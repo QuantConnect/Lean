@@ -74,7 +74,6 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
     <Compile Include="Examples\QuandlImporter.cs" />
     <Compile Include="Examples\BasicTemplateAlgorithm.cs" />
     <Compile Include="Examples\CustomData_NitfyINR.cs" />

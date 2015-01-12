@@ -110,7 +110,6 @@
     <Compile Include="Setup\ISetupHandler.cs" />
     <Compile Include="SubscriptionDataReader.cs" />
     <Compile Include="TransactionHandlers\BacktestingTransactionHandler.cs" />
-    <None Include="app.config" />
     <None Include="config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
