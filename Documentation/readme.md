@@ -1,1 +1,0 @@
-See lean.quantconnect.com for the latest documentation
