@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F15E0E67-E6CA-4BE4-BA36-54D73C5ACC11}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>QuantConnect.Tests</RootNamespace>
+    <AssemblyName>QuantConnect.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="nunit.framework">
+      <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Algorithm\Test_Cash.cs" />
+    <None Include="Algorithm\Test_LiveAlgorithm.cs" />
+    <None Include="Algorithm\Test_MixedAssets.cs" />
+    <None Include="Algorithm\Test_OnEndOfDay.cs" />
+    <None Include="Algorithm\Test_SetHolding.cs" />
+    <Compile Include="Common\Data\IdentityDataConsolidatorTests.cs" />
+    <Compile Include="Common\Data\TradeBarConsolidatorTests.cs" />
+    <Compile Include="Common\Util\ExpressionBuilderTests.cs" />
+    <Compile Include="Indicators\AroonOscillatorTests.cs" />
+    <Compile Include="Indicators\CompositeIndicatorTests.cs" />
+    <Compile Include="Indicators\DelayTests.cs" />
+    <Compile Include="Indicators\ExponentialMovingAverageTests.cs" />
+    <Compile Include="Indicators\IdentityTests.cs" />
+    <Compile Include="Indicators\IndicatorTests.cs" />
+    <Compile Include="Indicators\MaximumTests.cs" />
+    <Compile Include="Indicators\MinimumTests.cs" />
+    <Compile Include="Indicators\MomentumPercentTests.cs" />
+    <Compile Include="Indicators\MomentumTests.cs" />
+    <Compile Include="Indicators\MovingAverageConvergenceDivergenceTests.cs" />
+    <Compile Include="Indicators\MovingAverageTypeExtensionsTests.cs" />
+    <Compile Include="Indicators\RelativeStrengthIndexTests.cs" />
+    <Compile Include="Indicators\RollingWindowTests.cs" />
+    <Compile Include="Indicators\SequentialIndicatorTests.cs" />
+    <Compile Include="Indicators\SimpleMovingAverageTests.cs" />
+    <Compile Include="Indicators\TestHelper.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Adapters\" />
+    <Folder Include="API\" />
+    <Folder Include="Config\" />
+    <Folder Include="Engine\" />
+    <Folder Include="Logging\" />
+    <Folder Include="Messaging\" />
+    <Folder Include="Tasks\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common\QuantConnect.csproj">
+      <Project>{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}</Project>
+      <Name>QuantConnect</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
+      <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
+      <Name>QuantConnect.Indicators</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="TestData\spy_aroon_oscillator.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_with_indicators.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

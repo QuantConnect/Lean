@@ -1,0 +1,125 @@
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
+using NUnit.Framework;
+using QuantConnect.Indicators;
+
+namespace QuantConnect.Tests.Indicators
+{
+    /// <summary>
+    ///     Test class for QuantConnect.Indicators.Indicator
+    /// </summary>
+    [TestFixture]
+    public class IndicatorTests
+    {
+        [Test]
+        public void NameSaves()
+        {
+            // just testing that we get the right name out
+            const string name = "name";
+            var target = new TestIndicator(name);
+            Assert.AreEqual(name, target.Name);
+        }
+
+        [Test]
+        public void UpdatesProperly()
+        {
+            // we want to make sure the initialized value is the default value
+            // for a datapoint, and also verify the our indicator updates as we
+            // expect it to, in this case, it should return identity
+            var target = new TestIndicator();
+
+            Assert.AreEqual(DateTime.MinValue, target.Current.Time);
+            Assert.AreEqual(0m, target.Current.Value);
+
+            var time = DateTime.UtcNow;
+            var data = new IndicatorDataPoint(time, 1m);
+
+            target.Update(data);
+            Assert.AreEqual(1m, target.Current.Value);
+
+            target.Update(new IndicatorDataPoint(time.AddMilliseconds(1), 2m));
+            Assert.AreEqual(2m, target.Current.Value);
+        }
+
+        [Test]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "forward only")]
+        public void ThrowsOnPastTimes()
+        {
+            var target = new TestIndicator();
+
+            var time = DateTime.UtcNow;
+
+            target.Update(new IndicatorDataPoint(time, 1m));
+            target.Update(new IndicatorDataPoint(time.AddMilliseconds(-1), 2m));
+        }
+
+        [Test]
+        public void PassesOnDuplicateTimes()
+        {
+            var target = new TestIndicator();
+
+            var time = DateTime.UtcNow;
+
+            const decimal value1 = 1m;
+            var data = new IndicatorDataPoint(time, value1);
+            target.Update(data);
+            Assert.AreEqual(value1, target.Current.Value);
+
+            // this won't update because we told it to ignore duplicate
+            // data based on time
+            target.Update(data);
+            Assert.AreEqual(value1, target.Current.Value);
+        }
+
+        private class TestIndicator : Indicator
+        {
+            /// <summary>
+            ///     Initializes a new instance of the Indicator class using the specified name.
+            /// </summary>
+            /// <param name="name">The name of this indicator</param>
+            public TestIndicator(string name)
+                : base(name)
+            {
+            }
+            /// <summary>
+            ///     Initializes a new instance of the Indicator class using the name "test"
+            /// </summary>
+            public TestIndicator()
+                : base("test")
+            {
+            }
+
+            /// <summary>
+            ///     Gets a flag indicating when this indicator is ready and fully initialized
+            /// </summary>
+            public override bool IsReady
+            {
+                get { return true; }
+            }
+
+            /// <summary>
+            ///     Computes the next value of this indicator from the given state
+            /// </summary>
+            /// <param name="input">The input given to the indicator</param>
+            /// <returns>A new value for this indicator</returns>
+            protected override decimal ComputeNextValue(IndicatorDataPoint input)
+            {
+                return input;
+            }
+        }
+    }
+}
