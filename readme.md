@@ -46,7 +46,7 @@ The mailing list for the project can be found on [Google Groups][6]
 Contributions are warmly very welcomed but we ask you read the existing code to see how it is formatted, commented and ensure contributions match the existing style. All code submissions must include accompanying tests.
 
 ## Build Status ##
-<img src="https://magnum.travis-ci.com/QuantConnect/Lean.svg?token=jxpAqiA5Gr39WyJMyo88&branch=master">
+<img src="https://travis-ci.org/QuantConnect/Lean.svg?branch=master">
 
 ## Acknowledgements ##
 
