@@ -594,7 +594,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="value">Current daily performance value.</param>
         public void SamplePerformance(DateTime time, decimal value) 
         {
-            Sample("Daily Performance", ChartType.Overlay, "Performance", SeriesType.Line, time, value);
+            //Added a second chart to equity plot - daily perforamnce:
+            Sample("Strategy Equity", ChartType.Stacked, "Daily Performance", SeriesType.Bar, time, value);
         }
 
         /// <summary>
@@ -610,7 +611,7 @@ namespace QuantConnect.Lean.Engine.Results
                     //Create the chart if it doesn't exist already:
                     if (!Charts.ContainsKey(update.Name)) 
                     {
-                        Charts.AddOrUpdate<string, Chart>(update.Name, new Chart(update.Name, update.ChartType));
+                        Charts.AddOrUpdate(update.Name, new Chart(update.Name, update.ChartType));
                     }
 
                     //Add these samples to this chart.

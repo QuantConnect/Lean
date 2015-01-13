@@ -210,7 +210,9 @@ namespace QuantConnect
         /// Scatter Plot for Chart Distinct Types
         Scatter,
         /// Charts
-        Candle
+        Candle,
+        /// Bar chart.
+        Bar
     }
 
     /// <summary>
