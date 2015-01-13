@@ -43,6 +43,24 @@ namespace QuantConnect.Algorithm
         /******************************************************** 
         * CLASS METHODS
         *********************************************************/
+
+        /// <summary>
+        /// Creates a new AverageTrueRange indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose ATR we want</param>
+        /// <param name="period">The smoothing period used to smooth the computed TrueRange values</param>
+        /// <param name="type">The type of smoothing to use</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>A new AverageTrueRange indicator with the specified smoothing type and period</returns>
+        public AverageTrueRange ATR(string symbol, int period, MovingAverageType type = MovingAverageType.Simple, Resolution? resolution = null)
+        {
+            string name = CreateIndicatorName(symbol, "ATR" + period, resolution);
+            var atr = new AverageTrueRange(name, period, type);
+            RegisterIndicator(symbol, atr, resolution);
+            return atr;
+        }
+
         /// <summary>
         /// Creates an ExponentialMovingAverage indicator for the symbol. The indicator will be automatically
         /// updated on the given resolution.

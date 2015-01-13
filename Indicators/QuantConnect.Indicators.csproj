@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AroonOscillator.cs" />
+    <Compile Include="AverageTrueRange.cs" />
     <Compile Include="CompositeIndicator.cs" />
     <Compile Include="ConstantIndicator.cs" />
     <Compile Include="Delay.cs" />
