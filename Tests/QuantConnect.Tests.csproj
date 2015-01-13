@@ -53,6 +53,7 @@
     <Compile Include="Common\Data\TradeBarConsolidatorTests.cs" />
     <Compile Include="Common\Util\ExpressionBuilderTests.cs" />
     <Compile Include="Indicators\AroonOscillatorTests.cs" />
+    <Compile Include="Indicators\AverageTrueRangeTests.cs" />
     <Compile Include="Indicators\CompositeIndicatorTests.cs" />
     <Compile Include="Indicators\DelayTests.cs" />
     <Compile Include="Indicators\ExponentialMovingAverageTests.cs" />
