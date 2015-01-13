@@ -316,7 +316,7 @@ namespace QuantConnect.Algorithm
             {
                 // find our subscription to this symbol
                 var subscription = SubscriptionManager.Subscriptions.First(x => x.Symbol == symbol);
-                if (subscription.Type == typeof(TradeBar))
+                if (subscription.Type == typeof(TradeBar) || subscription.Type.IsSubclassOf(typeof(TradeBar)))
                 {
                     if (!resolution.HasValue)
                     {
