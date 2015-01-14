@@ -528,7 +528,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
 
             Log.Debug("LiveTradingResultHandler.SamplePerformance(): " + time.ToShortTimeString() + " >" + value);
-            Sample("Daily Performance", ChartType.Overlay, "Performance", SeriesType.Line, time, value);
+            Sample("Strategy Equity", ChartType.Overlay, "Daily Performance", SeriesType.Line, time, value);
         }
 
         /// <summary>

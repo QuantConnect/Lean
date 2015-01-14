@@ -276,7 +276,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="value">Value of the daily performance.</param>
         public void SamplePerformance(DateTime time, decimal value)
         {
-            Sample("Daily Performance", ChartType.Overlay, "Performance", SeriesType.Line, time, value);
+            Sample("Strategy Equity", ChartType.Overlay, "Daily Performance", SeriesType.Line, time, value);
         }
 
 

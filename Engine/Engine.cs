@@ -355,7 +355,7 @@ namespace QuantConnect.Lean.Engine
                             {
                                 //Generates error when things don't exist (no charting logged, runtime errors in main algo execution)
                                 var equity = charts["Strategy Equity"].Series["Equity"].Values;
-                                var performance = charts["Daily Performance"].Series["Performance"].Values;
+                                var performance = charts["Strategy Equity"].Series["Daily Performance"].Values;
                                 var profitLoss = new SortedDictionary<DateTime,decimal>(algorithm.Transactions.TransactionRecord);
                                 statistics = Statistics.Statistics.Generate(equity, profitLoss, performance, SetupHandler.StartingCapital, 252);
                             }

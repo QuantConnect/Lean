@@ -195,6 +195,11 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Set the start time for the algorithm
             _startTime = DateTime.Now;
+
+            //Default charts:
+            Charts.AddOrUpdate("Strategy Equity", new Chart("Strategy Equity", ChartType.Stacked));
+            Charts["Strategy Equity"].Series.Add("Equity", new Series("Equity", SeriesType.Candle));
+            Charts["Strategy Equity"].Series.Add("Daily Performance", new Series("Daily Performance", SeriesType.Bar));
         }
         
         /******************************************************** 
