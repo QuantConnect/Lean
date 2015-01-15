@@ -99,6 +99,21 @@ namespace QuantConnect.Data.Consolidators
 
             // wire up the second one to get data from the first
             first.DataConsolidated += (sender, consolidated) => second.Update(consolidated);
+            
+            // wire up the second one's events to also fire this consolidator's event so consumers
+            // can attach
+            second.DataConsolidated += (sender, consolidated) => OnDataConsolidated(consolidated);
+        }
+
+        /// <summary>
+        /// Event invocator for the DataConsolidated event. This should be invoked
+        /// by derived classes when they have consolidated a new piece of data.
+        /// </summary>
+        /// <param name="consolidated">The newly consolidated data</param>
+        protected virtual void OnDataConsolidated(BaseData consolidated)
+        {
+            var handler = DataConsolidated;
+            if (handler != null) handler(this, consolidated);
         }
     }
 }
