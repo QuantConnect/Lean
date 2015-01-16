@@ -47,6 +47,18 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Creates a new MACD with the specified parameters
         /// </summary>
+        /// <param name="fastPeriod">The fast moving average period</param>
+        /// <param name="slowPeriod">The slow moving average period</param>
+        /// <param name="signalPeriod">The signal period</param>
+        /// <param name="type">The type of moving averages to use</param>
+        public MovingAverageConvergenceDivergence(int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType type = MovingAverageType.Simple)
+            : this(string.Format("MACD({0},{1})", fastPeriod, slowPeriod), fastPeriod, slowPeriod, signalPeriod, type)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new MACD with the specified parameters
+        /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="fastPeriod">The fast moving average period</param>
         /// <param name="slowPeriod">The slow moving average period</param>
