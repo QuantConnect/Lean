@@ -316,14 +316,19 @@ namespace QuantConnect.Algorithm
             {
                 // find our subscription to this symbol
                 var subscription = SubscriptionManager.Subscriptions.First(x => x.Symbol == symbol);
-                if (subscription.Type == typeof(TradeBar) || subscription.Type.IsSubclassOf(typeof(TradeBar)))
+
+                // if the resolution is null or if the requested resolution matches the subscription, return identity
+                if (!resolution.HasValue || subscription.Resolution == resolution.Value)
                 {
-                    if (!resolution.HasValue)
-                    {
-                        // if we want the same resolution as in the subscription then just use identity
-                        return new TradeBarConsolidator(1);
-                    }
-                    
+                    // since there's a generic type parameter that we don't have access to, we'll just use the activator
+                    var identityConsolidatorType = typeof (IdentityDataConsolidator<>).MakeGenericType(subscription.Type);
+                    return (IDataConsolidator) Activator.CreateInstance(identityConsolidatorType);
+                }
+
+                // if our type can be used as a trade bar, then let's just make one of those
+                // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to TradeBar
+                if (typeof(TradeBar).IsAssignableFrom(subscription.Type))
+                {
                     return TradeBarConsolidator.FromResolution(resolution.Value);
                 }
 
@@ -332,7 +337,7 @@ namespace QuantConnect.Algorithm
                 // I imagine it would be something that produces a TradeBar from ticks!
 
 
-                // if it is custom data I don't think we can resolve a default consolidator for the type
+                // if it is custom data I don't think we can resolve a default consolidator for the type unless it was assignable to trade bar
             }
             catch (InvalidOperationException)
             {
