@@ -241,13 +241,11 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to register against</param>
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="consolidator">The consolidator to receive raw subscription data</param>
-        /// <param name="selector">Selects a value from the BaseData send into the indicator</param>
-        public void RegisterIndicator(string symbol, IndicatorBase<IndicatorDataPoint> indicator, IDataConsolidator consolidator, Func<BaseData, decimal> selector)
+        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        public void RegisterIndicator(string symbol, IndicatorBase<IndicatorDataPoint> indicator, IDataConsolidator consolidator, Func<BaseData, decimal> selector = null)
         {
-            if (selector == null)
-            {
-                throw new ArgumentNullException("selector");
-            }
+            // default our selector to the Value property on BaseData
+            selector = selector ?? (x => x.Value);
 
             // register the consolidator for automatic updates via SubscriptionManager
             SubscriptionManager.AddConsolidator(symbol, consolidator);
