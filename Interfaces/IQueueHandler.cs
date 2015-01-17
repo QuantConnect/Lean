@@ -17,7 +17,9 @@
 * USING NAMESPACES
 **********************************************************/
 
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using QuantConnect.Data.Market;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Interfaces
@@ -25,8 +27,8 @@ namespace QuantConnect.Interfaces
     /// <summary>
     /// Task requestor interface with cloud system
     /// </summary>
-    [InheritedExport(typeof(ITaskHandler))]
-    public interface ITaskHandler
+    [InheritedExport(typeof(IQueueHandler))]
+    public interface IQueueHandler
     {
         /// <summary>
         /// Initialize the task handler.
@@ -37,12 +39,18 @@ namespace QuantConnect.Interfaces
         /// Request the next task to run through the engine:
         /// </summary>
         /// <returns>Algorithm job to process</returns>
-        AlgorithmNodePacket NextTask(out string algorithmPath);
+        AlgorithmNodePacket NextJob(out string algorithmPath);
 
         /// <summary>
         /// Signal task complete
         /// </summary>
         /// <param name="job">Work to do.</param>
-        void AcknowledgeTask(AlgorithmNodePacket job);
+        void AcknowledgeJob(AlgorithmNodePacket job);
+
+        /// <summary>
+        /// Get the next ticks from the live trading data queue
+        /// </summary>
+        /// <returns>IEnumerable list of ticks since the last update.</returns>
+        IEnumerable<Tick> NextTicks();
     }
 }

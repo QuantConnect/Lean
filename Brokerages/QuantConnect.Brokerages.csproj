@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Brokerage.cs" />
+    <Compile Include="Paper\Paper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tradier\Tradier.cs" />
     <Compile Include="Tradier\Balances.cs" />

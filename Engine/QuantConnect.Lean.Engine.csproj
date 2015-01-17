@@ -110,6 +110,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlgorithmManager.cs" />
+    <Compile Include="DataFeeds\LiveTradingDataFeed.cs" />
     <Compile Include="DataStream.cs" />
     <Compile Include="RealTime\RealTimeEvent.cs" />
     <Compile Include="RealTime\LiveTradingRealTimeHandler.cs" />

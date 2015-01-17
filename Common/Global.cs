@@ -294,7 +294,11 @@ namespace QuantConnect
         /// Algorithm has been deleted
         Deleted,        //6
         /// Algorithm completed running
-        Completed       //7
+        Completed,      //7
+        /// Runtime Error Stoped Algorithm
+        RuntimeError,    //8
+        /// Error in the algorithm id (not used).
+        Invalid
     }
 
 

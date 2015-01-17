@@ -18,6 +18,7 @@
 * USING NAMESPACES
 **********************************************************/
 
+using System;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets

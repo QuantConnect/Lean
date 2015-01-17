@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory;
-using QuantConnect.Brokerages;
+using QuantConnect.Brokerages.Paper;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
@@ -117,7 +117,7 @@ namespace QuantConnect.Lean.Engine.Setup
         public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket job)
         {
             var initializeComplete = false;
-            brokerage = new Brokerage(); //Not used.
+            brokerage = new PaperBrokerage(); //Not used.
 
             //For the console, let it set itself up primarily:
             algorithm.Initialize();

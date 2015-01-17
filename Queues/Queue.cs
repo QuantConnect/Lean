@@ -15,12 +15,15 @@
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
+
+using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
-namespace QuantConnect.Tasks
+namespace QuantConnect.Queues
 {
     /******************************************************** 
     * CLASS DEFINITIONS
@@ -28,7 +31,7 @@ namespace QuantConnect.Tasks
     /// <summary>
     /// Implementation of local/desktop job request:
     /// </summary>
-    public class Tasks : ITaskHandler
+    public class Queue : IQueueHandler
     {
         /******************************************************** 
         * CLASS METHODS
@@ -71,7 +74,7 @@ namespace QuantConnect.Tasks
         /// Desktop/Local Get Next Task - Get task from the Algorithm folder of VS Solution.
         /// </summary>
         /// <returns></returns>
-        public AlgorithmNodePacket NextTask(out string location)
+        public AlgorithmNodePacket NextJob(out string location)
         {
             location = AlgorithmLocation;
 
@@ -109,9 +112,18 @@ namespace QuantConnect.Tasks
         /// Desktop/Local acknowledge the task processed. Nothing to do.
         /// </summary>
         /// <param name="job"></param>
-        public void AcknowledgeTask(AlgorithmNodePacket job)
+        public void AcknowledgeJob(AlgorithmNodePacket job)
         {
             //
+        }
+
+        /// <summary>
+        /// Get the next ticks from the live trading data server. No Ack needed since we always want the latest data
+        /// </summary>
+        /// <returns>Tick</returns>
+        public IEnumerable<Tick> NextTicks()
+        {
+            return new List<Tick>();
         }
     }
 

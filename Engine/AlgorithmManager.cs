@@ -215,12 +215,6 @@ namespace QuantConnect.Lean.Engine
                         }
 
                         startingPerformance = algorithm.Portfolio.TotalPortfolioValue;
-
-                        //Log.Trace("AlgorithmManager.Run(): Date Changed: " + time.ToShortDateString());
-                        if (time.Date.DayOfYear % 10 == 0 && OS.TotalPhysicalMemoryUsed > 500)
-                        {
-                            results.DebugMessage("Algorithm Notice: Memory " + OS.TotalPhysicalMemoryUsed + "Mb Used of Maxiumum " + Engine.MaximumRamAllocation + "Mb. Try not to store data in your algorithm.");
-                        }   
                     }
 
                     //Check if the user's signalled Quit: loop over data until day changes.

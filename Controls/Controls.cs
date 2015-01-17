@@ -75,7 +75,7 @@ namespace QuantConnect.Controls
         }
 
         /// <summary>
-        /// Get the algorithm status with this algorithm id.
+        /// Get the algorithm status from the user with this algorithm id.
         /// </summary>
         /// <param name="algorithmId">String algorithm id we're searching for.</param>
         /// <returns>Algorithm status enum</returns>
@@ -84,6 +84,16 @@ namespace QuantConnect.Controls
             return AlgorithmStatus.Running;
         }
 
+        /// <summary>
+        /// Algorithm passes back its current status to the UX.
+        /// </summary>
+        /// <param name="status">Status of the current algorithm</param>
+        /// <param name="algorithmId">String algorithm id we're setting.</param>
+        /// <returns>Algorithm status enum</returns>
+        public void SetAlgorithmStatus(string algorithmId, AlgorithmStatus status)
+        {
+            //
+        }
 
         /// <summary>
         /// Get the calendar open hours for the today.

@@ -104,7 +104,7 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Task requester / job queue handler for running the next algorithm task.
         /// </summary>
-        public static ITaskHandler Tasks;
+        public static IQueueHandler Queue;
 
         /// <summary>
         /// Algorithm controls handler for setting the per user restrictions on algorithm behaviour where applicable.
@@ -186,7 +186,7 @@ namespace QuantConnect.Lean.Engine
             {
                 // grab the right export based on configuration
                 Notify = container.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler"));
-                Tasks = container.GetExportedValueByTypeName<ITaskHandler>(Config.Get("task-handler"));
+                Queue = container.GetExportedValueByTypeName<IQueueHandler>(Config.Get("queue-handler"));
                 Controls = container.GetExportedValueByTypeName<IControls>(Config.Get("controls-handler")); 
             } 
             catch (CompositionException compositionException)
@@ -196,7 +196,7 @@ namespace QuantConnect.Lean.Engine
             //Setup packeting, queue and controls system: These don't do much locally.
             Controls.Initialize();
             Notify.Initialize();
-            Tasks.Initialize(_liveMode);
+            Queue.Initialize(_liveMode);
 
             //Start monitoring the backtest active status:
             var statusPingThread = new Thread(StateCheck.Ping.Run);
@@ -221,7 +221,7 @@ namespace QuantConnect.Lean.Engine
 
                     //-> Pull job from QuantConnect job queue, or, pull local build:
                     var algorithmPath = "";
-                    job = Tasks.NextTask(out algorithmPath); // Blocking.
+                    job = Queue.NextJob(out algorithmPath); // Blocking.
 
                     //-> Initialize messaging system
                     Notify.SetChannel(job.Channel);
@@ -328,12 +328,14 @@ namespace QuantConnect.Lean.Engine
                         } 
                         catch (Exception err) 
                         {
-                            //Log:
+                            //Error running the user algorithm: purge datafeed, send error messages, set algorithm status to failed.
                             Log.Error("Engine.Run(): Breaking out of parent try-catch: " + err.Message + " " + err.StackTrace);
-                            //Error running the user algorithm: purge datafeed.
                             if (DataFeed != null) DataFeed.Exit();
-                            //Send the error message:
-                            if (ResultHandler != null) ResultHandler.RuntimeError("Runtime Error: " + err.Message, err.StackTrace);
+                            if (ResultHandler != null)
+                            {
+                                ResultHandler.RuntimeError("Runtime Error: " + err.Message, err.StackTrace);
+                                Controls.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError);
+                            }
                         }
 
                         //Send result data back: this entire code block could be rewritten.
@@ -408,7 +410,7 @@ namespace QuantConnect.Lean.Engine
                 finally 
                 {
                     //Delete the message from the queue before another worker picks it up:
-                    Tasks.AcknowledgeTask(job);
+                    Queue.AcknowledgeJob(job);
                     Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
                     GC.Collect();
                 }
@@ -420,7 +422,7 @@ namespace QuantConnect.Lean.Engine
             StateCheck.Ping.Exit();
             
             // Make the console window pause so we can read log output before exiting and killing the application completely
-            System.Console.ReadKey();
+            Console.ReadKey();
 
             //Finally if ping thread still not complete, kill.
             if (statusPingThread != null && statusPingThread.IsAlive) statusPingThread.Abort();
@@ -505,6 +507,12 @@ namespace QuantConnect.Lean.Engine
                 case DataFeedEndpoint.FileSystem:
                     df = new FileSystemDataFeed(algorithm, (BacktestNodePacket)job);
                     Log.Trace("Engine.GetDataFeedHandler(): Selected FileSystem Datafeed");
+                    break;
+
+                //Live Trading Data Source:
+                case DataFeedEndpoint.LiveTrading:
+                    df = new LiveTradingDataFeed(algorithm, (LiveNodePacket)job);
+                    Log.Trace("Engine.GetDataFeedHandler(): Selected LiveTrading Datafeed");
                     break;
 
                 //Tradier Data Source:

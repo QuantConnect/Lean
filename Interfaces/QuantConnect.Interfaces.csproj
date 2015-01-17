@@ -74,7 +74,7 @@
     <Compile Include="IBrokerage.cs" />
     <Compile Include="IControls.cs" />
     <Compile Include="IMessagingHandler.cs" />
-    <Compile Include="ITaskHandler.cs" />
+    <Compile Include="IQueueHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

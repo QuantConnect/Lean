@@ -44,11 +44,18 @@ namespace QuantConnect.Interfaces
         void UpdateDailyLogUsed(int userId, string backtestId, string url, int length, string userToken, bool hitLimit = false);
 
         /// <summary>
-        /// Get the algorithm current status, active or cancelled.
+        /// Get the algorithm current status, active or cancelled from the user
         /// </summary>
         /// <param name="algorithmId"></param>
         /// <returns></returns>
         AlgorithmStatus GetAlgorithmStatus(string algorithmId);
+
+        /// <summary>
+        /// Set the algorithm status from the worker to update the UX e.g. if there was an error.
+        /// </summary>
+        /// <param name="algorithmId">Algorithm id we're setting.</param>
+        /// <param name="status">Status enum of the current worker</param>
+        void SetAlgorithmStatus(string algorithmId, AlgorithmStatus status);
 
         /// <summary>
         /// Market Status Today: REST call.

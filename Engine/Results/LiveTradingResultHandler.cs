@@ -273,7 +273,7 @@ namespace QuantConnect.Lean.Engine.Results
                                    select order).ToDictionary(t => t.Key, t => t.Value);
 
                     //Reset loop variables:
-                    _lastOrderId = (from order in deltaOrders.Values select order.Id).Max();
+                    _lastOrderId = (from order in deltaOrders.Values select order.Id).DefaultIfEmpty().Max();
                     _lastUpdate = AlgorithmManager.Frontier;
                     
                     //Limit length of orders we pass back dynamically to avoid flooding.
@@ -299,18 +299,16 @@ namespace QuantConnect.Lean.Engine.Results
                         }
                     }
 
+                    //Profit loss changes, get the banner statistics, summary information on the performance for the headers.
                     var holdings = new Dictionary<string, Holding>();
+                    var deltaProfitLoss = new Dictionary<DateTime, decimal>();
+                    var deltaStatistics = new Dictionary<string, string>();
+                    var runtimeStatistics = new Dictionary<string, string>();
+
                     foreach (var holding in _algorithm.Portfolio.Values)
                     {
                         holdings.Add(holding.Symbol, new Holding(holding));
                     }
-
-                    //Profit loss changes.
-                    var deltaProfitLoss = new Dictionary<DateTime, decimal>();
-                    var deltaStatistics = new Dictionary<string, string>();
-
-                    //Get the banner statistics, summary information on the performance for the headers.
-                    var runtimeStatistics = new Dictionary<string, string>();
 
                     //Add the algorithm statistics first.
                     lock (_runtimeStatistics)
