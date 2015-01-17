@@ -229,9 +229,10 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to register against</param>
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="resolution">The resolution at which to send data to the indicator, null to use the same resolution as the subscription</param>
-        public void RegisterIndicator(string symbol, IndicatorBase<IndicatorDataPoint> indicator, Resolution? resolution = null)
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        public void RegisterIndicator(string symbol, IndicatorBase<IndicatorDataPoint> indicator, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
         {
-            RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution), x => x.Value);
+            RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution), selector ?? (x => x.Value));
         }
 
         /// <summary>
