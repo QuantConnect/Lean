@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -22,6 +24,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             : base(algorithm)
         {
             _job = job;
+
+            // create a lookup keyed by SecurityType
+            var symbols = algorithm.Securities.ToLookup(x => x.Value.Type, x => x.Key).ToDictionary();
+
+            // request for data from these symbols
+            Engine.Queue.Subscribe(symbols);
         }
 
         /// <summary>

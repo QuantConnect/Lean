@@ -38,12 +38,12 @@ namespace QuantConnect.Lean.Engine.Results
         * PRIVATE VARIABLES
         *********************************************************/
         private bool _exitTriggered = false;
-        private BacktestNodePacket _job;
+        private IConsoleStatusHandler _algorithmNode;
         private DateTime _updateTime = new DateTime();
+        private DateTime _lastSampledTimed;
         private IAlgorithm _algorithm;
         private int _jobDays = 0;
         private bool _isActive = true;
-        private double _daysProcessed = 0;
         private object _chartLock = new Object();
 
         //Sampling Periods:
@@ -128,21 +128,31 @@ namespace QuantConnect.Lean.Engine.Results
         /// Console result handler constructor.
         /// </summary>
         /// <remarks>Setup the default sampling and notification periods based on the backtest length.</remarks>
-        public ConsoleResultHandler(BacktestNodePacket packet) 
+        public ConsoleResultHandler(AlgorithmNodePacket packet) 
         {
             Log.Trace("Launching Console Result Handler: QuantConnect v2.0");
             Messages = new ConcurrentQueue<Packet>();
             Charts = new ConcurrentDictionary<string, Chart>();
             _chartLock = new Object();
             _isActive = true;
-            _job = packet;
 
-            //Get the resample period:
-            const double samples = 4000;
-            const double minimumSamplePeriod = 4 * 60;
-            var totalMinutes = (_job.PeriodFinish - _job.PeriodStart).TotalMinutes;
-            var resampleMinutes = (totalMinutes < (minimumSamplePeriod * samples)) ? minimumSamplePeriod : (totalMinutes / samples); // Space out the sampling every 
-            _resamplePeriod = TimeSpan.FromMinutes(resampleMinutes);
+            // we expect one of two types here, the backtest node packet or the live node packet
+            if (packet is BacktestNodePacket)
+            {
+                var backtest = packet as BacktestNodePacket;
+                _algorithmNode = new BacktestConsoleStatusHandler(backtest);
+            }
+            else
+            {
+                var live = packet as LiveNodePacket;
+                if (live == null)
+                {
+                    throw new ArgumentException("Unexpected AlgorithmNodeType: " + packet.GetType().Name);
+                }
+                _algorithmNode = new LiveConsoleStatusHandler(live);
+            }
+
+            _resamplePeriod = _algorithmNode.ComputeSampleEquityPeriod();
 
             //Notification Period for pushes:
             _notificationPeriod = TimeSpan.FromSeconds(5);
@@ -180,7 +190,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (DateTime.Now > _updateTime)
                 {
                     _updateTime = DateTime.Now.AddSeconds(5);
-                    Log.Trace("Progress: " + (_daysProcessed * 100 / _jobDays).ToString("F2") + "% Processed: " + _daysProcessed + " days of total: " + _jobDays);
+                    _algorithmNode.LogAlgorithmStatus(_lastSampledTimed);
                 }
             }
 
@@ -266,7 +276,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void SampleEquity(DateTime time, decimal value)
         {
             Sample("Strategy Equity", ChartType.Stacked, "Equity", SeriesType.Candle, time, value);
-            _daysProcessed = (time - _job.PeriodStart).TotalDays;
+            _lastSampledTimed = time;
         }
 
         /// <summary>
@@ -373,7 +383,6 @@ namespace QuantConnect.Lean.Engine.Results
         public void SetAlgorithm(IAlgorithm algorithm) 
         {
             _algorithm = algorithm;
-            _jobDays = (int)(_job.PeriodFinish - _job.PeriodStart).TotalDays;
         }
 
         /// <summary>
@@ -424,6 +433,60 @@ namespace QuantConnect.Lean.Engine.Results
         {
             // Do nothing.
         }
+
+        /// <summary>
+        /// Provides an abstraction layer for live vs backtest packets to provide status/sampling to the AlgorithmManager
+        /// </summary>
+        /// <remarks>
+        /// Since we can run both live and back test from the console, we need two implementations of what to do
+        /// at certain times
+        /// </remarks>
+        private interface IConsoleStatusHandler
+        {
+            void LogAlgorithmStatus(DateTime current);
+            TimeSpan ComputeSampleEquityPeriod();
+        }
+
+        private class LiveConsoleStatusHandler : IConsoleStatusHandler
+        {
+            private readonly LiveNodePacket _job;
+            public LiveConsoleStatusHandler(LiveNodePacket _job)
+            {
+                this._job = _job;
+            }
+            public void LogAlgorithmStatus(DateTime current)
+            {
+                // later we can log daily %Gain if possible
+            }
+            public TimeSpan ComputeSampleEquityPeriod()
+            {
+                return TimeSpan.FromSeconds(2);
+            }
+        }
+        private class BacktestConsoleStatusHandler : IConsoleStatusHandler
+        {
+            private readonly BacktestNodePacket _job;
+            private readonly double _backtestSpanInDays;
+            public BacktestConsoleStatusHandler(BacktestNodePacket _job)
+            {
+                this._job = _job;
+                _backtestSpanInDays = (_job.PeriodFinish - _job.PeriodStart).TotalDays;
+            }
+            public void LogAlgorithmStatus(DateTime current)
+            {
+                var _daysProcessed = (current - _job.PeriodStart).TotalDays;
+                Log.Trace("Progress: " + (_daysProcessed * 100 / _backtestSpanInDays).ToString("F2") + "% Processed: " + _daysProcessed + " days of total: " + (int)_backtestSpanInDays);
+            }
+            public TimeSpan ComputeSampleEquityPeriod()
+            {
+                const double samples = 4000;
+                const double minimumSamplePeriod = 4 * 60;
+                var totalMinutes = (_job.PeriodFinish - _job.PeriodStart).TotalMinutes;
+                var resampleMinutes = (totalMinutes < (minimumSamplePeriod * samples)) ? minimumSamplePeriod : (totalMinutes / samples);
+                return TimeSpan.FromMinutes(resampleMinutes);
+            }
+        }
+
     } // End Result Handler Thread:
 
 } // End Namespace

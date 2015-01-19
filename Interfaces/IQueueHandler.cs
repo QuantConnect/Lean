@@ -52,5 +52,17 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <returns>IEnumerable list of ticks since the last update.</returns>
         IEnumerable<Tick> NextTicks();
+
+        /// <summary>
+        /// Adds the specified symbols to the subscription
+        /// </summary>
+        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
+        void Subscribe(IDictionary<SecurityType, List<string>> symbols);
+
+        /// <summary>
+        /// Removes the specified symbols to the subscription
+        /// </summary>
+        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
+        void Unubscribe(IDictionary<SecurityType, List<string>> symbols);
     }
 }

@@ -16,6 +16,7 @@
 * USING NAMESPACES
 **********************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Configuration;
@@ -118,12 +119,28 @@ namespace QuantConnect.Queues
         }
 
         /// <summary>
-        /// Get the next ticks from the live trading data server. No Ack needed since we always want the latest data
+        /// Desktop/Local doesn't support live data from this handler
         /// </summary>
         /// <returns>Tick</returns>
         public IEnumerable<Tick> NextTicks()
         {
-            return new List<Tick>();
+            throw new NotImplementedException("QuantConnect.Queues.Queue has not implemented live data.");
+        }
+
+        /// <summary>
+        /// Desktop/Local doesn't support live data from this handler
+        /// </summary>
+        public void Subscribe(IDictionary<SecurityType, List<string>> symbols)
+        {
+            throw new NotImplementedException("QuantConnect.Queues.Queue has not implemented live data.");
+        }
+
+        /// <summary>
+        /// Desktop/Local doesn't support live data from this handler
+        /// </summary>
+        public void Unubscribe(IDictionary<SecurityType, List<string>> symbols)
+        {
+            throw new NotImplementedException("QuantConnect.Queues.Queue has not implemented live data.");
         }
     }
 

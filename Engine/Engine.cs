@@ -578,6 +578,8 @@ namespace QuantConnect.Lean.Engine
         private static IResultHandler GetResultHandler(AlgorithmNodePacket job)
         {
             var rh = default(IResultHandler);
+            if (IsLocal) return new ConsoleResultHandler(job);
+
             switch (job.ResultEndpoint)
             {
                 //Local backtesting and live trading result handler route messages to the local console.
