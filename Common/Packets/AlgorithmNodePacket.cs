@@ -59,12 +59,6 @@ namespace QuantConnect.Packets
         public int ProjectId = 0;
 
         /// <summary>
-        /// User API access token
-        /// </summary>
-        [JsonProperty(PropertyName = "sUserToken")]
-        public string UserToken = "";
-
-        /// <summary>
         /// Algorithm Id - BacktestId or DeployId - Common Id property between packets.
         /// </summary>
         [JsonProperty(PropertyName = "sAlgorithmID")]

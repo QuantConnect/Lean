@@ -447,6 +447,7 @@ namespace QuantConnect.Lean.Engine.Results
             TimeSpan ComputeSampleEquityPeriod();
         }
 
+        // uses a const 2 second sample equity period and does nothing for logging algorithm status
         private class LiveConsoleStatusHandler : IConsoleStatusHandler
         {
             private readonly LiveNodePacket _job;
@@ -463,6 +464,7 @@ namespace QuantConnect.Lean.Engine.Results
                 return TimeSpan.FromSeconds(2);
             }
         }
+        // computes sample equity period from 4000 samples evenly spaced over the backtest interval and logs %complete to log file
         private class BacktestConsoleStatusHandler : IConsoleStatusHandler
         {
             private readonly BacktestNodePacket _job;

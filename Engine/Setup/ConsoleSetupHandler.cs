@@ -139,7 +139,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     var liveJob = baseJob as LiveNodePacket;
                     
                     //Live Job Parameters:
-                    liveJob.UserId = 1001;
+                    liveJob.UserId = liveJob.UserId;
                     liveJob.DeployId = "LOCALHOST";
                     liveJob.IssuedAt = DateTime.Now.Subtract(TimeSpan.FromSeconds(86399 - 60));     //For testing, first access token expires in 60 sec. refresh.
                     liveJob.LifeTime = TimeSpan.FromSeconds(86399);
@@ -149,14 +149,14 @@ namespace QuantConnect.Lean.Engine.Setup
                     liveJob.Type = PacketType.LiveNode;
 
                     //Endpoints:
-                    liveJob.TransactionEndpoint = TransactionHandlerEndpoint.Tradier;
+                    liveJob.TransactionEndpoint = TransactionHandlerEndpoint.Backtesting;
                     liveJob.ResultEndpoint = ResultHandlerEndpoint.LiveTrading;
                     liveJob.DataEndpoint = DataFeedEndpoint.LiveTrading;
                     liveJob.RealTimeEndpoint = RealTimeEndpoint.LiveTrading;
                     liveJob.SetupEndpoint = SetupHandlerEndpoint.Console;
 
                     //Call in the tradier setup:
-                    var setup = new TradierSetupHandler();
+                    var setup = new PaperTradingSetupHandler();
                     setup.Setup(algorithm, out brokerage, baseJob);
 
                     //Live Specific Parameters:

@@ -220,14 +220,12 @@ namespace QuantConnect
     { 
         /// Use Backtesting Models to Process Transactions
         Backtesting,
-        /// Use Paper Trading Model to Process Transactions
-        PaperTrading,
         /// Use Tradier to Process Transactions
         Tradier,
         /// Use Interactive Brokers to Process Transactions
-        InteractiveBrokers,
+        //InteractiveBrokers,
         /// Use FXCM to Process Transactions
-        FXCM
+        //FXCM
     }
 
     /// <summary>

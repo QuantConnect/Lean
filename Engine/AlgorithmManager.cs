@@ -344,7 +344,7 @@ namespace QuantConnect.Lean.Engine
                     }
 
                     //If its the historical/paper trading models, wait until its flagged as "ready"
-                    if (job.TransactionEndpoint == TransactionHandlerEndpoint.Backtesting || job.TransactionEndpoint == TransactionHandlerEndpoint.PaperTrading)
+                    if (job.TransactionEndpoint == TransactionHandlerEndpoint.Backtesting)
                     {
                         while (!transactions.Ready) Thread.Yield();
                     }

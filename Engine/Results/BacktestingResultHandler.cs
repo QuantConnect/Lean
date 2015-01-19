@@ -717,7 +717,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (!_log.Any()) return "";
 
                 //Get the max length allowed for the algorithm:
-                var allowance = Engine.Api.ReadLogAllowance(job.UserId, job.UserToken);
+                var allowance = Engine.Api.ReadLogAllowance(job.UserId, job.Channel);
                 var logBacktestMax = allowance[0];
                 var logDailyMax = allowance[1];
                 var logRemaining = Math.Min(logBacktestMax, allowance[2]); //Minimum of maxium backtest or remaining allowance.
@@ -764,7 +764,7 @@ namespace QuantConnect.Lean.Engine.Results
                 //Save the log: Upload this file to S3:
                 Engine.Api.Store(serialized, key, StoragePermissions.Public);
                 //Record the data usage:
-                Engine.Api.UpdateDailyLogUsed(job.UserId, job.AlgorithmId, remoteURL, logLength, job.UserToken, hitLimit);
+                Engine.Api.UpdateDailyLogUsed(job.UserId, job.AlgorithmId, remoteURL, logLength, job.Channel, hitLimit);
             }
             catch (Exception err)
             {

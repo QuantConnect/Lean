@@ -115,6 +115,9 @@ namespace QuantConnect.Packets
         Debug,
 
         /// Nodes -> User, Order Update Event
-        OrderEvent
+        OrderEvent,
+
+        /// Boolean true/false success
+        Success
     }
 }
