@@ -7,8 +7,8 @@
     <ProjectGuid>{D6633172-1368-4DF6-9444-825C3E00C819}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>QuantConnect.Queue</RootNamespace>
-    <AssemblyName>QuantConnect.Queue</AssemblyName>
+    <RootNamespace>QuantConnect.Queues</RootNamespace>
+    <AssemblyName>QuantConnect.Queues</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -20,7 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\Engine\Extensions\QuantConnect.Queue.xml</DocumentationFile>
+    <DocumentationFile>..\Engine\Extensions\QuantConnect.Queues.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

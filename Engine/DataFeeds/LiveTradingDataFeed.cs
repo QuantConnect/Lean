@@ -459,7 +459,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void UpdateSecurityMarketHours()
         {
             //Update the "Today's Market" Status:
-            var _today = Engine.Controls.MarketToday(SecurityType.Equity);
+            var _today = Engine.Api.MarketToday(SecurityType.Equity);
             Log.Trace("LiveTradingDataFeed.Run(): New Day Market Status: " + _today.Status);
 
             foreach (var sub in _subscriptions)

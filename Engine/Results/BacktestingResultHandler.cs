@@ -391,7 +391,7 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     //Upload Results Portion
-                    Engine.Controls.Store(serialized, key, StoragePermissions.Authenticated, async);
+                    Engine.Api.Store(serialized, key, StoragePermissions.Authenticated, async);
                 }
             }
             catch (Exception err)
@@ -717,7 +717,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (!_log.Any()) return "";
 
                 //Get the max length allowed for the algorithm:
-                var allowance = Engine.Controls.ReadLogAllowance(job.UserId, job.UserToken);
+                var allowance = Engine.Api.ReadLogAllowance(job.UserId, job.UserToken);
                 var logBacktestMax = allowance[0];
                 var logDailyMax = allowance[1];
                 var logRemaining = Math.Min(logBacktestMax, allowance[2]); //Minimum of maxium backtest or remaining allowance.
@@ -762,9 +762,9 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //Save the log: Upload this file to S3:
-                Engine.Controls.Store(serialized, key, StoragePermissions.Public);
+                Engine.Api.Store(serialized, key, StoragePermissions.Public);
                 //Record the data usage:
-                Engine.Controls.UpdateDailyLogUsed(job.UserId, job.AlgorithmId, remoteURL, logLength, job.UserToken, hitLimit);
+                Engine.Api.UpdateDailyLogUsed(job.UserId, job.AlgorithmId, remoteURL, logLength, job.UserToken, hitLimit);
             }
             catch (Exception err)
             {

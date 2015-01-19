@@ -51,8 +51,8 @@ namespace QuantConnect.Configuration
             {"local", "true"},
             {"livemode", "false"},
             {"messaging-handler", "QuantConnect.Messaging.Messaging"},
-            {"task-handler", "QuantConnect.Tasks.Tasks"},
-            {"controls-handler", "QuantConnect.Controls.Controls"}
+            {"queue-handler", "QuantConnect.Queues.Queues"},
+            {"api-handler", "QuantConnect.Api.Api"}
         };
 
         /******************************************************** 
@@ -97,6 +97,10 @@ namespace QuantConnect.Configuration
                 if (_settings != null && _settings.ContainsKey(key))
                 {
                     value = _settings[key];
+                }
+                else
+                {
+                    Log.Trace("Config.Get(): Configuration key not found. Key: " + key);
                 }
             }
             catch (Exception err)

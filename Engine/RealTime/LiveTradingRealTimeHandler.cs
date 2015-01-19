@@ -153,7 +153,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 AddEvent(new RealTimeEvent(TimeSpan.FromHours(3), () =>
                 {
                     Log.Trace("LiveTradingRealTimeHandler: Fired Update Market Status Event: 3.00am");
-                    _today[SecurityType.Equity] = Engine.Controls.MarketToday(SecurityType.Equity);
+                    _today[SecurityType.Equity] = Engine.Api.MarketToday(SecurityType.Equity);
                 }));
 
                 //MARKET CLOSE UPDATER REAL TIME EVENT:
@@ -172,7 +172,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                     if (security.IsQuantConnectData)
                     {
                         //If QC --> get the close time from API:
-                        if (!_today.ContainsKey(security.Type)) _today.Add(security.Type, Engine.Controls.MarketToday(security.Type));
+                        if (!_today.ContainsKey(security.Type)) _today.Add(security.Type, Engine.Api.MarketToday(security.Type));
 
                         if (_today[security.Type].Status == "open")
                         {

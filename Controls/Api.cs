@@ -19,7 +19,7 @@ using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
-namespace QuantConnect.Controls
+namespace QuantConnect.Api
 {
     /******************************************************** 
     * CLASS DEFINITIONS
@@ -27,7 +27,7 @@ namespace QuantConnect.Controls
     /// <summary>
     /// Cloud algorithm activity controls
     /// </summary>
-    public class Controls : IControls
+    public class Api : IApi
     {
         /******************************************************** 
         * CLASS VARIABLES
@@ -41,7 +41,7 @@ namespace QuantConnect.Controls
         * CLASS METHODS:
         *********************************************************/
         /// <summary>
-        /// Initialize the controls.
+        /// Initialize the API.
         /// </summary>
         public void Initialize()
         {

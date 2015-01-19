@@ -665,7 +665,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //For live trading we're making assumption its a long running task and safe to async save large files.
-                Engine.Controls.Store(serialized, key, StoragePermissions.Authenticated, true);
+                Engine.Api.Store(serialized, key, StoragePermissions.Authenticated, true);
             }
             catch (Exception err)
             {
@@ -713,7 +713,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //Upload Results Portion
-                Engine.Controls.Store(serialized, key, StoragePermissions.Authenticated, async);
+                Engine.Api.Store(serialized, key, StoragePermissions.Authenticated, async);
             }
             catch (Exception err)
             {

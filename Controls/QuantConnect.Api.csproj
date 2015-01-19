@@ -8,8 +8,8 @@
     <ProjectGuid>{C5D44209-49A0-4505-A870-043C5EF5FDDF}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>QuantConnect.Controls</RootNamespace>
-    <AssemblyName>QuantConnect.Controls</AssemblyName>
+    <RootNamespace>QuantConnect.Api</RootNamespace>
+    <AssemblyName>QuantConnect.Api</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -88,7 +88,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controls.cs" />
+    <Compile Include="Api.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

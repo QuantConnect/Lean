@@ -107,9 +107,9 @@ namespace QuantConnect.Lean.Engine
         public static IQueueHandler Queue;
 
         /// <summary>
-        /// Algorithm controls handler for setting the per user restrictions on algorithm behaviour where applicable.
+        /// Algorithm API handler for setting the per user restrictions on algorithm behaviour where applicable.
         /// </summary>
-        public static IControls Controls;
+        public static IApi Api;
 
 
         /******************************************************** 
@@ -187,14 +187,14 @@ namespace QuantConnect.Lean.Engine
                 // grab the right export based on configuration
                 Notify = container.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler"));
                 Queue = container.GetExportedValueByTypeName<IQueueHandler>(Config.Get("queue-handler"));
-                Controls = container.GetExportedValueByTypeName<IControls>(Config.Get("controls-handler")); 
+                Api = container.GetExportedValueByTypeName<IApi>(Config.Get("api-handler")); 
             } 
             catch (CompositionException compositionException)
             { Log.Error("Engine.Main(): Failed to load library: " + compositionException); 
             }
 
             //Setup packeting, queue and controls system: These don't do much locally.
-            Controls.Initialize();
+            Api.Initialize();
             Notify.Initialize();
             Queue.Initialize(_liveMode);
 
@@ -334,7 +334,7 @@ namespace QuantConnect.Lean.Engine
                             if (ResultHandler != null)
                             {
                                 ResultHandler.RuntimeError("Runtime Error: " + err.Message, err.StackTrace);
-                                Controls.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError);
+                                Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError);
                             }
                         }
 
@@ -455,7 +455,7 @@ namespace QuantConnect.Lean.Engine
                             try
                             {
                                 //Get the state from the central server:
-                                var state = Controls.GetAlgorithmStatus(AlgorithmManager.AlgorithmId);
+                                var state = Api.GetAlgorithmStatus(AlgorithmManager.AlgorithmId);
                                 AlgorithmManager.SetStatus(state);
 
                                 Log.Debug("StateCheck.Ping.Run(): Algorithm Status: " + state);
