@@ -534,13 +534,13 @@ namespace QuantConnect.Lean.Engine
             { 
                 //Don't fire based on system time but virtualized backtesting time.
                 case RealTimeEndpoint.Backtesting:
-                    Log.Trace("Engine.GetRealTimeHandler.GetRealTimeHandler(): Selected Backtesting RealTimeEvent Handler");
+                    Log.Trace("Engine.GetRealTimeHandler(): Selected Backtesting RealTimeEvent Handler");
                     rth = new BacktestingRealTimeHandler(algorithm, job);
                     break;
 
                 // Fire events based on real system clock time.
                 case RealTimeEndpoint.LiveTrading:
-                    Log.Trace("Engine.GetRealTimeHandler.GetRealTimeHandler(): Selected LiveTrading RealTimeEvent Handler");
+                    Log.Trace("Engine.GetRealTimeHandler(): Selected LiveTrading RealTimeEvent Handler");
                     rth = new LiveTradingRealTimeHandler(algorithm, feed, results, brokerage, job);
                     break;
             }
