@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -32,13 +33,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Engine.Queue.Subscribe(symbols);
         }
 
+        private DateTime _current = DateTime.Now;
+
         /// <summary>
         /// Gets the next ticks from the live trading feed
         /// </summary>
         /// <returns>The next ticks to be processed</returns>
         public override IEnumerable<Tick> GetNextTicks()
         {
-            return Engine.Queue.NextTicks();
+            var ticks = Engine.Queue.NextTicks().ToList();
+            var multiplied = Multiply(ticks, 10);
+            foreach (var tick in multiplied)
+            {
+                _current += TimeSpan.FromMilliseconds(100);
+                tick.Time = _current;
+                yield return tick;
+            }
+        }
+
+        private IEnumerable<T> Multiply<T>(List<T> enumerable, int count)
+        {
+            IEnumerable<T> result = enumerable;
+            for (int i = 1; i < count; i++)
+            {
+                result = result.Concat(enumerable);
+            }
+            return result;
         }
     }
 }
