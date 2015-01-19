@@ -605,7 +605,6 @@ namespace QuantConnect.Lean.Engine
                     break;
 
                 //Directly open for REST Requests:
-                case DataFeedEndpoint.Tradier:
                 case DataFeedEndpoint.LiveTrading:
                     reader = new SubscriptionStreamReader(source, _feedEndpoint);
                     break;
@@ -698,7 +697,7 @@ namespace QuantConnect.Lean.Engine
 
             switch (_feedEndpoint)
             { 
-                //BAcktesting S3 Endpoint:
+                //Backtesting S3 Endpoint:
                 case DataFeedEndpoint.Backtesting:
                 case DataFeedEndpoint.FileSystem:
 
@@ -715,7 +714,6 @@ namespace QuantConnect.Lean.Engine
                     break;
 
                 //Live Trading Endpoint: Fake, not actually used but need for consistency with backtesting system. Set to "" so will not use subscription reader.
-                case DataFeedEndpoint.Tradier:
                 case DataFeedEndpoint.LiveTrading:
                     source = "";
                     break;

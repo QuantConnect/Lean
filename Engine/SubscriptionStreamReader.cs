@@ -61,7 +61,6 @@ namespace QuantConnect.Lean.Engine
                         eos = _sr.EndOfStream;
                         break;
 
-                    case DataFeedEndpoint.Tradier:
                     case DataFeedEndpoint.LiveTrading:
                         eos = false;
                         break;
@@ -119,7 +118,6 @@ namespace QuantConnect.Lean.Engine
                     line = _sr.ReadLine();
                     break;
                 
-                case DataFeedEndpoint.Tradier:
                 case DataFeedEndpoint.LiveTrading:
                     var response = _client.Execute(_request);
                     line = response.Content;

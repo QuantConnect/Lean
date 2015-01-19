@@ -151,7 +151,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Endpoints:
                     liveJob.TransactionEndpoint = TransactionHandlerEndpoint.Tradier;
                     liveJob.ResultEndpoint = ResultHandlerEndpoint.LiveTrading;
-                    liveJob.DataEndpoint = DataFeedEndpoint.Tradier;
+                    liveJob.DataEndpoint = DataFeedEndpoint.LiveTrading;
                     liveJob.RealTimeEndpoint = RealTimeEndpoint.LiveTrading;
                     liveJob.SetupEndpoint = SetupHandlerEndpoint.Console;
 

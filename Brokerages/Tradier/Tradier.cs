@@ -137,7 +137,7 @@ namespace QuantConnect.Brokerages.Tradier
         private string _name = "Tradier";
         private DateTime _issuedAt = new DateTime();
         private string _scope = "";
-        private TimeSpan _lifeSpan = TimeSpan.FromSeconds(86399);
+        private TimeSpan _lifeSpan = TimeSpan.FromSeconds(86399); // 1 second less than a day
         private object _lockAccessCredentials = new Object();
 
         //Tradier Spec:

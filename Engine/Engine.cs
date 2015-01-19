@@ -511,14 +511,8 @@ namespace QuantConnect.Lean.Engine
 
                 //Live Trading Data Source:
                 case DataFeedEndpoint.LiveTrading:
-                    df = new LiveTradingDataFeed(algorithm, (LiveNodePacket)job);
+                    df = new PaperTradingDataFeed(algorithm, (LiveNodePacket)job);
                     Log.Trace("Engine.GetDataFeedHandler(): Selected LiveTrading Datafeed");
-                    break;
-
-                //Tradier Data Source:
-                case DataFeedEndpoint.Tradier:
-                    df = new TradierDataFeed(algorithm, brokerage, (LiveNodePacket)job);
-                    Log.Trace("Engine.GetDataFeedHandler(): Selected Tradier Datafeed");
                     break;
             }
             return df;

@@ -254,8 +254,6 @@ namespace QuantConnect.Data.Market
                     break;
                 case DataFeedEndpoint.LiveTrading:
                     break;
-                case DataFeedEndpoint.Tradier:
-                    break;
             }
 
             return _tick;

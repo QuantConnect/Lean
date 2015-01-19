@@ -28,6 +28,7 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -37,7 +38,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Live Data Feed Streamed From QC Source.
     /// </summary>
-    public class LiveTradingDataFeed : IDataFeed
+    public abstract class LiveTradingDataFeed : IDataFeed
     {
         /******************************************************** 
         * CLASS VARIABLES
@@ -45,14 +46,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private List<SubscriptionDataConfig> _subscriptions = new List<SubscriptionDataConfig>();
         private List<bool> _isQuantConnectData = new List<bool>();
         private SubscriptionDataReader[] _subscriptionManagers;
-        private int _subscriptionCount = 0;
         private ConcurrentQueue<List<BaseData>>[] _bridge;
         private bool _endOfBridges = false;
         private bool _isActive = true;
         private bool[] _endOfBridge = new bool[1];
         private DataFeedEndpoint _dataFeed = DataFeedEndpoint.LiveTrading;
         private IAlgorithm _algorithm;
-        private LiveNodePacket _job;
         private object _lock = new Object();
         private bool _exitTriggered = false;
         private List<string> _symbols = new List<string>();
@@ -126,35 +125,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             set { _isActive = value; }
         }
 
+        /// <summary>
+        /// The most advanced moment in time for which the data feed has completed loading data
+        /// </summary>
         public DateTime LoadedDataFrontier { get; private set; }
 
         /******************************************************** 
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
-        /// Tradier datafeed handler for getting free data from the tradier brokerage api.
+        /// Live trading datafeed handler provides a base implementation of a live trading datafeed. Derived types
+        /// need only implement the GetNextTicks() function to return unprocessed ticks from a data source.
+        /// This creates a new data feed with a DataFeedEndpoint of LiveTrading.
         /// </summary>
         /// <param name="algorithm">Algorithm requesting data</param>
-        /// <param name="job">Job packet requesting data</param>
-        public LiveTradingDataFeed(IAlgorithm algorithm, LiveNodePacket job)
+        protected LiveTradingDataFeed(IAlgorithm algorithm)
         {
             //Subscription Count:
             _subscriptions = algorithm.SubscriptionManager.Subscriptions;
-            _subscriptionCount = Subscriptions.Count;
 
             //Set Properties:
             _dataFeed = DataFeedEndpoint.LiveTrading;
             _isActive = true;
-            _bridge = new ConcurrentQueue<List<BaseData>>[_subscriptionCount];
-            _endOfBridge = new bool[_subscriptionCount];
-            _subscriptionManagers = new SubscriptionDataReader[_subscriptionCount];
+            _bridge = new ConcurrentQueue<List<BaseData>>[Subscriptions.Count];
+            _endOfBridge = new bool[Subscriptions.Count];
+            _subscriptionManagers = new SubscriptionDataReader[Subscriptions.Count];
 
             //Class Privates:
-            _job = job;
             _algorithm = algorithm;
 
             //Setup the arrays:
-            for (var i = 0; i < _subscriptionCount; i++)
+            for (var i = 0; i < Subscriptions.Count; i++)
             {
                 _endOfBridge[i] = false;
                 _bridge[i] = new ConcurrentQueue<List<BaseData>>();
@@ -168,7 +169,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 //Set up the source file for today:
                 _subscriptionManagers[i].RefreshSource(DateTime.Now.Date);
 
-                //Request the live data:
+                //Subscribe( ... )
             }
         }
 
@@ -178,14 +179,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="type"></param>
         /// <param name="symbol"></param>
-        private void Subscribe(SecurityType type, string symbol)
-        {
-            
-        }
+        //protected abstract void Subscribe(SecurityType type, string symbol);
 
 
         /// <summary>
-        /// Execute the primary Tradier thread for stock data.
+        /// Execute the primary thread for retrieving stock data.
         /// 1. Subscribe to the streams requested.
         /// 2. Build bars or tick data requested, primary loop increment smallest possible.
         /// </summary>
@@ -212,7 +210,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var onDay = ((now.Second == 0) && (now.Hour == 0));
 
                 // Determine if this subscription needs to be archived:
-                for (var i = 0; i < _subscriptionCount; i++)
+                for (var i = 0; i < Subscriptions.Count; i++)
                 {
                     //Do critical events every second regardless of the market/hybernate state:
                     if (onDay)
@@ -231,10 +229,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     { 
                         //This is a second resolution data source:
                         case Resolution.Second:
-                            //Enqueue Tradier data:
+                            //Enqueue our live data:
                             nextLoadedDataFrontier = now;
                             _streamStore[i].TriggerArchive(_subscriptions[i].FillDataForward, _isQuantConnectData[i]);
-                            Log.Debug("TradierDataFeed.Run(): Triggered Archive: " + _subscriptions[i].Symbol + "-Second... " + now.ToLongTimeString());
+                            Log.Debug("LiveTradingDataFeed.Run(): Triggered Archive: " + _subscriptions[i].Symbol + "-Second... " + now.ToLongTimeString());
                             break;
 
                         //This is a minute resolution data source:
@@ -259,7 +257,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 try
                 {
                     //Scan the Stream Store Queue's and if there are any shuffle them over to the bridge for synchronization:
-                    for (var i = 0; i < _subscriptionCount; i++)
+                    for (var i = 0; i < Subscriptions.Count; i++)
                     {
                         if (_streamStore[i].Queue.Count > 0)
                         { 
@@ -296,7 +294,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Stream thread handler uses the tradier object to build bars or ticks.
+        /// Stream thread handler uses the GetNextTicks() function to get current ticks from a data source and
+        /// then uses the stream store to compile them into trade bars.
         /// </summary>
         public void Stream()
         {
@@ -307,7 +306,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             
             //Initialize:
             Log.Trace("LiveTradingDataFeed.Stream(): Initializing subscription stream stores...");
-            for (var i = 0; i < _subscriptionCount; i++)
+            for (var i = 0; i < Subscriptions.Count; i++)
             {
                 var config = _subscriptions[i];
                 _streamStore.Add(i, new StreamStore(config));
@@ -326,18 +325,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 //Awake:
                 Log.Trace("LiveTradingDataFeed.Stream(): Market Open, Starting stream for " + string.Join(",", _symbols));
 
-                //Micro-thread for tradier stream running:
-                var liveThreadTask = new Task(() => {
+                //Micro-thread for polling for new data from data source:
+                var liveThreadTask = new Task(()=> {
 
                     //Blocking ForEach - Should stay within this loop as long as there is a data-connection
                     while (true)
                     {
-                        var ticks = Engine.Queue.NextTicks();
+                        var ticks = GetNextTicks();
 
                         foreach (var tick in ticks)
                         {
                             //Get the stream store with this symbol:
-                            for (var i = 0; i < _subscriptionCount; i++)
+                            for (var i = 0; i < Subscriptions.Count; i++)
                             {
                                 if (_subscriptions[i].Symbol == tick.Symbol)
                                 {
@@ -357,7 +356,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var customFeedsTask = new Task(() => {
                     while(true)
                     {
-                        for (var i = 0; i < _subscriptionCount; i++)
+                        for (var i = 0; i < Subscriptions.Count; i++)
                         {
                             if (!_isQuantConnectData[i])
                             {
@@ -399,9 +398,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Log.Trace("LiveTradingDataFeed.Stream(): EXITING STREAM");
         }
 
+        /// <summary>
+        /// Returns the next ticks from the data source. The data source itself is defined in the derived class's
+        /// implementation of this function. For example, if obtaining data from a brokerage, say IB, then the derived
+        /// implementation would ask the IB API for the next ticks
+        /// </summary>
+        /// <returns>The next ticks to be aggregated and sent to algoithm</returns>
+        public abstract IEnumerable<Tick> GetNextTicks();
 
         /// <summary>
-        /// Trigger the tradier datafeed thread to abort and stop looping.
+        /// Trigger the live trading datafeed thread to abort and stop looping.
         /// </summary>
         public void Exit()
         {
@@ -413,7 +419,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Conditionally hybernate if the market has closed to avoid constantly pinging the Tradier API or trying to login while the market is closed.
+        /// Conditionally hibernate if the market has closed to avoid constantly pinging the API or trying to login while the market is closed.
         /// </summary>
         public bool Hibernate()
         {
@@ -448,7 +454,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Update the algorithm market open and close hours on today's values from the Tradier API.
+        /// Update the algorithm market open and close hours on today's values using controls
         /// </summary>
         public void UpdateSecurityMarketHours()
         {
@@ -499,6 +505,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return open;
         }
 
-    } // End Tradier Data Feed Class:
+    } // End Live Trading Data Feed Class:
 
 } // End Namespace

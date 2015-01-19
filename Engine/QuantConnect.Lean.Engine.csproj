@@ -111,6 +111,7 @@
   <ItemGroup>
     <Compile Include="AlgorithmManager.cs" />
     <Compile Include="DataFeeds\LiveTradingDataFeed.cs" />
+    <Compile Include="DataFeeds\PaperTradingDataFeed.cs" />
     <Compile Include="DataStream.cs" />
     <Compile Include="RealTime\RealTimeEvent.cs" />
     <Compile Include="RealTime\LiveTradingRealTimeHandler.cs" />
@@ -136,7 +137,6 @@
     <Compile Include="Results\IResultHandler.cs" />
     <Compile Include="TransactionHandlers\ITransactionHandler.cs" />
     <Compile Include="DataFeeds\IDataFeed.cs" />
-    <Compile Include="DataFeeds\TradierDataFeed.cs" />
     <Compile Include="Results\LiveTradingResultHandler.cs" />
     <Compile Include="TransactionHandlers\TradierTransactionHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
