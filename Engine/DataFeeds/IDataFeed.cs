@@ -18,6 +18,7 @@
 * USING NAMESPACES
 **********************************************************/
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using QuantConnect.Data;
@@ -83,6 +84,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             get;
         }
 
+        /// <summary>
+        /// The most advanced moment in time for which the data feed has completed loading data
+        /// </summary>
+        DateTime LoadedDataFrontier { get; }
 
         /******************************************************** 
         * INTERFACE METHODS

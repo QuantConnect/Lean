@@ -77,8 +77,16 @@ namespace QuantConnect.Lean.Engine
 
                 //Make sure all bridges have data to to peek sync properly.
                 var now = Stopwatch.StartNew();
-                var delay = (Engine.LiveMode) ? 100 : 30000;
+                var delay = (Engine.LiveMode) ? 0 : 30000;
                 while (!AllBridgesHaveData(feed) && now.ElapsedMilliseconds < delay) 
+                {
+                    Thread.Sleep(1);
+                }
+
+                //we want to verify that our data stream is never ahead of our data feed.
+                //this acts as a virtual lock around the bridge so we can wait for the feed
+                //to be ahead of us
+                while (frontier > feed.LoadedDataFrontier)
                 {
                     Thread.Sleep(1);
                 }
@@ -147,7 +155,9 @@ namespace QuantConnect.Lean.Engine
 
 
         /// <summary>
-        /// Check if all the bridges has data before starting the analysis
+        /// Check if all the bridges have data or are dead before starting the analysis
+        /// 
+        /// This determines whether or not the data stream can pull data from the data feed.
         /// </summary>
         /// <param name="feed">Feed Interface with concurrent connection between producer and consumer</param>
         /// <returns>Boolean true more data to download</returns>

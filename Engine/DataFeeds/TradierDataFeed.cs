@@ -137,6 +137,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             set { _tradier = value; }
         }
 
+        public DateTime LoadedDataFrontier { get; private set; }
+
         /******************************************************** 
         * CLASS CONSTRUCTOR
         *********************************************************/
@@ -265,6 +267,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             }
                         }
                     }
+
+                    LoadedDataFrontier = DateTime.Now;
                 }
                 catch (Exception err)
                 {

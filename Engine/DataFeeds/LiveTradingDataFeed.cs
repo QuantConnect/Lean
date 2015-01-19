@@ -126,6 +126,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             set { _isActive = value; }
         }
 
+        public DateTime LoadedDataFrontier { get; private set; }
+
         /******************************************************** 
         * CLASS CONSTRUCTOR
         *********************************************************/
@@ -199,12 +201,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             streamThread.Start();
             Thread.Sleep(5); // Wait a little for the other thread to init.
 
+            var nextLoadedDataFrontier = new DateTime();
+
             // Setup Real Time Event Trigger:
             var realtime = new RealTimeSynchronizedTimer(TimeSpan.FromSeconds(1), () =>
             {
                 //This is a minute start / 0-seconds.
-                var onMinute = (DateTime.Now.Second == 0);
-                var onDay = ((DateTime.Now.Second == 0) && (DateTime.Now.Hour == 0));
+                var now = DateTime.Now;
+                var onMinute = (now.Second == 0);
+                var onDay = ((now.Second == 0) && (now.Hour == 0));
 
                 // Determine if this subscription needs to be archived:
                 for (var i = 0; i < _subscriptionCount; i++)
@@ -213,7 +218,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (onDay)
                     {
                         //Every day refresh the source file for the custom user data:
-                        _subscriptionManagers[i].RefreshSource(DateTime.Now.Date);
+                        _subscriptionManagers[i].RefreshSource(now.Date);
 
                         //Update the securities market open/close.
                         UpdateSecurityMarketHours();
@@ -227,16 +232,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         //This is a second resolution data source:
                         case Resolution.Second:
                             //Enqueue Tradier data:
+                            nextLoadedDataFrontier = now;
                             _streamStore[i].TriggerArchive(_subscriptions[i].FillDataForward, _isQuantConnectData[i]);
-                            Log.Debug("TradierDataFeed.Run(): Triggered Archive: " + _subscriptions[i].Symbol + "-Second... " + DateTime.Now.ToLongTimeString());
+                            Log.Debug("TradierDataFeed.Run(): Triggered Archive: " + _subscriptions[i].Symbol + "-Second... " + now.ToLongTimeString());
                             break;
 
                         //This is a minute resolution data source:
                         case Resolution.Minute:
                             if (onMinute)
                             {
+                                nextLoadedDataFrontier = now;
                                 _streamStore[i].TriggerArchive(_subscriptions[i].FillDataForward, _isQuantConnectData[i]);
-                                Log.Debug("LiveTradingDataFeed.Run(): Triggered Archive: " + _subscriptions[i].Symbol + "-Minute... " + DateTime.Now.ToLongTimeString());
+                                Log.Debug("LiveTradingDataFeed.Run(): Triggered Archive: " + _subscriptions[i].Symbol + "-Minute... " + now.ToLongTimeString());
                             }
                             break;
                     }
@@ -264,6 +271,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             }
                         }
                     }
+
+                    // for live data
+                    LoadedDataFrontier = nextLoadedDataFrontier;
                 }
                 catch (Exception err)
                 {

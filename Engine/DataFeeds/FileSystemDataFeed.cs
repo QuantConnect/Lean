@@ -74,6 +74,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Flag indicating the hander thread is completely finished and ready to dispose.
         public bool IsActive { get; private set; }
 
+        public DateTime LoadedDataFrontier { get; private set; }
+
         /// Signifying no more data
         public bool EndOfBridges {
             get {
@@ -215,6 +217,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Initialize Parameters:
             long earlyBirdTicks = 0;
             var subscriptions = SubscriptionReaderManagers.Length;
+            // this is really the next frontier in the future
             var frontier = new DateTime();
             var tradeBarIncrements = TimeSpan.FromDays(1);
             var increment = TimeSpan.FromDays(1);
@@ -228,7 +231,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             increment = CalculateIncrement(includeTick: true);               //Include ticks for small increment for frontier calcs.
 
             //Loop over each date in the job
-            foreach (var date in Time.EachTradeableDay(_algorithm.Securities, _job.PeriodStart, _job.PeriodFinish)) 
+            foreach (var date in Time.EachTradeableDay(_algorithm.Securities, _job.PeriodStart, _job.PeriodFinish))
             {
                 //Update the source-URL from the BaseData, reset the frontier to today. Update the source URL once per day.
                 frontier = date.Add(increment); //Frontier is in the future and looks back to all the data produced so far.
@@ -266,6 +269,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (_exitTriggered) break;
 
+                // for each smallest resolution
                 while ((frontier.Date == date.Date || frontier == date.Date.AddDays(1)) && !_exitTriggered)
                 {
                     var cache = new List<BaseData>[subscriptions];
@@ -322,20 +326,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
 
-                        //Now lock the bridge, add all the lists to the bridge, release the bridge:
-                        lock (Bridge)
+                        //Add all the lists to the bridge, release the bridge
+                        //we push all the data up to this frontier into the bridge at once
+                        for (var i = 0; i < subscriptions; i++)
                         {
-                            for (var i = 0; i < subscriptions; i++)
+                            if (cache[i] != null && cache[i].Count > 0)
                             {
-                                if (cache[i] != null && cache[i].Count > 0)
-                                {
-                                    FillForwardFrontiers[i] = cache[i][0].Time;
-                                    Bridge[i].Enqueue(cache[i]);
-                                }
-                                ProcessFillForward(SubscriptionReaderManagers[i], i, tradeBarIncrements);
+                                FillForwardFrontiers[i] = cache[i][0].Time;
+                                Bridge[i].Enqueue(cache[i]);
                             }
+                            ProcessFillForward(SubscriptionReaderManagers[i], i, tradeBarIncrements);
                         }
-                            
+
+                        //This will let consumers know we have loaded data up to this date
+                        //So that the data stream doesn't pull off data from the same time period in different events
+                        LoadedDataFrontier = frontier;
+
                         if (earlyBirdTicks > 0 && earlyBirdTicks > frontier.Ticks) {
                             //Jump increment to the nearest second, in the future: Round down, add increment
                             frontier = (new DateTime(earlyBirdTicks)).RoundDown(increment) + increment;
