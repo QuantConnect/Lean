@@ -138,7 +138,7 @@ namespace QuantConnect.Queues
         /// <summary>
         /// Desktop/Local doesn't support live data from this handler
         /// </summary>
-        public void Unubscribe(IDictionary<SecurityType, List<string>> symbols)
+        public void Unsubscribe(IDictionary<SecurityType, List<string>> symbols)
         {
             throw new NotImplementedException("QuantConnect.Queues.Queue has not implemented live data.");
         }

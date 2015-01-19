@@ -63,6 +63,6 @@ namespace QuantConnect.Interfaces
         /// Removes the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        void Unubscribe(IDictionary<SecurityType, List<string>> symbols);
+        void Unsubscribe(IDictionary<SecurityType, List<string>> symbols);
     }
 }
