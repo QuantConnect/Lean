@@ -43,7 +43,7 @@ namespace QuantConnect.Queues
         {
             get
             {
-                return Config.GetBool("backtesting-mode");
+                return !Config.GetBool("live-mode");
             }
         }
 
@@ -83,10 +83,10 @@ namespace QuantConnect.Queues
             {
                 var liveJob = new LiveNodePacket
                 {
-                    ResultEndpoint = ResultHandlerEndpoint.Console,
-                    SetupEndpoint = SetupHandlerEndpoint.Tradier,
-                    DataEndpoint = DataFeedEndpoint.Tradier,
-                    TransactionEndpoint = TransactionHandlerEndpoint.Tradier,
+                    ResultEndpoint = ResultHandlerEndpoint.LiveTrading,
+                    SetupEndpoint = SetupHandlerEndpoint.PaperTrading,
+                    DataEndpoint = DataFeedEndpoint.LiveTrading,
+                    TransactionEndpoint = TransactionHandlerEndpoint.Backtesting,
                     RealTimeEndpoint = RealTimeEndpoint.LiveTrading,
                     Type = PacketType.LiveNode,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation)
