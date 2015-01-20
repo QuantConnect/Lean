@@ -171,7 +171,9 @@ namespace QuantConnect
         /// Loading files off the local system
         FileSystem,
         /// Getting datafeed from a QC-Live-Cloud
-        LiveTrading
+        LiveTrading,
+        /// Test live data feed
+        Test
     }
 
     /// <summary>

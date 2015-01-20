@@ -495,7 +495,7 @@ namespace QuantConnect.Lean.Engine
         {
             var df = default(IDataFeed);
             switch (job.DataEndpoint) 
-            { 
+            {
                 //default:
                 ////Backtesting:
                 case DataFeedEndpoint.Backtesting:
@@ -513,6 +513,12 @@ namespace QuantConnect.Lean.Engine
                 case DataFeedEndpoint.LiveTrading:
                     df = new PaperTradingDataFeed(algorithm, (LiveNodePacket)job);
                     Log.Trace("Engine.GetDataFeedHandler(): Selected LiveTrading Datafeed");
+                    break;
+
+                case DataFeedEndpoint.Test:
+                    int fastForward = 100;
+                    df = new TestLiveTradingDataFeed(algorithm, (LiveNodePacket) job, fastForward: fastForward);
+                    Log.Trace("Engine.GetDataFeedHandler(): Selected Test Datafeed at " + fastForward + "x");
                     break;
             }
             return df;
