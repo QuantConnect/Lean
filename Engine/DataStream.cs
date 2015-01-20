@@ -75,21 +75,8 @@ namespace QuantConnect.Lean.Engine
                 earlyBirdTicks = 0; 
                 newData = new SortedDictionary<DateTime, Dictionary<int, List<BaseData>>>();
 
-                //Make sure all bridges have data to to peek sync properly.
-                var now = Stopwatch.StartNew();
-                var delay = (Engine.LiveMode) ? 0 : 30000;
-                while (!AllBridgesHaveData(feed) && now.ElapsedMilliseconds < delay) 
-                {
-                    Thread.Sleep(1);
-                }
-
-                //we want to verify that our data stream is never ahead of our data feed.
-                //this acts as a virtual lock around the bridge so we can wait for the feed
-                //to be ahead of us
-                while (frontier > feed.LoadedDataFrontier)
-                {
-                    Thread.Sleep(1);
-                }
+                // spin wait until the feed catches up to our frontier
+                WaitForDataOrEndOfBridges(feed, frontier);
 
                 for (var i = 0; i < _subscriptions; i++)
                 {
@@ -151,6 +138,34 @@ namespace QuantConnect.Lean.Engine
                 }
             }
             Log.Trace("DataStream.GetData(): All Streams Completed.");
+        }
+
+        /// <summary>
+        /// Waits until the data feed is ready for the data stream to pull data from it.
+        /// </summary>
+        /// <param name="feed">The IDataFeed instance populating the bridges</param>
+        /// <param name="dataStreamFrontier">The frontier of the data stream</param>
+        private static void WaitForDataOrEndOfBridges(IDataFeed feed, DateTime dataStreamFrontier)
+        {
+            //Make sure all bridges have data to to peek sync properly.
+            var now = Stopwatch.StartNew();
+
+            // timeout to prevent infinite looping here -- 2sec for live and 30sec for non-live
+            var loopTimeout = (Engine.LiveMode) ? 2000 : 30000;
+
+            while (!AllBridgesHaveData(feed) && now.ElapsedMilliseconds < loopTimeout)
+            {
+                Thread.Sleep(1);
+            }
+
+            //we want to verify that our data stream is never ahead of our data feed.
+            //this acts as a virtual lock around the bridge so we can wait for the feed
+            //to be ahead of us
+            // if we're out of data then the feed will never update
+            while (dataStreamFrontier > feed.LoadedDataFrontier && !feed.EndOfBridges && now.ElapsedMilliseconds < loopTimeout)
+            {
+                Thread.Sleep(1);
+            }
         }
 
 
