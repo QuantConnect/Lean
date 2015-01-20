@@ -514,9 +514,9 @@ namespace QuantConnect.Lean.Engine
                     break;
 
                 case DataFeedEndpoint.Test:
-                    int fastForward = 100;
-                    df = new TestLiveTradingDataFeed(algorithm, (LiveNodePacket) job, fastForward: fastForward);
-                    Log.Trace("Engine.GetDataFeedHandler(): Selected Test Datafeed at " + fastForward + "x");
+                    var feed = new TestLiveTradingDataFeed(algorithm, (LiveNodePacket)job);
+                    df = feed;
+                    Log.Trace("Engine.GetDataFeedHandler(): Selected Test Datafeed at " + feed.FastForward + "x");
                     break;
             }
             return df;
