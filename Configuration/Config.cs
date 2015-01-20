@@ -114,33 +114,52 @@ namespace QuantConnect.Configuration
         /// Get a boolean value configuration setting by a configuration key.
         /// </summary>
         /// <param name="key">String value of the configuration key.</param>
+        /// <param name="defaultValue">The default value to use if not found in configuration</param>
         /// <returns>Boolean value of the config setting.</returns>
-        public static bool GetBool(string key)
+        public static bool GetBool(string key, bool defaultValue = false)
         {
-            var value = Get(key);
-            return (value != "false");
+            return GetValue(key, defaultValue);
         }
 
         /// <summary>
         /// Get the int value of a config string.
         /// </summary>
         /// <param name="key">Search key from the config file</param>
+        /// <param name="defaultValue">The default value to use if not found in configuration</param>
         /// <returns>Int value of the config setting.</returns>
-        public static int GetInt(string key)
+        public static int GetInt(string key, int defaultValue = 0)
         {
-            var value = Get(key);
-            return Convert.ToInt32(value);
+            return GetValue(key, defaultValue);
         }
 
         /// <summary>
         /// Get the double value of a config string.
         /// </summary>
         /// <param name="key">Search key from the config file</param>
+        /// <param name="defaultValue">The default value to use if not found in configuration</param>
         /// <returns>Double value of the config setting.</returns>
-        public static double GetDouble(string key)
+        public static double GetDouble(string key, double defaultValue = 0.0)
+        {
+            return GetValue(key, defaultValue);
+        }
+
+        /// <summary>
+        /// Gets a value from configuration and converts it to the requested type, assigning a default if
+        /// the configuration is null or empty
+        /// </summary>
+        /// <typeparam name="T">The requested type</typeparam>
+        /// <param name="key">Search key from the config file</param>
+        /// <param name="defaultValue">The default value to use if not found in configuration</param>
+        /// <returns>Converted value of the config setting.</returns>
+        public static T GetValue<T>(string key, T defaultValue = default(T))
         {
             var value = Get(key);
-            return Convert.ToDouble(value);
+            if (string.IsNullOrEmpty(value))
+            {
+                Log.Trace("Config.GetValue(): " + key + " - Using default value: " + defaultValue);
+                return defaultValue;
+            }
+            return (T)Convert.ChangeType(value, typeof (T));
         }
     }
 }
