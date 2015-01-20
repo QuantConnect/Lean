@@ -52,8 +52,8 @@ namespace QuantConnect.Lean.Engine.Results
         private Dictionary<string, string> _runtimeStatistics = new Dictionary<string, string>();
 
         //Sampling Periods:
-        private TimeSpan _resamplePeriod = TimeSpan.FromMinutes(1);
-        private TimeSpan _notificationPeriod = TimeSpan.FromSeconds(2);
+        private readonly TimeSpan _resamplePeriod;
+        private readonly TimeSpan _notificationPeriod;
 
         //Update loop:
         private DateTime _nextUpdate = new DateTime();
