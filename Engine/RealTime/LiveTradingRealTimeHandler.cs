@@ -156,14 +156,6 @@ namespace QuantConnect.Lean.Engine.RealTime
                     _today[SecurityType.Equity] = Engine.Api.MarketToday(SecurityType.Equity);
                 }));
 
-                //MARKET CLOSE UPDATER REAL TIME EVENT:
-                // Every day at 3.30am and 9.30pm, update the access token for tradier: 
-                AddEvent(new RealTimeEvent(TimeSpan.FromHours(3.5), () =>
-                {
-                    Log.Trace("LiveTradingRealTimeHandler: Fired Update Access Token Event: 3.30am");
-                    Engine.Brokerage.RefreshSession();
-                }));
-
                 // END OF DAY REAL TIME EVENT:
                 //Load Today variables based on security type:
                 foreach (var security in _algorithm.Securities.Values)
