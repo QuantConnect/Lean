@@ -151,7 +151,9 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Endpoints:
                     liveJob.TransactionEndpoint = TransactionHandlerEndpoint.Backtesting;
                     liveJob.ResultEndpoint = ResultHandlerEndpoint.LiveTrading;
-                    liveJob.DataEndpoint = Log.DebuggingEnabled ? DataFeedEndpoint.Test : DataFeedEndpoint.LiveTrading;
+
+                    bool testLiveTradingEnabled = Config.GetBool("test-live-trading-enabled", defaultValue: false);
+                    liveJob.DataEndpoint = testLiveTradingEnabled ? DataFeedEndpoint.Test : DataFeedEndpoint.LiveTrading;
                     liveJob.RealTimeEndpoint = RealTimeEndpoint.LiveTrading;
                     liveJob.SetupEndpoint = SetupHandlerEndpoint.Console;
 
