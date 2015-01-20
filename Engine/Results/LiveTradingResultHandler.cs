@@ -197,7 +197,7 @@ namespace QuantConnect.Lean.Engine.Results
                                 //New Debug Message:
                                 case PacketType.Debug:
                                     var debug = packet as DebugPacket;
-                                    Log.Trace("LiveTradingResultHandlerRun(): Debug Packet: " + debug.Message);
+                                    Log.Debug("LiveTradingResultHandlerRun(): Debug Packet: " + debug.Message);
                                     Engine.Notify.DebugMessage(debug.Message, debug.ProjectId, _deployId, _compileId);
                                     break;
 
@@ -228,7 +228,8 @@ namespace QuantConnect.Lean.Engine.Results
                                     break;
 
                                 default:
-                                    Log.Error("LiveTradingResultHandler.Run(): Case Unhandled: " + packet.Type.ToString());
+                                    Engine.Notify.Send(packet);
+                                    Log.Debug("LiveTradingResultHandler.Run(): Case Unhandled: " + packet.Type);
                                     break;
                             }
                         }

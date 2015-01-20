@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -12,12 +14,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class TestLiveTradingDataFeed : PaperTradingDataFeed
     {
+        private DateTime _current;
         private readonly DateTime _start;
         private readonly TimeSpan _tickResolution;
-        private readonly int _fastForward = Config.GetInt("test-live-data-feed-fast-forward", 10);
-        private readonly string _symbol = Config.Get("test-live-data-feed-symbol");
-        private readonly TimeSpan _period = TimeSpan.FromHours(Config.GetDouble("test-live-data-feed-period-hours", 24));
-
+        private readonly int _fastForward = 5;
+        private readonly TimeSpan _period = TimeSpan.FromHours(0.5);
+        private readonly int _delay = 1;
+        
         /// <summary>
         /// Defines the number of ticks produced per
         /// </summary>
@@ -26,43 +29,50 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             get { return _fastForward;}
         }
 
-        private DateTime _current = DateTime.Now;
-
         /// <summary>
         /// Creates a test live trading data feed with the specified fast forward factor
         /// </summary>
         /// <param name="algorithm">The algorithm under analysis</param>
         /// <param name="job">The job for the algorithm</param>
-        /// <param name="tickResolution">The resolution of the tick data</param>
-        public TestLiveTradingDataFeed(IAlgorithm algorithm, LiveNodePacket job, TimeSpan tickResolution = default(TimeSpan)) 
+        public TestLiveTradingDataFeed(IAlgorithm algorithm, LiveNodePacket job) 
             : base(algorithm, job)
         {
-            _start = _current;
-            _tickResolution = tickResolution != default(TimeSpan) ? tickResolution : TimeSpan.FromSeconds(1);
-            if (string.IsNullOrWhiteSpace(_symbol))
-            {
-                throw new Exception("Required configuration key: 'test-live-data-feed-symbol' to set generated ticks");
-            }
+            _start = DateTime.Now;
+            _current = DateTime.Now;
+            _tickResolution = TimeSpan.FromSeconds(1);
         }
 
         public override IEnumerable<Tick> GetNextTicks()
         {
-            for (int i = 0; i < _fastForward; i++)
+            var ticks = new List<Tick>();
+            var sw = Stopwatch.StartNew();
+            for (var i = 0; i < _fastForward; i++)
             {
-                yield return new Tick
+                _current += _tickResolution;
+                var price = ComputeNextSineValue(_start, _current, _period);
+                ticks.Add(new Tick
                 {
-                    Symbol = _symbol,
-                    Time = (_current += _tickResolution),
+                    Symbol = "EURUSD",
+                    Time = _current,
                     Quantity = 10,
-                    Value = ComputeNextSineValue(_start, _current, _period)
-                };
+                    Value = price,
+                    BidPrice = price * 0.99m,
+                    AskPrice = price * 1.01m,
+                    SaleCondition = "",
+                    DataType = MarketDataType.Tick,
+                    Exchange = "ABC",
+                    Suspicious = false
+                });
             }
+            while (sw.ElapsedMilliseconds < _delay) Thread.Sleep(1);
+            return ticks;
         }
 
-        private static decimal ComputeNextSineValue(DateTime start, DateTime current, TimeSpan period)
+        private decimal ComputeNextSineValue(DateTime start, DateTime current, TimeSpan period)
         {
-            double percentage = (current.Ticks - start.Ticks)/(double) period.Ticks;
-            return (decimal)Math.Sin(2*Math.PI*percentage);
+            var percentage = ((current - start).TotalHours / period.TotalHours);
+
+            return ( (decimal) Math.Sin(percentage) * 100 ) + 1000;
         }
     }
 }
