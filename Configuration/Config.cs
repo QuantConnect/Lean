@@ -131,5 +131,16 @@ namespace QuantConnect.Configuration
             var value = Get(key);
             return Convert.ToInt32(value);
         }
+
+        /// <summary>
+        /// Get the double value of a config string.
+        /// </summary>
+        /// <param name="key">Search key from the config file</param>
+        /// <returns>Double value of the config setting.</returns>
+        public static double GetDouble(string key)
+        {
+            var value = Get(key);
+            return Convert.ToDouble(value);
+        }
     }
 }
