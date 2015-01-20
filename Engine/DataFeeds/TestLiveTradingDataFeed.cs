@@ -15,6 +15,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly DateTime _start;
         private readonly TimeSpan _tickResolution;
         private readonly int _fastForward = Config.GetInt("test-live-data-feed-fast-forward", 10);
+        private readonly string _symbol = Config.Get("test-live-data-feed-symbol");
         private readonly TimeSpan _period = TimeSpan.FromHours(Config.GetDouble("test-live-data-feed-period-hours", 24));
 
         /// <summary>
@@ -37,7 +38,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             : base(algorithm, job)
         {
             _start = _current;
-            _tickResolution = tickResolution != default(TimeSpan) ? tickResolution : TimeSpan.FromMilliseconds(100);
+            _tickResolution = tickResolution != default(TimeSpan) ? tickResolution : TimeSpan.FromSeconds(1);
+            if (string.IsNullOrWhiteSpace(_symbol))
+            {
+                throw new Exception("Required configuration key: 'test-live-data-feed-symbol' to set generated ticks");
+            }
         }
 
         public override IEnumerable<Tick> GetNextTicks()
@@ -46,6 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 yield return new Tick
                 {
+                    Symbol = _symbol,
                     Time = (_current += _tickResolution),
                     Quantity = 10,
                     Value = ComputeNextSineValue(_start, _current, _period)

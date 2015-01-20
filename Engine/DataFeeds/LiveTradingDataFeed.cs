@@ -348,7 +348,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 if (_subscriptions[i].Symbol == tick.Symbol)
                                 {
                                     _streamStore[i].Update(tick);
-                                    Log.Trace("LiveDataFeed.Stream(): New Packet >> " + tick.Symbol + " " + tick.LastPrice.ToString("C"));
+                                    Log.Debug("LiveDataFeed.Stream(): New Packet >> " + tick.Symbol + " " + tick.LastPrice.ToString("C"));
                                 }
                             }
                         }
