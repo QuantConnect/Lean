@@ -265,12 +265,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             if (_streamStore[i].Queue.TryDequeue(out data))
                             {
                                 Bridge[i].Enqueue(new List<BaseData> { data });
+
+                                if (Subscriptions.Count == 1)
+                                {
+                                    // we only care about the sync with multiple symbols
+                                    nextLoadedDataFrontier = data.Time;
+                                }
+                                
                                 Log.Debug("LiveTradingDataFeed.Run(): Enqueuing Data... s:" + data.Symbol + " >> v:" + data.Value);
                             }
                         }
                     }
 
-                    // for live data
+                    // for live data sync on bridge
                     LoadedDataFrontier = nextLoadedDataFrontier;
                 }
                 catch (Exception err)
@@ -340,7 +347,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 if (_subscriptions[i].Symbol == tick.Symbol)
                                 {
-                                    _streamStore[i].Update(tick.LastPrice, tick.Quantity, tick.BidPrice, tick.AskPrice);
+                                    _streamStore[i].Update(tick);
                                     Log.Trace("LiveDataFeed.Stream(): New Packet >> " + tick.Symbol + " " + tick.LastPrice.ToString("C"));
                                 }
                             }

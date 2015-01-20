@@ -48,7 +48,7 @@ namespace QuantConnect.Lean.Engine
         private BaseData _previousData = null;
         private Type _type;
         private SubscriptionDataConfig _config = new SubscriptionDataConfig();
-        private TimeSpan _increment = new TimeSpan(0, 0, 1);
+        private readonly TimeSpan _increment;
         private object _lock = new Object();
         private ConcurrentQueue<BaseData> _queue = new ConcurrentQueue<BaseData>();
 
@@ -74,17 +74,6 @@ namespace QuantConnect.Lean.Engine
             get
             {
                 return _increment;
-            }
-        }
-
-        /// <summary>
-        /// Start time of the bar.
-        /// </summary>
-        public DateTime StartTime
-        {
-            get
-            {
-                return DateTime.Now.RoundDown(_increment);
             }
         }
 
@@ -141,25 +130,22 @@ namespace QuantConnect.Lean.Engine
         public void Update(BaseData data)
         {
             //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
-            while (_data != null && _data.Time < StartTime)
+            while (_data != null && _data.Time < ComputeBarStartTime(data))
             { Thread.Sleep(1); } 
 
             _data = data;
         }
 
-
         /// <summary>
         /// Trade causing an update to the current tradebar object.
         /// </summary>
-        /// <param name="lastTrade">Trade value</param>
-        /// <param name="lastTradeSize">This Trade size</param>
-        /// <param name="askPrice">Asking price</param>
-        /// <param name="bidPrice">Current bid price</param>
+        /// <param name="tick"></param>
         /// <remarks>We build bars from the trade data, or if its a tick stream just pass the trade through as a tick.</remarks>
-        public void Update(decimal lastTrade, decimal lastTradeSize = 0, decimal bidPrice = 0, decimal askPrice = 0)
+        public void Update(Tick tick)
         {
             //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
-            while(_data != null && _data.Time < StartTime)
+            var barStartTime = ComputeBarStartTime(tick);
+            while (_data != null && _data.Time < barStartTime)
             { Thread.Sleep(1); } 
 
             lock (_lock)
@@ -169,18 +155,17 @@ namespace QuantConnect.Lean.Engine
                     case "TradeBar":
                         if (_data == null)
                         {
-                            _data = new TradeBar(StartTime, _config.Symbol, lastTrade, lastTrade, lastTrade, lastTrade, (long)lastTradeSize);
+                            _data = new TradeBar(barStartTime, _config.Symbol, tick.LastPrice, tick.LastPrice, tick.LastPrice, tick.LastPrice, tick.Quantity);
                         }
                         else
                         {
                             //Update the bar:
-                            _data.Update(lastTrade, lastTradeSize, bidPrice, askPrice);
+                            _data.Update(tick.LastPrice, tick.Quantity, tick.BidPrice, tick.AskPrice);
                         }
                         break;
 
                     //Each tick is a new data obj.
                     case "Tick":
-                        var tick = new Tick(StartTime, _config.Symbol, lastTrade, bidPrice, askPrice);
                         _queue.Enqueue(tick);
                         break;
                 }
@@ -207,7 +192,7 @@ namespace QuantConnect.Lean.Engine
                         Log.Debug("StreamStore.TriggerArchive(): No data to store, and not fill forward: " + Symbol);
                     } 
                     
-                    if (_data != null && _data.Time < StartTime)
+                    if (_data != null)// && _data.Time < StartTime)
                     {
                         //Create clone and reset original
                         Log.Debug("StreamStore.TriggerArchive(): Enqueued new data: S:" + _data.Symbol + " V:" + _data.Value);
@@ -215,13 +200,15 @@ namespace QuantConnect.Lean.Engine
                         _queue.Enqueue(_data.Clone());
                         _data = null;
                     }
-                    else if (fillForward && _data == null && _previousData != null || (!isQCData && _data == null && _previousData != null))
+                    else if (fillForward && _data == null && _previousData != null)// || (!isQCData && _data == null && _previousData != null))
                     {
                         //There was no other data in this timer period, and this is a fillforward subscription:
                         Log.Debug("StreamStore.TriggerArchive(): Fillforward, Previous Enqueued: S:" + _previousData.Symbol + " V:" + _previousData.Value);
                         var cloneForward = _previousData.Clone();
-                        cloneForward.Time = StartTime.Subtract(_config.Increment);
+                        cloneForward.Time = _previousData.Time.Add(_increment);// StartTime.Subtract(_config.Increment);
                         _queue.Enqueue(cloneForward);
+
+                        _previousData = cloneForward.Clone();
                     }
                 }
                 catch (Exception err)
@@ -229,6 +216,16 @@ namespace QuantConnect.Lean.Engine
                     Log.Error("StreamStore.TriggerAchive(fillforward): Failed to archive: " + err.Message);
                 }
             }
+        }
+
+        /// <summary>
+        /// Computes the start time of the bar this data belongs in
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        private DateTime ComputeBarStartTime(BaseData data)
+        {
+            return data.Time.RoundDown(_increment);
         }
 
     } // End of Class
