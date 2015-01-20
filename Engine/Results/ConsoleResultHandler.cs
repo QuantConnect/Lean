@@ -468,23 +468,57 @@ namespace QuantConnect.Lean.Engine.Results
         private class BacktestConsoleStatusHandler : IConsoleStatusHandler
         {
             private readonly BacktestNodePacket _job;
-            private readonly double _backtestSpanInDays;
+            private double? _backtestSpanInDays;
             public BacktestConsoleStatusHandler(BacktestNodePacket _job)
             {
                 this._job = _job;
-                _backtestSpanInDays = (_job.PeriodFinish - _job.PeriodStart).TotalDays;
             }
             public void LogAlgorithmStatus(DateTime current)
             {
-                var _daysProcessed = (current - _job.PeriodStart).TotalDays;
-                Log.Trace("Progress: " + (_daysProcessed * 100 / _backtestSpanInDays).ToString("F2") + "% Processed: " + _daysProcessed + " days of total: " + (int)_backtestSpanInDays);
+                if (!_backtestSpanInDays.HasValue)
+                {
+                    _backtestSpanInDays = (_job.PeriodFinish - _job.PeriodStart).TotalDays;
+                    if (_backtestSpanInDays == 0.0)
+                    {
+                        _backtestSpanInDays = null;
+                    }
+                }
+
+                // we need to wait until we've called initialize on the algorithm
+                // this is not ideal at all
+                if (_backtestSpanInDays.HasValue)
+                {
+                    var daysProcessed = (current - _job.PeriodStart).TotalDays;
+                    if (daysProcessed < 0) daysProcessed = 0;
+                    if (daysProcessed > _backtestSpanInDays.Value) daysProcessed = _backtestSpanInDays.Value;
+                    Log.Trace("Progress: " + (daysProcessed * 100 / _backtestSpanInDays.Value).ToString("F2") + "% Processed: " + daysProcessed + " days of total: " + (int)_backtestSpanInDays);
+                }
+                else
+                {
+                    Log.Trace("Initializing...");
+                }
             }
+
             public TimeSpan ComputeSampleEquityPeriod()
             {
                 const double samples = 4000;
                 const double minimumSamplePeriod = 4 * 60;
+                double resampleMinutes = minimumSamplePeriod;
+
                 var totalMinutes = (_job.PeriodFinish - _job.PeriodStart).TotalMinutes;
-                var resampleMinutes = (totalMinutes < (minimumSamplePeriod * samples)) ? minimumSamplePeriod : (totalMinutes / samples);
+
+                // before initialize is called this will be zero
+                if (totalMinutes > 0.0)
+                {
+                    resampleMinutes = (totalMinutes < (minimumSamplePeriod * samples)) ? minimumSamplePeriod : (totalMinutes / samples);
+                }
+
+                // set max value
+                if (resampleMinutes < minimumSamplePeriod)
+                {
+                    resampleMinutes = minimumSamplePeriod;
+                }
+                    
                 return TimeSpan.FromMinutes(resampleMinutes);
             }
         }
