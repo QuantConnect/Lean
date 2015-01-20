@@ -235,6 +235,12 @@ namespace QuantConnect
         /// <returns>Rounded timespan</returns>
         public static TimeSpan Round(this TimeSpan time, TimeSpan roundingInterval, MidpointRounding roundingType) 
         {
+            if (roundingInterval == TimeSpan.Zero)
+            {
+                // divide by zero exception
+                return time;
+            }
+
             return new TimeSpan(
                 Convert.ToInt64(System.Math.Round(
                     time.Ticks / (decimal)roundingInterval.Ticks,
@@ -264,6 +270,11 @@ namespace QuantConnect
         /// <returns>Rounded datetime</returns>
         public static DateTime RoundDown(this DateTime dateTime, TimeSpan interval)
         {
+            if (interval == TimeSpan.Zero)
+            {
+                // divide by zero exception
+                return dateTime;
+            }
             return dateTime.AddTicks(-(dateTime.Ticks % interval.Ticks));
         }
 
@@ -288,6 +299,11 @@ namespace QuantConnect
         /// <returns>Rounded datetime</returns>
         public static DateTime RoundUp(this DateTime time, TimeSpan d)
         {
+            if (d == TimeSpan.Zero)
+            {
+                // divide by zero exception
+                return time;
+            }
             return new DateTime(((time.Ticks + d.Ticks - 1) / d.Ticks) * d.Ticks);
         }
 
