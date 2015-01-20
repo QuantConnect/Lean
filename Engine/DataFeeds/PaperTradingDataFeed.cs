@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public override IEnumerable<Tick> GetNextTicks()
         {
             var ticks = Engine.Queue.NextTicks().ToList();
-            var multiplied = Multiply(ticks, 10);
+            var multiplied = Multiply(ticks, 100);
             foreach (var tick in multiplied)
             {
                 _current += TimeSpan.FromMilliseconds(100);
