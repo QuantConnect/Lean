@@ -18,7 +18,6 @@
 * USING NAMESPACES
 **********************************************************/
 using System;
-using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -207,7 +206,6 @@ namespace QuantConnect.Lean.Engine
                 try
                 {
                     //Clean up cache directories:
-                    CleanUpDirectories();
 
                     //Reset algo manager internal variables preparing for a new algorithm.
                     AlgorithmManager.ResetManager();
@@ -644,74 +642,6 @@ namespace QuantConnect.Lean.Engine
             }
             return sh;
         }
-
-        /// <summary>
-        /// Setup a private directory structure, clean the caches:
-        /// </summary>
-        private static void CleanUpDirectories() 
-        {
-            var baseCache = Directory.GetCurrentDirectory() + "/cache";
-            string[] resolutions = { "minute", "second", "tick" };
-            var days = 30;
-            var filesDeleted = 0;
-
-            try
-            {
-                if (!Directory.Exists(baseCache)) {
-                    //Create new directory structure fresh:
-                    Directory.CreateDirectory(baseCache + @"/algorithm");
-                    Directory.CreateDirectory(baseCache + @"/data");
-                }
-
-                while (OS.DriveSpaceRemaining < 3000 && !IsLocal && days-- >= 0)
-                {
-                    //Clean out the current structure each loop:
-                    var files = Directory.GetFiles(baseCache + @"/algorithm");
-                    foreach (var file in files)
-                    {
-                        File.Delete(file);
-                        filesDeleted++;
-                    }
-
-                    //Delete the user custom data:
-                    files = Directory.GetFiles(baseCache + @"/data");
-                    foreach (var file in files)
-                    {
-                        var info = new FileInfo(file);
-                        if (info.LastAccessTime < DateTime.Now.AddDays(days)) File.Delete(file);
-                    }
-
-                    //Go through all the resolutions and symbols, and 
-                    foreach (var resolution in resolutions)
-                    {
-                        var directoryLocation = baseCache + @"/data/equity/" + resolution + @"/";
-                        if (!Directory.Exists(directoryLocation)) Directory.CreateDirectory(directoryLocation);
-
-                        var directories = Directory.GetDirectories(directoryLocation);
-                        foreach (var directory in directories)
-                        {
-                            files = Directory.GetFiles(directory);
-                            foreach (var file in files)
-                            {
-                                var info = new FileInfo(file);
-                                if (info.LastAccessTime < DateTime.Now.AddDays(-days))
-                                {
-                                    File.Delete(file);
-                                    filesDeleted++;
-                                }
-                            }
-                        }
-                    }
-                }
-                Log.Trace("Engine.CleanUpDirectory(): Cleared " + filesDeleted + " files from cache. " + OS.DriveSpaceRemaining + " MB Disk Remaining");
-            }
-            catch (Exception err)
-            {
-                //Error cleaning up the directories 
-                Log.Error("Engine.CleanUpDirectories(): " + err.Message);
-            }
-        }
-
     } // End Algorithm Node Core Thread
     
 } // End Namespace
