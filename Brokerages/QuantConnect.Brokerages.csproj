@@ -56,7 +56,7 @@
     <Compile Include="Brokerage.cs" />
     <Compile Include="Paper\Paper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Tradier\Tradier.cs" />
+    <Compile Include="Tradier\TradierBrokerage.cs" />
     <Compile Include="Tradier\Balances.cs" />
     <Compile Include="Tradier\Common.cs" />
     <Compile Include="Tradier\Data.cs" />

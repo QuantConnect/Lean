@@ -175,6 +175,9 @@ namespace QuantConnect.Brokerages.Tradier
             //Swap into sandbox end points / modes.
             _rateLimitPeriod[TradierApiRequestType.Standard] = TimeSpan.FromMilliseconds(500);
             _rateLimitPeriod[TradierApiRequestType.Data] = TimeSpan.FromMilliseconds(500);
+
+            int millisecondsPerDay = (int)TimeSpan.FromDays(1).TotalMilliseconds;
+            var timer = new Timer(state => RefreshSession(), null, 0, millisecondsPerDay);
         }
 
         /******************************************************** 
