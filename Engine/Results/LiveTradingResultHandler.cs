@@ -276,7 +276,7 @@ namespace QuantConnect.Lean.Engine.Results
                     //Reset loop variables:
                     _lastOrderId = (from order in deltaOrders.Values select order.Id).DefaultIfEmpty().Max();
                     _lastUpdate = AlgorithmManager.Frontier;
-                    
+
                     //Limit length of orders we pass back dynamically to avoid flooding.
                     //if (deltaOrders.Count > 50) deltaOrders.Clear();
 
@@ -436,7 +436,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="types">List of security types</param>
         public void SecurityType(List<SecurityType> types)
         {
-            var packet = new SecurityTypesPacket {Types = types};
+            var packet = new SecurityTypesPacket { Types = types };
             Messages.Enqueue(packet);
         }
 
@@ -509,7 +509,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             if (_algorithm.Securities.ContainsKey(symbol) && value > 0)
             {
-                if (DateTime.Now.TimeOfDay > _algorithm.Securities[symbol].Exchange.MarketOpen 
+                if (DateTime.Now.TimeOfDay > _algorithm.Securities[symbol].Exchange.MarketOpen
                  && DateTime.Now.TimeOfDay < _algorithm.Securities[symbol].Exchange.MarketClose)
                 {
                     Sample("Stockplot: " + symbol, ChartType.Overlay, "Stockplot: " + symbol, SeriesType.Line, time, value);
@@ -688,8 +688,8 @@ namespace QuantConnect.Lean.Engine.Results
             // this will hold all the serialized data and the keys to be stored
             var data_keys = Enumerable.Range(0, 0).Select(x => new
             {
-                Key = (string) null,
-                Serialized = (string) null
+                Key = (string)null,
+                Serialized = (string)null
             }).ToList();
 
             try
@@ -711,10 +711,9 @@ namespace QuantConnect.Lean.Engine.Results
                         // truncate to just today, we don't need more than this for anyone
                         Truncate(live.Results, start, stop);
 
-                        var highResolutionCharts = live.Results.Charts;
+                        var highResolutionCharts = new Dictionary<string, Chart>(live.Results.Charts);
 
                         // 10 minute resolution data, save today
-
                         var tenminuteSampler = new SeriesSampler(TimeSpan.FromMinutes(10));
                         var tenminuteCharts = tenminuteSampler.SampleCharts(live.Results.Charts, start, stop);
 
@@ -737,13 +736,15 @@ namespace QuantConnect.Lean.Engine.Results
                             Key = CreateKey("minute"),
                             Serialized = JsonConvert.SerializeObject(live.Results)
                         });
-                        
+
                         // high resolution data, we only want to save an hour
 
                         live.Results.Charts = highResolutionCharts;
-                        start = DateTime.Now.RoundDown(TimeSpan.FromHours(1));
-                        stop = DateTime.Now.RoundUp(TimeSpan.FromHours(1));
+                        start = DateTime.UtcNow.RoundDown(TimeSpan.FromHours(1));
+                        stop = DateTime.UtcNow.RoundUp(TimeSpan.FromHours(1));
+
                         Truncate(live.Results, start, stop);
+
                         data_keys.Add(new
                         {
                             Key = CreateKey("second", "yyyy-MM-dd-hh"),
@@ -802,6 +803,8 @@ namespace QuantConnect.Lean.Engine.Results
             double unixDateStart = Time.DateTimeToUnixTimeStamp(start);
             double unixDateStop = Time.DateTimeToUnixTimeStamp(stop);
 
+            Log.Trace("LiveTradingResultHandler.Truncate(): Start: " + unixDateStart + " Stop: " + unixDateStop);
+
             var charts = new Dictionary<string, Chart>();
             foreach (var chart in result.Charts.Values)
             {
@@ -810,8 +813,8 @@ namespace QuantConnect.Lean.Engine.Results
                 foreach (var series in chart.Series.Values)
                 {
                     var newSeries = new Series(series.Name, series.SeriesType);
+                    newSeries.Values.AddRange(series.Values.Where(chartPoint => chartPoint.x >= unixDateStart && chartPoint.x <= unixDateStop));
                     newChart.AddSeries(newSeries);
-                    newSeries.Values.AddRange(series.Values.Where(x => x.x >= unixDateStart && x.x <= unixDateStop));
                 }
             }
             result.Charts = charts;
