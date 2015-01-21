@@ -324,7 +324,7 @@ namespace QuantConnect.Lean.Engine.Results
                     runtimeStatistics.Add("Unrealized:", _algorithm.Portfolio.TotalUnrealizedProfit.ToString("C"));
                     runtimeStatistics.Add("Fees:", _algorithm.Portfolio.TotalFees.ToString("C"));
                     runtimeStatistics.Add("Net Profit:", _algorithm.Portfolio.TotalProfit.ToString("C"));
-                    runtimeStatistics.Add("Return:", (_algorithm.Portfolio.TotalPortfolioValue / Engine.SetupHandler.StartingCapital).ToString("P"));
+                    runtimeStatistics.Add("Return:", (Math.Abs(Engine.SetupHandler.StartingCapital - _algorithm.Portfolio.TotalPortfolioValue) / Engine.SetupHandler.StartingCapital).ToString("P"));
                     runtimeStatistics.Add("Holdings:", _algorithm.Portfolio.TotalHoldingsValue.ToString("C"));
                     runtimeStatistics.Add("Volume:", _algorithm.Portfolio.TotalSaleVolume.ToString("C"));
 
