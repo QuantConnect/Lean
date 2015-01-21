@@ -23,8 +23,8 @@ namespace QuantConnect
         /// Samples the given series
         /// </summary>
         /// <param name="series">The series to be sampled</param>
-        /// <param name="start">The date to start sampling</param>
-        /// <param name="stop">The date to stop sampling</param>
+        /// <param name="start">The date to start sampling, if before start of data then start of data will be used</param>
+        /// <param name="stop">The date to stop sampling, if after stop of data, then stop of data will be used</param>
         /// <returns>The sampled series</returns>
         public Series Sample(Series series, DateTime start, DateTime stop)
         {
@@ -47,6 +47,12 @@ namespace QuantConnect
             ChartPoint previous = enumerator.Current;
             enumerator.MoveNext();
             ChartPoint current = enumerator.Current;
+
+            // make sure we don't start sampling before the data begins
+            if (nextSample < previous.x)
+            {
+                nextSample = previous.x;
+            }
 
             // make sure to advance into the requestd time frame before sampling
             while (current.x < nextSample && enumerator.MoveNext())

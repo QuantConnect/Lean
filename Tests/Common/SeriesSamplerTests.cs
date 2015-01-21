@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Common
         public void DownSamples()
         {
             var series = new Series {Name = "name"};
-            var reference = DateTime.Now.Date;
+            var reference = DateTime.UtcNow.Date;
             series.AddPoint(reference, 1m);
             series.AddPoint(reference.AddDays(1), 2m);
             series.AddPoint(reference.AddDays(2), 3m);
@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Common
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(1.5));
 
-            var sampled = sampler.Sample(series, reference, reference.AddDays(2));
+            var sampled = sampler.Sample(series, reference, reference.AddDays(3));
             Assert.AreEqual(3, sampled.Values.Count);
 
             Assert.AreEqual(series.Values[0].x, sampled.Values[0].x);
@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Common
         public void SubSamples()
         {
             var series = new Series {Name = "name"};
-            var reference = DateTime.Now.Date;
+            var reference = DateTime.UtcNow.Date;
             series.AddPoint(reference, 1m);
             series.AddPoint(reference.AddDays(1), 2m);
             series.AddPoint(reference.AddDays(2), 3m);
@@ -71,6 +71,32 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(series.Values[2].x, sampled.Values[1].x);
             Assert.AreEqual(series.Values[2].y, sampled.Values[1].y);
+        }
+
+        [Test]
+        public void DoesNotSampleBeforeStart()
+        {
+            var series = new Series { Name = "name" };
+            var reference = DateTime.UtcNow.Date;
+            series.AddPoint(reference, 1m);
+            series.AddPoint(reference.AddDays(1), 2m);
+            series.AddPoint(reference.AddDays(2), 3m);
+            series.AddPoint(reference.AddDays(3), 4m);
+            series.AddPoint(reference.AddDays(4), 5m);
+
+            var sampler = new SeriesSampler(TimeSpan.FromDays(1));
+
+            var sampled = sampler.Sample(series, reference.AddDays(-1), reference.AddDays(2));
+            Assert.AreEqual(3, sampled.Values.Count);
+
+            Assert.AreEqual(series.Values[0].x, sampled.Values[0].x);
+            Assert.AreEqual(series.Values[0].y, sampled.Values[0].y);
+
+            Assert.AreEqual(series.Values[1].x, sampled.Values[1].x);
+            Assert.AreEqual(series.Values[1].y, sampled.Values[1].y);
+
+            Assert.AreEqual(series.Values[2].x, sampled.Values[2].x);
+            Assert.AreEqual(series.Values[2].y, sampled.Values[2].y);
         }
     }
 }
