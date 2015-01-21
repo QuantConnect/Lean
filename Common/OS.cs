@@ -17,6 +17,7 @@
 * USING NAMESPACES
 **********************************************************/
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 
@@ -36,6 +37,7 @@ namespace QuantConnect
         *********************************************************/
         private static PerformanceCounter _ramTotalCounter;
         private static PerformanceCounter _ramAvailableBytes;
+        private static PerformanceCounter _cpuUsageCounter;
 
         /// <summary>
         /// Total Physical Ram on the Machine:
@@ -81,6 +83,21 @@ namespace QuantConnect
                     }
                 }
                 return _ramAvailableBytes;
+            }
+        }
+
+        /// <summary>
+        /// Total CPU usage as a percentage
+        /// </summary>
+        public static PerformanceCounter CpuUsage
+        {
+            get
+            {
+                if (_cpuUsageCounter == null)
+                {
+                    _cpuUsageCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+                }
+                return _cpuUsageCounter;
             }
         }
 
@@ -157,7 +174,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Get the RAM remaining on the machine:
+        /// Get the RAM used on the machine:
         /// </summary>
         public static long TotalPhysicalMemoryUsed
         {
@@ -167,5 +184,25 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Gets the RAM remaining on the machine
+        /// </summary>
+        private static long FreePhysicalMemory
+        {
+            get { return TotalPhysicalMemory - TotalPhysicalMemoryUsed; }
+        }
+
+        /// <summary>
+        /// Gets the statistics of the machine, including CPU% and RAM
+        /// </summary>
+        public static Dictionary<string, string> GetServerStatistics()
+        {
+            return new Dictionary<string, string>
+            {
+                {"Free Disk Space (MB)", DriveSpaceRemaining.ToString()},
+                {"Free RAM (MB)",        FreePhysicalMemory.ToString()},
+                {"CPU Usage",            CpuUsage.NextValue().ToString("0.0") + "%"}
+            };
+        }
     } // End OS Class
 } // End QC Namespace

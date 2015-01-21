@@ -52,6 +52,7 @@
     <Compile Include="Common\Data\IdentityDataConsolidatorTests.cs" />
     <Compile Include="Common\Data\SequentialConsolidatorTests.cs" />
     <Compile Include="Common\Data\TradeBarConsolidatorTests.cs" />
+    <Compile Include="Common\OSTests.cs" />
     <Compile Include="Common\SeriesSamplerTests.cs" />
     <Compile Include="Common\Util\ExpressionBuilderTests.cs" />
     <Compile Include="Indicators\AroonOscillatorTests.cs" />

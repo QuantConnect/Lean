@@ -178,6 +178,11 @@ namespace QuantConnect.Packets
         public Dictionary<string, string> RuntimeStatistics = new Dictionary<string, string>();
 
         /// <summary>
+        /// Server status information, including CPU/RAM usage, ect...
+        /// </summary>
+        public Dictionary<string, string> ServerStatistics = new Dictionary<string, string>();
+
+        /// <summary>
         /// Default Constructor
         /// </summary>
         public LiveResult() 
@@ -186,7 +191,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Constructor for the result class for dictionary objects
         /// </summary>
-        public LiveResult(Dictionary<string, Chart> charts, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, Dictionary<string, string> statistics, Dictionary<string, string> runtime)
+        public LiveResult(Dictionary<string, Chart> charts, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, Dictionary<string, string> statistics, Dictionary<string, string> runtime, Dictionary<string, string> serverStatistics = null)
         {
             Charts = charts;
             Orders = orders;
@@ -194,7 +199,8 @@ namespace QuantConnect.Packets
             Statistics = statistics;
             Holdings = holdings;
             RuntimeStatistics = runtime;
-        }
+            ServerStatistics = serverStatistics ?? OS.GetServerStatistics();
+        } 
     }
 
 } // End of Namespace:

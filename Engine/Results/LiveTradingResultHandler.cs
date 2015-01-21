@@ -305,6 +305,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var deltaProfitLoss = new Dictionary<DateTime, decimal>();
                     var deltaStatistics = new Dictionary<string, string>();
                     var runtimeStatistics = new Dictionary<string, string>();
+                    var serverStatistics = OS.GetServerStatistics();
 
                     foreach (var holding in _algorithm.Portfolio.Values)
                     {
@@ -329,7 +330,7 @@ namespace QuantConnect.Lean.Engine.Results
                     runtimeStatistics.Add("Volume:", _algorithm.Portfolio.TotalSaleVolume.ToString("C"));
 
                     //Create the simultor result packet.
-                    var packet = new LiveResultPacket(_job, new LiveResult(deltaCharts, deltaOrders, deltaProfitLoss, holdings, deltaStatistics, runtimeStatistics));
+                    var packet = new LiveResultPacket(_job, new LiveResult(deltaCharts, deltaOrders, deltaProfitLoss, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
 
                     //Send to the user terminal directly.
                     Engine.Notify.LiveTradingResult(packet);
@@ -342,7 +343,7 @@ namespace QuantConnect.Lean.Engine.Results
                         {
                             var chartComplete = new Dictionary<string, Chart>(Charts);
                             var ordersComplete = new Dictionary<int, Order>(_algorithm.Transactions.Orders);
-                            var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, ordersComplete, _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics));
+                            var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, ordersComplete, _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
                             StoreResult(complete, true);
                         }
                     }
