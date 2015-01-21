@@ -194,6 +194,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         where security.IsQuantConnectData && (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
                         select security.Symbol).ToList<string>();
 
+            //Initialize:
+            _streamStore = new Dictionary<int, StreamStore>();
+
+            Log.Trace("LiveTradingDataFeed.Stream(): Initializing subscription stream stores...");
+            for (var i = 0; i < Subscriptions.Count; i++)
+            {
+                var config = _subscriptions[i];
+                _streamStore.Add(i, new StreamStore(config));
+            }
+            Log.Trace("LiveTradingDataFeed.Stream(): Initialized " + _streamStore.Count + " stream stores.");
+
             // Set up separate thread to handle stream and building packets:
             var streamThread = new Thread(Stream);
             streamThread.Start();
@@ -309,16 +320,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Initialize
             var exitTasks = false;
             var update = new Dictionary<int, DateTime>();
-            _streamStore = new Dictionary<int, StreamStore>();
-            
-            //Initialize:
-            Log.Trace("LiveTradingDataFeed.Stream(): Initializing subscription stream stores...");
-            for (var i = 0; i < Subscriptions.Count; i++)
-            {
-                var config = _subscriptions[i];
-                _streamStore.Add(i, new StreamStore(config));
-            }
-            Log.Trace("LiveTradingDataFeed.Stream(): Initialized " + _streamStore.Count + " stream stores.");
 
             //Loop over stream
             do
