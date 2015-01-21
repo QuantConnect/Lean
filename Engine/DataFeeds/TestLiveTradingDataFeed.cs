@@ -65,9 +65,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 });
             }
             while (sw.ElapsedMilliseconds < _delay) Thread.Sleep(1);
+            GC.Collect(3, GCCollectionMode.Forced, true);
             return ticks;
         }
 
+
+        /// <summary>
+        /// Calculate the next fake value for our fake data:
+        /// </summary>
+        /// <param name="start">Start of the fake data period</param>
+        /// <param name="current">Current time for the fake data period</param>
+        /// <param name="period">Period we want the sine to run over</param>
+        /// <returns></returns>
         private decimal ComputeNextSineValue(DateTime start, DateTime current, TimeSpan period)
         {
             var percentage = ((current - start).TotalHours / period.TotalHours);

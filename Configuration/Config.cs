@@ -86,8 +86,9 @@ namespace QuantConnect.Configuration
         /// Get the matching config setting from the file searching for this key.
         /// </summary>
         /// <param name="key">String key value we're seaching for in the config file.</param>
+        /// <param name="defaultValue"></param>
         /// <returns>String value of the configuration setting or empty string if nothing found.</returns>
-        public static string Get(string key)
+        public static string Get(string key, string defaultValue = "")
         {
             var value = "";
             try
@@ -100,6 +101,7 @@ namespace QuantConnect.Configuration
                 }
                 else
                 {
+                    value = defaultValue;
                     Log.Trace("Config.Get(): Configuration key not found. Key: " + key);
                 }
             }

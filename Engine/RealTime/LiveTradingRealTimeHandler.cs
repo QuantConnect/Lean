@@ -110,6 +110,9 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void Run()
         {
+            _isActive = false;
+            return; // HACK
+
             _isActive = true;
             _time = DateTime.Now;
 
