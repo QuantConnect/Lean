@@ -803,8 +803,6 @@ namespace QuantConnect.Lean.Engine.Results
             double unixDateStart = Time.DateTimeToUnixTimeStamp(start);
             double unixDateStop = Time.DateTimeToUnixTimeStamp(stop);
 
-            Log.Trace("LiveTradingResultHandler.Truncate(): Start: " + unixDateStart + " Stop: " + unixDateStop);
-
             var charts = new Dictionary<string, Chart>();
             foreach (var chart in result.Charts.Values)
             {
