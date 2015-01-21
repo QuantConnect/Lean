@@ -100,13 +100,20 @@ namespace QuantConnect
     [JsonObjectAttribute]
     public class Series
     {
+        /// <summary>
         /// Name of the Series:
+        /// </summary>
         public string Name = "";
 
-        /// Values for the series plot:
+        /// <summary>
+        ///  Values for the series plot:
+        /// These values are assumed to be in ascending time order (first points earliest, last points latest)
+        /// </summary>
         public List<ChartPoint> Values = new List<ChartPoint>();
 
+        /// <summary>
         /// Chart type for the series:
+        /// </summary>
         public SeriesType SeriesType = SeriesType.Line;
 
         /// Get the index of the last fetch update request to only retrieve the "delta" of the previous request.

@@ -685,27 +685,70 @@ namespace QuantConnect.Lean.Engine.Results
         /// </remarks>
         public void StoreResult(Packet packet, bool async = true)
         {
-            //Initialize:
-            var serialized = "";
-            var key = "";
+            // this will hold all the serialized data and the keys to be stored
+            var data_keys = Enumerable.Range(0, 0).Select(x => new
+            {
+                Key = (string) null,
+                Serialized = (string) null
+            }).ToList();
 
             try
             {
                 lock (_chartLock)
                 {
-                    //1. Make sure this is the right type of packet:
+                    // Make sure this is the right type of packet:
                     if (packet.Type != PacketType.LiveResult) return;
 
-                    //2. Port to packet format:
+                    // Port to packet format:
                     var live = packet as LiveResultPacket;
 
                     if (live != null)
                     {
-                        //3. Get the S3 Storage Location:
-                        key = "live/" + _job.UserId + "/" + _job.ProjectId + "/" + _job.DeployId + "-" +  DateTime.Now.ToString("yyyy-MM-dd") + ".json";
+                        // we need to down sample
+                        var start = DateTime.Today;
+                        var stop = start.AddDays(1);
 
-                        //4. Serialize to JSON:
-                        serialized = JsonConvert.SerializeObject(live.Results);
+                        // truncate to just today, we don't need more than this for anyone
+                        Truncate(live.Results, start, stop);
+
+                        var highResolutionCharts = live.Results.Charts;
+
+                        // 10 minute resolution data, save today
+
+                        var tenminuteSampler = new SeriesSampler(TimeSpan.FromMinutes(10));
+                        var tenminuteCharts = tenminuteSampler.SampleCharts(live.Results.Charts, start, stop);
+
+                        live.Results.Charts = tenminuteCharts;
+                        data_keys.Add(new
+                        {
+                            Key = CreateKey("10minute"),
+                            Serialized = JsonConvert.SerializeObject(live.Results)
+                        });
+
+                        // minute resoluton data, save today
+
+                        var minuteSampler = new SeriesSampler(TimeSpan.FromMinutes(1));
+                        var minuteCharts = minuteSampler.SampleCharts(live.Results.Charts, start, stop);
+
+                        // swap out our charts with the sampeld data
+                        live.Results.Charts = minuteCharts;
+                        data_keys.Add(new
+                        {
+                            Key = CreateKey("minute"),
+                            Serialized = JsonConvert.SerializeObject(live.Results)
+                        });
+                        
+                        // high resolution data, we only want to save an hour
+
+                        live.Results.Charts = highResolutionCharts;
+                        start = DateTime.Now.RoundDown(TimeSpan.FromHours(1));
+                        stop = DateTime.Now.RoundUp(TimeSpan.FromHours(1));
+                        Truncate(live.Results, start, stop);
+                        data_keys.Add(new
+                        {
+                            Key = CreateKey("second", "yyyy-MM-dd-hh"),
+                            Serialized = JsonConvert.SerializeObject(live.Results)
+                        });
                     }
                     else
                     {
@@ -713,8 +756,11 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                 }
 
-                //Upload Results Portion
-                Engine.Api.Store(serialized, key, StoragePermissions.Authenticated, async);
+                // Upload Results Portion
+                foreach (var dataKey in data_keys)
+                {
+                    Engine.Api.Store(dataKey.Serialized, dataKey.Key, StoragePermissions.Authenticated, async);
+                }
             }
             catch (Exception err)
             {
@@ -747,6 +793,36 @@ namespace QuantConnect.Lean.Engine.Results
         {
             Messages.Clear();
         }
+
+        /// <summary>
+        /// Truncates the chart and order data in the result packet to within the specified time frame
+        /// </summary>
+        private static void Truncate(LiveResult result, DateTime start, DateTime stop)
+        {
+            double unixDateStart = Time.DateTimeToUnixTimeStamp(start);
+            double unixDateStop = Time.DateTimeToUnixTimeStamp(stop);
+
+            var charts = new Dictionary<string, Chart>();
+            foreach (var chart in result.Charts.Values)
+            {
+                var newChart = new Chart(chart.Name, chart.ChartType);
+                charts.Add(newChart.Name, newChart);
+                foreach (var series in chart.Series.Values)
+                {
+                    var newSeries = new Series(series.Name, series.SeriesType);
+                    newChart.AddSeries(newSeries);
+                    newSeries.Values.AddRange(series.Values.Where(x => x.x >= unixDateStart && x.x <= unixDateStop));
+                }
+            }
+            result.Charts = charts;
+            result.Orders = result.Orders.Values.Where(x => x.Time >= start && x.Time <= stop).ToDictionary(x => x.Id);
+        }
+
+        private string CreateKey(string suffix, string dateFormat = "yyyy-MM-dd")
+        {
+            return string.Format("live/{0}/{1}/{2}-{3}_{4}.json", _job.UserId, _job.ProjectId, _job.DeployId, DateTime.Now.ToString(dateFormat), suffix);
+        }
+
     } // End Result Handler Thread:
 
 } // End Namespace
