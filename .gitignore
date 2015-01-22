@@ -233,3 +233,4 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
+/.nuget/NuGet.exe
