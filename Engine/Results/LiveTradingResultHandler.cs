@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -322,12 +323,13 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     //Add other fixed parameters.
-                    runtimeStatistics.Add("Unrealized:", _algorithm.Portfolio.TotalUnrealizedProfit.ToString("C"));
-                    runtimeStatistics.Add("Fees:", _algorithm.Portfolio.TotalFees.ToString("C"));
-                    runtimeStatistics.Add("Net Profit:", _algorithm.Portfolio.TotalProfit.ToString("C"));
-                    runtimeStatistics.Add("Return:", ((_algorithm.Portfolio.TotalPortfolioValue - Engine.SetupHandler.StartingCapital) / Engine.SetupHandler.StartingCapital).ToString("P"));
-                    runtimeStatistics.Add("Holdings:", _algorithm.Portfolio.TotalHoldingsValue.ToString("C"));
-                    runtimeStatistics.Add("Volume:", _algorithm.Portfolio.TotalSaleVolume.ToString("C"));
+
+                    runtimeStatistics.Add("Unrealized:", "$" + _algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"));
+                    runtimeStatistics.Add("Fees:", "-$" + _algorithm.Portfolio.TotalFees.ToString("N2"));
+                    runtimeStatistics.Add("Net Profit:", "$" + _algorithm.Portfolio.TotalProfit.ToString("N2"));
+                    runtimeStatistics.Add("Return:", (Math.Abs(Engine.SetupHandler.StartingCapital - _algorithm.Portfolio.TotalPortfolioValue) / Engine.SetupHandler.StartingCapital).ToString("P"));
+                    runtimeStatistics.Add("Holdings:", "$" + _algorithm.Portfolio.TotalHoldingsValue.ToString("N2"));
+                    runtimeStatistics.Add("Volume:", "$" + _algorithm.Portfolio.TotalSaleVolume.ToString("N2"));
 
                     // since we're sending multiple packets, let's do it async and forget about it
                     Task.Factory.StartNew(() =>
