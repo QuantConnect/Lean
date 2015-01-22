@@ -226,7 +226,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
 
                 //Create the new qcOrder
-                var qcOrder = new Order(order.Symbol, Convert.ToInt32((decimal) qcQuantity), qcType, order.CreatedDate, qcPrice);
+                var qcOrder = new Order(order.Symbol, algorithm.Securities[order.Symbol].Type, Convert.ToInt32((decimal) qcQuantity), qcType, order.CreatedDate, qcPrice);
                 //Set Status for Order:
                 qcOrder.Status = qcStatus;
 

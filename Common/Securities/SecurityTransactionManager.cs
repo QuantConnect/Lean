@@ -255,13 +255,14 @@ namespace QuantConnect.Securities
                     return;
                 }
 
-                if (Orders[orderId].Status != OrderStatus.Submitted) 
+                var order = Orders[orderId];
+                if (order.Status != OrderStatus.Submitted) 
                 {
                     Log.Error("Security.TransactionManager.RemoveOutstandingOrder(): Order already filled");
                     return;
                 }
 
-                var orderToRemove = new Order("", 0, OrderType.Market, new DateTime())
+                var orderToRemove = new Order("", order.SecurityType,  0, OrderType.Market, new DateTime())
                 {
                     Id = orderId,
                     Status = OrderStatus.Canceled

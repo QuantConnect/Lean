@@ -228,7 +228,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                                                 while (!Orders.TryAdd(order.Id, order)) { };
 
                                                 //Create the second order: add to queue, make contingent on primary order.
-                                                var secondOrder = new Order(order.Symbol, Convert.ToInt32(secondOrderQuantity), order.Type, order.Time, order.Price, order.Tag);
+                                                var secondOrder = new Order(order.Symbol, order.SecurityType, Convert.ToInt32(secondOrderQuantity), order.Type, order.Time, order.Price, order.Tag);
                                                 secondOrder.Id = _algorithm.Transactions.GetIncrementOrderId();
                                                 secondOrder.Status = OrderStatus.New;
                                                 secondOrder.ContingentId = order.Id;
