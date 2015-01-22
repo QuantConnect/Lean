@@ -148,6 +148,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         //Endpoints:
         private string _requestEndpoint = @"https://api.tradier.com/v1/";
+        private readonly Timer _timer;
 
         /******************************************************** 
         * CLASS CONSTRUCTOR
@@ -177,7 +178,8 @@ namespace QuantConnect.Brokerages.Tradier
             _rateLimitPeriod[TradierApiRequestType.Data] = TimeSpan.FromMilliseconds(500);
 
             int millisecondsPerDay = (int)TimeSpan.FromDays(1).TotalMilliseconds;
-            var timer = new Timer(state => RefreshSession(), null, 0, millisecondsPerDay);
+
+            _timer = new Timer(state => RefreshSession(), this, 0, millisecondsPerDay);
         }
 
         /******************************************************** 
