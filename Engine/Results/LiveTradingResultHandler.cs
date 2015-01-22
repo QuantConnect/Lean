@@ -22,6 +22,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -302,7 +303,6 @@ namespace QuantConnect.Lean.Engine.Results
 
                     //Profit loss changes, get the banner statistics, summary information on the performance for the headers.
                     var holdings = new Dictionary<string, Holding>();
-                    var deltaProfitLoss = new Dictionary<DateTime, decimal>();
                     var deltaStatistics = new Dictionary<string, string>();
                     var runtimeStatistics = new Dictionary<string, string>();
                     var serverStatistics = OS.GetServerStatistics();
@@ -325,15 +325,21 @@ namespace QuantConnect.Lean.Engine.Results
                     runtimeStatistics.Add("Unrealized:", _algorithm.Portfolio.TotalUnrealizedProfit.ToString("C"));
                     runtimeStatistics.Add("Fees:", _algorithm.Portfolio.TotalFees.ToString("C"));
                     runtimeStatistics.Add("Net Profit:", _algorithm.Portfolio.TotalProfit.ToString("C"));
-                    runtimeStatistics.Add("Return:", (Math.Abs(Engine.SetupHandler.StartingCapital - _algorithm.Portfolio.TotalPortfolioValue) / Engine.SetupHandler.StartingCapital).ToString("P"));
+                    runtimeStatistics.Add("Return:", ((_algorithm.Portfolio.TotalPortfolioValue - Engine.SetupHandler.StartingCapital) / Engine.SetupHandler.StartingCapital).ToString("P"));
                     runtimeStatistics.Add("Holdings:", _algorithm.Portfolio.TotalHoldingsValue.ToString("C"));
                     runtimeStatistics.Add("Volume:", _algorithm.Portfolio.TotalSaleVolume.ToString("C"));
 
-                    //Create the simultor result packet.
-                    var packet = new LiveResultPacket(_job, new LiveResult(deltaCharts, deltaOrders, deltaProfitLoss, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
+                    // since we're sending multiple packets, let's do it async and forget about it
+                    Task.Factory.StartNew(() =>
+                    {
+                        // chart data can get big so let's break them up into groups
+                        var splitPackets = SplitPackets(deltaCharts, deltaOrders, holdings, deltaStatistics, runtimeStatistics, serverStatistics);
 
-                    //Send to the user terminal directly.
-                    Engine.Notify.LiveTradingResult(packet);
+                        foreach (var liveResultPacket in splitPackets)
+                        {
+                            Engine.Notify.Send(liveResultPacket);
+                        }
+                    });
 
                     //Send full packet to storage.
                     if (DateTime.Now > _nextChartsUpdate)
@@ -378,6 +384,46 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 Log.Error("LiveTradingResultHandler().ProcessSeriesUpdate(): " + err.Message, true);
             }
+        }
+
+        private IEnumerable<LiveResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts,
+            Dictionary<int, Order> deltaOrders,
+            Dictionary<string, Holding> holdings,
+            Dictionary<string, string> deltaStatistics,
+            Dictionary<string, string> runtimeStatistics,
+            Dictionary<string, string> serverStatistics)
+        {
+            // break the charts into groups
+
+            const int groupSize = 10;
+            Dictionary<string, Chart> current = null;
+            var chartPackets = new List<LiveResultPacket>();
+            foreach (var chart in deltaCharts.Values)
+            {
+                if (current == null || current.Count >= groupSize)
+                {
+                    current = new Dictionary<string, Chart>(groupSize);
+                    chartPackets.Add(new LiveResultPacket(_job, new LiveResult {Charts = current}));
+                }
+                current.Add(chart.Name, chart);
+            }
+
+            // these are easier to split up, not as big as the chart objects
+            var packets = new[]
+            {
+                new LiveResultPacket(_job, new LiveResult {Orders = deltaOrders}),
+                //new LiveResultPacket(_job, new LiveResult {ProfitLoss = deltaProfitLoss}),
+                new LiveResultPacket(_job, new LiveResult {Holdings = holdings}),
+                new LiveResultPacket(_job, new LiveResult
+                {
+                    Statistics = deltaStatistics,
+                    RuntimeStatistics = runtimeStatistics,
+                    ServerStatistics = serverStatistics
+                })
+            };
+
+            // combine all the packets to be sent to through pubnub
+            return packets.Concat(chartPackets);
         }
 
 
