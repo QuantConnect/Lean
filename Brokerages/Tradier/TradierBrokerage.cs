@@ -27,6 +27,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using RestSharp;
 
@@ -43,7 +44,7 @@ namespace QuantConnect.Brokerages.Tradier
     ///  - Placing orders.
     ///  - Getting user data.
     /// </summary>
-    public class TradierBrokerage : Brokerage
+    public class TradierBrokerage : IBrokerage
     {
         /******************************************************** 
         * CLASS PROPERTIES
@@ -73,15 +74,11 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Brokerage Name:
         /// </summary>
-        public override string Name
+        public string Name
         {
             get
             {
-                return _name;
-            }
-            set
-            {
-                _name = value;
+                return "Tradier";
             }
         }
 
@@ -134,7 +131,6 @@ namespace QuantConnect.Brokerages.Tradier
         private string _refreshToken = "";
         private string _previousRequestRaw = "";
         private int _userId = 0;
-        private string _name = "Tradier";
         private DateTime _issuedAt = new DateTime();
         private string _scope = "";
         private TimeSpan _lifeSpan = TimeSpan.FromSeconds(86399); // 1 second less than a day
@@ -158,9 +154,6 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         public TradierBrokerage()
         {
-            //Common Brokerage Class:
-            Name = "Tradier";
-
             //Tradier Specific Initialization:
             _rateLimitPeriod = new Dictionary<TradierApiRequestType, TimeSpan>();
             _rateLimitNextRequest = new Dictionary<TradierApiRequestType, DateTime>();
@@ -281,7 +274,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Setup an error handler for the fault:
         /// </summary>
-        public override void AddErrorHander(string key, Action callback)
+        public void AddErrorHander(string key, Action callback)
         {
             key = key.ToLower();
 
@@ -298,24 +291,22 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Verify we have a user session; or refresh the access token.
         /// </summary>
-        public override bool RefreshSession()
+        public bool RefreshSession()
         {
             //Send: 
             //Get: {"sAccessToken":"123123","iExpiresIn":86399,"dtIssuedAt":"2014-10-15T16:59:52-04:00","sRefreshToken":"123123","sScope":"read write market trade stream","sStatus":"approved","success":true}
             // Or: {"success":false}
             var raw = "";
-            var client = new RestClient();
-            var request = new RestRequest();
 
             lock (_lockAccessCredentials)
             {
                 try
                 {
                     //Create the client for connection:
-                    client = new RestClient("https://beta.quantconnect.com/terminal/");
+                    var client = new RestClient("https://beta.quantconnect.com/terminal/");
 
                     //Create the GET call:
-                    request = new RestRequest("processTradier", Method.GET);
+                    var request = new RestRequest("processTradier", Method.GET);
                     request.AddParameter("uid", _userId.ToString(), ParameterType.GetOrPost);
                     request.AddParameter("accessToken", _accessToken, ParameterType.GetOrPost);
                     request.AddParameter("refreshToken", _refreshToken, ParameterType.GetOrPost);

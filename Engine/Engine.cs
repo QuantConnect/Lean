@@ -268,7 +268,7 @@ namespace QuantConnect.Lean.Engine
                         
                         //Load the associated handlers for data, transaction and realtime events:
                         ResultHandler.SetAlgorithm(algorithm);
-                        DataFeed = GetDataFeedHandler(algorithm, _brokerage, job);
+                        DataFeed = GetDataFeedHandler(algorithm, job);
                         TransactionHandler = GetTransactionHandler(algorithm, _brokerage, ResultHandler, job);
                         RealTimeHandler = GetRealTimeHandler(algorithm, _brokerage, DataFeed, ResultHandler, job);
 
@@ -487,9 +487,8 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         /// <param name="algorithm">User algorithm to scan for securities</param>
         /// <param name="job">Algorithm Node Packet</param>
-        /// <param name="brokerage">Brokerage instance to avoid access token duplication</param>
         /// <returns>Class matching IDataFeed Interface</returns>
-        private static IDataFeed GetDataFeedHandler(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket job)
+        private static IDataFeed GetDataFeedHandler(IAlgorithm algorithm, AlgorithmNodePacket job)
         {
             var df = default(IDataFeed);
             switch (job.DataEndpoint) 

@@ -149,8 +149,14 @@ namespace QuantConnect.Lean.Engine.Setup
         public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob)
         {
             var job = baseJob as BacktestNodePacket;
-            brokerage = new Brokerage(); //Not used.
+            if (job == null)
+            {
+                throw new ArgumentException("Expected BacktestNodePacket but received " + baseJob.GetType().Name);
+            }
 
+            // must be set since its defined as an out parameters
+            brokerage = (default(IBrokerage));
+            
             if (algorithm == null)
             {
                 Errors.Add("Could not create instance of algorithm");
@@ -158,9 +164,9 @@ namespace QuantConnect.Lean.Engine.Setup
             }
 
             //Make sure the algorithm start date ok.
-            if (job.PeriodStart == null)
+            if (job.PeriodStart == default(DateTime))
             {
-                Errors.Add("Algorithm start date is null");
+                Errors.Add("Algorithm start date was never set");
                 return false;
             }
             

@@ -103,7 +103,7 @@ namespace QuantConnect.Lean.Engine.Setup
         public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob)
         {
             var initializeComplete = false;
-            brokerage = new Brokerage();    //Error case.
+            brokerage = default(IBrokerage);    //Error case.
 
             try
             {
@@ -132,7 +132,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Backtest Specific Parameters:
                     StartingDate = backtestJob.PeriodStart;
                     StartingCapital = algorithm.Portfolio.Cash;
-                    baseJob = backtestJob;
                 }
                 else
                 {
@@ -164,7 +163,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Live Specific Parameters:
                     StartingDate = DateTime.Now;
                     StartingCapital = algorithm.Portfolio.Cash;
-                    baseJob = liveJob;
                 }
             }
             catch (Exception err)

@@ -20,15 +20,7 @@
 **********************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading;
-using Newtonsoft.Json;
-using QuantConnect.Logging;
-using RestSharp;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Brokerages.Paper
 {
@@ -38,7 +30,7 @@ namespace QuantConnect.Brokerages.Paper
     /// <summary>
     /// Paper Trading Brokerage
     /// </summary>
-    public class PaperBrokerage : Brokerage
+    public class PaperBrokerage : IBrokerage
     {
         /// <summary>
         /// Name of our brokerage
@@ -56,7 +48,7 @@ namespace QuantConnect.Brokerages.Paper
         /// </summary>
         /// <param name="key">Key for the error name.</param>
         /// <param name="callback">Callback for the error actions.</param>
-        public override void AddErrorHander(string key, Action callback)
+        public void AddErrorHander(string key, Action callback)
         {
             // No error handlers//no errors from paper trading brokerage inc.
         }
@@ -64,7 +56,7 @@ namespace QuantConnect.Brokerages.Paper
         /// <summary>
         /// Refresh the login session with the brokerage.
         /// </summary>
-        public override bool RefreshSession()
+        public bool RefreshSession()
         {
             //No need to refresh session.
             return true;
