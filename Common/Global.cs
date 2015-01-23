@@ -273,6 +273,31 @@ namespace QuantConnect
     }
 
     /// <summary>
+    /// Wrapper for algorithm status enum to include the charting subscription. 
+    /// </summary>
+    public class AlgorithmControl
+    {
+        /// <summary>
+        /// Default initializer for algorithm control class.
+        /// </summary>
+        public AlgorithmControl()
+        {
+            Status = AlgorithmStatus.Running;
+            ChartSubscription = "Strategy Equity";
+        }
+
+        /// <summary>
+        /// Current run status of the algorithm id.
+        /// </summary>
+        public AlgorithmStatus Status;
+
+        /// <summary>
+        /// Currently requested chart.
+        /// </summary>
+        public string ChartSubscription;
+    }
+
+    /// <summary>
     /// States of a live deployment.
     /// </summary>
     public enum AlgorithmStatus

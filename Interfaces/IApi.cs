@@ -48,7 +48,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="algorithmId"></param>
         /// <returns></returns>
-        AlgorithmStatus GetAlgorithmStatus(string algorithmId);
+        AlgorithmControl GetAlgorithmStatus(string algorithmId);
 
         /// <summary>
         /// Set the algorithm status from the worker to update the UX e.g. if there was an error.

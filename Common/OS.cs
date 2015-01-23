@@ -151,6 +151,36 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Get the drive space remaining on windows and linux in MB
+        /// </summary>
+        public static long DriveSpaceUsed
+        {
+            get
+            {
+                var drives = DriveInfo.GetDrives();
+                //User 1 GB Maximum As Cache
+                if (drives.Length <= 0) return 1024;
+                var d = drives[0];
+                return (d.TotalSize - d.TotalFreeSpace) / (1024 * 1024);
+            }
+        }
+
+
+        /// <summary>
+        /// Total space on the drive
+        /// </summary>
+        public static long DriveTotalSpace
+        {
+            get
+            {
+                var drives = DriveInfo.GetDrives();
+                //User 1 GB Maximum As Cache
+                if (drives.Length <= 0) return 1024;
+                var d = drives[0];
+                return d.TotalSize / (1024 * 1024);
+            }
+        }
 
         /// <summary>
         /// Get the RAM remaining on the machine:
@@ -199,9 +229,11 @@ namespace QuantConnect
         {
             return new Dictionary<string, string>
             {
-                {"Free Disk Space (MB)", DriveSpaceRemaining.ToString()},
-                {"Free RAM (MB)",        FreePhysicalMemory.ToString()},
-                {"CPU Usage",            CpuUsage.NextValue().ToString("0.0") + "%"}
+                {"CPU Usage",            CpuUsage.NextValue().ToString("0.0") + "%"},
+                {"Used RAM (MB)",        TotalPhysicalMemoryUsed.ToString()},
+                {"Total RAM (MB)",        TotalPhysicalMemory.ToString()},
+                {"Used Disk Space (MB)", DriveSpaceUsed.ToString() },
+                {"Total Disk Space (MB)", DriveTotalSpace.ToString() }
             };
         }
     } // End OS Class

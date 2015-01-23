@@ -130,8 +130,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="seriesType">Series type for the chart.</param>
         /// <param name="time">Time for the sample</param>
         /// <param name="value">Value for the chart sample.</param>
+        /// <param name="unit">Unit for the sample chart</param>
         /// <remarks>Sample can be used to create new charts or sample equity - daily performance.</remarks>
-        void Sample(string chartName, ChartType chartType, string seriesName, SeriesType seriesType, DateTime time, decimal value);
+        void Sample(string chartName, ChartType chartType, string seriesName, SeriesType seriesType, DateTime time, decimal value, string unit = "$");
 
         /// <summary>
         /// Wrapper methond on sample to create the equity chart.
@@ -191,6 +192,13 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="status">Status enum of the algorithm.</param>
         /// <param name="message">Optional string message describing reason for status change.</param>
         void SendStatusUpdate(string algorithmId, AlgorithmStatus status, string message = "");
+
+
+        /// <summary>
+        /// Set the chart name:
+        /// </summary>
+        /// <param name="symbol">Symbol of the chart we want.</param>
+        void SetChartSubscription(string symbol);
 
         /// <summary>
         /// Set a dynamic runtime statistic to show in the (live) algorithm header
