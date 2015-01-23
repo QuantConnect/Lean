@@ -127,6 +127,7 @@ namespace QuantConnect.Brokerages.Tradier
         * PRIVATE VARIABLES
         *********************************************************/
         //Access and Refresh Tokens:
+        private long _accountID;
         private string _accessToken = "";
         private string _refreshToken = "";
         private string _previousRequestRaw = "";
@@ -152,8 +153,10 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Create a new Tradier Object:
         /// </summary>
-        public TradierBrokerage()
+        public TradierBrokerage(long accountID)
         {
+            _accountID = accountID;
+
             //Tradier Specific Initialization:
             _rateLimitPeriod = new Dictionary<TradierApiRequestType, TimeSpan>();
             _rateLimitNextRequest = new Dictionary<TradierApiRequestType, DateTime>();
@@ -171,8 +174,9 @@ namespace QuantConnect.Brokerages.Tradier
             _rateLimitPeriod[TradierApiRequestType.Data] = TimeSpan.FromMilliseconds(500);
 
             int millisecondsPerDay = (int)TimeSpan.FromDays(1).TotalMilliseconds;
-
             _timer = new Timer(state => RefreshSession(), this, 0, millisecondsPerDay);
+
+            // we need to subscribe for streaming updates
         }
 
         /******************************************************** 
@@ -253,7 +257,6 @@ namespace QuantConnect.Brokerages.Tradier
 
             return response;
         }
-
 
         /// <summary>
         /// Tradier Fault Error Handlers:
@@ -367,14 +370,14 @@ namespace QuantConnect.Brokerages.Tradier
         /// Get all the users balance information:
         /// </summary>
         /// <returns>Balance</returns>
-        public TradierBalanceDetails Balance(long accountId)
+        public TradierBalanceDetails Balance()
         {
             var balance = new TradierBalanceDetails();
             var balContainer = new TradierBalance();
             try
             {
                 var request = new RestRequest("accounts/{accountId}/balances", Method.GET);
-                request.AddParameter("accountId", accountId, ParameterType.UrlSegment);
+                request.AddParameter("accountId", _accountID, ParameterType.UrlSegment);
                 balContainer = Execute<TradierBalance>(request, TradierApiRequestType.Standard);
                 balance = balContainer.Balances;
             }
@@ -390,13 +393,13 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         /// <param name="accountId">Account id we'd like to know</param>
         /// <returns>Array of the symbols we hold.</returns>
-        public List<TradierPosition> Positions(long accountId)
+        public List<TradierPosition> Positions()
         {
             var positions = new List<TradierPosition>();
             try
             {
                 var request = new RestRequest("accounts/{accountId}/positions", Method.GET);
-                request.AddParameter("accountId", accountId, ParameterType.UrlSegment);
+                request.AddParameter("accountId", _accountID, ParameterType.UrlSegment);
                 var positionContainer = Execute<TradierPositionsContainer>(request, TradierApiRequestType.Standard);
 
                 if (positionContainer.TradierPositions != null && positionContainer.TradierPositions.Positions != null)
@@ -418,14 +421,14 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Get a list of historical events for this account:
         /// </summary>
-        public List<TradierEvent> Events(long accountId)
+        public List<TradierEvent> Events()
         {
             var events = new List<TradierEvent>();
             try
             {
                 //Download the event history
                 var request = new RestRequest("accounts/{accountId}/history", Method.GET);
-                request.AddUrlSegment("accountId", accountId.ToString());
+                request.AddUrlSegment("accountId", _accountID.ToString());
 
                 var eventContainer = Execute<TradierEventContainer>(request, TradierApiRequestType.Standard);
                 events = eventContainer.TradierEvents.Events;
@@ -440,13 +443,13 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// GainLoss of recent trades for this account:
         /// </summary>
-        public List<TradierGainLoss> GainLoss(long accountId)
+        public List<TradierGainLoss> GainLoss()
         {
             var gainloss = new List<TradierGainLoss>();
             try
             {
                 var request = new RestRequest("accounts/{accountId}/gainloss");
-                request.AddUrlSegment("accountId", accountId.ToString());
+                request.AddUrlSegment("accountId", _accountID.ToString());
 
                 var gainLossContainer = Execute<TradierGainLossContainer>(request, TradierApiRequestType.Standard);
                 gainloss = gainLossContainer.GainLossClosed.ClosedPositions;
@@ -461,14 +464,14 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Get Intraday and pending orders for users account: accounts/{account_id}/orders
         /// </summary>
-        public List<TradierOrder> FetchOrders(long accountId)
+        public List<TradierOrder> FetchOrders()
         {
             var ordersContainer = new TradierOrdersContainer();
             var orders = new List<TradierOrder>();
             try
             {
                 var request = new RestRequest("accounts/{accountId}/orders");
-                request.AddUrlSegment("accountId", accountId.ToString());
+                request.AddUrlSegment("accountId", _accountID.ToString());
                 ordersContainer = Execute<TradierOrdersContainer>(request, TradierApiRequestType.Standard);
 
                 if (ordersContainer.Orders != null)
@@ -490,13 +493,13 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Get information about a specific order: accounts/{account_id}/orders/{id}
         /// </summary>
-        public TradierOrderDetailed OrderInformation(long accountId, long orderId)
+        public TradierOrderDetailed OrderInformation(long orderId)
         {
             var order = new TradierOrderDetailed();
             try
             {
                 var request = new RestRequest("accounts/{accountId}/orders/" + orderId);
-                request.AddUrlSegment("accountId", accountId.ToString());
+                request.AddUrlSegment("accountId", _accountID.ToString());
                 var detailsParent = Execute<TradierOrderDetailedContainer>(request, TradierApiRequestType.Standard);
                 order = detailsParent.DetailedOrder;
             }
@@ -511,7 +514,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// Place Order through API.
         /// accounts/{account-id}/orders
         /// </summary>
-        public TradierOrderResponse PlaceOrder(long accountId, TradierOrderClass classification, TradierOrderDirection direction, string symbol, decimal quantity, decimal price = 0, decimal stop = 0, string optionSymbol = "", TradierOrderType type = TradierOrderType.Market, TradierOrderDuration duration = TradierOrderDuration.GTC)
+        public TradierOrderResponse PlaceOrder(TradierOrderClass classification, TradierOrderDirection direction, string symbol, decimal quantity, decimal price = 0, decimal stop = 0, string optionSymbol = "", TradierOrderType type = TradierOrderType.Market, TradierOrderDuration duration = TradierOrderDuration.GTC)
         {
             var response = new TradierOrderResponse();
 
@@ -519,7 +522,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 //Compose the request:
                 var request = new RestRequest("accounts/{accountId}/orders");
-                request.AddUrlSegment("accountId", accountId.ToString());
+                request.AddUrlSegment("accountId", _accountID.ToString());
 
                 //Add data:
                 request.AddParameter("class", GetEnumDescription(classification));
@@ -550,7 +553,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Update an exiting Tradier Order:
         /// </summary>
-        public TradierOrderResponse ChangeOrder(long accountId, long orderId, TradierOrderType type = TradierOrderType.Market, TradierOrderDuration duration = TradierOrderDuration.GTC, decimal price = 0, decimal stop = 0)
+        public TradierOrderResponse ChangeOrder(long orderId, TradierOrderType type = TradierOrderType.Market, TradierOrderDuration duration = TradierOrderDuration.GTC, decimal price = 0, decimal stop = 0)
         {
             var response = new TradierOrderResponse();
 
@@ -558,7 +561,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 //Create Request:
                 var request = new RestRequest("accounts/{accountId}/orders/{orderId}");
-                request.AddUrlSegment("accountId", accountId.ToString());
+                request.AddUrlSegment("accountId", _accountID.ToString());
                 request.AddUrlSegment("orderId", orderId.ToString());
                 request.Method = Method.PUT;
 
@@ -582,7 +585,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Cancel the order with this account and id number
         /// </summary>
-        public TradierOrderResponse CancelOrder(long accountId, long orderId)
+        public TradierOrderResponse CancelOrder(long orderId)
         {
             var response = new TradierOrderResponse();
 
@@ -590,7 +593,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 //Compose Request:
                 var request = new RestRequest("accounts/{accountId}/orders/{orderId}");
-                request.AddUrlSegment("accountId", accountId.ToString());
+                request.AddUrlSegment("accountId", _accountID.ToString());
                 request.AddUrlSegment("orderId", orderId.ToString());
                 request.Method = Method.DELETE;
 
@@ -762,9 +765,9 @@ namespace QuantConnect.Brokerages.Tradier
 
 
         /// <summary>
-        /// Get the current market status
+        /// Creates a new streaming session for market data events
         /// </summary>
-        public TradierStreamSession CreateStreamSession()
+        private TradierStreamSession CreateDataStreamSession()
         {
             var session = new TradierStreamSession();
             try
@@ -774,33 +777,30 @@ namespace QuantConnect.Brokerages.Tradier
             }
             catch (Exception err)
             {
-                Log.Error("Tradier.Stream(): " + err.Message + ">> " + _previousRequestRaw);
+                Log.Error("Tradier.CreateDataStreamSession(): " + err.Message + ">> " + _previousRequestRaw);
             }
             return session;
         }
-
 
         /// <summary>
         /// Connect to tradier API strea:
         /// </summary>
         /// <param name="symbols">symbol list</param>
         /// <returns></returns>
-        public IEnumerable<TradierStreamData> Stream(List<string> symbols)
+        public IEnumerable<TradierStreamData> StreamData(List<string> symbols)
         {
-            var stream = new List<TradierStreamData>();
             var symbolJoined = String.Join(",", symbols);
             var success = true;
             
-            var session = CreateStreamSession();
+            var session = CreateDataStreamSession();
             if (session == null || session.SessionId == null || session.Url == null)
             {
-                Log.Error("Tradier.Stream(): Failed to Created Stream Session", true);
+                Log.Error("Tradier.StreamData(): Failed to create data stream session", true);
                 yield break;
             }
-            Log.Trace("Tradier.Stream(): Created Stream Session Id: " + session.SessionId + " Url:" + session.Url, true);
-
+            Log.Trace("Tradier.StreamData(): Created Stream Session Id: " + session.SessionId + " Url:" + session.Url, true);
             
-            var request = (HttpWebRequest)WebRequest.Create((string) session.Url);
+            HttpWebRequest request;
             do
             {
                 //Connect to URL:
@@ -830,14 +830,14 @@ namespace QuantConnect.Brokerages.Tradier
                 }
                 catch (Exception err)
                 {
-                    Log.Error("Tradier.Stream(): Failed to write session parameters to URL: " + err.Message + " >>  ST >>" + err.StackTrace, true);
+                    Log.Error("Tradier.StreamData(): Failed to write session parameters to URL: " + err.Message + " >>  ST >>" + err.StackTrace, true);
                     success = false;
                 }
             } 
             while (!success);
 
             //Get response as a stream:
-            Log.Trace("Tradier.Stream(): Session Created, Reading Stream...", true);
+            Log.Trace("Tradier.StreamData(): Session Created, Reading Stream...", true);
             var response = (HttpWebResponse)request.GetResponse();
             var tradierStream = response.GetResponseStream();
 
@@ -879,6 +879,81 @@ namespace QuantConnect.Brokerages.Tradier
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Creates a new streaming response to receive order event from the Tradier API
+        /// </summary>
+        /// <param name="accountId">The account to receive events for</param>
+        /// <returns>The orders as they arrive</returns>
+        public IEnumerable<TradierOrder> StreamOrders()
+        {
+            var session = CreateOrdersStreamSession();
+            if (session == null || session.SessionId == null || session.Url == null)
+            {
+                Log.Error("Tradier.StreamOrders(): Failed to create order stream session", true);
+                yield break;
+            }
+
+            Log.Trace("Tradier.StreamOrders(): Creates Stream Session Id: " + session.SessionId + " Url: " + session.Url, true);
+
+            //Connect to URL:
+            var request = (HttpWebRequest) WebRequest.Create(session.Url);
+                
+            //Authenticate a request:
+            request.Accept = "application/json";
+            request.Headers.Add("Authorization", "Bearer " + _accessToken);
+
+            //Set post:
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
+
+            using (var response = new StreamReader(request.GetResponse().GetResponseStream()))
+            using (var jsonReader = new JsonTextReader(response))
+            {
+                var serializer = new JsonSerializer();
+                jsonReader.SupportMultipleContent = true;
+
+                bool successfulRead = true;
+                while (successfulRead)
+                {
+                    var order = new TradierOrder();
+                    try
+                    {
+                        successfulRead = jsonReader.Read();
+                        order = serializer.Deserialize<TradierOrder>(jsonReader);
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error("Tradier.StreamOrders(): Error while reading response stream: " + err.Message);
+                    }
+
+                    yield return order;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a new stream session for account events
+        /// </summary>
+        /// <param name="accountId">The user's account id</param>
+        /// <returns>The streaming session details</returns>
+        public TradierStreamSession CreateOrdersStreamSession()
+        {
+            //https://api.tradier.com/v1/accounts/{account}/events/session
+            var session = new TradierStreamSession();
+            try
+            {
+                var request = new RestRequest("accounts/{accountId}/events/session", Method.POST);
+                request.AddUrlSegment("accountId", _accountID.ToString());
+
+                session = Execute<TradierStreamSession>(request, TradierApiRequestType.Data, "stream");
+            }
+            catch (Exception err)
+            {
+                Log.Error("Tradier.Stream(): " + err.Message + ">> " + _previousRequestRaw);
+            }
+            return session;
         }
 
 

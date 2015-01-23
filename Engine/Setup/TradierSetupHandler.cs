@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /******************************************************** 
         * PRIVATE VARIABLES
         *********************************************************/
-        private TradierBrokerage _tradier = new TradierBrokerage();
+        private TradierBrokerage _tradier;
 
         /******************************************************** 
         * PUBLIC PROPERTIES
@@ -129,7 +129,7 @@ namespace QuantConnect.Lean.Engine.Setup
             var portfolioResolution = PortfolioResolution(algorithm.Securities);
 
             //-> Connect to Tradier:
-            _tradier = new TradierBrokerage();
+            _tradier = new TradierBrokerage(job.AccountId);
             //_tradier = (Tradier)brokerage;
             _tradier.SetTokens(job.UserId, job.AccessToken, job.RefreshToken, job.IssuedAt, job.LifeTime);
             brokerage = _tradier;
@@ -165,7 +165,7 @@ namespace QuantConnect.Lean.Engine.Setup
             }
 
             //-> Fetch the orders on the account:
-            var orders = _tradier.FetchOrders(job.AccountId);
+            var orders = _tradier.FetchOrders();
             foreach (var order in orders)
             {
                 //Ignore option orders for now.
@@ -254,7 +254,7 @@ namespace QuantConnect.Lean.Engine.Setup
             }
 
             //-> Retrieve/Set Tradier Portfolio Positions:
-            var positions = _tradier.Positions(job.AccountId);
+            var positions = _tradier.Positions();
             foreach (var position in positions)
             {
                 //We can't support options.
@@ -283,7 +283,7 @@ namespace QuantConnect.Lean.Engine.Setup
             //algorithm.Portfolio.SetCash(100000);
             //_startingCapital = 100000;
 
-            var balance = _tradier.Balance(job.AccountId);
+            var balance = _tradier.Balance();
             if (balance != null)
             {
                 if (balance.AccountNumber == job.AccountId)
