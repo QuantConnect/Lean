@@ -58,7 +58,7 @@
   <ItemGroup>
     <Compile Include="Brokerage.cs" />
     <Compile Include="InteractiveBrokers\IBBrokerage.cs" />
-    <Compile Include="Paper\Paper.cs" />
+    <Compile Include="Paper\PaperBrokerage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tradier\TradierBrokerage.cs" />
     <Compile Include="Tradier\Balances.cs" />

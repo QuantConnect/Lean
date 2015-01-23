@@ -335,6 +335,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _exitTriggered = true;
         }
 
-    } // End Algorithm Class:
+    } // End Algorithm Class
 
 } // End Namespace
