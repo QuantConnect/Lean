@@ -143,10 +143,7 @@ namespace QuantConnect
         { 
             get 
             {
-                var drives = DriveInfo.GetDrives();
-                //User 1 GB Maximum As Cache
-                if (drives.Length <= 0) return 1024;
-                var d = drives[0];
+                var d = GetDrive();
                 return d.AvailableFreeSpace / (1024 * 1024);
             }
         }
@@ -158,11 +155,8 @@ namespace QuantConnect
         {
             get
             {
-                var drives = DriveInfo.GetDrives();
-                //User 1 GB Maximum As Cache
-                if (drives.Length <= 0) return 1024;
-                var d = drives[0];
-                return (d.TotalSize - d.TotalFreeSpace) / (1024 * 1024);
+                var d = GetDrive();
+                return (d.TotalSize - d.AvailableFreeSpace) / (1024 * 1024);
             }
         }
 
@@ -174,12 +168,19 @@ namespace QuantConnect
         {
             get
             {
-                var drives = DriveInfo.GetDrives();
-                //User 1 GB Maximum As Cache
-                if (drives.Length <= 0) return 1024;
-                var d = drives[0];
+                var d = GetDrive();
                 return d.TotalSize / (1024 * 1024);
             }
+        }
+
+        /// <summary>
+        /// Get the drive.
+        /// </summary>
+        /// <returns></returns>
+        private static DriveInfo GetDrive()
+        {
+            var drives = DriveInfo.GetDrives();
+            return drives[0];
         }
 
         /// <summary>
