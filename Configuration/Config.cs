@@ -161,7 +161,13 @@ namespace QuantConnect.Configuration
                 Log.Trace("Config.GetValue(): " + key + " - Using default value: " + defaultValue);
                 return defaultValue;
             }
-            return (T)Convert.ChangeType(value, typeof (T));
+
+            var type = typeof (T);
+            if (type.IsEnum)
+            {
+                return (T) Enum.Parse(type, value);
+            }
+            return (T)Convert.ChangeType(value, type);
         }
     }
 }
