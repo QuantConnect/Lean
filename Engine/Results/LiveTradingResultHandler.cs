@@ -349,8 +349,7 @@ namespace QuantConnect.Lean.Engine.Results
                         lock (_chartLock)
                         {
                             var chartComplete = new Dictionary<string, Chart>(Charts);
-                            var ordersComplete = new Dictionary<int, Order>(_algorithm.Transactions.Orders);
-                            var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, ordersComplete, _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
+                            var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, new Dictionary<int, Order>(), _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
                             StoreResult(complete, true);
                         }
                     }
@@ -795,7 +794,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                         data_keys.Add(new
                         {
-                            Key = CreateKey("second", "yyyy-MM-dd-hh"),
+                            Key = CreateKey("second", "yyyy-MM-dd-HH"),
                             Serialized = JsonConvert.SerializeObject(live.Results)
                         });
                     }
@@ -823,7 +822,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="newEvent">New event details</param>
         public void OrderEvent(OrderEvent newEvent)
         {
-            Log.Trace("LiveConsoleResultHandler.OrderEvent(): id:" + newEvent.OrderId + " >> Status:" + newEvent.Status.ToString() + " >> Fill Price: " + newEvent.FillPrice.ToString("C") + " >> Fill Quantity: " + newEvent.FillQuantity);
+            Log.Trace("LiveConsoleResultHandler.OrderEvent(): id:" + newEvent.OrderId + " >> Status:" + newEvent.Status + " >> Fill Price: " + newEvent.FillPrice.ToString("C") + " >> Fill Quantity: " + newEvent.FillQuantity);
             Messages.Enqueue(new OrderEventPacket(_deployId, newEvent));
         }
 
@@ -848,8 +847,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         private static void Truncate(LiveResult result, DateTime start, DateTime stop)
         {
-            double unixDateStart = Time.DateTimeToUnixTimeStamp(start);
-            double unixDateStop = Time.DateTimeToUnixTimeStamp(stop);
+            var unixDateStart = Time.DateTimeToUnixTimeStamp(start);
+            var unixDateStop = Time.DateTimeToUnixTimeStamp(stop);
 
             var charts = new Dictionary<string, Chart>();
             foreach (var chart in result.Charts.Values)
