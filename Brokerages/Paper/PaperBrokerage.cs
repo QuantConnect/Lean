@@ -20,6 +20,8 @@
 
 using System;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages.Paper
 {
@@ -31,6 +33,10 @@ namespace QuantConnect.Brokerages.Paper
     /// </summary>
     public class PaperBrokerage : IBrokerage
     {
+        public event EventHandler<OrderEvent> OrderFilled;
+        public event EventHandler<PortfolioEvent> PortfolioChanged;
+        public event EventHandler<AccountEvent> AccountChanged;
+
         /// <summary>
         /// Name of our brokerage
         /// </summary>
@@ -39,17 +45,39 @@ namespace QuantConnect.Brokerages.Paper
             get { return "Paper-Trading Brokerage"; }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-        /// <summary>
-        /// Add an error handler for the specific brokerage error.
-        /// </summary>
-        /// <param name="key">Key for the error name.</param>
-        /// <param name="callback">Callback for the error actions.</param>
-        public void AddErrorHander(string key, Action callback)
+        public bool IsConnected
         {
-            // No error handlers//no errors from paper trading brokerage inc.
+            get { return true; }
+        }
+
+        public void AddErrorHander(ErrorHandlerCallback callback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool PlaceOrder(Order order)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool UpdateOrder(Order order)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CancelOrder(Order order)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Connect()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Disconnect()
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>

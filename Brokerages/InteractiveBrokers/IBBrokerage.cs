@@ -32,7 +32,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// <summary>
     /// The Interactive Brokers brokerage
     /// </summary>
-    public sealed class IBBrokerage : IBrokerage2
+    public sealed class IBBrokerage : IBrokerage
     {
         /// <summary>
         /// Event that fires each time an order is filled

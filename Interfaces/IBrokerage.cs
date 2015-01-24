@@ -1,60 +1,83 @@
-﻿/*
- * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
- * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
-*/
-
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
+using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Brokerage interface - store common objects and properties which are common across all brokerages.
+    /// Defines an error handler callback function that is used to process errors returned from
+    /// the brokerage's server
+    /// </summary>
+    /// <param name="key">The error code, or key, represened as a string.</param>
+    /// <param name="message">The callback to execute upon encountering the error</param>
+    public delegate void ErrorHandlerCallback(string key, string message);
+
+    /// <summary>
+    /// Brokerage interface that defines the operations all brokerages must implement.
     /// </summary>
     public interface IBrokerage
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
-        /// Brokerage Name:
+        /// Event that fires each time an order is filled
         /// </summary>
-        string Name
-        {
-            get;
-        }
-
-        /******************************************************** 
-        * INTERFACE METHODS
-        *********************************************************/
-        /// <summary>
-        /// Add an error handler for the specific brokerage error.
-        /// </summary>
-        /// <param name="key">String error name</param>
-        /// <param name="callback">Action call back</param>
-        void AddErrorHander(string key, Action callback);
+        event EventHandler<OrderEvent> OrderFilled;
 
         /// <summary>
-        /// Refresh brokerage login session where applicable.
+        /// Event that fires each time portfolio holdings have changed
         /// </summary>
-        bool RefreshSession();
+        event EventHandler<PortfolioEvent> PortfolioChanged;
+
+        /// <summary>
+        /// Event that fires each time a user's brokerage account is changed
+        /// </summary>
+        event EventHandler<AccountEvent> AccountChanged;
+
+        /// <summary>
+        /// Gets the name of the brokerage
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
+        /// Returns true if we're currently connected to the broker
+        /// </summary>
+        bool IsConnected { get; }
+
+        /// <summary>
+        /// Defines a handler for a specific type of error. The key here is a string representation
+        /// of the error code sent back from the brokerage.
+        /// </summary>
+        /// <param name="callback">The callback to execute upon encountering the error</param>
+        void AddErrorHander(ErrorHandlerCallback callback);
+
+        /// <summary>
+        /// Places a new order
+        /// </summary>
+        /// <param name="order">The order to be placed</param>
+        /// <returns>True if the request for a new order has been placed, false otherwise</returns>
+        bool PlaceOrder(Order order);
+
+        /// <summary>
+        /// Updates the order with the same id
+        /// </summary>
+        /// <param name="order">The new order information</param>
+        /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
+        bool UpdateOrder(Order order);
+
+        /// <summary>
+        /// Cancels the order with the specified ID
+        /// </summary>
+        /// <param name="order">The order to cancel</param>
+        /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
+        bool CancelOrder(Order order);
+
+        /// <summary>
+        /// Connects the client to the broker's remote servers
+        /// </summary>
+        void Connect();
+
+        /// <summary>
+        /// Disconnects the client from the broker's remote servers
+        /// </summary>
+        void Disconnect();
     }
 }

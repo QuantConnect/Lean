@@ -56,8 +56,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Brokerage.cs" />
-    <Compile Include="IBrokerage2.cs" />
     <Compile Include="InteractiveBrokers\IBBrokerage.cs" />
     <Compile Include="InteractiveBrokers\IBGatewayRunner.cs" />
     <Compile Include="Paper\PaperBrokerage.cs" />

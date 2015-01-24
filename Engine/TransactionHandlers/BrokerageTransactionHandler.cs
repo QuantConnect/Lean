@@ -33,7 +33,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private bool _exitTriggered;
         private IAlgorithm _algorithm;
-        private readonly IBrokerage2 _brokerage;
+        private readonly IBrokerage _brokerage;
         private ConcurrentQueue<Order> _orderQueue;
         private ConcurrentDictionary<int, Order> _orders;
         private ConcurrentDictionary<int, List<OrderEvent>> _orderEvents;
@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// Creates a new BrokerageTransactionHandler to process orders using the specified brokerage implementation
         /// </summary>
         /// <param name="brokerage">The brokerage implementation to process orders and fire fill events</param>
-        public BrokerageTransactionHandler(IBrokerage2 brokerage)
+        public BrokerageTransactionHandler(IBrokerage brokerage)
         {
             _brokerage = brokerage;
             _brokerage.OrderFilled += (sender, orderEvent) =>
@@ -165,6 +165,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <param name="order">The new order</param>
         private void HandleNewOrder(Order order)
         {
+            // create new id in thread safe manner
+            if (order.Id == 0) order.Id = Interlocked.Increment(ref _orderId);
+
             // tell algorithm to wait during scynchronous backtests
             _algorithm.ProcessingOrder = true;
             if (!_orders.TryAdd(order.Id, order))
