@@ -156,7 +156,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     liveJob.RealTimeEndpoint = RealTimeEndpoint.LiveTrading;
                     liveJob.SetupEndpoint = SetupHandlerEndpoint.Console;
 
-                    //Call in the tradier setup:
+                    //Call in the paper trading setup:
                     var setup = new PaperTradingSetupHandler();
                     setup.Setup(algorithm, out brokerage, baseJob);
 

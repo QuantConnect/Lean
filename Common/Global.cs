@@ -210,9 +210,7 @@ namespace QuantConnect
         /// Configure algorithm+job for the console:
         Console,
         /// Paper trading algorithm+job internal state configuration
-        PaperTrading,
-        /// Tradier Setup Handler
-        Tradier
+        PaperTrading
     }
 
     /// <summary>
@@ -221,9 +219,7 @@ namespace QuantConnect
     public enum TransactionHandlerEndpoint 
     { 
         /// Use Backtesting Models to Process Transactions
-        Backtesting,
-        /// Use Tradier to Process Transactions
-        Tradier,
+        Backtesting
         /// Use Interactive Brokers to Process Transactions
         //InteractiveBrokers,
         /// Use FXCM to Process Transactions

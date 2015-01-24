@@ -123,7 +123,6 @@
     <Compile Include="Setup\ConsoleSetupHandler.cs" />
     <Compile Include="Setup\BacktestingSetupHandler.cs" />
     <Compile Include="Setup\PaperTradingSetupHandler.cs" />
-    <Compile Include="Setup\TradierSetupHandler.cs" />
     <Compile Include="Setup\ISetupHandler.cs" />
     <Compile Include="SubscriptionDataReader.cs" />
     <Compile Include="TransactionHandlers\BacktestingTransactionHandler.cs" />
@@ -139,7 +138,6 @@
     <Compile Include="TransactionHandlers\ITransactionHandler.cs" />
     <Compile Include="DataFeeds\IDataFeed.cs" />
     <Compile Include="Results\LiveTradingResultHandler.cs" />
-    <Compile Include="TransactionHandlers\TradierTransactionHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DataFeeds\BacktestingDataFeed.cs" />
     <Compile Include="Engine.cs" />
