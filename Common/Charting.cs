@@ -106,6 +106,11 @@ namespace QuantConnect
         public string Name = "";
 
         /// <summary>
+        /// Axis for the chart series.
+        /// </summary>
+        public string Unit = "$";
+
+        /// <summary>
         ///  Values for the series plot:
         /// These values are assumed to be in ascending time order (first points earliest, last points latest)
         /// </summary>
@@ -129,11 +134,13 @@ namespace QuantConnect
         /// </summary>
         /// <param name="name">Name of the chart series</param>
         /// <param name="type">Type of the chart series</param>
-        public Series(string name, SeriesType type = SeriesType.Line) 
+        /// <param name="unit">Unit of the serier</param>
+        public Series(string name, SeriesType type = SeriesType.Line, string unit = "$") 
         {
             Name = name;
             Values = new List<ChartPoint>();
             SeriesType = type;
+            Unit = unit;
         }
 
         /// <summary>

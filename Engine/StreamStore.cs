@@ -184,8 +184,6 @@ namespace QuantConnect.Lean.Engine
             {
                 try
                 {
-                    Console.Write(".");
-
                     //When there's nothing to do:
                     if (_data == null && !fillForward)
                     {

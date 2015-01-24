@@ -105,8 +105,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Securities\AccountEvent.cs" />
-    <Compile Include="Securities\PortfolioEvent.cs" />
+    <Compile Include="KeepAlive.cs" />
     <Compile Include="SeriesSampler.cs" />
     <Compile Include="Data\Custom\Quandl.cs" />
     <Compile Include="Data\DynamicData.cs" />
@@ -143,6 +142,8 @@
     <Compile Include="Global.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Orders\Order.cs" />
+    <Compile Include="Securities\AccountEvent.cs" />
+    <Compile Include="Securities\PortfolioEvent.cs" />
     <Compile Include="Securities\Equity\EquityCache.cs" />
     <Compile Include="Securities\Equity\EquityDataFilter.cs" />
     <Compile Include="Securities\Forex\ForexCache.cs" />

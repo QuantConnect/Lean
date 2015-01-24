@@ -39,6 +39,12 @@ namespace QuantConnect.Packets
         public AlgorithmStatus Status;
 
         /// <summary>
+        /// Chart we're subscribed to for live trading.
+        /// </summary>
+        [JsonProperty(PropertyName = "sChartSubscription")]
+        public string ChartSubscription;
+
+        /// <summary>
         /// Optional message or reason for state change.
         /// </summary>
         [JsonProperty(PropertyName = "sMessage")]

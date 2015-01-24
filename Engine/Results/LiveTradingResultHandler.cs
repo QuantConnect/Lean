@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,6 +69,7 @@ namespace QuantConnect.Lean.Engine.Results
         //Log Message Store:
         private object _logStoreLock = new object();
         private Dictionary<DateTime, List<string>> _logStore = new Dictionary<DateTime, List<string>>();
+        private string _subscription = "Strategy Equity";
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -289,16 +289,7 @@ namespace QuantConnect.Lean.Engine.Results
                         //Get the updates since the last chart
                         foreach (var chart in Charts.Values)
                         {
-                            if (chart.Name != "Strategy Equity")
-                            {
-                                deltaCharts.Add(chart.Name, chart.GetUpdates());
-                            }
-
-                            if ((chart.Name == "Strategy Equity") && (DateTime.Now > _nextEquityUpdate))
-                            {
-                                _nextEquityUpdate = DateTime.Now.AddSeconds(60);
-                                deltaCharts.Add(chart.Name, chart.GetUpdates());
-                            }
+                            deltaCharts.Add(chart.Name, chart.GetUpdates());
                         }
                     }
 
@@ -386,6 +377,17 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
+
+        /// <summary>
+        /// Run over all the data and break it into smaller packets to ensure they all arrive at the terminal
+        /// </summary>
+        /// <param name="deltaCharts"></param>
+        /// <param name="deltaOrders"></param>
+        /// <param name="holdings"></param>
+        /// <param name="deltaStatistics"></param>
+        /// <param name="runtimeStatistics"></param>
+        /// <param name="serverStatistics"></param>
+        /// <returns></returns>
         private IEnumerable<LiveResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts,
             Dictionary<int, Order> deltaOrders,
             Dictionary<string, Holding> holdings,
@@ -400,6 +402,9 @@ namespace QuantConnect.Lean.Engine.Results
             var chartPackets = new List<LiveResultPacket>();
             foreach (var chart in deltaCharts.Values)
             {
+                if (chart.Series.Values.Sum(x => x.Values.Count) == 0) continue;
+                //if (chart.Name != _subscription) continue;
+
                 if (current == null || current.Count >= groupSize)
                 {
                     current = new Dictionary<string, Chart>(groupSize);
@@ -412,7 +417,6 @@ namespace QuantConnect.Lean.Engine.Results
             var packets = new[]
             {
                 new LiveResultPacket(_job, new LiveResult {Orders = deltaOrders}),
-                //new LiveResultPacket(_job, new LiveResult {ProfitLoss = deltaProfitLoss}),
                 new LiveResultPacket(_job, new LiveResult {Holdings = holdings}),
                 new LiveResultPacket(_job, new LiveResult
                 {
@@ -507,15 +511,16 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="seriesType">Series type for the chart.</param>
         /// <param name="time">Time for the sample</param>
         /// <param name="value">Value for the chart sample.</param>
+        /// <param name="unit">Unit for the chart axis</param>
         /// <remarks>Sample can be used to create new charts or sample equity - daily performance.</remarks>
-        public void Sample(string chartName, ChartType chartType, string seriesName, SeriesType seriesType, DateTime time, decimal value)
+        public void Sample(string chartName, ChartType chartType, string seriesName, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
         {
             lock (_chartLock)
             {
                 //Add a copy locally:
                 if (!Charts.ContainsKey(chartName))
                 {
-                    Charts.AddOrUpdate<string, Chart>(chartName, new Chart(chartName, chartType));
+                    Charts.AddOrUpdate(chartName, new Chart(chartName, chartType));
                 }
 
                 //Add the sample to our chart:
@@ -574,7 +579,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
 
             Log.Debug("LiveTradingResultHandler.SamplePerformance(): " + time.ToShortTimeString() + " >" + value);
-            Sample("Strategy Equity", ChartType.Overlay, "Daily Performance", SeriesType.Line, time, value);
+            Sample("Strategy Equity", ChartType.Overlay, "Daily Performance", SeriesType.Line, time, value, "%");
         }
 
         /// <summary>
@@ -591,7 +596,7 @@ namespace QuantConnect.Lean.Engine.Results
                     //Create the chart if it doesn't exist already:
                     if (!Charts.ContainsKey(update.Name))
                     {
-                        Charts.AddOrUpdate<string, Chart>(update.Name, new Chart(update.Name, update.ChartType));
+                        Charts.AddOrUpdate(update.Name, new Chart(update.Name, update.ChartType));
                     }
 
                     //Add these samples to this chart.
@@ -792,11 +797,20 @@ namespace QuantConnect.Lean.Engine.Results
 
                         Truncate(live.Results, start, stop);
 
-                        data_keys.Add(new
+                        foreach (var name in live.Results.Charts.Keys)
                         {
-                            Key = CreateKey("second", "yyyy-MM-dd-HH"),
-                            Serialized = JsonConvert.SerializeObject(live.Results)
-                        });
+                            var newPacket = new LiveResult();
+                            newPacket.Orders = new Dictionary<int, Order>(live.Results.Orders);
+                            newPacket.Holdings = new Dictionary<string, Holding>(live.Results.Holdings);
+                            newPacket.Charts = new Dictionary<string, Chart>();
+                            newPacket.Charts.Add(name, live.Results.Charts[name]);
+
+                            data_keys.Add(new
+                            {
+                                Key = CreateKey("second_" + Uri.EscapeUriString(name), "yyyy-MM-dd-HH"),
+                                Serialized = JsonConvert.SerializeObject(newPacket)
+                            });
+                        }
                     }
                     else
                     {
@@ -832,6 +846,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void Exit()
         {
             _exitTriggered = true;
+            PurgeQueue();
         }
 
         /// <summary>
@@ -868,7 +883,16 @@ namespace QuantConnect.Lean.Engine.Results
 
         private string CreateKey(string suffix, string dateFormat = "yyyy-MM-dd")
         {
-            return string.Format("live/{0}/{1}/{2}-{3}_{4}.json", _job.UserId, _job.ProjectId, _job.DeployId, DateTime.Now.ToString(dateFormat), suffix);
+            return string.Format("live/{0}/{1}/{2}-{3}_{4}.json", _job.UserId, _job.ProjectId, _job.DeployId, DateTime.UtcNow.ToString(dateFormat), suffix);
+        }
+
+
+        /// <summary>
+        /// Set the chart name that we want data from.
+        /// </summary>
+        public void SetChartSubscription(string symbol)
+        {
+            _subscription = symbol;
         }
 
     } // End Result Handler Thread:

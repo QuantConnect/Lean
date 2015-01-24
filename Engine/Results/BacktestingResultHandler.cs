@@ -556,8 +556,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="seriesName">Series name for the chart.</param>
         /// <param name="seriesType">Series type for the chart.</param>
         /// <param name="time">Time for the sample</param>
+        /// <param name="unit">Unit of the sample</param>
         /// <param name="value">Value for the chart sample.</param>
-        public void Sample(string chartName, ChartType chartType, string seriesName, SeriesType seriesType, DateTime time, decimal value) 
+        public void Sample(string chartName, ChartType chartType, string seriesName, SeriesType seriesType, DateTime time, decimal value, string unit = "$") 
         {
             lock (_chartLock)
             {
@@ -570,7 +571,7 @@ namespace QuantConnect.Lean.Engine.Results
                 //Add the sample to our chart:
                 if (!Charts[chartName].Series.ContainsKey(seriesName)) 
                 {
-                    Charts[chartName].Series.Add(seriesName, new Series(seriesName, seriesType));
+                    Charts[chartName].Series.Add(seriesName, new Series(seriesName, seriesType, unit));
                 }
 
                 //Add our value:
@@ -600,7 +601,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void SamplePerformance(DateTime time, decimal value) 
         {
             //Added a second chart to equity plot - daily perforamnce:
-            Sample("Strategy Equity", ChartType.Stacked, "Daily Performance", SeriesType.Bar, time, value);
+            Sample("Strategy Equity", ChartType.Stacked, "Daily Performance", SeriesType.Bar, time, value, "%");
         }
 
         /// <summary>
@@ -772,6 +773,15 @@ namespace QuantConnect.Lean.Engine.Results
             }
             Log.Trace("BacktestingResultHandler.ProcessLogMessages(): Ready: " + remoteURL);
             return remoteURL;
+        }
+
+
+        /// <summary>
+        /// Set the chart subscription we want data for. Not used in backtesting.
+        /// </summary>
+        public void SetChartSubscription(string symbol)
+        {
+            //
         }
 
     } // End Result Handler Thread:

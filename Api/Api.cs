@@ -79,9 +79,9 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="algorithmId">String algorithm id we're searching for.</param>
         /// <returns>Algorithm status enum</returns>
-        public AlgorithmStatus GetAlgorithmStatus(string algorithmId)
+        public AlgorithmControl GetAlgorithmStatus(string algorithmId)
         {
-            return AlgorithmStatus.Running;
+            return new AlgorithmControl();
         }
 
         /// <summary>

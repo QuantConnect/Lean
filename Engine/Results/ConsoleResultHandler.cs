@@ -246,8 +246,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="seriesType">Series type for the chart.</param>
         /// <param name="time">Time for the sample</param>
         /// <param name="value">Value for the chart sample.</param>
+        /// <param name="unit">Unit for the sample axis</param>
         /// <remarks>Sample can be used to create new charts or sample equity - daily performance.</remarks>
-        public void Sample(string chartName, ChartType chartType, string seriesName, SeriesType seriesType, DateTime time, decimal value)
+        public void Sample(string chartName, ChartType chartType, string seriesName, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
         {
             lock (_chartLock)
             {
@@ -286,7 +287,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="value">Value of the daily performance.</param>
         public void SamplePerformance(DateTime time, decimal value)
         {
-            Sample("Strategy Equity", ChartType.Overlay, "Daily Performance", SeriesType.Line, time, value);
+            Sample("Strategy Equity", ChartType.Overlay, "Daily Performance", SeriesType.Line, time, value, "%");
         }
 
 
@@ -523,6 +524,14 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
+
+        /// <summary>
+        /// Not used
+        /// </summary>
+        public void SetChartSubscription(string symbol)
+        {
+            //
+        }
     } // End Result Handler Thread:
 
 } // End Namespace
