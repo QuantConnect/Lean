@@ -21,7 +21,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
@@ -35,35 +34,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /******************************************************** 
         * INTERFACE PROPERTIES
         *********************************************************/
-        /// <summary>
-        /// The orders queue holds orders which are sent to exchange, partially filled, completely filled or cancelled.
-        /// Once the transaction thread has worked on them they get put here while witing for fill updates.
-        /// </summary>
-        ConcurrentDictionary<int, Order> Orders
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// OrderEvents is an orderid indexed collection of events attached to each order. Because an order might be filled in 
-        /// multiple legs it is important to keep a record of each event.
-        /// </summary>
-        ConcurrentDictionary<int, List<OrderEvent>> OrderEvents
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// OrderQueue holds the newly updated orders from the user algorithm waiting to be processed. Once
-        /// orders are processed they are moved into the Orders queue awaiting the brokerage response.
-        /// </summary>
-        ConcurrentQueue<Order> OrderQueue
-        {
-            get;
-            set;
-        }
 
         /// <summary>
         /// Boolean flag indicating the thread is busy. 
@@ -88,27 +58,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// Primary thread entry point to launch the transaction thread.
         /// </summary>
         void Run();
-        
-        /// <summary>
-        /// Submit a new order to be processed.
-        /// </summary>
-        /// <param name="order">New order object</param>
-        /// <returns>New unique quantconnect order id</returns>
-        int NewOrder(Order order);
-
-        /// <summary>
-        /// Update and resubmit the order to the OrderQueue for processing.
-        /// </summary>
-        /// <param name="order">Order we'd like updated</param>
-        /// <returns>True if successful, false if already cancelled or filled.</returns>
-        bool UpdateOrder(Order order);
-
-        /// <summary>
-        /// Cancel the order specified
-        /// </summary>
-        /// <param name="order">Order we'd like to cancel.</param>
-        /// <returns>True if successful, false if its already been cancelled or filled.</returns>
-        bool CancelOrder(Order order);
 
         /// <summary>
         /// Set a local reference to the algorithm instance.

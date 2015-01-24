@@ -135,6 +135,7 @@
     <Compile Include="DataFeeds\FileSystemDataFeed.cs" />
     <Compile Include="Results\ConsoleResultHandler.cs" />
     <Compile Include="Results\IResultHandler.cs" />
+    <Compile Include="TransactionHandlers\BrokerageTransactionHandler.cs" />
     <Compile Include="TransactionHandlers\ITransactionHandler.cs" />
     <Compile Include="DataFeeds\IDataFeed.cs" />
     <Compile Include="Results\LiveTradingResultHandler.cs" />

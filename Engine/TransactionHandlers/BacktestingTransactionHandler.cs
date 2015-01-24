@@ -258,66 +258,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Submit a new order to be processed.
-        /// </summary>
-        /// <param name="order">New order object</param>
-        /// <returns>New unique quantconnect order id</returns>
-        public int NewOrder(Order order) 
-        {
-            //If this is a new order (with no id) set it:
-            if (order.Id == 0) order.Id = _orderId++;
-
-            //Submit to queue
-            order.Status = OrderStatus.New;
-            OrderQueue.Enqueue(order);
-            _ready = false;
-
-            return order.Id;
-        }
-
-        /// <summary>
-        /// Update and resubmit the order to the OrderQueue for processing.
-        /// </summary>
-        /// <param name="order">Order we'd like updated</param>
-        /// <returns>True if successful, false if already cancelled or filled.</returns>
-        public bool UpdateOrder(Order order) 
-        {
-            //Failed.
-            if (Orders[order.Id].Status == OrderStatus.Filled || Orders[order.Id].Status == OrderStatus.Canceled) 
-            {
-                return false;
-            }
-
-            //Flag the order as new, send it to the queue:
-            order.Status = OrderStatus.Update;
-            OrderQueue.Enqueue(order);
-            _ready = false;
-
-            return true;
-        }
-
-        /// <summary>
-        /// Cancel the order specified
-        /// </summary>
-        /// <param name="order">Order we'd like to cancel.</param>
-        /// <returns>True if successful, false if its already been cancelled or filled.</returns>
-        public bool CancelOrder(Order order)
-        {
-            //Failed.
-            if (Orders[order.Id].Status == OrderStatus.Filled || Orders[order.Id].Status == OrderStatus.Canceled)
-            {
-                return false;
-            }
-
-            //Flag the order as new, send it to the queue:
-            order.Status = OrderStatus.Canceled;
-            OrderQueue.Enqueue(order);
-            _ready = false;
-
-            return true;
-        }
-
-        /// <summary>
         /// Set a local reference to the algorithm instance.
         /// </summary>
         /// <param name="algorithm">IAlgorithm object</param>

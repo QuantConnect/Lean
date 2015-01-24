@@ -346,7 +346,7 @@ namespace QuantConnect.Lean.Engine
                         try
                         {
                             var charts = new Dictionary<string, Chart>(ResultHandler.Charts);
-                            var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
+                            var orders = new Dictionary<int, Order>(algorithm.Transactions.Orders);
                             var holdings = new Dictionary<string, Holding>();
                             var statistics = new Dictionary<string, string>();
                             var banner = new Dictionary<string, string>();

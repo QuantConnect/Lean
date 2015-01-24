@@ -23,7 +23,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Tradier;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -44,12 +43,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /******************************************************** 
         * CLASS VARIABLES
         *********************************************************/
-        private TradierBrokerage _tradier = new TradierBrokerage();
+        private readonly TradierBrokerage _tradier;
         private bool _isActive = true;
         private bool _ready = false;
         private int _orderId = 0;
         private bool _exitTriggered = false;
-        private int _accountId = 0;
+        private readonly int _accountId;
         private DateTime _refreshOrders = new DateTime();
         private List<TradierOrder> _previousOrders = new List<TradierOrder>();
         private IAlgorithm _algorithm;
@@ -295,7 +294,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         if (sufficientBuyingPower)
                         {
                             var response = _tradier.PlaceOrder( 
-                                accountId: _accountId, 
                                 classification: TradierOrderClass.Equity,
                                 direction: Direction(_algorithm.Portfolio[order.Symbol].Quantity, order), 
                                 symbol: order.Symbol, 
@@ -327,7 +325,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     if (keys.Count > 0 && DateTime.Now > _refreshOrders)
                     {
                         //Fetch orders and schedule for next refresh in 200ms.
-                        var orderDetails = _tradier.FetchOrders(_accountId);
+                        var orderDetails = _tradier.FetchOrders();
                         _refreshOrders = DateTime.Now.AddMilliseconds(200);
 
                         //Go through each submitted order, detect fills, process fills when delta from known fill.
@@ -419,24 +417,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
 
         /// <summary>
-        /// Submit a new order to be processed.
-        /// </summary>
-        /// <param name="order">New order object</param>
-        /// <returns>New unique quantconnect order id</returns>
-        public int NewOrder(Order order)
-        {
-            //If this is a new order (with no id) set it:
-            if (order.Id == 0) order.Id = _orderId++;
-
-            //Submit to queue
-            order.Status = OrderStatus.New;
-            OrderQueue.Enqueue(order);
-            _ready = false;
-            return order.Id;
-        }
-
-
-        /// <summary>
         /// Convert a QC Direction to Tradier Direction Enum
         /// </summary>
         /// <param name="holdingQuantity">Our current holdings quantity</param>
@@ -521,47 +501,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 case QuantConnect.Orders.OrderDuration.GTC:
                     return TradierOrderDuration.GTC;
             }
-        }
-
-        /// <summary>
-        /// Update and resubmit the order to the OrderQueue for processing.
-        /// </summary>
-        /// <param name="order">Order we'd like updated</param>
-        /// <returns>True if successful, false if already cancelled or filled.</returns>
-        public bool UpdateOrder(Order order)
-        {
-            //Filled or already cancelled, can't update:
-            if (Orders[order.Id].Status == OrderStatus.Filled || Orders[order.Id].Status == OrderStatus.Canceled)
-            {
-                return false;
-            }
-
-            //Flag the order as new, send it to the queue:
-            order.Status = OrderStatus.Update;
-            OrderQueue.Enqueue(order);
-            _ready = false;
-            return true;
-        }
-
-
-        /// <summary>
-        /// Cancel the order specified
-        /// </summary>
-        /// <param name="order">Order we'd like to cancel.</param>
-        /// <returns>True if successful, false if its already been cancelled or filled.</returns>
-        public bool CancelOrder(Order order)
-        {
-            //Filled or already cancelled, can't recancel.
-            if (Orders[order.Id].Status == OrderStatus.Filled || Orders[order.Id].Status == OrderStatus.Canceled)
-            {
-                return false;
-            }
-
-            //Flag the order as new, send it to the queue:
-            order.Status = OrderStatus.Canceled;
-            OrderQueue.Enqueue(order);
-            _ready = false;
-            return true;
         }
 
 

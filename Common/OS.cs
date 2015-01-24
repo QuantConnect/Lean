@@ -204,18 +204,5 @@ namespace QuantConnect
                 {"CPU Usage",            CpuUsage.NextValue().ToString("0.0") + "%"}
             };
         }
-
-        /// <summary>
-        /// Executes a command in the command window. In windows, this uses cmd.exe, on Linux, it uses bash
-        /// </summary>
-        /// <param name="command">The command to be executed</param>
-        /// <returns>The started process</returns>
-        public static Process ExecuteCommand(string command)
-        {
-            var processStartInfo = IsWindows ? new ProcessStartInfo("cmd.exe", "/C " + command) : new ProcessStartInfo("bash", command);
-            processStartInfo.CreateNoWindow = false;
-            processStartInfo.UseShellExecute = false;
-            return Process.Start(processStartInfo);
-        }
     } // End OS Class
 } // End QC Namespace

@@ -17,13 +17,34 @@ using System;
 using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Brokerages.InteractiveBrokers;
+using QuantConnect.Configuration;
 using QuantConnect.Orders;
 
-namespace QuantConnect.Tests.Brokerages
+namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
     [TestFixture]
+    //[Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
     public class InteractiveBrokersTests
     {
+        private bool gatewayInitialized;
+
+        [SetUp]
+        public void InitializeGateway()
+        {
+            if (gatewayInitialized) return;
+
+            gatewayInitialized = true;
+            IBGatewayRunner.Start(Config.Get("ib-account"));
+        }
+
+        [TearDown]
+        public void KillGateway()
+        {
+            if (!gatewayInitialized) return;
+
+            IBGatewayRunner.Stop();
+        }
+
         [Test]
         public void ClientConnects()
         {

@@ -17,9 +17,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -32,26 +32,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// <summary>
     /// The Interactive Brokers brokerage
     /// </summary>
-    public sealed class IBBrokerage : IBrokerage
+    public sealed class IBBrokerage : IBrokerage2
     {
-        static IBBrokerage()
-        {
-            // verify that the IB Gateway is up and running, we only need to do this once per application
-
-            try
-            {
-                // for TWS
-                OS.ExecuteCommand("C:\\IBController\\IBControllerStart.bat");
-
-                // for just the gateway
-                //OS.ExecuteCommand("C:\\IBController\\IBControllerGatewayStart.bat");
-            }
-            catch (Exception err)
-            {
-                Log.Error("IBBrokerage.cctor(): " + err.Message);
-            }
-        }
-
         /// <summary>
         /// Event that fires each time an order is filled
         /// </summary>
@@ -67,8 +49,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         public event EventHandler<AccountEvent> AccountChanged;
 
+        // next valid order id for this client
         private int _nextValidID;
-        private static int _nextClientID = 0;
+        // next valid client id for the gateway/tws
+        private static int _nextClientID;
 
         private readonly int _port;
         private readonly string _account;
@@ -77,9 +61,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly IB.IBClient _client;
         private readonly IB.AgentDescription _agentDescription;
 
+        private ErrorHandlerCallback _errorHandler = (key, message) => { /*default to doing nothing*/ };
+
         // the key here is the QC order ID
         private readonly ConcurrentDictionary<int, Order>  _outstandingOrders = new ConcurrentDictionary<int, Order>();
-        private readonly Dictionary<string, string> _accountProperties = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _accountProperties = new Dictionary<string, string>(); 
 
         public string Name
         {
@@ -103,14 +89,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         ///     ib-account
         ///     ib-host
         ///     ib-port
-        ///     ib-client-id
         ///     ib-agent-description
         /// </summary>
         public IBBrokerage()
             : this(
                 Config.Get("ib-account"),
                 Config.Get("ib-host"),
-                Config.GetInt("ib-port"),
+                Config.GetInt("ib-port", 4001),
                 Config.GetValue<IB.AgentDescription>("ib-agent-description")
                 )
         {
@@ -122,7 +107,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="account">The Interactive Brokers account name</param>
         /// <param name="host">host name or IP address of the machine where TWS is running. Leave blank to connect to the local host.</param>
         /// <param name="port">must match the port specified in TWS on the Configure&gt;API&gt;Socket Port field.</param>
-        /// <param name="clientId">A number used to identify this client connection. All orders placed/modified from this client will be associated with this client identifier. Each client MUST connect with a unique clientId.</param>
         /// <param name="agentDescription">Used for Rule 80A describes the type of trader.</param>
         public IBBrokerage(string account, string host, int port, IB.AgentDescription agentDescription = IB.AgentDescription.Individual)
         {
@@ -142,15 +126,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             get { return _client; }
         }
 
-        public void AddErrorHander(string key, Action callback)
+        public void AddErrorHander(ErrorHandlerCallback callback)
         {
-            //
-        }
-
-        public bool RefreshSession()
-        {
-            Connect();
-            return IsConnected;
+            if (callback == null)
+            {
+                throw new ArgumentNullException("callback");
+            }
+            _errorHandler = callback;
         }
 
         /// <summary>
@@ -242,29 +224,59 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             if (IsConnected) return;
 
-            Log.Trace("IBBrokerage.Connect(): Attempting to connect...");
+            // set up event handlers
+            _client.UpdatePortfolio += HandlePortfolioUpdates;
+            _client.OrderStatus += HandleOrderStatusUpdates;
+            _client.UpdateAccountValue += HandleUpdateAccountValue;
+            _client.Error += HandleError;
 
-            try
+            // we need to wait until we receive the next valid id from the server
+            var manualResetEvent = new ManualResetEvent(false);
+            _client.NextValidId += (sender, e) =>
             {
-                _client.UpdatePortfolio += new EventHandler<IB.UpdatePortfolioEventArgs>(HandlePortfolioUpdates);
-                _client.OrderStatus += new EventHandler<IB.OrderStatusEventArgs>(HandleOrderStatusUpdates);
-                _client.CurrentTime += new EventHandler<IB.CurrentTimeEventArgs>(HandleCurrentTime);
-                _client.UpdateAccountValue += new EventHandler<IB.UpdateAccountValueEventArgs>(HandleUpdateAccountValue);
-                _client.NextValidId += new EventHandler<IB.NextValidIdEventArgs>(HandleNextValidID);
-                _client.Error += new EventHandler<IB.ErrorEventArgs>(HandleError);
+                // only grab this id when we initialize, and we'll manually increment it here to avoid threading issues
+                if (_nextValidID == 0)
+                {
+                    _nextValidID = e.OrderId;
+                    manualResetEvent.Set();
+                }
+                Log.Trace("IBBrokerage.HandleNextValidID(): " + e.OrderId);
+            };
 
-                _client.Connect(_host, _port, _clientID);
-
-                // pause for a moment to receive next valid ID message from gateway
-                Thread.Sleep(50);
-
-                _client.RequestAccountUpdates(true, _account);
-            }
-            catch (Exception err)
+            int attempt = 1;
+            while (true)
             {
-                Log.Error("IBBrokerage.Connect(): " + err.Message);
-                throw;
+                try
+                {
+                    Log.Trace("IBBrokerage.Connect(): Attempting to connect (" + attempt + "/10) ...");
+
+                    // we're going to try and connect several times, if successful break
+                    _client.Connect(_host, _port, _clientID);
+                    break;
+                }
+                catch (Exception err)
+                { 
+                    // max out at 10 attempts to connect
+                    if (attempt++ < 10)
+                    {
+                        Thread.Sleep(5000);
+                        continue;
+                    }
+
+                    // we couldn't connect after several attempts, log the error and throw an exception
+                    Log.Error("IBBrokerage.Connect(): " + err.Message);
+                    throw;
+                }
             }
+
+            // pause for a moment to receive next valid ID message from gateway
+            if (!manualResetEvent.WaitOne(1000))
+            {
+                // we timed out our wait for next valid id... we'll just log it
+                Log.Error("IBBrokerage.Connect(): Timed out waiting for next valid ID event to fire.");
+            }
+
+            _client.RequestAccountUpdates(true, _account);
         }
 
         /// <summary>
@@ -363,19 +375,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Trace(message);
             }
-        }
 
-        /// <summary>
-        /// Handles the NextValidID messages from IB
-        /// </summary>
-        private void HandleNextValidID(object sender, IB.NextValidIdEventArgs e)
-        {
-            // only grab this id when we initialize, and we'll manually increment it here to avoid threading issues
-            if (_nextValidID == 0)
-            {
-                _nextValidID = e.OrderId;
-            }
-            Log.Trace("IBBrokerage.HandleNextValidID(): " + e.OrderId);
+            // invoke our custom error handler, defaults to do nothing
+            _errorHandler.Invoke(e.ErrorCode.ToString(), e.ErrorMsg);
         }
 
         /// <summary>
@@ -408,11 +410,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Error("IBBrokerage.HandleUpdateAccountValue(): " + err.Message);
             }
-        }
-
-        private void HandleCurrentTime(object sender, IB.CurrentTimeEventArgs e)
-        {
-            //NOP
         }
 
         /// <summary>
