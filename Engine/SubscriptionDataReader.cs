@@ -260,7 +260,7 @@ namespace QuantConnect.Lean.Engine
             {
                 if (_reader == null) 
                 {
-                    //Handle the 1% of time:: getReader failed (e.g. missing day on S3) so skip day:
+                    //Handle the 1% of time:: getReader failed e.g. missing day so skip day:
                     Current = null;
                 } 
                 else
