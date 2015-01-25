@@ -564,12 +564,6 @@ namespace QuantConnect.Lean.Engine
                     th = new BacktestingTransactionHandler(algorithm);
                     Log.Trace("Engine.GetTransactionHandler(): Selected Backtesting Transaction Models.");
                     break;
-
-                case TransactionHandlerEndpoint.Tradier:
-                    var live = job as LiveNodePacket;
-                    Log.Trace("Engine.GetTransactionHandler(): Selected Live Transaction Fills.");
-                    th = new TradierTransactionHandler(algorithm, brokerage, results, live.AccountId);
-                    break;
             }
             return th;
         }
@@ -634,10 +628,6 @@ namespace QuantConnect.Lean.Engine
                 case SetupHandlerEndpoint.PaperTrading:
                     sh = new PaperTradingSetupHandler();
                     Log.Trace("Engine.GetSetupHandler(): Selected PaperTrading Algorithm Setup Handler.");
-                    break;
-                case SetupHandlerEndpoint.Tradier:
-                    sh = new TradierSetupHandler();
-                    Log.Trace("Engine.GetSetupHandler(): Selected Tradier Algorithm Setup Handler.");
                     break;
             }
             return sh;
