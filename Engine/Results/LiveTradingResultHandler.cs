@@ -398,14 +398,18 @@ namespace QuantConnect.Lean.Engine.Results
             // break the charts into groups
 
             const int groupSize = 10;
-            Dictionary<string, Chart> current = null;
+            Dictionary<string, Chart> current = new Dictionary<string, Chart>();
             var chartPackets = new List<LiveResultPacket>();
             foreach (var chart in deltaCharts.Values)
             {
                 if (chart.Series.Values.Sum(x => x.Values.Count) == 0) continue;
-                if (chart.Name != _subscription) continue;
+                if (chart.Name != _subscription)
+                {
+                    current.Add(chart.Name, new Chart(chart.Name));
+                    continue;
+                }
 
-                if (current == null || current.Count >= groupSize)
+                if (current.Count >= groupSize)
                 {
                     current = new Dictionary<string, Chart>(groupSize);
                     chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = current }));

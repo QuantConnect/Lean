@@ -24,7 +24,6 @@ namespace QuantConnect.Algorithm
     /// Console is a helper class to override default behaviour of Console.WriteLine(); and force the write-line messages 
     /// to be managed by the application, and if required appear in the web browser IDE console.
     /// </summary>
-    /// <![CDATA[{ "caption":"Console.WriteLine(string)", "value":"Debug(string message)", "meta":"method" } ]]>
     public static class Console
     {
         private static QCAlgorithm _algorithmNamespace;
