@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.Examples
                 var delayedSma = delay.Of(sma);
 
                 // register our new 'delayedSma' for automaic updates on a daily resolution
-                RegisterIndicator(Symbol, delayedSma, Resolution.Daily);
+                RegisterIndicator(Symbol, delayedSma, Resolution.Daily, data => data.Value);
 
                 return delayedSma;
             }).ToArray();

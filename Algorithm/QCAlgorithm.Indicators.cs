@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm
         {
             string name = CreateIndicatorName(symbol, "EMA" + period, resolution);
             var ema = new ExponentialMovingAverage(name, period);
-            RegisterIndicator(symbol, ema, resolution);
+            RegisterIndicator(symbol, ema, resolution, x => x.Value);
             return ema;
         }
 
@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm
         {
             string name = CreateIndicatorName(symbol, "SMA" + period, resolution);
             var sma = new SimpleMovingAverage(name, period);
-            RegisterIndicator(symbol, sma, resolution);
+            RegisterIndicator(symbol, sma, resolution, x => x.Value);
             return sma;
         }
 
@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, string.Format("MACD({0},{1})", fastPeriod, slowPeriod), resolution);
             var macd = new MovingAverageConvergenceDivergence(name, fastPeriod, slowPeriod, signalPeriod, type);
-            RegisterIndicator(symbol, macd, resolution);
+            RegisterIndicator(symbol, macd, resolution, x => x.Value);
             return macd;
         }
 
@@ -185,7 +185,7 @@ namespace QuantConnect.Algorithm
         {
             string name = CreateIndicatorName(symbol, "MOM" + period, resolution);
             var momentum = new Momentum(name, period);
-            RegisterIndicator(symbol, momentum, resolution);
+            RegisterIndicator(symbol, momentum, resolution, x => x.Value);
             return momentum;
         }
 
@@ -201,7 +201,7 @@ namespace QuantConnect.Algorithm
         {
             string name = CreateIndicatorName(symbol, "MOMP" + period, resolution);
             var momentum = new MomentumPercent(name, period);
-            RegisterIndicator(symbol, momentum, resolution);
+            RegisterIndicator(symbol, momentum, resolution, x => x.Value);
             return momentum;
         }
 
@@ -218,7 +218,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, "RSI" + period, resolution);
             var rsi = new RelativeStrengthIndex(name, period, movingAverageType);
-            RegisterIndicator(symbol, rsi, resolution);
+            RegisterIndicator(symbol, rsi, resolution, x => x.Value);
             return rsi;
         }
 
