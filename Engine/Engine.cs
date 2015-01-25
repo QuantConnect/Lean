@@ -24,6 +24,7 @@ using System.Threading;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using QuantConnect.Brokerages;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
@@ -53,7 +54,7 @@ namespace QuantConnect.Lean.Engine
         *********************************************************/
         private static bool _liveMode = Config.GetBool("live-mode");
         private static bool _local = Config.GetBool("local");
-        private static IBrokerage _brokerage = new Brokerage();
+        private static IBrokerage _brokerage;
 
         /******************************************************** 
         * CLASS PUBLIC VARIABLES
@@ -268,7 +269,7 @@ namespace QuantConnect.Lean.Engine
                         
                         //Load the associated handlers for data, transaction and realtime events:
                         ResultHandler.SetAlgorithm(algorithm);
-                        DataFeed = GetDataFeedHandler(algorithm, _brokerage, job);
+                        DataFeed = GetDataFeedHandler(algorithm, job);
                         TransactionHandler = GetTransactionHandler(algorithm, _brokerage, ResultHandler, job);
                         RealTimeHandler = GetRealTimeHandler(algorithm, _brokerage, DataFeed, ResultHandler, job);
 
@@ -346,7 +347,7 @@ namespace QuantConnect.Lean.Engine
                         try
                         {
                             var charts = new Dictionary<string, Chart>(ResultHandler.Charts);
-                            var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
+                            var orders = new Dictionary<int, Order>(algorithm.Transactions.Orders);
                             var holdings = new Dictionary<string, Holding>();
                             var statistics = new Dictionary<string, string>();
                             var banner = new Dictionary<string, string>();
@@ -487,9 +488,8 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         /// <param name="algorithm">User algorithm to scan for securities</param>
         /// <param name="job">Algorithm Node Packet</param>
-        /// <param name="brokerage">Brokerage instance to avoid access token duplication</param>
         /// <returns>Class matching IDataFeed Interface</returns>
-        private static IDataFeed GetDataFeedHandler(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket job)
+        private static IDataFeed GetDataFeedHandler(IAlgorithm algorithm, AlgorithmNodePacket job)
         {
             var df = default(IDataFeed);
             switch (job.DataEndpoint) 
@@ -561,7 +561,7 @@ namespace QuantConnect.Lean.Engine
             {
                 //Operation from local files:
                 default:
-                    th = new BacktestingTransactionHandler(algorithm);
+                    th = new BacktestingTransactionHandler(algorithm, brokerage as BacktestingBrokerage);
                     Log.Trace("Engine.GetTransactionHandler(): Selected Backtesting Transaction Models.");
                     break;
             }

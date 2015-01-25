@@ -215,7 +215,8 @@ namespace QuantConnect.Algorithm
             }
 
             //Set a temporary price for validating order for market orders:
-            price = Securities[symbol].Price;
+            var security = Securities[symbol];
+            price = security.Price;
             if (price == 0)
             {
                 Error("Asset price is $0. If using custom data make sure you've set the 'Value' property.");
@@ -223,7 +224,7 @@ namespace QuantConnect.Algorithm
             }
 
             //Check the exchange is open before sending a market order.
-            if (type == OrderType.Market && !Securities[symbol].Exchange.ExchangeOpen)
+            if (type == OrderType.Market && !security.Exchange.ExchangeOpen)
             {
                 Error("Market order and exchange not open");
                 return -3;
@@ -237,7 +238,7 @@ namespace QuantConnect.Algorithm
             }
 
             //Add the order and create a new order Id.
-            orderId = Transactions.AddOrder(new Order(symbol, quantity, type, Time, price, tag));
+            orderId = Transactions.AddOrder(new Order(symbol, security.Type, quantity, type, Time, price, tag));
 
             //Wait for the order event to process:
             //Enqueue means send to order queue but don't wait for response:

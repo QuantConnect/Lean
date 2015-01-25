@@ -18,16 +18,8 @@
 * USING NAMESPACES
 **********************************************************/
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading;
-using Newtonsoft.Json;
-using QuantConnect.Logging;
-using RestSharp;
+using QuantConnect.Brokerages.Backtesting;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Brokerages.Paper
 {
@@ -37,38 +29,16 @@ namespace QuantConnect.Brokerages.Paper
     /// <summary>
     /// Paper Trading Brokerage
     /// </summary>
-    public class PaperBrokerage : Brokerage
+    public class PaperBrokerage : BacktestingBrokerage
     {
         /// <summary>
-        /// Name of our brokerage
+        /// Creates a new PaperBrokerage
         /// </summary>
-        public string Name
+        /// <param name="algorithm"></param>
+        public PaperBrokerage(IAlgorithm algorithm) 
+            : base(algorithm, "Paper Brokerage")
         {
-            get { return "Paper-Trading Brokerage"; }
         }
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-        /// <summary>
-        /// Add an error handler for the specific brokerage error.
-        /// </summary>
-        /// <param name="key">Key for the error name.</param>
-        /// <param name="callback">Callback for the error actions.</param>
-        public override void AddErrorHander(string key, Action callback)
-        {
-            // No error handlers//no errors from paper trading brokerage inc.
-        }
-
-        /// <summary>
-        /// Refresh the login session with the brokerage.
-        /// </summary>
-        public override bool RefreshSession()
-        {
-            //No need to refresh session.
-            return true;
-        }
-
     } // End of Paper Brokerage:
 
 }

@@ -215,6 +215,11 @@ namespace QuantConnect.Orders
         public string Tag = "";
 
         /// <summary>
+        /// The symbol's security type
+        /// </summary>
+        public SecurityType SecurityType = SecurityType.Equity;
+
+        /// <summary>
         /// Order Direction Property based off Quantity.
         /// </summary>
         public OrderDirection Direction 
@@ -262,12 +267,13 @@ namespace QuantConnect.Orders
         /// New order constructor
         /// </summary>
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
+        /// <param name="type"></param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="order">Order type (market, limit or stoploss order)</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="price">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public Order(string symbol, int quantity, OrderType order, DateTime time, decimal price = 0, string tag = "") 
+        public Order(string symbol, SecurityType type, int quantity, OrderType order, DateTime time, decimal price = 0, string tag = "") 
         {
             Time = time;
             Price = price;
@@ -276,6 +282,7 @@ namespace QuantConnect.Orders
             Symbol = symbol;
             Status = OrderStatus.None;
             Tag = tag;
+            SecurityType = type;
             Duration = OrderDuration.GTC;
             BrokerId = new List<long>();
             ContingentId = 0;

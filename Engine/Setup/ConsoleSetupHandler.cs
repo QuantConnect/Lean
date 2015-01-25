@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -103,7 +104,7 @@ namespace QuantConnect.Lean.Engine.Setup
         public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob)
         {
             var initializeComplete = false;
-            brokerage = new Brokerage();    //Error case.
+            brokerage = new BacktestingBrokerage(algorithm);
 
             try
             {
@@ -132,7 +133,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Backtest Specific Parameters:
                     StartingDate = backtestJob.PeriodStart;
                     StartingCapital = algorithm.Portfolio.Cash;
-                    baseJob = backtestJob;
                 }
                 else
                 {
@@ -164,7 +164,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Live Specific Parameters:
                     StartingDate = DateTime.Now;
                     StartingCapital = algorithm.Portfolio.Cash;
-                    baseJob = liveJob;
                 }
             }
             catch (Exception err)

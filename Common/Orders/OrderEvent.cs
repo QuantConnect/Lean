@@ -116,6 +116,18 @@ namespace QuantConnect.Orders
             FillQuantity = 0;
             FillPrice = 0;
         }
+
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            return string.Format("OrderID: {0} Symbol: {1} Status: {2}", OrderId, Symbol, Status);
+        }
     }
 
 } // End QC Namespace:

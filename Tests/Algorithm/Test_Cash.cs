@@ -20,6 +20,7 @@ using QuantConnect.Securities;
 
 using System.Globalization;
 using QuantConnect.Data;
+using QuantConnect.Algorithm;
 using QuantConnect.Orders;
 
 namespace QuantConnect
