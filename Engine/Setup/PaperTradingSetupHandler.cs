@@ -117,7 +117,7 @@ namespace QuantConnect.Lean.Engine.Setup
         public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket job)
         {
             var initializeComplete = false;
-            brokerage = new PaperBrokerage(); //Not used.
+            brokerage = new PaperBrokerage(algorithm);
 
             //For the console, let it set itself up primarily:
             algorithm.Initialize();

@@ -1,0 +1,172 @@
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System.Collections.Concurrent;
+using System.Linq;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+
+namespace QuantConnect.Brokerages.Backtesting
+{
+    /// <summary>
+    /// Represents a brokerage to be used during backtesting. This is intended to be only be used with the BacktestingTransactionHandler
+    /// </summary>
+    public class BacktestingBrokerage : Brokerage
+    {
+        // this is the algorithm under test
+        private readonly IAlgorithm _algorithm;
+        // this is the orders dictionary reference from the algorithm for convenence
+        private readonly ConcurrentDictionary<int, Order> _orders;
+
+        /// <summary>
+        /// Creates a new BacktestingBrokerage for the specified algorithm
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        public BacktestingBrokerage(IAlgorithm algorithm)
+            : base("Backtesting Brokerage")
+        {
+            _algorithm = algorithm;
+            _orders = _algorithm.Transactions.Orders;
+        }
+
+        /// <summary>
+        /// Creates a new BacktestingBrokerage for the specified algorithm
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="name">The name of the brokerage</param>
+        protected BacktestingBrokerage(IAlgorithm algorithm, string name)
+            : base(name)
+        {
+            _algorithm = algorithm;
+            _orders = _algorithm.Transactions.Orders;
+        }
+
+        /// <summary>
+        /// Gets the connection status
+        /// </summary>
+        /// <remarks>
+        /// The BacktestingBrokerage is always connected
+        /// </remarks>
+        public override bool IsConnected
+        {
+            get { return true; }
+        }
+
+        /// <summary>
+        /// Places a new order and assigns a new broker ID to the order
+        /// </summary>
+        /// <param name="order">The order to be placed</param>
+        /// <returns>True if the request for a new order has been placed, false otherwise</returns>
+        public override bool PlaceOrder(Order order)
+        {
+            if (order.Status == OrderStatus.New)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Updates the order with the same ID
+        /// </summary>
+        /// <param name="order">The new order information</param>
+        /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
+        public override bool UpdateOrder(Order order)
+        {
+            if (order.Status == OrderStatus.Update)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Cancels the order with the specified ID
+        /// </summary>
+        /// <param name="order">The order to cancel</param>
+        /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
+        public override bool CancelOrder(Order order)
+        {
+            if (order.Status == OrderStatus.Canceled)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Scans all the outstanding orders and applies the algorithm model fills to generate the order events
+        /// </summary>
+        public void Scan()
+        {
+            //2. NOW ALL ORDERS IN ORDER DICTIONARY::> 
+            //   Scan through Orders: Process fills. Trigger Events.
+            //   Refresh the order model: look at the orders for ones - process every time.
+            
+            // find orders that still need to be processed, be sure to sort them by their id so we
+            // fill them in the proper order
+            var orders = (from order in _orders
+                          where order.Value.Status != OrderStatus.Filled &&
+                                order.Value.Status != OrderStatus.Canceled &&
+                                order.Value.Status != OrderStatus.Invalid
+                          orderby order.Value.Id ascending
+                          select order.Value);
+
+            //Now we have the orders; re-apply the order models to each order.
+            foreach (var order in orders)
+            {
+                // verify sure we have enough cash to perform the fill
+                var sufficientBuyingPower = _algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order);
+
+                var fill = new OrderEvent();
+
+                //Before we check this queued order make sure we have buying power:
+                if (sufficientBuyingPower)
+                {
+                    //Based on the order type: refresh its model to get fill price and quantity
+                    fill = _algorithm.Securities[order.Symbol].Model.Fill(_algorithm.Securities[order.Symbol], order);
+                }
+                else
+                {
+                    //Flag order as invalid and push off queue:
+                    order.Status = OrderStatus.Invalid;
+                    _algorithm.Error("Order Error: id: " + order.Id + ": Insufficient buying power to complete order.");
+                }
+
+                if (order.Status != OrderStatus.None)
+                {
+                    //If the fill models come back suggesting filled, process the affects on portfolio
+                    OnOrderEvent(fill);
+                }
+            }
+        }
+
+        /// <summary>
+        /// The BacktestingBrokerage is always connected. This is a no-op.
+        /// </summary>
+        public override void Connect()
+        {
+            //NOP
+        }
+
+        /// <summary>
+        /// The BacktestingBrokerage is always connected. This is a no-op.
+        /// </summary>
+        public override void Disconnect()
+        {
+            //NOP
+        }
+    }
+}

@@ -13,37 +13,32 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Securities
+using System;
+
+namespace QuantConnect.Brokerages
 {
     /// <summary>
-    /// Messaging class signifying a change in a user's account
+    /// Represents an error retuned from a broker's server
     /// </summary>
-    public class AccountEvent
+    public class BrokerageException : Exception
     {
         /// <summary>
-        /// The total cash balance of the account
+        /// Creates a new BrokerageException with the specified message.
         /// </summary>
-        public decimal CashBalance { get; private set; }
-
-        /// <summary>
-        /// Creates an AccountEvent
-        /// </summary>
-        /// <param name="cashBalance">The total cash balance of the account</param>
-        public AccountEvent(decimal cashBalance)
+        /// <param name="message">The error message that explains the reason for the exception.</param>
+        public BrokerageException(string message)
+            : base(message)
         {
-            CashBalance = cashBalance;
         }
 
         /// <summary>
-        /// Returns a string that represents the current object.
+        /// Creates a new BrokerageException with the specified message.
         /// </summary>
-        /// <returns>
-        /// A string that represents the current object.
-        /// </returns>
-        /// <filterpriority>2</filterpriority>
-        public override string ToString()
+        /// <param name="message">The error message that explains the reason for the exception.</param>
+        /// <param name="inner">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
+        public BrokerageException(string message, Exception inner)
+            : base(message, inner)
         {
-            return "Account Cash Balance: " + CashBalance.ToString("C");
         }
     }
 }

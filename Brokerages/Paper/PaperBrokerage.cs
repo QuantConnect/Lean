@@ -18,10 +18,8 @@
 * USING NAMESPACES
 **********************************************************/
 
-using System;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages.Paper
 {
@@ -31,64 +29,16 @@ namespace QuantConnect.Brokerages.Paper
     /// <summary>
     /// Paper Trading Brokerage
     /// </summary>
-    public class PaperBrokerage : IBrokerage
+    public class PaperBrokerage : BacktestingBrokerage
     {
-        public event EventHandler<OrderEvent> OrderFilled;
-        public event EventHandler<PortfolioEvent> PortfolioChanged;
-        public event EventHandler<AccountEvent> AccountChanged;
-
         /// <summary>
-        /// Name of our brokerage
+        /// Creates a new PaperBrokerage
         /// </summary>
-        public string Name
+        /// <param name="algorithm"></param>
+        public PaperBrokerage(IAlgorithm algorithm) 
+            : base(algorithm, "Paper Brokerage")
         {
-            get { return "Paper-Trading Brokerage"; }
         }
-
-        public bool IsConnected
-        {
-            get { return true; }
-        }
-
-        public void AddErrorHander(ErrorHandlerCallback callback)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool PlaceOrder(Order order)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool UpdateOrder(Order order)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CancelOrder(Order order)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Connect()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Disconnect()
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Refresh the login session with the brokerage.
-        /// </summary>
-        public bool RefreshSession()
-        {
-            //No need to refresh session.
-            return true;
-        }
-
     } // End of Paper Brokerage:
 
 }

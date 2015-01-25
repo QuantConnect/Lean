@@ -26,7 +26,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// <summary>
     /// Handles launching and killing the IB Controller script
     /// </summary>
-    public static class IBGatewayRunner
+    public static class InteractiveBrokersGatewayRunner
     {
         // process that's running the IB Controller script
         private static int ScriptProcessID;

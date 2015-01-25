@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -103,7 +104,7 @@ namespace QuantConnect.Lean.Engine.Setup
         public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob)
         {
             var initializeComplete = false;
-            brokerage = default(IBrokerage);    //Error case.
+            brokerage = new BacktestingBrokerage(algorithm);
 
             try
             {

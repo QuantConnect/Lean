@@ -56,8 +56,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="InteractiveBrokers\IBBrokerage.cs" />
-    <Compile Include="InteractiveBrokers\IBGatewayRunner.cs" />
+    <Compile Include="Backtesting\BacktestingBrokerage.cs" />
+    <Compile Include="Brokerage.cs" />
+    <Compile Include="BrokerageException.cs" />
+    <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
+    <Compile Include="InteractiveBrokers\InteractiveBrokersException.cs" />
+    <Compile Include="InteractiveBrokers\InteractiveBrokersGatewayRunner.cs" />
     <Compile Include="Paper\PaperBrokerage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

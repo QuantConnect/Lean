@@ -20,7 +20,6 @@
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
@@ -58,12 +57,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// Primary thread entry point to launch the transaction thread.
         /// </summary>
         void Run();
-
-        /// <summary>
-        /// Set a local reference to the algorithm instance.
-        /// </summary>
-        /// <param name="algorithm">IAlgorithm object</param>
-        void SetAlgorithm(IAlgorithm algorithm);
 
         /// <summary>
         /// Signal a end of thread request to stop montioring the transactions.

@@ -5,14 +5,6 @@ using QuantConnect.Securities;
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Defines an error handler callback function that is used to process errors returned from
-    /// the brokerage's server
-    /// </summary>
-    /// <param name="key">The error code, or key, represened as a string.</param>
-    /// <param name="message">The callback to execute upon encountering the error</param>
-    public delegate void ErrorHandlerCallback(string key, string message);
-
-    /// <summary>
     /// Brokerage interface that defines the operations all brokerages must implement.
     /// </summary>
     public interface IBrokerage
@@ -20,7 +12,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Event that fires each time an order is filled
         /// </summary>
-        event EventHandler<OrderEvent> OrderFilled;
+        event EventHandler<OrderEvent> OrderEvent;
 
         /// <summary>
         /// Event that fires each time portfolio holdings have changed
@@ -33,6 +25,11 @@ namespace QuantConnect.Interfaces
         event EventHandler<AccountEvent> AccountChanged;
 
         /// <summary>
+        /// Event that fires when an error is encountered in the brokerage
+        /// </summary>
+        event EventHandler<Exception> Error;
+
+        /// <summary>
         /// Gets the name of the brokerage
         /// </summary>
         string Name { get; }
@@ -43,14 +40,7 @@ namespace QuantConnect.Interfaces
         bool IsConnected { get; }
 
         /// <summary>
-        /// Defines a handler for a specific type of error. The key here is a string representation
-        /// of the error code sent back from the brokerage.
-        /// </summary>
-        /// <param name="callback">The callback to execute upon encountering the error</param>
-        void AddErrorHander(ErrorHandlerCallback callback);
-
-        /// <summary>
-        /// Places a new order
+        /// Places a new order and assigns a new broker ID to the order
         /// </summary>
         /// <param name="order">The order to be placed</param>
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>

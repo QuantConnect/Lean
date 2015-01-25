@@ -125,7 +125,6 @@
     <Compile Include="Setup\PaperTradingSetupHandler.cs" />
     <Compile Include="Setup\ISetupHandler.cs" />
     <Compile Include="SubscriptionDataReader.cs" />
-    <Compile Include="TransactionHandlers\BacktestingTransactionHandler.cs" />
     <None Include="config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -134,6 +133,7 @@
     <Compile Include="DataFeeds\FileSystemDataFeed.cs" />
     <Compile Include="Results\ConsoleResultHandler.cs" />
     <Compile Include="Results\IResultHandler.cs" />
+    <Compile Include="TransactionHandlers\BacktestingTransactionHandler.cs" />
     <Compile Include="TransactionHandlers\BrokerageTransactionHandler.cs" />
     <Compile Include="TransactionHandlers\ITransactionHandler.cs" />
     <Compile Include="DataFeeds\IDataFeed.cs" />

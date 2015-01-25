@@ -25,25 +25,25 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
     [TestFixture]
     [Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
-    public class InteractiveBrokersTests
+    public class InteractiveBrokersBrokerageTests
     {
         [SetUp]
         public void InitializeGateway()
         {
-            IBGatewayRunner.Start(Config.Get("ib-account"));
+            InteractiveBrokersGatewayRunner.Start(Config.Get("ib-account"));
         }
 
         [TearDown]
         public void KillGateway()
         {
-            IBGatewayRunner.Stop();
+            InteractiveBrokersGatewayRunner.Stop();
             Thread.Sleep(250);
         }
 
         [Test]
         public void ClientConnects()
         {
-            var ib = new IBBrokerage();
+            var ib = new InteractiveBrokersBrokerage();
             ib.Connect();
         }
 
@@ -52,12 +52,12 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             bool orderFilled = false;
             var manualResetEvent = new ManualResetEvent(false);
-            var ib = new IBBrokerage();
+            var ib = new QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage();
             ib.Connect();
 
             ib.Client.RequestOpenOrders();
 
-            ib.OrderFilled += (sender, args) =>
+            ib.OrderEvent += (sender, args) =>
             {
                 orderFilled = true;
                 manualResetEvent.Set();
@@ -79,10 +79,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             bool orderFilled = false;
             var manualResetEvent = new ManualResetEvent(false);
 
-            var ib = new IBBrokerage();
+            var ib = new InteractiveBrokersBrokerage();
             ib.Connect();
 
-            ib.OrderFilled += (sender, args) =>
+            ib.OrderEvent += (sender, args) =>
             {
                 orderFilled = true;
                 manualResetEvent.Set();
@@ -103,12 +103,12 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             bool orderFilled = false;
             var manualResetEvent = new ManualResetEvent(false);
-            var ib = new IBBrokerage();
+            var ib = new InteractiveBrokersBrokerage();
             ib.Connect();
 
             decimal aapl = 100m;
             decimal delta = 85.0m; // if we can't get a price then make the delta huge
-            ib.OrderFilled += (sender, args) =>
+            ib.OrderEvent += (sender, args) =>
             {
                 orderFilled = true;
                 aapl = args.FillPrice;
@@ -142,12 +142,12 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             bool orderFilled = false;
             var manualResetEvent = new ManualResetEvent(false);
-            var ib = new IBBrokerage();
+            var ib = new InteractiveBrokersBrokerage();
             ib.Connect();
 
             decimal aapl = 100m;
             decimal delta = 85.0m; // if we can't get a price then make the delta huge
-            ib.OrderFilled += (sender, args) =>
+            ib.OrderEvent += (sender, args) =>
             {
                 orderFilled = true;
                 aapl = args.FillPrice;
@@ -185,10 +185,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             OrderStatus status = OrderStatus.New;
             var manualResetEvent = new ManualResetEvent(false);
 
-            var ib = new IBBrokerage();
+            var ib = new InteractiveBrokersBrokerage();
             ib.Connect();
 
-            ib.OrderFilled += (sender, args) =>
+            ib.OrderEvent += (sender, args) =>
             {
                 status = args.Status;
                 manualResetEvent.Set();
@@ -207,7 +207,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.AreEqual(OrderStatus.Canceled, status);
         }
 
-        private static Order AssertOrderOpened(bool orderFilled, IBBrokerage ib, Order order)
+        private static Order AssertOrderOpened(bool orderFilled, QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage ib, Order order)
         {
             // if the order didn't fill check for it as an open order
             if (!orderFilled)

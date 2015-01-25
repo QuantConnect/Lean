@@ -24,6 +24,7 @@ using System.Threading;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using QuantConnect.Brokerages;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
@@ -560,7 +561,7 @@ namespace QuantConnect.Lean.Engine
             {
                 //Operation from local files:
                 default:
-                    th = new BacktestingTransactionHandler(algorithm);
+                    th = new BacktestingTransactionHandler(algorithm, brokerage as BacktestingBrokerage);
                     Log.Trace("Engine.GetTransactionHandler(): Selected Backtesting Transaction Models.");
                     break;
             }

@@ -40,5 +40,17 @@ namespace QuantConnect.Securities
             Symbol = symbol;
             Quantity = quantity;
         }
+
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            return string.Format("Symbol: {0} Quantity: {1}", Symbol, Quantity);
+        }
     }
 }

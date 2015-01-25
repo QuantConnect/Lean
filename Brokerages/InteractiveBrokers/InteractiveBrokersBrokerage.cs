@@ -19,9 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using QuantConnect.Configuration;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -32,23 +30,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// <summary>
     /// The Interactive Brokers brokerage
     /// </summary>
-    public sealed class IBBrokerage : IBrokerage
+    public sealed class InteractiveBrokersBrokerage : Brokerage
     {
-        /// <summary>
-        /// Event that fires each time an order is filled
-        /// </summary>
-        public event EventHandler<OrderEvent> OrderFilled;
-
-        /// <summary>
-        /// Event that fires each time portfolio holdings have changed
-        /// </summary>
-        public event EventHandler<PortfolioEvent> PortfolioChanged;
-
-        /// <summary>
-        /// Event that fires each time a user's brokerage account is changed
-        /// </summary>
-        public event EventHandler<AccountEvent> AccountChanged;
-
         // next valid order id for this client
         private int _nextValidID;
         // next valid client id for the gateway/tws
@@ -61,21 +44,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly IB.IBClient _client;
         private readonly IB.AgentDescription _agentDescription;
 
-        private ErrorHandlerCallback _errorHandler = (key, message) => { /*default to doing nothing*/ };
-
         // the key here is the QC order ID
         private readonly ConcurrentDictionary<int, Order>  _outstandingOrders = new ConcurrentDictionary<int, Order>();
         private readonly Dictionary<string, string> _accountProperties = new Dictionary<string, string>(); 
 
-        public string Name
-        {
-            get { return "Interactive Brokers"; }
-        }
-
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public bool IsConnected
+        public override bool IsConnected
         {
             get
             {
@@ -91,10 +67,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         ///     ib-port
         ///     ib-agent-description
         /// </summary>
-        public IBBrokerage()
+        public InteractiveBrokersBrokerage()
             : this(
                 Config.Get("ib-account"),
-                Config.Get("ib-host"),
+                Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
                 Config.GetValue<IB.AgentDescription>("ib-agent-description")
                 )
@@ -108,7 +84,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="host">host name or IP address of the machine where TWS is running. Leave blank to connect to the local host.</param>
         /// <param name="port">must match the port specified in TWS on the Configure&gt;API&gt;Socket Port field.</param>
         /// <param name="agentDescription">Used for Rule 80A describes the type of trader.</param>
-        public IBBrokerage(string account, string host, int port, IB.AgentDescription agentDescription = IB.AgentDescription.Individual)
+        public InteractiveBrokersBrokerage(string account, string host, int port, IB.AgentDescription agentDescription = IB.AgentDescription.Individual)
+            : base("Interactive Brokers Brokerage")
         {
             _account = account;
             _host = host;
@@ -126,21 +103,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             get { return _client; }
         }
 
-        public void AddErrorHander(ErrorHandlerCallback callback)
-        {
-            if (callback == null)
-            {
-                throw new ArgumentNullException("callback");
-            }
-            _errorHandler = callback;
-        }
-
         /// <summary>
-        /// Places a new order
+        /// Places a new order and assigns a new broker ID to the order
         /// </summary>
         /// <param name="order">The order to be placed</param>
-        /// <returns>The brokerage ID for the order, or -1 if there was an error</returns>
-        public bool PlaceOrder(Order order)
+        /// <returns>True if the request for a new order has been placed, false otherwise</returns>
+        public override bool PlaceOrder(Order order)
         {
             try
             {
@@ -169,7 +137,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         /// <param name="order">The new order information</param>
         /// <returns>True if the request was made for the order to be updaed, false otherwise</returns>
-        public bool UpdateOrder(Order order)
+        public override bool UpdateOrder(Order order)
         {
             try
             {
@@ -203,7 +171,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         /// <param name="order">The order to cancel</param>
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
-        public bool CancelOrder(Order order)
+        public override bool CancelOrder(Order order)
         {
             try
             {
@@ -255,7 +223,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Connects the client to the IB gateway
         /// </summary>
-        public void Connect()
+        public override void Connect()
         {
             if (IsConnected) return;
 
@@ -317,7 +285,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Disconnects the client from the IB gateway
         /// </summary>
-        public void Disconnect()
+        public override void Disconnect()
         {
             if (!IsConnected) return;
 
@@ -368,9 +336,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Trace(message);
             }
-
-            // invoke our custom error handler, defaults to do nothing
-            _errorHandler.Invoke(e.ErrorCode.ToString(), e.ErrorMsg);
+            
+            OnError(new InteractiveBrokersException(e.ErrorCode, e.TickerId, e.ErrorMsg));
         }
 
         /// <summary>
@@ -395,8 +362,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // we want to capture if the user's cash changes so we can reflect it in the algorithm
                 if (e.Key == "CashBalance")
                 {
-                    var handler = AccountChanged;
-                    if (handler != null) handler(this, new AccountEvent(e.Value.ToDecimal()));
+                    OnAccountChanged(new AccountEvent(e.Value.ToDecimal()));
                 }
             }
             catch (Exception err)
@@ -422,8 +388,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 Log.Trace("IBBrokerage.HandleOrderStatusUpdtes(): QC OrderID: " + order.Id + " IB OrderID: " + update.OrderId + " Status: " + update.Status);
 
-                var handler = OrderFilled;
-                if (handler != null) handler(this, new OrderEvent(order.Id, order.Symbol, ConvertOrderStatus(update.Status), update.AverageFillPrice, update.Filled, "Interactive Brokers Fill Event"));
+                OnOrderEvent(new OrderEvent(order.Id, order.Symbol, ConvertOrderStatus(update.Status), update.AverageFillPrice, update.Filled, "Interactive Brokers Fill Event"));
 
                 if (update.Remaining == 0)
                 {
@@ -442,15 +407,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandlePortfolioUpdates(object sender, IB.UpdatePortfolioEventArgs e)
         {
-            try
-            {
-                var handler = PortfolioChanged;
-                if (handler != null) handler(this, new PortfolioEvent(e.Contract.Symbol, e.Position));
-            }
-            catch (Exception err)
-            {
-                Log.Error("IBBrokerage.HandlePortfolioUpdates(): " + err.Message);
-            }
+            OnPortfolioChanged(new PortfolioEvent(e.Contract.Symbol, e.Position));
         }
 
         /// <summary>
