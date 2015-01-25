@@ -24,6 +24,7 @@ using System.Security.Cryptography;
 using System.Collections.Concurrent;
 using System.ComponentModel.Composition.Hosting;
 using System.Linq;
+using System.Timers;
 
 namespace QuantConnect 
 {
@@ -305,6 +306,16 @@ namespace QuantConnect
                 return time;
             }
             return new DateTime(((time.Ticks + d.Ticks - 1) / d.Ticks) * d.Ticks);
+        }
+
+        /// <summary>
+        /// Add the reset method to the System.Timer class.
+        /// </summary>
+        /// <param name="timer">System.timer object</param>
+        public static void Reset(this Timer timer)
+        {
+            timer.Stop();
+            timer.Start();
         }
 
         /// <summary>

@@ -49,7 +49,7 @@ namespace QuantConnect.Configuration
 
             //Engine code:
             {"local", "true"},
-            {"livemode", "false"},
+            {"live-mode", "false"},
             {"messaging-handler", "QuantConnect.Messaging.Messaging"},
             {"queue-handler", "QuantConnect.Queues.Queues"},
             {"api-handler", "QuantConnect.Api.Api"}

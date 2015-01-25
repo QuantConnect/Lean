@@ -44,7 +44,7 @@ namespace QuantConnect.Queues
         {
             get
             {
-                return !Config.GetBool("livemode");
+                return !Config.GetBool("live-mode");
             }
         }
 
