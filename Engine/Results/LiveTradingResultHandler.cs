@@ -403,7 +403,7 @@ namespace QuantConnect.Lean.Engine.Results
             foreach (var chart in deltaCharts.Values)
             {
                 if (chart.Series.Values.Sum(x => x.Values.Count) == 0) continue;
-                //if (chart.Name != _subscription) continue;
+                if (chart.Name != _subscription) continue;
 
                 if (current == null || current.Count >= groupSize)
                 {

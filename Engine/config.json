@@ -4,7 +4,7 @@
 
     // engine
     "local": "true",
-    "livemode": "false",
+    "live-mode": "false",
 
     // handlers
     "messaging-handler": "QuantConnect.Messaging.Messaging",

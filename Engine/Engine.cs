@@ -51,7 +51,7 @@ namespace QuantConnect.Lean.Engine
         /******************************************************** 
         * CLASS PRIVATE VARIABLES
         *********************************************************/
-        private static bool _liveMode = Config.GetBool("livemode");
+        private static bool _liveMode = Config.GetBool("live-mode");
         private static bool _local = Config.GetBool("local");
         private static IBrokerage _brokerage = new Brokerage();
 
