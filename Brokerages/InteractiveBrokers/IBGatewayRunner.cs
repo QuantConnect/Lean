@@ -33,7 +33,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private static string _account;
 
         // pick controller based on configuraiton, TWS or just the gateway, TWS is nice for running on desktops, default to TWS for desktop users
-        private static readonly string Controller = Config.GetBool("ib-use-tws") ? "IBControllerStart" : "IBControllerGatewayStart";
+        private static readonly bool UseTWS = Config.GetBool("ib-use-tws");
+        private static readonly string Controller = UseTWS ? "IBControllerStart" : "IBControllerGatewayStart";
 
         /// <summary>
         /// Gets whether or not the the IB Gateway or TWS is running
@@ -78,6 +79,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var process = Process.Start(processStartInfo);
                 ScriptProcessID = process.Id;
 
+                if (UseTWS)
+                {
+                    // sleep an extra 10 seconds for TWS, it takes a little bit to come up all the way
+                    Thread.Sleep(10000);
+                }
                 // wait for 15 seconds so it can start
                 Thread.Sleep(15000);
 
@@ -93,9 +99,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         public static void Stop()
         {
-            // the process isn't running
-            if (!IsRunning) return;
-
             try
             {
                 Log.Trace("IBGatewayRunner.Stop(): Stopping IBController...");

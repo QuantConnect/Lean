@@ -152,6 +152,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return false;
                 }
 
+                Log.Trace("IBBrokerage.PlaceOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity);
+
                 IBPlaceOrder(order);
                 return true;
             }
@@ -183,7 +185,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     Log.Trace("IBBrokerage.UpdateOrder(): Unable to update order " + order.Id + " because it is " + outstanding.Status);
                     return false;
                 }
-                
+
+                Log.Trace("IBBrokerage.UpdateOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity + " Status: " + order.Status);
+
                 IBPlaceOrder(order);
             }
             catch (Exception err)
@@ -203,6 +207,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             try
             {
+                Log.Trace("IBBrokerage.UpdateOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity);
+
                 // this could be better
                 foreach (var id in order.BrokerId)
                 {
@@ -215,6 +221,35 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Gets all open orders on the account
+        /// </summary>
+        /// <returns>The open orders returned from IB</returns>
+        public List<Order> GetOpenOrders()
+        {
+            var orders = new List<Order>();
+
+            var manualResetEvent = new ManualResetEvent(false);
+            
+            // define our handlers
+            EventHandler<IB.OpenOrderEventArgs> clientOnOpenOrder = (sender, args) => orders.Add(ConvertOrder(args.Order, args.Contract));
+            EventHandler<EventArgs> clientOnOpenOrderEnd = (sender, args) => manualResetEvent.Set();
+
+            // add the handlers
+            _client.OpenOrder += clientOnOpenOrder;
+            _client.OpenOrderEnd += clientOnOpenOrderEnd;
+
+            _client.RequestOpenOrders();
+
+            manualResetEvent.WaitOne();
+
+            // remove the handlers
+            _client.OpenOrder -= clientOnOpenOrder;
+            _client.OpenOrderEnd -= clientOnOpenOrderEnd;
+
+            return orders;
         }
 
         /// <summary>
@@ -319,48 +354,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Converts a QC order to an IB order
-        /// </summary>
-        private IB.Order ConvertOrder(Order order)
-        {
-            var ibOrder = new IB.Order();
-            ibOrder.ClientId = _clientID;
-
-            int id = AddInteractiveBrokersOrderID(order);
-
-            // the order ids are generated for us by the SecurityTransactionManaer
-            ibOrder.OrderId = id;
-            ibOrder.PermId = id;
-            ibOrder.Action = ConvertOrderDirection(order.Direction);
-            ibOrder.TotalQuantity = Math.Abs(order.Quantity);
-            ibOrder.OrderType = ConvertOrderType(order.Type);
-
-            if (ibOrder.OrderType == IB.OrderType.Limit)
-            {
-                ibOrder.LimitPrice = order.Price;
-            }
-            else if (ibOrder.OrderType == IB.OrderType.Stop)
-            {
-                ibOrder.AuxPrice = order.Price;
-            }
-            else if (ibOrder.OrderType == IB.OrderType.TrailingStop)
-            {
-                ibOrder.TrailStopPrice = order.Price;
-            }
-
-            // not yet supported
-            //ibOrder.ParentId = 
-            //ibOrder.OcaGroup =
-
-            ibOrder.AllOrNone = false;
-            ibOrder.Tif = IB.TimeInForce.GoodTillCancel;
-            ibOrder.Transmit = true;
-            ibOrder.Rule80A = _agentDescription;
-
-            return ibOrder;
-        }
-
-        /// <summary>
         /// Handles error messages from IB
         /// </summary>
         private void HandleError(object sender, IB.ErrorEventArgs e)
@@ -461,6 +454,73 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
+        /// Converts a QC order to an IB order
+        /// </summary>
+        private IB.Order ConvertOrder(Order order)
+        {
+            var ibOrder = new IB.Order();
+            ibOrder.ClientId = _clientID;
+
+            int id = AddInteractiveBrokersOrderID(order);
+
+            // the order ids are generated for us by the SecurityTransactionManaer
+            ibOrder.OrderId = id;
+            ibOrder.PermId = id;
+            ibOrder.Action = ConvertOrderDirection(order.Direction);
+            ibOrder.TotalQuantity = Math.Abs(order.Quantity);
+            ibOrder.OrderType = ConvertOrderType(order.Type);
+
+            if (ibOrder.OrderType == IB.OrderType.Limit)
+            {
+                ibOrder.LimitPrice = order.Price;
+            }
+            else if (ibOrder.OrderType == IB.OrderType.Stop)
+            {
+                ibOrder.AuxPrice = order.Price;
+            }
+            else if (ibOrder.OrderType == IB.OrderType.TrailingStop)
+            {
+                ibOrder.TrailStopPrice = order.Price;
+            }
+
+            // not yet supported
+            //ibOrder.ParentId = 
+            //ibOrder.OcaGroup =
+
+            ibOrder.AllOrNone = false;
+            ibOrder.Tif = IB.TimeInForce.GoodTillCancel;
+            ibOrder.Transmit = true;
+            ibOrder.Rule80A = _agentDescription;
+
+            return ibOrder;
+        }
+
+        private Order ConvertOrder(IB.Order ibOrder, IB.Contract contract)
+        {
+            decimal price = 0;
+            if (ibOrder.LimitPrice != 0)
+            {
+                price = ibOrder.LimitPrice;
+            }
+            else if (ibOrder.AuxPrice != 0)
+            {
+                price = ibOrder.AuxPrice;
+            }
+
+            var order = new Order(contract.Symbol,
+                ConvertSecurityType(contract.SecurityType),
+                ibOrder.TotalQuantity,
+                ConvertOrderType(ibOrder.OrderType),
+                new DateTime(), // not sure how to get this data
+                price
+                );
+
+            order.BrokerId.Add(ibOrder.OrderId);
+
+            return order;
+        }
+
+        /// <summary>
         /// Creates an IB contract from the order.
         /// </summary>
         /// <param name="order">The order to create a contract from</param>
@@ -495,11 +555,26 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             switch (type)
             {
-                case OrderType.Market:     return IB.OrderType.Market;
-                case OrderType.Limit:      return IB.OrderType.Limit;
-                case OrderType.StopMarket: return IB.OrderType.Stop;
+                case OrderType.Market:      return IB.OrderType.Market;
+                case OrderType.Limit:       return IB.OrderType.Limit;
+                case OrderType.StopMarket:  return IB.OrderType.Stop;
                 default:
-                    throw new InvalidEnumArgumentException("type", (int) type, typeof (OrderType));
+                    throw new InvalidEnumArgumentException("type", (int)type, typeof(OrderType));
+            }
+        }
+
+        /// <summary>
+        /// Maps OrderType enum
+        /// </summary>
+        private OrderType ConvertOrderType(IB.OrderType type)
+        {
+            switch (type)
+            {
+                case IB.OrderType.Market: return OrderType.Market;
+                case IB.OrderType.Limit:  return OrderType.Limit;
+                case IB.OrderType.Stop:   return OrderType.StopMarket;
+                default:
+                    throw new InvalidEnumArgumentException("type", (int)type, typeof(OrderType));
             }
         }
 
@@ -557,21 +632,57 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 case SecurityType.Option:
                     return IB.SecurityType.Option;
-                
+
                 case SecurityType.Commodity:
                     return IB.SecurityType.Commodity;
-                
+
                 case SecurityType.Forex:
                     return IB.SecurityType.Cash;
-                
+
                 case SecurityType.Future:
                     return IB.SecurityType.Future;
-                
+
                 case SecurityType.Base:
                     throw new ArgumentException("InteractiveBrokers does not support SecurityType.Base");
 
                 default:
                     throw new InvalidEnumArgumentException("type", (int)type, typeof(SecurityType));
+            }
+        }
+        /// <summary>
+        /// Maps SecurityType enum
+        /// </summary>
+        private SecurityType ConvertSecurityType(IB.SecurityType type)
+        {
+            switch (type)
+            {
+                case IB.SecurityType.Stock:
+                    return SecurityType.Equity;
+
+                case IB.SecurityType.Option:
+                    return SecurityType.Option;
+
+                case IB.SecurityType.Commodity:
+                    return SecurityType.Commodity;
+
+                case IB.SecurityType.Cash:
+                    return SecurityType.Forex;
+
+                case IB.SecurityType.Future:
+                    return SecurityType.Future;
+
+                // we don't map these security types to anything specific yet, load them as custom data instead of throwing
+                case IB.SecurityType.Index:
+                case IB.SecurityType.FutureOption:
+                case IB.SecurityType.Bag:
+                case IB.SecurityType.Bond:
+                case IB.SecurityType.Warrant:
+                case IB.SecurityType.Bill:
+                case IB.SecurityType.Undefined:
+                    return SecurityType.Base;
+
+                default:
+                    throw new ArgumentOutOfRangeException("type");
             }
         }
 
