@@ -193,40 +193,6 @@ namespace QuantConnect.AlgorithmFactory
             return algorithmInstance != null;
         }
 
-
-        /// <summary>
-        /// Fast Object Creator from Generic Type: 
-        /// Modified from http://rogeralsing.com/2008/02/28/linq-expressions-creating-objects/
-        /// </summary>
-        /// <param name="dataType">Type of the objectwe wish to create</param>
-        /// <returns>Method to return an instance of object</returns>
-        public static Func<object[], object> GetActivator(Type dataType)
-        {
-            var ctor = dataType.GetConstructor(new Type[] { });
-
-            //User has forgotten to include a parameterless constructor:
-            if (ctor == null) return null;
-
-            var paramsInfo = ctor.GetParameters();
-
-            //create a single param of type object[]
-            var param = Expression.Parameter(typeof(object[]), "args");
-            var argsExp = new Expression[paramsInfo.Length];
-
-            for (var i = 0; i < paramsInfo.Length; i++)
-            {
-                var index = Expression.Constant(i);
-                var paramType = paramsInfo[i].ParameterType;
-                var paramAccessorExp = Expression.ArrayIndex(param, index);
-                var paramCastExp = Expression.Convert(paramAccessorExp, paramType);
-                argsExp[i] = paramCastExp;
-            }
-
-            var newExp = Expression.New(ctor, argsExp);
-            var lambda = Expression.Lambda(typeof(Func<object[], object>), newExp, param);
-            return (Func<object[], object>)lambda.Compile();
-        }
-
         /// <summary>
         /// Shim method - Gets the types derived from the 'baseClassName' type
         /// </summary>

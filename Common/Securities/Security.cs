@@ -47,7 +47,7 @@ namespace QuantConnect.Securities
         private Resolution _resolution = Resolution.Second;
         private bool _isFillDataForward = false;
         private bool _isExtendedMarketHours = false;
-        private bool _isQuantConnectData = false;
+        private bool _isDynamicallyLoadedData = false;
         private decimal _leverage = 1;
 
         /******************************************************** 
@@ -173,7 +173,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(string symbol, SecurityType type, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours, bool useQuantConnectData = false) 
+        public Security(string symbol, SecurityType type, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours, bool isDynamicallyLoadedData = false) 
         {
             //Set Basics:
             _symbol = symbol;
@@ -182,7 +182,7 @@ namespace QuantConnect.Securities
             _isFillDataForward = fillDataForward;
             _leverage = leverage;
             _isExtendedMarketHours = extendedMarketHours;
-            _isQuantConnectData = useQuantConnectData;
+            _isDynamicallyLoadedData = isDynamicallyLoadedData;
 
             //Setup Transaction Model for this Asset
             switch (type) 
@@ -277,11 +277,11 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Use QuantConnect data source flag, or is the security a user imported object
         /// </summary>
-        public virtual bool IsQuantConnectData 
+        public virtual bool IsDynamicallyLoadedData 
         {
             get
             {
-                return _isQuantConnectData;
+                return _isDynamicallyLoadedData;
             }
         }
 

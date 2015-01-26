@@ -50,6 +50,22 @@ namespace QuantConnect.Lean.Engine
         /******************************************************** 
         * CLASS METHODS:
         *********************************************************/
+
+        /// <summary>
+        /// Determines whether or not we have factor files from the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol to check for factor files</param>
+        /// <returns>True if we can find the factor files, false otherwise</returns>
+        public static bool HasScalingFactors(string symbol)
+        {
+            // check for factor files
+            if (File.Exists(DataFolder + "equity/factor_files/" + symbol.ToLower() + ".csv"))
+            {
+                return true;
+            }
+            return false;
+        }
+
         /// <summary>
         /// Overload for base method: using a memory table, find the priceFactor.
         /// </summary>

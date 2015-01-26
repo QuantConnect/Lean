@@ -99,8 +99,8 @@ namespace QuantConnect.Securities
         /// <param name="fillDataForward">Return previous bar's data when there is no trading in this bar</param>
         /// <param name="leverage">Leverage for this security, default = 1</param>
         /// <param name="extendedMarketHours">Request all the data available, including the extended market hours from 4am - 8pm.</param>
-        /// <param name="useQuantConnectData">Use quantconnect's data for equity and forex requests</param>
-        public void Add(string symbol, SecurityType type = SecurityType.Equity, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 1, bool extendedMarketHours = false, bool useQuantConnectData = false) 
+        /// <param name="isDynamicallyLoadedData">Use dynamic data</param>
+        public void Add(string symbol, SecurityType type = SecurityType.Equity, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 1, bool extendedMarketHours = false, bool isDynamicallyLoadedData = false) 
         {
             //Upper case sybol:
             symbol = symbol.ToUpper();
@@ -125,10 +125,10 @@ namespace QuantConnect.Securities
                 switch (type)
                 {
                     case SecurityType.Equity:
-                        Add(symbol, new Equity.Equity(symbol, resolution, fillDataForward, leverage, extendedMarketHours, useQuantConnectData));
+                        Add(symbol, new Equity.Equity(symbol, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData));
                         break;
                     case SecurityType.Forex:
-                        Add(symbol, new Forex.Forex(symbol, resolution, fillDataForward, leverage, extendedMarketHours, useQuantConnectData));
+                        Add(symbol, new Forex.Forex(symbol, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData));
                         break;
                     case SecurityType.Base:
                         Add(symbol, new Security(symbol, SecurityType.Base, resolution, fillDataForward, leverage, extendedMarketHours));

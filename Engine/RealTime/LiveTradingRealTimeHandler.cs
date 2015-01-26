@@ -164,7 +164,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 foreach (var security in _algorithm.Securities.Values)
                 {
                     var endOfDayEventTime = new TimeSpan();
-                    if (security.IsQuantConnectData)
+                    if (security.IsDynamicallyLoadedData)
                     {
                         //If QC --> get the close time from API:
                         if (!_today.ContainsKey(security.Type)) _today.Add(security.Type, Engine.Api.MarketToday(security.Type));

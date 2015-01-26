@@ -28,6 +28,7 @@ using QuantConnect.Securities;
 using QuantConnect.Logging;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Data;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -67,11 +68,11 @@ namespace QuantConnect.Lean.Engine
         /// Subscription Securities Access
         private Security _security;
 
-        /// Save security type of speed
-        private bool _isQCEquity = false;
+        /// true if we can find a scale factor file for the security of the form: ..\Lean\Data\equity\factor_files\{SYMBOL}.csv
+        private bool _hasScaleFactors = false;
 
         // Subscription is for a QC type:
-        private bool _isQCData = false;
+        private bool _isDynamicallyLoadedData = false;
 
         //Price Factor Mapping:
         private SortedDictionary<DateTime, decimal> _priceFactors;
@@ -82,30 +83,27 @@ namespace QuantConnect.Lean.Engine
         private string _mappedSymbol = "";
 
         /// Location of the datafeed - the type of this data.
-        private DataFeedEndpoint _feedEndpoint = DataFeedEndpoint.Backtesting;
+        private readonly DataFeedEndpoint _feedEndpoint;
 
         /// Object Activator - Fast create new instance of "Type":
-        private Func<object[], object> _objectActivator;
+        private readonly Func<object[], object> _objectActivator;
 
         ///Create a single instance to invoke all Type Methods:
-        private BaseData _dataFactory;
-
-        /// Access to Reader Method:
-        private MethodInfo _readerMethod;
+        private readonly BaseData _dataFactory;
 
         ///FastReflect Method Invoker
-        private MethodInvoker _readerMethodInvoker;
+        private readonly MethodInvoker _readerMethodInvoker;
 
         /// Access to Get Source Method:
-        private MethodInfo _getSourceMethod;
+        private readonly MethodInfo _getSourceMethod;
 
         /// Remember edge conditions as market enters/leaves open-closed.
         private BaseData _lastBarOfStream = null;
         private BaseData _lastBarOutsideMarketHours = null;
 
         //Start finish times of the backtest:
-        private DateTime _periodStart;
-        private DateTime _periodFinish;
+        private readonly DateTime _periodStart;
+        private readonly DateTime _periodFinish;
 
         /******************************************************** 
         * CLASS PUBLIC VARIABLES
@@ -148,24 +146,6 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        /// <summary>
-        /// Simple flag to show if this is a QC data type
-        /// </summary>
-        public bool IsQCTick
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Simple flag to show if this is a QC data type
-        /// </summary>
-        public bool IsQCTradeBar
-        {
-            get;
-            private set;
-        }
-
         /******************************************************** 
         * CLASS CONSTRUCTOR
         *********************************************************/
@@ -191,18 +171,16 @@ namespace QuantConnect.Lean.Engine
 
             //Save access to securities
             _security = security;
-            _isQCData = security.IsQuantConnectData;
-            _isQCEquity = (security.Type == SecurityType.Equity) && _isQCData;
-            
-            //Set QC Type Flags:
-            IsQCTick = (config.Type.Name == "Tick" && _isQCData);
-            IsQCTradeBar = (config.Type.Name == "TradeBar" && _isQCData);
+            _isDynamicallyLoadedData = security.IsDynamicallyLoadedData;
+
+            // do we have factor tables?
+            _hasScaleFactors = SubscriptionAdjustment.HasScalingFactors(config.Symbol);
 
             //Save the type of data we'll be getting from the source.
             _feedEndpoint = feed;
 
             //Create the dynamic type-activators:
-            _objectActivator = Loader.GetActivator(config.Type);
+            _objectActivator = ObjectActivator.GetActivator(config.Type);
 
             if (_objectActivator == null) 
             {
@@ -216,10 +194,10 @@ namespace QuantConnect.Lean.Engine
             _dataFactory = userObj as BaseData;
 
             //Save Access to the "Reader" Method:
-            _readerMethod = _dataFactory.GetType().GetMethod("Reader", new[] { typeof(SubscriptionDataConfig), typeof(string), typeof(DateTime), typeof(DataFeedEndpoint) });
+            var readerMethod = _dataFactory.GetType().GetMethod("Reader", new[] { typeof(SubscriptionDataConfig), typeof(string), typeof(DateTime), typeof(DataFeedEndpoint) });
 
             //Create a Delagate Accessor.
-            _readerMethodInvoker = _readerMethod.DelegateForCallMethod();
+            _readerMethodInvoker = readerMethod.DelegateForCallMethod();
 
             //Save access to the "GetSource" Method:
             _getSourceMethod = _dataFactory.GetType().GetMethod("GetSource", new[] { typeof(SubscriptionDataConfig), typeof(DateTime), typeof(DataFeedEndpoint) });
@@ -227,7 +205,7 @@ namespace QuantConnect.Lean.Engine
             //Load the entire factor and symbol mapping tables into memory
             try 
             {
-                if (_isQCEquity)
+                if (_hasScaleFactors)
                 {
                     _priceFactors = SubscriptionAdjustment.GetFactorTable(config.Symbol);
                     _symbolMap = SubscriptionAdjustment.GetMapTable(config.Symbol);
@@ -317,19 +295,16 @@ namespace QuantConnect.Lean.Engine
                         
 
                     //Check if we're in date range of the data request
-                    if (!_isQCData) 
+                    if (instance.Time < _periodStart) 
                     {
-                        if (instance.Time < _periodStart) 
-                        {
-                            _lastBarOutsideMarketHours = instance;
-                            instance = null;
-                            continue;
-                        }
-                        if (instance.Time > _periodFinish) 
-                        {
-                            instance = null;
-                            continue;
-                        }
+                        _lastBarOutsideMarketHours = instance;
+                        instance = null;
+                        continue;
+                    }
+                    if (instance.Time > _periodFinish) 
+                    {
+                        instance = null;
+                        continue;
                     }
 
                     //Save bar for extended market hours (fill forward).
@@ -446,8 +421,9 @@ namespace QuantConnect.Lean.Engine
             _date = date;
             var newSource = "";
 
-            //If this is an equity, apply the backward price scaling (backtesting only).
-            if (_isQCEquity && (_feedEndpoint == DataFeedEndpoint.Backtesting || _feedEndpoint == DataFeedEndpoint.FileSystem)) {
+            //If we can find scale factor files on disk, use them. LiveTrading will aways use 1 by definition
+            if (_hasScaleFactors) 
+            {
                 UpdateScaleFactors(date);
             }
 
@@ -459,15 +435,7 @@ namespace QuantConnect.Lean.Engine
             }
 
             //Choose the new source file, hide the QC source file locations
-            if (_isQCData)
-            {
-                newSource = GetQuantConnectSource(date);
-            }
-            else
-            {
-                //If its not a QC bar, load the source from the user function.
-                newSource = GetSource(date);
-            }
+            newSource = GetSource(date);
 
             //When stream over stop looping on this data.
             if (newSource == "") 
@@ -490,7 +458,7 @@ namespace QuantConnect.Lean.Engine
                 try 
                 {
                     //Log.Debug("SubscriptionDataReader.RefreshSource(): Created new reader for source: " + source);
-                    _reader = GetReader(_source, (_isQCData && !Engine.IsLocal));
+                    _reader = GetReader(_source);
                 } 
                 catch (Exception err) 
                 {
@@ -504,7 +472,7 @@ namespace QuantConnect.Lean.Engine
                     Log.Error("Failed to get StreamReader for data source(" + _source + "), symbol(" + _mappedSymbol + "). Skipping date(" + date.ToShortDateString() + "). Reader is null.");
                     //Engine.ResultHandler.DebugMessage("We could not find the requested data. This may be an invalid data request, failed download of custom data, or a public holiday. Skipping date (" + date.ToShortDateString() + ").");
 
-                    if (!_isQCData)
+                    if (_isDynamicallyLoadedData)
                     {
                         Engine.ResultHandler.ErrorMessage("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source (" + _source + ").");
                     }
@@ -536,9 +504,8 @@ namespace QuantConnect.Lean.Engine
         /// Using this source URL, download it to our cache and open a local reader.
         /// </summary>
         /// <param name="source">Source URL for the data:</param>
-        /// <param name="qcFile">Boolean if this is a QC managed data file, if so can look in QC store</param>
         /// <returns>StreamReader for the data source</returns>
-        private SubscriptionStreamReader GetReader(string source, bool qcFile = false)
+        private SubscriptionStreamReader GetReader(string source)
         { 
             //Prepare local folders:
             const string cache = "./cache/data";
@@ -556,51 +523,51 @@ namespace QuantConnect.Lean.Engine
             { 
                 case DataFeedEndpoint.FileSystem:
                 case DataFeedEndpoint.Backtesting:
-                    //1.2 Download from source to location 
-                    if (qcFile)
+
+                    var uri = new Uri(source, UriKind.RelativeOrAbsolute);
+
+                    // check if this is not a local uri then download it to the local cache
+                    if (uri.IsAbsoluteUri && !uri.IsLoopback)
                     {
-                        if (!File.Exists(source))
-                        {
-                            Log.Trace("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: " + source);
-                            Engine.ResultHandler.SamplePerformance(_date.Date, 0);
-                            return reader;
-                        }
-                        //Data source is also location of raw file; root /data directory.
-                        location = source;
-                    }
-                    else
-                    {
-                        //If the file already exists a
                         try
                         {
                             using (var client = new WebClient())
                             {
                                 client.DownloadFile(source, location);
+
+                                // reassign source since it's now on local disk
+                                source = location;
                             }
                         }
                         catch (Exception err)
                         {
                             Engine.ResultHandler.ErrorMessage("Error downloading custom data source file, skipped: " + source + " Err: " + err.Message, err.StackTrace);
-                            if (OS.IsWindows) Engine.ResultHandler.SamplePerformance(_date.Date, 0);
-                            return reader;
+                            Engine.ResultHandler.SamplePerformance(_date.Date, 0);
+                            return null;
                         }
                     }
 
                     //2. File downloaded. Open Stream:
-                    if (File.Exists(location))
+                    if (File.Exists(source))
                     {
                         if (source.GetExtension() == ".zip")
                         {
                             //Extracting zip returns stream reader:
-                            var sr = Compression.Unzip(location);
+                            var sr = Compression.Unzip(source);
                             if (sr == null) return null;
                             reader = new SubscriptionStreamReader(sr, _feedEndpoint);
                         }
                         else
                         {
                             //Custom file stream: open from disk
-                            reader = new SubscriptionStreamReader(location, _feedEndpoint);
+                            reader = new SubscriptionStreamReader(source, _feedEndpoint);
                         }
+                    }
+                    else
+                    {
+                        Log.Trace("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: " + source);
+                        Engine.ResultHandler.SamplePerformance(_date.Date, 0);
+                        return null;
                     }
                     break;
 
@@ -683,44 +650,6 @@ namespace QuantConnect.Lean.Engine
             //Return the freshly calculated source URL.
             return newSource;
         }
-
-
-        /// <summary>
-        /// Get the source location of this QuantConnect data request.
-        /// </summary>
-        /// <param name="date">Date to retrieve</param>
-        /// <returns>string source</returns>
-        public string GetQuantConnectSource(DateTime date)
-        {
-            var source = "";
-            var dataType = TickType.Trade;
-
-            switch (_feedEndpoint)
-            { 
-                //Backtesting S3 Endpoint:
-                case DataFeedEndpoint.Backtesting:
-                case DataFeedEndpoint.FileSystem:
-
-                    var dateFormat = "yyyyMMdd";
-                    if (_config.Security == SecurityType.Forex)
-                    {
-                        dataType = TickType.Quote;
-                        dateFormat = "yyMMdd";
-                    }
-
-                    source =  @"../../../Data/" + _config.Security.ToString().ToLower();
-                    source += @"/" + _config.Resolution.ToString().ToLower() + @"/" + _config.Symbol.ToLower() + @"/";
-                    source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
-                    break;
-
-                //Live Trading Endpoint: Fake, not actually used but need for consistency with backtesting system. Set to "" so will not use subscription reader.
-                case DataFeedEndpoint.LiveTrading:
-                    source = "";
-                    break;
-            }
-            return source;
-        }
-
     } // End Base Data Class
 
 } // End QC Namespace
