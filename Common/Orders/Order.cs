@@ -267,6 +267,31 @@ namespace QuantConnect.Orders
         /// New order constructor
         /// </summary>
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
+        /// <param name="type">Type of the security order</param>
+        /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
+        /// <param name="order">Order type (market, limit or stoploss order)</param>
+        /// <param name="time">Time the order was placed</param>
+        /// <param name="price">Price the order should be filled at if a limit order</param>
+        /// <param name="tag">User defined data tag for this order</param>
+        public Order(string symbol, int quantity, OrderType order, DateTime time, decimal price = 0, string tag = "", SecurityType type = SecurityType.Base)
+        {
+            Time = time;
+            Price = price;
+            Type = order;
+            Quantity = quantity;
+            Symbol = symbol;
+            Status = OrderStatus.None;
+            Tag = tag;
+            SecurityType = type;
+            Duration = OrderDuration.GTC;
+            BrokerId = new List<long>();
+            ContingentId = 0;
+        }
+
+        /// <summary>
+        /// New order constructor
+        /// </summary>
+        /// <param name="symbol">Symbol asset we're seeking to trade</param>
         /// <param name="type"></param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="order">Order type (market, limit or stoploss order)</param>

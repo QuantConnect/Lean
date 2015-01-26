@@ -417,6 +417,9 @@ namespace QuantConnect.Lean.Engine.Results
                 current.Add(chart.Name, chart);
             }
 
+            //Add the last packet:
+            chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = current }));
+
             // these are easier to split up, not as big as the chart objects
             var packets = new[]
             {

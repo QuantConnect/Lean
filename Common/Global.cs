@@ -59,13 +59,16 @@ namespace QuantConnect
         public string Symbol = "";
 
         /// Average Price of our Holding
-        public decimal AveragePrice = 0;
+        public decimal AveragePrice;
 
         /// Quantity of Symbol We Hold.
-        public decimal Quantity = 0;
+        public decimal Quantity;
 
         /// Current Market Price of the Asset
-        public decimal MarketPrice = 0;
+        public decimal MarketPrice;
+
+        /// Unrealized profit loss for the holding.
+        public decimal Unrealized;
 
         /// Create a new default holding:
         public Holding()
@@ -81,6 +84,7 @@ namespace QuantConnect
             Quantity = holding.Quantity;
             AveragePrice = holding.AveragePrice;
             MarketPrice = holding.Price;
+            Unrealized = holding.UnrealizedProfit;
         }
     }
 
