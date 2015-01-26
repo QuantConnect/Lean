@@ -177,8 +177,7 @@ namespace QuantConnect.Lean.Engine
         /// A time period has lapsed, trigger a save/queue of the current value of data.
         /// </summary>
         /// <param name="fillForward">Data stream is a fillforward type</param>
-        /// <param name="isQCData">The data stream is a QCManaged stream</param>
-        public void TriggerArchive(bool fillForward, bool isQCData)
+        public void TriggerArchive(bool fillForward)
         {
             lock (_lock)
             {
@@ -190,7 +189,7 @@ namespace QuantConnect.Lean.Engine
                         Log.Debug("StreamStore.TriggerArchive(): No data to store, and not fill forward: " + Symbol);
                     } 
                     
-                    if (_data != null)// && _data.Time < StartTime)
+                    if (_data != null)
                     {
                         //Create clone and reset original
                         Log.Debug("StreamStore.TriggerArchive(): Enqueued new data: S:" + _data.Symbol + " V:" + _data.Value);
@@ -198,12 +197,12 @@ namespace QuantConnect.Lean.Engine
                         _queue.Enqueue(_data.Clone());
                         _data = null;
                     }
-                    else if (fillForward && _data == null && _previousData != null)// || (!isQCData && _data == null && _previousData != null))
+                    else if (fillForward && _data == null && _previousData != null)
                     {
                         //There was no other data in this timer period, and this is a fillforward subscription:
                         Log.Debug("StreamStore.TriggerArchive(): Fillforward, Previous Enqueued: S:" + _previousData.Symbol + " V:" + _previousData.Value);
                         var cloneForward = _previousData.Clone();
-                        cloneForward.Time = _previousData.Time.Add(_increment);// StartTime.Subtract(_config.Increment);
+                        cloneForward.Time = _previousData.Time.Add(_increment);
                         _queue.Enqueue(cloneForward);
 
                         _previousData = cloneForward.Clone();

@@ -18,6 +18,10 @@
 **********************************************************/
 
 using System;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -37,6 +41,7 @@ namespace QuantConnect.Data
         private DateTime _time = new DateTime();
         private string _symbol = "";
         private decimal _value = 0;
+        private readonly object[] _emptyObjectArray = new object[0];
 
         /******************************************************** 
         * CLASS PUBLIC VARIABLES
@@ -167,13 +172,35 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Return a new instance clone of this object
+        /// Return a new instance clone of this object, used in fill forward
         /// </summary>
-        /// <returns></returns>
-        public virtual BaseData Clone() 
-        { 
-            //Optional implementation
-            return default(BaseData);
+        /// <remarks>
+        /// This base implementation uses reflection to copy all public fields and properties
+        /// </remarks>
+        /// <returns>A clone of the current object</returns>
+        public virtual BaseData Clone()
+        {
+            var factory = ObjectActivator.GetActivator(GetType());
+            var members = GetType().GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+            var instance = factory.Invoke(_emptyObjectArray);
+            foreach (var member in members)
+            {
+                var field = member as _FieldInfo;
+                if (field != null)
+                {
+                    field.SetValue(instance, field.GetValue(this));
+                    continue;
+                }
+
+                var property = member as _PropertyInfo;
+                if (property != null && property.CanRead && property.CanWrite && property.GetIndexParameters().Length == 0)
+                {
+                    property.SetValue(instance, property.GetValue(this, _emptyObjectArray), _emptyObjectArray);
+                }
+            }
+
+            return (BaseData)instance;
         }
 
     } // End Base Data Class

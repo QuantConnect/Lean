@@ -612,7 +612,7 @@ namespace QuantConnect.Algorithm
                     //Add the symbol to Data Manager -- generate unified data streams for algorithm events
                     SubscriptionManager.Add(securityType, symbol, resolution, fillDataForward, extendedMarketHours);
                     //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
-                    Securities.Add(symbol, securityType, resolution, fillDataForward, leverage, extendedMarketHours, useQuantConnectData: true);
+                    Securities.Add(symbol, securityType, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData: false);
                 }
                 else 
                 {
@@ -643,7 +643,7 @@ namespace QuantConnect.Algorithm
             // Defaults:extended market hours"      = true because we want events 24 hours, 
             //          fillforward                 = false because only want to trigger when there's new custom data.
             //          leverage                    = 1 because no leverage on nonmarket data?
-            Securities.Add(symbol, SecurityType.Base, resolution, fillDataForward: false, leverage:1, extendedMarketHours:true, useQuantConnectData:false);
+            Securities.Add(symbol, SecurityType.Base, resolution, fillDataForward: false, leverage:1, extendedMarketHours:true, isDynamicallyLoadedData:true);
         }
 
         /// <summary>

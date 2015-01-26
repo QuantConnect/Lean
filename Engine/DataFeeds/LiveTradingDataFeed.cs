@@ -44,7 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         * CLASS VARIABLES
         *********************************************************/
         private List<SubscriptionDataConfig> _subscriptions = new List<SubscriptionDataConfig>();
-        private List<bool> _isQuantConnectData = new List<bool>();
+        private List<bool> _isDynamicallyLoadedData = new List<bool>();
         private SubscriptionDataReader[] _subscriptionManagers;
         private ConcurrentQueue<List<BaseData>>[] _bridge;
         private bool _endOfBridges = false;
@@ -161,7 +161,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _bridge[i] = new ConcurrentQueue<List<BaseData>>();
 
                 //This is quantconnect data source, store here for speed/ease of access
-                _isQuantConnectData.Add(algorithm.Securities[_subscriptions[i].Symbol].IsQuantConnectData);
+                _isDynamicallyLoadedData.Add(algorithm.Securities[_subscriptions[i].Symbol].IsDynamicallyLoadedData);
 
                 //Subscription managers for downloading user data:
                 _subscriptionManagers[i] = new SubscriptionDataReader(_subscriptions[i], algorithm.Securities[_subscriptions[i].Symbol], DataFeedEndpoint.LiveTrading, new DateTime(), new DateTime(9999, 12, 12));
@@ -191,7 +191,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             // Symbols requested:
             _symbols = (from security in _algorithm.Securities.Values
-                        where security.IsQuantConnectData && (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
+                        where !security.IsDynamicallyLoadedData && (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
                         select security.Symbol).ToList<string>();
 
             //Initialize:
@@ -242,7 +242,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         case Resolution.Second:
                             //Enqueue our live data:
                             nextLoadedDataFrontier = now;
-                            _streamStore[i].TriggerArchive(_subscriptions[i].FillDataForward, _isQuantConnectData[i]);
+                            _streamStore[i].TriggerArchive(_subscriptions[i].FillDataForward);
                             Log.Debug("LiveTradingDataFeed.Run(): Triggered Archive: " + _subscriptions[i].Symbol + "-Second... " + now.ToLongTimeString());
                             break;
 
@@ -251,7 +251,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             if (onMinute)
                             {
                                 nextLoadedDataFrontier = now;
-                                _streamStore[i].TriggerArchive(_subscriptions[i].FillDataForward, _isQuantConnectData[i]);
+                                _streamStore[i].TriggerArchive(_subscriptions[i].FillDataForward);
                                 Log.Debug("LiveTradingDataFeed.Run(): Triggered Archive: " + _subscriptions[i].Symbol + "-Minute... " + now.ToLongTimeString());
                             }
                             break;
@@ -366,7 +366,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         for (var i = 0; i < Subscriptions.Count; i++)
                         {
-                            if (!_isQuantConnectData[i])
+                            if (_isDynamicallyLoadedData[i])
                             {
                                 if (!update.ContainsKey(i)) update.Add(i, new DateTime());
 

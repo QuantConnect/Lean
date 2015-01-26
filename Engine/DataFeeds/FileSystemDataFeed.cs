@@ -400,9 +400,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="increment">Timespan increment to jump the fillforward results</param>
         void ProcessFillForward(SubscriptionDataReader manager, int i, TimeSpan increment)
         {
-            //Fillforward only applies to QC TradeBars: 
             // If previous == null cannot fill forward nothing there to move forward (e.g. cases where file not found on first file).
-            if (!manager.IsQCTradeBar || !Subscriptions[i].FillDataForward || manager.Previous == null) return;
+            if (!Subscriptions[i].FillDataForward || manager.Previous == null) return;
 
             //Last tradebar and the current one we're about to add to queue:
             var previous = manager.Previous;
