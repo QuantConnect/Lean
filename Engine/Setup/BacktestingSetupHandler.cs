@@ -24,6 +24,7 @@ using System.Linq;
 using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
@@ -154,9 +155,9 @@ namespace QuantConnect.Lean.Engine.Setup
                 throw new ArgumentException("Expected BacktestNodePacket but received " + baseJob.GetType().Name);
             }
 
-            // must be set since its defined as an out parameters
-            brokerage = (default(IBrokerage));
-            
+            // Must be set since its defined as an out parameters
+            brokerage = new BacktestingBrokerage(algorithm);
+
             if (algorithm == null)
             {
                 Errors.Add("Could not create instance of algorithm");

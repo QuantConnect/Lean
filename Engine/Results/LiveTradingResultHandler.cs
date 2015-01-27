@@ -21,6 +21,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -41,36 +42,34 @@ namespace QuantConnect.Lean.Engine.Results
         * CLASS VARIABLES
         *********************************************************/
         // Required properties for the cloud app.
-        private string _compileId = "";
-        private string _deployId = "";
-        private bool _isActive = false;
+        private bool _isActive;
+        private readonly string _compileId;
+        private readonly string _deployId;
         private ConcurrentDictionary<string, Chart> _charts;
         private ConcurrentQueue<Packet> _messages;
         private IAlgorithm _algorithm;
-        private bool _exitTriggered = false;
-        private DateTime _startTime = new DateTime();
-        private LiveNodePacket _job;
-        private Dictionary<string, string> _runtimeStatistics = new Dictionary<string, string>();
+        private bool _exitTriggered;
+        private readonly DateTime _startTime;
+        private readonly LiveNodePacket _job;
+        private readonly Dictionary<string, string> _runtimeStatistics = new Dictionary<string, string>();
 
         //Sampling Periods:
         private readonly TimeSpan _resamplePeriod;
         private readonly TimeSpan _notificationPeriod;
 
         //Update loop:
-        private DateTime _nextUpdate = new DateTime();
-        private DateTime _nextEquityUpdate = new DateTime();
-        private DateTime _nextChartsUpdate = new DateTime();
-        private DateTime _nextLogStoreUpdate = new DateTime();
-        private DateTime _lastUpdate = new DateTime();
+        private DateTime _nextUpdate;
+        private DateTime _nextChartsUpdate;
+        private DateTime _nextLogStoreUpdate;
         private int _lastOrderId = -1;
-        private object _chartLock = new Object();
-        private object _runtimeLock = new Object();
-
-        //Log Message Store:
-        private object _logStoreLock = new object();
-        private Dictionary<DateTime, List<string>> _logStore = new Dictionary<DateTime, List<string>>();
+        private readonly object _chartLock = new Object();
+        private readonly object _runtimeLock = new Object();
         private string _subscription = "Strategy Equity";
 
+        //Log Message Store:
+        private readonly object _logStoreLock = new object();
+        private List<LogEntry> _logStore;
+        
         /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
@@ -165,7 +164,7 @@ namespace QuantConnect.Lean.Engine.Results
             _startTime = DateTime.Now;
 
             //Store log and debug messages sorted by time.
-            _logStore = new Dictionary<DateTime, List<string>>();
+            _logStore = new List<LogEntry>();
         }
 
 
@@ -206,6 +205,15 @@ namespace QuantConnect.Lean.Engine.Results
                                 case PacketType.RuntimeError:
                                     var runtimeError = packet as RuntimeErrorPacket;
                                     Engine.Notify.RuntimeError(_deployId, runtimeError.Message);
+                                    break;
+
+                                //Log all order events to the frontend:
+                                case PacketType.OrderEvent:
+                                    var orderEvent = packet as OrderEventPacket;
+                                    DebugMessage("New Order Event: OrderId:" + orderEvent.Event.OrderId + " Symbol:" +
+                                                 orderEvent.Event.Symbol + " Quantity:" + orderEvent.Event.FillQuantity +
+                                                 " Status:" + orderEvent.Event.Status);
+                                    Engine.Notify.Send(orderEvent);
                                     break;
 
                                 //Send log messages to the browser as well for live trading:
@@ -258,7 +266,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void Update()
         {
             //Initialize:
-            var deltaOrders = new Dictionary<int, Order>();
+            Dictionary<int, Order> deltaOrders;
 
             //Error checks if the algorithm & threads have not loaded yet, or are closing down.
             if (_algorithm == null || _algorithm.Transactions == null || _algorithm.Transactions.Orders == null)
@@ -277,7 +285,6 @@ namespace QuantConnect.Lean.Engine.Results
 
                     //Reset loop variables:
                     _lastOrderId = (from order in deltaOrders.Values select order.Id).DefaultIfEmpty().Max();
-                    _lastUpdate = AlgorithmManager.Frontier;
 
                     //Limit length of orders we pass back dynamically to avoid flooding.
                     //if (deltaOrders.Count > 50) deltaOrders.Clear();
@@ -299,7 +306,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var runtimeStatistics = new Dictionary<string, string>();
                     var serverStatistics = OS.GetServerStatistics();
 
-                    foreach (var holding in _algorithm.Portfolio.Values)
+                    foreach (var holding in _algorithm.Portfolio.Values.Where(x => x.AbsoluteQuantity > 0).OrderBy(x => x.Symbol))
                     {
                         holdings.Add(holding.Symbol, new Holding(holding));
                     }
@@ -341,28 +348,25 @@ namespace QuantConnect.Lean.Engine.Results
                         {
                             var chartComplete = new Dictionary<string, Chart>(Charts);
                             var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, new Dictionary<int, Order>(), _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
-                            StoreResult(complete, true);
+                            StoreResult(complete);
                         }
                     }
 
                     // Upload the logs every 1-2 minutes; this can be a heavy operation depending on amount of live logging and should probably be done asynchronously.
                     if (DateTime.Now > _nextLogStoreUpdate)
                     {
-                        var date = DateTime.Now.Date;
-                        _nextLogStoreUpdate = DateTime.Now.AddMinutes(1);
-
+                        Log.Trace("LiveTradingResultHandler.Update(): Storing log...");
                         lock (_logStoreLock)
                         {
-                            //Make sure we have logs for this day:
-                            if (_logStore.ContainsKey(date)) StoreLog(date, _logStore[date]);
-
-                            //Clear all log store dates not today (save RAM with long running algorithm)
-                            var keys = _logStore.Keys.ToList();
-                            foreach (var key in keys)
-                            {
-                                if (key.Date != DateTime.Now.Date) _logStore.Remove(key);
-                            }
+                            var utc = DateTime.UtcNow;
+                            var logs = (from log in _logStore
+                                        where log.Time > utc.RoundDown(TimeSpan.FromHours(1)) && log.Time < utc.RoundUp(TimeSpan.FromHours(1))
+                                        select log).ToList();
+                            //Override the log master to delete the old entries and prevent memory creep.
+                            _logStore = logs;
+                            StoreLog(logs);
                         }
+                        _nextLogStoreUpdate = DateTime.Now.AddMinutes(2);
                     }
 
                     //Set the new update time after we've finished processing. 
@@ -469,11 +473,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">String message to send to browser.</param>
         private void AddToLogStore(string message)
         {
-            var date = DateTime.Now.Date;
             lock (_logStoreLock)
             {
-                if (!_logStore.ContainsKey(date)) _logStore.Add(date, new List<string>());
-                _logStore[date].Add(DateTime.Now.ToString("u") + " " + message);
+                _logStore.Add(new LogEntry(DateTime.Now.ToString("u") + " " + message));;
             }
         }
 
@@ -584,9 +586,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal)"/>
         public void SamplePerformance(DateTime time, decimal value)
         {
-
-            Log.Debug("LiveTradingResultHandler.SamplePerformance(): " + time.ToShortTimeString() + " >" + value);
-            Sample("Strategy Equity", ChartType.Overlay, "Daily Performance", SeriesType.Line, time, value, "%");
+            //No "daily performance" sampling for live trading yet.
+            //Log.Debug("LiveTradingResultHandler.SamplePerformance(): " + time.ToShortTimeString() + " >" + value);
+            //Sample("Strategy Equity", ChartType.Overlay, "Daily Performance", SeriesType.Line, time, value, "%");
         }
 
         /// <summary>
@@ -709,23 +711,18 @@ namespace QuantConnect.Lean.Engine.Results
 
 
         /// <summary>
-        /// Process the log list and save it to storage.
+        /// Process the log entries and save it to permanent storage 
         /// </summary>
         /// <param name="date">Today's date for this log</param>
         /// <param name="logs">Log list</param>
-        public void StoreLog(DateTime date, List<string> logs)
+        public void StoreLog(IEnumerable<LogEntry> logs)
         {
             try
             {
-                var key = "live/" + _job.UserId + "/" + _job.ProjectId + "/" + _job.DeployId + "-" + DateTime.Now.ToString("yyyy-MM-dd") + "-log.txt";
-                var serialized = "";
-                foreach (var log in logs)
-                {
-                    serialized += log + "\r\n";
-                }
-
-                //For live trading we're making assumption its a long running task and safe to async save large files.
-                Engine.Api.Store(serialized, key, StoragePermissions.Authenticated, true);
+                //Concatenate and upload the log file:
+                var joined = string.Join("\r\n", logs);
+                var key = "live/" + _job.UserId + "/" + _job.ProjectId + "/" + _job.DeployId + "-" + DateTime.UtcNow.ToString("yyyy-MM-dd-HH") + "-log.txt";
+                Engine.Api.Store(joined, key, StoragePermissions.Authenticated);
             }
             catch (Exception err)
             {
@@ -843,8 +840,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="newEvent">New event details</param>
         public void OrderEvent(OrderEvent newEvent)
         {
+            //Send the message to frontend as packet:
             Log.Trace("LiveConsoleResultHandler.OrderEvent(): id:" + newEvent.OrderId + " >> Status:" + newEvent.Status + " >> Fill Price: " + newEvent.FillPrice.ToString("C") + " >> Fill Quantity: " + newEvent.FillQuantity);
             Messages.Enqueue(new OrderEventPacket(_deployId, newEvent));
+
+            //Add the order event message to the log:
+            LogMessage("New Order Event: Id:" + newEvent.OrderId + " Symbol:" + newEvent.Symbol + " Quantity:" + newEvent.FillQuantity + " Status:" + newEvent.Status);
         }
 
         /// <summary>

@@ -67,9 +67,6 @@ namespace QuantConnect
         /// Current Market Price of the Asset
         public decimal MarketPrice;
 
-        /// Unrealized profit loss for the holding.
-        public decimal Unrealized;
-
         /// Create a new default holding:
         public Holding()
         { }
@@ -84,7 +81,6 @@ namespace QuantConnect
             Quantity = holding.Quantity;
             AveragePrice = holding.AveragePrice;
             MarketPrice = holding.Price;
-            Unrealized = holding.UnrealizedProfit;
         }
     }
 

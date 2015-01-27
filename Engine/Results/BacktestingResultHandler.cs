@@ -709,7 +709,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <returns>String URL of log</returns>
         private string ProcessLogMessages(AlgorithmNodePacket job)
         {
-            var remoteURL = @"http://data.quantconnect.com/";
+            var remoteUrl = @"http://data.quantconnect.com/";
             var logLength = 0;
 
             try
@@ -726,7 +726,7 @@ namespace QuantConnect.Lean.Engine.Results
                 var serialized = "";
 
                 var key = "backtests/" + job.UserId + "/" + job.ProjectId + "/" + job.AlgorithmId + "-log.txt";
-                remoteURL += key;
+                remoteUrl += key;
 
                 foreach (var line in _log)
                 {
@@ -765,14 +765,14 @@ namespace QuantConnect.Lean.Engine.Results
                 //Save the log: Upload this file to S3:
                 Engine.Api.Store(serialized, key, StoragePermissions.Public);
                 //Record the data usage:
-                Engine.Api.UpdateDailyLogUsed(job.UserId, job.AlgorithmId, remoteURL, logLength, job.Channel, hitLimit);
+                Engine.Api.UpdateDailyLogUsed(job.UserId, job.AlgorithmId, remoteUrl, logLength, job.Channel, hitLimit);
             }
             catch (Exception err)
             {
                 Log.Error("BacktestingResultHandler.ProcessLogMessages(): " + err.Message);
             }
-            Log.Trace("BacktestingResultHandler.ProcessLogMessages(): Ready: " + remoteURL);
-            return remoteURL;
+            Log.Trace("BacktestingResultHandler.ProcessLogMessages(): Ready: " + remoteUrl);
+            return remoteUrl;
         }
 
 
@@ -781,7 +781,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public void SetChartSubscription(string symbol)
         {
-            //
+            //NOP.
         }
 
     } // End Result Handler Thread:
