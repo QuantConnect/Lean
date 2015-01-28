@@ -270,18 +270,29 @@ namespace QuantConnect.Data.Market
         public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
         {
             var source = "";
-            switch (datafeed) 
-            {  
-                //Source location for backtesting. Commonly a dropbox or FTP link
+            var dataType = TickType.Trade;
+
+            switch (datafeed)
+            {
+                //Backtesting S3 Endpoint:
                 case DataFeedEndpoint.Backtesting:
-                    break;
-
-                //Source location for local testing: Not yet released :) Coming soon.
                 case DataFeedEndpoint.FileSystem:
+
+                    var dateFormat = "yyyyMMdd";
+                    if (config.Security == SecurityType.Forex)
+                    {
+                        dataType = TickType.Quote;
+                        dateFormat = "yyMMdd";
+                    }
+
+                    source = @"../../../Data/" + config.Security.ToString().ToLower();
+                    source += @"/" + config.Resolution.ToString().ToLower() + @"/" + config.Symbol.ToLower() + @"/";
+                    source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
                     break;
 
-                //Source location for live trading: do you have an endpoint for streaming data?
+                //Live Trading Endpoint: Fake, not actually used but need for consistency with backtesting system. Set to "" so will not use subscription reader.
                 case DataFeedEndpoint.LiveTrading:
+                    source = "";
                     break;
             }
             return source;
