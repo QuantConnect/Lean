@@ -26,6 +26,7 @@ using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages.Paper;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.Setup
@@ -120,7 +121,15 @@ namespace QuantConnect.Lean.Engine.Setup
             brokerage = new PaperBrokerage(algorithm);
 
             //For the console, let it set itself up primarily:
-            algorithm.Initialize();
+            try
+            {
+                algorithm.Initialize();
+            }
+            catch (Exception err)
+            {
+                Log.Error("PaperTradingSetupHandler.Setup(): " + err.Message);
+                Errors.Add("Error setting up the paper trading algorithm; " + err.Message);
+            }
 
             // Starting capital is portfolio cash:
             StartingCapital = algorithm.Portfolio.Cash;
