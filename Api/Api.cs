@@ -89,8 +89,9 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="status">Status of the current algorithm</param>
         /// <param name="algorithmId">String algorithm id we're setting.</param>
+        /// <param name="message">Message for the algorithm status event</param>
         /// <returns>Algorithm status enum</returns>
-        public void SetAlgorithmStatus(string algorithmId, AlgorithmStatus status)
+        public void SetAlgorithmStatus(string algorithmId, AlgorithmStatus status, string message = "")
         {
             //
         }
