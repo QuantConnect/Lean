@@ -151,7 +151,7 @@ namespace QuantConnect.Lean.Engine
             var now = Stopwatch.StartNew();
 
             // timeout to prevent infinite looping here -- 2sec for live and 30sec for non-live
-            var loopTimeout = (Engine.LiveMode) ? 2000 : 30000;
+            var loopTimeout = (Engine.LiveMode) ? 0 : 30000;
 
             while (!AllBridgesHaveData(feed) && now.ElapsedMilliseconds < loopTimeout)
             {
