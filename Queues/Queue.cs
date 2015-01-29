@@ -122,7 +122,7 @@ namespace QuantConnect.Queues
         /// Desktop/Local doesn't support live data from this handler
         /// </summary>
         /// <returns>Tick</returns>
-        public IEnumerable<Tick> NextTicks()
+        public IEnumerable<Tick> GetNextTicks()
         {
             throw new NotImplementedException("QuantConnect.Queues.Queue has not implemented live data.");
         }

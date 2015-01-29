@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The next ticks to be processed</returns>
         public override IEnumerable<Tick> GetNextTicks()
         {
-            return Engine.Queue.NextTicks();
+            return Engine.Queue.GetNextTicks();
         }
     }
 }
