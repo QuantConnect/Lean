@@ -210,11 +210,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             streamThread.Start();
             Thread.Sleep(5); // Wait a little for the other thread to init.
 
-            var nextLoadedDataFrontier = new DateTime();
+            bool storingData = false;
 
             // Setup Real Time Event Trigger:
             var realtime = new RealTimeSynchronizedTimer(TimeSpan.FromSeconds(1), () =>
             {
+                storingData = true;
+
                 //This is a minute start / 0-seconds.
                 var now = DateTime.Now;
                 var onMinute = (now.Second == 0);
@@ -241,7 +243,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         //This is a second resolution data source:
                         case Resolution.Second:
                             //Enqueue our live data:
-                            nextLoadedDataFrontier = now;
                             _streamStore[i].TriggerArchive(_subscriptions[i].FillDataForward);
                             Log.Debug("LiveTradingDataFeed.Run(): Triggered Archive: " + _subscriptions[i].Symbol + "-Second... " + now.ToLongTimeString());
                             break;
@@ -250,13 +251,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         case Resolution.Minute:
                             if (onMinute)
                             {
-                                nextLoadedDataFrontier = now;
                                 _streamStore[i].TriggerArchive(_subscriptions[i].FillDataForward);
                                 Log.Debug("LiveTradingDataFeed.Run(): Triggered Archive: " + _subscriptions[i].Symbol + "-Minute... " + now.ToLongTimeString());
                             }
                             break;
                     }
                 }
+
+                storingData = false;
             });
 
             //Start the realtime sampler above
@@ -265,31 +267,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // Scan the Stream Stores for Archived Bars, 
             do
             {
+                while (storingData)
+                {
+                    Thread.Yield();
+                }
+
                 try
                 {
                     //Scan the Stream Store Queue's and if there are any shuffle them over to the bridge for synchronization:
+                    DateTime? last = null;
+                    int count = 0;
                     for (var i = 0; i < Subscriptions.Count; i++)
                     {
-                        if (_streamStore[i].Queue.Count > 0)
-                        { 
-                            BaseData data;
-                            if (_streamStore[i].Queue.TryDequeue(out data))
-                            {
-                                Bridge[i].Enqueue(new List<BaseData> { data });
-
-                                if (Subscriptions.Count == 1)
-                                {
-                                    // we only care about the sync with multiple symbols
-                                    nextLoadedDataFrontier = data.Time;
-                                }
-                                
-                                Log.Debug("LiveTradingDataFeed.Run(): Enqueuing Data... s:" + data.Symbol + " >> v:" + data.Value);
-                            }
+                        BaseData data;
+                        while (_streamStore[i].Queue.TryDequeue(out data))
+                        {
+                            count++;
+                            last = data.Time;
+                            Bridge[i].Enqueue(new List<BaseData> { data });
+                            Log.Debug("LiveTradingDataFeed.Run(): Enqueuing Data... s:" + data.Symbol + " >> v:" + data.Value);
                         }
                     }
 
-                    // for live data sync on bridge
-                    LoadedDataFrontier = nextLoadedDataFrontier;
+                    // if we dequeued someone, update frontier for live data sync on bridge
+                    if (last.HasValue)
+                    {
+                        LoadedDataFrontier = last.Value;
+                    }
                 }
                 catch (Exception err)
                 {
@@ -297,7 +301,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 //Prevent Thread Locking Up - Sleep 1ms (linux only, on windows will sleep 15ms).
-                Thread.Sleep(1);
+                Thread.Yield();
 
             } while (!_exitTriggered && !_endOfBridges);
 
@@ -389,7 +393,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (Hibernate()) return;
                         if (_exitTriggered) return;
                         if (exitTasks) return;
-                        Thread.Sleep(1);
+                        Thread.Yield();
                     }
                 });
 
