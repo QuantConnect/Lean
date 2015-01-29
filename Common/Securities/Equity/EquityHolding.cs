@@ -37,11 +37,12 @@ namespace QuantConnect.Securities.Equity
         /******************************************************** 
         * CONSTRUCTOR/DELEGATE DEFINITIONS
         *********************************************************/
+
         /// <summary>
         /// Constructor for equities holdings.
         /// </summary>
-        public EquityHolding(string symbol, ISecurityTransactionModel transactionModel) :
-            base(symbol, transactionModel)
+        public EquityHolding(string symbol, ISecurityTransactionModel transactionModel)
+            : base(symbol, SecurityType.Equity, transactionModel)
         {
         }
 

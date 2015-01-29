@@ -36,7 +36,8 @@ namespace QuantConnect.Securities
         private decimal _averagePrice = 0;
         private int     _quantity = 0;
         private decimal _price = 0;
-        private string  _symbol = "";
+        private readonly string  _symbol = "";
+        private readonly SecurityType _securityType;
         private decimal _totalSaleVolume = 0;
         private decimal _profit = 0;
         private decimal _lastTradeProfit = 0;
@@ -46,13 +47,23 @@ namespace QuantConnect.Securities
         /******************************************************** 
         * CONSTRUCTOR DEFINITION
         *********************************************************/
+
         /// <summary>
         /// Create a new holding class instance setting the initial properties to $0.
         /// </summary>
         public SecurityHolding(string symbol, ISecurityTransactionModel transactionModel)
+            : this(symbol, SecurityType.Equity, transactionModel)
+        {
+        }
+
+        /// <summary>
+        /// Create a new holding class instance setting the initial properties to $0.
+        /// </summary>
+        public SecurityHolding(string symbol, SecurityType type, ISecurityTransactionModel transactionModel)
         {
             _model = transactionModel;
             _symbol = symbol;
+            _securityType = type;
 
             //Total Sales Volume for the day
             _totalSaleVolume = 0;
