@@ -55,7 +55,8 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="algorithmId">Algorithm id we're setting.</param>
         /// <param name="status">Status enum of the current worker</param>
-        void SetAlgorithmStatus(string algorithmId, AlgorithmStatus status);
+        /// <param name="message">Message for the algorithm status event</param>
+        void SetAlgorithmStatus(string algorithmId, AlgorithmStatus status, string message = "");
 
         /// <summary>
         /// Market Status Today: REST call.
