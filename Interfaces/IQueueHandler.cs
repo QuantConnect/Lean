@@ -51,7 +51,7 @@ namespace QuantConnect.Interfaces
         /// Get the next ticks from the live trading data queue
         /// </summary>
         /// <returns>IEnumerable list of ticks since the last update.</returns>
-        IEnumerable<Tick> NextTicks();
+        IEnumerable<Tick> GetNextTicks();
 
         /// <summary>
         /// Adds the specified symbols to the subscription
