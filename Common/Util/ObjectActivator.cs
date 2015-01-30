@@ -16,6 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace QuantConnect.Util
 {
@@ -25,6 +27,7 @@ namespace QuantConnect.Util
     public static class ObjectActivator
     {
         private static readonly object _lock = new object();
+        private static readonly object[] _emptyObjectArray = new object[0];
         private static readonly Dictionary<Type, Func<object[], object>> _activatorsByType = new Dictionary<Type, Func<object[], object>>(); 
 
         /// <summary>
@@ -77,6 +80,42 @@ namespace QuantConnect.Util
             }
 
             return factory;
+        }
+
+        /// <summary>
+        /// Clones the specified instance using reflection
+        /// </summary>
+        /// <param name="instanceToClone">The instance to be cloned</param>
+        /// <returns>A field/property wise, non-recursive clone of the instance</returns>
+        public static object Clone(object instanceToClone)
+        {
+            if (instanceToClone == null)
+            {
+                return null;
+            }
+
+            var type = instanceToClone.GetType();
+            var factory = GetActivator(type);
+            var members = type.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+            var instance = factory.Invoke(_emptyObjectArray);
+            foreach (var member in members)
+            {
+                var field = member as _FieldInfo;
+                if (field != null)
+                {
+                    field.SetValue(instance, field.GetValue(instanceToClone));
+                    continue;
+                }
+
+                var property = member as _PropertyInfo;
+                if (property != null && property.CanRead && property.CanWrite && property.GetIndexParameters().Length == 0)
+                {
+                    property.SetValue(instance, property.GetValue(instanceToClone, _emptyObjectArray), _emptyObjectArray);
+                }
+            }
+
+            return instance;
         }
     }
 }
