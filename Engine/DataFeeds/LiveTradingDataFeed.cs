@@ -269,20 +269,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 while (storingData)
                 {
-                    Thread.Yield();
+                    Thread.Sleep(1);
                 }
 
                 try
                 {
                     //Scan the Stream Store Queue's and if there are any shuffle them over to the bridge for synchronization:
                     DateTime? last = null;
-                    int count = 0;
                     for (var i = 0; i < Subscriptions.Count; i++)
                     {
                         BaseData data;
                         while (_streamStore[i].Queue.TryDequeue(out data))
                         {
-                            count++;
                             last = data.Time;
                             Bridge[i].Enqueue(new List<BaseData> { data });
                             Log.Debug("LiveTradingDataFeed.Run(): Enqueuing Data... s:" + data.Symbol + " >> v:" + data.Value);
@@ -301,7 +299,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 //Prevent Thread Locking Up - Sleep 1ms (linux only, on windows will sleep 15ms).
-                Thread.Yield();
+                Thread.Sleep(1);
 
             } while (!_exitTriggered && !_endOfBridges);
 
@@ -361,6 +359,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         //If we did hibernate we'll probably need a new session variable, or Quit if signalled.
                         if (Hibernate()) return;
                         if (_exitTriggered) return;
+
+                        Thread.Sleep(1);
                     }
                 });
 
@@ -393,13 +393,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (Hibernate()) return;
                         if (_exitTriggered) return;
                         if (exitTasks) return;
-                        Thread.Yield();
+                        Thread.Sleep(10);
                     }
                 });
 
                 //Wait for micro-threads to break before continuing
-                liveThreadTask.Start(); customFeedsTask.Start();
-                Task.WaitAll(liveThreadTask, customFeedsTask);
+                liveThreadTask.Start();
+
+                // define what tasks we're going to wait on, we use a task from result in place of the custom task, just in case we never start it
+                var tasks = new Task[2] {liveThreadTask, Task.FromResult(1)};
+
+                // if we have any dynamically loaded data, start the custom thread
+                if (_isDynamicallyLoadedData.Any(x => x))
+                {
+                    customFeedsTask.Start();
+                    tasks[1] = customFeedsTask;
+                }
+                
+                Task.WaitAll(tasks);
 
                 //Sleep 10s, then attempt reconnection to prevent thread lock-up
                 if (!_exitTriggered) Thread.Sleep(1000);

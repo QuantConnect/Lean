@@ -350,7 +350,7 @@ namespace QuantConnect.Lean.Engine
                 if (_isFillForward && Previous != null)
                 {
                     //If instance == null, current is null, so clone previous to record the final sample:
-                    Current = Previous.Clone();
+                    Current = Previous.Clone(true);
                     //When market closes fastforward current bar to the last bar fill forwarded to close time.
                     Current.Time = _security.Exchange.TimeOfDayClosed(Previous.Time);
                     // Save the previous bar as last bar before next stream (for fill forwrd).

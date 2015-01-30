@@ -41,6 +41,7 @@ namespace QuantConnect.Data
         private DateTime _time = new DateTime();
         private string _symbol = "";
         private decimal _value = 0;
+        private bool _isFillForward = false;
         private readonly object[] _emptyObjectArray = new object[0];
 
         /******************************************************** 
@@ -61,7 +62,15 @@ namespace QuantConnect.Data
                 _dataType = value;
             }
         }
-        
+
+        /// <summary>
+        /// True if this is a fill forward piece of data
+        /// </summary>
+        public bool IsFillForward
+        {
+            get { return _isFillForward; }
+        }
+
         /// <summary>
         /// Current time marker of this data packet.
         /// </summary>
@@ -169,6 +178,21 @@ namespace QuantConnect.Data
         public virtual void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume)
         {
             Value = lastTrade;
+        }
+
+        /// <summary>
+        /// Return a new instance clone of this object, used in fill forward
+        /// </summary>
+        /// <remarks>
+        /// This base implementation uses reflection to copy all public fields and properties
+        /// </remarks>
+        /// <param name="fillForward">True if this is a fill forward clone</param>
+        /// <returns>A clone of the current object</returns>
+        public BaseData Clone(bool fillForward)
+        {
+            var clone = Clone();
+            clone._isFillForward = fillForward;
+            return clone;
         }
 
         /// <summary>

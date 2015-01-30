@@ -151,13 +151,18 @@ namespace QuantConnect.Lean.Engine
             var now = Stopwatch.StartNew();
 
             // timeout to prevent infinite looping here -- 2sec for live and 30sec for non-live
-            var loopTimeout = (Engine.LiveMode) ? 500 : 30000;
+            var loopTimeout = (Engine.LiveMode) ? 50 : 30000;
 
-            do
+            if (Engine.LiveMode)
+            {
+                // give some time to the other threads in live mode
+                Thread.Sleep(1);
+            }
+
+            while (!AllBridgesHaveData(feed) && now.ElapsedMilliseconds < loopTimeout)
             {
                 Thread.Sleep(1);
             }
-            while (!AllBridgesHaveData(feed) && now.ElapsedMilliseconds < loopTimeout);
 
             //we want to verify that our data stream is never ahead of our data feed.
             //this acts as a virtual lock around the bridge so we can wait for the feed

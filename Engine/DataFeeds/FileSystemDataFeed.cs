@@ -417,7 +417,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 for (var date = FillForwardFrontiers[i] + increment; manager.MarketOpen(date); date = date + increment)
                 {
                     var cache = new List<BaseData>(1);
-                    var fillforward = current.Clone();
+                    var fillforward = current.Clone(true);
                     fillforward.Time = date;
                     FillForwardFrontiers[i] = date;
                     cache.Add(fillforward);
@@ -458,7 +458,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 var cache = new List<BaseData>(1);
-                var fillforward = previous.Clone();
+                var fillforward = previous.Clone(true);
                 fillforward.Time = date;
                 FillForwardFrontiers[i] = date;
                 cache.Add(fillforward);

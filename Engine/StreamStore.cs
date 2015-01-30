@@ -201,7 +201,7 @@ namespace QuantConnect.Lean.Engine
                     {
                         //There was no other data in this timer period, and this is a fillforward subscription:
                         Log.Debug("StreamStore.TriggerArchive(): Fillforward, Previous Enqueued: S:" + _previousData.Symbol + " V:" + _previousData.Value);
-                        var cloneForward = _previousData.Clone();
+                        var cloneForward = _previousData.Clone(true);
                         cloneForward.Time = _previousData.Time.Add(_increment);
                         _queue.Enqueue(cloneForward);
 
