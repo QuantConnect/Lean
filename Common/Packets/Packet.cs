@@ -108,6 +108,9 @@ namespace QuantConnect.Packets
         /// Node -> User Algorithm Runtime Error
         RuntimeError,
 
+        /// Error is an internal handled error packet inside users algorithm
+        HandledError,
+
         /// Nodes -> User Log Message
         Log,
 

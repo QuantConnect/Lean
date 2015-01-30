@@ -532,7 +532,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             if (message == _errorMessage) return;
             if (Messages.Count > 500) return;
-            Messages.Enqueue(new RuntimeErrorPacket(_backtestId, message, stacktrace));
+            Messages.Enqueue(new HandledErrorPacket(_backtestId, message, stacktrace));
             _errorMessage = message;
         }
 

@@ -487,7 +487,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void ErrorMessage(string message, string stacktrace = "")
         {
             if (Messages.Count > 500) return;
-            Messages.Enqueue(new RuntimeErrorPacket(_deployId, message, stacktrace));
+            Messages.Enqueue(new HandledErrorPacket(_deployId, message, stacktrace));
         }
 
         /// <summary>
@@ -720,7 +720,7 @@ namespace QuantConnect.Lean.Engine.Results
             try
             {
                 //Concatenate and upload the log file:
-                var joined = string.Join("\r\n", logs);
+                var joined = string.Join("\r\n", logs.Select(x=>x.Message));
                 var key = "live/" + _job.UserId + "/" + _job.ProjectId + "/" + _job.DeployId + "-" + DateTime.UtcNow.ToString("yyyy-MM-dd-HH") + "-log.txt";
                 Engine.Api.Store(joined, key, StoragePermissions.Authenticated);
             }
