@@ -34,7 +34,7 @@ namespace QuantConnect.Securities.Forex
         * CLASS VARIABLES
         *********************************************************/
         private TimeSpan _marketOpen = TimeSpan.FromHours(0);
-        private TimeSpan _marketClose = TimeSpan.FromHours(23.999999);
+        private TimeSpan _marketClose = TimeSpan.FromDays(1).Subtract(TimeSpan.FromTicks(1));
 
         /******************************************************** 
         * CLASS CONSTRUCTION

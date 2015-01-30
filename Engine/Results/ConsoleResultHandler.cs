@@ -478,7 +478,7 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 if (!_backtestSpanInDays.HasValue)
                 {
-                    _backtestSpanInDays = (_job.PeriodFinish - _job.PeriodStart).TotalDays;
+                    _backtestSpanInDays = Math.Round((_job.PeriodFinish - _job.PeriodStart).TotalDays);
                     if (_backtestSpanInDays == 0.0)
                     {
                         _backtestSpanInDays = null;
@@ -492,7 +492,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var daysProcessed = (current - _job.PeriodStart).TotalDays;
                     if (daysProcessed < 0) daysProcessed = 0;
                     if (daysProcessed > _backtestSpanInDays.Value) daysProcessed = _backtestSpanInDays.Value;
-                    Log.Trace("Progress: " + (daysProcessed * 100 / _backtestSpanInDays.Value).ToString("F2") + "% Processed: " + daysProcessed + " days of total: " + (int)_backtestSpanInDays);
+                    Log.Trace("Progress: " + (daysProcessed * 100 / _backtestSpanInDays.Value).ToString("F2") + "% Processed: " + daysProcessed.ToString("0.000") + " days of total: " + (int)_backtestSpanInDays.Value);
                 }
                 else
                 {
