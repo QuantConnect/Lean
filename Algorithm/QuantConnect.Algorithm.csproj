@@ -74,6 +74,7 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Examples\CustomDataWithFillForward.cs" />
     <Compile Include="Examples\QuandlImporter.cs" />
     <Compile Include="Examples\BasicTemplateAlgorithm.cs" />
     <Compile Include="Examples\CustomData_NitfyINR.cs" />

@@ -42,7 +42,6 @@ namespace QuantConnect.Data
         private string _symbol = "";
         private decimal _value = 0;
         private bool _isFillForward = false;
-        private readonly object[] _emptyObjectArray = new object[0];
 
         /******************************************************** 
         * CLASS PUBLIC VARIABLES
@@ -204,29 +203,8 @@ namespace QuantConnect.Data
         /// <returns>A clone of the current object</returns>
         public virtual BaseData Clone()
         {
-            var factory = ObjectActivator.GetActivator(GetType());
-            var members = GetType().GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
-            var instance = factory.Invoke(_emptyObjectArray);
-            foreach (var member in members)
-            {
-                var field = member as _FieldInfo;
-                if (field != null)
-                {
-                    field.SetValue(instance, field.GetValue(this));
-                    continue;
-                }
-
-                var property = member as _PropertyInfo;
-                if (property != null && property.CanRead && property.CanWrite && property.GetIndexParameters().Length == 0)
-                {
-                    property.SetValue(instance, property.GetValue(this, _emptyObjectArray), _emptyObjectArray);
-                }
-            }
-
-            return (BaseData)instance;
+            return ObjectActivator.Clone(this) as BaseData;
         }
-
     } // End Base Data Class
 
 } // End QC Namespace

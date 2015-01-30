@@ -122,7 +122,7 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         object IEnumerator.Current
         {
-            get { throw new NotImplementedException(); }
+            get { return Current; }
         }
 
 
