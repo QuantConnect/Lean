@@ -85,7 +85,7 @@
     <Compile Include="Examples\DataConsolidation.cs" />
     <Compile Include="Examples\MACDTrendFollowing.cs" />
     <Compile Include="Examples\MovingAverageCross.cs" />
-    <Compile Include="Examples\Stress_Test.cs" />
+    <Compile Include="Examples\Stress_Symbols.cs" />
     <Compile Include="QCAlgorithm.cs" />
     <Compile Include="QCAlgorithm.Console.cs" />
     <Compile Include="QCAlgorithm.Trading.cs" />
