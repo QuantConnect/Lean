@@ -455,12 +455,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             { 
                 if (!announced) 
                 {
-                    Log.Trace("LiveTradingDataFeed.Stream(): All securities closed, hibernating until market open."); 
+                    Log.Trace("LiveTradingDataFeed.Stream(): All securities closed, hibernating until market open.");
+                    Engine.ResultHandler.DebugMessage("All securities closed, hibernating until market open.");
                     announced = true;
                     _hibernate = true;
+                    Engine.Queue.CloseDataQueue();
                 } 
                 Thread.Sleep(1000); 
             }
+            if (_hibernate) Engine.Queue.OpenDataQueue();
             _hibernate = false;
             return announced;
         }

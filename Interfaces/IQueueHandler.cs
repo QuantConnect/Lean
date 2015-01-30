@@ -54,6 +54,16 @@ namespace QuantConnect.Interfaces
         IEnumerable<Tick> GetNextTicks();
 
         /// <summary>
+        /// Open the data queue when coming out of hibernate.
+        /// </summary>
+        void OpenDataQueue();
+
+        /// <summary>
+        /// Stop pulling data from the queue temporarily.
+        /// </summary>
+        void CloseDataQueue();
+
+        /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>

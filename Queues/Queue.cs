@@ -127,6 +127,23 @@ namespace QuantConnect.Queues
             throw new NotImplementedException("QuantConnect.Queues.Queue has not implemented live data.");
         }
 
+
+        /// <summary>
+        /// Open the data queue when coming out of hibernate.
+        /// </summary>
+        public void OpenDataQueue()
+        {
+            //NOP
+        }
+
+        /// <summary>
+        /// Stop pulling data from the queue temporarily.
+        /// </summary>
+        public void CloseDataQueue()
+        {
+            //NOP
+        }
+
         /// <summary>
         /// Desktop/Local doesn't support live data from this handler
         /// </summary>
@@ -142,6 +159,7 @@ namespace QuantConnect.Queues
         {
             throw new NotImplementedException("QuantConnect.Queues.Queue has not implemented live data.");
         }
+
     }
 
 }

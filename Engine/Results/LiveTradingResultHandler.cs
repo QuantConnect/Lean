@@ -283,6 +283,12 @@ namespace QuantConnect.Lean.Engine.Results
                                    where order.Value.Id > _lastOrderId
                                    select order).ToDictionary(t => t.Key, t => t.Value);
 
+                    //For charting convert to UTC
+                    foreach (var order in deltaOrders)
+                    {
+                        order.Value.Time = order.Value.Time.ToUniversalTime();
+                    }
+
                     //Reset loop variables:
                     _lastOrderId = (from order in deltaOrders.Values select order.Id).DefaultIfEmpty().Max();
 
@@ -557,7 +563,6 @@ namespace QuantConnect.Lean.Engine.Results
                 Sample("Strategy Equity", ChartType.Stacked, "Equity", SeriesType.Candle, time, value);
             }
         }
-
 
         /// <summary>
         /// Sample the asset prices to generate plots.
