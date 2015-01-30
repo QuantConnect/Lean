@@ -1,11 +1,23 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Queues.Test
@@ -16,11 +28,10 @@ namespace QuantConnect.Queues.Test
     public class FakeLiveQueueHandler : Queue
     {
         private readonly Random _random = new Random();
-        private readonly int _tickCount = Config.GetInt("fake-live-queue-handler-tick-count", 1000);
-        private readonly int _createDataGapsEvery = Config.GetInt("fake-live-queue-handler-create-data-gaps-every-n-subscriptions", 2);
-        private readonly TimeSpan _maxDataGap = TimeSpan.FromMinutes(Config.GetDouble("fake-live-queue-handler-max-gap-minutes", 1));
-        private static readonly int MaxTimesPerSecond = Config.GetInt("fake-live-queue-handler-times-per-second", 1);
-        private static readonly TimeSpan _emitEvery = TimeSpan.FromSeconds(Config.GetDouble("fake-live-queue-handler-emit-ever-seconds", 1.0));
+        private const int _tickCount = 1000;
+        private const int _createDataGapsEvery = 2;
+        private readonly TimeSpan _maxDataGap = TimeSpan.FromMinutes(1);
+        private static readonly TimeSpan _emitEvery = TimeSpan.FromSeconds(1.0);
         
         private static readonly DateTime _start = DateTime.Now;
         private readonly HashSet<Subscription> _subscriptions = new HashSet<Subscription>();
