@@ -149,10 +149,13 @@ namespace QuantConnect.Lean.Engine
                 //Total Physical Ram Available:
                 var allocation = 1024;
                 var ram = Convert.ToInt32(OS.TotalPhysicalMemory);
+                
                 if (ram < allocation)
                 {
                     allocation = ram - 200;
                 }
+
+                if (_liveMode) allocation -= 50;
 
                 Log.Trace("Engine.MaximumRamAllocation(): Allocated: " + allocation);
 
