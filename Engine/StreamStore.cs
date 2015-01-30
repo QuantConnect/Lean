@@ -222,7 +222,8 @@ namespace QuantConnect.Lean.Engine
         /// <returns></returns>
         private DateTime ComputeBarStartTime(BaseData data)
         {
-            return data.Time.RoundDown(_increment);
+            // for live data feeds compute a bar start time base on wall clock time, this prevents splitting of data into the algorithm
+            return DateTime.Now.RoundDown(_increment);
         }
 
     } // End of Class

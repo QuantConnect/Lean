@@ -19,26 +19,42 @@ namespace QuantConnect.Queues.Test
         private readonly int _tickCount = Config.GetInt("fake-live-queue-handler-tick-count", 1000);
         private readonly int _createDataGapsEvery = Config.GetInt("fake-live-queue-handler-create-data-gaps-every-n-subscriptions", 2);
         private readonly TimeSpan _maxDataGap = TimeSpan.FromMinutes(Config.GetDouble("fake-live-queue-handler-max-gap-minutes", 1));
-        private static readonly int TimesPerSecond = Config.GetInt("fake-live-queue-handler-times-per-second", 1);
+        private static readonly int MaxTimesPerSecond = Config.GetInt("fake-live-queue-handler-times-per-second", 1);
+        private static readonly TimeSpan _emitEvery = TimeSpan.FromSeconds(Config.GetDouble("fake-live-queue-handler-emit-ever-seconds", 1.0));
+        
         private static readonly DateTime _start = DateTime.Now;
         private readonly HashSet<Subscription> _subscriptions = new HashSet<Subscription>();
-        private readonly Dictionary<string, DateTime> _lastDataTimes = new Dictionary<string, DateTime>(); 
+
+        private readonly Stopwatch _lastEmit = Stopwatch.StartNew();
         public override IEnumerable<Tick> GetNextTicks()
         {
-            Thread.Sleep((int) (1000/(double) TimesPerSecond));
+            // instead of sleeping, model real world where we just don't have data to pull from the queue
+            if (_lastEmit.ElapsedTicks < _emitEvery.Ticks * _random.NextDouble())
+            {
+                yield break;
+            }
+
+            // reset our last emit to now
+            _lastEmit.Restart();
 
             // spread them out
             for (int i = 0; i < _tickCount; i++)
             {
                 foreach (var subscription in _subscriptions)
                 {
+                    // model delays in dequeuing
                     if (_random.NextDouble() < 0.0001)
-                    //if (_lastDataTimes[subscription.Symbol].Add(subscription.DataInterval) <= DateTime.Now)
                     {
-                        _lastDataTimes[subscription.Symbol] = DateTime.Now;
-                        var sine = ComputeNextSineValue(_start, DateTime.Now, TimeSpan.FromMinutes(1));
-                        yield return new Tick(DateTime.Now, subscription.Symbol, sine*1.025m, sine*.975m);
+                        Thread.Sleep(10);
                     }
+                    else
+                    {
+                        Thread.Sleep(1);
+                    }
+
+                    var time = DateTime.Now.Subtract(TimeSpan.FromMilliseconds(4200 * _random.NextDouble()));
+                    var sine = ComputeNextSineValue(_start, time, TimeSpan.FromMinutes(1));
+                    yield return new Tick(time, subscription.Symbol, sine * 1.025m, sine * .975m);
                 }
             }
         }
@@ -58,7 +74,6 @@ namespace QuantConnect.Queues.Test
                     }
                     Console.WriteLine("SYMBOL: " + symbol + " GAP: " + gap.TotalSeconds.ToString("0.00"));
                     _subscriptions.Add(new Subscription(symbol, gap));
-                    _lastDataTimes.Add(symbol, DateTime.MinValue);
                 }
             }
         }
