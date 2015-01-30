@@ -223,6 +223,13 @@ namespace QuantConnect.Algorithm
                 return -1;
             }
 
+            //Make sure the security has some data:
+            if (!security.HasData)
+            {
+                Error("There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point.");
+                return -1;
+            }
+
             //Check the exchange is open before sending a market order.
             if (type == OrderType.Market && !security.Exchange.ExchangeOpen)
             {

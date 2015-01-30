@@ -113,6 +113,17 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// There has been at least one datapoint since our algorithm started running for us to determine price.
+        /// </summary>
+        public bool HasData
+        {
+            get
+            {
+                return GetLastData() != null; 
+            }
+        }
+
+        /// <summary>
         /// Data cache for the security to store previous price information.
         /// </summary>
         /// <seealso cref="EquityCache"/>
