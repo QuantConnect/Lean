@@ -105,6 +105,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\Test\FakeTradeBarCustom.cs" />
     <Compile Include="SeriesSampler.cs" />
     <Compile Include="Data\Custom\Quandl.cs" />
     <Compile Include="Data\DynamicData.cs" />
