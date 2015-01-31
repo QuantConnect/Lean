@@ -80,6 +80,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="packages.config" />
     <Compile Include="Indicators\StandardDeviationTests.cs" />
+    <Compile Include="Indicators\BollingerBandsTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Adapters\" />

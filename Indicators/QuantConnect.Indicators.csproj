@@ -71,6 +71,7 @@
     <Compile Include="TradeBarIndicator.cs" />
     <Compile Include="WindowIndicator.cs" />
     <Compile Include="StandardDeviation.cs" />
+    <Compile Include="BollingerBands.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\QuantConnect.csproj">
