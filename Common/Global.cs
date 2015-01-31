@@ -43,6 +43,8 @@ namespace QuantConnect
         public const string UI = "yyyyMMdd HH:mm:ss";
         /// EXT Web Date Representation
         public const string EXT = "yyyy-MM-dd HH:mm:ss";
+        /// en-US format
+        public const string US = "M/d/yyyy h:mm:ss tt";
     }
 
 
