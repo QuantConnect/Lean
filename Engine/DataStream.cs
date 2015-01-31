@@ -63,6 +63,7 @@ namespace QuantConnect.Lean.Engine
             var increment = TimeSpan.FromSeconds(1);
             _subscriptions = feed.Subscriptions.Count;
             var frontier = frontierOrigin;
+            var nextEmitTime = DateTime.MinValue;
             var newData = new SortedDictionary<DateTime, Dictionary<int, List<BaseData>>>();
 
             //Wait for datafeeds to be ready, wait for first data to arrive:
@@ -131,9 +132,10 @@ namespace QuantConnect.Lean.Engine
                     frontier += increment;
                 }
 
-                //Submit the next data array:
-                if (newData.Count > 0)
+                //Submit the next data array, even if there's no data, allow emits every second to allow event handling (liquidate/stop/ect...)
+                if (newData.Count > 0 || (Engine.LiveMode && DateTime.Now > nextEmitTime))
                 {
+                    nextEmitTime = DateTime.Now + TimeSpan.FromSeconds(1);
                     yield return newData;
                 }
             }

@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             bool orderFilled = false;
             var manualResetEvent = new ManualResetEvent(false);
-            var ib = new QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage();
+            var ib = new InteractiveBrokersBrokerage();
             ib.Connect();
 
             ib.Client.RequestOpenOrders();

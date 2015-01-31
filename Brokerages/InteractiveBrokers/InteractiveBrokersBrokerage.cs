@@ -61,7 +61,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Creates a new IBBrokerage using values from configuration:
+        /// Creates a new InteractiveBrokersBrokerage using values from configuration:
         ///     ib-account
         ///     ib-host
         ///     ib-port
@@ -78,7 +78,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Creates a new IBBrokerage from the specified values
+        /// Creates a new InteractiveBrokersBrokerage from the specified values
         /// </summary>
         /// <param name="account">The Interactive Brokers account name</param>
         /// <param name="host">host name or IP address of the machine where TWS is running. Leave blank to connect to the local host.</param>
@@ -116,18 +116,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 if (!_outstandingOrders.TryAdd(order.Id, order))
                 {
                     // this order has already been placed
-                    Log.Trace("IBBrokerage.PlaceOrder(): Attempted to place order for existing order ID");
+                    Log.Trace("InteractiveBrokersBrokerage.PlaceOrder(): Attempted to place order for existing order ID");
                     return false;
                 }
 
-                Log.Trace("IBBrokerage.PlaceOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity);
+                Log.Trace("InteractiveBrokersBrokerage.PlaceOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity);
 
                 IBPlaceOrder(order);
                 return true;
             }
             catch (Exception err)
             {
-                Log.Error("IBBrokerage.PlaceOrder(): " + err.Message);
+                Log.Error("InteractiveBrokersBrokerage.PlaceOrder(): " + err.Message);
                 return false;
             }
         }
@@ -144,23 +144,23 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Order outstanding;
                 if (!_outstandingOrders.TryGetValue(order.Id, out outstanding))
                 {
-                    Log.Trace("IBBrokerage.UpdateOrder(): Unable to update order " + order.Id + " because it is no longer outstanding");
+                    Log.Trace("InteractiveBrokersBrokerage.UpdateOrder(): Unable to update order " + order.Id + " because it is no longer outstanding");
                     return false;
                 }
 
                 if (!(outstanding.Status != OrderStatus.Filled && outstanding.Status != OrderStatus.Canceled))
                 {
-                    Log.Trace("IBBrokerage.UpdateOrder(): Unable to update order " + order.Id + " because it is " + outstanding.Status);
+                    Log.Trace("InteractiveBrokersBrokerage.UpdateOrder(): Unable to update order " + order.Id + " because it is " + outstanding.Status);
                     return false;
                 }
 
-                Log.Trace("IBBrokerage.UpdateOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity + " Status: " + order.Status);
+                Log.Trace("InteractiveBrokersBrokerage.UpdateOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity + " Status: " + order.Status);
 
                 IBPlaceOrder(order);
             }
             catch (Exception err)
             {
-                Log.Error("IBBrokerage.UpdateOrder(): " + err.Message);
+                Log.Error("InteractiveBrokersBrokerage.UpdateOrder(): " + err.Message);
                 return false;
             }
             return true;
@@ -175,7 +175,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             try
             {
-                Log.Trace("IBBrokerage.UpdateOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity);
+                Log.Trace("InteractiveBrokersBrokerage.UpdateOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity);
 
                 // this could be better
                 foreach (var id in order.BrokerId)
@@ -185,7 +185,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch (Exception err)
             {
-                Log.Error("IBBrokerage.CancelOrder(): OrderID: " + order.Id + " - " + err.Message);
+                Log.Error("InteractiveBrokersBrokerage.CancelOrder(): OrderID: " + order.Id + " - " + err.Message);
                 return false;
             }
             return true;
@@ -243,7 +243,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     _nextValidID = e.OrderId;
                     manualResetEvent.Set();
                 }
-                Log.Trace("IBBrokerage.HandleNextValidID(): " + e.OrderId);
+                Log.Trace("InteractiveBrokersBrokerage.HandleNextValidID(): " + e.OrderId);
             };
 
             int attempt = 1;
@@ -251,7 +251,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 try
                 {
-                    Log.Trace("IBBrokerage.Connect(): Attempting to connect (" + attempt + "/10) ...");
+                    Log.Trace("InteractiveBrokersBrokerage.Connect(): Attempting to connect (" + attempt + "/10) ...");
 
                     // we're going to try and connect several times, if successful break
                     _client.Connect(_host, _port, _clientID);
@@ -267,7 +267,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     }
 
                     // we couldn't connect after several attempts, log the error and throw an exception
-                    Log.Error("IBBrokerage.Connect(): " + err.Message);
+                    Log.Error("InteractiveBrokersBrokerage.Connect(): " + err.Message);
                     throw;
                 }
             }
@@ -276,7 +276,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (!manualResetEvent.WaitOne(1000))
             {
                 // we timed out our wait for next valid id... we'll just log it
-                Log.Error("IBBrokerage.Connect(): Timed out waiting for next valid ID event to fire.");
+                Log.Error("InteractiveBrokersBrokerage.Connect(): Timed out waiting for next valid ID event to fire.");
             }
 
             _client.RequestAccountUpdates(true, _account);
@@ -312,7 +312,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             if (!IsConnected)
             {
-                throw new InvalidOperationException("IBBrokerage.IBPlaceOrder(): Unable to place order while not connected.");
+                throw new InvalidOperationException("InteractiveBrokersBrokerage.IBPlaceOrder(): Unable to place order while not connected.");
             }
 
             var contract = CreateContract(order, exchange);
@@ -327,7 +327,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private void HandleError(object sender, IB.ErrorEventArgs e)
         {
             // if greater than zero error generated from order or ticker
-            var message = string.Format("IBBrokerage.HandleError(): {0} - {1}", e.TickerId, e.ErrorMsg);
+            var message = string.Format("InteractiveBrokersBrokerage.HandleError(): {0} - {1}", e.TickerId, e.ErrorMsg);
             if (e.TickerId > 0)
             {
                 Log.Error(message);
@@ -367,7 +367,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch (Exception err)
             {
-                Log.Error("IBBrokerage.HandleUpdateAccountValue(): " + err.Message);
+                Log.Error("InteractiveBrokersBrokerage.HandleUpdateAccountValue(): " + err.Message);
             }
         }
 
@@ -382,11 +382,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var order = _outstandingOrders.FirstOrDefault(x => x.Value.BrokerId.Contains(update.OrderId)).Value;
                 if (order == null)
                 {
-                    Log.Error("IBBrokerage.HandleOrderStatusUpdates(): Unable to resolve order " + update.OrderId);
+                    Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Unable to resolve order " + update.OrderId);
                     return;
                 }
 
-                Log.Trace("IBBrokerage.HandleOrderStatusUpdtes(): QC OrderID: " + order.Id + " IB OrderID: " + update.OrderId + " Status: " + update.Status);
+                Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdtes(): QC OrderID: " + order.Id + " IB OrderID: " + update.OrderId + " Status: " + update.Status);
 
                 OnOrderEvent(new OrderEvent(order.Id, order.Symbol, ConvertOrderStatus(update.Status), update.AverageFillPrice, update.Filled, "Interactive Brokers Fill Event"));
 
@@ -398,7 +398,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch (Exception err)
             {
-                Log.Error("IBBrokerage.HandleOrderStatusUpdates(): " + err.Message);
+                Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): " + err.Message);
             }
         }
 
@@ -565,7 +565,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return OrderStatus.Invalid;
 
                 case IB.OrderStatus.Inactive:
-                    Log.Error("IBBrokerage.ConvertOrderStatus(): Inactive order");
+                    Log.Error("InteractiveBrokersBrokerage.ConvertOrderStatus(): Inactive order");
                     return OrderStatus.None;
 
                 case IB.OrderStatus.None: 

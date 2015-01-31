@@ -433,10 +433,15 @@ namespace QuantConnect.Algorithm
         /// </remarks>
         public void SetStartDate(int year, int month, int day) 
         {
-            try 
+            try
             {
-                SetStartDate(new DateTime(year, month, day));
-            } 
+                var start = new DateTime(year, month, day);
+
+                // we really just want the date of the start, so it's 12am of the requested day (first moment of the day)
+                start = start.Date;
+
+                SetStartDate(start);
+            }
             catch (Exception err) 
             {
                 throw new Exception("Date Invalid: " + err.Message);
@@ -453,10 +458,15 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="SetEndDate(DateTime)"/>
         public void SetEndDate(int year, int month, int day) 
         {
-            try 
+            try
             {
-                SetEndDate(new DateTime(year, month, day));
-            } 
+                var end = new DateTime(year, month, day);
+
+                // we want the end date to be just before the next day (last moment of the day)
+                end = end.Date.AddDays(1).Subtract(TimeSpan.FromTicks(1));
+
+                SetEndDate(end);
+            }
             catch (Exception err) 
             {
                 throw new Exception("Date Invalid: " + err.Message);

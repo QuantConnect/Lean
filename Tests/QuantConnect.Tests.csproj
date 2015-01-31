@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Krs.Ats.IBNet, Version=9.66.0.31, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Krs.Ats.IBNet.9.66.0.31\lib\net20\Krs.Ats.IBNet.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
@@ -42,9 +46,6 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Krs.Ats.IBNet">
-      <HintPath>..\packages\Krs.Ats.IBNet.9.66.0.31\lib\net20\Krs.Ats.IBNet.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Algorithm\Test_Cash.cs" />
@@ -61,6 +62,7 @@
     <Compile Include="Common\Util\ExpressionBuilderTests.cs" />
     <Compile Include="Indicators\AroonOscillatorTests.cs" />
     <Compile Include="Indicators\AverageTrueRangeTests.cs" />
+    <Compile Include="Indicators\BollingerBandsTests.cs" />
     <Compile Include="Indicators\CompositeIndicatorTests.cs" />
     <Compile Include="Indicators\DelayTests.cs" />
     <Compile Include="Indicators\ExponentialMovingAverageTests.cs" />
@@ -76,11 +78,11 @@
     <Compile Include="Indicators\RollingWindowTests.cs" />
     <Compile Include="Indicators\SequentialIndicatorTests.cs" />
     <Compile Include="Indicators\SimpleMovingAverageTests.cs" />
+    <Compile Include="Indicators\StandardDeviationTests.cs" />
     <Compile Include="Indicators\TestHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="packages.config" />
-    <Compile Include="Indicators\StandardDeviationTests.cs" />
-    <Compile Include="Indicators\BollingerBandsTests.cs" />
+    <None Include="TestData\CashTestingStrategy.csv" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Adapters\" />
@@ -105,7 +107,7 @@
       <Name>QuantConnect.Configuration</Name>
     </ProjectReference>
     <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
-      <Project>{73FB2522-C3ED-4E47-8E3D-AFAD48A6B888}</Project>
+      <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
       <Name>QuantConnect.Indicators</Name>
     </ProjectReference>
     <ProjectReference Include="..\Interfaces\QuantConnect.Interfaces.csproj">

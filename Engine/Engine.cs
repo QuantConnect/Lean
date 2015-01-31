@@ -359,10 +359,18 @@ namespace QuantConnect.Lean.Engine
                             try
                             {
                                 //Generates error when things don't exist (no charting logged, runtime errors in main algo execution)
-                                var equity = charts["Strategy Equity"].Series["Equity"].Values;
-                                var performance = charts["Strategy Equity"].Series["Daily Performance"].Values;
-                                var profitLoss = new SortedDictionary<DateTime,decimal>(algorithm.Transactions.TransactionRecord);
-                                statistics = Statistics.Statistics.Generate(equity, profitLoss, performance, SetupHandler.StartingCapital, 252);
+                                const string strategyEquityKey = "Strategy Equity";
+                                const string equityKey = "Equity";
+                                const string dailyPerformanceKey = "Daily Performance";
+
+                                // make sure we've taken samples for these series before just blindly requesting them
+                                if (charts.ContainsKey(strategyEquityKey) && charts[strategyEquityKey].Series.ContainsKey(equityKey) && charts[strategyEquityKey].Series.ContainsKey(dailyPerformanceKey))
+                                {
+                                    var equity = charts[strategyEquityKey].Series[equityKey].Values;
+                                    var performance = charts[strategyEquityKey].Series[dailyPerformanceKey].Values;
+                                    var profitLoss = new SortedDictionary<DateTime, decimal>(algorithm.Transactions.TransactionRecord);
+                                    statistics = Statistics.Statistics.Generate(equity, profitLoss, performance, SetupHandler.StartingCapital, 252);
+                                }
                             }
                             catch (Exception err) {
                                 Log.Error("Algorithm.Node.Engine(): Error generating result packet: " + err.Message);
