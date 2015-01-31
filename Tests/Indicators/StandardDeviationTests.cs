@@ -25,7 +25,8 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ComputesCorrectly()
         {
-            // Indicator output was compared against values from "std" function in Julia.
+            // Indicator output was compared against the following function in Julia
+            //  stdpop(v) = sqrt(sum((v - mean(v)).^2) / length(v))
             var std = new StandardDeviation(3);
             var reference = DateTime.MinValue;
 
@@ -36,13 +37,13 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(-1m, std.Current.Value);
 
             std.Update(reference.AddDays(3), 1m);
-            Assert.AreEqual(1.15470053837925m, std.Current.Value);
+            Assert.AreEqual(0.942809041582063m, std.Current.Value);
 
             std.Update(reference.AddDays(4), -2m);
-            Assert.AreEqual(1.52752523165195m, std.Current.Value);
+            Assert.AreEqual(1.24721912892465m, std.Current.Value);
 
             std.Update(reference.AddDays(5), 3m);
-            Assert.AreEqual(2.51661147842358m, std.Current.Value);
+            Assert.AreEqual(2.05480466765633m, std.Current.Value);
         }
     }
 }

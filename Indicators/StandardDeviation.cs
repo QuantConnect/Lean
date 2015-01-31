@@ -25,8 +25,8 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the StandardDeviation class with the specified period.
         /// 
-        /// Estimates the unbiased population standard deviation.
-        /// On a dataset of size N will use an N-1 normalizer (Bessel's correction).
+        /// Evaluates the standard deviation from the provided full population. 
+        /// On a dataset of size N will use an N normalizer and would thus be biased if applied to a subset.
         /// </summary>
         /// <param name="period">The sample size of the standard deviation</param>
         public StandardDeviation(int period)
@@ -52,7 +52,7 @@ namespace QuantConnect.Indicators
                 return input;
             }
             IEnumerable<double> doubleValues = window.Select(i => Convert.ToDouble(i.Value));
-            double std = MathNetStatistics.StandardDeviation(doubleValues);
+            double std = MathNetStatistics.PopulationStandardDeviation(doubleValues);
             return Convert.ToDecimal(std);
         }
     }
