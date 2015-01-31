@@ -80,6 +80,7 @@
     <Compile Include="Indicators\TestHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="packages.config" />
+    <None Include="TestData\CashTestingStrategy.csv" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Adapters\" />
@@ -119,9 +120,7 @@
     <Content Include="TestData\spy_atr.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\spy_bollinger_bands.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Content Include="TestData\spy_bollinger_bands.txt" />
     <Content Include="TestData\spy_mfi.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
