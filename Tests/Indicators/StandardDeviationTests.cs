@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Indicators
         public void ComputesCorrectly()
         {
             // Indicator output was compared against the following function in Julia
-            //  stdpop(v) = sqrt(sum((v - mean(v)).^2) / length(v))
+            // stdpop(v) = sqrt(sum((v - mean(v)).^2) / length(v))
             var std = new StandardDeviation(3);
             var reference = DateTime.MinValue;
 

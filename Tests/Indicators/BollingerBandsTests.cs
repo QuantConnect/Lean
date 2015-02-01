@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using System;
+
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -29,14 +29,14 @@ namespace QuantConnect.Tests.Indicators
         }   
 
         [Test]
-        public void ComparesWithExternalUpperBand()
+        public void ComparesWithExternalDataUpperBand()
         {
             var bb = new BollingerBands(20, 2, MovingAverageType.Simple);
             TestHelper.TestIndicator(bb, "spy_bollinger_bands.txt", "Bollinger Bands® 20 2 Top", (BollingerBands ind) => (double)ind.UpperBand.Current.Value);
         }           
 
         [Test]
-        public void ComparesWithExternalLowerBand()
+        public void ComparesWithExternalDataLowerBand()
         {
             var bb = new BollingerBands(20, 2, MovingAverageType.Simple);
             TestHelper.TestIndicator(bb, "spy_bollinger_bands.txt", "Bollinger Bands® 20 2 Bottom", (BollingerBands ind) => (double)ind.LowerBand.Current.Value);

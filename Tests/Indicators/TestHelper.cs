@@ -136,7 +136,7 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="indicator">The indicator under test</param>
         /// <param name="externalDataFilename"></param>
         /// <param name="targetColumn">The column with the correct answers</param>
-        /// <param name="selector">A function that receives the indicator and outputs a value to match the target column</param>
+        /// <param name="selector">A function that receives the indicator as input and outputs a value to match the target column</param>
         /// <param name="epsilon">The maximum delta between expected and actual</param>
         public static void TestIndicator<T>(T indicator, string externalDataFilename, string targetColumn, Func<T, double> selector, double epsilon = 1e-3)
             where T : Indicator

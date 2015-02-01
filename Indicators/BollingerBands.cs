@@ -67,7 +67,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Computes the next value of the sub-indicators from the given state:
+        /// Computes the next value of the following sub-indicators from the given state:
         /// StandardDeviation, MiddleBand, UpperBand, LowerBand
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
