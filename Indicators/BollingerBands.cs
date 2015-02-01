@@ -66,7 +66,7 @@ namespace QuantConnect.Indicators
             MovingAverageType = movingAverageType;
             StandardDeviation = new StandardDeviation(name + "_StandardDeviation", stdPeriod);
             MiddleBand = movingAverageType.AsIndicator(name + "_MiddleBand", maPeriod);
-            var kConstant = new ConstantIndicator<IndicatorDataPoint>(k.ToString, k);
+            var kConstant = new ConstantIndicator<IndicatorDataPoint>(k.ToString(), (decimal)k);
             LowerBand = MiddleBand.Minus(StandardDeviation.Times(kConstant), name + "_LowerBand");
             UpperBand = MiddleBand.Plus(StandardDeviation.Times(kConstant), name + "_UpperBand");
         }
@@ -79,9 +79,8 @@ namespace QuantConnect.Indicators
         /// <param name="k">The number of standard deviations specifying the distance of the bands from the moving average</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
         public BollingerBands(String name, int period, int k, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : base(name)
+            : this(name, period, period, k, movingAverageType)
         {
-            BollingerBands(name, period, period, k, movingAverageType);
         }
 
         /// <summary>
@@ -93,27 +92,18 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Z-Score = (currentValue - movingAverage)/standardDeviation
+        /// Computes the next value of the sub-indicators from the given state:
+        /// StandardDeviation, MiddleBand, UpperBand, LowerBand
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
-        /// <returns>Z-Score</returns>
-        private decimal ComputeZScore(IndicatorDataPoint input)
-        {
-            return (input.Value - MiddleBand.Current.Value) / StandardDeviation.Current.Value;
-        }
-
-        /// <summary>
-        /// Computes the next value of this indicator from the given state
-        /// </summary>
-        /// <param name="input">The input given to the indicator</param>
-        /// <returns>Z-score. The number of standard deviations between the input and the moving average</returns>
+        /// <returns>The input is returned unmodified.</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
             StandardDeviation.Update(input);
             MiddleBand.Update(input);
             UpperBand.Update(input);
             LowerBand.Update(input);
-            return ComputeZScore(input);
+            return input;
         }
     }
 }

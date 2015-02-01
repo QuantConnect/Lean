@@ -22,24 +22,24 @@ namespace QuantConnect.Tests.Indicators
     public class BollingerBandsTests
     {
         [Test]
-        public void ComparesWithExternalData()
+        public void ComparesWithExternalDataMiddleBand()
         {
-            const int maxFailures = 0;
-            int totalFailures = 0;
-            var bb = new BollingerBands (20, 20, 2, MovingAverageType.Simple);
-            TestHelper.TestIndicator (bb, "spy_bollinger_bands.txt", "Moving Average 50", (i, expected) => {
-                try {
-                    var actual = (double)bb.MiddleBand.Current.Value;
-                    Console.WriteLine(String.Format("expected={0} actual={1}", expected, actual));
-                    Assert.AreEqual(expected, actual, 1e-3);
-                } catch {
-                    totalFailures++;
-                }
-            });
+            var bb = new BollingerBands(20, 20, 2, MovingAverageType.Simple);
+            TestHelper.TestIndicator(bb, "spy_bollinger_bands.txt", "Moving Average 20", (BollingerBands ind) => (double)ind.MiddleBand.Current.Value);
+        }   
 
-            if (totalFailures > maxFailures) {
-                Assert.Fail("BollingerBands failed: {0} Expected: {1}", totalFailures, maxFailures);
-            }
+        [Test]
+        public void ComparesWithExternalUpperBand()
+        {
+            var bb = new BollingerBands(20, 20, 2, MovingAverageType.Simple);
+            TestHelper.TestIndicator(bb, "spy_bollinger_bands.txt", "Bollinger Bands® 20 2 Top", (BollingerBands ind) => (double)ind.UpperBand.Current.Value);
+        }           
+
+        [Test]
+        public void ComparesWithExternalLowerBand()
+        {
+            var bb = new BollingerBands(20, 20, 2, MovingAverageType.Simple);
+            TestHelper.TestIndicator(bb, "spy_bollinger_bands.txt", "Bollinger Bands® 20 2 Bottom", (BollingerBands ind) => (double)ind.LowerBand.Current.Value);
         }
     }
 }

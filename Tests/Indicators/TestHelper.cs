@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         /// <summary>
-        /// Compare the specified indicator against external data using the specificied comma delimited tet file.
+        /// Compare the specified indicator against external data using the specificied comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
         /// </summary>
         /// <param name="indicator">The indicator under test</param>
@@ -117,20 +117,34 @@ namespace QuantConnect.Tests.Indicators
 
 
         /// <summary>
-        /// Compare the specified indicator against external data using the specificied comma delimited tet file.
+        /// Compare the specified indicator against external data using the specificied comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
         /// </summary>
         /// <param name="indicator">The indicator under test</param>
         /// <param name="externalDataFilename"></param>
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="epsilon">The maximum delta between expected and actual</param>
-        public static void TestIndicator(IndicatorBase<TradeBar> indicator, string externalDataFilename, string targetColumn, double  epsilon = 1e-3)
+        public static void TestIndicator(IndicatorBase<TradeBar> indicator, string externalDataFilename, string targetColumn, double epsilon = 1e-3)
         {
             TestIndicator(indicator, externalDataFilename, targetColumn, (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon, "Failed at " + i.Current.Time.ToString("o")));
         }
 
         /// <summary>
-        /// Compare the specified indicator against external data using the specificied comma delimited tet file.
+        /// Compare the specified indicator against external data using the specificied comma delimited text file.
+        /// The 'Close' column will be fed to the indicator as input
+        /// </summary>
+        /// <param name="indicator">The indicator under test</param>
+        /// <param name="externalDataFilename"></param>
+        /// <param name="targetColumn">The column with the correct answers</param>
+        /// <param name="selector">A function that receives the indicator and outputs a value to match the target column</param>
+        /// <param name="epsilon">The maximum delta between expected and actual</param>
+        public static void TestIndicator<T>(T indicator, string externalDataFilename, string targetColumn, Func<T, double> selector, double epsilon = 1e-3)
+            where T : Indicator
+        {
+            TestIndicator(indicator, externalDataFilename, targetColumn, (i, expected) => Assert.AreEqual(expected, selector(indicator), epsilon, "Failed at " + i.Current.Time.ToString("o")));
+        }
+        /// <summary>
+        /// Compare the specified indicator against external data using the specificied comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
         /// </summary>
         /// <param name="indicator">The indicator under test</param>
