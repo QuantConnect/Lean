@@ -24,21 +24,21 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ComparesWithExternalDataMiddleBand()
         {
-            var bb = new BollingerBands(20, 20, 2, MovingAverageType.Simple);
+            var bb = new BollingerBands(20, 2, MovingAverageType.Simple);
             TestHelper.TestIndicator(bb, "spy_bollinger_bands.txt", "Moving Average 20", (BollingerBands ind) => (double)ind.MiddleBand.Current.Value);
         }   
 
         [Test]
         public void ComparesWithExternalUpperBand()
         {
-            var bb = new BollingerBands(20, 20, 2, MovingAverageType.Simple);
+            var bb = new BollingerBands(20, 2, MovingAverageType.Simple);
             TestHelper.TestIndicator(bb, "spy_bollinger_bands.txt", "Bollinger Bands® 20 2 Top", (BollingerBands ind) => (double)ind.UpperBand.Current.Value);
         }           
 
         [Test]
         public void ComparesWithExternalLowerBand()
         {
-            var bb = new BollingerBands(20, 20, 2, MovingAverageType.Simple);
+            var bb = new BollingerBands(20, 2, MovingAverageType.Simple);
             TestHelper.TestIndicator(bb, "spy_bollinger_bands.txt", "Bollinger Bands® 20 2 Bottom", (BollingerBands ind) => (double)ind.LowerBand.Current.Value);
         }
     }
