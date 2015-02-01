@@ -223,6 +223,38 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new StandardDeviation indicator. This will return the population standard deviation of samples over the specified period.
+        /// </summary>
+        /// <param name="symbol">The symbol whose STD we want</param>
+        /// <param name="period">The period over which to compute the STD</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>The StandardDeviation indicator for the requested symbol over the speified period</returns>
+        public StandardDeviation STD(string symbol, int period, Resolution? resolution = null)
+        {
+            var name = CreateIndicatorName(symbol, "STD" + period, resolution);
+            var std = new StandardDeviation(name, period);
+            RegisterIndicator(symbol, std, resolution, x => x.Value);
+            return std;
+        }
+
+        /// <summary>
+        /// Creates a new BollingerBands indicator which will compute the MiddleBand, UpperBand, LowerBand, and StandardDeviation
+        /// </summary>
+        /// <param name="symbol">The symbol whose BollingerBands we seek</param>
+        /// <param name="period">The period of the standard deviation and moving average (middle band)</param>
+        /// <param name="k">The number of standard deviations specifying the distance between the middle band and upper or lower bands</param>
+        /// <param name="movingAverageType">The type of moving average to be used</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>A BollingerBands configured with the specied period</returns>
+        public BollingerBands BOL(string symbol, int period, int k, MovingAverageType movingAverageType = MovingAverageType.Simple, Resolution? resolution = null)
+        {
+            var name = CreateIndicatorName(symbol, string.Format("BOL({0},{1})", period, k), resolution);
+            var bol = new BollingerBands(name, period, k, movingAverageType);
+            RegisterIndicator(symbol, bol, resolution);
+            return bol;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>

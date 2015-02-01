@@ -32,8 +32,8 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the BollingerBands class
         /// </summary>
-        /// <param name="period">The period of the standard deviation and moving average</param>
-        /// <param name="k">The number of standard deviations specifying the distance of bands from the moving average</param>
+        /// <param name="period">The period of the standard deviation and moving average (middle band)</param>
+        /// <param name="k">The number of standard deviations specifying the distance between the middle band and upper or lower bands</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
         public BollingerBands(int period, int k, MovingAverageType movingAverageType = MovingAverageType.Simple)
             : this(string.Format("BOL({0},{1})", period, k), period, k, movingAverageType)
@@ -44,8 +44,8 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the BollingerBands class
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        /// <param name="period">The period of the standard deviation and moving average</param>
-        /// <param name="k">The number of standard deviations specifying the distance of the bands from the moving average</param>
+        /// <param name="period">The period of the standard deviation and moving average (middle band)</param>
+        /// <param name="k">The number of standard deviations specifying the distance between the middle band and upper or lower bands</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
         public BollingerBands(String name, int period, int k, MovingAverageType movingAverageType = MovingAverageType.Simple)
             : base(name)
