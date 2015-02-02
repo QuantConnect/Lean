@@ -31,10 +31,10 @@ namespace QuantConnect.Tests.Indicators
             var reference = DateTime.MinValue;
 
             std.Update(reference.AddDays(1), 1m);
-            Assert.AreEqual(1m, std.Current.Value);
+            Assert.AreEqual(0m, std.Current.Value);
 
             std.Update(reference.AddDays(2), -1m);
-            Assert.AreEqual(-1m, std.Current.Value);
+            Assert.AreEqual(1m, std.Current.Value);
 
             std.Update(reference.AddDays(3), 1m);
             Assert.AreEqual(0.942809041582063m, std.Current.Value);

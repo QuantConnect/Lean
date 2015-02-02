@@ -246,12 +246,12 @@ namespace QuantConnect.Algorithm
         /// <param name="movingAverageType">The type of moving average to be used</param>
         /// <param name="resolution">The resolution</param>
         /// <returns>A BollingerBands configured with the specied period</returns>
-        public BollingerBands BOL(string symbol, int period, int k, MovingAverageType movingAverageType = MovingAverageType.Simple, Resolution? resolution = null)
+        public BollingerBands BB(string symbol, int period, decimal k, MovingAverageType movingAverageType = MovingAverageType.Simple, Resolution? resolution = null)
         {
-            var name = CreateIndicatorName(symbol, string.Format("BOL({0},{1})", period, k), resolution);
-            var bol = new BollingerBands(name, period, k, movingAverageType);
-            RegisterIndicator(symbol, bol, resolution);
-            return bol;
+            var name = CreateIndicatorName(symbol, string.Format("BB({0},{1})", period, k), resolution);
+            var bb = new BollingerBands(name, period, k, movingAverageType);
+            RegisterIndicator(symbol, bb, resolution);
+            return bb;
         }
 
         /// <summary>

@@ -20,6 +20,9 @@ using MathNetStatistics = MathNet.Numerics.Statistics.Statistics;
 
 namespace QuantConnect.Indicators
 {
+    /// <summary>
+    /// This indicator computes the n-period population standard deviation.
+    /// </summary>
     public class StandardDeviation : WindowIndicator<IndicatorDataPoint>
     {
         /// <summary>
@@ -61,8 +64,8 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            if (!IsReady) {
-                return input;
+            if (Samples < 2) {
+                return 0m;
             }
             IEnumerable<double> doubleValues = window.Select(i => Convert.ToDouble(i.Value));
             double std = MathNetStatistics.PopulationStandardDeviation(doubleValues);
