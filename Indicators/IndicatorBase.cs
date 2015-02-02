@@ -18,7 +18,7 @@ using QuantConnect.Data;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Provides a base type for all indiators
+    /// Provides a base type for all indicators
     /// </summary>
     /// <typeparam name="T">The type of data input into this indicator</typeparam>
     public abstract class IndicatorBase<T>

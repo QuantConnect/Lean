@@ -38,6 +38,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="MathNet.Numerics">
+      <HintPath>..\packages\MathNet.Numerics.3.3.0\lib\net40\MathNet.Numerics.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AroonOscillator.cs" />
@@ -67,10 +70,12 @@
     <Compile Include="Maximum.cs" />
     <Compile Include="TradeBarIndicator.cs" />
     <Compile Include="WindowIndicator.cs" />
+    <Compile Include="StandardDeviation.cs" />
+    <Compile Include="BollingerBands.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\QuantConnect.csproj">
-      <Project>{2545c0b4-fabb-49c9-8dd1-9ad7ee23f86b}</Project>
+      <Project>{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}</Project>
       <Name>QuantConnect</Name>
     </ProjectReference>
   </ItemGroup>

@@ -57,6 +57,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+*.userprefs
 
 # Build results
 [Dd]ebug/

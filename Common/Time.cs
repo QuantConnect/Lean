@@ -139,13 +139,19 @@ namespace QuantConnect
                         } 
                         catch 
                         {
-                            if (DateTime.TryParse(dateToParse, out date) == false) 
+                            try 
                             {
-                                Log.Error("Time.ParseDate(): Malformed Date: " + dateToParse);
+                                date = DateTime.ParseExact(dateToParse, DateFormat.US, System.Globalization.CultureInfo.InvariantCulture);
                             } 
-                            else 
-                            {
-                                return date;
+                            catch {
+                                if (DateTime.TryParse(dateToParse, out date) == false) 
+                                {
+                                    Log.Error("Time.ParseDate(): Malformed Date: " + dateToParse);
+                                } 
+                                else 
+                                {
+                                    return date;
+                                }
                             }
                         }
                     }                        
