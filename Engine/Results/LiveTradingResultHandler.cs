@@ -353,7 +353,8 @@ namespace QuantConnect.Lean.Engine.Results
                         lock (_chartLock)
                         {
                             var chartComplete = new Dictionary<string, Chart>(Charts);
-                            var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, new Dictionary<int, Order>(), _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
+                            var orders = new Dictionary<int, Order>(_algorithm.Transactions.Orders);
+                            var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, orders, _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
                             StoreResult(complete);
                         }
                     }
@@ -481,7 +482,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             lock (_logStoreLock)
             {
-                _logStore.Add(new LogEntry(DateTime.Now.ToString("u") + " " + message));;
+                _logStore.Add(new LogEntry(DateTime.Now.ToString(DateFormat.UI) + " " + message));
             }
         }
 
@@ -786,7 +787,6 @@ namespace QuantConnect.Lean.Engine.Results
                         });
 
                         // minute resoluton data, save today
-
                         var minuteSampler = new SeriesSampler(TimeSpan.FromMinutes(1));
                         var minuteCharts = minuteSampler.SampleCharts(live.Results.Charts, start, stop);
 
@@ -799,7 +799,6 @@ namespace QuantConnect.Lean.Engine.Results
                         });
 
                         // high resolution data, we only want to save an hour
-
                         live.Results.Charts = highResolutionCharts;
                         start = DateTime.UtcNow.RoundDown(TimeSpan.FromHours(1));
                         stop = DateTime.UtcNow.RoundUp(TimeSpan.FromHours(1));
@@ -892,6 +891,12 @@ namespace QuantConnect.Lean.Engine.Results
             }
             result.Charts = charts;
             result.Orders = result.Orders.Values.Where(x => x.Time >= start && x.Time <= stop).ToDictionary(x => x.Id);
+
+            //For live charting convert to UTC
+            foreach (var order in result.Orders)
+            {
+                order.Value.Time = order.Value.Time.ToUniversalTime();
+            }
         }
 
         private string CreateKey(string suffix, string dateFormat = "yyyy-MM-dd")

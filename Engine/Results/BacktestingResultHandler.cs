@@ -498,7 +498,7 @@ namespace QuantConnect.Lean.Engine.Results
             Messages.Enqueue(new DebugPacket(_job.ProjectId, _backtestId, _compileId, message));
 
             //Save last message sent:
-            _log.Add(_algorithm.Time.ToString("u") + " " + message);
+            _log.Add(_algorithm.Time.ToString(DateFormat.UI) + " " + message);
             _debugMessage = message;
         }
 
@@ -508,7 +508,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd in the log.</param>
         public void LogMessage(string message)
         {
-            _log.Add(_algorithm.Time.ToString("u") + " " + message);
+            _log.Add(_algorithm.Time.ToString( DateFormat.UI ) + " " + message);
         }
 
         /// <summary>
