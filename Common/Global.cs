@@ -40,7 +40,7 @@ namespace QuantConnect
         /// MySQL Format Date Representation
         public const string DB = "yyyy-MM-dd HH:mm:ss";
         /// QuantConnect UX Date Representation
-        public const string UI = "yyyyMMdd HH:mm:ss";
+        public const string UI = "yyyy-MM-dd HH:mm:ss";
         /// EXT Web Date Representation
         public const string EXT = "yyyy-MM-dd HH:mm:ss";
         /// en-US format
