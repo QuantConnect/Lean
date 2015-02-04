@@ -250,7 +250,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, string.Format("BB({0},{1})", period, k), resolution);
             var bb = new BollingerBands(name, period, k, movingAverageType);
-            RegisterIndicator(symbol, bb, resolution);
+            RegisterIndicator(symbol, bb, resolution, x => x.Value);
             return bb;
         }
 
