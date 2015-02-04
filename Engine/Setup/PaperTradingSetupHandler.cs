@@ -123,6 +123,13 @@ namespace QuantConnect.Lean.Engine.Setup
             //For the console, let it set itself up primarily:
             try
             {
+                //Algorithm is backtesting, not live:
+                algorithm.SetLiveMode(true);
+                
+                //Set the live trading level asset/ram allocation limits
+                algorithm.SetAssetLimits(50, 10, 5);
+
+                //Initialize the algorithm
                 algorithm.Initialize();
             }
             catch (Exception err)

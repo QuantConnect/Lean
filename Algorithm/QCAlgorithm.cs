@@ -38,14 +38,14 @@ namespace QuantConnect.Algorithm
         /******************************************************** 
         * CLASS PRIVATE VARIABLES
         *********************************************************/
-        private DateTime _time = new DateTime();
+        private DateTime _time;
         private DateTime _startDate;   //Default start and end dates.
         private DateTime _endDate;     //Default end to yesterday
         private RunMode _runMode = RunMode.Series;
-        private bool _locked = false;
+        private bool _locked;
+        private bool _quit;
+        private bool _liveMode;
         private string _algorithmId = "";
-        private bool _quit = false;
-        private bool _liveMode = false;
         private List<string> _debugMessages = new List<string>();
         private List<string> _logMessages = new List<string>();
         private List<string> _errorMessages = new List<string>();
@@ -565,13 +565,27 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Set live mode state of the algorithm run: Public setter for the algorithm property LiveMode.
         /// </summary>
-        /// <param name="live">Bool live mode flag</param>
-        /// <remarks>Intended for Internal QC Lean Engine use only to prevent accidental manipulation of important properties</remarks>
         public void SetLiveMode(bool live) 
         {
             if (!_locked)
             {
                 _liveMode = live;
+            }
+        }
+
+        /// <summary>
+        /// Set the maximum number of assets allowable to ensure good memory usage / avoid linux killing job.
+        /// </summary>
+        /// <param name="minuteLimit">Maximum number of minute level assets the live mode can support with selected server</param>
+        /// <param name="secondLimit">Maximum number of second level assets the live mode can support with selected server</param>
+        /// /// <param name="tickLimit">Maximum number of tick level assets the live mode can support with selected server</param>
+        /// <param name="ramEstimate">Estimate of the max ram usage possible</param>
+        /// <remarks>Sets the live behaviour of the algorithm including the selected server (ram) limits.</remarks>
+        public void SetAssetLimits(int minuteLimit = 500, int secondLimit = 100, int tickLimit = 30)
+        {
+            if (!_locked)
+            {
+                Securities.SetLimits(minuteLimit, secondLimit, tickLimit);
             }
         }
 
@@ -619,10 +633,12 @@ namespace QuantConnect.Algorithm
                         }
                     }
 
-                    //Add the symbol to Data Manager -- generate unified data streams for algorithm events
-                    SubscriptionManager.Add(securityType, symbol, resolution, fillDataForward, extendedMarketHours);
                     //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
                     Securities.Add(symbol, securityType, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData: false);
+
+                    //Add the symbol to Data Manager -- generate unified data streams for algorithm events
+                    SubscriptionManager.Add(securityType, symbol, resolution, fillDataForward, extendedMarketHours);
+                    
                 }
                 else 
                 {

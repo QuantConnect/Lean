@@ -176,12 +176,14 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 try
                 {
-                    //0.0 Set the algorithm time before we even initialize:
+                    //Algorithm is backtesting, not live:
+                    algorithm.SetLiveMode(false);
+                    //Set the backtest level asset ram allocation limits
+                    algorithm.SetAssetLimits(500, 100, 30);
+                    //Set the algorithm time before we even initialize:
                     algorithm.SetDateTime(job.PeriodStart);
-                    //1.0 Initialise the algorithm, get the required data:
+                    //Initialise the algorithm, get the required data:
                     algorithm.Initialize();
-                    //1.2 Set the algorithm to locked to avoid messing with cash:
-                    algorithm.SetLocked();
                 }
                 catch (Exception err)
                 {

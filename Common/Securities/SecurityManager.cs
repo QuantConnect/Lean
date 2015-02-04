@@ -40,6 +40,13 @@ namespace QuantConnect.Securities
         //Internal dictionary implementation:
         private IDictionary<string, Security> _securityManager;
         private IDictionary<string, SecurityHolding> _securityHoldings;
+        private int _minuteLimit = 500;
+        private int _minuteMemory = 2;
+        private int _secondLimit = 100;
+        private int _secondMemory = 10;
+        private int _tickLimit = 30;
+        private int _tickMemory = 34;
+        private decimal _maxRamEstimate = 1024;
 
         /******************************************************** 
         * CLASS PUBLIC VARIABLES
@@ -106,17 +113,25 @@ namespace QuantConnect.Securities
             symbol = symbol.ToUpper();
 
             //Maximum Data Usage: mainly RAM constraints but this has never been fully tested.
-            if (GetResolutionCount(Resolution.Tick) == 30 && resolution == Resolution.Tick) 
+            if (GetResolutionCount(Resolution.Tick) >= _tickLimit && resolution == Resolution.Tick) 
             {
-                throw new Exception("We currently only support 30 tick assets at a time.");
+                throw new Exception("We currently only support " + _tickLimit + " tick assets at a time due to physical memory limitations.");
             }
-            if (GetResolutionCount(Resolution.Second) == 100 && resolution == Resolution.Second) 
+            if (GetResolutionCount(Resolution.Second) >= _secondLimit && resolution == Resolution.Second) 
             {
-                throw new Exception("We currently only support 100 second resolution securities at a time.");
+                throw new Exception("We currently only support  " + _secondLimit + "  second resolution securities at a time due to physical memory limitations.");
             }
-            if (GetResolutionCount(Resolution.Minute) == 1000 && resolution == Resolution.Minute) 
+            if (GetResolutionCount(Resolution.Minute) >= _minuteLimit && resolution == Resolution.Minute) 
             {
-                throw new Exception("We currently only support 1000 minute assets at a time.");
+                throw new Exception("We currently only support  " + _minuteLimit + "  minute assets at a time due to physical memory limitations.");
+            }
+
+            //Current ram usage: this especially applies during live trading where micro servers have limited resources:
+            var currentEstimatedRam = GetRamEstimate(GetResolutionCount(Resolution.Minute), GetResolutionCount(Resolution.Second), GetResolutionCount(Resolution.Tick));
+            
+            if (currentEstimatedRam > _maxRamEstimate)
+            {
+                throw new Exception("We estimate you will run out of memory (" + currentEstimatedRam + "mb of " + _maxRamEstimate + "mb physically available). Please reduce the number of symbols you're analysing or if in live trading upgrade your server to allow more memory.");
             }
 
             //If we don't already have this asset, add it to the securities list.
@@ -364,6 +379,32 @@ namespace QuantConnect.Securities
             return count;
         }
 
+
+        /// <summary>
+        /// Limits on the number of minute, second and tick assets due to memory constraints.
+        /// </summary>
+        /// <param name="minute">Minute asset allowance</param>
+        /// <param name="second">Second asset allowance</param>
+        /// <param name="tick">Tick asset allowance</param>
+        public void SetLimits(int minute, int second, int tick)
+        {
+            _minuteLimit = minute;  //Limit the number and combination of symbols
+            _secondLimit = second;
+            _tickLimit = tick;
+            _maxRamEstimate = Math.Max(Math.Max(_minuteLimit * _minuteMemory, _secondLimit * _secondMemory), _tickLimit * _tickMemory);
+        }
+
+        /// <summary>
+        /// Estimated ram usage with this symbol combination:
+        /// </summary>
+        /// <param name="minute"></param>
+        /// <param name="second"></param>
+        /// <param name="tick"></param>
+        /// <returns>Decimal estimate of the number of MB ram the requested assets would consume</returns>
+        private decimal GetRamEstimate(int minute, int second, int tick)
+        {
+            return _minuteMemory * minute + _secondMemory * second + _tickMemory * tick;
+        }
 
         /// <summary>
         /// Update the security properties/online functions with new data/price packets.

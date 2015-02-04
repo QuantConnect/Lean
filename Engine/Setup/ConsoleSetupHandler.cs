@@ -113,6 +113,10 @@ namespace QuantConnect.Lean.Engine.Setup
                 if (baseJob.Type == PacketType.BacktestNode)
                 {
                     var backtestJob = baseJob as BacktestNodePacket;
+                    
+                    //Set the limits on the algorithm assets (for local no limits)
+                    algorithm.SetAssetLimits(999, 999, 999);
+                    
                     //Setup Base Algorithm:
                     algorithm.Initialize();
 
