@@ -170,7 +170,7 @@ namespace QuantConnect.Orders
         public int ContingentId;
 
         /// <summary>
-        /// Brokerage Id for this order.
+        /// Brokerage Id for this order for when the brokerage splits orders into multiple pieces
         /// </summary>
         public List<long> BrokerId;
 
@@ -212,7 +212,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Tag the order with some custom data
         /// </summary>
-        public string Tag = "";
+        public string Tag;
 
         /// <summary>
         /// The symbol's security type
@@ -261,6 +261,24 @@ namespace QuantConnect.Orders
             {
                 return Convert.ToDecimal(Quantity) * Price;
             }
+        }
+
+        /// <summary>
+        /// Added a default constructor for JSON Deserialization:
+        /// </summary>
+        public Order()
+        {
+            Time = new DateTime();
+            Price = 0;
+            Type = OrderType.Market;
+            Quantity = 0;
+            Symbol = "";
+            Status = OrderStatus.None;
+            Tag = "";
+            SecurityType = SecurityType.Base;
+            Duration = OrderDuration.GTC;
+            BrokerId = new List<long>();
+            ContingentId = 0;
         }
 
         /// <summary>
