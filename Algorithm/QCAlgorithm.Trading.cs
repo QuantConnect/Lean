@@ -199,7 +199,7 @@ namespace QuantConnect.Algorithm
             decimal price = 0;
 
             //Ordering 0 is useless.
-            if (quantity == 0 || symbol == null || symbol == "")
+            if (quantity == 0 || string.IsNullOrEmpty(symbol))
             {
                 return -1;
             }
