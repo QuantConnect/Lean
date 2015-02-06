@@ -23,8 +23,6 @@ using System.Diagnostics;
 using System.Threading;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
-using System.ServiceModel.Channels;
-using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -55,6 +53,7 @@ namespace QuantConnect.Lean.Engine
         *********************************************************/
         private static bool _liveMode = Config.GetBool("live-mode");
         private static bool _local = Config.GetBool("local");
+        private static string _version = Config.Get("version", "");
         private static IBrokerage _brokerage;
 
         /******************************************************** 
@@ -112,7 +111,14 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public static IApi Api;
 
-
+        /// <summary>
+        /// Version of the engine that is running. This is required for retiring old processing 
+        /// and live trading nodes during live trading.
+        /// </summary>
+        public static string Version
+        {
+            get { return _version; }
+        }
         /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
@@ -179,6 +185,7 @@ namespace QuantConnect.Lean.Engine
             
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
+            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + _version);
             Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
             Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + +OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
 
