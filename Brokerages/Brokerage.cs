@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -171,5 +172,17 @@ namespace QuantConnect.Brokerages
                 Log.Error("Brokerage.OnError(): Caught Error: " + ex.Message);
             }
         }
+
+        /// <summary>
+        /// Gets all open orders on the account
+        /// </summary>
+        /// <returns>The open orders returned from IB</returns>
+        public abstract List<Order> GetOpenOrders();
+
+        /// <summary>
+        /// Gets the current USD cash balance in the brokerage account
+        /// </summary>
+        /// <returns>The current USD cash balance available for trading</returns>
+        public abstract decimal GetCashBalance();
     }
 }

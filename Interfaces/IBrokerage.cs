@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -39,6 +40,18 @@ namespace QuantConnect.Interfaces
         /// Returns true if we're currently connected to the broker
         /// </summary>
         bool IsConnected { get; }
+
+        /// <summary>
+        /// Gets all open orders on the account
+        /// </summary>
+        /// <returns>The open orders returned from IB</returns>
+        List<Order> GetOpenOrders();
+
+        /// <summary>
+        /// Gets the current USD cash balance in the brokerage account
+        /// </summary>
+        /// <returns>The current USD cash balance available for trading</returns>
+        decimal GetCashBalance();
 
         /// <summary>
         /// Places a new order and assigns a new broker ID to the order

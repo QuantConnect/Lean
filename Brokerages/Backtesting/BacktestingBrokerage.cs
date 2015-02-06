@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -62,6 +63,29 @@ namespace QuantConnect.Brokerages.Backtesting
         public override bool IsConnected
         {
             get { return true; }
+        }
+
+        /// <summary>
+        /// Gets all open orders on the account
+        /// </summary>
+        /// <returns>The open orders returned from IB</returns>
+        public override List<Order> GetOpenOrders()
+        {
+            return (from order in _orders
+                    where order.Value.Status != OrderStatus.Filled &&
+                          order.Value.Status != OrderStatus.Canceled &&
+                          order.Value.Status != OrderStatus.Invalid
+                    orderby order.Value.Id
+                    select order.Value).ToList();
+        }
+
+        /// <summary>
+        /// Gets the current USD cash balance in the brokerage account
+        /// </summary>
+        /// <returns>The current USD cash balance available for trading</returns>
+        public override decimal GetCashBalance()
+        {
+            return _algorithm.Portfolio.Cash;
         }
 
         /// <summary>

@@ -34,6 +34,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     {
         // next valid order id for this client
         private int _nextValidID;
+        // the last known cash balance in the account
+        private decimal _currentCashBalance;
+
         // next valid client id for the gateway/tws
         private static int _nextClientID;
 
@@ -62,17 +65,26 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         /// <summary>
         /// Creates a new InteractiveBrokersBrokerage using values from configuration:
-        ///     ib-account
-        ///     ib-host
-        ///     ib-port
-        ///     ib-agent-description
+        ///     ib-account (required)
+        ///     ib-host (optional, defaults to LOCALHOST)
+        ///     ib-port (optional, defaults to 4001)
+        ///     ib-agent-description (optional, defaults to Individual)
         /// </summary>
         public InteractiveBrokersBrokerage()
             : this(
                 Config.Get("ib-account"),
                 Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
-                Config.GetValue<IB.AgentDescription>("ib-agent-description")
+                Config.GetValue("ib-agent-description", IB.AgentDescription.Individual)
+                )
+        {
+        }
+
+        public InteractiveBrokersBrokerage(string account)
+            : this(account,
+                Config.Get("ib-host", "LOCALHOST"),
+                Config.GetInt("ib-port", 4001),
+                Config.GetValue("ib-agent-description", IB.AgentDescription.Individual)
                 )
         {
         }
@@ -136,7 +148,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Updates the order with the same id
         /// </summary>
         /// <param name="order">The new order information</param>
-        /// <returns>True if the request was made for the order to be updaed, false otherwise</returns>
+        /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
             try
@@ -195,7 +207,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Gets all open orders on the account
         /// </summary>
         /// <returns>The open orders returned from IB</returns>
-        public List<Order> GetOpenOrders()
+        public override List<Order> GetOpenOrders()
         {
             var orders = new List<Order>();
 
@@ -218,6 +230,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.OpenOrderEnd -= clientOnOpenOrderEnd;
 
             return orders;
+        }
+
+        /// <summary>
+        /// Gets the current USD cash balance in the brokerage account
+        /// </summary>
+        /// <returns>The current USD cash balance available for trading</returns>
+        public override decimal GetCashBalance()
+        {
+            return _currentCashBalance;
         }
 
         /// <summary>
@@ -362,7 +383,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // we want to capture if the user's cash changes so we can reflect it in the algorithm
                 if (e.Key == "CashBalance")
                 {
-                    OnAccountChanged(new AccountEvent(e.Value.ToDecimal()));
+                    var cashBalance = e.Value.ToDecimal();
+                    _currentCashBalance = cashBalance;
+                    OnAccountChanged(new AccountEvent(cashBalance));
                 }
             }
             catch (Exception err)
