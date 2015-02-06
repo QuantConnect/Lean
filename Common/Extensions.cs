@@ -320,7 +320,7 @@ namespace QuantConnect
 
         /// <summary>
         /// Extension method to searches the composition container for an export that has a matching type name. This function
-        /// will first try to match on Type.FullName, and if unsuccessful will try to match on Type.Name
+        /// will first try to match on Type.AssemblyQualifiedName, then Type.FullName, and finally on Type.Name
         /// 
         /// This method will not throw if multiple types are found matching the name, it will just return the first one it finds.
         /// </summary>
@@ -333,28 +333,38 @@ namespace QuantConnect
         {
             var values = container.GetExportedValues<T>().ToList();
 
-            // first check assembly qualified name
-            var value = values.FirstOrDefault(x => x.GetType().AssemblyQualifiedName == typeName);
-            if (value != null)
-            {
-                return value;
-            }
-
-            // check for full type name
-            value = values.FirstOrDefault(x => x.GetType().FullName == typeName);
-            if (value != null)
-            {
-                return value;
-            }
-
-            // lastly, just check for the type's name
-            value = values.FirstOrDefault(x => x.GetType().Name == typeName);
-            if (value == null)
+            // search the values by type to find the requested type
+            var matchingType = values.Select(x => x.GetType()).FirstOrDefault(type => type.MatchesTypeName(typeName));
+            if (matchingType == null)
             {
                 throw new ArgumentException("Unable to locate any exports matching the requested typeName: " + typeName, "typeName");
             }
 
-            return value;
+            return values.First(x => x.GetType() == matchingType);
+        }
+
+        /// <summary>
+        /// Function used to match a type against a string type name. This function compares on the AssemblyQualfiedName,
+        /// the FullName, and then just the Name of the type.
+        /// </summary>
+        /// <param name="type">The type to test for a match</param>
+        /// <param name="typeName">The name of the type to match</param>
+        /// <returns>True if the specified type matches the type name, false otherwise</returns>
+        public static bool MatchesTypeName(this Type type, string typeName)
+        {
+            if (type.AssemblyQualifiedName == typeName)
+            {
+                return true;
+            }
+            if (type.FullName == typeName)
+            {
+                return true;
+            }
+            if (type.Name == typeName)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }
