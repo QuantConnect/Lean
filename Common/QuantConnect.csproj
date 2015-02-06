@@ -105,7 +105,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Packets\HandledErrorPacket.cs" />    
+    <Compile Include="Packets\HandledErrorPacket.cs" />
     <Compile Include="Data\Test\FakeTradeBarCustom.cs" />
     <Compile Include="SeriesSampler.cs" />
     <Compile Include="Data\Custom\Quandl.cs" />
@@ -173,6 +173,7 @@
     <Compile Include="Realtime.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Util\Composer.cs" />
     <Compile Include="Util\ExpressionBuilder.cs" />
     <Compile Include="Util\LinqExtensions.cs" />
     <Compile Include="Util\ObjectActivator.cs" />
