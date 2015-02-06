@@ -5,7 +5,8 @@ using QuantConnect.Securities;
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Brokerage interface that defines the operations all brokerages must implement.
+    /// Brokerage interface that defines the operations all brokerages must implement. The IBrokerage implementation
+    /// must have a matching IBrokerageFactory implementation.
     /// </summary>
     public interface IBrokerage
     {
