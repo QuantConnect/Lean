@@ -182,7 +182,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                     //2. Set this time as the handler for EOD event:
                     if (endOfDayEventTime != new TimeSpan())
                     {
-                        Log.Trace("LiveTradingRealTimeHandler.SetupEvents(): Setup EOD Event for " + endOfDayEventTime.ToString());
+                        Log.Trace("LiveTradingRealTimeHandler.SetupEvents(): Setup EOD Event for " + endOfDayEventTime);
                         AddEvent(new RealTimeEvent(endOfDayEventTime, () =>
                         {
                             try

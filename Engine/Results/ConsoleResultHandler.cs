@@ -37,18 +37,18 @@ namespace QuantConnect.Lean.Engine.Results
         /******************************************************** 
         * PRIVATE VARIABLES
         *********************************************************/
-        private bool _exitTriggered = false;
-        private IConsoleStatusHandler _algorithmNode;
-        private DateTime _updateTime = new DateTime();
+        private bool _isActive;
+        private bool _exitTriggered;
+        private DateTime _updateTime;
         private DateTime _lastSampledTimed;
         private IAlgorithm _algorithm;
-        private int _jobDays = 0;
-        private bool _isActive = true;
-        private object _chartLock = new Object();
+        private readonly object _chartLock;
+        private readonly IConsoleStatusHandler _algorithmNode;
 
         //Sampling Periods:
-        private TimeSpan _resamplePeriod = TimeSpan.FromMinutes(4);
-        private TimeSpan _notificationPeriod = TimeSpan.FromSeconds(2);
+        private DateTime _nextSample;
+        private readonly TimeSpan _resamplePeriod;
+        private readonly TimeSpan _notificationPeriod;
 
         /******************************************************** 
         * PUBLIC PROPERTIES
@@ -532,6 +532,62 @@ namespace QuantConnect.Lean.Engine.Results
         {
             //
         }
+
+        /// <summary>
+        /// Process the synchronous result events, sampling and message reading. 
+        /// This method is triggered from the algorithm manager thread.
+        /// </summary>
+        /// <remarks>Prime candidate for putting into a base class. Is identical across all result handlers.</remarks>
+        public void ProcessSynchronousEvents()
+        {
+            var time = _algorithm.Time;
+
+            if (time > _nextSample)
+            {
+                //Set next sample time: 4000 samples per backtest
+                _nextSample = time.Add(ResamplePeriod);
+
+                //Sample the portfolio value over time for chart.
+                SampleEquity(time, Math.Round(_algorithm.Portfolio.TotalPortfolioValue, 4));
+
+                //Also add the user samples / plots to the result handler tracking:
+                SampleRange(_algorithm.GetChartUpdates());
+
+                //Sample the asset pricing:
+                foreach (var security in _algorithm.Securities.Values) 
+                {
+                    SampleAssetPrices(security.Symbol, time, security.Price);
+                }
+            }
+
+            //Send out the debug messages:
+            foreach (var message in _algorithm.DebugMessages)
+            {
+                DebugMessage(message);
+            }
+            _algorithm.DebugMessages.Clear();
+
+            //Send out the error messages:
+            foreach (var message in _algorithm.ErrorMessages)
+            {
+                ErrorMessage(message);
+            }
+            _algorithm.ErrorMessages.Clear();
+
+            //Send out the log messages:
+            foreach (var message in _algorithm.LogMessages)
+            {
+                LogMessage(message);
+            }
+            _algorithm.LogMessages.Clear();
+
+            //Set the running statistics:
+            foreach (var pair in _algorithm.RuntimeStatistics)
+            {
+                RuntimeStatistic(pair.Key, pair.Value);
+            }
+        }
+
     } // End Result Handler Thread:
 
 } // End Namespace

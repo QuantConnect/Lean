@@ -44,12 +44,11 @@ namespace QuantConnect.Lean.Engine
         /******************************************************** 
         * CLASS VARIABLES
         *********************************************************/
-        private static DateTime _previousTime = new DateTime();
-        private static DateTime _frontier = new DateTime();
-        private static DateTime _nextSample = new DateTime();
+        private static DateTime _previousTime;
+        private static DateTime _frontier;
         private static Exception _runtimeError = new Exception();
         private static AlgorithmStatus _algorithmState = AlgorithmStatus.Running;
-        private static object _lock = new object();
+        private static readonly object _lock = new object();
         private static string _algorithmId = "";
 
         /******************************************************** 
@@ -74,6 +73,17 @@ namespace QuantConnect.Lean.Engine
             get 
             {
                 return _runtimeError;
+            }
+        }
+
+        /// <summary>
+        /// Publicly accessible algorithm status
+        /// </summary>
+        public static AlgorithmStatus State
+        {
+            get
+            {
+                return _algorithmState;
             }
         }
 
@@ -126,7 +136,6 @@ namespace QuantConnect.Lean.Engine
             var methodInvokers = new Dictionary<Type, MethodInvoker>();
 
             //Initialize Properties:
-            _nextSample = new DateTime();
             _frontier = setup.StartingDate;
             _runtimeError = null;
             _algorithmId = job.AlgorithmId;
@@ -174,6 +183,7 @@ namespace QuantConnect.Lean.Engine
                     if (genericMethod == null)
                     {
                         _runtimeError = new Exception("Data event handler not found, please create a function matching this template: public void OnData(" + config.Type.Name + " data) {  }");
+                        _algorithmState = AlgorithmStatus.RuntimeError;
                         return;
                     }
                     methodInvokers.Add(config.Type, genericMethod.DelegateForCallMethod());
@@ -303,6 +313,7 @@ namespace QuantConnect.Lean.Engine
                                     catch (Exception err) 
                                     {
                                         _runtimeError = err;
+                                        _algorithmState = AlgorithmStatus.RuntimeError;
                                         Log.Error("AlgorithmManager.Run(): RuntimeError: Custom Data: " + err.Message + " STACK >>> " + err.StackTrace);
                                         return;
                                     }
@@ -323,6 +334,7 @@ namespace QuantConnect.Lean.Engine
                         catch (Exception err) 
                         {
                             _runtimeError = err;
+                            _algorithmState = AlgorithmStatus.RuntimeError;
                             Log.Error("AlgorithmManager.Run(): RuntimeError: Backwards Compatibility Mode: " + err.Message + " STACK >>> " + err.StackTrace);
                             return;
                         }
@@ -338,36 +350,18 @@ namespace QuantConnect.Lean.Engine
                         catch (Exception err)
                         {
                             _runtimeError = err;
+                            _algorithmState = AlgorithmStatus.RuntimeError;
                             Log.Error("AlgorithmManager.Run(): RuntimeError: New Style Mode: " + err.Message + " STACK >>> " + err.StackTrace);
                             return;
                         }
                     }
 
-                    //If its the historical/paper trading models, wait until its flagged as "ready"
-                    if (job.TransactionEndpoint == TransactionHandlerEndpoint.Backtesting)
-                    {
-                        while (!transactions.Ready) Thread.Yield();
-                    }
+                    //If its the historical/paper trading models, wait until market orders have been "filled"
+                    // Manually trigger the event handler to prevent thread switch.
+                    transactions.ProcessSynchronousEvents();
 
-                    if (time > _nextSample) 
-                    {
-                        //Set next sample time: 4000 samples per backtest
-                        _nextSample = time.Add(results.ResamplePeriod);
-                        
-                        //Sample the portfolio value over time for chart.
-                        results.SampleEquity(time, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
-                        
-                        //Also add the user samples / plots to the result handler tracking:
-                        results.SampleRange(algorithm.GetChartUpdates());
-
-                        //Sample the asset pricing:
-                        foreach (var security in algorithm.Securities.Values)
-                        {
-                            results.SampleAssetPrices(security.Symbol, time, security.Price);
-                        }
-                    }
-                    
-                    ProcessMessages(results, algorithm);
+                    // Process any required events of the results handler such as sampling assets, equity, or stock prices.
+                    results.ProcessSynchronousEvents();
 
                     //Save the previous time for the sample calculations
                     _previousTime = time;
@@ -385,14 +379,15 @@ namespace QuantConnect.Lean.Engine
             catch (Exception err)
             {
                 _runtimeError = new Exception("Error running OnEndOfAlgorithm(): " + err.Message, err.InnerException);
+                _algorithmState = AlgorithmStatus.RuntimeError;
                 return;
             }
 
-            //Process the final messages from the algorithm
-            ProcessMessages(results, algorithm);
+            // Process any required events of the results handler such as sampling assets, equity, or stock prices.
+            results.ProcessSynchronousEvents();
 
             //Liquidate Holdings for Calculations:
-            if (_algorithmState == AlgorithmStatus.Liquidated || Engine.IsLocal || job.TransactionEndpoint == TransactionHandlerEndpoint.Backtesting) 
+            if (_algorithmState == AlgorithmStatus.Liquidated || !Engine.LiveMode)
             {
                 Log.Trace("AlgorithmManager.Run(): Liquidating algorithm holdings...");
                 algorithm.Liquidate();
@@ -465,7 +460,6 @@ namespace QuantConnect.Lean.Engine
         public static void ResetManager() 
         {
             //Reset before the next loop/
-            _nextSample = new DateTime();
             _frontier = new DateTime();
             _runtimeError = null;
             _algorithmId = "";

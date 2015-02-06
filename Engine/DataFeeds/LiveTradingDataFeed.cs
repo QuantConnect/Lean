@@ -168,18 +168,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 //Set up the source file for today:
                 _subscriptionManagers[i].RefreshSource(DateTime.Now.Date);
-
-                //Subscribe( ... )
             }
         }
-
-
-        /// <summary>
-        /// Subscribe to a new live data stream
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="symbol"></param>
-        //protected abstract void Subscribe(SecurityType type, string symbol);
 
 
         /// <summary>
@@ -320,7 +310,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Stream()
         {
             //Initialize
-            var exitTasks = false;
             var update = new Dictionary<int, DateTime>();
 
             //Loop over stream
@@ -350,8 +339,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 if (_subscriptions[i].Symbol == tick.Symbol)
                                 {
+                                    //Update our internal counter
                                     _streamStore[i].Update(tick);
-                                    Log.Debug("LiveDataFeed.Stream(): New Packet >> " + tick.Symbol + " " + tick.LastPrice.ToString("C"));
+                                    //Log.Debug("LiveDataFeed.Stream(): New Packet >> " + tick.Symbol + " " + tick.LastPrice.ToString("C"));
                                 }
                             }
                         }
@@ -359,7 +349,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         //If we did hibernate we'll probably need a new session variable, or Quit if signalled.
                         if (Hibernate()) return;
                         if (_exitTriggered) return;
-
                         Thread.Sleep(1);
                     }
                 });
@@ -392,7 +381,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                         if (Hibernate()) return;
                         if (_exitTriggered) return;
-                        if (exitTasks) return;
                         Thread.Sleep(10);
                     }
                 });

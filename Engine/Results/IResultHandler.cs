@@ -139,7 +139,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="time">Time of the sample.</param>
         /// <param name="value">Equity value at this moment in time.</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal)"/>
+        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
         void SampleEquity(DateTime time, decimal value);
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="time">Current backtest date.</param>
         /// <param name="value">Current daily performance value.</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal)"/>
+        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
         void SamplePerformance(DateTime time, decimal value);
 
         /// <summary>
@@ -156,14 +156,14 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="symbol">Symbol we're sampling.</param>
         /// <param name="time">Time of sample</param>
         /// <param name="value">Value of the asset price</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal)"/>
+        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
         void SampleAssetPrices(string symbol, DateTime time, decimal value);
 
         /// <summary>
         /// Add a range of samples from the users algorithms to the end of our current list.
         /// </summary>
         /// <param name="samples">Chart updates since the last request.</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal)"/>
+        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
         void SampleRange(List<Chart> samples);
 
         /// <summary>
@@ -222,5 +222,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// Purge/clear any outstanding messages in message queue.
         /// </summary>
         void PurgeQueue();
+
+        /// <summary>
+        /// Process any synchronous events in here that are primarily triggered from the algorithm loop
+        /// </summary>
+        void ProcessSynchronousEvents();
     }
 }

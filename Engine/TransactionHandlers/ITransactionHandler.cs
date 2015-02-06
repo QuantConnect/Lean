@@ -62,5 +62,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// Signal a end of thread request to stop montioring the transactions.
         /// </summary>
         void Exit();
+
+        /// <summary>
+        /// Process any synchronous events from the primary algorithm thread.
+        /// </summary>
+        void ProcessSynchronousEvents();
     }
 }
