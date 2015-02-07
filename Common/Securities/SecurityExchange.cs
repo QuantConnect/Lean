@@ -33,7 +33,7 @@ namespace QuantConnect.Securities
         *********************************************************/
         private DateTime _frontier;
         private TimeSpan _marketOpen = TimeSpan.FromHours(0);
-        private TimeSpan _marketClose = TimeSpan.FromHours(23.999999);
+        private TimeSpan _marketClose = TimeSpan.FromHours(24).Subtract(TimeSpan.FromTicks(1));
 
         /******************************************************** 
         * CLASS CONSTRUCTION
