@@ -27,6 +27,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using Timer = System.Timers.Timer;
@@ -72,7 +73,6 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly object _logStoreLock = new object();
         private List<LogEntry> _logStore;
         private DateTime _nextSample;
-        private Timer _synchronousEvents;
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -169,14 +169,6 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Store log and debug messages sorted by time.
             _logStore = new List<LogEntry>();
-
-            //Ensure the sync events are triggered at least every second:
-            _synchronousEvents = new Timer(1000);
-            _synchronousEvents.Elapsed += (sender, e) =>
-            {
-                ProcessSynchronousEvents();
-            };
-            _synchronousEvents.Start();
         }
 
 
@@ -868,7 +860,6 @@ namespace QuantConnect.Lean.Engine.Results
         public void Exit()
         {
             _exitTriggered = true;
-            _synchronousEvents.Stop();
             PurgeQueue();
         }
 
@@ -977,8 +968,31 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 RuntimeStatistic(pair.Key, pair.Value);
             }
-        }
 
+            //Send all the notification messages but timeout within a second
+            DateTime start = DateTime.Now;
+            while (_algorithm.Notify.Messages.Count > 0 && DateTime.Now < start.AddSeconds(1))
+            {
+                Notification message;
+                if (_algorithm.Notify.Messages.TryDequeue(out message))
+                {
+                    switch (message.Type)
+                    {
+                        case NotificationType.Email:
+                            Engine.Notify.Email(message as NotificationEmail);
+                            break;
+
+                        case NotificationType.Sms:
+                            Engine.Notify.Sms(message as NotificationSms);
+                            break;
+
+                        case NotificationType.Web:
+                            Engine.Notify.Web(message as NotificationWeb);
+                            break;
+                    }
+                }
+            } 
+        }
     } // End Result Handler Thread:
 
 } // End Namespace
