@@ -360,14 +360,13 @@ namespace QuantConnect.Lean.Engine
                     // Manually trigger the event handler to prevent thread switch.
                     transactions.ProcessSynchronousEvents();
 
-                    // Process any required events of the results handler such as sampling assets, equity, or stock prices.
-                    results.ProcessSynchronousEvents();
-
                     //Save the previous time for the sample calculations
                     _previousTime = time;
 
                 } // End of Time Loop
 
+                // Process any required events of the results handler such as sampling assets, equity, or stock prices.
+                results.ProcessSynchronousEvents();
             } // End of ForEach DataStream
 
             //Stream over:: Send the final packet and fire final events:
