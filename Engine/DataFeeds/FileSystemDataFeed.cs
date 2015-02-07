@@ -46,8 +46,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         // Set types in public area to speed up:
         private IAlgorithm _algorithm;
         private BacktestNodePacket _job;
-        private Type _ticksType = typeof(Ticks);
-        private Type _tradeBarsType = typeof(TradeBars);
         private bool _endOfStreams = false;
         private int _subscriptions = 0;
         private int _bridgeMax = 500000;
@@ -56,29 +54,44 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
-        /// Subscriptions for this datafeed. What data would we like to pull: 
+        /// <summary>
+        /// List of the subscription the algorithm has requested. Subscriptions contain the type, sourcing information and manage the enumeration of data.
+        /// </summary>
         public List<SubscriptionDataConfig> Subscriptions { get; private set; }
 
-        /// IDataStream Thread Safe Data Bridge  
+        /// <summary>
+        /// Cross-threading queues so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
+        /// </summary>
         public ConcurrentQueue<List<BaseData>>[] Bridge { get; set; }
 
+        /// <summary>
         /// Stream created from the configuration settings.
+        /// </summary>
         public SubscriptionDataReader[] SubscriptionReaderManagers { get; set; }
 
-        /// Thread State Control
-        public ThreadState ThreadControl { get; set; }
-
-        /// Set the source of data we're requesting
+        /// <summary>
+        /// Set the source of the data we're requesting for the type-readers to know where to get data from.
+        /// </summary>
+        /// <remarks>Live or Backtesting Datafeed</remarks>
         public DataFeedEndpoint DataFeed { get; set; }
 
+        /// <summary>
         /// Flag indicating the hander thread is completely finished and ready to dispose.
+        /// </summary>
         public bool IsActive { get; private set; }
 
+        /// <summary>
+        /// Furthest point in time that the data has loaded into the bridges.
+        /// </summary>
         public DateTime LoadedDataFrontier { get; private set; }
 
-        /// Signifying no more data
-        public bool EndOfBridges {
-            get {
+        /// <summary>
+        /// Signifying no more data across all bridges
+        /// </summary>
+        public bool EndOfBridges 
+        {
+            get 
+            {
                 for (var i = 0; i < Bridge.Length; i++)
                 {
                     if (Bridge[i].Count != 0 || EndOfBridge[i] != true || _endOfStreams != true)
@@ -90,12 +103,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        /// End of Stream for One Bridge:
+        /// <summary>
+        /// End of Stream for Each Bridge:
+        /// </summary>
         public bool[] EndOfBridge { get; set; }
 
+        /// <summary>
         /// Frontiers for each fill forward high water mark
+        /// </summary>
         public DateTime[] FillForwardFrontiers;
-
 
         /******************************************************** 
         * CLASS CONSTRUCTOR
@@ -487,5 +503,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 t.Clear();
             }
         }
+
     } // End FileSystem Local Feed Class:
 } // End Namespace

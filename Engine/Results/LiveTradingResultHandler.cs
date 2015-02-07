@@ -21,7 +21,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Policy;
+using System.Timers;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -29,6 +29,8 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using Timer = System.Timers.Timer;
+
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -69,7 +71,9 @@ namespace QuantConnect.Lean.Engine.Results
         //Log Message Store:
         private readonly object _logStoreLock = new object();
         private List<LogEntry> _logStore;
-        
+        private DateTime _nextSample;
+        private Timer _synchronousEvents;
+
         /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
@@ -165,6 +169,14 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Store log and debug messages sorted by time.
             _logStore = new List<LogEntry>();
+
+            //Ensure the sync events are triggered at least every second:
+            _synchronousEvents = new Timer(1000);
+            _synchronousEvents.Elapsed += (sender, e) =>
+            {
+                ProcessSynchronousEvents();
+            };
+            _synchronousEvents.Start();
         }
 
 
@@ -181,7 +193,6 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 try
                 {
-
                     //While there's no work to do, go back to the algorithm:
                     if (Messages.Count == 0)
                     {
@@ -555,7 +566,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="time">Time of the sample.</param>
         /// <param name="value">Equity value at this moment in time.</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal)"/>
+        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
         public void SampleEquity(DateTime time, decimal value)
         {
             if (value > 0)
@@ -571,7 +582,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="symbol">Symbol we're sampling.</param>
         /// <param name="time">Time of sample</param>
         /// <param name="value">Value of the asset price</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal)"/>
+        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
         public void SampleAssetPrices(string symbol, DateTime time, decimal value)
         {
             if (_algorithm.Securities.ContainsKey(symbol) && value > 0)
@@ -589,7 +600,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="time">Current backtest date.</param>
         /// <param name="value">Current daily performance value.</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal)"/>
+        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
         public void SamplePerformance(DateTime time, decimal value)
         {
             //No "daily performance" sampling for live trading yet.
@@ -601,7 +612,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// Add a range of samples from the users algorithms to the end of our current list.
         /// </summary>
         /// <param name="updates">Chart updates since the last request.</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal)"/>
+        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
         public void SampleRange(List<Chart> updates)
         {
             lock (_chartLock)
@@ -719,7 +730,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Process the log entries and save it to permanent storage 
         /// </summary>
-        /// <param name="date">Today's date for this log</param>
         /// <param name="logs">Log list</param>
         public void StoreLog(IEnumerable<LogEntry> logs)
         {
@@ -858,6 +868,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void Exit()
         {
             _exitTriggered = true;
+            _synchronousEvents.Stop();
             PurgeQueue();
         }
 
@@ -911,6 +922,61 @@ namespace QuantConnect.Lean.Engine.Results
         public void SetChartSubscription(string symbol)
         {
             _subscription = symbol;
+        }
+
+        /// <summary>
+        /// Process the synchronous result events, sampling and message reading. 
+        /// This method is triggered from the algorithm manager thread.
+        /// </summary>
+        /// <remarks>Prime candidate for putting into a base class. Is identical across all result handlers.</remarks>
+        public void ProcessSynchronousEvents()
+        {
+            var time = DateTime.Now;
+
+            if (time > _nextSample)
+            {
+                //Set next sample time: 4000 samples per backtest
+                _nextSample = time.Add(ResamplePeriod);
+
+                //Sample the portfolio value over time for chart.
+                SampleEquity(time, Math.Round(_algorithm.Portfolio.TotalPortfolioValue, 4));
+
+                //Also add the user samples / plots to the result handler tracking:
+                SampleRange(_algorithm.GetChartUpdates());
+
+                //Sample the asset pricing:
+                foreach (var security in _algorithm.Securities.Values)
+                {
+                    SampleAssetPrices(security.Symbol, time, security.Price);
+                }
+            }
+
+            //Send out the debug messages:
+            foreach (var message in _algorithm.DebugMessages)
+            {
+                DebugMessage(message);
+            }
+            _algorithm.DebugMessages.Clear();
+
+            //Send out the error messages:
+            foreach (var message in _algorithm.ErrorMessages)
+            {
+                ErrorMessage(message);
+            }
+            _algorithm.ErrorMessages.Clear();
+
+            //Send out the log messages:
+            foreach (var message in _algorithm.LogMessages)
+            {
+                LogMessage(message);
+            }
+            _algorithm.LogMessages.Clear();
+
+            //Set the running statistics:
+            foreach (var pair in _algorithm.RuntimeStatistics)
+            {
+                RuntimeStatistic(pair.Key, pair.Value);
+            }
         }
 
     } // End Result Handler Thread:

@@ -189,7 +189,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Processes all synchronous events that must take place before the next time loop for the algorithm
         /// </summary>
-        protected virtual void ProcessSynchronousEvents()
+        public virtual void ProcessSynchronousEvents()
         {
             // how to do synchronous market orders for real brokerages?
         }

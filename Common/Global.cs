@@ -105,29 +105,56 @@ namespace QuantConnect
 
 
     /// <summary>
-    /// Multilanguage support enum: which language is this project
+    /// Multilanguage support enum: which language is this project for the interop bridge converter.
     /// </summary>
     public enum Language 
     { 
+        /// <summary>
         /// C# Language Project
+        /// </summary>
         CSharp,
+
+        /// <summary>
         /// Java Language Project
+        /// </summary>
         Java,
+
+        /// <summary>
         /// Python Language Project
+        /// </summary>
         Python
     }
 
 
     /// <summary>
-    /// User subscription level
+    /// User / Algorithm Job Subscription Level
     /// </summary>
-    /// <remarks>Currently there are only hobbyist plans</remarks>
     public enum UserPlan 
     {
-        /// Free User 
+        /// <summary>
+        /// Free User (Backtesting).
+        /// </summary>
         Free,
-        /// Hobbyist User 
-        Hobbyist
+
+        /// <summary>
+        /// Hobbyist User with Included 512mb Server.
+        /// </summary>
+        Hobbyist,
+
+        /// <summary>
+        /// Additional server 
+        /// </summary>
+        Server512,
+
+        /// <summary>
+        /// Upgraded server
+        /// </summary>
+        Server1024,
+
+        /// <summary>
+        /// Server with 2048 MB Ram.
+        /// </summary>
+        Server2048
     }
 
 
@@ -136,17 +163,34 @@ namespace QuantConnect
     /// </summary>
     public enum SecurityType 
     {
+        /// <summary>
         /// Base class for all security types: 
+        /// </summary>
         Base,
+
+        /// <summary>
         /// US Equity Security
+        /// </summary>
         Equity,
+
+        /// <summary>
         /// Option Security Type
+        /// </summary>
         Option,
+
+        /// <summary>
         /// Commodity Security Type
+        /// </summary>
         Commodity,
+
+        /// <summary>
         /// FOREX Security 
+        /// </summary>
         Forex,
+        
+        /// <summary>
         /// Future Security Type
+        /// </summary>
         Future
     }
 

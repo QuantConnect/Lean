@@ -126,8 +126,22 @@ namespace QuantConnect.Lean.Engine.Setup
                 //Algorithm is backtesting, not live:
                 algorithm.SetLiveMode(true);
                 
-                //Set the live trading level asset/ram allocation limits
-                algorithm.SetAssetLimits(50, 10, 5);
+                //Set the live trading level asset/ram allocation limits. 
+                //Protects algorithm from linux killing the job by excess memory:
+                switch (job.UserPlan)
+                {
+                    case UserPlan.Server1024:
+                        algorithm.SetAssetLimits(100, 20, 10);
+                        break;
+
+                    case UserPlan.Server2048:
+                        algorithm.SetAssetLimits(400, 50, 30);
+                        break;
+
+                    default:
+                        algorithm.SetAssetLimits(50, 10, 5);
+                        break;
+                }
 
                 //Initialize the algorithm
                 algorithm.Initialize();

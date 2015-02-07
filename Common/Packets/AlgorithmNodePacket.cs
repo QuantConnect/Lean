@@ -93,6 +93,12 @@ namespace QuantConnect.Packets
         public string CompileId = "";
 
         /// <summary>
+        /// Version number identifier for the lean engine.
+        /// </summary>
+        [JsonProperty(PropertyName = "sVersion")]
+        public string Version = "";
+
+        /// <summary>
         /// Algorithm binary with zip of contents
         /// </summary>
         [JsonProperty(PropertyName = "oAlgorithm")]

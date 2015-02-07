@@ -42,6 +42,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _tickResolution = TimeSpan.FromSeconds(1);
         }
 
+        /// <summary>
+        /// Implementation of Get Next Ticks for test framework.
+        /// </summary>
+        /// <returns></returns>
         public override IEnumerable<Tick> GetNextTicks()
         {
             var ticks = new List<Tick>();
