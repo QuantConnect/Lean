@@ -989,6 +989,19 @@ namespace QuantConnect.Lean.Engine.Results
                         case "NotificationWeb":
                             Engine.Notify.Web(message as NotificationWeb);
                             break;
+
+                        default:
+                            try
+                            {
+                                //User code.
+                                message.Send();
+                            }
+                            catch (Exception err)
+                            {
+                                Log.Error("LiveTradingResultHandler.ProcessSynchronousEvents(): Custom send notification: " + err.Message);
+                                ErrorMessage("Custom send notification: " + err.Message, err.StackTrace);
+                            }
+                            break;
                     }
                 }
             } 

@@ -25,7 +25,14 @@ namespace QuantConnect.Notifications
     /// </summary>
     public abstract class Notification
     {
-
+        /// <summary>
+        /// Method for sending implementations of notification object types.
+        /// </summary>
+        /// <remarks>SMS, Email and Web are all handled by the QC Messaging Handler. To implement your own notification type implement it here.</remarks>
+        public virtual void Send()
+        {
+            //
+        }
     }
 
     /// <summary>
