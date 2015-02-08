@@ -976,17 +976,17 @@ namespace QuantConnect.Lean.Engine.Results
                 Notification message;
                 if (_algorithm.Notify.Messages.TryDequeue(out message))
                 {
-                    switch (message.Type)
+                    switch (message.GetType().ToString())
                     {
-                        case NotificationType.Email:
+                        case "NotificationEmail":
                             Engine.Notify.Email(message as NotificationEmail);
                             break;
 
-                        case NotificationType.Sms:
+                        case "NotificationSms":
                             Engine.Notify.Sms(message as NotificationSms);
                             break;
 
-                        case NotificationType.Web:
+                        case "NotificationWeb":
                             Engine.Notify.Web(message as NotificationWeb);
                             break;
                     }

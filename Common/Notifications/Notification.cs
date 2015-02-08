@@ -25,12 +25,8 @@ namespace QuantConnect.Notifications
     /// </summary>
     public abstract class Notification
     {
-        /// <summary>
-        /// Type of the underlying notification packet:
-        /// </summary>
-        public NotificationType Type;
-    }
 
+    }
 
     /// <summary>
     /// Web Notification Class
@@ -56,7 +52,6 @@ namespace QuantConnect.Notifications
         {
             Address = address;
             Data = data;
-            Type = NotificationType.Web;
         }
     }
 
@@ -84,7 +79,6 @@ namespace QuantConnect.Notifications
         {
             PhoneNumber = number;
             Message = message;
-            Type = NotificationType.Sms;
         }
     }
 
@@ -123,32 +117,10 @@ namespace QuantConnect.Notifications
         /// <param name="data">Data to attach to the email</param>
         public NotificationEmail(string address, string subject, string message, string data)
         {
-            Type = NotificationType.Email;
             Message = message;
             Data = data;
             Subject = subject;
             Address = address;
         }
-    }
-
-    /// <summary>
-    /// Type of the notification packet
-    /// </summary>
-    public enum NotificationType
-    {
-        /// <summary>
-        /// Send an email to your user account address.
-        /// </summary>
-        Email,
-
-        /// <summary>
-        /// Send a SMS to a mobile phone
-        /// </summary>
-        Sms,
-
-        /// <summary>
-        /// Web notification type for sending a request to web hook.
-        /// </summary>
-        Web
     }
 }
