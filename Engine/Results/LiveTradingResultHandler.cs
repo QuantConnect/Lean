@@ -790,7 +790,7 @@ namespace QuantConnect.Lean.Engine.Results
                     if (live != null)
                     {
                         // we need to down sample
-                        var start = DateTime.Today;
+                        var start = DateTime.UtcNow.Date;
                         var stop = start.AddDays(1);
 
                         // truncate to just today, we don't need more than this for anyone
@@ -900,6 +900,9 @@ namespace QuantConnect.Lean.Engine.Results
             var unixDateStart = Time.DateTimeToUnixTimeStamp(start);
             var unixDateStop = Time.DateTimeToUnixTimeStamp(stop);
 
+            //Log.Trace("LiveTradingResultHandler.Truncate: Start: " + start.ToString("u") + " Stop : " + stop.ToString("u"));
+            //Log.Trace("LiveTradingResultHandler.Truncate: Truncate Delta: " + (unixDateStop - unixDateStart) + " Incoming Points: " + result.Charts["Strategy Equity"].Series["Equity"].Values.Count);
+
             var charts = new Dictionary<string, Chart>();
             foreach (var chart in result.Charts.Values)
             {
@@ -914,6 +917,8 @@ namespace QuantConnect.Lean.Engine.Results
             }
             result.Charts = charts;
             result.Orders = result.Orders.Values.Where(x => x.Time >= start && x.Time <= stop).ToDictionary(x => x.Id);
+
+            //Log.Trace("LiveTradingResultHandler.Truncate: Truncate Outgoing: " + result.Charts["Strategy Equity"].Series["Equity"].Values.Count);
 
             //For live charting convert to UTC
             foreach (var order in result.Orders)
