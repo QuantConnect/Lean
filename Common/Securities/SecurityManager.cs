@@ -146,7 +146,7 @@ namespace QuantConnect.Securities
                         Add(symbol, new Forex.Forex(symbol, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData));
                         break;
                     case SecurityType.Base:
-                        Add(symbol, new Security(symbol, SecurityType.Base, resolution, fillDataForward, leverage, extendedMarketHours));
+                        Add(symbol, new Security(symbol, SecurityType.Base, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData));
                         break;
                 }
             } 
@@ -163,7 +163,7 @@ namespace QuantConnect.Securities
                         _securityManager[symbol] = new Forex.Forex(symbol, resolution, fillDataForward, leverage, extendedMarketHours);
                         break;
                     case SecurityType.Base:
-                        _securityManager[symbol] = new Security(symbol, SecurityType.Base, resolution, fillDataForward, leverage, extendedMarketHours);
+                        _securityManager[symbol] = new Security(symbol, SecurityType.Base, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData);
                         break;
                 }
             }

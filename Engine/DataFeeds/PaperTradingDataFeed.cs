@@ -26,7 +26,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _job = job;
 
             // create a lookup keyed by SecurityType
-            var symbols = algorithm.Securities.ToLookup(x => x.Value.Type, x => x.Key).ToDictionary();
+            var symbols = new Dictionary<SecurityType, List<string>>();
+
+            // Only subscribe equities and forex symbols
+            foreach (var security in algorithm.Securities.Values)
+            {
+                if (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
+                {
+                    if (!symbols.ContainsKey(security.Type)) symbols.Add(security.Type, new List<string>());
+                    symbols[security.Type].Add(security.Symbol);
+                }
+            }
 
             // request for data from these symbols
             Engine.Queue.Subscribe(symbols);

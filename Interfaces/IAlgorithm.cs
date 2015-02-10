@@ -21,6 +21,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using QuantConnect;
 using QuantConnect.Data;
+using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -76,6 +77,15 @@ namespace QuantConnect.Interfaces
         /// <remarks>The orders and their associated events are accessible here. When a new OrderEvent is recieved the algorithm portfolio is updated.</remarks>
         SecurityTransactionManager Transactions
         { 
+            get; 
+            set;
+        }
+
+        /// <summary>
+        /// Notification manager for storing and processing live event messages
+        /// </summary>
+        NotificationManager Notify
+        {
             get; 
             set;
         }

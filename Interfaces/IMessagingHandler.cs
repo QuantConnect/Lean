@@ -18,6 +18,7 @@
 **********************************************************/
 
 using System.ComponentModel.Composition;
+using QuantConnect.Notifications;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Interfaces
@@ -96,5 +97,23 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="packet">Live result packet containing live result information to update the GUI</param>
         void LiveTradingResult(LiveResultPacket packet);
+
+        /// <summary>
+        /// Send a rate limited email notification triggered during live trading from a user algorithm
+        /// </summary>
+        /// <param name="notification">Notification object class</param>
+        void Email(NotificationEmail notification);
+
+        /// <summary>
+        /// Send a rate limited SMS notification triggered duing live trading from a user algorithm.
+        /// </summary>
+        /// <param name="notification">Notification object class</param>
+        void Sms(NotificationSms notification);
+
+        /// <summary>
+        /// Send a web REST request notification triggered during live trading from a user algorithm.
+        /// </summary>
+        /// <param name="notification">Notification object class</param>
+        void Web(NotificationWeb notification);
     }
 }

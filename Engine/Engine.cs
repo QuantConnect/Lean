@@ -475,6 +475,7 @@ namespace QuantConnect.Lean.Engine
                                 //Get the state from the central server:
                                 var state = Api.GetAlgorithmStatus(AlgorithmManager.AlgorithmId);
                                 AlgorithmManager.SetStatus(state.Status);
+                                //Set which chart the user is look at, so we can reduce excess messaging (e.g. trading 100 symbols, only send 1).
                                 ResultHandler.SetChartSubscription(state.ChartSubscription);
                                 Log.Debug("StateCheck.Ping.Run(): Algorithm Status: " + state);
                             }

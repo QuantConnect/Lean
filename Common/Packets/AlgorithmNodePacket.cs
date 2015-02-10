@@ -87,6 +87,12 @@ namespace QuantConnect.Packets
         public UserPlan UserPlan = UserPlan.Free;
 
         /// <summary>
+        /// Server type for the deployment (512, 1024, 2048)
+        /// </summary>
+        [JsonProperty(PropertyName = "sServerType")]
+        public ServerType ServerType = ServerType.Server512;
+
+        /// <summary>
         /// Unique compile id of this backtest
         /// </summary>
         [JsonProperty(PropertyName = "sCompileID")]

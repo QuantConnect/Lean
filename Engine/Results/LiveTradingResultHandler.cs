@@ -27,6 +27,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using Timer = System.Timers.Timer;
@@ -63,6 +64,7 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextUpdate;
         private DateTime _nextChartsUpdate;
         private DateTime _nextLogStoreUpdate;
+        private DateTime _nextStatisticsUpdate;
         private int _lastOrderId = -1;
         private readonly object _chartLock = new Object();
         private readonly object _runtimeLock = new Object();
@@ -72,7 +74,6 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly object _logStoreLock = new object();
         private List<LogEntry> _logStore;
         private DateTime _nextSample;
-        private Timer _synchronousEvents;
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -169,14 +170,6 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Store log and debug messages sorted by time.
             _logStore = new List<LogEntry>();
-
-            //Ensure the sync events are triggered at least every second:
-            _synchronousEvents = new Timer(1000);
-            _synchronousEvents.Elapsed += (sender, e) =>
-            {
-                ProcessSynchronousEvents();
-            };
-            _synchronousEvents.Start();
         }
 
 
@@ -387,17 +380,37 @@ namespace QuantConnect.Lean.Engine.Results
                         _nextLogStoreUpdate = DateTime.Now.AddMinutes(2);
                     }
 
+                    // Every 30 minute send statistics on usage:
+                    if (DateTime.Now > _nextStatisticsUpdate)
+                    {
+                        try
+                        {
+                            Engine.Api.SendStatistics(_job.AlgorithmId, _algorithm.Portfolio.TotalUnrealizedProfit,
+                                _algorithm.Portfolio.TotalFees, _algorithm.Portfolio.TotalProfit,
+                                _algorithm.Portfolio.TotalHoldingsValue, _algorithm.Portfolio.TotalPortfolioValue,
+                                _algorithm.Portfolio.TotalSaleVolume, _lastOrderId, 0);
+                        }
+                        catch (Exception err)
+                        {
+                            Log.Error("LiveTradingResultHandler.Update(): Error sending statistics: " + err.Message);   
+                        }
+                        _nextStatisticsUpdate = DateTime.Now.AddMinutes(30);
+                    }
+
                     //Set the new update time after we've finished processing. 
                     // The processing can takes time depending on how large the packets are.
                     _nextUpdate = DateTime.Now.AddSeconds(2);
 
-                } // End Update Charts:                
+                } // End Update Charts:
             }
             catch (Exception err)
             {
                 Log.Error("LiveTradingResultHandler().ProcessSeriesUpdate(): " + err.Message, true);
             }
         }
+
+
+
 
 
         /// <summary>
@@ -868,7 +881,6 @@ namespace QuantConnect.Lean.Engine.Results
         public void Exit()
         {
             _exitTriggered = true;
-            _synchronousEvents.Stop();
             PurgeQueue();
         }
 
@@ -977,8 +989,47 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 RuntimeStatistic(pair.Key, pair.Value);
             }
-        }
 
+            //Send all the notification messages but timeout within a second
+            var start = DateTime.Now;
+            while (_algorithm.Notify.Messages.Count > 0 && DateTime.Now < start.AddSeconds(1))
+            {
+                Notification message;
+                if (_algorithm.Notify.Messages.TryDequeue(out message))
+                {
+                    //Process the notification messages:
+                    Log.Trace("LiveTradingResultHandler.ProcessSynchronousEvents(): Processing Notification...");
+
+                    switch (message.GetType().Name)
+                    {
+                        case "NotificationEmail":
+                            Engine.Notify.Email(message as NotificationEmail);
+                            break;
+
+                        case "NotificationSms":
+                            Engine.Notify.Sms(message as NotificationSms);
+                            break;
+
+                        case "NotificationWeb":
+                            Engine.Notify.Web(message as NotificationWeb);
+                            break;
+
+                        default:
+                            try
+                            {
+                                //User code.
+                                message.Send();
+                            }
+                            catch (Exception err)
+                            {
+                                Log.Error("LiveTradingResultHandler.ProcessSynchronousEvents(): Custom send notification: " + err.Message);
+                                ErrorMessage("Custom send notification: " + err.Message, err.StackTrace);
+                            }
+                            break;
+                    }
+                }
+            } 
+        }
     } // End Result Handler Thread:
 
 } // End Namespace

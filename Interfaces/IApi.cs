@@ -59,6 +59,20 @@ namespace QuantConnect.Interfaces
         void SetAlgorithmStatus(string algorithmId, AlgorithmStatus status, string message = "");
 
         /// <summary>
+        /// Send the statistics to storage for performance tracking.
+        /// </summary>
+        /// <param name="algorithmId">Identifier for algorithm</param>
+        /// <param name="unrealized">Unrealized gainloss</param>
+        /// <param name="fees">Total fees</param>
+        /// <param name="netProfit">Net profi</param>
+        /// <param name="holdings">Algorithm holdings</param>
+        /// <param name="capital">Total capital</param>
+        /// <param name="volume">Volume traded</param>
+        /// <param name="trades">Total trades since inception</param>
+        /// <param name="sharpe">Sharpe ratio since inception</param>
+        void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal capital, decimal volume, int trades, double sharpe);
+
+        /// <summary>
         /// Market Status Today: REST call.
         /// </summary>
         /// <param name="type">Security asset</param>

@@ -17,7 +17,11 @@
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
+
+using System;
 using System.IO;
+using Newtonsoft.Json;
+using QuantConnect.Logging;
 using RestSharp;
 
 namespace QuantConnect.Lean.Engine
@@ -85,7 +89,11 @@ namespace QuantConnect.Lean.Engine
             {
                 _sr = new StreamReader(source);
             }
-            _request = new RestRequest(source, Method.GET);
+            else
+            {
+                _client = new RestClient(source);
+                _request = new RestRequest(Method.GET);
+            }
             _dataFeed = datafeed;
         }
 
@@ -119,11 +127,17 @@ namespace QuantConnect.Lean.Engine
                     break;
                 
                 case DataFeedEndpoint.LiveTrading:
-                    var response = _client.Execute(_request);
-                    line = response.Content;
+                    try
+                    {
+                        var response = _client.Execute(_request);
+                        line = response.Content;
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error("SubscriptionStreamReader.ReadLine(): " + err.Message);
+                    }
                     break;
             }
-
             return line;
         }
 

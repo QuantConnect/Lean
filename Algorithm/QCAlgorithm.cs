@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -70,6 +71,7 @@ namespace QuantConnect.Algorithm
             Securities = new SecurityManager();
             Transactions = new SecurityTransactionManager(Securities);
             Portfolio = new SecurityPortfolioManager(Securities, Transactions);
+            Notify = new NotificationManager(false); // Notification manager defaults to disabled.
 
             //Initialise Data Manager 
             SubscriptionManager = new SubscriptionManager();
@@ -121,6 +123,16 @@ namespace QuantConnect.Algorithm
         { 
             get; 
             set; 
+        }
+
+
+        /// <summary>
+        /// Notification Manager for Sending Live Runtime Notifications to users about important events.
+        /// </summary>
+        public NotificationManager Notify
+        {
+            get; 
+            set;
         }
 
         /// <summary>
@@ -570,6 +582,7 @@ namespace QuantConnect.Algorithm
             if (!_locked)
             {
                 _liveMode = live;
+                Notify = new NotificationManager(live);
             }
         }
 
@@ -775,6 +788,8 @@ namespace QuantConnect.Algorithm
             return _quit;
         }
 
-    } // End Algorithm Template
+    }
+
+// End Algorithm Template
 
 } // End QC Namespace
