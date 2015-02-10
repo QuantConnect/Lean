@@ -80,6 +80,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
         }
 
+        /// <summary>
+        /// Creates a new InteractiveBrokeragBrokerage for the specified account
+        /// </summary>
+        /// <param name="account">The account used to connect to IB</param>
         public InteractiveBrokersBrokerage(string account)
             : this(account,
                 Config.Get("ib-host", "LOCALHOST"),
