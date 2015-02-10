@@ -27,7 +27,9 @@ using Fasterflect;
 using QuantConnect.Securities;
 using QuantConnect.Logging;
 using QuantConnect.AlgorithmFactory;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.Custom;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine
@@ -201,6 +203,12 @@ namespace QuantConnect.Lean.Engine
 
             //Save access to the "GetSource" Method:
             _getSourceMethod = _dataFactory.GetType().GetMethod("GetSource", new[] { typeof(SubscriptionDataConfig), typeof(DateTime), typeof(DataFeedEndpoint) });
+
+            //If its quandl set the access token in data factory:
+            if (_dataFactory.GetType().Name == "Quandl")
+            {
+                ((Quandl)_dataFactory).SetAuthCode(Config.Get("quandl-auth-token"));
+            }
 
             //Load the entire factor and symbol mapping tables into memory
             try 
