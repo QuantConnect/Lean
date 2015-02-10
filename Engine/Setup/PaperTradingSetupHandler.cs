@@ -128,17 +128,17 @@ namespace QuantConnect.Lean.Engine.Setup
                 
                 //Set the live trading level asset/ram allocation limits. 
                 //Protects algorithm from linux killing the job by excess memory:
-                switch (job.UserPlan)
+                switch (job.ServerType)
                 {
-                    case UserPlan.Server1024:
+                    case ServerType.Server1024:
                         algorithm.SetAssetLimits(100, 20, 10);
                         break;
 
-                    case UserPlan.Server2048:
+                    case ServerType.Server2048:
                         algorithm.SetAssetLimits(400, 50, 30);
                         break;
 
-                    default:
+                    default: //512
                         algorithm.SetAssetLimits(50, 10, 5);
                         break;
                 }

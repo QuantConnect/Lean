@@ -139,8 +139,15 @@ namespace QuantConnect
         /// <summary>
         /// Hobbyist User with Included 512mb Server.
         /// </summary>
-        Hobbyist,
+        Hobbyist
+    }
 
+
+    /// <summary>
+    /// Live server types available through the web IDE. / QC deployment.
+    /// </summary>
+    public enum ServerType
+    {
         /// <summary>
         /// Additional server 
         /// </summary>
