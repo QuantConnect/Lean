@@ -43,7 +43,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             get;
         }
 
+
         /// <summary>
+        /// Prices of the datafeed this instant for dynamically updating security values (and calculation of the total portfolio value in realtime).
+        /// </summary>
+        /// <remarks>Indexed in order of the subscriptions</remarks>
+        List<decimal> RealtimePrices
+        {
+            get;
+        }
+
+            /// <summary>
         /// Cross-threading queues so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
         /// </summary>
         ConcurrentQueue<List<BaseData>>[] Bridge

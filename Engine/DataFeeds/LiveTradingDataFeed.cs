@@ -57,6 +57,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private List<string> _symbols = new List<string>();
         private Dictionary<int, StreamStore> _streamStore = new Dictionary<int, StreamStore>();
         private bool _hibernate = false;
+        private List<decimal> _realtimePrices;
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -68,6 +69,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             get  { return _subscriptions; }
             set { _subscriptions = value; }
+        }
+
+
+        /// <summary>
+        /// Prices of the datafeed this instant for dynamically updating security values (and calculation of the total portfolio value in realtime).
+        /// </summary>
+        /// <remarks>Indexed in order of the subscriptions</remarks>
+        public List<decimal> RealtimePrices 
+        {
+            get { return _realtimePrices; }
         }
 
         /// <summary>
@@ -150,6 +161,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _bridge = new ConcurrentQueue<List<BaseData>>[Subscriptions.Count];
             _endOfBridge = new bool[Subscriptions.Count];
             _subscriptionManagers = new SubscriptionDataReader[Subscriptions.Count];
+            _realtimePrices = new List<decimal>();
 
             //Class Privates:
             _algorithm = algorithm;
@@ -168,6 +180,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 //Set up the source file for today:
                 _subscriptionManagers[i].RefreshSource(DateTime.Now.Date);
+
+                _realtimePrices.Add(0);
             }
         }
 
@@ -339,9 +353,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 if (_subscriptions[i].Symbol == tick.Symbol)
                                 {
-                                    //Update our internal counter
+                                    // Update our internal counter
                                     _streamStore[i].Update(tick);
-                                    //Log.Debug("LiveDataFeed.Stream(): New Packet >> " + tick.Symbol + " " + tick.LastPrice.ToString("C"));
+                                    // Update the realtime price stream value
+                                    _realtimePrices[i] = tick.Value;
                                 }
                             }
                         }
@@ -372,7 +387,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                         var data = _subscriptionManagers[i].Current;
                                         if (data != null)
                                         {
-                                            _streamStore[i].Update(data);
+                                            _streamStore[i].Update(data);       //Update bar builder.
+                                            _realtimePrices[i] = data.Value;    //Update realtime price value.
                                         }
                                     }
                                     update[i] = DateTime.Now.Add(_subscriptions[i].Increment);

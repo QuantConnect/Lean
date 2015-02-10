@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Timers;
 using System.Threading;
@@ -956,38 +957,39 @@ namespace QuantConnect.Lean.Engine.Results
                 //Set next sample time: 4000 samples per backtest
                 _nextSample = time.Add(ResamplePeriod);
 
+                //Update the asset prices to take a real time sample of the market price even though we're using minute bars
+                if (Engine.DataFeed != null)
+                {
+                    for (var i = 0; i < Engine.DataFeed.Subscriptions.Count; i++)
+                    {
+                        var price = Engine.DataFeed.RealtimePrices[i];
+                        var subscription = Engine.DataFeed.Subscriptions[i];
+                        
+                        //Sample Portfolio Value:
+                        _algorithm.Portfolio[subscription.Symbol].UpdatePrice(price);
+
+                        //Sample Asset Pricing:
+                        SampleAssetPrices(subscription.Symbol, time, price);
+                    }   
+                }
+
                 //Sample the portfolio value over time for chart.
                 SampleEquity(time, Math.Round(_algorithm.Portfolio.TotalPortfolioValue, 4));
 
                 //Also add the user samples / plots to the result handler tracking:
                 SampleRange(_algorithm.GetChartUpdates());
-
-                //Sample the asset pricing:
-                foreach (var security in _algorithm.Securities.Values)
-                {
-                    SampleAssetPrices(security.Symbol, time, security.Price);
-                }
             }
 
             //Send out the debug messages:
-            foreach (var message in _algorithm.DebugMessages)
-            {
-                DebugMessage(message);
-            }
+            _algorithm.DebugMessages.ForEach(x => DebugMessage(x));
             _algorithm.DebugMessages.Clear();
 
             //Send out the error messages:
-            foreach (var message in _algorithm.ErrorMessages)
-            {
-                ErrorMessage(message);
-            }
+            _algorithm.ErrorMessages.ForEach(x => ErrorMessage(x));
             _algorithm.ErrorMessages.Clear();
 
             //Send out the log messages:
-            foreach (var message in _algorithm.LogMessages)
-            {
-                LogMessage(message);
-            }
+            _algorithm.LogMessages.ForEach(x => LogMessage(x));
             _algorithm.LogMessages.Clear();
 
             //Set the running statistics:
