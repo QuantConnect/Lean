@@ -101,8 +101,8 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Version number identifier for the lean engine.
         /// </summary>
-        [JsonProperty(PropertyName = "sVersion")]
-        public string Version = "";
+        [JsonProperty(PropertyName = "dtVersion")]
+        public DateTime Version;
 
         /// <summary>
         /// Algorithm binary with zip of contents

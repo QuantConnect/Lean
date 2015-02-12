@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
+using System.Globalization;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -53,7 +54,7 @@ namespace QuantConnect.Lean.Engine
         *********************************************************/
         private static bool _liveMode = Config.GetBool("live-mode");
         private static bool _local = Config.GetBool("local");
-        private static string _version = Config.Get("version", "");
+        private static DateTime _version;
         private static IBrokerage _brokerage;
 
         /******************************************************** 
@@ -115,7 +116,7 @@ namespace QuantConnect.Lean.Engine
         /// Version of the engine that is running. This is required for retiring old processing 
         /// and live trading nodes during live trading.
         /// </summary>
-        public static string Version
+        public static DateTime Version
         {
             get { return _version; }
         }
@@ -182,6 +183,7 @@ namespace QuantConnect.Lean.Engine
             AlgorithmNodePacket job = null;
             var timer = Stopwatch.StartNew();
             var algorithm = default(IAlgorithm);
+            _version = DateTime.ParseExact(Config.Get("version", DateTime.Now.ToString(DateFormat.UI)), DateFormat.UI, CultureInfo.InvariantCulture);
             
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
