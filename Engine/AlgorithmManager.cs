@@ -420,42 +420,6 @@ namespace QuantConnect.Lean.Engine
             results.SamplePerformance(_frontier, Math.Round((algorithm.Portfolio.TotalPortfolioValue - startingPerformance) * 100 / startingPerformance, 10));
         } // End of Run();
 
-
-        /// <summary>
-        /// Process the user defined messaging by retrieving all the data inside the algorithm and sending to result handler.
-        /// </summary>
-        /// <param name="results">IResultHandler object to send the results</param>
-        /// <param name="algorithm">Algorithm to extract messages from</param>
-        public static void ProcessMessages(IResultHandler results, IAlgorithm algorithm)
-        {
-            //Send out the debug messages:
-            foreach (var message in algorithm.DebugMessages)
-            {
-                results.DebugMessage(message);
-            }
-            algorithm.DebugMessages.Clear();
-
-            //Send out the error messages:
-            foreach (var message in algorithm.ErrorMessages)
-            {
-                results.ErrorMessage(message);
-            }
-            algorithm.ErrorMessages.Clear();
-
-            //Send out the log messages:
-            foreach (var message in algorithm.LogMessages)
-            {
-                results.LogMessage(message);
-            }
-            algorithm.LogMessages.Clear();
-
-            //Set the running statistics:
-            foreach (var pair in algorithm.RuntimeStatistics)
-            {
-                results.RuntimeStatistic(pair.Key, pair.Value);
-            }
-        }
-
         /// <summary>
         /// Reset all variables required before next loops
         /// </summary>
