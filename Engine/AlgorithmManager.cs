@@ -314,7 +314,7 @@ namespace QuantConnect.Lean.Engine
                                     {
                                         _runtimeError = err;
                                         _algorithmState = AlgorithmStatus.RuntimeError;
-                                        Log.Error("AlgorithmManager.Run(): RuntimeError: Custom Data: " + err.Message + " STACK >>> " + err.StackTrace);
+                                        Log.Debug("AlgorithmManager.Run(): RuntimeError: Custom Data: " + err.Message + " STACK >>> " + err.StackTrace);
                                         return;
                                     }
                                     break;
@@ -335,7 +335,7 @@ namespace QuantConnect.Lean.Engine
                         {
                             _runtimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
-                            Log.Error("AlgorithmManager.Run(): RuntimeError: Backwards Compatibility Mode: " + err.Message + " STACK >>> " + err.StackTrace);
+                            Log.Debug("AlgorithmManager.Run(): RuntimeError: Backwards Compatibility Mode: " + err.Message + " STACK >>> " + err.StackTrace);
                             return;
                         }
                     } 
@@ -351,7 +351,7 @@ namespace QuantConnect.Lean.Engine
                         {
                             _runtimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
-                            Log.Error("AlgorithmManager.Run(): RuntimeError: New Style Mode: " + err.Message + " STACK >>> " + err.StackTrace);
+                            Log.Debug("AlgorithmManager.Run(): RuntimeError: New Style Mode: " + err.Message + " STACK >>> " + err.StackTrace);
                             return;
                         }
                     }
@@ -377,8 +377,9 @@ namespace QuantConnect.Lean.Engine
             }
             catch (Exception err)
             {
-                _runtimeError = new Exception("Error running OnEndOfAlgorithm(): " + err.Message, err.InnerException);
                 _algorithmState = AlgorithmStatus.RuntimeError;
+                _runtimeError = new Exception("Error running OnEndOfAlgorithm(): " + err.Message, err.InnerException);
+                Log.Debug("AlgorithmManager.OnEndOfAlgorithm(): " + err.Message + " STACK >>> " + err.StackTrace);
                 return;
             }
 
