@@ -1,13 +1,13 @@
 ﻿{
     // algorithm selector
     "algorithm-type-name": "BasicTemplateAlgorithm",
-
+	 
     // engine
     "local": "true",
     "live-mode": "false",
 
 	// versioning
-	"version" : "",
+	"version" : "2015-02-10 15:00:00",
 
     // handlers
     "messaging-handler": "QuantConnect.Messaging.Messaging",
