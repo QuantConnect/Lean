@@ -146,6 +146,10 @@ namespace QuantConnect.Lean.Engine
             {
                 return _endOfStream || _reader == null;
             }
+            set
+            {
+                _endOfStream = value;
+            }
         }
 
         /******************************************************** 
@@ -259,8 +263,9 @@ namespace QuantConnect.Lean.Engine
             }
 
             //Log.Debug("SubscriptionDataReader.MoveNext(): Launching While-InstanceNotNull && not EOS: " + reader.EndOfStream);
+            var attempts = 0;
             //Keep looking until output's an instance:
-            while (instance == null  && !_reader.EndOfStream) 
+            while (instance == null  && !_reader.EndOfStream && attempts++ < 10)  
             {
                 //Get the next string line from file, create instance of BaseData:
                 var line = _reader.ReadLine();
@@ -274,6 +279,7 @@ namespace QuantConnect.Lean.Engine
                     //Log.Debug("SubscriptionDataReader.MoveNext(): Error invoking instance: " + err.Message);
                     Engine.ResultHandler.RuntimeError("Error invoking " + _config.Symbol + " data reader. Line: " + line + " Error: " + err.Message, err.StackTrace);
                     _endOfStream = true;
+                    continue;
                 }
 
                 if (instance != null)
