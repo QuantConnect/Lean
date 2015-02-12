@@ -214,7 +214,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             streamThread.Start();
             Thread.Sleep(5); // Wait a little for the other thread to init.
 
-            bool storingData = false;
+            var storingData = false;
 
             // Setup Real Time Event Trigger:
             var realtime = new RealTimeSynchronizedTimer(TimeSpan.FromSeconds(1), () =>
@@ -233,7 +233,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (onDay)
                     {
                         //Every day refresh the source file for the custom user data:
-                        _subscriptionManagers[i].RefreshSource(now.Date);
+                        var success = _subscriptionManagers[i].RefreshSource(now.Date);
 
                         //Update the securities market open/close.
                         UpdateSecurityMarketHours();
@@ -369,7 +369,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 });
 
                 // Micro-thread for custom data/feeds. This onl supports polling at this time. todo: Custom data sockets
-                var customFeedsTask = new Task(() => {
+                var customFeedsTask = new Task(() =>
+                {
+                    var attempts = 0;
+                    var feedSuccess = false;
                     while(true)
                     {
                         for (var i = 0; i < Subscriptions.Count; i++)
@@ -383,7 +386,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     //Now Time has passed -> Trigger a refresh,
                                     if (!_subscriptionManagers[i].EndOfStream)
                                     {
-                                        _subscriptionManagers[i].MoveNext();
+                                        //Attempt 10 times to download the updated data:
+                                        attempts = 0;
+                                        do {
+                                            feedSuccess = _subscriptionManagers[i].MoveNext();
+                                            if (!feedSuccess) Thread.Sleep(1000);   //Network issues may cause download to fail. Sleep a little to make it more robust.
+                                        }
+                                        while (!feedSuccess && attempts++ < 10);
+
+                                        if (!feedSuccess)
+                                        {
+                                            _subscriptionManagers[i].EndOfStream = true;
+                                            continue;
+                                        }
+
+                                        //Use the latest data, push it into the store:
                                         var data = _subscriptionManagers[i].Current;
                                         if (data != null)
                                         {
