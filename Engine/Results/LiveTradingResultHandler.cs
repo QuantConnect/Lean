@@ -382,21 +382,27 @@ namespace QuantConnect.Lean.Engine.Results
                         _nextLogStoreUpdate = DateTime.Now.AddMinutes(2);
                     }
 
-                    // Every 30 minute send statistics on usage:
+                    // Every 5 send usage statistics:
                     if (DateTime.Now > _nextStatisticsUpdate)
                     {
                         try
                         {
-                            Engine.Api.SendStatistics(_job.AlgorithmId, _algorithm.Portfolio.TotalUnrealizedProfit,
-                                _algorithm.Portfolio.TotalFees, _algorithm.Portfolio.TotalProfit,
-                                _algorithm.Portfolio.TotalHoldingsValue, _algorithm.Portfolio.TotalPortfolioValue,
-                                _algorithm.Portfolio.TotalSaleVolume, _lastOrderId, 0);
+                            Engine.Api.SendStatistics(
+                                _job.AlgorithmId, 
+                                _algorithm.Portfolio.TotalUnrealizedProfit,
+                                _algorithm.Portfolio.TotalFees, 
+                                _algorithm.Portfolio.TotalProfit,
+                                _algorithm.Portfolio.TotalHoldingsValue, 
+                                _algorithm.Portfolio.TotalPortfolioValue, 
+                                (_algorithm.Portfolio.TotalProfit + _algorithm.Portfolio.TotalUnrealizedProfit) / Engine.SetupHandler.StartingCapital,
+                                _algorithm.Portfolio.TotalSaleVolume, 
+                                _lastOrderId, 0);
                         }
                         catch (Exception err)
                         {
                             Log.Error("LiveTradingResultHandler.Update(): Error sending statistics: " + err.Message);   
                         }
-                        _nextStatisticsUpdate = DateTime.Now.AddMinutes(30);
+                        _nextStatisticsUpdate = DateTime.Now.AddMinutes(5);
                     }
 
                     //Set the new update time after we've finished processing. 
@@ -540,7 +546,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Associated error stack trace.</param>
         public void RuntimeError(string message, string stacktrace = "")
         {
-            PurgeQueue();
             Messages.Enqueue(new RuntimeErrorPacket(_deployId, message, stacktrace));
         }
 
@@ -883,7 +888,6 @@ namespace QuantConnect.Lean.Engine.Results
         public void Exit()
         {
             _exitTriggered = true;
-            PurgeQueue();
         }
 
         /// <summary>
@@ -948,11 +952,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// This method is triggered from the algorithm manager thread.
         /// </summary>
         /// <remarks>Prime candidate for putting into a base class. Is identical across all result handlers.</remarks>
-        public void ProcessSynchronousEvents()
+        public void ProcessSynchronousEvents(bool forceProcess = false)
         {
             var time = DateTime.Now;
 
-            if (time > _nextSample)
+            if (time > _nextSample || forceProcess)
             {
                 //Set next sample time: 4000 samples per backtest
                 _nextSample = time.Add(ResamplePeriod);
@@ -1000,7 +1004,7 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Send all the notification messages but timeout within a second
             var start = DateTime.Now;
-            while (_algorithm.Notify.Messages.Count > 0 && DateTime.Now < start.AddSeconds(1))
+            while (_algorithm.Notify.Messages.Count > 0 && DateTime.Now < start.AddSeconds(1) || forceProcess)
             {
                 Notification message;
                 if (_algorithm.Notify.Messages.TryDequeue(out message))

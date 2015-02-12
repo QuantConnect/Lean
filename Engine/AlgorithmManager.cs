@@ -383,13 +383,14 @@ namespace QuantConnect.Lean.Engine
             }
 
             // Process any required events of the results handler such as sampling assets, equity, or stock prices.
-            results.ProcessSynchronousEvents();
+            results.ProcessSynchronousEvents(forceProcess: true);
 
             //Liquidate Holdings for Calculations:
             if (_algorithmState == AlgorithmStatus.Liquidated || !Engine.LiveMode)
             {
                 Log.Trace("AlgorithmManager.Run(): Liquidating algorithm holdings...");
                 algorithm.Liquidate();
+                results.LogMessage("Algorithm Liquidated");
                 results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Liquidated);
             }
 
@@ -397,6 +398,7 @@ namespace QuantConnect.Lean.Engine
             if (_algorithmState == AlgorithmStatus.Stopped)
             {
                 Log.Trace("AlgorithmManager.Run(): Stopping algorithm...");
+                results.LogMessage("Algorithm Stopped");
                 results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Stopped);
             }
 

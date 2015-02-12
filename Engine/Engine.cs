@@ -345,9 +345,11 @@ namespace QuantConnect.Lean.Engine
                             if (DataFeed != null) DataFeed.Exit();
                             if (ResultHandler != null)
                             {
+                                var message = "Runtime Error: " + err.Message;
                                 Log.Trace("Engine.Run(): Sending runtime error to user...");
-                                ResultHandler.RuntimeError("Runtime Error: " + err.Message, err.StackTrace);
-                                Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, "Runtime Error: " + err.Message + " Stack Trace: " + err.StackTrace);
+                                ResultHandler.LogMessage(message);
+                                ResultHandler.RuntimeError(message, err.StackTrace);
+                                Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, message + " Stack Trace: " + err.StackTrace);
                             }
                         }
 
@@ -411,7 +413,7 @@ namespace QuantConnect.Lean.Engine
 
                     //Wait for the threads to complete:
                     var ts = Stopwatch.StartNew();
-                    while ((ResultHandler.IsActive || (TransactionHandler != null && TransactionHandler.IsActive) || (DataFeed != null && DataFeed.IsActive)) && ts.ElapsedMilliseconds < 60 * 1000)
+                    while ((ResultHandler.IsActive || (TransactionHandler != null && TransactionHandler.IsActive) || (DataFeed != null && DataFeed.IsActive)) && ts.ElapsedMilliseconds < 30 * 1000)
                     {
                         Thread.Sleep(100); Log.Trace("Waiting for threads to exit...");
                     }

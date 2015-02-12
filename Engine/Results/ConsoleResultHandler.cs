@@ -538,11 +538,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// This method is triggered from the algorithm manager thread.
         /// </summary>
         /// <remarks>Prime candidate for putting into a base class. Is identical across all result handlers.</remarks>
-        public void ProcessSynchronousEvents()
+        public void ProcessSynchronousEvents(bool forceProcess = false)
         {
             var time = _algorithm.Time;
 
-            if (time > _nextSample)
+            if (time > _nextSample || forceProcess)
             {
                 //Set next sample time: 4000 samples per backtest
                 _nextSample = time.Add(ResamplePeriod);
@@ -561,24 +561,15 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send out the debug messages:
-            foreach (var message in _algorithm.DebugMessages)
-            {
-                DebugMessage(message);
-            }
+            _algorithm.DebugMessages.ForEach(x => DebugMessage(x));
             _algorithm.DebugMessages.Clear();
 
             //Send out the error messages:
-            foreach (var message in _algorithm.ErrorMessages)
-            {
-                ErrorMessage(message);
-            }
+            _algorithm.ErrorMessages.ForEach(x => ErrorMessage(x));
             _algorithm.ErrorMessages.Clear();
 
             //Send out the log messages:
-            foreach (var message in _algorithm.LogMessages)
-            {
-                LogMessage(message);
-            }
+            _algorithm.LogMessages.ForEach(x => LogMessage(x));
             _algorithm.LogMessages.Clear();
 
             //Set the running statistics:
