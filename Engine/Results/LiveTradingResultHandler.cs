@@ -209,7 +209,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                                 case PacketType.RuntimeError:
                                     var runtimeError = packet as RuntimeErrorPacket;
-                                    Engine.Notify.RuntimeError(_deployId, runtimeError.Message);
+                                    Engine.Notify.RuntimeError(_deployId, runtimeError.Message, runtimeError.StackTrace);
                                     break;
 
                                 //Log all order events to the frontend:
@@ -393,8 +393,8 @@ namespace QuantConnect.Lean.Engine.Results
                                 _algorithm.Portfolio.TotalFees, 
                                 _algorithm.Portfolio.TotalProfit,
                                 _algorithm.Portfolio.TotalHoldingsValue, 
-                                _algorithm.Portfolio.TotalPortfolioValue, 
-                                (_algorithm.Portfolio.TotalProfit + _algorithm.Portfolio.TotalUnrealizedProfit) / Engine.SetupHandler.StartingCapital,
+                                _algorithm.Portfolio.TotalPortfolioValue,
+                                ((_algorithm.Portfolio.TotalPortfolioValue - Engine.SetupHandler.StartingCapital) / Engine.SetupHandler.StartingCapital),
                                 _algorithm.Portfolio.TotalSaleVolume, 
                                 _lastOrderId, 0);
                         }
