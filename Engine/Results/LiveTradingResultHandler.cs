@@ -402,7 +402,7 @@ namespace QuantConnect.Lean.Engine.Results
                         {
                             Log.Error("LiveTradingResultHandler.Update(): Error sending statistics: " + err.Message);   
                         }
-                        _nextStatisticsUpdate = DateTime.Now.AddMinutes(5);
+                        _nextStatisticsUpdate = DateTime.Now.AddMinutes(1);
                     }
 
                     //Set the new update time after we've finished processing. 
@@ -974,7 +974,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                         //Sample Asset Pricing:
                         SampleAssetPrices(subscription.Symbol, time, price);
-                    }   
+                    }
                 }
 
                 //Sample the portfolio value over time for chart.
@@ -1004,7 +1004,7 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Send all the notification messages but timeout within a second
             var start = DateTime.Now;
-            while (_algorithm.Notify.Messages.Count > 0 && DateTime.Now < start.AddSeconds(1) || forceProcess)
+            while (_algorithm.Notify.Messages.Count > 0 && DateTime.Now < start.AddSeconds(1))
             {
                 Notification message;
                 if (_algorithm.Notify.Messages.TryDequeue(out message))
