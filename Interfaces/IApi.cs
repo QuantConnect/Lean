@@ -66,11 +66,12 @@ namespace QuantConnect.Interfaces
         /// <param name="fees">Total fees</param>
         /// <param name="netProfit">Net profi</param>
         /// <param name="holdings">Algorithm holdings</param>
-        /// <param name="capital">Total capital</param>
+        /// <param name="equity">Total equity</param>
+        /// <param name="netReturn">Algorithm return</param>
         /// <param name="volume">Volume traded</param>
         /// <param name="trades">Total trades since inception</param>
         /// <param name="sharpe">Sharpe ratio since inception</param>
-        void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal capital, decimal volume, int trades, double sharpe);
+        void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe);
 
         /// <summary>
         /// Market Status Today: REST call.
