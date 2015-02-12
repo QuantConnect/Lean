@@ -433,7 +433,7 @@ namespace QuantConnect.Lean.Engine
                     Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
 
                     //No matter what for live mode; make sure we've set algorithm status in the API for "not running" conditions:
-                    if (LiveMode && AlgorithmManager.State != AlgorithmStatus.Running) 
+                    if (LiveMode && AlgorithmManager.State != AlgorithmStatus.Running && AlgorithmManager.State != AlgorithmStatus.RuntimeError) 
                         Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmManager.State);
                     
                     //Attempt to clean up ram usage:
@@ -482,7 +482,7 @@ namespace QuantConnect.Lean.Engine
                                 AlgorithmManager.SetStatus(state.Status);
                                 //Set which chart the user is look at, so we can reduce excess messaging (e.g. trading 100 symbols, only send 1).
                                 ResultHandler.SetChartSubscription(state.ChartSubscription);
-                                Log.Debug("StateCheck.Ping.Run(): Algorithm Status: " + state);
+                                Log.Debug("StateCheck.Ping.Run(): Algorithm Status: " + state.Status + " Subscription: " + state.ChartSubscription);
                             }
                             catch
                             {
