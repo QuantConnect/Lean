@@ -27,7 +27,9 @@ using Fasterflect;
 using QuantConnect.Securities;
 using QuantConnect.Logging;
 using QuantConnect.AlgorithmFactory;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.Custom;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine
@@ -144,6 +146,10 @@ namespace QuantConnect.Lean.Engine
             {
                 return _endOfStream || _reader == null;
             }
+            set
+            {
+                _endOfStream = value;
+            }
         }
 
         /******************************************************** 
@@ -202,6 +208,12 @@ namespace QuantConnect.Lean.Engine
             //Save access to the "GetSource" Method:
             _getSourceMethod = _dataFactory.GetType().GetMethod("GetSource", new[] { typeof(SubscriptionDataConfig), typeof(DateTime), typeof(DataFeedEndpoint) });
 
+            //If its quandl set the access token in data factory:
+            if (_dataFactory.GetType().Name == "Quandl")
+            {
+                ((Quandl)_dataFactory).SetAuthCode(Config.Get("quandl-auth-token"));
+            }
+
             //Load the entire factor and symbol mapping tables into memory
             try 
             {
@@ -251,8 +263,9 @@ namespace QuantConnect.Lean.Engine
             }
 
             //Log.Debug("SubscriptionDataReader.MoveNext(): Launching While-InstanceNotNull && not EOS: " + reader.EndOfStream);
+            //var attempts = 0;
             //Keep looking until output's an instance:
-            while (instance == null  && !_reader.EndOfStream) 
+            while (instance == null && !_reader.EndOfStream) //&& attempts++ < 10  
             {
                 //Get the next string line from file, create instance of BaseData:
                 var line = _reader.ReadLine();
@@ -266,6 +279,7 @@ namespace QuantConnect.Lean.Engine
                     //Log.Debug("SubscriptionDataReader.MoveNext(): Error invoking instance: " + err.Message);
                     Engine.ResultHandler.RuntimeError("Error invoking " + _config.Symbol + " data reader. Line: " + line + " Error: " + err.Message, err.StackTrace);
                     _endOfStream = true;
+                    continue;
                 }
 
                 if (instance != null)

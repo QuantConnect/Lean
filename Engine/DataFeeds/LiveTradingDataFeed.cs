@@ -57,6 +57,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private List<string> _symbols = new List<string>();
         private Dictionary<int, StreamStore> _streamStore = new Dictionary<int, StreamStore>();
         private bool _hibernate = false;
+        private List<decimal> _realtimePrices;
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -68,6 +69,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             get  { return _subscriptions; }
             set { _subscriptions = value; }
+        }
+
+
+        /// <summary>
+        /// Prices of the datafeed this instant for dynamically updating security values (and calculation of the total portfolio value in realtime).
+        /// </summary>
+        /// <remarks>Indexed in order of the subscriptions</remarks>
+        public List<decimal> RealtimePrices 
+        {
+            get { return _realtimePrices; }
         }
 
         /// <summary>
@@ -150,6 +161,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _bridge = new ConcurrentQueue<List<BaseData>>[Subscriptions.Count];
             _endOfBridge = new bool[Subscriptions.Count];
             _subscriptionManagers = new SubscriptionDataReader[Subscriptions.Count];
+            _realtimePrices = new List<decimal>();
 
             //Class Privates:
             _algorithm = algorithm;
@@ -168,6 +180,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 //Set up the source file for today:
                 _subscriptionManagers[i].RefreshSource(DateTime.Now.Date);
+
+                _realtimePrices.Add(0);
             }
         }
 
@@ -200,7 +214,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             streamThread.Start();
             Thread.Sleep(5); // Wait a little for the other thread to init.
 
-            bool storingData = false;
+            var storingData = false;
 
             // Setup Real Time Event Trigger:
             var realtime = new RealTimeSynchronizedTimer(TimeSpan.FromSeconds(1), () =>
@@ -219,7 +233,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (onDay)
                     {
                         //Every day refresh the source file for the custom user data:
-                        _subscriptionManagers[i].RefreshSource(now.Date);
+                        var success = _subscriptionManagers[i].RefreshSource(now.Date);
 
                         //Update the securities market open/close.
                         UpdateSecurityMarketHours();
@@ -339,9 +353,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 if (_subscriptions[i].Symbol == tick.Symbol)
                                 {
-                                    //Update our internal counter
+                                    // Update our internal counter
                                     _streamStore[i].Update(tick);
-                                    //Log.Debug("LiveDataFeed.Stream(): New Packet >> " + tick.Symbol + " " + tick.LastPrice.ToString("C"));
+                                    // Update the realtime price stream value
+                                    _realtimePrices[i] = tick.Value;
                                 }
                             }
                         }
@@ -354,7 +369,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 });
 
                 // Micro-thread for custom data/feeds. This onl supports polling at this time. todo: Custom data sockets
-                var customFeedsTask = new Task(() => {
+                var customFeedsTask = new Task(() =>
+                {
+                    var attempts = 0;
+                    var feedSuccess = false;
                     while(true)
                     {
                         for (var i = 0; i < Subscriptions.Count; i++)
@@ -368,11 +386,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     //Now Time has passed -> Trigger a refresh,
                                     if (!_subscriptionManagers[i].EndOfStream)
                                     {
-                                        _subscriptionManagers[i].MoveNext();
+                                        //Attempt 10 times to download the updated data:
+                                        attempts = 0;
+                                        do {
+                                            feedSuccess = _subscriptionManagers[i].MoveNext();
+                                            if (!feedSuccess) Thread.Sleep(1000);   //Network issues may cause download to fail. Sleep a little to make it more robust.
+                                        }
+                                        while (!feedSuccess && attempts++ < 10);
+
+                                        if (!feedSuccess)
+                                        {
+                                            _subscriptionManagers[i].EndOfStream = true;
+                                            continue;
+                                        }
+
+                                        //Use the latest data, push it into the store:
                                         var data = _subscriptionManagers[i].Current;
                                         if (data != null)
                                         {
-                                            _streamStore[i].Update(data);
+                                            _streamStore[i].Update(data);       //Update bar builder.
+                                            _realtimePrices[i] = data.Value;    //Update realtime price value.
                                         }
                                     }
                                     update[i] = DateTime.Now.Add(_subscriptions[i].Increment);

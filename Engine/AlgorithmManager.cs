@@ -314,7 +314,7 @@ namespace QuantConnect.Lean.Engine
                                     {
                                         _runtimeError = err;
                                         _algorithmState = AlgorithmStatus.RuntimeError;
-                                        Log.Error("AlgorithmManager.Run(): RuntimeError: Custom Data: " + err.Message + " STACK >>> " + err.StackTrace);
+                                        Log.Debug("AlgorithmManager.Run(): RuntimeError: Custom Data: " + err.Message + " STACK >>> " + err.StackTrace);
                                         return;
                                     }
                                     break;
@@ -335,7 +335,7 @@ namespace QuantConnect.Lean.Engine
                         {
                             _runtimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
-                            Log.Error("AlgorithmManager.Run(): RuntimeError: Backwards Compatibility Mode: " + err.Message + " STACK >>> " + err.StackTrace);
+                            Log.Debug("AlgorithmManager.Run(): RuntimeError: Backwards Compatibility Mode: " + err.Message + " STACK >>> " + err.StackTrace);
                             return;
                         }
                     } 
@@ -351,7 +351,7 @@ namespace QuantConnect.Lean.Engine
                         {
                             _runtimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
-                            Log.Error("AlgorithmManager.Run(): RuntimeError: New Style Mode: " + err.Message + " STACK >>> " + err.StackTrace);
+                            Log.Debug("AlgorithmManager.Run(): RuntimeError: New Style Mode: " + err.Message + " STACK >>> " + err.StackTrace);
                             return;
                         }
                     }
@@ -377,19 +377,21 @@ namespace QuantConnect.Lean.Engine
             }
             catch (Exception err)
             {
-                _runtimeError = new Exception("Error running OnEndOfAlgorithm(): " + err.Message, err.InnerException);
                 _algorithmState = AlgorithmStatus.RuntimeError;
+                _runtimeError = new Exception("Error running OnEndOfAlgorithm(): " + err.Message, err.InnerException);
+                Log.Debug("AlgorithmManager.OnEndOfAlgorithm(): " + err.Message + " STACK >>> " + err.StackTrace);
                 return;
             }
 
             // Process any required events of the results handler such as sampling assets, equity, or stock prices.
-            results.ProcessSynchronousEvents();
+            results.ProcessSynchronousEvents(forceProcess: true);
 
             //Liquidate Holdings for Calculations:
             if (_algorithmState == AlgorithmStatus.Liquidated || !Engine.LiveMode)
             {
                 Log.Trace("AlgorithmManager.Run(): Liquidating algorithm holdings...");
                 algorithm.Liquidate();
+                results.LogMessage("Algorithm Liquidated");
                 results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Liquidated);
             }
 
@@ -397,6 +399,7 @@ namespace QuantConnect.Lean.Engine
             if (_algorithmState == AlgorithmStatus.Stopped)
             {
                 Log.Trace("AlgorithmManager.Run(): Stopping algorithm...");
+                results.LogMessage("Algorithm Stopped");
                 results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Stopped);
             }
 
@@ -416,42 +419,6 @@ namespace QuantConnect.Lean.Engine
             results.SampleEquity(_frontier, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
             results.SamplePerformance(_frontier, Math.Round((algorithm.Portfolio.TotalPortfolioValue - startingPerformance) * 100 / startingPerformance, 10));
         } // End of Run();
-
-
-        /// <summary>
-        /// Process the user defined messaging by retrieving all the data inside the algorithm and sending to result handler.
-        /// </summary>
-        /// <param name="results">IResultHandler object to send the results</param>
-        /// <param name="algorithm">Algorithm to extract messages from</param>
-        public static void ProcessMessages(IResultHandler results, IAlgorithm algorithm)
-        {
-            //Send out the debug messages:
-            foreach (var message in algorithm.DebugMessages)
-            {
-                results.DebugMessage(message);
-            }
-            algorithm.DebugMessages.Clear();
-
-            //Send out the error messages:
-            foreach (var message in algorithm.ErrorMessages)
-            {
-                results.ErrorMessage(message);
-            }
-            algorithm.ErrorMessages.Clear();
-
-            //Send out the log messages:
-            foreach (var message in algorithm.LogMessages)
-            {
-                results.LogMessage(message);
-            }
-            algorithm.LogMessages.Clear();
-
-            //Set the running statistics:
-            foreach (var pair in algorithm.RuntimeStatistics)
-            {
-                results.RuntimeStatistic(pair.Key, pair.Value);
-            }
-        }
 
         /// <summary>
         /// Reset all variables required before next loops

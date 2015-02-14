@@ -59,6 +59,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public List<SubscriptionDataConfig> Subscriptions { get; private set; }
 
+
+        public List<decimal> RealtimePrices { get; private set; } 
+
         /// <summary>
         /// Cross-threading queues so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
         /// </summary>
@@ -133,6 +136,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             EndOfBridge = new bool[_subscriptions];
             SubscriptionReaderManagers = new SubscriptionDataReader[_subscriptions];
             FillForwardFrontiers = new DateTime[_subscriptions];
+            RealtimePrices = new List<decimal>(_subscriptions);
 
             //Class Privates:
             _job = job;

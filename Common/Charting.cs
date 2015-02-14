@@ -226,7 +226,9 @@ namespace QuantConnect
         /// Charts
         Candle,
         /// Bar chart.
-        Bar
+        Bar,
+        /// Flag indicators
+        Flag
     }
 
     /// <summary>

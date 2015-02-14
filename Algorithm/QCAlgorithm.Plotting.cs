@@ -171,9 +171,9 @@ namespace QuantConnect.Algorithm
         public void Plot(string chart, string series, decimal value) 
         {
             //Ignore the reserved chart names:
-            if ((chart == "Strategy Equity" && series == "Equity") || (chart == "Daily Performance"))
+            if ((chart == "Strategy Equity" && series == "Equity") || (chart == "Daily Performance") || (chart == "Meta"))
             {
-                throw new Exception("Algorithm.Plot(): 'Equity' and 'Performance' are reserved chart names create for all backtests.");
+                throw new Exception("Algorithm.Plot(): 'Equity', 'Daily Performance' and 'Meta' are reserved chart names created for all charts.");
             }
 
             // If we don't have the chart, create it:

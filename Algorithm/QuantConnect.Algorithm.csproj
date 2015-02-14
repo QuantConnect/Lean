@@ -74,19 +74,19 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Examples\CustomDataWithFillForward.cs" />
-    <None Include="Examples\QuandlImporter.cs" />
-    <None Include="Examples\BasicTemplateAlgorithm.cs" />
-    <None Include="Examples\CustomData_NitfyINR.cs" />
-    <None Include="Examples\DisplacedMovingAverageRibbon.cs" />
-    <None Include="Examples\ETFGlobalRotation.cs" />
-    <None Include="Examples\CustomData_Bitcoin.cs" />
-    <None Include="Examples\CustomCharting.cs" />
-    <None Include="Examples\CustomTickFilter.cs" />
-    <None Include="Examples\DataConsolidation.cs" />
-    <None Include="Examples\MACDTrendFollowing.cs" />
-    <None Include="Examples\MovingAverageCross.cs" />
-    <None Include="Examples\Stress_Symbols.cs" />
+    <Compile Include="Examples\CustomDataWithFillForward.cs" />
+    <Compile Include="Examples\QuandlImporter.cs" />
+    <Compile Include="Examples\BasicTemplateAlgorithm.cs" />
+    <Compile Include="Examples\CustomData_NitfyINR.cs" />
+    <Compile Include="Examples\DisplacedMovingAverageRibbon.cs" />
+    <Compile Include="Examples\ETFGlobalRotation.cs" />
+    <Compile Include="Examples\CustomData_Bitcoin.cs" />
+    <Compile Include="Examples\CustomCharting.cs" />
+    <Compile Include="Examples\CustomTickFilter.cs" />
+    <Compile Include="Examples\DataConsolidation.cs" />
+    <Compile Include="Examples\MACDTrendFollowing.cs" />
+    <Compile Include="Examples\MovingAverageCross.cs" />
+    <Compile Include="Examples\Stress_Symbols.cs" />
     <Compile Include="Examples\LiveFeaturesAlgorithm.cs" />
     <Compile Include="QCAlgorithm.cs" />
     <Compile Include="QCAlgorithm.Console.cs" />

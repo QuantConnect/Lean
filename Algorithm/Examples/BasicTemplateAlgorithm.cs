@@ -16,7 +16,7 @@ using System;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Algorithm
+namespace QuantConnect.Algorithm.Examples
 {
     public class BasicTemplateAlgorithm : QCAlgorithm
     {

@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Timers;
 using System.Threading;
@@ -208,7 +209,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                                 case PacketType.RuntimeError:
                                     var runtimeError = packet as RuntimeErrorPacket;
-                                    Engine.Notify.RuntimeError(_deployId, runtimeError.Message);
+                                    Engine.Notify.RuntimeError(_deployId, runtimeError.Message, runtimeError.StackTrace);
                                     break;
 
                                 //Log all order events to the frontend:
@@ -335,6 +336,7 @@ namespace QuantConnect.Lean.Engine.Results
                     runtimeStatistics.Add("Fees:", "-$" + _algorithm.Portfolio.TotalFees.ToString("N2"));
                     runtimeStatistics.Add("Net Profit:", "$" + _algorithm.Portfolio.TotalProfit.ToString("N2"));
                     runtimeStatistics.Add("Return:", ((_algorithm.Portfolio.TotalPortfolioValue - Engine.SetupHandler.StartingCapital) / Engine.SetupHandler.StartingCapital).ToString("P"));
+                    runtimeStatistics.Add("Equity:", "$" + _algorithm.Portfolio.TotalPortfolioValue.ToString("N2"));
                     runtimeStatistics.Add("Holdings:", "$" + _algorithm.Portfolio.TotalHoldingsValue.ToString("N2"));
                     runtimeStatistics.Add("Volume:", "$" + _algorithm.Portfolio.TotalSaleVolume.ToString("N2"));
 
@@ -380,21 +382,27 @@ namespace QuantConnect.Lean.Engine.Results
                         _nextLogStoreUpdate = DateTime.Now.AddMinutes(2);
                     }
 
-                    // Every 30 minute send statistics on usage:
+                    // Every 5 send usage statistics:
                     if (DateTime.Now > _nextStatisticsUpdate)
                     {
                         try
                         {
-                            Engine.Api.SendStatistics(_job.AlgorithmId, _algorithm.Portfolio.TotalUnrealizedProfit,
-                                _algorithm.Portfolio.TotalFees, _algorithm.Portfolio.TotalProfit,
-                                _algorithm.Portfolio.TotalHoldingsValue, _algorithm.Portfolio.TotalPortfolioValue,
-                                _algorithm.Portfolio.TotalSaleVolume, _lastOrderId, 0);
+                            Engine.Api.SendStatistics(
+                                _job.AlgorithmId, 
+                                _algorithm.Portfolio.TotalUnrealizedProfit,
+                                _algorithm.Portfolio.TotalFees, 
+                                _algorithm.Portfolio.TotalProfit,
+                                _algorithm.Portfolio.TotalHoldingsValue, 
+                                _algorithm.Portfolio.TotalPortfolioValue,
+                                ((_algorithm.Portfolio.TotalPortfolioValue - Engine.SetupHandler.StartingCapital) / Engine.SetupHandler.StartingCapital),
+                                _algorithm.Portfolio.TotalSaleVolume, 
+                                _lastOrderId, 0);
                         }
                         catch (Exception err)
                         {
                             Log.Error("LiveTradingResultHandler.Update(): Error sending statistics: " + err.Message);   
                         }
-                        _nextStatisticsUpdate = DateTime.Now.AddMinutes(30);
+                        _nextStatisticsUpdate = DateTime.Now.AddMinutes(1);
                     }
 
                     //Set the new update time after we've finished processing. 
@@ -538,7 +546,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Associated error stack trace.</param>
         public void RuntimeError(string message, string stacktrace = "")
         {
-            PurgeQueue();
             Messages.Enqueue(new RuntimeErrorPacket(_deployId, message, stacktrace));
         }
 
@@ -790,7 +797,7 @@ namespace QuantConnect.Lean.Engine.Results
                     if (live != null)
                     {
                         // we need to down sample
-                        var start = DateTime.Today;
+                        var start = DateTime.UtcNow.Date;
                         var stop = start.AddDays(1);
 
                         // truncate to just today, we don't need more than this for anyone
@@ -881,7 +888,6 @@ namespace QuantConnect.Lean.Engine.Results
         public void Exit()
         {
             _exitTriggered = true;
-            PurgeQueue();
         }
 
         /// <summary>
@@ -900,6 +906,9 @@ namespace QuantConnect.Lean.Engine.Results
             var unixDateStart = Time.DateTimeToUnixTimeStamp(start);
             var unixDateStop = Time.DateTimeToUnixTimeStamp(stop);
 
+            //Log.Trace("LiveTradingResultHandler.Truncate: Start: " + start.ToString("u") + " Stop : " + stop.ToString("u"));
+            //Log.Trace("LiveTradingResultHandler.Truncate: Truncate Delta: " + (unixDateStop - unixDateStart) + " Incoming Points: " + result.Charts["Strategy Equity"].Series["Equity"].Values.Count);
+
             var charts = new Dictionary<string, Chart>();
             foreach (var chart in result.Charts.Values)
             {
@@ -914,6 +923,8 @@ namespace QuantConnect.Lean.Engine.Results
             }
             result.Charts = charts;
             result.Orders = result.Orders.Values.Where(x => x.Time >= start && x.Time <= stop).ToDictionary(x => x.Id);
+
+            //Log.Trace("LiveTradingResultHandler.Truncate: Truncate Outgoing: " + result.Charts["Strategy Equity"].Series["Equity"].Values.Count);
 
             //For live charting convert to UTC
             foreach (var order in result.Orders)
@@ -941,47 +952,48 @@ namespace QuantConnect.Lean.Engine.Results
         /// This method is triggered from the algorithm manager thread.
         /// </summary>
         /// <remarks>Prime candidate for putting into a base class. Is identical across all result handlers.</remarks>
-        public void ProcessSynchronousEvents()
+        public void ProcessSynchronousEvents(bool forceProcess = false)
         {
             var time = DateTime.Now;
 
-            if (time > _nextSample)
+            if (time > _nextSample || forceProcess)
             {
                 //Set next sample time: 4000 samples per backtest
                 _nextSample = time.Add(ResamplePeriod);
+
+                //Update the asset prices to take a real time sample of the market price even though we're using minute bars
+                if (Engine.DataFeed != null)
+                {
+                    for (var i = 0; i < Engine.DataFeed.Subscriptions.Count; i++)
+                    {
+                        var price = Engine.DataFeed.RealtimePrices[i];
+                        var subscription = Engine.DataFeed.Subscriptions[i];
+                        
+                        //Sample Portfolio Value:
+                        _algorithm.Portfolio[subscription.Symbol].UpdatePrice(price);
+
+                        //Sample Asset Pricing:
+                        SampleAssetPrices(subscription.Symbol, time, price);
+                    }
+                }
 
                 //Sample the portfolio value over time for chart.
                 SampleEquity(time, Math.Round(_algorithm.Portfolio.TotalPortfolioValue, 4));
 
                 //Also add the user samples / plots to the result handler tracking:
                 SampleRange(_algorithm.GetChartUpdates());
-
-                //Sample the asset pricing:
-                foreach (var security in _algorithm.Securities.Values)
-                {
-                    SampleAssetPrices(security.Symbol, time, security.Price);
-                }
             }
 
             //Send out the debug messages:
-            foreach (var message in _algorithm.DebugMessages)
-            {
-                DebugMessage(message);
-            }
+            _algorithm.DebugMessages.ForEach(x => DebugMessage(x));
             _algorithm.DebugMessages.Clear();
 
             //Send out the error messages:
-            foreach (var message in _algorithm.ErrorMessages)
-            {
-                ErrorMessage(message);
-            }
+            _algorithm.ErrorMessages.ForEach(x => ErrorMessage(x));
             _algorithm.ErrorMessages.Clear();
 
             //Send out the log messages:
-            foreach (var message in _algorithm.LogMessages)
-            {
-                LogMessage(message);
-            }
+            _algorithm.LogMessages.ForEach(x => LogMessage(x));
             _algorithm.LogMessages.Clear();
 
             //Set the running statistics:

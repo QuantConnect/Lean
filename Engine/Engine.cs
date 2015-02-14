@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
+using System.Globalization;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -53,7 +54,7 @@ namespace QuantConnect.Lean.Engine
         *********************************************************/
         private static bool _liveMode = Config.GetBool("live-mode");
         private static bool _local = Config.GetBool("local");
-        private static string _version = Config.Get("version", "");
+        private static DateTime _version;
         private static IBrokerage _brokerage;
 
         /******************************************************** 
@@ -115,7 +116,7 @@ namespace QuantConnect.Lean.Engine
         /// Version of the engine that is running. This is required for retiring old processing 
         /// and live trading nodes during live trading.
         /// </summary>
-        public static string Version
+        public static DateTime Version
         {
             get { return _version; }
         }
@@ -182,6 +183,7 @@ namespace QuantConnect.Lean.Engine
             AlgorithmNodePacket job = null;
             var timer = Stopwatch.StartNew();
             var algorithm = default(IAlgorithm);
+            _version = DateTime.ParseExact(Config.Get("version", DateTime.Now.ToString(DateFormat.UI)), DateFormat.UI, CultureInfo.InvariantCulture);
             
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
@@ -343,8 +345,11 @@ namespace QuantConnect.Lean.Engine
                             if (DataFeed != null) DataFeed.Exit();
                             if (ResultHandler != null)
                             {
-                                ResultHandler.RuntimeError("Runtime Error: " + err.Message, err.StackTrace);
-                                Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, "Runtime Error: " + err.Message + " Stack Trace: " + err.StackTrace);
+                                var message = "Runtime Error: " + err.Message;
+                                Log.Trace("Engine.Run(): Sending runtime error to user...");
+                                ResultHandler.LogMessage(message);
+                                ResultHandler.RuntimeError(message, err.StackTrace);
+                                Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, message + " Stack Trace: " + err.StackTrace);
                             }
                         }
 
@@ -408,7 +413,7 @@ namespace QuantConnect.Lean.Engine
 
                     //Wait for the threads to complete:
                     var ts = Stopwatch.StartNew();
-                    while ((ResultHandler.IsActive || (TransactionHandler != null && TransactionHandler.IsActive) || (DataFeed != null && DataFeed.IsActive)) && ts.ElapsedMilliseconds < 60 * 1000)
+                    while ((ResultHandler.IsActive || (TransactionHandler != null && TransactionHandler.IsActive) || (DataFeed != null && DataFeed.IsActive)) && ts.ElapsedMilliseconds < 30 * 1000)
                     {
                         Thread.Sleep(100); Log.Trace("Waiting for threads to exit...");
                     }
@@ -428,7 +433,7 @@ namespace QuantConnect.Lean.Engine
                     Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
 
                     //No matter what for live mode; make sure we've set algorithm status in the API for "not running" conditions:
-                    if (LiveMode && AlgorithmManager.State != AlgorithmStatus.Running) 
+                    if (LiveMode && AlgorithmManager.State != AlgorithmStatus.Running && AlgorithmManager.State != AlgorithmStatus.RuntimeError) 
                         Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmManager.State);
                     
                     //Attempt to clean up ram usage:
@@ -477,7 +482,7 @@ namespace QuantConnect.Lean.Engine
                                 AlgorithmManager.SetStatus(state.Status);
                                 //Set which chart the user is look at, so we can reduce excess messaging (e.g. trading 100 symbols, only send 1).
                                 ResultHandler.SetChartSubscription(state.ChartSubscription);
-                                Log.Debug("StateCheck.Ping.Run(): Algorithm Status: " + state);
+                                Log.Debug("StateCheck.Ping.Run(): Algorithm Status: " + state.Status + " Subscription: " + state.ChartSubscription);
                             }
                             catch
                             {
