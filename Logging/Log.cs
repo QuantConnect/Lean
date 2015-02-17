@@ -21,9 +21,11 @@ using System.Threading;
 using System.Text;
 using System.Collections;
 using System.Diagnostics;
+using System.IO;
 
 namespace QuantConnect.Logging 
 {
+
     /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
@@ -32,6 +34,11 @@ namespace QuantConnect.Logging
     /// </summary>
     public class Log 
     {
+        /// <summary>
+        /// This can be set to another TextWriter in order to redirect the log output.
+        /// </summary>
+        public static TextWriter Console = System.Console.Out;
+
         /******************************************************** 
         * CLASS VARIABLES
         *********************************************************/
@@ -88,10 +95,10 @@ namespace QuantConnect.Logging
             try 
             {
                 if (error == _lastErrorText && !overrideMessageFloodProtection) return;
-                var original = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Red;
+                //var original = Console.ForegroundColor;
+                //Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(DateTime.Now.ToString(_dateFormat) + " ERROR:: " + error);
-                Console.ForegroundColor = original;
+                //Console.ForegroundColor = original;
                 _lastErrorText = error; //Stop message flooding filling diskspace.
 
                 //Log to system log:
