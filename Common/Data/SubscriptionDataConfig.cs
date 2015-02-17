@@ -82,7 +82,9 @@ namespace QuantConnect.Data
             switch (resolution)
             {
                 case Resolution.Tick:
+                    //Ticks are individual sales and fillforward doesn't apply.
                     Increment = TimeSpan.FromSeconds(0);
+                    FillDataForward = false;
                     break;
                 case Resolution.Second:
                     Increment = TimeSpan.FromSeconds(1);
