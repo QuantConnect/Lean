@@ -24,6 +24,7 @@ using System.Threading;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.Globalization;
+using Fasterflect;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -56,6 +57,7 @@ namespace QuantConnect.Lean.Engine
         private static bool _local = Config.GetBool("local");
         private static DateTime _version;
         private static IBrokerage _brokerage;
+        private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
 
         /******************************************************** 
         * CLASS PUBLIC VARIABLES
@@ -180,6 +182,7 @@ namespace QuantConnect.Lean.Engine
         public static void Main(string[] args) 
         {
             //Initialize:
+            var algorithmPath = "";
             AlgorithmNodePacket job = null;
             var timer = Stopwatch.StartNew();
             var algorithm = default(IAlgorithm);
@@ -229,9 +232,22 @@ namespace QuantConnect.Lean.Engine
                     Thread threadResults = null;
                     Thread threadRealTime = null;
 
-                    //-> Pull job from QuantConnect job queue, or, pull local build:
-                    var algorithmPath = "";
-                    job = Queue.NextJob(out algorithmPath); // Blocking.
+                    do
+                    {
+                        //-> Pull job from QuantConnect job queue, or, pull local build:
+                        job = Queue.NextJob(out algorithmPath); // Blocking.
+
+                        if (!IsLocal && (job.Version < Version || job.Redelivered))
+                        {
+                            //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
+                            //In this event kill the old algorithm and leave a message so the user can later review.
+                            Queue.AcknowledgeJob(job);
+                            Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, _collapseMessage);
+                            Notify.RuntimeError(job.AlgorithmId, _collapseMessage);
+                            job = null;
+                        }
+                    } while (job == null);
+                    
 
                     //-> Initialize messaging system
                     Notify.SetChannel(job.Channel);
