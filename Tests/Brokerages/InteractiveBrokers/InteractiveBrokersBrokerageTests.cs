@@ -207,6 +207,55 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.AreEqual(OrderStatus.Canceled, status);
         }
 
+        [Test]
+        public void GetsAccountHoldings()
+        {
+            var ib = new InteractiveBrokersBrokerage();
+            ib.Connect();
+
+            var symbol = "USDJPY";
+            var currentHoldings = ib.GetAccountHoldings().ToDictionary(x => x.Symbol);
+
+            Console.WriteLine("Quantity: " + currentHoldings[symbol].Quantity);
+
+            bool hasAapl = currentHoldings.ContainsKey(symbol);
+
+            // wait for order to complete before request account holdings
+            var manualResetEvent = new ManualResetEvent(false);
+            ib.OrderEvent += (sender, args) =>
+            {
+                if (args.Status == OrderStatus.Filled)
+                {
+                    manualResetEvent.Set();
+                }
+            };
+
+            // buy some currency
+            const int quantity = 25000;
+            var order = new Order(symbol, SecurityType.Forex, -quantity, OrderType.Market, DateTime.UtcNow);
+            ib.PlaceOrder(order);
+
+            // wait for the order to go through
+            manualResetEvent.WaitOne();
+
+            // pause for a moment for updates to come through
+            Thread.Sleep(1500);
+
+            var newHoldings = ib.GetAccountHoldings().ToDictionary(x => x.Symbol);
+            Console.WriteLine("New Quantity: " + newHoldings[symbol].Quantity);
+
+            if (hasAapl)
+            {
+                Assert.AreEqual(currentHoldings[symbol].Quantity, newHoldings[symbol].Quantity + quantity);
+            }
+            else
+            {
+                Assert.IsTrue(newHoldings.ContainsKey(symbol));
+                Assert.AreEqual(newHoldings[symbol].Quantity, quantity);
+            }
+
+        }
+
         private static Order AssertOrderOpened(bool orderFilled, QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage ib, Order order)
         {
             // if the order didn't fill check for it as an open order

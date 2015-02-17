@@ -48,6 +48,12 @@ namespace QuantConnect.Interfaces
         List<Order> GetOpenOrders();
 
         /// <summary>
+        /// Gets all holdings for the account
+        /// </summary>
+        /// <returns>The current holdings from the account</returns>
+        List<Holding> GetAccountHoldings(); 
+
+        /// <summary>
         /// Gets the current USD cash balance in the brokerage account
         /// </summary>
         /// <returns>The current USD cash balance available for trading</returns>

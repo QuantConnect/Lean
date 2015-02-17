@@ -227,6 +227,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _client.RequestOpenOrders();
 
+            // wait for our end signal
             manualResetEvent.WaitOne();
 
             // remove the handlers
@@ -234,6 +235,38 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.OpenOrderEnd -= clientOnOpenOrderEnd;
 
             return orders;
+        }
+
+        /// <summary>
+        /// Gets all holdings for the account
+        /// </summary>
+        /// <returns>The current holdings from the account</returns>
+        public override List<Holding> GetAccountHoldings()
+        {
+            var holdings = new List<Holding>();
+
+            var manualReseEvent = new ManualResetEvent(false);
+
+            // define our handlers
+            EventHandler<IB.UpdatePortfolioEventArgs> clientOnUpdatePortfolio = (sender, args) => holdings.Add(CreateHolding(args));
+            EventHandler<IB.AccountDownloadEndEventArgs> clientOnAccountDownloadEnd = (sender, args) => manualReseEvent.Set();
+
+            // add the handles
+            _client.UpdatePortfolio += clientOnUpdatePortfolio;
+            _client.AccountDownloadEnd += clientOnAccountDownloadEnd;
+
+            _client.RequestAccountUpdates(true, _account);
+
+            // wait for our end signal
+            manualReseEvent.WaitOne();
+
+            _client.RequestAccountUpdates(false, _account);
+
+            // remove the handlers
+            _client.UpdatePortfolio -= clientOnUpdatePortfolio;
+            _client.AccountDownloadEnd -= clientOnAccountDownloadEnd;
+
+            return holdings;
         }
 
         /// <summary>
@@ -280,6 +313,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     // we're going to try and connect several times, if successful break
                     _client.Connect(_host, _port, _clientID);
+
                     break;
                 }
                 catch (Exception err)
@@ -303,8 +337,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // we timed out our wait for next valid id... we'll just log it
                 Log.Error("InteractiveBrokersBrokerage.Connect(): Timed out waiting for next valid ID event to fire.");
             }
-
-            _client.RequestAccountUpdates(true, _account);
         }
 
         /// <summary>
@@ -434,7 +466,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandlePortfolioUpdates(object sender, IB.UpdatePortfolioEventArgs e)
         {
-            OnPortfolioChanged(new PortfolioEvent(e.Contract.Symbol, e.Position));
+            OnPortfolioChanged(new PortfolioEvent(MapSymbol(e.Contract), e.Position));
         }
 
         /// <summary>
@@ -491,7 +523,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 price = ibOrder.AuxPrice;
             }
 
-            var order = new Order(contract.Symbol,
+            var order = new Order(MapSymbol(contract),
                 ConvertSecurityType(contract.SecurityType),
                 ibOrder.TotalQuantity,
                 ConvertOrderType(ibOrder.OrderType),
@@ -514,6 +546,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             var securityType = ConvertSecurityType(order.SecurityType);
             var contract = new IB.Contract(order.Symbol, exchange ?? "Smart", securityType, "USD");
+            if (order.SecurityType == SecurityType.Forex)
+            {
+                // forex is special, so rewrite some of the properties to make it work
+                contract.Exchange = "IDEALPRO";
+                contract.Symbol = order.Symbol.Substring(0, 3);
+                contract.Currency = order.Symbol.Substring(3);
+            }
             return contract;
         }
 
@@ -633,6 +672,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     throw new InvalidEnumArgumentException("type", (int)type, typeof(SecurityType));
             }
         }
+        
         /// <summary>
         /// Maps SecurityType enum
         /// </summary>
@@ -668,6 +708,31 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 default:
                     throw new ArgumentOutOfRangeException("type");
             }
+        }
+
+        /// <summary>
+        /// Creates a holding object from te UpdatePortfolioEventArgs
+        /// </summary>
+        private Holding CreateHolding(IB.UpdatePortfolioEventArgs e)
+        {
+            return new Holding
+            {
+                Symbol = MapSymbol(e.Contract),
+                Type = ConvertSecurityType(e.Contract.SecurityType),
+                Quantity = e.Position,
+                AveragePrice = e.AverageCost,
+                MarketPrice = e.MarketPrice
+            };
+        }
+
+        private string MapSymbol(IB.Contract contract)
+        {
+            if (contract.SecurityType == IB.SecurityType.Cash)
+            {
+                // reformat for QC
+                return contract.Symbol + contract.Currency;
+            }
+            return contract.Symbol;
         }
 
         /// <summary>

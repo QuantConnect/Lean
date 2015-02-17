@@ -34,7 +34,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var liveJob = job as LiveNodePacket;
             if (liveJob != null)
             {
-                // this needs to be fixed, LiveNodePacket.AccountId should be a string
+                // this needs to be fixed, LiveNodePacket.AccountId must be a string
                 return new InteractiveBrokersBrokerage(liveJob.AccountId.ToString());
             }
             return null;

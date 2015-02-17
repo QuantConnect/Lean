@@ -80,6 +80,16 @@ namespace QuantConnect.Brokerages.Backtesting
         }
 
         /// <summary>
+        /// Gets all holdings for the account
+        /// </summary>
+        /// <returns>The current holdings from the account</returns>
+        public override List<Holding> GetAccountHoldings()
+        {
+            // grab everything from the portfolio with a non-zero absolute quantity
+            return _algorithm.Portfolio.Values.Where(x => x.AbsoluteQuantity > 0).OrderBy(x => x.Symbol).Select(holding => new Holding(holding)).ToList();
+        }
+
+        /// <summary>
         /// Gets the current USD cash balance in the brokerage account
         /// </summary>
         /// <returns>The current USD cash balance available for trading</returns>

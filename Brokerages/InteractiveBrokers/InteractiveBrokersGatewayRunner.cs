@@ -62,7 +62,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             try
             {
-                Log.Trace("IBGatewayRunner.Start(): Launching IBController for account " + account + "...");
+                Log.Trace("InteractiveBrokersGatewayRunner.Start(): Launching IBController for account " + account + "...");
 
                 ProcessStartInfo processStartInfo;
                 if (OS.IsWindows)
@@ -90,7 +90,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch (Exception err)
             {
-                Log.Error("IBGatewayRunner.Start(): " + err.Message);
+                Log.Error("InteractiveBrokersGatewayRunner.Start(): " + err.Message);
             }
         }
 
@@ -101,9 +101,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             try
             {
-                Log.Trace("IBGatewayRunner.Stop(): Stopping IBController...");
+                Log.Trace("InteractiveBrokersGatewayRunner.Stop(): Stopping IBController...");
 
-                foreach (var process in GetSpawnedProcesses(ScriptProcessID))
+                // we need to materialize this ienumerable since if we start killing some of them
+                // we may leave some daemon processes hanging
+                foreach (var process in GetSpawnedProcesses(ScriptProcessID).ToList())
                 {
                     // kill all spawned processes
                     process.Kill();
@@ -111,7 +113,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch (Exception err)
             {
-                Log.Error("IBGatewayRunner.Stop(): " + err.Message);
+                Log.Error("InteractiveBrokersGatewayRunner.Stop(): " + err.Message);
             }
         }
 
