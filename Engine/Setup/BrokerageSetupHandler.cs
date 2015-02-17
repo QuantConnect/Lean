@@ -129,6 +129,13 @@ namespace QuantConnect.Lean.Engine.Setup
                     order.Id = algorithm.Transactions.GetIncrementOrderId();
                     algorithm.Orders.AddOrUpdate(order.Id, order, (i, o) => order);
                 }
+
+                // populate the algorihtm with the account's current holdings
+                var holdings = brokerage.GetAccountHoldings();
+                foreach (var holding in holdings)
+                {
+                    algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int)holding.Quantity);
+                }
             }
             catch (Exception err)
             {
