@@ -60,6 +60,9 @@ namespace QuantConnect
         /// Symbol of the Holding:
         public string Symbol = "";
 
+        /// Type of the security
+        public SecurityType Type;
+
         /// Average Price of our Holding
         public decimal AveragePrice;
 
@@ -80,6 +83,7 @@ namespace QuantConnect
         public Holding(Securities.SecurityHolding holding)
         {
             Symbol = holding.Symbol;
+            Type = holding.Type;
             Quantity = holding.Quantity;
             AveragePrice = holding.AveragePrice;
             MarketPrice = holding.Price;

@@ -109,7 +109,17 @@ namespace QuantConnect.Securities
                 return _symbol;
             }
         }
-        
+
+        /// <summary>
+        /// The security type of the symbol
+        /// </summary>
+        public SecurityType Type
+        {
+            get
+            {
+                return _securityType;
+            }
+        }
 
         /// <summary>
         /// Acquisition cost of the security total holdings.
