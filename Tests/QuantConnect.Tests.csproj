@@ -54,6 +54,7 @@
     <None Include="Algorithm\Test_MixedAssets.cs" />
     <None Include="Algorithm\Test_OnEndOfDay.cs" />
     <None Include="Algorithm\Test_SetHolding.cs" />
+    <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageFactoryTests.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageTests.cs" />
     <Compile Include="Common\Data\IdentityDataConsolidatorTests.cs" />
     <Compile Include="Common\Data\SequentialConsolidatorTests.cs" />

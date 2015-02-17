@@ -13,31 +13,28 @@
  * limitations under the License.
 */
 
-using System;
+using NUnit.Framework;
+using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
-namespace QuantConnect.Brokerages.InteractiveBrokers
+namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
-    /// <summary>
-    /// Factory type for the InteractiveBrokersBrokerage
-    /// </summary>
-    public class InteractiveBrokersBrokerageFactory : IBrokerageFactory
+    [TestFixture]
+    public class InteractiveBrokersBrokerageFactoryTests
     {
-        public Type BrokerageType
+        [Test]
+        public void InitializesInstanceFromComposer()
         {
-            get { return typeof (InteractiveBrokersBrokerage); }
-        }
+            var composer = Composer<IBrokerageFactory>.Instance;
+            var factory = composer.GetInstance(instance => instance.BrokerageType == typeof (InteractiveBrokersBrokerage));
+            Assert.IsNotNull(factory);
 
-        public IBrokerage CreateBrokerage(AlgorithmNodePacket job)
-        {
-            var liveJob = job as LiveNodePacket;
-            if (liveJob != null)
-            {
-                // this needs to be fixed, LiveNodePacket.AccountId should be a string
-                return new InteractiveBrokersBrokerage(liveJob.AccountId.ToString());
-            }
-            return null;
+            var job = new LiveNodePacket { Brokerage = "Interactive Brokers"};
+            var brokerage = factory.CreateBrokerage(job);
+            Assert.IsNotNull(brokerage);
+            Assert.IsInstanceOf<InteractiveBrokersBrokerage>(brokerage);
         }
     }
 }

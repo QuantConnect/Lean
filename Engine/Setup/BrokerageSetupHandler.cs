@@ -113,7 +113,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 var brokerageFactory = composer.GetInstance(instance => instance.BrokerageType.MatchesTypeName(liveJob.Brokerage));
 
                 // initialize the correct brokerage using the resolved factory
-                brokerage = brokerageFactory.Create(job);
+                brokerage = brokerageFactory.CreateBrokerage(job);
 
                 brokerage.Connect();
 
