@@ -146,7 +146,10 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public void Close()
         {
-            _sr.Close();
+            if (_sr != null)
+            {
+                _sr.Close();
+            }
         }
 
         /// <summary>
@@ -154,7 +157,10 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public void Dispose()
         {
-            _sr.Dispose();
+            if (_sr != null)
+            {
+                _sr.Dispose();
+            }
         }
 
     } // End of Class
