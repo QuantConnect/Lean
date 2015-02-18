@@ -136,6 +136,7 @@
     <Compile Include="RealTime\LiveTradingRealTimeHandler.cs" />
     <Compile Include="RealTime\BacktestingRealTimeHandler.cs" />
     <Compile Include="RealTime\IRealTimeHandler.cs" />
+    <Compile Include="StateCheck.cs" />
     <Compile Include="SubscriptionScaling.cs" />
     <Compile Include="SubscriptionStreamReader.cs" />
     <Compile Include="StreamStore.cs" />
