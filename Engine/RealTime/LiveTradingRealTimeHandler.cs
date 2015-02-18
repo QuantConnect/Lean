@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -91,7 +92,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Initialize the realtime event handler with all information required for triggering daily events.
         /// </summary>
-        public LiveTradingRealTimeHandler(IAlgorithm algorithm, IDataFeed feed, IResultHandler results, IBrokerage brokerage, AlgorithmNodePacket job) 
+        public LiveTradingRealTimeHandler(IAlgorithm algorithm, IDataFeed feed, IResultHandler results) 
         {
             //Initialize:
             _algorithm = algorithm;
@@ -110,12 +111,11 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void Run()
         {
-            _isActive = false;
-
+            //Initialize to today time:
             _isActive = true;
             _time = DateTime.Now;
 
-            //Set up the realtime event:
+            //Set up the realtime events:
             SetupEvents(DateTime.Now.Date);
 
             //Continue looping until exit triggered:
@@ -140,7 +140,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         ///     We setup events for:to 
         ///     - Refreshing of the brokerage session tokens.
         ///     - Getting the new daily market open close times.
-        ///     - Setting up the "OnEndOfDay" events which close -10M before closing.
+        ///     - Setting up the "OnEndOfDay" events which close -10min before closing.
         /// </remarks>
         /// <param name="date">Datetime today</param>
         public void SetupEvents(DateTime date)
@@ -150,40 +150,47 @@ namespace QuantConnect.Lean.Engine.RealTime
                 //Clear the previous days events to reset with today:
                 ClearEvents();
 
-                //MARKET CLOSE UPDATER REAL TIME EVENT:
-                // Every day at 3am, update the market status for today:
-                AddEvent(new RealTimeEvent(TimeSpan.FromHours(3), () =>
+                //Find unique security types in the collection.
+                var uniqueSecurityTypes = (from security in _algorithm.Securities.Values 
+                                           select security.Type).Distinct();
+
+                //Refresh market status information so we can setup end of day events:
+                foreach (var type in uniqueSecurityTypes)
                 {
-                    Log.Trace("LiveTradingRealTimeHandler: Fired Update Market Status Event: 3.00am");
-                    _today[SecurityType.Equity] = Engine.Api.MarketToday(SecurityType.Equity);
-                }));
+                    if (!_today.ContainsKey(type))
+                    {
+                        //Setup storage
+                        _today.Add(type, new MarketToday());
+                    }
+                    //Refresh the market information
+                    _today[type] = Engine.Api.MarketToday(type);
+                }
 
                 // END OF DAY REAL TIME EVENT:
-                //Load Today variables based on security type:
+                // Load Today variables based on security type:
                 foreach (var security in _algorithm.Securities.Values)
                 {
-                    var endOfDayEventTime = new TimeSpan();
-                    if (security.IsDynamicallyLoadedData)
-                    {
-                        //If QC --> get the close time from API:
-                        if (!_today.ContainsKey(security.Type)) _today.Add(security.Type, Engine.Api.MarketToday(security.Type));
+                    DateTime? endOfDayEventTime = null;
 
+                    if (!security.IsDynamicallyLoadedData)
+                    {
+                        //If the market is open, set the end of day event time:
                         if (_today[security.Type].Status == "open")
                         {
-                            endOfDayEventTime = _today[security.Type].Open.End.Subtract(_endOfDayDelta);
+                            endOfDayEventTime = DateTime.Now.Date + _today[security.Type].Open.End.Subtract(_endOfDayDelta);
                         }
                     }
                     else
                     {
-                        //If User Data --> Get close time from security.
-                        endOfDayEventTime = security.Exchange.MarketClose.Subtract(_endOfDayDelta);
+                        //If custom/dynamic data get close time from user defined security object.
+                        endOfDayEventTime = DateTime.Now.Date + security.Exchange.MarketClose.Subtract(_endOfDayDelta);
                     }
 
                     //2. Set this time as the handler for EOD event:
-                    if (endOfDayEventTime != new TimeSpan())
+                    if (endOfDayEventTime.HasValue)
                     {
-                        Log.Trace("LiveTradingRealTimeHandler.SetupEvents(): Setup EOD Event for " + endOfDayEventTime);
-                        AddEvent(new RealTimeEvent(endOfDayEventTime, () =>
+                        Log.Trace("LiveTradingRealTimeHandler.SetupEvents(): Setup EOD Event for " + endOfDayEventTime.Value.ToString("u"));
+                        AddEvent(new RealTimeEvent(endOfDayEventTime.Value, () =>
                         {
                             try
                             {
@@ -193,9 +200,10 @@ namespace QuantConnect.Lean.Engine.RealTime
                             }
                             catch (Exception err)
                             {
+                                Engine.ResultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
                                 Log.Error("LiveTradingRealTimeHandler.SetupEvents.Trigger OnEndOfDay(): " + err.Message);
                             }
-                        }));
+                        }, true));
                     }
                 }
             }

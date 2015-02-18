@@ -102,8 +102,10 @@ namespace QuantConnect
             //10/27/2014	17.24	17.87	16	16.04	0	16.04
             string[] data = line.Split(',');
             fear.Time = DateTime.ParseExact(data[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            fear.Open = Convert.ToDecimal(data[1]); fear.High = Convert.ToDecimal(data[2]);
-            fear.Low = Convert.ToDecimal(data[3]); fear.Close = Convert.ToDecimal(data[4]);
+            fear.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture); 
+            fear.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
+            fear.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture); 
+            fear.Close = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture);
             fear.Symbol = "VIX"; fear.Value = fear.Close;
             //}
             //catch 

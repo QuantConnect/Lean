@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -113,32 +114,33 @@ namespace QuantConnect.Lean.Engine.RealTime
             foreach (var security in _algorithm.Securities.Values)
             {
                 //Register Events:
-                //Log.Trace("BacktestingRealTimeHandler.SetupEvents(): Adding End of Day: " + security.Exchange.MarketClose.Add(TimeSpan.FromMinutes(-10)));
+                Log.Debug("BacktestingRealTimeHandler.SetupEvents(): Adding End of Day: " + security.Exchange.MarketClose.Add(TimeSpan.FromMinutes(-10)));
 
                 //1. Setup End of Day Events:
-                AddEvent(new RealTimeEvent(security.Exchange.MarketClose.Add(TimeSpan.FromMinutes(-10)), () =>
+                var closingToday = date.Date + security.Exchange.MarketClose.Add(TimeSpan.FromMinutes(-10));
+
+                AddEvent(new RealTimeEvent( closingToday, () =>
                 {
-                    _algorithm.OnEndOfDay();
-                    _algorithm.OnEndOfDay(security.Symbol);
-                    //Log.Trace("BacktestingRealTimeHandler: Fired On End Of Day Event(" + security.Symbol + ") for Day( " + _time.ToShortDateString() + ")");
+                    try
+                    {
+                        _algorithm.OnEndOfDay();
+                        _algorithm.OnEndOfDay(security.Symbol);
+                    }
+                    catch (Exception err)
+                    {
+                        Engine.ResultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
+                        Log.Error("BacktestingRealTimeHandler.SetupEvents(): EOD: " + err.Message);
+                    }
                 }));
             }
         }
         
         /// <summary>
-        /// Normally this would run the realtime event monitoring, but since the backtesting is in fastforward he realtime is linked to the backtest clock.
+        /// Normally this would run the realtime event monitoring. Backtesting is in fastforward so the realtime is linked to the backtest clock.
         /// This thread does nothing. Wait until the job is over.
         /// </summary>
         public void Run()
         {
-            _isActive = true;
-
-            //Launch Thread: Continue looping until exit triggered:
-            while (!_exitTriggered)
-            {
-                Thread.Sleep(500); 
-            }
-
             _isActive = false;
         }
 
@@ -182,6 +184,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
         }
 
+
         /// <summary>
         /// Set the time for the realtime event handler.
         /// </summary>
@@ -191,15 +194,19 @@ namespace QuantConnect.Lean.Engine.RealTime
             //Check for day reset:
             if (_time.Date != time.Date)
             {
-                //Reset all the daily events
+                // Backtest Mode Only: 
+                // > Scan & trigger any remaining events which haven't been triggered (e.g. daily bar data with "daily event" at 4pm):
+                ScanEvents();
+
+                //Reset all the daily events with today's date:
                 SetupEvents(time.Date);
-                ResetEvents();
             }
 
             //Set the time:
             _time = time;
 
-            //Refresh event processing when time manually set:
+            // Backtest Mode Only: 
+            // > Scan the event every time we set the time. This allows "fast-forwarding" of the realtime events into sync with backtest.
             ScanEvents();
         }
 

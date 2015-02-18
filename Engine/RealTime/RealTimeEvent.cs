@@ -32,8 +32,9 @@ namespace QuantConnect.Lean.Engine.RealTime
         * CLASS VARIABLES
         *********************************************************/
         // Trigger Timing
-        private TimeSpan _triggerTime;
-        private Action _callback;
+        private readonly DateTime _triggerTime;
+        private readonly Action _callback;
+        private readonly bool _logging;
 
         // Trigger Action
         private bool _triggered;
@@ -41,7 +42,13 @@ namespace QuantConnect.Lean.Engine.RealTime
         /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
-        
+        /// <summary>
+        /// Flag indicating the event has been triggered
+        /// </summary>
+        public bool Triggered
+        {
+            get { return _triggered; }
+        }
 
         /******************************************************** 
         * CONSTRUCTOR METHODS
@@ -51,12 +58,14 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         /// <param name="triggerTime">Time of day to trigger this event</param>
         /// <param name="callback">Action to run when the time passes.</param>
+        /// <param name="logging">Enable logging the realtime events</param>
         /// <seealso cref="IRealTimeHandler"/>
-        public RealTimeEvent(TimeSpan triggerTime, Action callback)
+        public RealTimeEvent(DateTime triggerTime, Action callback, bool logging = false)
         {
             _triggered = false;
             _triggerTime = triggerTime;
             _callback = callback;
+            _logging = logging;
         }
 
         /******************************************************** 
@@ -74,13 +83,16 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
 
             //When the time passes the trigger time, trigger the event.
-            if (time.TimeOfDay > _triggerTime)
+            if (time > _triggerTime)
             {
                 _triggered = true;
 
                 try
                 {
-                    //Log.Trace("RealTimeEvent.Scan(): Eventhandler Called: " + time.TimeOfDay);
+                    if (_logging)
+                    {
+                        Log.Trace("RealTimeEvent.Scan(): Eventhandler Called: " + time.ToString("u"));
+                    }
                     _callback();
                 }
                 catch (Exception err)

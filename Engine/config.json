@@ -6,9 +6,6 @@
     "local": "true",
     "live-mode": "false",
 
-	// versioning
-	"version" : "2015-02-10 15:00:00",
-
     // handlers
     "messaging-handler": "QuantConnect.Messaging.Messaging",
     "queue-handler": "QuantConnect.Queues.Queue",
