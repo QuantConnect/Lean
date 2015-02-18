@@ -139,7 +139,7 @@ namespace QuantConnect
             {
                 string[] data = line.Split(',');
                 cash.Time = DateTime.ParseExact(data[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-                cash.Value = Convert.ToDecimal(data[1]);
+                cash.Value = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
             }
             catch { /* Do nothing, skip first title row */ }
 

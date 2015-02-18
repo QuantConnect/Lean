@@ -37,7 +37,6 @@ namespace QuantConnect
             AddSecurity(SecurityType.Equity, "BQR", res, fillDataForward: true, extendedMarketHours: false);
             //AddSecurity(SecurityType.Equity, "GOOG", res, fillDataForward: false, extendedMarketHours: false);
             //AddSecurity(SecurityType.Equity, "TSLA", res, fillDataForward: false, extendedMarketHours: false);
-
             //AddData<Bitcoin>("BTC", res);
         }
 
@@ -147,10 +146,10 @@ namespace QuantConnect
                     {
                         string[] data = line.Split(',');
                         coin.Time = DateTime.Parse(data[0]);
-                        coin.Open = Convert.ToDecimal(data[1]);
-                        coin.High = Convert.ToDecimal(data[2]);
-                        coin.Low = Convert.ToDecimal(data[3]);
-                        coin.Close = Convert.ToDecimal(data[4]);
+                        coin.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
+                        coin.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
+                        coin.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
+                        coin.Close = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture);
                         coin.VolumeBTC = Convert.ToDecimal(data[5]);
                         coin.WeightedPrice = Convert.ToDecimal(data[7]);
                         coin.Symbol = "BTC";

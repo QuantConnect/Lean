@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Globalization;
 using QuantConnect.Data;
 
 
@@ -137,13 +138,13 @@ namespace QuantConnect.Algorithm.Examples
                 //2011-09-13 5.8    6.0     5.65    5.97    58.37138238,    346.0973893944      5.929230648356
                 string[] data = line.Split(',');
                 coin.Time = DateTime.Parse(data[0]);
-                coin.Open = Convert.ToDecimal(data[1]);
-                coin.High = Convert.ToDecimal(data[2]);
-                coin.Low = Convert.ToDecimal(data[3]);
-                coin.Close = Convert.ToDecimal(data[4]);
-                coin.VolumeBTC = Convert.ToDecimal(data[5]);
-                coin.VolumeUSD = Convert.ToDecimal(data[6]);
-                coin.WeightedPrice = Convert.ToDecimal(data[7]);
+                coin.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
+                coin.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
+                coin.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
+                coin.Close = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture);
+                coin.VolumeBTC = Convert.ToDecimal(data[5], CultureInfo.InvariantCulture);
+                coin.VolumeUSD = Convert.ToDecimal(data[6], CultureInfo.InvariantCulture);
+                coin.WeightedPrice = Convert.ToDecimal(data[7], CultureInfo.InvariantCulture);
                 coin.Symbol = "BTC";
                 coin.Value = coin.Close;
             }
