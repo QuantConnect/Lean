@@ -17,8 +17,8 @@
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
-
 using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
@@ -71,10 +71,16 @@ namespace QuantConnect.Packets
         public TimeSpan LifeTime = TimeSpan.FromSeconds(0);
 
         /// <summary>
+        /// String-String Dictionary of Brokerage Data for this Live Job
+        /// </summary>
+        [JsonProperty(PropertyName = "aBrokerageData")]
+        public Dictionary<string, string> BrokerageData = new Dictionary<string, string>();
+
+        /// <summary>
         /// Account Id for specified brokerage
         /// </summary>
-        [JsonProperty(PropertyName = "iAccountID")]
-        public int AccountId = 0;
+        [JsonProperty(PropertyName = "sAccountID")]
+        public string AccountId = "";
 
         /******************************************************** 
         * CLASS CONSTRUCTOR
