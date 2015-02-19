@@ -233,9 +233,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (onDay)
                     {
                         //Every day refresh the source file for the custom user data:
-                        var success = _subscriptionManagers[i].RefreshSource(now.Date);
+                        _subscriptionManagers[i].RefreshSource(now.Date);
 
                         //Update the securities market open/close.
+                        Log.Trace("LiveTradingDataFeed.Run(): Updating market security hours (new day)");
                         UpdateSecurityMarketHours();
                     }
 
@@ -287,7 +288,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             last = data.Time;
                             Bridge[i].Enqueue(new List<BaseData> { data });
-                            Log.Debug("LiveTradingDataFeed.Run(): Enqueuing Data... s:" + data.Symbol + " >> v:" + data.Value);
                         }
                     }
 
@@ -313,8 +313,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Stop thread
             _isActive = false;
 
-            //Exiting RealTime Events:
-            Log.Trace("LiveTradingDataFeed.Run(): Exiting Realtime Run Routine");
+            //Exit Live DataStream Feed:
+            Log.Trace("LiveTradingDataFeed.Run(): Exiting LiveTradingDataFeed Run Method");
         }
 
         /// <summary>
@@ -330,13 +330,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             do
             {
                 //Scan for the required time period to stream:
+                Log.Trace("LiveTradingDataFeed.Stream(): Updating market hours...", true);
                 UpdateSecurityMarketHours();
 
                 //Wait for one of our equity securities to be open! Attempt to reopen stream when day changes.
                 Hibernate();
 
                 //Awake:
-                Log.Trace("LiveTradingDataFeed.Stream(): Market Open, Starting stream for " + string.Join(",", _symbols));
+                Log.Trace("LiveTradingDataFeed.Stream(): Market open, starting stream for " + string.Join(",", _symbols));
 
                 //Micro-thread for polling for new data from data source:
                 var liveThreadTask = new Task(()=> {
@@ -472,7 +473,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var announced = false;
             
             //Wait here while market is closed.
-            while (!AnySecurityOpen() && hibernateDate.Date == DateTime.Now.Date)
+            while (!AnySecurityOpen() && hibernateDate.Date == DateTime.Now.Date && !_exitTriggered)
             { 
                 if (!announced) 
                 {
@@ -514,10 +515,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 switch (security.Type)
                 {
                     case SecurityType.Equity:
-                        var _todayEquity = Engine.Api.MarketToday(SecurityType.Equity);
-                        Log.Trace("LiveTradingDataFeed.Run(): New Day Market Status: " + _todayEquity.Status);
+                        var todayEquity = Engine.Api.MarketToday(SecurityType.Equity);
+                        Log.Trace("LiveTradingDataFeed.Run(): New Day Market Status: " + todayEquity.Status, true);
                         //If we're open set both market open&close to midnight, so it won't open.
-                        if (_todayEquity.Status != "open")
+                        if (todayEquity.Status != "open")
                         {
                             _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = TimeSpan.FromHours(0);
                             _algorithm.Securities[sub.Symbol].Exchange.MarketClose = TimeSpan.FromHours(0);
@@ -525,18 +526,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         if (sub.ExtendedMarketHours)
                         {
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = _todayEquity.PreMarket.Start;
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketClose = _todayEquity.PostMarket.End;
+                            _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = todayEquity.PreMarket.Start;
+                            _algorithm.Securities[sub.Symbol].Exchange.MarketClose = todayEquity.PostMarket.End;
                         }
                         else
                         {
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = _todayEquity.Open.Start;
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketClose = _todayEquity.Open.End;
+                            _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = todayEquity.Open.Start;
+                            _algorithm.Securities[sub.Symbol].Exchange.MarketClose = todayEquity.Open.End;
                         }
                         break;
 
                     case SecurityType.Forex:
-                        //var _todayForex = Engine.Api.MarketToday(SecurityType.Forex);
+                        //var todayForex = Engine.Api.MarketToday(SecurityType.Forex);
                         //Do nothing, standard market hours are always right.
                         break;
                 }
