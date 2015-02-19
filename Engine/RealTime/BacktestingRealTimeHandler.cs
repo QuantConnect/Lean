@@ -118,13 +118,13 @@ namespace QuantConnect.Lean.Engine.RealTime
 
                 //1. Setup End of Day Events:
                 var closingToday = date.Date + security.Exchange.MarketClose.Add(TimeSpan.FromMinutes(-10));
-
+                var symbol = security.Symbol;
                 AddEvent(new RealTimeEvent( closingToday, () =>
                 {
                     try
                     {
                         _algorithm.OnEndOfDay();
-                        _algorithm.OnEndOfDay(security.Symbol);
+                        _algorithm.OnEndOfDay(symbol);
                     }
                     catch (Exception err)
                     {

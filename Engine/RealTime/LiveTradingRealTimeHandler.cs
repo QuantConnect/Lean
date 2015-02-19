@@ -190,13 +190,14 @@ namespace QuantConnect.Lean.Engine.RealTime
                     if (endOfDayEventTime.HasValue)
                     {
                         Log.Trace("LiveTradingRealTimeHandler.SetupEvents(): Setup EOD Event for " + endOfDayEventTime.Value.ToString("u"));
+                        var symbol = security.Symbol;
                         AddEvent(new RealTimeEvent(endOfDayEventTime.Value, () =>
                         {
                             try
                             {
                                 _algorithm.OnEndOfDay();
-                                _algorithm.OnEndOfDay(security.Symbol);
-                                Log.Trace("LiveTradingRealTimeHandler: Fired On End of Day Event(" + security.Symbol + ") for Day( " + _time.ToShortDateString() + ")");
+                                _algorithm.OnEndOfDay(symbol);
+                                Log.Trace("LiveTradingRealTimeHandler: Fired On End of Day Event(" + symbol + ") for Day( " + _time.ToShortDateString() + ")");
                             }
                             catch (Exception err)
                             {
