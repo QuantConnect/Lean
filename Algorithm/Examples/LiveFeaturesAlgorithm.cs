@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Globalization;
 using Newtonsoft.Json;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
@@ -57,8 +58,8 @@ namespace QuantConnect
                 Order("BTC", 100);
 
                 //Send a notification email/SMS/web request on events:
-                Notify.Email("jaredbroad@gmail.com", "Test", "Test Body", "test attachment");
-                Notify.Sms("+12157838519", Time.ToString("u") + ">> Test message from live BTC server.");
+                Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment");
+                Notify.Sms("+11233456789", Time.ToString("u") + ">> Test message from live BTC server.");
                 Notify.Web("http://api.quantconnect.com", Time.ToString("u") + ">> Test data packet posted from live BTC server.");
             }
         }
@@ -70,7 +71,7 @@ namespace QuantConnect
                 int quantity = (int)Math.Floor(Portfolio.Cash / data["AAPL"].Close);
                 Order("AAPL", quantity);
                 Debug("Purchased SPY on " + Time.ToShortDateString());
-                Notify.Email("jaredbroad@gmail.com", "Test", "Test Body", "test attachment");
+                Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment");
             }
         }
     }
@@ -139,12 +140,12 @@ namespace QuantConnect
                     {
                         string[] data = line.Split(',');
                         coin.Time = DateTime.Parse(data[0]);
-                        coin.Open = Convert.ToDecimal(data[1]);
-                        coin.High = Convert.ToDecimal(data[2]);
-                        coin.Low = Convert.ToDecimal(data[3]);
-                        coin.Close = Convert.ToDecimal(data[4]);
-                        coin.VolumeBTC = Convert.ToDecimal(data[5]);
-                        coin.WeightedPrice = Convert.ToDecimal(data[7]);
+                        coin.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
+                        coin.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
+                        coin.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
+                        coin.Close = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture);
+                        coin.VolumeBTC = Convert.ToDecimal(data[5], CultureInfo.InvariantCulture);
+                        coin.WeightedPrice = Convert.ToDecimal(data[7], CultureInfo.InvariantCulture);
                         coin.Symbol = "BTC";
                         coin.Value = coin.Close;
                     }

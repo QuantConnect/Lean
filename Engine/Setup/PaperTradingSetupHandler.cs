@@ -118,6 +118,7 @@ namespace QuantConnect.Lean.Engine.Setup
         public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket job)
         {
             var initializeComplete = false;
+            var liveJob = job as LiveNodePacket; 
             brokerage = new PaperBrokerage(algorithm);
 
             //For the console, let it set itself up primarily:
@@ -145,6 +146,13 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 //Initialize the algorithm
                 algorithm.Initialize();
+
+                //Try and use he live job packet cash if exists, otherwise resort to the user algo cash:
+                if (liveJob != null && liveJob.BrokerageData.ContainsKey("project-paper-equity"))
+                {
+                    var consistentCash = Convert.ToDecimal(liveJob.BrokerageData["project-paper-equity"]);
+                    algorithm.SetCash(consistentCash);
+                }
             }
             catch (Exception err)
             {
