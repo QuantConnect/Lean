@@ -32,25 +32,37 @@ namespace QuantConnect.Logging
     /// <summary>
     /// Logging management class.
     /// </summary>
-    public class Log 
+    public static class Log
     {
-        /// <summary>
-        /// This can be set to another TextWriter in order to redirect the log output.
-        /// </summary>
-        public static TextWriter Console = System.Console.Out;
-
         /******************************************************** 
         * CLASS VARIABLES
         *********************************************************/
         private static string _lastTraceText = "";
         private static string _lastErrorText = "";
-        private const string _dateFormat = "yyyyMMdd HH:mm:ss";
         private static bool _debuggingEnabled = false;
         private static int _level = 1;
-       
+        private static ILogHandler _logHandler = new ConsoleLogHandler();
+
         /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static ILogHandler LogHandler
+        {
+            get
+            {
+                return _logHandler;
+            }
+            set
+            {
+                _logHandler = value;
+            }
+        }
+
+
         /// <summary>
         /// Global flag whether to enable debugging logging:
         /// </summary>
@@ -95,33 +107,8 @@ namespace QuantConnect.Logging
             try 
             {
                 if (error == _lastErrorText && !overrideMessageFloodProtection) return;
-                //var original = Console.ForegroundColor;
-                //Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(DateTime.Now.ToString(_dateFormat) + " ERROR:: " + error);
-                //Console.ForegroundColor = original;
+                _logHandler.Error(error);
                 _lastErrorText = error; //Stop message flooding filling diskspace.
-
-                //Log to system log:
-                //Only run logger on Linux, this conditional copied from OS.IsLinux and then inverted
-                var platform = (int)Environment.OSVersion.Platform;
-                if (platform != 4 && platform != 6 && platform != 128) return;
-
-                try
-                {
-                    var cExecutable = new ProcessStartInfo
-                    {
-                        FileName = "logger",
-                        UseShellExecute = true,
-                        RedirectStandardOutput = false,
-                        Arguments = "'" + error + "'",
-                    };
-                    //Don't wait for exit:
-                    Process.Start(cExecutable);
-                }
-                catch (Exception err)
-                {
-                    Console.WriteLine("Log.SystemLog(): Error with system log: " + err.Message);
-                }
             } 
             catch (Exception err)
             {
@@ -138,7 +125,7 @@ namespace QuantConnect.Logging
             try 
             {
                 if (traceText == _lastTraceText && !overrideMessageFloodProtection) return;
-                Console.WriteLine(DateTime.Now.ToString(_dateFormat) + " Trace:: " + traceText);
+                _logHandler.Trace(traceText);
                 _lastTraceText = traceText;
             } 
             catch (Exception err) 
@@ -155,9 +142,16 @@ namespace QuantConnect.Logging
         /// <param name="delay"></param>
         public static void Debug(string text, int level = 1, int delay = 0)
         {
-            if (!_debuggingEnabled || level < _level) return;
-            Console.WriteLine(DateTime.Now.ToString(_dateFormat) + " DEBUGGING :: " + text);
-            Thread.Sleep(delay);
+            try
+            {
+                if (!_debuggingEnabled || level < _level) return;
+                _logHandler.Debug(text);
+                Thread.Sleep(delay);
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine("Log.Debug(): Error writing debug: " + err.Message);
+            }
         }
 
         /// <summary>
