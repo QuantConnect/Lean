@@ -51,7 +51,7 @@ namespace QuantConnect
         public RealTimeSynchronizedTimer()
         {
             _period = TimeSpan.FromSeconds(0);
-            _thread = new Thread(new ThreadStart(Scanner));
+            _thread = new Thread(Scanner);
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace QuantConnect
             _period = period;
             _callback = callback;
             _timer = new Stopwatch();
-            _thread = new Thread(new ThreadStart(Scanner));
+            _thread = new Thread(Scanner);
             _stopped = false;
             _triggerTime = DateTime.Now.RoundUp(period);
         }

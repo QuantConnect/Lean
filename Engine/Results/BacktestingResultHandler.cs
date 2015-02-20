@@ -212,7 +212,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void Run() 
         {
             //Initialize:
-            var _lastMessage = "";
+            var lastMessage = "";
             _lastDaysProcessed = 5;
 
             //Setup minimum result arrays:
@@ -237,11 +237,11 @@ namespace QuantConnect.Lean.Engine.Results
                             //New Debug Message:
                             case PacketType.Debug:
                                 var debug = packet as DebugPacket;
-                                if (_lastMessage != debug.Message)
+                                if (lastMessage != debug.Message)
                                 {
                                     //Log.Trace("BacktestingResultHandlerRun(): Debug Packet: " + debug.Message);
                                     Engine.Notify.DebugMessage(debug.Message, debug.ProjectId, _backtestId, _compileId);
-                                    _lastMessage = debug.Message;
+                                    lastMessage = debug.Message;
                                 }
                                 break;
 
