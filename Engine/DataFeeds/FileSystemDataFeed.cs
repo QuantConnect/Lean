@@ -293,90 +293,84 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 while ((frontier.Date == date.Date || frontier == date.Date.AddDays(1)) && !_exitTriggered)
                 {
                     var cache = new List<BaseData>[subscriptions];
-                    try
+                    
+                    //Reset Loop:
+                    earlyBirdTicks = 0;
+
+                    //Go over all the subscriptions, one by one add a minute of data to the bridge.
+                    for (var i = 0; i < subscriptions; i++)
                     {
-                        //Reset Loop:
-                        earlyBirdTicks = 0;
+                        //Get the reader manager:
+                        var manager = SubscriptionReaderManagers[i];
 
-                        //Go over all the subscriptions, one by one add a minute of data to the bridge.
-                        for (var i = 0; i < subscriptions; i++)
+                        //End of the manager stream set flag to end bridge: also if the EOB flag set, from the refresh source method above
+                        if (manager.EndOfStream || EndOfBridge[i])
                         {
-                            //Get the reader manager:
-                            var manager = SubscriptionReaderManagers[i];
-
-                            //End of the manager stream set flag to end bridge: also if the EOB flag set, from the refresh source method above
-                            if (manager.EndOfStream || EndOfBridge[i])
+                            EndOfBridge[i] = true;
+                            activeStreams = GetActiveStreams();
+                            if (activeStreams == 0)
                             {
-                                EndOfBridge[i] = true;
-                                activeStreams = GetActiveStreams();
-                                if (activeStreams == 0)
-                                {
-                                    frontier = frontier.Date + TimeSpan.FromDays(1);
-                                    //if (frontier.ToString("yyyy-MMM-dd") == "2013-May-03") System.Diagnostics.Debugger.Break();
-                                    //Log.Debug("FileSystemDataFeed.Run(): No Active Streams; moving to next day.");
-                                }
-                                continue;
+                                frontier = frontier.Date + TimeSpan.FromDays(1);
+                                //if (frontier.ToString("yyyy-MMM-dd") == "2013-May-03") System.Diagnostics.Debugger.Break();
+                                //Log.Debug("FileSystemDataFeed.Run(): No Active Streams; moving to next day.");
                             }
-
-                            //Initialize data store:
-                            cache[i] = new List<BaseData>();
-
-                            //Add the last iteration to the new list: only if it falls into this time category
-                            //Log.Debug("FileSystemDataFeed.Run(): Entering cache builder: current: " + manager.Current.Time.ToLongTimeString());
-                            while (manager.Current.Time < frontier) //.RoundUp(increment)
-                            {
-                                cache[i].Add(manager.Current);
-                                //Log.Debug("FileSystemDataFeed.Run(): Adding feed.Current to cache: frontier: " +  frontier.ToLongTimeString());
-                                if (!manager.MoveNext()) break;
-                            }
-
-                            //Save the next earliest time from the bridges: only if we're not filling forward.
-                            if (manager.Current != null)
-                            {
-                                if (earlyBirdTicks == 0 || manager.Current.Time.Ticks < earlyBirdTicks)
-                                {
-                                    earlyBirdTicks = manager.Current.Time.Ticks;
-                                }
-                            }
+                            continue;
                         }
 
-                        if (activeStreams == 0)
+                        //Initialize data store:
+                        cache[i] = new List<BaseData>();
+
+                        //Add the last iteration to the new list: only if it falls into this time category
+                        //Log.Debug("FileSystemDataFeed.Run(): Entering cache builder: current: " + manager.Current.Time.ToLongTimeString());
+                        while (manager.Current.Time < frontier) //.RoundUp(increment)
                         {
-                            break;
+                            cache[i].Add(manager.Current);
+                            //Log.Debug("FileSystemDataFeed.Run(): Adding feed.Current to cache: frontier: " +  frontier.ToLongTimeString());
+                            if (!manager.MoveNext()) break;
                         }
 
-
-                        //Add all the lists to the bridge, release the bridge
-                        //we push all the data up to this frontier into the bridge at once
-                        for (var i = 0; i < subscriptions; i++)
+                        //Save the next earliest time from the bridges: only if we're not filling forward.
+                        if (manager.Current != null)
                         {
-                            if (cache[i] != null && cache[i].Count > 0)
+                            if (earlyBirdTicks == 0 || manager.Current.Time.Ticks < earlyBirdTicks)
                             {
-                                FillForwardFrontiers[i] = cache[i][0].Time;
-                                Bridge[i].Enqueue(cache[i]);
+                                earlyBirdTicks = manager.Current.Time.Ticks;
                             }
-                            ProcessFillForward(SubscriptionReaderManagers[i], i, tradeBarIncrements);
                         }
-
-                        //This will let consumers know we have loaded data up to this date
-                        //So that the data stream doesn't pull off data from the same time period in different events
-                        LoadedDataFrontier = frontier;
-
-                        if (earlyBirdTicks > 0 && earlyBirdTicks > frontier.Ticks) {
-                            //Jump increment to the nearest second, in the future: Round down, add increment
-                            frontier = (new DateTime(earlyBirdTicks)).RoundDown(increment) + increment;
-                        } 
-                        else 
-                        {
-                            //Otherwise step one forward.
-                            frontier += increment;  
-                        }
-                    } 
-                    finally
-                    {
-                        // End Using Cache: Fix memory leak
-                        cache = null;
                     }
+
+                    if (activeStreams == 0)
+                    {
+                        break;
+                    }
+
+
+                    //Add all the lists to the bridge, release the bridge
+                    //we push all the data up to this frontier into the bridge at once
+                    for (var i = 0; i < subscriptions; i++)
+                    {
+                        if (cache[i] != null && cache[i].Count > 0)
+                        {
+                            FillForwardFrontiers[i] = cache[i][0].Time;
+                            Bridge[i].Enqueue(cache[i]);
+                        }
+                        ProcessFillForward(SubscriptionReaderManagers[i], i, tradeBarIncrements);
+                    }
+
+                    //This will let consumers know we have loaded data up to this date
+                    //So that the data stream doesn't pull off data from the same time period in different events
+                    LoadedDataFrontier = frontier;
+
+                    if (earlyBirdTicks > 0 && earlyBirdTicks > frontier.Ticks) {
+                        //Jump increment to the nearest second, in the future: Round down, add increment
+                        frontier = (new DateTime(earlyBirdTicks)).RoundDown(increment) + increment;
+                    } 
+                    else 
+                    {
+                        //Otherwise step one forward.
+                        frontier += increment;  
+                    }
+
                 } // End of This Day.
 
                 if (_exitTriggered) break;
