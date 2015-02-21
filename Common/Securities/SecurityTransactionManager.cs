@@ -239,7 +239,6 @@ namespace QuantConnect.Securities
             return 0;
         }
 
-
         /// <summary>
         /// Remove this order from outstanding queue: user is requesting a cancel.
         /// </summary>
