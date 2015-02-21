@@ -56,6 +56,7 @@
     <None Include="Algorithm\Test_SetHolding.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageFactoryTests.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageTests.cs" />
+    <Compile Include="Brokerages\InteractiveBrokers\SetupInteractiveBrokers.cs" />
     <Compile Include="Common\Data\IdentityDataConsolidatorTests.cs" />
     <Compile Include="Common\Data\SequentialConsolidatorTests.cs" />
     <Compile Include="Common\Data\TradeBarConsolidatorTests.cs" />
@@ -130,6 +131,9 @@
     </Content>
     <Content Include="TestData\spy_mfi.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_ohlcv.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_parabolic_SAR.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

@@ -14,8 +14,11 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
+using System.ComponentModel.Composition.Primitives;
+using System.IO;
 using System.Linq;
 
 namespace QuantConnect.Util
@@ -23,66 +26,94 @@ namespace QuantConnect.Util
     /// <summary>
     /// Provides methods for obtaining IBrokerageFactory instances
     /// </summary>
-    public class Composer<T>
+    public class Composer
     {
         /// <summary>
         /// Gets the singleton instance of BrokerageFactory
         /// </summary>
-        public static Composer<T> Instance = new Composer<T>();
+        public static Composer Instance = new Composer();
 
         // we really only need one of these per T for the whole application to use
-        private Composer() { }
+        private Composer()
+        {
+            // grab assemblies from current executing directory
+            var catalog = new DirectoryCatalog(Directory.GetCurrentDirectory());
+            _compositionContainer = new CompositionContainer(catalog);
+            _exportedValues = new Dictionary<Type, IEnumerable>();
+        }
 
-        private bool _hasComposed;
-        private IEnumerable<T> _composedInstances = new List<T>();
+        private CompositionContainer _compositionContainer;
+        private readonly Dictionary<Type, IEnumerable> _exportedValues;
+        private readonly object _exportedValuesLockObject = new object();
 
         /// <summary>
-        /// Gets the first factory that produces the requested brokerage type
+        /// Gets the export matching the predicate
         /// </summary>
         /// <param name="predicate">Function used to pick which imported instance to return, if null the first instance is returned</param>
         /// <returns>A factory that produces the requested brokerage type, or null</returns>
-        public T GetInstance(Func<T, bool> predicate)
+        public T Single<T>(Func<T, bool> predicate)
         {
-            // if we never composed, compose using all loaded types
-            if (!_hasComposed) Compose();
-
-            predicate = predicate ?? (x => true);
-            return _composedInstances.FirstOrDefault(predicate);
-        }
-
-        /// <summary>
-        /// Enumerates over all the composed instances
-        /// </summary>
-        /// <returns>An enumerable of all composed instances</returns>
-        public IEnumerable<T> GetInstances()
-        {
-            // if we never composed, compose using all loaded types
-            if (!_hasComposed) Compose();
-
-            // we purposefully select into identity to create a new enumerable to prevent callers from modifying its contents
-            return _composedInstances.Select(x => x);
-        }
-
-        /// <summary>
-        /// Composes the available IBrokerageFactory instances from the specified composition container. If the container is null,
-        /// then one wil be created that searches all loaded types.
-        /// </summary>
-        /// <param name="container">The composition container to use to search for brokerage factories, or null to search all loaded types</param>
-        public void Compose(CompositionContainer container = null)
-        {
-            if (container == null)
+            if (predicate == null)
             {
-                // create a catalog containing all loaded assemblies in the current app domain
-                var catalog = new AggregateCatalog(AppDomain.CurrentDomain.GetAssemblies().Select(x => new AssemblyCatalog(x)));
-
-                // define a container for all loaded assemblies
-                container = new CompositionContainer(catalog);
+                throw new ArgumentNullException("predicate");
             }
 
-            // save off the instances composed from the container
-            _composedInstances = container.GetExportedValues<T>();
+            return GetExportedValues<T>().Single(predicate);
+        }
 
-            _hasComposed = true;
+        /// <summary>
+        /// Resets the composition container to use the specified catalog
+        /// </summary>
+        /// <param name="catalog">The catalog containing parts to be exported</param>
+        public void SetCatalog(ComposablePartCatalog catalog)
+        {
+            if (catalog == null)
+            {
+                throw new ArgumentNullException("catalog");
+            }
+
+            lock (_exportedValuesLockObject)
+            {
+                _exportedValues.Clear();
+                _compositionContainer = new CompositionContainer(catalog);
+            }
+        }
+
+        /// <summary>
+        /// Resets the composition container
+        /// </summary>
+        /// <param name="compositionContainer">The composition container to search for exports</param>
+        public void SetCompositionContainer(CompositionContainer compositionContainer)
+        {
+            if (compositionContainer == null)
+            {
+                throw new ArgumentNullException("compositionContainer");
+            }
+
+            lock (_exportedValuesLockObject)
+            {
+                _exportedValues.Clear();
+                _compositionContainer = compositionContainer;
+            }
+        }
+
+        /// <summary>
+        /// Gets all exports of type T
+        /// </summary>
+        public IEnumerable<T> GetExportedValues<T>()
+        {
+            lock (_exportedValuesLockObject)
+            {
+                IEnumerable values;
+                if (_exportedValues.TryGetValue(typeof (T), out values))
+                {
+                    return values.OfType<T>();
+                }
+
+                values = _compositionContainer.GetExportedValues<T>().ToList();
+                _exportedValues[typeof (T)] = values;
+                return values.OfType<T>();
+            }
         }
     }
 }

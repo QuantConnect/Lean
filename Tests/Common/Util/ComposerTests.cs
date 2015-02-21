@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void ComposesTypes()
         {
-            var instances = Composer<IExport>.Instance.GetInstances().ToList();
+            var instances = Composer.Instance.GetExportedValues<IExport>().ToList();
             Assert.AreEqual(4, instances.Count);
             Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export1)));
             Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export2)));
@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void GetsInstanceUsingPredicate()
         {
-            var instance = Composer<IExport>.Instance.GetInstance(x => x.Id == 3);
+            var instance = Composer.Instance.Single<IExport>(x => x.Id == 3);
             Assert.IsNotNull(instance);
             Assert.IsInstanceOf(typeof (Export3), instance);
         }

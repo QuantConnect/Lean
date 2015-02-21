@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.AlgorithmFactory;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
@@ -73,7 +74,19 @@ namespace QuantConnect.Lean.Engine.Setup
             IAlgorithm algorithm;
 
             // limit load times to 10 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(TimeSpan.FromSeconds(10), names => names.SingleOrDefault());
+            var loader = new Loader(TimeSpan.FromSeconds(10), names =>
+            {
+                // if there's only one use that guy
+                if (names.Count == 1)
+                {
+                    return names.Single();
+                }
+
+                // if there's more than one then check configuration for which one we should use
+                var algorithmName = Config.Get("algorithm-type-name");
+                return names.Single(x => x.Contains(algorithmName));
+            });
+
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
             if (!complete) throw new Exception(error + " Try re-building algorithm.");
 
@@ -108,12 +121,52 @@ namespace QuantConnect.Lean.Engine.Setup
 
             try
             {
+                //Execute the initialize code:
+                var initializeComplete = Isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(10), () =>
+                {
+                    try
+                    {                
+                        //Set the live trading level asset/ram allocation limits. 
+                        //Protects algorithm from linux killing the job by excess memory:
+                        switch (job.ServerType)
+                        {
+                            case ServerType.Server1024:
+                                algorithm.SetAssetLimits(100, 20, 10);
+                                break;
+
+                            case ServerType.Server2048:
+                                algorithm.SetAssetLimits(400, 50, 30);
+                                break;
+
+                            default: //512
+                                algorithm.SetAssetLimits(50, 10, 5);
+                                break;
+                        }
+
+                        //Algorithm is backtesting, not live:
+                        algorithm.SetLiveMode(true);
+
+                        //Initialise the algorithm, get the required data:
+                        algorithm.Initialize();
+                    }
+                    catch (Exception err)
+                    {
+                        Errors.Add("Failed to initialize algorithm: Initialize(): " + err.Message);
+                    }
+                });
+
+                if (!initializeComplete)
+                {
+                    AddInitializationError("Failed to initialize algorithm.");
+                    return false;
+                }
+
                 // find the correct brokerage factory based on the specified brokerage in the live job packet
-                var composer = Composer<IBrokerageFactory>.Instance;
-                var brokerageFactory = composer.GetInstance(instance => instance.BrokerageType.MatchesTypeName(liveJob.Brokerage));
+                var composer = Composer.Instance;
+                var brokerageFactory = composer.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
 
                 // initialize the correct brokerage using the resolved factory
-                brokerage = brokerageFactory.CreateBrokerage(job);
+                brokerage = brokerageFactory.CreateBrokerage(liveJob, algorithm);
 
                 brokerage.Connect();
 
@@ -130,7 +183,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     algorithm.Orders.AddOrUpdate(order.Id, order, (i, o) => order);
                 }
 
-                // populate the algorihtm with the account's current holdings
+                // populate the algorithm with the account's current holdings
                 var holdings = brokerage.GetAccountHoldings();
                 foreach (var holding in holdings)
                 {

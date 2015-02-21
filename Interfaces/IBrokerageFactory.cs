@@ -34,7 +34,8 @@ namespace QuantConnect.Interfaces
         /// Creates a new IBrokerage instance
         /// </summary>
         /// <param name="job">The job packet to create the brokerage for</param>
+        /// <param name="algorithm"></param>
         /// <returns>A new brokerage instance</returns>
-        IBrokerage CreateBrokerage(AlgorithmNodePacket job);
+        IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm);
     }
 }

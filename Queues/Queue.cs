@@ -90,7 +90,8 @@ namespace QuantConnect.Queues
                     TransactionEndpoint = TransactionHandlerEndpoint.Backtesting,
                     RealTimeEndpoint = RealTimeEndpoint.LiveTrading,
                     Type = PacketType.LiveNode,
-                    Algorithm = File.ReadAllBytes(AlgorithmLocation)
+                    Algorithm = File.ReadAllBytes(AlgorithmLocation),
+                    Brokerage = Config.Get("live-mode-brokerage", "Paper Brokerage")
                 };
                 return liveJob;
             }

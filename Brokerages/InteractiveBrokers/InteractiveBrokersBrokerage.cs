@@ -35,7 +35,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // next valid order id for this client
         private int _nextValidID;
         // the last known cash balance in the account
-        private decimal _currentCashBalance;
 
         // next valid client id for the gateway/tws
         private static int _nextClientID;
@@ -106,7 +105,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _account = account;
             _host = host;
             _port = port;
-            _clientID = Interlocked.Increment(ref _nextClientID);
+            _clientID = IncrementClientID();
             _agentDescription = agentDescription;
             _client = new IB.IBClient();
         }
@@ -213,28 +212,25 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The open orders returned from IB</returns>
         public override List<Order> GetOpenOrders()
         {
-            var orders = new List<Order>();
+            // create a separate client for this request
+            using (var client = new IB.IBClient())
+            {
+                client.Connect(_host, _port, IncrementClientID());
+                var orders = new List<Order>();
 
-            var manualResetEvent = new ManualResetEvent(false);
-            
-            // define our handlers
-            EventHandler<IB.OpenOrderEventArgs> clientOnOpenOrder = (sender, args) => orders.Add(ConvertOrder(args.Order, args.Contract));
-            EventHandler<EventArgs> clientOnOpenOrderEnd = (sender, args) => manualResetEvent.Set();
+                var manualResetEvent = new ManualResetEvent(false);
 
-            // add the handlers
-            _client.OpenOrder += clientOnOpenOrder;
-            _client.OpenOrderEnd += clientOnOpenOrderEnd;
+                // define our handlers
+                client.OpenOrder += (sender, args) => orders.Add(ConvertOrder(args.Order, args.Contract));
+                client.OpenOrderEnd += (sender, args) => manualResetEvent.Set();
 
-            _client.RequestOpenOrders();
+                client.RequestOpenOrders();
 
-            // wait for our end signal
-            manualResetEvent.WaitOne();
+                // wait for our end signal
+                manualResetEvent.WaitOne();
 
-            // remove the handlers
-            _client.OpenOrder -= clientOnOpenOrder;
-            _client.OpenOrderEnd -= clientOnOpenOrderEnd;
-
-            return orders;
+                return orders;
+            }
         }
 
         /// <summary>
@@ -243,30 +239,25 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            var holdings = new List<Holding>();
+            // create a separate client for this request
+            using (var client = new IB.IBClient())
+            {
+                client.Connect(_host, _port, IncrementClientID());
 
-            var manualReseEvent = new ManualResetEvent(false);
+                var holdings = new List<Holding>();
+                var manualReseEvent = new ManualResetEvent(false);
 
-            // define our handlers
-            EventHandler<IB.UpdatePortfolioEventArgs> clientOnUpdatePortfolio = (sender, args) => holdings.Add(CreateHolding(args));
-            EventHandler<IB.AccountDownloadEndEventArgs> clientOnAccountDownloadEnd = (sender, args) => manualReseEvent.Set();
+                // define our handlers
+                client.UpdatePortfolio += (sender, args) => holdings.Add(CreateHolding(args));
+                client.AccountDownloadEnd += (sender, args) => manualReseEvent.Set();
 
-            // add the handles
-            _client.UpdatePortfolio += clientOnUpdatePortfolio;
-            _client.AccountDownloadEnd += clientOnAccountDownloadEnd;
+                client.RequestAccountUpdates(true, _account);
 
-            _client.RequestAccountUpdates(true, _account);
+                // wait for our end signal
+                manualReseEvent.WaitOne();
 
-            // wait for our end signal
-            manualReseEvent.WaitOne();
-
-            _client.RequestAccountUpdates(false, _account);
-
-            // remove the handlers
-            _client.UpdatePortfolio -= clientOnUpdatePortfolio;
-            _client.AccountDownloadEnd -= clientOnAccountDownloadEnd;
-
-            return holdings;
+                return holdings;
+            }
         }
 
         /// <summary>
@@ -275,7 +266,25 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The current USD cash balance available for trading</returns>
         public override decimal GetCashBalance()
         {
-            return _currentCashBalance;
+            // create a separate client for this request
+            using (var client = new IB.IBClient())
+            {
+                client.Connect(_host, _port, IncrementClientID());
+
+                decimal cash = 0m;
+                var manualResetEvent = new ManualResetEvent(false);
+
+                client.UpdateAccountValue += (sender, args) =>
+                {
+                    if (args.Key == AccountValueKeys.CashBalance)
+                    {
+                        cash = args.Value.ToDecimal();
+                        manualResetEvent.Set();
+                    }
+                };
+
+                return cash;
+            }
         }
 
         /// <summary>
@@ -292,14 +301,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.Error += HandleError;
 
             // we need to wait until we receive the next valid id from the server
-            var manualResetEvent = new ManualResetEvent(false);
+            var waitForNextValidID = new ManualResetEvent(false);
             _client.NextValidId += (sender, e) =>
             {
                 // only grab this id when we initialize, and we'll manually increment it here to avoid threading issues
                 if (_nextValidID == 0)
                 {
                     _nextValidID = e.OrderId;
-                    manualResetEvent.Set();
+                    waitForNextValidID.Set();
                 }
                 Log.Trace("InteractiveBrokersBrokerage.HandleNextValidID(): " + e.OrderId);
             };
@@ -313,7 +322,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     // we're going to try and connect several times, if successful break
                     _client.Connect(_host, _port, _clientID);
-
+                    _client.RequestAccountUpdates(true, _account);
                     break;
                 }
                 catch (Exception err)
@@ -332,7 +341,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // pause for a moment to receive next valid ID message from gateway
-            if (!manualResetEvent.WaitOne(1000))
+            if (!waitForNextValidID.WaitOne(1000))
             {
                 // we timed out our wait for next valid id... we'll just log it
                 Log.Error("InteractiveBrokersBrokerage.Connect(): Timed out waiting for next valid ID event to fire.");
@@ -356,6 +365,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             if (_client != null)
             {
+                _client.Disconnect();
                 _client.Dispose();
             }
         }
@@ -402,10 +412,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandleUpdateAccountValue(object sender, IB.UpdateAccountValueEventArgs e)
         {
-            //https://www.interactivebrokers.com/en/software/api/apiguide/java/updateaccountvalue.htm
+            //https://www.interactivebrokers.com/en/software/api/apiguide/activex/updateaccountvalue.htm
 
             try
-            { 
+            {
                 // not sure if we need to track all the information
                 if (_accountProperties.ContainsKey(e.Key))
                 {
@@ -417,10 +427,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
 
                 // we want to capture if the user's cash changes so we can reflect it in the algorithm
-                if (e.Key == "CashBalance")
+                if (e.Key == AccountValueKeys.CashBalance)
                 {
                     var cashBalance = e.Value.ToDecimal();
-                    _currentCashBalance = cashBalance;
                     OnAccountChanged(new AccountEvent(cashBalance));
                 }
             }
@@ -441,6 +450,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var order = _outstandingOrders.FirstOrDefault(x => x.Value.BrokerId.Contains(update.OrderId)).Value;
                 if (order == null)
                 {
+                    Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): BrokerIds:" + string.Join(",", _outstandingOrders.SelectMany(x => x.Value.BrokerId)));
                     Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Unable to resolve order " + update.OrderId);
                     return;
                 }
@@ -532,6 +542,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 );
 
             order.BrokerId.Add(ibOrder.OrderId);
+
+            // assign the QC order ID if we can find the order in our collection
+            var outstandingOrder = _outstandingOrders.FirstOrDefault(x => x.Value.BrokerId.Contains(ibOrder.OrderId));
+            if (outstandingOrder.Value != null)
+            {
+                order.Id = outstandingOrder.Value.Id;
+            }
 
             return order;
         }
@@ -748,6 +765,19 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             int id = Interlocked.Increment(ref _nextValidID);
             order.BrokerId.Add(id);
             return id;
+        }
+
+        /// <summary>
+        /// Increments the client ID for communication with the gateway
+        /// </summary>
+        private static int IncrementClientID()
+        {
+            return Interlocked.Increment(ref _nextClientID);
+        }
+
+        public static class AccountValueKeys
+        {
+            public const string CashBalance = "CashBalance";
         }
     }
 }

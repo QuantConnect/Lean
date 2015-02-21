@@ -267,7 +267,9 @@ namespace QuantConnect
         /// Configure algorithm+job for the console:
         Console,
         /// Paper trading algorithm+job internal state configuration
-        PaperTrading
+        PaperTrading,
+        /// Live trading against a user's brokerage
+        Brokerage
     }
 
     /// <summary>

@@ -29,15 +29,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             get { return typeof (InteractiveBrokersBrokerage); }
         }
 
-        public IBrokerage CreateBrokerage(AlgorithmNodePacket job)
+        public IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
-            var liveJob = job as LiveNodePacket;
-            if (liveJob != null)
-            {
-                // this needs to be fixed, LiveNodePacket.AccountId must be a string
-                return new InteractiveBrokersBrokerage(liveJob.AccountId.ToString());
-            }
-            return null;
+            // launch the IB gateway
+            InteractiveBrokersGatewayRunner.Start(job.AccountId.ToString());
+
+            // this needs to be fixed, LiveNodePacket.AccountId must be a string
+            return new InteractiveBrokersBrokerage(job.AccountId.ToString());
         }
     }
 }

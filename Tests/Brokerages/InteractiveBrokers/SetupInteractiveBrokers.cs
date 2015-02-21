@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,29 +13,26 @@
  * limitations under the License.
 */
 
+using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Brokerages.InteractiveBrokers;
-using QuantConnect.Interfaces;
-using QuantConnect.Packets;
-using QuantConnect.Util;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
-    [TestFixture]
-    [Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
-    public class InteractiveBrokersBrokerageFactoryTests
+    [SetUpFixture]
+    public class SetupInteractiveBrokers
     {
-        [Test]
-        public void InitializesInstanceFromComposer()
+        [SetUp]
+        public void InitializeGateway()
         {
-            var composer = Composer.Instance;
-            var factory = composer.Single<IBrokerageFactory>(instance => instance.BrokerageType == typeof(InteractiveBrokersBrokerage));
-            Assert.IsNotNull(factory);
+            InteractiveBrokersGatewayRunner.Start(Config.Get("ib-account"));
+        }
 
-            var job = new LiveNodePacket { Brokerage = "Interactive Brokers"};
-            var brokerage = factory.CreateBrokerage(job, null); // IB factory doesn't use IAlgorithm instance
-            Assert.IsNotNull(brokerage);
-            Assert.IsInstanceOf<InteractiveBrokersBrokerage>(brokerage);
+        [TearDown]
+        public void KillGateway()
+        {
+            InteractiveBrokersGatewayRunner.Stop();
         }
     }
 }

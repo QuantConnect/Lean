@@ -669,6 +669,10 @@ namespace QuantConnect.Lean.Engine
                     sh = new PaperTradingSetupHandler();
                     Log.Trace("Engine.GetSetupHandler(): Selected PaperTrading Algorithm Setup Handler.");
                     break;
+                case SetupHandlerEndpoint.Brokerage:
+                    sh = new BrokerageSetupHandler();
+                    Log.Trace("Engine.GetSetupHandler(): Selected PaperTrading Algorithm Setup Handler.");
+                    break;
             }
             return sh;
         }

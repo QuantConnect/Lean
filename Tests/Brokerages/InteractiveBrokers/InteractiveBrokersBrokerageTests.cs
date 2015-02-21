@@ -18,7 +18,6 @@ using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Brokerages.InteractiveBrokers;
-using QuantConnect.Configuration;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
@@ -27,24 +26,49 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
     [Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
     public class InteractiveBrokersBrokerageTests
     {
+        private InteractiveBrokersBrokerage _interactiveBrokersBrokerage;
+        private const string Symbol = "USDJPY";
+        private const SecurityType Type = SecurityType.Forex;
+
         [SetUp]
-        public void InitializeGateway()
+        public void InitializeBrokerage()
         {
-            InteractiveBrokersGatewayRunner.Start(Config.Get("ib-account"));
+            // grabs account info from configuration
+            _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage();
+            _interactiveBrokersBrokerage.Connect();
         }
 
         [TearDown]
-        public void KillGateway()
+        public void CancelOpenOrders()
         {
-            InteractiveBrokersGatewayRunner.Stop();
-            Thread.Sleep(250);
+            var manualResetEvent = new ManualResetEvent(false);
+            _interactiveBrokersBrokerage.OrderEvent += (sender, orderEvent) =>
+            {
+                if (orderEvent.Status == OrderStatus.Canceled)
+                {
+                    manualResetEvent.Set();
+                }
+            };
+
+            var orders = _interactiveBrokersBrokerage.GetOpenOrders();
+            foreach (var order in orders)
+            {
+                _interactiveBrokersBrokerage.CancelOrder(order);
+                manualResetEvent.WaitOne();
+                manualResetEvent.Reset();
+            }
+
+            Assert.AreEqual(0, _interactiveBrokersBrokerage.GetOpenOrders().Count);
+
+            _interactiveBrokersBrokerage.Dispose();
+            _interactiveBrokersBrokerage = null;
         }
 
         [Test]
         public void ClientConnects()
         {
-            var ib = new InteractiveBrokersBrokerage();
-            ib.Connect();
+            var ib = _interactiveBrokersBrokerage;
+            Assert.IsTrue(ib.IsConnected);
         }
 
         [Test]
@@ -52,20 +76,19 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             bool orderFilled = false;
             var manualResetEvent = new ManualResetEvent(false);
-            var ib = new InteractiveBrokersBrokerage();
-            ib.Connect();
+            var ib = _interactiveBrokersBrokerage;
 
-            ib.Client.RequestOpenOrders();
-
-            ib.OrderEvent += (sender, args) =>
+            ib.OrderEvent += (sender, orderEvent) =>
             {
-                orderFilled = true;
-                manualResetEvent.Set();
+                if (orderEvent.Status == OrderStatus.Filled)
+                {
+                    orderFilled = true;
+                    manualResetEvent.Set();
+                }
             };
             
             const int buyQuantity = 1;
-            //ib.PlaceOrder(new Order("AAPL", SecurityType.Equity, buyQuantity, OrderType.Market, DateTime.Now));
-            var order = new Order("AAPL", SecurityType.Equity, buyQuantity, OrderType.Market, DateTime.Now);
+            var order = new Order(Symbol, Type, buyQuantity, OrderType.Market, DateTime.Now);
             ib.PlaceOrder(order);
 
             manualResetEvent.WaitOne(2500);
@@ -79,17 +102,19 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             bool orderFilled = false;
             var manualResetEvent = new ManualResetEvent(false);
 
-            var ib = new InteractiveBrokersBrokerage();
-            ib.Connect();
+            var ib = _interactiveBrokersBrokerage;
 
-            ib.OrderEvent += (sender, args) =>
+            ib.OrderEvent += (sender, orderEvent) =>
             {
-                orderFilled = true;
-                manualResetEvent.Set();
+                if (orderEvent.Status == OrderStatus.Filled)
+                {
+                    orderFilled = true;
+                    manualResetEvent.Set();
+                }
             };
 
             // sell a single share
-            var order = new Order("AAPL", SecurityType.Equity, -1, OrderType.Market, DateTime.UtcNow);
+            var order = new Order(Symbol, Type, -1, OrderType.Market, DateTime.UtcNow);
             ib.PlaceOrder(order);
 
             manualResetEvent.WaitOne(2500);
@@ -103,22 +128,24 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             bool orderFilled = false;
             var manualResetEvent = new ManualResetEvent(false);
-            var ib = new InteractiveBrokersBrokerage();
-            ib.Connect();
+            var ib = _interactiveBrokersBrokerage;
 
             decimal aapl = 100m;
             decimal delta = 85.0m; // if we can't get a price then make the delta huge
-            ib.OrderEvent += (sender, args) =>
+            ib.OrderEvent += (sender, orderEvent) =>
             {
-                orderFilled = true;
-                aapl = args.FillPrice;
+                if (orderEvent.Status == OrderStatus.Filled)
+                {
+                    orderFilled = true;
+                    manualResetEvent.Set();
+                }
+                aapl = orderEvent.FillPrice;
                 delta = 0.02m;
-                manualResetEvent.Set();
             };
 
             // get the current market price, couldn't get RequestMarketData to fire tick events
             int id = 0;
-            ib.PlaceOrder(new Order("AAPL", SecurityType.Equity, 1, OrderType.Market, DateTime.UtcNow) { Id = ++id });
+            ib.PlaceOrder(new Order(Symbol, Type, 1, OrderType.Market, DateTime.UtcNow) { Id = ++id });
 
             manualResetEvent.WaitOne(2000);
             manualResetEvent.Reset();
@@ -126,10 +153,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             // make a box around the current price +- a little
 
             const int quantity = 1;
-            var order = new Order("AAPL", SecurityType.Equity, +quantity, OrderType.Limit, DateTime.Now, aapl - delta) {Id = ++id};
+            var order = new Order(Symbol, Type, +quantity, OrderType.Limit, DateTime.Now, aapl - delta) { Id = ++id };
             ib.PlaceOrder(order);
 
-            ib.PlaceOrder(new Order("AAPL", SecurityType.Equity, -quantity, OrderType.Limit, DateTime.Now, aapl + delta) {Id = ++id});
+            ib.PlaceOrder(new Order(Symbol, Type, -quantity, OrderType.Limit, DateTime.Now, aapl + delta) { Id = ++id });
 
             manualResetEvent.WaitOne(1000);
 
@@ -142,22 +169,21 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             bool orderFilled = false;
             var manualResetEvent = new ManualResetEvent(false);
-            var ib = new InteractiveBrokersBrokerage();
-            ib.Connect();
+            var ib = _interactiveBrokersBrokerage;
 
-            decimal aapl = 100m;
+            decimal fillPrice = 100m;
             decimal delta = 85.0m; // if we can't get a price then make the delta huge
             ib.OrderEvent += (sender, args) =>
             {
                 orderFilled = true;
-                aapl = args.FillPrice;
+                fillPrice = args.FillPrice;
                 delta = 0.02m;
                 manualResetEvent.Set();
             };
 
             // get the current market price, couldn't get RequestMarketData to fire tick events
             int id = 0;
-            ib.PlaceOrder(new Order("AAPL", SecurityType.Equity, 1, OrderType.Market, DateTime.UtcNow) { Id = ++id });
+            ib.PlaceOrder(new Order(Symbol, Type, 1, OrderType.Market, DateTime.UtcNow) { Id = ++id });
 
             manualResetEvent.WaitOne(2000);
             manualResetEvent.Reset();
@@ -168,10 +194,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             // make a box around the current price +- a little
 
             const int quantity = 1;
-            var order = new Order("AAPL", SecurityType.Equity, +quantity, OrderType.StopMarket, DateTime.Now, aapl - delta) {Id = ++id};
+            var order = new Order(Symbol, Type, +quantity, OrderType.StopMarket, DateTime.Now, fillPrice - delta) { Id = ++id };
             ib.PlaceOrder(order);
 
-            ib.PlaceOrder(new Order("AAPL", SecurityType.Equity, -quantity, OrderType.StopMarket, DateTime.Now, aapl + delta) { Id = ++id });
+            ib.PlaceOrder(new Order(Symbol, Type, -quantity, OrderType.StopMarket, DateTime.Now, fillPrice + delta) { Id = ++id });
 
             manualResetEvent.WaitOne(1000);
 
@@ -185,17 +211,16 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             OrderStatus status = OrderStatus.New;
             var manualResetEvent = new ManualResetEvent(false);
 
-            var ib = new InteractiveBrokersBrokerage();
-            ib.Connect();
+            var ib = _interactiveBrokersBrokerage;
 
-            ib.OrderEvent += (sender, args) =>
+            ib.OrderEvent += (sender, orderEvent) =>
             {
-                status = args.Status;
+                status = orderEvent.Status;
                 manualResetEvent.Set();
             };
 
             // try to sell a single share at a ridiculous price, we'll cancel this later
-            var order = new Order("AAPL", SecurityType.Equity, -1, OrderType.Limit, DateTime.UtcNow, 100000);
+            var order = new Order(Symbol, Type, -1, OrderType.Limit, DateTime.UtcNow, 100000);
             ib.PlaceOrder(order);
             manualResetEvent.WaitOne(2500);
 
@@ -210,21 +235,28 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [Test]
         public void GetsAccountHoldings()
         {
-            var ib = new InteractiveBrokersBrokerage();
-            ib.Connect();
+            // when running all the tests in this class there seems to be some left overs sometime,
+            // so wait a full second for the dust to settle before starting this guy
+            Thread.Sleep(1000);
 
-            var symbol = "USDJPY";
+            var ib = _interactiveBrokersBrokerage;
+            
+            ib.Client.UpdatePortfolio += (sender, args) =>
+            {
+                Console.WriteLine("Symbol: " + args.Contract.LocalSymbol + " Quantity: " + args.Position);
+            };
+
             var currentHoldings = ib.GetAccountHoldings().ToDictionary(x => x.Symbol);
 
-            Console.WriteLine("Quantity: " + currentHoldings[symbol].Quantity);
+            Console.WriteLine("Quantity: " + currentHoldings[Symbol].Quantity);
 
-            bool hasAapl = currentHoldings.ContainsKey(symbol);
+            bool hasSymbol = currentHoldings.ContainsKey(Symbol);
 
             // wait for order to complete before request account holdings
             var manualResetEvent = new ManualResetEvent(false);
-            ib.OrderEvent += (sender, args) =>
+            ib.OrderEvent += (sender, orderEvent) =>
             {
-                if (args.Status == OrderStatus.Filled)
+                if (orderEvent.Status == OrderStatus.Filled)
                 {
                     manualResetEvent.Set();
                 }
@@ -232,31 +264,84 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             // buy some currency
             const int quantity = 25000;
-            var order = new Order(symbol, SecurityType.Forex, -quantity, OrderType.Market, DateTime.UtcNow);
+            var order = new Order(Symbol, Type, -quantity, OrderType.Market, DateTime.UtcNow);
             ib.PlaceOrder(order);
 
             // wait for the order to go through
             manualResetEvent.WaitOne();
 
-            // pause for a moment for updates to come through
-            Thread.Sleep(1500);
+            // wait a little longer for the account update to be sent
+            Thread.Sleep(250);
 
             var newHoldings = ib.GetAccountHoldings().ToDictionary(x => x.Symbol);
-            Console.WriteLine("New Quantity: " + newHoldings[symbol].Quantity);
+            Console.WriteLine("New Quantity: " + newHoldings[Symbol].Quantity);
 
-            if (hasAapl)
+
+            if (hasSymbol)
             {
-                Assert.AreEqual(currentHoldings[symbol].Quantity, newHoldings[symbol].Quantity + quantity);
+                Assert.AreEqual(currentHoldings[Symbol].Quantity, newHoldings[Symbol].Quantity + quantity);
             }
             else
             {
-                Assert.IsTrue(newHoldings.ContainsKey(symbol));
-                Assert.AreEqual(newHoldings[symbol].Quantity, quantity);
+                Assert.IsTrue(newHoldings.ContainsKey(Symbol));
+                Assert.AreEqual(newHoldings[Symbol].Quantity, quantity);
             }
-
         }
 
-        private static Order AssertOrderOpened(bool orderFilled, QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage ib, Order order)
+        [Test]
+        public void GetsCashBalanceAfterConnect()
+        {
+            var ib = _interactiveBrokersBrokerage;
+            var cashBalance = ib.GetCashBalance();
+            Assert.AreNotEqual(0m, cashBalance);
+            
+            var manualResetEvent = new ManualResetEvent(false);
+            ib.OrderEvent += (sender, orderEvent) =>
+            {
+                if (orderEvent.Status == OrderStatus.Filled)
+                {
+                    manualResetEvent.Set();
+                }
+            };
+            ib.PlaceOrder(new Order(Symbol, Type, 25000, OrderType.Market, new DateTime()));
+            manualResetEvent.WaitOne();
+            Thread.Sleep(50);
+
+            Assert.AreNotEqual(cashBalance, ib.GetCashBalance());
+        }
+
+        [Test]
+        public void GetsCashBalanceAfterTrade()
+        {
+            var ib = _interactiveBrokersBrokerage;
+            
+
+            decimal balance = ib.GetCashBalance();
+
+            // wait for our order to fill
+            var manualResetEvent = new ManualResetEvent(false);
+            ib.OrderEvent += (sender, orderEvent) =>
+            {
+                if (orderEvent.Status == OrderStatus.Filled)
+                {
+                    manualResetEvent.Set();
+                }
+            };
+
+            var order = new Order(Symbol, Type, 1, OrderType.Market, DateTime.Now);
+            ib.PlaceOrder(order);
+
+            manualResetEvent.WaitOne();
+
+            decimal balanceAfterTrade = ib.GetCashBalance();
+
+            Console.WriteLine("Pre  trade balance: " + balance);
+            Console.WriteLine("Post trade balance: " + balanceAfterTrade);
+
+            Assert.AreNotEqual(balance, balanceAfterTrade);
+        }
+
+        private static Order AssertOrderOpened(bool orderFilled, InteractiveBrokersBrokerage ib, Order order)
         {
             // if the order didn't fill check for it as an open order
             if (!orderFilled)
