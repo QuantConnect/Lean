@@ -279,7 +279,7 @@ namespace QuantConnect.Data.Market
                     }
 
                     source = @"../../../Data/" + config.Security.ToString().ToLower();
-                    source += @"/" + config.Resolution.ToString().ToLower() + @"/" + config.Symbol.ToLower() + @"/";
+                    source += @"/" + config.Resolution.ToString().ToLower() + @"/" + config.MappedSymbol.ToLower() + @"/";
                     source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
                     break;
 

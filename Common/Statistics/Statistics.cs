@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -56,6 +57,7 @@ namespace QuantConnect.Statistics
                     var url = "http://real-chart.finance.yahoo.com/table.csv?s=SPY&a=11&b=31&c=1997&d=" + (DateTime.Now.Month - 1) + "&e=" + DateTime.Now.Day + "&f=" + DateTime.Now.Year + "&g=d&ignore=.csv";
                     using (var net = new WebClient())
                     {
+                        net.Proxy = WebRequest.GetSystemWebProxy();
                         var data = net.DownloadString(url);
                         var first = true;
                         using (var sr = new StreamReader(data.ToStream()))
@@ -66,7 +68,7 @@ namespace QuantConnect.Statistics
                                 if (first) { first = false; continue; }
                                 if (line == null) continue;
                                 var csv = line.Split(',');
-                                _benchmark.Add(DateTime.Parse(csv[0]), Convert.ToDecimal(csv[6]));
+                                _benchmark.Add(DateTime.Parse(csv[0]), Convert.ToDecimal(csv[6], CultureInfo.InvariantCulture));
                             }
                         }
                     }

@@ -237,12 +237,13 @@ namespace QuantConnect.Lean.Engine
                         //-> Pull job from QuantConnect job queue, or, pull local build:
                         job = Queue.NextJob(out algorithmPath); // Blocking.
 
-                        if (!IsLocal && (job.Version < Version || job.Redelivered))
+                        if (!IsLocal && (job.Version < Version || (job.Version == Version && job.Redelivered)))
                         {
                             //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
                             //In this event kill the old algorithm and leave a message so the user can later review.
                             Queue.AcknowledgeJob(job);
                             Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, _collapseMessage);
+                            Notify.SetChannel(job.Channel);
                             Notify.RuntimeError(job.AlgorithmId, _collapseMessage);
                             job = null;
                         }
@@ -469,60 +470,6 @@ namespace QuantConnect.Lean.Engine
         }
 
 
-        /// <summary>
-        /// Algorithm status monitor reads the central command directive for this algorithm/backtest. When it detects
-        /// the backtest has been deleted or cancelled the backtest is aborted.
-        /// </summary>
-        public static class StateCheck
-        {
-            /// DB Ping Class
-            public static class Ping
-            {
-                // set to true to break while loop in Run()
-                private static bool _exitTriggered;
-
-                /// DB Ping Run Method:
-                public static void Run()
-                {
-                    //Don't run at all if local.
-                    if (_local) return;
-
-                    while (!_exitTriggered)
-                    {
-                        if (AlgorithmManager.AlgorithmId != "" && AlgorithmManager.QuitState == false)
-                        {
-                            try
-                            {
-                                //Get the state from the central server:
-                                var state = Api.GetAlgorithmStatus(AlgorithmManager.AlgorithmId);
-                                AlgorithmManager.SetStatus(state.Status);
-                                //Set which chart the user is look at, so we can reduce excess messaging (e.g. trading 100 symbols, only send 1).
-                                ResultHandler.SetChartSubscription(state.ChartSubscription);
-                                Log.Debug("StateCheck.Ping.Run(): Algorithm Status: " + state.Status + " Subscription: " + state.ChartSubscription);
-                            }
-                            catch
-                            {
-                                Log.Debug("StateCheck.Run(): Error in state check.");
-                            }
-                        }
-                        else
-                        {
-                            Log.Debug("StateCheck.Ping.Run(): Opted to not ping: " + AlgorithmManager.AlgorithmId + " " + AlgorithmManager.QuitState);
-                        }
-                        Thread.Sleep(1000);
-                    }
-                }
-
-                /// <summary>
-                /// Send an exit signal to the thread
-                /// </summary>
-                public static void Exit()
-                {
-                    _exitTriggered = true;
-                }
-            }
-        }
-
 
         /// <summary>
         /// Get an instance of the data feed handler we're requesting for this work.
@@ -580,7 +527,7 @@ namespace QuantConnect.Lean.Engine
                 // Fire events based on real system clock time.
                 case RealTimeEndpoint.LiveTrading:
                     Log.Trace("Engine.GetRealTimeHandler(): Selected LiveTrading RealTimeEvent Handler");
-                    rth = new LiveTradingRealTimeHandler(algorithm, feed, results, brokerage, job);
+                    rth = new LiveTradingRealTimeHandler(algorithm, feed, results);
                     break;
             }
             return rth;

@@ -19,6 +19,7 @@
 **********************************************************/
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using QuantConnect.Logging;
@@ -104,7 +105,7 @@ namespace QuantConnect.Lean.Engine
                     if (line == null) continue;
 
                     var csv = line.Split(',');
-                    factorTable.Add(Time.ParseDate(csv[0]), Convert.ToDecimal(csv[1]) * Convert.ToDecimal(csv[2]));
+                    factorTable.Add(Time.ParseDate(csv[0]), Convert.ToDecimal(csv[1], CultureInfo.InvariantCulture) * Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture));
                 }
             }
             return factorTable;

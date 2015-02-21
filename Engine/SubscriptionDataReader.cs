@@ -547,6 +547,7 @@ namespace QuantConnect.Lean.Engine
                         {
                             using (var client = new WebClient())
                             {
+                                client.Proxy = WebRequest.GetSystemWebProxy();
                                 client.DownloadFile(source, location);
 
                                 // reassign source since it's now on local disk
@@ -608,6 +609,7 @@ namespace QuantConnect.Lean.Engine
 
             //Reopen the source with the new URL.
             _web = new WebClient();
+            _web.Proxy = WebRequest.GetSystemWebProxy();
             using (var stream = _web.OpenRead(source)) 
             {
                 //If its a zip, unzip it:

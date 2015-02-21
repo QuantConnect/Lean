@@ -176,8 +176,8 @@ namespace QuantConnect.Data.Market
             Time = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm:ss.ffff", CultureInfo.InvariantCulture);
             Value = BidPrice + (AskPrice - BidPrice) / 2;
             TickType = TickType.Quote;
-            BidPrice = Convert.ToDecimal(csv[1]);
-            AskPrice = Convert.ToDecimal(csv[2]);
+            BidPrice = Convert.ToDecimal(csv[1], CultureInfo.InvariantCulture);
+            AskPrice = Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture);
         }
 
 
@@ -286,7 +286,7 @@ namespace QuantConnect.Data.Market
                     }
 
                     source = @"../../../Data/" + config.Security.ToString().ToLower();
-                    source += @"/" + config.Resolution.ToString().ToLower() + @"/" + config.Symbol.ToLower() + @"/";
+                    source += @"/" + config.Resolution.ToString().ToLower() + @"/" + config.MappedSymbol.ToLower() + @"/";
                     source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
                     break;
 
