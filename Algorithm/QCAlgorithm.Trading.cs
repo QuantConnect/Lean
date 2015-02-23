@@ -457,6 +457,46 @@ namespace QuantConnect.Algorithm
             }
         }
 
+        /// <summary>
+        /// Obsolete implementation of Order method accepting a OrderType. This was deprecated since it 
+        /// was impossible to generate other orders via this method. Any calls to this method will always default to a Market Order.
+        /// </summary>
+        /// <param name="symbol">Symbol we want to purchase</param>
+        /// <param name="quantity">Quantity to buy, + is long, - short.</param>
+        /// <param name="type">Order Type</param>
+        /// <param name="asynchronous">Don't wait for the response, just submit order and move on.</param>
+        /// <param name="tag">Custom data for this order</param>
+        /// <returns>Integer Order ID.</returns>
+        [Obsolete("This Order method has been made obsolete, use Order(string, int, bool, string) method instead. Calls to the obsolete method will only generate market orders.")]
+        public int Order(string symbol, int quantity, OrderType type, bool asynchronous = false, string tag = "")
+        {
+            return Order(symbol, quantity, asynchronous, tag);
+        }
+
+        /// <summary>
+        /// Obsolete method for placing orders. 
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <param name="quantity"></param>
+        /// <param name="type"></param>
+        [Obsolete("This Order method has been made obsolete, use the specialized Order helper methods instead. Calls to the obsolete method will only generate market orders.")]
+        public int Order(string symbol, decimal quantity, OrderType type)
+        {
+            return Order(symbol, (int)quantity);
+        }
+
+        /// <summary>
+        /// Obsolete method for placing orders.
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <param name="quantity"></param>
+        /// <param name="type"></param>
+        [Obsolete("This Order method has been made obsolete, use the specialized Order helper methods instead. Calls to the obsolete method will only generate market orders.")]
+        public int Order(string symbol, int quantity, OrderType type)
+        {
+            return Order(symbol, quantity);
+        }
+
     } // End Partial Algorithm Template - Trading..
 
 } // End QC Namespace
