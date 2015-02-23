@@ -62,37 +62,178 @@ namespace QuantConnect.Securities.Equity
         * CLASS METHODS
         *********************************************************/
         /// <summary>
-        /// Process a order fill with the supplied security and order.
+        /// Default equity transaction model for a market fill on this order
         /// </summary>
-        /// <param name="vehicle">Asset we're working with</param>
-        /// <param name="order">Order class to check if filled.</param>
+        /// <param name="asset">Asset we're working with</param>
+        /// <param name="order">Order to update</param>
         /// <returns>OrderEvent packet with the full or partial fill information</returns>
-        public virtual OrderEvent Fill(Security vehicle, Order order)
+        public OrderEvent MarketFill(Security asset, MarketOrder order)
         {
             var fill = new OrderEvent(order);
-
-            try 
+            try
             {
-                //Based on the order type, select the fill model method.
-                switch (order.Type) 
+                //Calculate the model slippage: e.g. 0.01c
+                var slip = GetSlippageApproximation(asset, order);
+
+                switch (order.Direction)
                 {
-                    case OrderType.Limit:
-                        fill = LimitFill(vehicle, order);
+                    case OrderDirection.Buy:
+                        order.Price = asset.Price;
+                        order.Price += slip;
                         break;
-                    case OrderType.StopMarket:
-                        fill = StopFill(vehicle, order);
-                        break;
-                    case OrderType.Market:
-                        fill = MarketFill(vehicle, order);
+                    case OrderDirection.Sell:
+                        order.Price = asset.Price;
+                        order.Price -= slip;
                         break;
                 }
-            } 
-            catch (Exception err) 
+
+                //Market orders fill instantly.
+                order.Status = OrderStatus.Filled;
+                order.Price = Math.Round(order.Price, 3);
+
+                //Fill Order:
+                fill.Status = order.Status;
+                fill.FillQuantity = order.Quantity;
+                fill.FillPrice = order.Price;
+            }
+            catch (Exception err)
             {
-                Log.Error("Equity.EquityTransactionModel.Fill(): " + err.Message);
+                Log.Error("EquityTransactionModel.MarketFill(): " + err.Message);
             }
             return fill;
         }
+
+
+        /// <summary>
+        /// Check if the model has stopped out our position yet:
+        /// </summary>
+        /// <param name="asset">Asset we're working with</param>
+        /// <param name="order">Stop Order to Check, return filled if true</param>
+        /// <returns>OrderEvent packet with the full or partial fill information</returns>
+        public OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
+        {
+            var fill = new OrderEvent(order);
+            try
+            {
+                //If its cancelled don't need anymore checks:
+                if (order.Status == OrderStatus.Canceled) return fill;
+
+                //Calculate the model slippage: e.g. 0.01c
+                var slip = GetSlippageApproximation(asset, order);
+
+                //Check if the Stop Order was filled: opposite to a limit order
+                switch (order.Direction)
+                {
+                    case OrderDirection.Sell:
+                        //-> 1.1 Sell Stop: If Price below setpoint, Sell:
+                        if (asset.Price < order.StopPrice)
+                        {
+                            order.Status = OrderStatus.Filled;
+                            order.Price = Math.Round(asset.Price, 3);
+                            order.Price -= slip;
+                        }
+                        break;
+                    case OrderDirection.Buy:
+                        //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
+                        if (asset.Price > order.StopPrice)
+                        {
+                            order.Status = OrderStatus.Filled;
+                            order.Price = Math.Round(asset.Price, 3);
+                            order.Price += slip;
+                        }
+                        break;
+                }
+
+                if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled)
+                {
+                    fill.FillQuantity = order.Quantity;
+                    fill.FillPrice = order.Price;
+                    fill.Status = order.Status;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error("EquityTransactionModel.StopMarketFill(): " + err.Message);
+            }
+            return fill;
+        }
+
+
+        /// <summary>
+        /// Check if the price MarketDataed to our limit price yet:
+        /// </summary>
+        /// <param name="asset">Asset we're working with</param>
+        /// <param name="order">Limit order in market</param>
+        /// <returns>OrderEvent packet with the full or partial fill information</returns>
+        public OrderEvent LimitFill(Security asset, LimitOrder order)
+        {
+            //Initialise;
+            var fill = new OrderEvent(order);
+
+            try
+            {
+                //If its cancelled don't need anymore checks:
+                if (fill.Status == OrderStatus.Canceled) return fill;
+
+                //Calculate the model slippage: e.g. 0.01c
+                var slip = GetSlippageApproximation(asset, order);
+
+                //Depending on the resolution, return different data types:
+                var marketData = asset.GetLastData();
+
+                decimal marketDataMinPrice;
+                decimal marketDataMaxPrice;
+                if (marketData.DataType == MarketDataType.TradeBar)
+                {
+                    marketDataMinPrice = ((TradeBar)marketData).Low;
+                    marketDataMaxPrice = ((TradeBar)marketData).High;
+                }
+                else
+                {
+                    marketDataMinPrice = marketData.Value;
+                    marketDataMaxPrice = marketData.Value;
+                }
+
+                //-> Valid Live/Model Order: 
+                switch (order.Direction)
+                {
+                    case OrderDirection.Buy:
+                        //Buy limit seeks lowest price
+                        if (marketDataMinPrice < order.LimitPrice)
+                        {
+                            order.Status = OrderStatus.Filled;
+                            order.Price = Math.Round(asset.Price, 3);
+                            order.Price += slip;
+                        }
+                        break;
+                    case OrderDirection.Sell:
+                        //Sell limit seeks highest price possible
+                        if (marketDataMaxPrice > order.LimitPrice)
+                        {
+                            order.Status = OrderStatus.Filled;
+                            order.Price = Math.Round(asset.Price, 3);
+                            order.Price -= slip;
+                        }
+                        break;
+                }
+
+                //Set fill:
+                if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled)
+                {
+                    //Assuming 100% fill in models:
+                    fill.FillQuantity = order.Quantity;
+                    fill.FillPrice = order.Price;
+                    fill.Status = order.Status;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error("EquityTransactionModel.LimitFill(): " + err.Message);
+            }
+            return fill;
+        }
+
+        
 
 
         /// <summary>
@@ -108,199 +249,23 @@ namespace QuantConnect.Securities.Equity
 
 
         /// <summary>
-        /// Default equity transaction model for a market fill on this order
-        /// </summary>
-        /// <param name="security">Asset we're working with</param>
-        /// <param name="order">Order to update</param>
-        /// <returns>OrderEvent packet with the full or partial fill information</returns>
-        public virtual OrderEvent MarketFill(Security security, Order order)
-        {
-            var fill = new OrderEvent(order);
-            try 
-            {
-                //Calculate the model slippage: e.g. 0.01c
-                var slip = GetSlippageApproximation(security, order);
-
-                switch (order.Direction)
-                {
-                    case OrderDirection.Buy:
-                        order.Price = security.Price;
-                        order.Price += slip;
-                        break;
-                    case OrderDirection.Sell:
-                        order.Price = security.Price;
-                        order.Price -= slip;
-                        break;
-                }
-
-                //Market orders fill instantly.
-                order.Status = OrderStatus.Filled;
-                order.Price = Math.Round(order.Price, 3);
-
-                //Fill Order:
-                fill.Status = order.Status;
-                fill.FillQuantity = order.Quantity;
-                fill.FillPrice = order.Price;
-            } 
-            catch (Exception err) 
-            {
-                Log.Error("Equity.EquityTransactionModel.MarketFill(): " + err.Message);
-            }
-            return fill;
-        }
-
-
-
-
-        /// <summary>
-        /// Check if the model has stopped out our position yet:
-        /// </summary>
-        /// <param name="security">Asset we're working with</param>
-        /// <param name="order">Stop Order to Check, return filled if true</param>
-        /// <returns>OrderEvent packet with the full or partial fill information</returns>
-        public virtual OrderEvent StopFill(Security security, Order order)
-        {
-            var fill = new OrderEvent(order);
-            try 
-            {
-                //If its cancelled don't need anymore checks:
-                if (order.Status == OrderStatus.Canceled) return fill;
-
-                //Calculate the model slippage: e.g. 0.01c
-                var slip = GetSlippageApproximation(security, order);
-
-                //Check if the Stop Order was filled: opposite to a limit order
-                switch (order.Direction)
-                {
-                    case OrderDirection.Sell:
-                        //-> 1.1 Sell Stop: If Price below setpoint, Sell:
-                        if (security.Price < order.Price) 
-                        {
-                            order.Status = OrderStatus.Filled;
-                            order.Price = Math.Round(security.Price, 3);
-                            order.Price -= slip;
-                        }
-                        break;
-                    case OrderDirection.Buy:
-                        //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
-                        if (security.Price > order.Price) 
-                        {
-                            order.Status = OrderStatus.Filled;
-                            order.Price = Math.Round(security.Price, 3);
-                            order.Price += slip;
-                        }
-                        break;
-                }
-
-                if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled)
-                {
-                    fill.FillQuantity = order.Quantity;
-                    fill.FillPrice = order.Price;
-                    fill.Status = order.Status;
-                }
-            } 
-            catch (Exception err) 
-            {
-                Log.Error("Equity.EquityTransactionModel.StopFill(): " + err.Message);
-            }
-            return fill;
-        }
-
-
-
-        /// <summary>
-        /// Check if the price MarketDataed to our limit price yet:
-        /// </summary>
-        /// <param name="security">Asset we're working with</param>
-        /// <param name="order">Limit order in market</param>
-        /// <returns>OrderEvent packet with the full or partial fill information</returns>
-        public virtual OrderEvent LimitFill(Security security, Order order)
-        {
-            //Initialise;
-            var fill = new OrderEvent(order);
-
-            try {
-                //If its cancelled don't need anymore checks:
-                if (fill.Status == OrderStatus.Canceled) return fill;
-
-                //Calculate the model slippage: e.g. 0.01c
-                var slip = GetSlippageApproximation(security, order);
-
-                //Depending on the resolution, return different data types:
-                var marketData = security.GetLastData();
-
-                decimal marketDataMinPrice = 0;
-                decimal marketDataMaxPrice = 0;
-                if (marketData.DataType == MarketDataType.TradeBar)
-                {
-                    marketDataMinPrice = ((TradeBar)marketData).Low;
-                    marketDataMaxPrice = ((TradeBar)marketData).High;
-                } 
-                else 
-                {
-                    marketDataMinPrice = marketData.Value;
-                    marketDataMaxPrice = marketData.Value;
-                }
-
-                //-> Valid Live/Model Order: 
-                switch (order.Direction)
-                {
-                    case OrderDirection.Buy:
-                        //Buy limit seeks lowest price
-                        if (marketDataMinPrice < order.Price) 
-                        {
-                            order.Status = OrderStatus.Filled;
-                            order.Price = Math.Round(security.Price, 3);
-                            order.Price += slip;
-                        }
-                        break;
-                    case OrderDirection.Sell:
-                        //Sell limit seeks highest price possible
-                        if (marketDataMaxPrice > order.Price) 
-                        {
-                            order.Status = OrderStatus.Filled;
-                            order.Price = Math.Round(security.Price, 3);
-                            order.Price -= slip;
-                        }
-                        break;
-                }
-
-                //Set fill:
-                if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled)
-                {
-                    //Assuming 100% fill in models:
-                    fill.FillQuantity = order.Quantity;
-                    fill.FillPrice = order.Price;
-                    fill.Status = order.Status;
-                }
-            } 
-            catch (Exception err) 
-            {
-                Log.Error("Equity.EquityTransactionModel.LimitFill(): " + err.Message);
-            }
-            return fill;
-        }
-
-
-
-        /// <summary>
         /// Get the fees from one order
         /// </summary>
         /// <param name="quantity">Quantity of shares processed</param>
         /// <param name="price">Price of the orders filled</param>
         /// <remarks>Default implementation uses the Interactive Brokers fee model of 1c per share with a maximum of 0.5% per order.</remarks>
         /// <returns>Decimal value of the order fee given this quantity and order price</returns>
-        public virtual decimal GetOrderFee(decimal quantity, decimal price) 
+        public virtual decimal GetOrderFee(decimal quantity, decimal price)
         {
-            decimal tradeFee = 0;
+            decimal tradeFee;
             quantity = Math.Abs(quantity);
             var tradeValue = (price * quantity);
 
             //Per share fees
-            if (quantity < 500) 
+            if (quantity < 500)
             {
                 tradeFee = quantity * 0.013m;
-            } 
+            }
             else
             {
                 tradeFee = quantity * 0.008m;
@@ -308,11 +273,11 @@ namespace QuantConnect.Securities.Equity
 
             //Maximum Per Order: 0.5%
             //Minimum per order. $1.0
-            if (tradeFee < 1) 
+            if (tradeFee < 1)
             {
                 tradeFee = 1;
-            } 
-            else if (tradeFee > (0.005m * tradeValue)) 
+            }
+            else if (tradeFee > (0.005m * tradeValue))
             {
                 tradeFee = 0.005m * tradeValue;
             }
@@ -321,6 +286,55 @@ namespace QuantConnect.Securities.Equity
             return Math.Abs(tradeFee);
         }
 
+        /// <summary>
+        /// Process a order fill with the supplied security and order.
+        /// </summary>
+        /// <param name="vehicle">Asset we're working with</param>
+        /// <param name="order">Order class to check if filled.</param>
+        /// <returns>OrderEvent packet with the full or partial fill information</returns>
+        [Obsolete("Fill(Security, Order) method has been made obsolete, use fill methods directly instead (e.g. MarketFill(security, marketOrder)).")]
+        public virtual OrderEvent Fill(Security vehicle, Order order)
+        {
+            return new OrderEvent(order);
+        }
+
+        /// <summary>
+        /// Default equity transaction model for a market fill on this order
+        /// </summary>
+        /// <param name="security">Asset we're working with</param>
+        /// <param name="order">Order to update</param>
+        /// <returns>OrderEvent packet with the full or partial fill information</returns>
+        [Obsolete("MarketFill(Security, Order) method has been made obsolete, use MarketFill(Security, MarketOrder) method instead.")]
+        public virtual OrderEvent MarketFill(Security security, Order order)
+        {
+            return MarketFill(security, order as MarketOrder);
+        }
+
+
+        /// <summary>
+        /// Check if the model has stopped out our position yet:
+        /// </summary>
+        /// <param name="security">Asset we're working with</param>
+        /// <param name="order">Stop Order to Check, return filled if true</param>
+        /// <returns>OrderEvent packet with the full or partial fill information</returns>
+        [Obsolete("StopFill(Security, Order) method has been made obsolete, use StopMarketFill(Security, StopMarketOrder) method instead.")]
+        public virtual OrderEvent StopFill(Security security, Order order)
+        {
+            return StopMarketFill(security, order as StopMarketOrder);
+        }
+
+
+        /// <summary>
+        /// Check if the price MarketDataed to our limit price yet:
+        /// </summary>
+        /// <param name="security">Asset we're working with</param>
+        /// <param name="order">Limit order in market</param>
+        /// <returns>OrderEvent packet with the full or partial fill information</returns>
+        [Obsolete("LimitFill(Security, Order) method has been made obsolete, use LimitFill(Security, LimitOrder) method instead.")]
+        public virtual OrderEvent LimitFill(Security security, Order order)
+        {
+            return LimitFill(security, order as LimitOrder);
+        }
     } // End Algorithm Transaction Filling Classes
 
 } // End QC Namespace
