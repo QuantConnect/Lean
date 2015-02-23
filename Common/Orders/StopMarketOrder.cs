@@ -1,0 +1,67 @@
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+/**********************************************************
+* USING NAMESPACES
+**********************************************************/
+using System;
+
+namespace QuantConnect.Orders
+{
+    /******************************************************** 
+    * ORDER CLASS DEFINITION
+    *********************************************************/
+    /// <summary>
+    /// Stop Market Order Type Definition
+    /// </summary>
+    public class StopMarketOrder : Order
+    {
+        /// <summary>
+        /// Stop price for this stop market order.
+        /// </summary>
+        public decimal StopPrice;
+
+        /// <summary>
+        /// Default constructor for JSON Deserialization:
+        /// </summary>
+        public StopMarketOrder()
+        {
+            Type = OrderType.StopMarket;
+        }
+
+        /// <summary>
+        /// New Stop Market Order constructor - 
+        /// </summary>
+        /// <param name="symbol">Symbol asset we're seeking to trade</param>
+        /// <param name="type">Type of the security order</param>
+        /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
+        /// <param name="time">Time the order was placed</param>
+        /// <param name="stopPrice">Price the order should be filled at if a limit order</param>
+        /// <param name="tag">User defined data tag for this order</param>
+        public StopMarketOrder(string symbol, int quantity, decimal stopPrice, DateTime time, string tag = "", SecurityType type = SecurityType.Base) :
+            base(symbol, quantity, OrderType.StopMarket, time, 0, tag, type)
+        {
+            StopPrice = stopPrice;
+            Type = OrderType.StopMarket;
+
+            if (tag == "")
+            {
+                //Default tag values to display stop price in GUI.
+                Tag = "Stop Price: " + stopPrice.ToString("C");
+            }
+        }
+    }
+
+} // End QC Namespace:
