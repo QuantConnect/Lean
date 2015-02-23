@@ -18,36 +18,30 @@ using System.Linq;
 using System.Collections.Generic;
 using MathNetStatistics = MathNet.Numerics.Statistics.Statistics;
 
-namespace QuantConnect.Indicators
-{
+namespace QuantConnect.Indicators {
     /// <summary>
-    /// This indicator computes the n-period population standard deviation.
+    /// This indicator computes the n-period mean absolute deviation.
     /// </summary>
-    public class StandardDeviation : WindowIndicator<IndicatorDataPoint>
-    {
+    public class MeanAbsoluteDeviation : WindowIndicator<IndicatorDataPoint> {
         /// <summary>
-        /// Initializes a new instance of the StandardDeviation class with the specified period.
+        /// Initializes a new instance of the MeanAbsoluteDeviation class with the specified period.
         /// 
-        /// Evaluates the standard deviation of samples in the lookback period. 
-        /// On a dataset of size N will use an N normalizer and would thus be biased if applied to a subset.
+        /// Evaluates the mean absolute deviation of samples in the lookback period. 
         /// </summary>
         /// <param name="period">The sample size of the standard deviation</param>
-        public StandardDeviation(int period)
-            : this("STD" + period, period)
-        {
+        public MeanAbsoluteDeviation(int period)
+            : this("MAD" + period, period) {
         }
 
         /// <summary>
-        /// Initializes a new instance of the StandardDeviation class with the specified period.
+        /// Initializes a new instance of the MeanAbsoluteDeviation class with the specified period.
         /// 
-        /// Evaluates the standard deviation of samples in the lookback period. 
-        /// On a dataset of size N will use an N normalizer and would thus be biased if applied to a subset.
+        /// Evaluates the mean absolute deviation of samples in the lookback period. 
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        /// <param name="period">The sample size of the standard deviation</param>
-        public StandardDeviation(string name, int period)
-            : base(name, period)
-        {
+        /// <param name="period">The sample size of the mean absoluate deviation</param>
+        public MeanAbsoluteDeviation(string name, int period)
+            : base(name, period) {
         }
 
         /// <summary>
@@ -63,13 +57,18 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         /// <param name="window">The window for the input history</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
-        {
+        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input) {
             if (Samples < 2) {
                 return 0m;
             }
             IEnumerable<double> doubleValues = window.Select(i => Convert.ToDouble(i.Value));
-            double std = MathNetStatistics.PopulationStandardDeviation(doubleValues);
+            // TODO: See if Math.Net has a function for this.
+            double mean = MathNetStatistics.Mean(doubleValues);
+            double sum = 0;
+            foreach (double x in doubleValues) {
+                sum += Math.Abs(mean - x);
+            }
+            double std = sum / doubleValues.Count();
             return Convert.ToDecimal(std);
         }
     }
