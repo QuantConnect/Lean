@@ -17,12 +17,13 @@
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
+
+using System;
 using System.Threading;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine
 {
-
     /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
@@ -30,10 +31,22 @@ namespace QuantConnect.Lean.Engine
     /// Algorithm status monitor reads the central command directive for this algorithm/backtest. When it detects
     /// the backtest has been deleted or cancelled the backtest is aborted.
     /// </summary>
-    public static class StateCheck
+    public class StateCheck
     {
+        /******************************************************** 
+        * CLASS VARIABLES
+        *********************************************************/
+
+        /******************************************************** 
+        * CLASS CONSTRUCTOR
+        *********************************************************/
+
+        /******************************************************** 
+        * CLASS METHODS
+        *********************************************************/
+
         /// DB Ping Class
-        public static class Ping
+        public class Ping
         {
             // set to true to break while loop in Run()
             private static bool _exitTriggered;
@@ -52,19 +65,18 @@ namespace QuantConnect.Lean.Engine
                         {
                             //Get the state from the central server:
                             var state = Engine.Api.GetAlgorithmStatus(AlgorithmManager.AlgorithmId);
+                            Log.Debug("StateCheck.Ping.Run(): Algorithm Status: " + state.Status + " Subscription: " + state.ChartSubscription);
+
+                            //Set state via get/set method:
                             AlgorithmManager.SetStatus(state.Status);
+
                             //Set which chart the user is look at, so we can reduce excess messaging (e.g. trading 100 symbols, only send 1).
                             Engine.ResultHandler.SetChartSubscription(state.ChartSubscription);
-                            Log.Debug("StateCheck.Ping.Run(): Algorithm Status: " + state.Status + " Subscription: " + state.ChartSubscription);
                         }
-                        catch
+                        catch (Exception err) 
                         {
-                            Log.Debug("StateCheck.Run(): Error in state check.");
+                            Log.Error("StateCheck.Run(): Error in state check: " + err.Message);
                         }
-                    }
-                    else
-                    {
-                        Log.Debug("StateCheck.Ping.Run(): Opted to not ping: " + AlgorithmManager.AlgorithmId + " " + AlgorithmManager.QuitState);
                     }
                     Thread.Sleep(1000);
                 }
