@@ -13,10 +13,13 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages.Backtesting
 {
@@ -135,14 +138,36 @@ namespace QuantConnect.Brokerages.Backtesting
                 //Before we check this queued order make sure we have buying power:
                 if (sufficientBuyingPower)
                 {
+                    //Model:
+                    var model = _algorithm.Securities[order.Symbol].Model;
+
                     //Based on the order type: refresh its model to get fill price and quantity
-                    fill = _algorithm.Securities[order.Symbol].Model.Fill(_algorithm.Securities[order.Symbol], order);
+                    try
+                    {
+                        switch (order.Type)
+                        {
+                            case OrderType.Limit:
+                                fill = model.LimitFill(_algorithm.Securities[order.Symbol], order as LimitOrder);
+                                break;
+                            case OrderType.StopMarket:
+                                fill = model.StopMarketFill(_algorithm.Securities[order.Symbol], order as StopMarketOrder);
+                                break;
+                            case OrderType.Market:
+                                fill = model.MarketFill(_algorithm.Securities[order.Symbol], order as MarketOrder);
+                                break;
+                        }
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error("BacktestingBrokerage.Scan(): " + err.Message);
+                        _algorithm.Error(string.Format("Order Error: id: {0}, Transaction model failed to fill for order type: {1} with error: {2}", order.Id, order.Type, err.Message));
+                    }
                 }
                 else
                 {
                     //Flag order as invalid and push off queue:
                     order.Status = OrderStatus.Invalid;
-                    _algorithm.Error("Order Error: id: " + order.Id + ": Insufficient buying power to complete order.");
+                    _algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order.", order.Id));
                 }
 
                 if (order.Status != OrderStatus.None)
