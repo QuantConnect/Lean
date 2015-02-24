@@ -16,7 +16,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using MathNetStatistics = MathNet.Numerics.Statistics.Statistics;
+
 
 namespace QuantConnect.Indicators {
     /// <summary>
@@ -62,14 +62,9 @@ namespace QuantConnect.Indicators {
                 return 0m;
             }
             IEnumerable<double> doubleValues = window.Select(i => Convert.ToDouble(i.Value));
-            // TODO: See if Math.Net has a function for this.
-            double mean = MathNetStatistics.Mean(doubleValues);
-            double sum = 0;
-            foreach (double x in doubleValues) {
-                sum += Math.Abs(mean - x);
-            }
-            double std = sum / doubleValues.Count();
-            return Convert.ToDecimal(std);
+            double mean = doubleValues.Average();
+            double mad = doubleValues.Average(v => Math.Abs(v - mean));
+            return Convert.ToDecimal(mad);
         }
     }
 }
