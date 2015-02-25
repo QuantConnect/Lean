@@ -457,7 +457,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdtes(): QC OrderID: " + order.Id + " IB OrderID: " + update.OrderId + " Status: " + update.Status);
 
-                OnOrderEvent(new OrderEvent(order.Id, order.Symbol, ConvertOrderStatus(update.Status), update.AverageFillPrice, update.Filled, "Interactive Brokers Fill Event"));
+                var orderEvent = new OrderEvent(order.Id, order.Symbol, ConvertOrderStatus(update.Status), update.AverageFillPrice, update.Filled, "Interactive Brokers Fill Event");
+                orderEvent.BrokerageIds.Add(update.OrderId);
+                OnOrderEvent(orderEvent);
 
                 if (update.Remaining == 0)
                 {
