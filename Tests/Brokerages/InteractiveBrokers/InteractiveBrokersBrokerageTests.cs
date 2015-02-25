@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             
             const int buyQuantity = 1;
             //ib.PlaceOrder(new Order("AAPL", SecurityType.Equity, buyQuantity, OrderType.Market, DateTime.Now));
-            var order = new Order("AAPL", SecurityType.Equity, buyQuantity, OrderType.Market, DateTime.Now);
+            var order = new MarketOrder("AAPL", buyQuantity, DateTime.Now, "", SecurityType.Equity);
             ib.PlaceOrder(order);
 
             manualResetEvent.WaitOne(2500);
@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             };
 
             // sell a single share
-            var order = new Order("AAPL", SecurityType.Equity, -1, OrderType.Market, DateTime.UtcNow);
+            var order = new MarketOrder("AAPL", -1, DateTime.UtcNow, "", SecurityType.Equity);
             ib.PlaceOrder(order);
 
             manualResetEvent.WaitOne(2500);
@@ -118,7 +118,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             // get the current market price, couldn't get RequestMarketData to fire tick events
             int id = 0;
-            ib.PlaceOrder(new Order("AAPL", SecurityType.Equity, 1, OrderType.Market, DateTime.UtcNow) { Id = ++id });
+            ib.PlaceOrder(new MarketOrder("AAPL", 1, DateTime.UtcNow, "", SecurityType.Equity) { Id = ++id });
 
             manualResetEvent.WaitOne(2000);
             manualResetEvent.Reset();
@@ -126,10 +126,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             // make a box around the current price +- a little
 
             const int quantity = 1;
-            var order = new Order("AAPL", SecurityType.Equity, +quantity, OrderType.Limit, DateTime.Now, aapl - delta) {Id = ++id};
+            var order = new LimitOrder("AAPL", +quantity, aapl - delta, DateTime.Now, "", SecurityType.Equity) { Id = ++id };
             ib.PlaceOrder(order);
 
-            ib.PlaceOrder(new Order("AAPL", SecurityType.Equity, -quantity, OrderType.Limit, DateTime.Now, aapl + delta) {Id = ++id});
+            ib.PlaceOrder(new LimitOrder("AAPL", -quantity, aapl + delta, DateTime.Now, "", SecurityType.Equity) { Id = ++id });
 
             manualResetEvent.WaitOne(1000);
 
@@ -157,7 +157,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             // get the current market price, couldn't get RequestMarketData to fire tick events
             int id = 0;
-            ib.PlaceOrder(new Order("AAPL", SecurityType.Equity, 1, OrderType.Market, DateTime.UtcNow) { Id = ++id });
+            ib.PlaceOrder(new MarketOrder("AAPL", 1, DateTime.UtcNow, "", SecurityType.Equity) { Id = ++id });
 
             manualResetEvent.WaitOne(2000);
             manualResetEvent.Reset();
@@ -168,10 +168,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             // make a box around the current price +- a little
 
             const int quantity = 1;
-            var order = new Order("AAPL", SecurityType.Equity, +quantity, OrderType.StopMarket, DateTime.Now, aapl - delta) {Id = ++id};
+            var order = new StopMarketOrder("AAPL", +quantity, aapl - delta, DateTime.Now, "", SecurityType.Equity) { Id = ++id };
             ib.PlaceOrder(order);
 
-            ib.PlaceOrder(new Order("AAPL", SecurityType.Equity, -quantity, OrderType.StopMarket, DateTime.Now, aapl + delta) { Id = ++id });
+            ib.PlaceOrder(new StopMarketOrder("AAPL", -quantity, aapl + delta, DateTime.Now, "", SecurityType.Equity) { Id = ++id });
 
             manualResetEvent.WaitOne(1000);
 
@@ -195,7 +195,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             };
 
             // try to sell a single share at a ridiculous price, we'll cancel this later
-            var order = new Order("AAPL", SecurityType.Equity, -1, OrderType.Limit, DateTime.UtcNow, 100000);
+            var order = new LimitOrder("AAPL", -1, 100000, DateTime.UtcNow, "", SecurityType.Equity);
             ib.PlaceOrder(order);
             manualResetEvent.WaitOne(2500);
 

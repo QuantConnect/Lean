@@ -28,7 +28,7 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Order struct for placing new trade
     /// </summary>
-    public class Order 
+    public abstract class Order 
     {
         /// <summary>
         /// Order ID.

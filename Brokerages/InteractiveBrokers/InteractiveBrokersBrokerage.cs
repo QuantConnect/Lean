@@ -460,13 +460,23 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 price = ibOrder.AuxPrice;
             }
 
-            var order = new Order(contract.Symbol,
-                ConvertSecurityType(contract.SecurityType),
-                ibOrder.TotalQuantity,
-                ConvertOrderType(ibOrder.OrderType),
-                new DateTime(), // not sure how to get this data
-                price
-                );
+            Order order;
+            var orderType = ConvertOrderType(ibOrder.OrderType);
+            var securityType = ConvertSecurityType(contract.SecurityType);
+
+            switch (orderType)
+            {
+                default:
+                case OrderType.Market:
+                    order = new MarketOrder(contract.Symbol, ibOrder.TotalQuantity, new DateTime(), "", securityType);
+                    break;
+                case OrderType.Limit:
+                    order = new LimitOrder(contract.Symbol, ibOrder.TotalQuantity, price, new DateTime(), "", securityType);
+                    break;
+                case OrderType.StopMarket:
+                    order = new StopMarketOrder(contract.Symbol, ibOrder.TotalQuantity, price, new DateTime(), "", securityType);
+                    break;
+            }
 
             order.BrokerId.Add(ibOrder.OrderId);
 
