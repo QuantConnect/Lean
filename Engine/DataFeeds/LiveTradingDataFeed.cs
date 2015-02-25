@@ -200,44 +200,40 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             //Initialize:
             _streamStore = new Dictionary<int, StreamStore>();
-
-            Log.Trace("LiveTradingDataFeed.Stream(): Initializing subscription stream stores...");
             for (var i = 0; i < Subscriptions.Count; i++)
             {
                 var config = _subscriptions[i];
                 _streamStore.Add(i, new StreamStore(config));
             }
-            Log.Trace("LiveTradingDataFeed.Stream(): Initialized " + _streamStore.Count + " stream stores.");
+            Log.Trace(string.Format("LiveTradingDataFeed.Stream(): Initialized {0} stream stores.", _streamStore.Count));
 
             // Set up separate thread to handle stream and building packets:
-            var streamThread = new Thread(Stream);
+            var streamThread = new Thread(StreamStoreConsumer);
             streamThread.Start();
             Thread.Sleep(5); // Wait a little for the other thread to init.
 
-            var storingData = false;
+            var sourceDate = DateTime.Now.Date;
+            var resumeRun = new ManualResetEvent(true);
 
-            // Setup Real Time Event Trigger:
+            // This thread converts data into bars "on" the second - assuring the bars are close as 
+            // possible to a second unit tradebar (starting at 0 milliseconds).
             var realtime = new RealTimeSynchronizedTimer(TimeSpan.FromSeconds(1), () =>
             {
-                storingData = true;
+                //Pause bridge queing operations:
+                resumeRun.Reset();
 
-                //This is a minute start / 0-seconds.
                 var now = DateTime.Now;
                 var onMinute = (now.Second == 0);
-                var onDay = ((now.Second == 0) && (now.Hour == 0));
 
                 // Determine if this subscription needs to be archived:
                 for (var i = 0; i < Subscriptions.Count; i++)
                 {
                     //Do critical events every second regardless of the market/hybernate state:
-                    if (onDay)
+                    if (now.Date != sourceDate)
                     {
                         //Every day refresh the source file for the custom user data:
                         _subscriptionManagers[i].RefreshSource(now.Date);
-
-                        //Update the securities market open/close.
-                        Log.Trace("LiveTradingDataFeed.Run(): Updating market security hours (new day)");
-                        UpdateSecurityMarketHours();
+                        sourceDate = now.Date;
                     }
 
                     //If hibernate stop sending data until market opens
@@ -260,21 +256,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             break;
                     }
                 }
-
-                storingData = false;
+                //Resume bridge queing operations:
+                resumeRun.Set();
             });
 
             //Start the realtime sampler above
             realtime.Start();
 
-            // Scan the Stream Stores for Archived Bars, 
-            do
+            while (!_exitTriggered && !_endOfBridges)
             {
-                while (storingData)
-                {
-                    Thread.Sleep(1);
-                }
-
+                resumeRun.WaitOne();
+                
                 try
                 {
                     //Scan the Stream Store Queue's and if there are any shuffle them over to the bridge for synchronization:
@@ -300,10 +292,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     Log.Error("LiveTradingDataFeed.Run(): " + err.Message);
                 }
 
-                //Prevent Thread Locking Up - Sleep 1ms (linux only, on windows will sleep 15ms).
                 Thread.Sleep(1);
-
-            } while (!_exitTriggered && !_endOfBridges);
+            }
 
             //Dispose of the realtime clock.
             realtime.Stop();
@@ -316,129 +306,133 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Stream thread handler uses the GetNextTicks() function to get current ticks from a data source and
+        /// Stream Store Consumer uses the GetNextTicks() function to get current ticks from a data source and
         /// then uses the stream store to compile them into trade bars.
         /// </summary>
-        public void Stream()
+        public void StreamStoreConsumer()
         {
             //Initialize
             var update = new Dictionary<int, DateTime>();
 
-            //Loop over stream
-            do
+            //Scan for the required time period to stream:
+            Log.Trace("LiveTradingDataFeed.Stream(): Waiting for updated market hours...", true);
+
+            //Wait for one of our equity securities to be open! Attempt to reopen stream when day changes.
+            Hibernate();
+
+            //Awake:
+            Log.Trace("LiveTradingDataFeed.Stream(): Market open, starting stream for " + string.Join(",", _symbols));
+
+            //Micro-thread for polling for new data from data source:
+            var liveThreadTask = new Task(()=> 
             {
-                //Scan for the required time period to stream:
-                Log.Trace("LiveTradingDataFeed.Stream(): Updating market hours...", true);
-                UpdateSecurityMarketHours();
-
-                //Wait for one of our equity securities to be open! Attempt to reopen stream when day changes.
-                Hibernate();
-
-                //Awake:
-                Log.Trace("LiveTradingDataFeed.Stream(): Market open, starting stream for " + string.Join(",", _symbols));
-
-                //Micro-thread for polling for new data from data source:
-                var liveThreadTask = new Task(()=> {
-
-                    //Blocking ForEach - Should stay within this loop as long as there is a data-connection
-                    while (true)
-                    {
-                        var ticks = GetNextTicks();
-
-                        foreach (var tick in ticks)
-                        {
-                            //Get the stream store with this symbol:
-                            for (var i = 0; i < Subscriptions.Count; i++)
-                            {
-                                if (_subscriptions[i].Symbol == tick.Symbol)
-                                {
-                                    // Update our internal counter
-                                    _streamStore[i].Update(tick);
-                                    // Update the realtime price stream value
-                                    _realtimePrices[i] = tick.Value;
-                                }
-                            }
-                        }
-
-                        //If we did hibernate we'll probably need a new session variable, or Quit if signalled.
-                        if (Hibernate()) return;
-                        if (_exitTriggered) return;
-                        Thread.Sleep(1);
-                    }
-                });
-
-                // Micro-thread for custom data/feeds. This onl supports polling at this time. todo: Custom data sockets
-                var customFeedsTask = new Task(() =>
+                //Blocking ForEach - Should stay within this loop as long as there is a data-connection
+                while (true)
                 {
-                    var attempts = 0;
-                    var feedSuccess = false;
-                    while(true)
+                    var ticks = GetNextTicks();
+
+                    foreach (var tick in ticks)
                     {
+                        //Get the stream store with this symbol:
                         for (var i = 0; i < Subscriptions.Count; i++)
                         {
-                            if (_isDynamicallyLoadedData[i])
+                            if (_subscriptions[i].Symbol == tick.Symbol)
                             {
-                                if (!update.ContainsKey(i)) update.Add(i, new DateTime());
-
-                                if (DateTime.Now > update[i])
-                                {
-                                    //Now Time has passed -> Trigger a refresh,
-                                    if (!_subscriptionManagers[i].EndOfStream)
-                                    {
-                                        //Attempt 10 times to download the updated data:
-                                        attempts = 0;
-                                        do {
-                                            feedSuccess = _subscriptionManagers[i].MoveNext();
-                                            if (!feedSuccess) Thread.Sleep(1000);   //Network issues may cause download to fail. Sleep a little to make it more robust.
-                                        }
-                                        while (!feedSuccess && attempts++ < 10);
-
-                                        if (!feedSuccess)
-                                        {
-                                            _subscriptionManagers[i].EndOfStream = true;
-                                            continue;
-                                        }
-
-                                        //Use the latest data, push it into the store:
-                                        var data = _subscriptionManagers[i].Current;
-                                        if (data != null)
-                                        {
-                                            _streamStore[i].Update(data);       //Update bar builder.
-                                            _realtimePrices[i] = data.Value;    //Update realtime price value.
-                                        }
-                                    }
-                                    update[i] = DateTime.Now.Add(_subscriptions[i].Increment);
-                                }
+                                // Update our internal counter
+                                _streamStore[i].Update(tick);
+                                // Update the realtime price stream value
+                                _realtimePrices[i] = tick.Value;
                             }
                         }
-                        if (Hibernate()) return;
-                        if (_exitTriggered) return;
-                        Thread.Sleep(10);
                     }
-                });
 
-                //Wait for micro-threads to break before continuing
-                liveThreadTask.Start();
+                    //If we did hibernate we'll probably need a new session variable, or Quit if signalled.
+                    if (Hibernate())
+                    {
+                        //We're coming out of a long term hibernation
+                    }
 
-                // define what tasks we're going to wait on, we use a task from result in place of the custom task, just in case we never start it
-                var tasks = new Task[2] {liveThreadTask, Task.FromResult(1)};
-
-                // if we have any dynamically loaded data, start the custom thread
-                if (_isDynamicallyLoadedData.Any(x => x))
-                {
-                    customFeedsTask.Start();
-                    tasks[1] = customFeedsTask;
+                    if (_exitTriggered) return;
+                    Thread.Sleep(1);
                 }
-                
-                Task.WaitAll(tasks);
+            });
 
-                //Sleep 10s, then attempt reconnection to prevent thread lock-up
-                if (!_exitTriggered) Thread.Sleep(1000);
-                Log.Trace("LiveTradingDataFeed.Stream(): Loop exited blocking foreach, reconnecting to stream...");
+            // Micro-thread for custom data/feeds. This onl supports polling at this time. todo: Custom data sockets
+            var customFeedsTask = new Task(() =>
+            {
+                while(true)
+                {
+                    for (var i = 0; i < Subscriptions.Count; i++)
+                    {
+                        if (_isDynamicallyLoadedData[i])
+                        {
+                            if (!update.ContainsKey(i)) update.Add(i, new DateTime());
+
+                            if (DateTime.Now > update[i])
+                            {
+                                //Now Time has passed -> Trigger a refresh,
+                                if (!_subscriptionManagers[i].EndOfStream)
+                                {
+                                    //Attempt 10 times to download the updated data:
+                                    var attempts = 0;
+                                    var feedSuccess = false;
+                                    do 
+                                    {
+                                        feedSuccess = _subscriptionManagers[i].MoveNext();
+                                        if (!feedSuccess) Thread.Sleep(1000);   //Network issues may cause download to fail. Sleep a little to make it more robust.
+                                    }
+                                    while (!feedSuccess && attempts++ < 10);
+
+                                    if (!feedSuccess)
+                                    {
+                                        _subscriptionManagers[i].EndOfStream = true;
+                                        continue;
+                                    }
+
+                                    //Use the latest data, push it into the store:
+                                    var data = _subscriptionManagers[i].Current;
+                                    if (data != null)
+                                    {
+                                        _streamStore[i].Update(data);       //Update bar builder.
+                                        _realtimePrices[i] = data.Value;    //Update realtime price value.
+                                    }
+                                }
+                                update[i] = DateTime.Now.Add(_subscriptions[i].Increment);
+                            }
+                        }
+                    }
+
+                    //If we did hibernate we'll probably need a new session variable, or Quit if signalled.
+                    if (Hibernate())
+                    {
+                        //We're coming out of a long term hibernation
+                    }
+
+                    if (_exitTriggered) return;
+                    Thread.Sleep(10);
+                }
+            });
+
+            //Wait for micro-threads to break before continuing
+            liveThreadTask.Start();
+
+            // define what tasks we're going to wait on, we use a task from result in place of the custom task, just in case we never start it
+            var tasks = new Task[2] {liveThreadTask, Task.FromResult(1)};
+
+            // if we have any dynamically loaded data, start the custom thread
+            if (_isDynamicallyLoadedData.Any(x => x))
+            {
+                //Start task and set it as the second one we want to monitor:
+                customFeedsTask.Start();
+                tasks[1] = customFeedsTask;
             }
-            while (!_exitTriggered);
+                
+            Task.WaitAll(tasks);
 
-            Log.Trace("LiveTradingDataFeed.Stream(): EXITING STREAM");
+            //Once we're here the tasks have died, signal 
+            if (!_exitTriggered) _endOfBridges = true;
+
+            Log.Trace(string.Format("LiveTradingDataFeed.Stream(): Stream Task Completed. Exit Signal: {0}", _exitTriggered));
         }
 
         /// <summary>
@@ -462,7 +456,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Conditionally hibernate if the market has closed to avoid constantly pinging the API or trying to login while the market is closed.
+        /// Conditionally hibernate if the market has closed to avoid constantly pinging 
+        /// the API or trying to login while the market is closed.
         /// </summary>
         public bool Hibernate()
         {
@@ -470,20 +465,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var hibernateDate = DateTime.Now.Date;
             var announced = false;
             
-            //Wait here while market is closed.
+            //Wait here while market is closed and its the same date: when date changes refresh the market hours for the new day:
             while (!AnySecurityOpen() && hibernateDate.Date == DateTime.Now.Date && !_exitTriggered)
-            { 
-                if (!announced) 
+            {
+                if (!_hibernate) 
                 {
-                    Log.Trace("LiveTradingDataFeed.Stream(): All securities closed, hibernating until market open.");
+                    Log.Trace("LiveTradingDataFeed.Hibernate(): All securities closed, hibernating until market open. Closing Datafeed.");
                     Engine.ResultHandler.DebugMessage("All securities closed, hibernating until market open.");
                     announced = true;
                     _hibernate = true;
                     Engine.Queue.CloseDataQueue();
-                } 
+                }
                 Thread.Sleep(1000); 
             }
-            if (_hibernate) Engine.Queue.OpenDataQueue();
+
+            if (_hibernate && !_exitTriggered)
+            {
+                Log.Trace("LiveTradingDataFeed.Hibernate(): Re-Opening Datafeed.");
+                Engine.Queue.OpenDataQueue();
+            }
+
             _hibernate = false;
             return announced;
         }
@@ -499,48 +500,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        /// <summary>
-        /// Update the algorithm market open and close hours on today's values using controls
-        /// </summary>
-        public void UpdateSecurityMarketHours()
-        {
-            //Update the "Today's Market" Status: Set the market times so we know when to close/hibernate the algorithm
-
-            foreach (var sub in _subscriptions)
-            {
-                var security = _algorithm.Securities[sub.Symbol];
-
-                switch (security.Type)
-                {
-                    case SecurityType.Equity:
-                        var todayEquity = Engine.Api.MarketToday(SecurityType.Equity);
-                        Log.Trace("LiveTradingDataFeed.Run(): New Day Market Status: " + todayEquity.Status, true);
-                        //If we're open set both market open&close to midnight, so it won't open.
-                        if (todayEquity.Status != "open")
-                        {
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = TimeSpan.FromHours(0);
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketClose = TimeSpan.FromHours(0);
-                        }
-
-                        if (sub.ExtendedMarketHours)
-                        {
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = todayEquity.PreMarket.Start;
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketClose = todayEquity.PostMarket.End;
-                        }
-                        else
-                        {
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = todayEquity.Open.Start;
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketClose = todayEquity.Open.End;
-                        }
-                        break;
-
-                    case SecurityType.Forex:
-                        //var todayForex = Engine.Api.MarketToday(SecurityType.Forex);
-                        //Do nothing, standard market hours are always right.
-                        break;
-                }
-            }
-        }
 
         /// <summary>
         /// Return true when at least one security is open.
@@ -554,6 +513,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (DateTime.Now.TimeOfDay > security.Exchange.MarketOpen && DateTime.Now.TimeOfDay < security.Exchange.MarketClose)
                 {
                     open = true;
+                    break;
                 }
             }
             return open;
