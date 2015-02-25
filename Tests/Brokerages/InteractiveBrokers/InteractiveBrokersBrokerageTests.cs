@@ -17,12 +17,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Krs.Ats.IBNet;
 using NUnit.Framework;
 using QuantConnect.Brokerages.InteractiveBrokers;
-using Order = QuantConnect.Orders.Order;
-using OrderStatus = QuantConnect.Orders.OrderStatus;
-using OrderType = QuantConnect.Orders.OrderType;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
@@ -30,6 +27,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
     [Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
     public class InteractiveBrokersBrokerageTests
     {
+        private readonly object _lock = new object();
         private InteractiveBrokersBrokerage _interactiveBrokersBrokerage;
         private const string Symbol = "USDJPY";
         private const SecurityType Type = SecurityType.Forex;
@@ -37,6 +35,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [SetUp]
         public void InitializeBrokerage()
         {
+            // force only a single test to run at time
+            Monitor.Enter(_lock);
+
             // grabs account info from configuration
             _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage();
             _interactiveBrokersBrokerage.Connect();
@@ -45,27 +46,35 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [TearDown]
         public void CancelOpenOrders()
         {
-            var manualResetEvent = new ManualResetEvent(false);
-            _interactiveBrokersBrokerage.OrderEvent += (sender, orderEvent) =>
+            try
             {
-                if (orderEvent.Status == OrderStatus.Canceled)
+                var manualResetEvent = new ManualResetEvent(false);
+                _interactiveBrokersBrokerage.OrderEvent += (sender, orderEvent) =>
                 {
-                    manualResetEvent.Set();
+                    if (orderEvent.Status == OrderStatus.Canceled)
+                    {
+                        manualResetEvent.Set();
+                    }
+                };
+
+                var orders = _interactiveBrokersBrokerage.GetOpenOrders();
+                foreach (var order in orders)
+                {
+                    _interactiveBrokersBrokerage.CancelOrder(order);
+                    manualResetEvent.WaitOne();
+                    manualResetEvent.Reset();
                 }
-            };
 
-            var orders = _interactiveBrokersBrokerage.GetOpenOrders();
-            foreach (var order in orders)
-            {
-                _interactiveBrokersBrokerage.CancelOrder(order);
-                manualResetEvent.WaitOne();
-                manualResetEvent.Reset();
+                Assert.AreEqual(0, _interactiveBrokersBrokerage.GetOpenOrders().Count);
+
+                _interactiveBrokersBrokerage.Dispose();
+                _interactiveBrokersBrokerage = null;
             }
-
-            Assert.AreEqual(0, _interactiveBrokersBrokerage.GetOpenOrders().Count);
-
-            _interactiveBrokersBrokerage.Dispose();
-            _interactiveBrokersBrokerage = null;
+            finally
+            {
+                // force only a single test to run at a time
+                Monitor.Exit(_lock);
+            }
         }
 
         [Test]
@@ -157,10 +166,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             // make a box around the current price +- a little
 
             const int quantity = 1;
-            var order = new Order(Symbol, Type, +quantity, OrderType.Limit, DateTime.Now, aapl - delta) { Id = ++id };
+            var order = new LimitOrder(Symbol, +quantity, aapl - delta, DateTime.Now, null, Type) { Id = ++id };
             ib.PlaceOrder(order);
 
-            ib.PlaceOrder(new Order(Symbol, Type, -quantity, OrderType.Limit, DateTime.Now, aapl + delta) { Id = ++id });
+            ib.PlaceOrder(new LimitOrder(Symbol, -quantity, aapl + delta, DateTime.Now, null, Type) { Id = ++id });
 
             manualResetEvent.WaitOne(1000);
 
@@ -219,12 +228,16 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             ib.OrderEvent += (sender, orderEvent) =>
             {
-                status = orderEvent.Status;
+                if (orderEvent.Status == OrderStatus.Canceled)
+                {
+                    status = orderEvent.Status;
+                    return;
+                }
                 manualResetEvent.Set();
             };
 
             // try to sell a single share at a ridiculous price, we'll cancel this later
-            var order = new Order(Symbol, Type, -1, OrderType.Limit, DateTime.UtcNow, 100000);
+            var order = new LimitOrder(Symbol, -1, 100000, DateTime.UtcNow, null, Type);
             ib.PlaceOrder(order);
             manualResetEvent.WaitOne(2500);
 
@@ -258,12 +271,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             // wait for order to complete before request account holdings
             var manualResetEvent = new ManualResetEvent(false);
-            ib.OrderEvent += (sender, orderEvent) =>
+            ib.PortfolioChanged += (sender, portfolioEvent) =>
             {
-                if (orderEvent.Status == OrderStatus.Filled)
-                {
-                    manualResetEvent.Set();
-                }
+                manualResetEvent.Set();
             };
 
             // buy some currency
@@ -300,12 +310,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.AreNotEqual(0m, cashBalance);
             
             var manualResetEvent = new ManualResetEvent(false);
-            ib.OrderEvent += (sender, orderEvent) =>
+            ib.AccountChanged += (sender, orderEvent) =>
             {
-                if (orderEvent.Status == OrderStatus.Filled)
-                {
-                    manualResetEvent.Set();
-                }
+                manualResetEvent.Set();
             };
             ib.PlaceOrder(new Order(Symbol, Type, 25000, OrderType.Market, new DateTime()));
             manualResetEvent.WaitOne();
@@ -364,12 +371,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             // wait for our order to fill
             var manualResetEvent = new ManualResetEvent(false);
-            ib.OrderEvent += (sender, orderEvent) =>
+            ib.AccountChanged += (sender, orderEvent) =>
             {
-                if (orderEvent.Status == OrderStatus.Filled)
-                {
-                    manualResetEvent.Set();
-                }
+                manualResetEvent.Set();
             };
 
             var order = new Order(Symbol, Type, 1, OrderType.Market, DateTime.Now);

@@ -276,12 +276,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 client.UpdateAccountValue += (sender, args) =>
                 {
-                    if (args.Key == AccountValueKeys.CashBalance)
+                    if (args.Key == AccountValueKeys.CashBalance && args.Currency == "USD")
                     {
                         cash = args.Value.ToDecimal();
                         manualResetEvent.Set();
                     }
                 };
+
+                client.RequestAccountUpdates(true, _account);
+
+                // wait for our end signal
+                manualResetEvent.WaitOne();
 
                 return cash;
             }
@@ -535,13 +540,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             ibOrder.TotalQuantity = Math.Abs(order.Quantity);
             ibOrder.OrderType = ConvertOrderType(order.Type);
 
-            if (ibOrder.OrderType == IB.OrderType.Limit)
+            var limitOrder = order as LimitOrder;
+            var marketOrder = order as StopMarketOrder;
+            if (limitOrder != null)
             {
-                ibOrder.LimitPrice = (order as LimitOrder).LimitPrice;
+                ibOrder.LimitPrice = limitOrder.LimitPrice;
             }
-            else if (ibOrder.OrderType == IB.OrderType.Stop)
+            else if (marketOrder != null)
             {
-                ibOrder.AuxPrice = (order as StopMarketOrder).StopPrice;
+                ibOrder.AuxPrice = marketOrder.StopPrice;
             }
 
             // not yet supported
