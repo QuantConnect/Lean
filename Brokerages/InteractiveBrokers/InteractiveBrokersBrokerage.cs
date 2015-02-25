@@ -288,6 +288,43 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
+        /// Gets the execution details matching the filter
+        /// </summary>
+        /// <returns>A list of executions matching the filter</returns>
+        public List<IB.ExecDetailsEventArgs> GetExecutions(string symbol, IB.SecurityType? type, string exchange, DateTime? timeSince, IB.ActionSide? side)
+        {
+            var filter = new IB.ExecutionFilter
+            {
+                AcctCode = _account,
+                ClientId = _clientID,
+                Exchange = exchange,
+                SecurityType = type ?? IB.SecurityType.Undefined,
+                Symbol = symbol,
+                Time = DateTime.MinValue,
+                Side = side ?? IB.ActionSide.Undefined
+            };
+
+            // create separate client for this request
+            using (var client = new IB.IBClient())
+            {
+                client.Connect(_host, _port, IncrementClientID());
+
+                var details = new List<IB.ExecDetailsEventArgs>();
+                client.ExecDetails += (sender, args) => details.Add(args);
+
+                var manualResetEvent = new ManualResetEvent(false);
+                client.ExecutionDataEnd += delegate { manualResetEvent.Set(); };
+
+                // no need to be fancy with request id since that's all this client does is 1 request
+                client.RequestExecutions(1, filter);
+
+                manualResetEvent.WaitOne();
+
+                return details;
+            }
+        }
+
+        /// <summary>
         /// Connects the client to the IB gateway
         /// </summary>
         public override void Connect()
@@ -740,7 +777,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             };
         }
 
-        private string MapSymbol(IB.Contract contract)
+        /// <summary>
+        /// Maps the IB Contract's symbol to a QC symbol
+        /// </summary>
+        public static string MapSymbol(IB.Contract contract)
         {
             if (contract.SecurityType == IB.SecurityType.Cash)
             {

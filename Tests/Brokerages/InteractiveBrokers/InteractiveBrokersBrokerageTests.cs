@@ -17,9 +17,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Krs.Ats.IBNet;
 using NUnit.Framework;
 using QuantConnect.Brokerages.InteractiveBrokers;
-using QuantConnect.Orders;
+using Order = QuantConnect.Orders.Order;
+using OrderStatus = QuantConnect.Orders.OrderStatus;
+using OrderType = QuantConnect.Orders.OrderType;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
@@ -320,7 +323,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             var orderEventFired = new ManualResetEvent(false);
             ib.OrderEvent += (sender, args) =>
             {
-                orderEventFired.Set();
+                if (args.Status == OrderStatus.Filled)
+                {
+                    orderEventFired.Set();
+                }
             };
 
             var cashBalanceUpdates = new List<decimal>();
@@ -377,6 +383,31 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Console.WriteLine("Post trade balance: " + balanceAfterTrade);
 
             Assert.AreNotEqual(balance, balanceAfterTrade);
+        }
+
+        [Test]
+        public void GetExecutions()
+        {
+            var ib = _interactiveBrokersBrokerage;
+
+            var orderEventFired = new ManualResetEvent(false);
+            ib.OrderEvent += (sender, args) =>
+            {
+                if (args.Status == OrderStatus.Filled)
+                {
+                    orderEventFired.Set();
+                }
+            };
+
+            var order = new Order(Symbol, Type, 25000, OrderType.Market, new DateTime());
+            ib.PlaceOrder(order);
+            orderEventFired.WaitOne();
+
+            var executions = ib.GetExecutions(null, null, null, DateTime.Now, null);
+            var execution = executions.OrderByDescending(x => x.Execution.Time).First();
+
+            Assert.AreEqual(Symbol, InteractiveBrokersBrokerage.MapSymbol(execution.Contract));
+            Assert.AreEqual(order.BrokerId[0], execution.OrderId);
         }
 
         private static Order AssertOrderOpened(bool orderFilled, InteractiveBrokersBrokerage ib, Order order)
