@@ -24,16 +24,15 @@ using System.Linq;
 namespace QuantConnect.Util
 {
     /// <summary>
-    /// Provides methods for obtaining IBrokerageFactory instances
+    /// Provides methods for obtaining exported MEF instances
     /// </summary>
     public class Composer
     {
         /// <summary>
-        /// Gets the singleton instance of BrokerageFactory
+        /// Gets the singleton instance
         /// </summary>
         public static Composer Instance = new Composer();
 
-        // we really only need one of these per T for the whole application to use
         private Composer()
         {
             // grab assemblies from current executing directory
@@ -50,7 +49,7 @@ namespace QuantConnect.Util
         /// Gets the export matching the predicate
         /// </summary>
         /// <param name="predicate">Function used to pick which imported instance to return, if null the first instance is returned</param>
-        /// <returns>A factory that produces the requested brokerage type, or null</returns>
+        /// <returns>The only export matching the specified predicate</returns>
         public T Single<T>(Func<T, bool> predicate)
         {
             if (predicate == null)
