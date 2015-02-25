@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
@@ -305,9 +306,46 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             };
             ib.PlaceOrder(new Order(Symbol, Type, 25000, OrderType.Market, new DateTime()));
             manualResetEvent.WaitOne();
+            
             Thread.Sleep(50);
 
             Assert.AreNotEqual(cashBalance, ib.GetCashBalance());
+        }
+
+        [Test]
+        public void FiresMultipleAccountBalanceEvents()
+        {
+            var ib = _interactiveBrokersBrokerage;
+
+            var orderEventFired = new ManualResetEvent(false);
+            ib.OrderEvent += (sender, args) =>
+            {
+                orderEventFired.Set();
+            };
+
+            var cashBalanceUpdates = new List<decimal>();
+            var accountChangedFired = new ManualResetEvent(false);
+            ib.AccountChanged += (sender, args) =>
+            {
+                cashBalanceUpdates.Add(args.CashBalance);
+                accountChangedFired.Set();
+            };
+
+            int orderCount = 3;
+            for (int i = 0; i < orderCount; i++)
+            {
+                var quantity = 25000;
+                //if (i%2 == 0) quantity *= -1;
+                ib.PlaceOrder(new Order(Symbol, Type, quantity, OrderType.Market, new DateTime()));
+                
+                orderEventFired.WaitOne();
+                orderEventFired.Reset();
+
+                accountChangedFired.WaitOne();
+                accountChangedFired.Reset();
+            }
+
+            Assert.AreEqual(orderCount, cashBalanceUpdates.Count);
         }
 
         [Test]

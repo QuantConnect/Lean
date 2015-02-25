@@ -427,7 +427,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
 
                 // we want to capture if the user's cash changes so we can reflect it in the algorithm
-                if (e.Key == AccountValueKeys.CashBalance)
+                if (e.Key == AccountValueKeys.CashBalance && e.Currency == "USD")
                 {
                     var cashBalance = e.Value.ToDecimal();
                     OnAccountChanged(new AccountEvent(cashBalance));
