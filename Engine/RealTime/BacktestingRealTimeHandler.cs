@@ -46,6 +46,7 @@ namespace QuantConnect.Lean.Engine.RealTime
 
         //Algorithm and Handlers:
         private IAlgorithm _algorithm;
+        private Dictionary<SecurityType, MarketToday> _today;
 
         /******************************************************** 
         * PUBLIC PROPERTIES
@@ -83,6 +84,18 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
         }
 
+        /// <summary>
+        /// Market hours for today for each security type in the algorithm
+        /// </summary>
+        public Dictionary<SecurityType, MarketToday> MarketToday
+        {
+            get
+            {
+                throw new NotImplementedException("MarketToday is not currently needed in backtesting mode");
+                return _today;
+            }
+        }
+
         /******************************************************** 
         * PUBLIC CONSTRUCTOR
         *********************************************************/
@@ -95,6 +108,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             _algorithm = algorithm;
             _events = new List<RealTimeEvent>();
             _job = job;
+            _today = new Dictionary<SecurityType, MarketToday>();
         }
 
         /******************************************************** 

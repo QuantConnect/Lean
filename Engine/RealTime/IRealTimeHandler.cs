@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -51,6 +52,14 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// Thread status flag.
         /// </summary>
         bool IsActive
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Data for the Market Open Hours Today
+        /// </summary>
+        Dictionary<SecurityType, MarketToday> MarketToday
         {
             get;
         }
