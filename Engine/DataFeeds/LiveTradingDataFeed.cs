@@ -240,7 +240,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         UpdateSecurityMarketHours();
                     }
 
-                    //If hybernate stop sending data until its resumed.
+                    //If hibernate stop sending data until market opens
                     if (_hibernate) continue;
 
                     switch (_subscriptions[i].Resolution)
@@ -249,7 +249,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         case Resolution.Second:
                             //Enqueue our live data:
                             _streamStore[i].TriggerArchive(_subscriptions[i].FillDataForward);
-                            Log.Debug("LiveTradingDataFeed.Run(): Triggered Archive: " + _subscriptions[i].Symbol + "-Second... " + now.ToLongTimeString());
                             break;
 
                         //This is a minute resolution data source:
@@ -257,7 +256,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             if (onMinute)
                             {
                                 _streamStore[i].TriggerArchive(_subscriptions[i].FillDataForward);
-                                Log.Debug("LiveTradingDataFeed.Run(): Triggered Archive: " + _subscriptions[i].Symbol + "-Minute... " + now.ToLongTimeString());
                             }
                             break;
                     }

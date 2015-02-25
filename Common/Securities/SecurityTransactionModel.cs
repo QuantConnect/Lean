@@ -58,96 +58,50 @@ namespace QuantConnect.Securities
         * CLASS METHODS
         *********************************************************/
         /// <summary>
-        /// Process an order to see if it has been filled and return the matching order event.
-        /// </summary>
-        /// <param name="vehicle">Asset we're working with</param>
-        /// <param name="order">Order class to check if filled.</param>
-        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        public virtual OrderEvent Fill(Security vehicle, Order order)
-        {
-            //Default order event to return.
-            var fill = new OrderEvent(order);
-
-            try 
-            {
-                switch (order.Type) 
-                {
-                    case OrderType.Limit:
-                        fill = LimitFill(vehicle, order);
-                        break;
-                    case OrderType.StopMarket:
-                        fill = StopFill(vehicle, order);
-                        break;
-                    case OrderType.Market:
-                        fill = MarketFill(vehicle, order);
-                        break;
-                }
-            } catch (Exception err) {
-                Log.Error("SecurityTransactionModel.TransOrderDirection.Fill(): " + err.Message);
-            }
-
-            return fill;
-        }
-
-
-        /// <summary>
-        /// Get the slippage approximation for this order
-        /// </summary>
-        /// <param name="security">Security asset we're filling</param>
-        /// <param name="order">Order packet to model</param>
-        /// <returns>decimal approximation for slippage</returns>
-        public virtual decimal GetSlippageApproximation(Security security, Order order) 
-        {
-            return 0;
-        }
-
-
-        /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.
         /// </summary>
-        /// <param name="security">Security asset we're filling</param>
+        /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        /// <seealso cref="StopFill"/>
-        /// <seealso cref="LimitFill"/>
-        public virtual OrderEvent MarketFill(Security security, Order order)
+        /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
+        /// <seealso cref="LimitFill(Security, LimitOrder)"/>
+        public OrderEvent MarketFill(Security asset, MarketOrder order)
         {
             //Default order event to return.
             var fill = new OrderEvent(order);
-            try {
-                
-                //Set the order price 
-                order.Price = security.Price;
+            try
+            {
+                //Order [fill]price for a market order model is the current security price.
+                order.Price = asset.Price;
                 order.Status = OrderStatus.Filled;
 
-                //Set the order event fill: - Assuming 100% fill
-                fill.FillPrice = security.Price;
+                //For backtesting, we assuming the order is 100% filled on first attempt.
+                fill.FillPrice = asset.Price;
                 fill.FillQuantity = order.Quantity;
                 fill.Status = order.Status;
-
-            } catch (Exception err) {
-                Log.Error("SecurityTransactionModel.TransOrderDirection.MarketFill(): " + err.Message);
+            }
+            catch (Exception err)
+            {
+                Log.Error("SecurityTransactionModel.MarketFill(): " + err.Message);
             }
             return fill;
         }
 
 
-
-
         /// <summary>
-        /// Default stop fill model implementation in base class security.
+        /// Default stop fill model implementation in base class security. (Stop Market Order Type)
         /// </summary>
-        /// <param name="security">Security asset we're filling</param>
+        /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        /// <seealso cref="MarketFill"/>
-        /// <seealso cref="LimitFill"/>
-        public virtual OrderEvent StopFill(Security security, Order order)
+        /// <seealso cref="MarketFill(Security, MarketOrder)"/>
+        /// <seealso cref="LimitFill(Security, LimitOrder)"/>
+        public OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
             //Default order event to return.
             var fill = new OrderEvent(order);
 
-            try 
+            try
             {
                 //If its cancelled don't need anymore checks:
                 if (fill.Status == OrderStatus.Canceled) return fill;
@@ -157,18 +111,18 @@ namespace QuantConnect.Securities
                 {
                     case OrderDirection.Sell:
                         //-> 1.1 Sell Stop: If Price below setpoint, Sell:
-                        if (security.Price < order.Price) 
+                        if (asset.Price < order.StopPrice)
                         {
                             order.Status = OrderStatus.Filled;
-                            order.Price = security.Price;
+                            order.Price = asset.Price;
                         }
                         break;
                     case OrderDirection.Buy:
                         //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
-                        if (security.Price > order.Price) 
+                        if (asset.Price > order.StopPrice)
                         {
                             order.Status = OrderStatus.Filled;
-                            order.Price = security.Price;
+                            order.Price = asset.Price;
                         }
                         break;
                 }
@@ -176,11 +130,11 @@ namespace QuantConnect.Securities
                 if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled)
                 {
                     fill.FillQuantity = order.Quantity;
-                    fill.FillPrice = security.Price;        //Stop price as security price because can gap past stop price.
+                    fill.FillPrice = asset.Price;        //Stop price as security price because can gap past stop price.
                     fill.Status = order.Status;
                 }
-            } 
-            catch (Exception err) 
+            }
+            catch (Exception err)
             {
                 Log.Error("SecurityTransactionModel.TransOrderDirection.StopFill(): " + err.Message);
             }
@@ -189,16 +143,15 @@ namespace QuantConnect.Securities
         }
 
 
-
         /// <summary>
         /// Default limit order fill model in the base security class.
         /// </summary>
-        /// <param name="security">Security asset we're filling</param>
+        /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        /// <seealso cref="StopFill"/>
-        /// <seealso cref="MarketFill"/>
-        public virtual OrderEvent LimitFill(Security security, Order order)
+        /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
+        /// <seealso cref="MarketFill(Security, MarketOrder)"/>
+        public OrderEvent LimitFill(Security asset, LimitOrder order)
         {
             //Initialise;
             var fill = new OrderEvent(order);
@@ -209,15 +162,17 @@ namespace QuantConnect.Securities
                 if (fill.Status == OrderStatus.Canceled) return fill;
 
                 //Depending on the resolution, return different data types:
-                var marketData = security.GetLastData();
+                var marketData = asset.GetLastData();
 
-                decimal marketDataMinPrice = 0;
-                decimal marketDataMaxPrice = 0;
+                decimal marketDataMinPrice;
+                decimal marketDataMaxPrice;
                 if (marketData.DataType == MarketDataType.TradeBar)
                 {
                     marketDataMinPrice = ((TradeBar)marketData).Low;
                     marketDataMaxPrice = ((TradeBar)marketData).High;
-                } else {
+                }
+                else
+                {
                     marketDataMinPrice = marketData.Value;
                     marketDataMaxPrice = marketData.Value;
                 }
@@ -227,19 +182,19 @@ namespace QuantConnect.Securities
                 {
                     case OrderDirection.Buy:
                         //Buy limit seeks lowest price
-                        if (marketDataMinPrice < order.Price) 
-                        {   
+                        if (marketDataMinPrice < order.LimitPrice)
+                        {
                             //Set order fill:
                             order.Status = OrderStatus.Filled;
-                            order.Price = security.Price;
+                            order.Price = asset.Price;
                         }
                         break;
                     case OrderDirection.Sell:
                         //Sell limit seeks highest price possible
-                        if (marketDataMaxPrice > order.Price) 
+                        if (marketDataMaxPrice > order.LimitPrice)
                         {
                             order.Status = OrderStatus.Filled;
-                            order.Price = security.Price;
+                            order.Price = asset.Price;
                         }
                         break;
                 }
@@ -247,15 +202,27 @@ namespace QuantConnect.Securities
                 if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled)
                 {
                     fill.FillQuantity = order.Quantity;
-                    fill.FillPrice = security.Price;
+                    fill.FillPrice = asset.Price;
                     fill.Status = order.Status;
                 }
-            } 
-            catch (Exception err) 
+            }
+            catch (Exception err)
             {
-                Log.Error("SecurityTransactionModel.TransOrderDirection.LimitFill(): " + err.Message);
+                Log.Error("SecurityTransactionModel.LimitFill(): " + err.Message);
             }
             return fill;
+        }
+
+
+        /// <summary>
+        /// Get the slippage approximation for this order
+        /// </summary>
+        /// <param name="security">Security asset we're filling</param>
+        /// <param name="order">Order packet to model</param>
+        /// <returns>decimal approximation for slippage</returns>
+        public virtual decimal GetSlippageApproximation(Security security, Order order)
+        {
+            return 0;
         }
 
 
@@ -265,6 +232,64 @@ namespace QuantConnect.Securities
         public virtual decimal GetOrderFee(decimal quantity, decimal price)
         {
             return 0;
+        }
+
+
+        /// <summary>
+        /// Process an order to see if it has been filled and return the matching order event.
+        /// </summary>
+        /// <param name="vehicle">Asset we're working with</param>
+        /// <param name="order">Order class to check if filled.</param>
+        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
+        [Obsolete("Fill method has been made obsolete, use order type fill methods directly.")]
+        public virtual OrderEvent Fill(Security vehicle, Order order)
+        {
+            return new OrderEvent(order);
+        }
+
+
+        /// <summary>
+        /// Default market fill model for the base security class. Fills at the last traded price.
+        /// </summary>
+        /// <param name="security">Security asset we're filling</param>
+        /// <param name="order">Order packet to model</param>
+        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
+        /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
+        /// <seealso cref="LimitFill(Security, LimitOrder)"/>
+        [Obsolete("MarketFill(Security, Order) method has been made obsolete, use MarketFill(Security, MarketOrder) method instead.")]
+        public virtual OrderEvent MarketFill(Security security, Order order)
+        {
+            return MarketFill(security, order as MarketOrder);
+        }
+
+
+        /// <summary>
+        /// Default stop fill model implementation in base class security. (Stop Market Order Type)
+        /// </summary>
+        /// <param name="security">Security asset we're filling</param>
+        /// <param name="order">Order packet to model</param>
+        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
+        /// <seealso cref="LimitFill(Security, LimitOrder)"/>
+        /// <seealso cref="MarketFill(Security, MarketOrder)"/>
+        [Obsolete("StopFill(Security, Order) method has been made obsolete, use StopMarketFill(Security, StopMarketOrder) method instead.")]
+        public virtual OrderEvent StopFill(Security security, Order order)
+        {
+            return StopMarketFill(security, order as StopMarketOrder);
+        }
+
+
+        /// <summary>
+        /// Default limit order fill model in the base security class.
+        /// </summary>
+        /// <param name="security">Security asset we're filling</param>
+        /// <param name="order">Order packet to model</param>
+        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
+        /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
+        /// <seealso cref="MarketFill(Security, MarketOrder)"/>
+        [Obsolete("LimitFill(Security, Order) method has been made obsolete, use LimitFill(Security, LimitOrder) method instead.")]
+        public virtual OrderEvent LimitFill(Security security, Order order)
+        {
+            return LimitFill(security, order as LimitOrder);
         }
 
     } // End Algorithm Transaction Filling Classes

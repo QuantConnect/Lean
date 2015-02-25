@@ -61,40 +61,172 @@ namespace QuantConnect.Securities.Forex
         /******************************************************** 
         * CLASS METHODS
         *********************************************************/
+
         /// <summary>
-        /// Perform neccessary check to see if the model has been filled, appoximate the best we can.
+        /// Model the slippage on a market order: fixed percentage of order price
         /// </summary>
-        /// <param name="vehicle">Asset we're working with</param>
-        /// <param name="order">Order class to check if filled.</param>
+        /// <param name="asset">Asset we're working with</param>
+        /// <param name="order">Order to update</param>
         /// <returns>OrderEvent packet with the full or partial fill information</returns>
         /// <seealso cref="OrderEvent"/>
         /// <seealso cref="Order"/>
-        public virtual OrderEvent Fill(Security vehicle, Order order) 
-        {    
+        public OrderEvent MarketFill(Security asset, MarketOrder order)
+        {
             var fill = new OrderEvent(order);
-
             try
             {
-                switch (order.Type) 
+                //Calculate the model slippage: e.g. 0.01c
+                var slip = GetSlippageApproximation(asset, order);
+
+                switch (order.Direction)
                 {
-                    case OrderType.Limit:
-                        fill = LimitFill(vehicle, order);
+                    case OrderDirection.Buy:
+                        //Set the order and slippage on the order, update the fill price:
+                        order.Price = asset.Price;
+                        order.Price += slip;
                         break;
-                    case OrderType.StopMarket:
-                        fill = StopFill(vehicle, order);
-                        break;
-                    case OrderType.Market:
-                        fill = MarketFill(vehicle, order);
+
+                    case OrderDirection.Sell:
+                        //Set the order and slippage on the order, update the fill price:
+                        order.Price = asset.Price;
+                        order.Price -= slip;
                         break;
                 }
+
+                //Market orders fill instantly.
+                order.Status = OrderStatus.Filled;
+
+                //Assume 100% fill for market & modelled orders.
+                fill.FillQuantity = order.Quantity;
+                fill.FillPrice = order.Price;
+                fill.Status = order.Status;
             }
             catch (Exception err)
             {
-                Log.Error("Forex.ForexTransactionModel.Fill(): " + err.Message);
+                Log.Error("Forex.ForexTransactionModel.MarketFill(): " + err.Message);
             }
             return fill;
         }
 
+
+        /// <summary>
+        /// Check if the model has stopped out our position yet: (Stop Market Order Type)
+        /// </summary>
+        /// <param name="asset">Asset we're working with</param>
+        /// <param name="order">Stop Order to Check, return filled if true</param>
+        /// <returns>OrderEvent packet with the full or partial fill information</returns>
+        /// <seealso cref="OrderEvent"/>
+        /// <seealso cref="Order"/>
+        public OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
+        {
+            var fill = new OrderEvent(order);
+            try
+            {
+                //If its cancelled don't need anymore checks:
+                if (order.Status == OrderStatus.Canceled) return fill;
+
+                //Check if the Stop Order was filled: opposite to a limit order
+                if (order.Direction == OrderDirection.Sell)
+                {
+                    //-> 1.1 Sell Stop: If Price below setpoint, Sell:
+                    if (asset.Price < order.StopPrice)
+                    {
+                        //Set the order and slippage on the order, update the fill price:
+                        order.Status = OrderStatus.Filled;
+                        order.Price = asset.Price;   //Fill at the security price, sometimes gap down skip past stop.
+                    }
+                }
+                else if (order.Direction == OrderDirection.Buy)
+                {
+                    //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
+                    if (asset.Price > order.StopPrice)
+                    {
+                        order.Status = OrderStatus.Filled;
+                        order.Price = asset.Price;   //Fill at the security price, sometimes gap down skip past stop.
+                    }
+                }
+
+                //Set the fill properties when order filled.
+                if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled)
+                {
+                    fill.FillQuantity = order.Quantity;
+                    fill.FillPrice = asset.Price;
+                    fill.Status = order.Status;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error("ForexTransactionModel.StopFill(): " + err.Message);
+            }
+            return fill;
+        }
+
+
+        /// <summary>
+        /// Analyse the market price of the security provided to see if the limit order has been filled.
+        /// </summary>
+        /// <param name="asset">Asset we're working with</param>
+        /// <param name="order">Limit order in market</param>
+        /// <returns>OrderEvent packet with the full or partial fill information</returns>
+        /// <seealso cref="OrderEvent"/>
+        /// <seealso cref="Order"/>
+        public OrderEvent LimitFill(Security asset, LimitOrder order)
+        {
+            //Initialise;
+            var fill = new OrderEvent(order);
+
+            try
+            {
+                //If its cancelled don't need anymore checks:
+                if (order.Status == OrderStatus.Canceled) return fill;
+                //Depending on the resolution, return different data types:
+                var marketData = asset.GetLastData();
+
+                decimal marketDataMinPrice;
+                decimal marketDataMaxPrice;
+                if (marketData.DataType == MarketDataType.TradeBar)
+                {
+                    marketDataMinPrice = ((TradeBar)marketData).Low;
+                    marketDataMaxPrice = ((TradeBar)marketData).High;
+                }
+                else
+                {
+                    marketDataMinPrice = marketData.Value;
+                    marketDataMaxPrice = marketData.Value;
+                }
+
+                //-> Valid Live/Model Order: 
+                if (order.Direction == OrderDirection.Buy)
+                {
+                    //Buy limit seeks lowest price
+                    if (marketDataMinPrice < order.LimitPrice)
+                    {
+                        order.Status = OrderStatus.Filled;
+                    }
+                }
+                else if (order.Direction == OrderDirection.Sell)
+                {
+                    //Sell limit seeks highest price possible
+                    if (marketDataMaxPrice > order.LimitPrice)
+                    {
+                        order.Status = OrderStatus.Filled;
+                    }
+                }
+
+                //Fill price
+                if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled)
+                {
+                    fill.FillQuantity = order.Quantity;
+                    fill.FillPrice = order.Price;
+                    fill.Status = order.Status;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error("ForexTransactionModel.LimitFill(): " + err.Message);
+            }
+            return fill;
+        }
 
 
         /// <summary>
@@ -114,7 +246,7 @@ namespace QuantConnect.Securities.Forex
                     //Get the last data packet:
                     var lastBar = (TradeBar) security.GetLastData();
                     //Assume slippage is 1/10,000th of the price
-                    slippage = lastBar.Value*0.0001m;
+                    slippage = lastBar.Value*0.00001m;
                     break;
 
                 case Resolution.Tick:
@@ -137,179 +269,6 @@ namespace QuantConnect.Securities.Forex
         }
 
 
-
-        /// <summary>
-        /// Model the slippage on a market order: fixed percentage of order price
-        /// </summary>
-        /// <param name="security">Asset we're working with</param>
-        /// <param name="order">Order to update</param>
-        /// <returns>OrderEvent packet with the full or partial fill information</returns>
-        /// <seealso cref="OrderEvent"/>
-        /// <seealso cref="Order"/>
-        public virtual OrderEvent MarketFill(Security security, Order order)
-        {
-            var fill = new OrderEvent(order);
-            try 
-            {
-                //Calculate the model slippage: e.g. 0.01c
-                var slip = GetSlippageApproximation(security, order);
-
-                switch (order.Direction)
-                {
-                    case OrderDirection.Buy:
-                        //Set the order and slippage on the order, update the fill price:
-                        order.Price = security.Price;
-                        order.Price += slip;
-                        break;
-
-                    case OrderDirection.Sell:
-                        //Set the order and slippage on the order, update the fill price:
-                        order.Price = security.Price;
-                        order.Price -= slip;
-                        break;
-                }
-
-                //Market orders fill instantly.
-                order.Status = OrderStatus.Filled;
-
-                //Assume 100% fill for market & modelled orders.
-                fill.FillQuantity = order.Quantity;
-                fill.FillPrice = order.Price;
-                fill.Status = order.Status;
-            }
-            catch (Exception err) 
-            {
-                Log.Error("Forex.ForexTransactionModel.MarketFill(): " + err.Message);
-            }
-            return fill;
-        }
-
-
-
-
-        /// <summary>
-        /// Check if the model has stopped out our position yet:
-        /// </summary>
-        /// <param name="security">Asset we're working with</param>
-        /// <param name="order">Stop Order to Check, return filled if true</param>
-        /// <returns>OrderEvent packet with the full or partial fill information</returns>
-        /// <seealso cref="OrderEvent"/>
-        /// <seealso cref="Order"/>
-        public virtual OrderEvent StopFill(Security security, Order order)
-        {
-            var fill = new OrderEvent(order);
-            try 
-            {
-                //If its cancelled don't need anymore checks:
-                if (order.Status == OrderStatus.Canceled) return fill;
-
-                //Check if the Stop Order was filled: opposite to a limit order
-                if (order.Direction == OrderDirection.Sell) 
-                {
-                    //-> 1.1 Sell Stop: If Price below setpoint, Sell:
-                    if (security.Price < order.Price) 
-                    {
-                        //Set the order and slippage on the order, update the fill price:
-                        order.Status = OrderStatus.Filled;
-                        order.Price = security.Price;   //Fill at the security price, sometimes gap down skip past stop.
-                    }
-                } 
-                else if (order.Direction == OrderDirection.Buy) 
-                {
-                    //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
-                    if (security.Price > order.Price) 
-                    {
-                        order.Status = OrderStatus.Filled;
-                        order.Price = security.Price;   //Fill at the security price, sometimes gap down skip past stop.
-                    }
-                }
-
-                //Set the fill properties when order filled.
-                if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled)
-                {
-                    fill.FillQuantity = order.Quantity;
-                    fill.FillPrice = security.Price;
-                    fill.Status = order.Status;
-                }
-            } 
-            catch (Exception err) 
-            {
-                Log.Error("Forex.ForexTransactionModel.StopFill(): " + err.Message);
-            }
-            return fill;
-        }
-
-
-
-        /// <summary>
-        /// Analyse the market price of the security provided to see if the limit order has been filled.
-        /// </summary>
-        /// <param name="security">Asset we're working with</param>
-        /// <param name="order">Limit order in market</param>
-        /// <returns>OrderEvent packet with the full or partial fill information</returns>
-        /// <seealso cref="OrderEvent"/>
-        /// <seealso cref="Order"/>
-        public virtual OrderEvent LimitFill(Security security, Order order)
-        {
-            //Initialise;
-            var fill = new OrderEvent(order);
-
-            try 
-            {
-                //If its cancelled don't need anymore checks:
-                if (order.Status == OrderStatus.Canceled) return fill;
-                //Depending on the resolution, return different data types:
-                var marketData = security.GetLastData();
-
-                decimal marketDataMinPrice = 0;
-                decimal marketDataMaxPrice = 0;
-                if (marketData.DataType == MarketDataType.TradeBar)
-                {
-                    marketDataMinPrice = ((TradeBar)marketData).Low;
-                    marketDataMaxPrice = ((TradeBar)marketData).High;
-                } 
-                else 
-                {
-                    marketDataMinPrice = marketData.Value;
-                    marketDataMaxPrice = marketData.Value;
-                }
-
-                //-> Valid Live/Model Order: 
-                if (order.Direction == OrderDirection.Buy) 
-                {
-                    //Buy limit seeks lowest price
-                    if (marketDataMinPrice < order.Price) 
-                    {
-                        order.Status = OrderStatus.Filled;
-                    }
-
-                } 
-                else if (order.Direction == OrderDirection.Sell) 
-                {
-                    //Sell limit seeks highest price possible
-                    if (marketDataMaxPrice > order.Price) 
-                    {
-                        order.Status = OrderStatus.Filled;
-                    }
-                }
-
-                //Fill price
-                if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled)
-                {
-                    fill.FillQuantity = order.Quantity;
-                    fill.FillPrice = order.Price;
-                    fill.Status = order.Status;
-                }
-            } 
-            catch (Exception err)
-            {
-                Log.Error("Forex.ForexTransactionModel.LimitFill(): " + err.Message);
-            }
-            return fill;
-        }
-
-
-
         /// <summary>
         /// Get the fees from this order
         /// </summary>
@@ -324,6 +283,65 @@ namespace QuantConnect.Securities.Forex
         {
             //Modelled order fee to 0; Assume spread is the fee for most FX brokerages.
             return 0;
+        }
+
+        /// <summary>
+        /// Perform neccessary check to see if the model has been filled, appoximate the best we can.
+        /// </summary>
+        /// <param name="vehicle">Asset we're working with</param>
+        /// <param name="order">Order class to check if filled.</param>
+        /// <returns>OrderEvent packet with the full or partial fill information</returns>
+        /// <seealso cref="OrderEvent"/>
+        /// <seealso cref="Order"/>
+        [Obsolete("Fill(Security, Order) method has been made obsolete, use fill methods directly instead (e.g. MarketFill(Security, MarketOrder)).")]
+        public virtual OrderEvent Fill(Security vehicle, Order order)
+        {
+            return new OrderEvent(order);
+        }
+
+
+        /// <summary>
+        /// Model the slippage on a market order: fixed percentage of order price
+        /// </summary>
+        /// <param name="security">Asset we're working with</param>
+        /// <param name="order">Order to update</param>
+        /// <returns>OrderEvent packet with the full or partial fill information</returns>
+        /// <seealso cref="OrderEvent"/>
+        /// <seealso cref="Order"/>
+        [Obsolete("MarketFill(Security, Order) method has been made obsolete, use MarketFill(Security, MarketOrder) method instead.")]
+        public virtual OrderEvent MarketFill(Security security, Order order)
+        {
+            return MarketFill(security, order as MarketOrder);
+        }
+
+
+        /// <summary>
+        /// Check if the model has stopped out our position yet: (Stop Market Order Type)
+        /// </summary>
+        /// <param name="asset">Asset we're working with</param>
+        /// <param name="order">Stop Order to Check, return filled if true</param>
+        /// <returns>OrderEvent packet with the full or partial fill information</returns>
+        /// <seealso cref="OrderEvent"/>
+        /// <seealso cref="Order"/>
+        [Obsolete("StopFill(Security, Order) method has been made obsolete, use StopMarketFill(Security, StopMarketOrder) method instead.")]
+        public virtual OrderEvent StopFill(Security asset, Order order)
+        {
+            return StopMarketFill(asset, order as StopMarketOrder);
+        }
+
+
+        /// <summary>
+        /// Analyse the market price of the security provided to see if the limit order has been filled.
+        /// </summary>
+        /// <param name="security">Asset we're working with</param>
+        /// <param name="order">Limit order in market</param>
+        /// <returns>OrderEvent packet with the full or partial fill information</returns>
+        /// <seealso cref="OrderEvent"/>
+        /// <seealso cref="Order"/>
+        [Obsolete("LimitFill(Security, Order) method has been made obsolete, use LimitFill(Security, LimitOrder) method instead.")]
+        public virtual OrderEvent LimitFill(Security security, Order order)
+        {
+            return LimitFill(security, order as LimitOrder);
         }
 
     } // End Algorithm Transaction Filling Classes

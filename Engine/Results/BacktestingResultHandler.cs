@@ -200,7 +200,7 @@ namespace QuantConnect.Lean.Engine.Results
             //Default charts:
             Charts.AddOrUpdate("Strategy Equity", new Chart("Strategy Equity", ChartType.Stacked));
             Charts["Strategy Equity"].Series.Add("Equity", new Series("Equity", SeriesType.Candle));
-            Charts["Strategy Equity"].Series.Add("Daily Performance", new Series("Daily Performance", SeriesType.Bar));
+            Charts["Strategy Equity"].Series.Add("Daily Performance", new Series("Daily Performance", SeriesType.Bar, "%"));
         }
         
         /******************************************************** 

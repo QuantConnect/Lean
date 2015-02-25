@@ -320,7 +320,7 @@ namespace QuantConnect.Statistics
                     { "Average Win", Math.Round(averageWin * 100, 2) + "%"  },
                     { "Average Loss", Math.Round(averageLoss * 100, 2) + "%" },
                     { "Compounding Annual Return", Math.Round(algoCompoundingPerformance * 100, 3) + "%" },
-                    { "Drawdown", (Drawdown(equity, 3) * 100) + "%" },
+                    { "Drawdown", (DrawdownPercent(equity, 3) * 100) + "%" },
                     { "Expectancy", Math.Round((winRate * averageWinRatio) - (lossRate), 3).ToString() },
                     { "Net Profit", Math.Round(totalNetProfit * 100, 3) + "%"},
                     { "Sharpe Ratio", Math.Round(SharpeRatio(listPerformance, riskFreeRate), 3).ToString() },
@@ -356,12 +356,40 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Get the drawdown dtatistic for this period from the equity curve.
+        /// Drawdown maximum percentage.
+        /// </summary>
+        /// <param name="equityOverTime"></param>
+        /// <param name="rounding"></param>
+        /// <returns></returns>
+        public static decimal DrawdownPercent(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
+        {
+            var dd = 0m;
+            try
+            {
+                var lPrices = equityOverTime.Values.ToList();
+                var lDrawdowns = new List<decimal>();
+                var high = lPrices[0];
+                foreach (var price in lPrices)
+                {
+                    if (price >= high) high = price;
+                    lDrawdowns.Add((price/high) - 1);
+                }
+                dd = Math.Round(Math.Abs(lDrawdowns.Min()), rounding);
+            }
+            catch (Exception err)
+            {
+                Log.Error("Statistics.DrawdownPercentage(): " + err.Message);
+            }
+            return dd;
+        }
+
+        /// <summary>
+        /// Drawdown maximum value
         /// </summary>
         /// <param name="equityOverTime">Array of portfolio value over time.</param>
         /// <param name="rounding">Round the drawdown statistics.</param>
         /// <returns>Draw down percentage over period.</returns>
-        public static decimal Drawdown(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
+        public static decimal DrawdownValue(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
         {
             //Initialise:
             var priceMaximum = 0;
@@ -370,7 +398,8 @@ namespace QuantConnect.Statistics
 
             try
             {
-                var lPrices = equityOverTime.Values.ToList<decimal>();
+                var lPrices = equityOverTime.Values.ToList();
+
                 for (var id = 0; id < lPrices.Count; id++)
                 {
                     if (lPrices[id] >= lPrices[priceMaximum])
@@ -386,11 +415,11 @@ namespace QuantConnect.Statistics
                         }
                     }
                 }
-                return Math.Round((lPrices[previousMaximum] - lPrices[previousMinimum]) / lPrices[previousMaximum], rounding);
+                return Math.Round((lPrices[previousMaximum] - lPrices[previousMinimum]), rounding);
             }
             catch (Exception err)
             {
-                Log.Error("Statistics.Drawdown(): " + err.Message);
+                Log.Error("Statistics.DrawdownValue(): " + err.Message);
             }
             return 0;
         } // End Drawdown:

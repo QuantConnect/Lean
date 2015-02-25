@@ -355,11 +355,10 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="symbol">Symbol we want to purchase</param>
         /// <param name="quantity">Quantity to buy, + is long, - short.</param>
-        /// <param name="type">Market, Limit or Stop Order</param>
         /// <param name="asynchronous">Don't wait for the response, just submit order and move on.</param>
         /// <param name="tag">Custom data for this order</param>
         /// <returns>Integer Order ID.</returns>
-        int Order(string symbol, int quantity, OrderType type = OrderType.Market, bool asynchronous = false, string tag = "");
+        int Order(string symbol, int quantity, bool asynchronous = false, string tag = "");
 
         /// <summary>
         /// Liquidate your portfolio holdings:

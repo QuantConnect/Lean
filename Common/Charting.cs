@@ -167,7 +167,7 @@ namespace QuantConnect
         /// <returns>List of the updates from the series</returns>
         public Series GetUpdates() 
         {
-            var copy = new Series(Name, SeriesType);
+            var copy = new Series(Name, SeriesType, Unit);
             try
             {
                 //Add the updates since the last 

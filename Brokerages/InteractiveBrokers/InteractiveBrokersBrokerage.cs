@@ -498,15 +498,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (ibOrder.OrderType == IB.OrderType.Limit)
             {
-                ibOrder.LimitPrice = order.Price;
+                ibOrder.LimitPrice = (order as LimitOrder).LimitPrice;
             }
             else if (ibOrder.OrderType == IB.OrderType.Stop)
             {
-                ibOrder.AuxPrice = order.Price;
-            }
-            else if (ibOrder.OrderType == IB.OrderType.TrailingStop)
-            {
-                ibOrder.TrailStopPrice = order.Price;
+                ibOrder.AuxPrice = (order as StopMarketOrder).StopPrice;
             }
 
             // not yet supported
