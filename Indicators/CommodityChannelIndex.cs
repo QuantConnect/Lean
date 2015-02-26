@@ -85,6 +85,9 @@ namespace QuantConnect.Indicators {
             _typicalPriceAverage.Update(input.Time, typicalPrice);
             _typicalPriceMeanDeviation.Update(input.Time, typicalPrice);
 
+            if (_typicalPriceMeanDeviation.Current == 0.0m) {
+                return 0m;
+            }
             return (typicalPrice - _typicalPriceAverage.Current) / (_k * _typicalPriceMeanDeviation.Current);
         }
     }
