@@ -34,13 +34,13 @@ namespace QuantConnect.Tests.Indicators {
             Assert.AreEqual(1m, std.Current.Value);
 
             std.Update(reference.AddDays(3), 1m);
-            Assert.AreEqual(0.888888888888889m, std.Current.Value);
+            Assert.AreEqual(0.888888888888889m, Decimal.Round(std.Current.Value, 15));
 
             std.Update(reference.AddDays(4), -2m);
-            Assert.AreEqual(1.11111111111111m, std.Current.Value);
+            Assert.AreEqual(1.111111111111111m, Decimal.Round(std.Current.Value, 15));
 
             std.Update(reference.AddDays(5), 3m);
-            Assert.AreEqual(1.77777777777778m, std.Current.Value);
+            Assert.AreEqual(1.777777777777778m, Decimal.Round(std.Current.Value, 15));
         }
     }
 }
