@@ -33,7 +33,7 @@ namespace QuantConnect.Securities.Equity
     /// </summary>
     /// <seealso cref="SecurityTransactionModel"/>
     /// <seealso cref="ISecurityTransactionModel"/>
-    public class EquityTransactionModel : ISecurityTransactionModel 
+    public class EquityTransactionModel : SecurityTransactionModel, ISecurityTransactionModel 
     {
         /******************************************************** 
         * CLASS PRIVATE VARIABLES
@@ -67,7 +67,7 @@ namespace QuantConnect.Securities.Equity
         /// <param name="asset">Asset we're working with</param>
         /// <param name="order">Order to update</param>
         /// <returns>OrderEvent packet with the full or partial fill information</returns>
-        public OrderEvent MarketFill(Security asset, MarketOrder order)
+        public override OrderEvent MarketFill(Security asset, MarketOrder order)
         {
             var fill = new OrderEvent(order);
             try
@@ -110,7 +110,7 @@ namespace QuantConnect.Securities.Equity
         /// <param name="asset">Asset we're working with</param>
         /// <param name="order">Stop Order to Check, return filled if true</param>
         /// <returns>OrderEvent packet with the full or partial fill information</returns>
-        public OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
+        public override OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
             var fill = new OrderEvent(order);
             try
@@ -165,7 +165,7 @@ namespace QuantConnect.Securities.Equity
         /// <param name="asset">Asset we're working with</param>
         /// <param name="order">Limit order in market</param>
         /// <returns>OrderEvent packet with the full or partial fill information</returns>
-        public OrderEvent LimitFill(Security asset, LimitOrder order)
+        public override OrderEvent LimitFill(Security asset, LimitOrder order)
         {
             //Initialise;
             var fill = new OrderEvent(order);
@@ -242,7 +242,7 @@ namespace QuantConnect.Securities.Equity
         /// <param name="security">Security object we're working with</param>
         /// <param name="order">Order to approximate the slippage</param>
         /// <returns>Decimal value for he approximate slippage</returns>
-        public virtual decimal GetSlippageApproximation(Security security, Order order) 
+        public override decimal GetSlippageApproximation(Security security, Order order) 
         {
             return 0;
         }
@@ -255,7 +255,7 @@ namespace QuantConnect.Securities.Equity
         /// <param name="price">Price of the orders filled</param>
         /// <remarks>Default implementation uses the Interactive Brokers fee model of 1c per share with a maximum of 0.5% per order.</remarks>
         /// <returns>Decimal value of the order fee given this quantity and order price</returns>
-        public virtual decimal GetOrderFee(decimal quantity, decimal price)
+        public override decimal GetOrderFee(decimal quantity, decimal price)
         {
             decimal tradeFee;
             quantity = Math.Abs(quantity);
