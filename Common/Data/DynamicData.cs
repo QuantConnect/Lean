@@ -59,15 +59,17 @@ namespace QuantConnect.Data
         /// <returns>return true if set successfully.</returns>
         public object SetProperty(string name, object value)
         {
-            if (name == "Time")
+            name = name.ToLower();
+
+            if (name == "time")
             {
                 return Time = (DateTime)value;
             }
-            if (name == "Value")
+            if (name == "value")
             {
                 return Value = (decimal)value;
             }
-            if (name == "Symbol")
+            if (name == "symbol")
             {
                 return Symbol = (string)value;
             }
@@ -87,20 +89,22 @@ namespace QuantConnect.Data
         /// <returns>object value of BaseData</returns>
         public object GetProperty(string name)
         {
+            name = name.ToLower();
+
             // redirect these calls to the base types properties
-            if (name == "Time")
+            if (name == "time")
             {
                 return Time;
             }
-            if (name == "Value")
+            if (name == "value")
             {
                 return Value;
             }
-            if (name == "Symbol")
+            if (name == "symbol")
             {
                 return Symbol;
             }
-            if (name == "Price")
+            if (name == "price")
             {
                 return Price;
             }
