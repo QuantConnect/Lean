@@ -331,11 +331,12 @@ namespace QuantConnect.Securities
         {
             try
             {
-                //If this is a market order, use the current market price to calculate order value
-                var orderValue = order.Type == OrderType.Market
-                    ? order.Quantity*_securities[order.Symbol].Price
-                    : order.Value;
-                return Math.Abs(orderValue) / _securities[order.Symbol].Leverage;    
+                //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
+                //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
+                var orderFees = _securities[order.Symbol].Model.GetOrderFee(order.Quantity, order.Price);
+
+                //Return the total buying power for the order, including fees:
+                return (Math.Abs(order.Value) / _securities[order.Symbol].Leverage) + orderFees; 
             } 
             catch(Exception err)
             {
