@@ -155,6 +155,9 @@ namespace QuantConnect.Brokerages.Backtesting
                             case OrderType.Market:
                                 fill = model.MarketFill(_algorithm.Securities[order.Symbol], order as MarketOrder);
                                 break;
+                            case OrderType.StopLimit:
+                                fill = model.StopLimitFill(_algorithm.Securities[order.Symbol], order as StopLimitOrder);
+                                break;
                         }
                     }
                     catch (Exception err)
