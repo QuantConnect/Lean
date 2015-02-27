@@ -414,13 +414,16 @@ namespace QuantConnect.Securities
         public decimal GetBuyingPower(string symbol, OrderDirection direction = OrderDirection.Hold) 
         {
             //Each asset has different leverage values, so affects our cash position in different ways.
-            // Basically position affect on cash = holdings / leverage
-            var holdings = (Securities[symbol].Holdings.AbsoluteQuantity * Securities[symbol].Close);
-            var remainingBuyingPower = Cash * Securities[symbol].Leverage;
+            var holdings = Securities[symbol].Holdings;
+            var remainingBuyingPower = Cash;
+            var price = Securities[symbol].Price;
+            var leverage = Securities[symbol].Leverage;
 
             if (direction == OrderDirection.Hold) return remainingBuyingPower;
             //Log.Debug("SecurityPortfolioManager.GetBuyingPower(): Direction: " + direction.ToString());
 
+            //If the order is in the same direction as holdings, our buying power is our cash
+            //In the opposite direction, our buying power is 2 x current value of assets + our cash
             if (Securities[symbol].Holdings.IsLong)
             {
                 switch (direction)
@@ -428,7 +431,9 @@ namespace QuantConnect.Securities
                     case OrderDirection.Buy:
                         return remainingBuyingPower;
                     case OrderDirection.Sell:
-                        return holdings * 2  + remainingBuyingPower;
+                        var profit = (price - holdings.AveragePrice)*holdings.AbsoluteQuantity;
+                        var assetCost = holdings.AveragePrice*holdings.AbsoluteQuantity/leverage;
+                        return (profit + assetCost)*2 + remainingBuyingPower;
                 }
             } 
             else if (Securities[symbol].Holdings.IsShort) 
@@ -436,7 +441,9 @@ namespace QuantConnect.Securities
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        return holdings*2 + remainingBuyingPower;
+                        var profit = (holdings.AveragePrice - price) * holdings.AbsoluteQuantity;
+                        var assetCost = holdings.AveragePrice*holdings.AbsoluteQuantity/leverage;
+                        return (profit + assetCost)*2 + remainingBuyingPower;   
                     case OrderDirection.Sell:
                         return remainingBuyingPower;
                 }
