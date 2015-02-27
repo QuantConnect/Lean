@@ -274,6 +274,29 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Send a stop limit order to the transaction handler:
+        /// </summary>
+        /// <param name="symbol">String symbol for the asset</param>
+        /// <param name="quantity">Quantity of shares for limit order</param>
+        /// <param name="stopPrice">Stop price for this order</param>
+        /// <param name="limitPrice">Limit price to fill this order</param>
+        /// <param name="tag">String tag for the order (optional)</param>
+        /// <returns>Order id</returns>
+        public int StopLimitOrder(string symbol, int quantity, decimal stopPrice, decimal limitPrice, string tag = "")
+        {
+            var error = PreOrderChecks(symbol, quantity, OrderType.StopLimit);
+            if (error < 0)
+            {
+                return error;
+            }
+
+            var order = new StopLimitOrder(symbol, quantity, stopPrice, limitPrice, Time, tag, Securities[symbol].Type);
+
+            //Add the order and create a new order Id.
+            return Transactions.AddOrder(order);
+        }
+
+        /// <summary>
         /// Perform preorder checks to ensure we have sufficient capital, 
         /// the market is open, and we haven't exceeded maximum realistic orders per day.
         /// </summary>
