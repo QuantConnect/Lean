@@ -123,12 +123,9 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Value of the order at limit price if a limit order, or market price if a market order.
         /// </summary>
-        public decimal Value 
-        {
-            get
-            {
-                return Convert.ToDecimal(Quantity) * Price;
-            }
+        public abstract decimal Value 
+        { 
+            get; 
         }
 
         /// <summary>

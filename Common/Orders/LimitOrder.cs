@@ -33,6 +33,18 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal LimitPrice;
 
+
+        /// <summary>
+        /// Value of the order at limit price if a limit order
+        /// </summary>
+        public override decimal Value
+        {
+            get
+            {
+                return Convert.ToDecimal(Quantity) * LimitPrice;
+            }
+        }
+
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>

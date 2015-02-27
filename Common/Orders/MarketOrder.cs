@@ -37,6 +37,17 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Value of the order at market price.
+        /// </summary>
+        public override decimal Value
+        {
+            get
+            {
+                return Convert.ToDecimal(Quantity) * Price;
+            }
+        }
+
+        /// <summary>
         /// New market order constructor
         /// </summary>
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
