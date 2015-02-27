@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 
@@ -272,6 +273,36 @@ namespace QuantConnect.Securities
             {
                 Log.Error("TransactionManager.RemoveOrder(): " + err.Message);
             }
+        }
+
+
+        /// <summary>
+        /// Get the order by its id
+        /// </summary>
+        /// <param name="orderId">Order id to fetch</param>
+        /// <returns></returns>
+        public Order GetOrderById(int orderId)
+        {
+            Order order = null;
+            try
+            {
+                if (!Orders.TryGetValue(orderId, out order))
+                {
+                    var pending = OrderQueue.ToList();
+
+                    var pendingOrder = (from o in pending 
+                                        where o.Id == orderId 
+                                        select o).FirstOrDefault();
+
+                    return pendingOrder;
+                }
+                return order;
+            }
+            catch (Exception err)
+            {
+                Log.Error("TransactionManager.RemoveOrder(): " + err.Message);
+            }
+            return order;
         }
 
         /// <summary>
