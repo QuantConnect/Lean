@@ -205,6 +205,9 @@ namespace QuantConnect.Algorithm
 
             var order = new MarketOrder(symbol, quantity, Time, tag, Securities[symbol].Type);
 
+            //Set the rough price of the order for buying power calculations
+            order.Price = Securities[symbol].Price;
+
             //Add the order and create a new order Id.
             var orderId = Transactions.AddOrder(order);
 
