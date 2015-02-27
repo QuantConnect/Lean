@@ -46,7 +46,7 @@ namespace QuantConnect.Securities.Interfaces
 
 
         /// <summary>
-        /// Check if the model has stopped out our position yet:
+        /// Stop Market Fill Model. Return an order event with the fill details.
         /// </summary>
         /// <param name="asset">Asset we're trading this order</param>
         /// <param name="order">Stop Order to Check, return filled if true</param>
@@ -54,7 +54,16 @@ namespace QuantConnect.Securities.Interfaces
 
 
         /// <summary>
-        /// Model for a limit fill.
+        /// Stop Limit Fill Model. Return an order event with the fill details.
+        /// </summary>
+        /// <param name="asset"></param>
+        /// <param name="order"></param>
+        /// <returns></returns>
+        OrderEvent StopLimitFill(Security asset, StopLimitOrder order);
+
+
+        /// <summary>
+        /// Limit Fill Model. Return an order event with the fill details.
         /// </summary>
         /// <param name="asset">Stock Object to use to help model limit fill</param>
         /// <param name="order">Order to fill. Alter the values directly if filled.</param>
@@ -62,13 +71,13 @@ namespace QuantConnect.Securities.Interfaces
 
 
         /// <summary>
-        /// Get the Slippage approximation for this order:
+        /// Slippage Model. Return a decimal cash slippage approximation on the order.
         /// </summary>
         decimal GetSlippageApproximation(Security asset, Order order);
 
 
         /// <summary>
-        /// Get the fees from one order. Currently defaults to interactive
+        /// Fee Model. Return the decimal fees from one order. Currently defaults to interactive
         /// </summary>
         /// <param name="quantity">Quantity for this Order</param>
         /// <param name="price">Average Price for this Order</param>
