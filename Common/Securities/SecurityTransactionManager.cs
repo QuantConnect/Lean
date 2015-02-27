@@ -329,9 +329,13 @@ namespace QuantConnect.Securities
         /// <returns>decimal cash required to purchase order</returns>
         private decimal GetOrderRequiredBuyingPower(Order order)
         {
-            try 
+            try
             {
-                return Math.Abs(order.Value) / _securities[order.Symbol].Leverage;    
+                //If this is a market order, use the current market price to calculate order value
+                var orderValue = order.Type == OrderType.Market
+                    ? order.Quantity*_securities[order.Symbol].Price
+                    : order.Value;
+                return Math.Abs(orderValue) / _securities[order.Symbol].Leverage;    
             } 
             catch(Exception err)
             {
