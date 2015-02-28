@@ -14,8 +14,7 @@
 */
 
 using QuantConnect.Data.Market;
-using MathNetStatistics = MathNet.Numerics.Statistics.Statistics;
-using MathNet;
+
 
 namespace QuantConnect.Indicators {
     /// <summary>
@@ -52,19 +51,28 @@ namespace QuantConnect.Indicators {
         /// </summary>
         private readonly IndicatorBase<IndicatorDataPoint> _typicalPriceMeanDeviation;
 
-
-        public CommodityChannelIndex(string name, int period, MovingAverageType movingAverageType = MovingAverageType.Simple) 
-            : base(name)
+        /// <summary>
+        /// Initializes a new instance of the CommodityChannelIndex class
+        /// </summary>
+        /// <param name="period">The period of the standard deviation and moving average (middle band)</param>
+        /// <param name="movingAverageType">The type of moving average to be used</param>
+        public CommodityChannelIndex(int period, MovingAverageType movingAverageType = MovingAverageType.Simple)
+            : this("CCI" + period, period, movingAverageType) 
         {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the CommodityChannelIndex class
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="period">The period of the standard deviation and moving average (middle band)</param>
+        /// <param name="movingAverageType">The type of moving average to be used</param>
+        public CommodityChannelIndex(string name, int period, MovingAverageType movingAverageType = MovingAverageType.Simple)
+            : base(name) {
             _period = period;
             MovingAverageType = movingAverageType;
             _typicalPriceAverage = movingAverageType.AsIndicator(name + "_TypicalPriceAvg", period);
             _typicalPriceMeanDeviation = new MeanAbsoluteDeviation(name + "_TypicalPriceMAD", period);
-        }
-
-        public CommodityChannelIndex(int period, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : this("CCI" + period, period, movingAverageType) 
-        {
         }
 
         /// <summary>
@@ -86,7 +94,7 @@ namespace QuantConnect.Indicators {
             _typicalPriceMeanDeviation.Update(input.Time, typicalPrice);
 
             if (_typicalPriceMeanDeviation.Current == 0.0m) {
-                return 0m;
+                return 0.0m;
             }
             return (typicalPrice - _typicalPriceAverage.Current) / (_k * _typicalPriceMeanDeviation.Current);
         }
