@@ -213,13 +213,29 @@ namespace QuantConnect.Algorithm
         /// <param name="period">The period over which to compute the RSI</param>
         /// <param name="movingAverageType">The type of moving average to use in computing the average gain/loss values</param>
         /// <param name="resolution">The resolution</param>
-        /// <returns>The RelativeStrengthIndex indicator for the requested symbol over the speified period</returns>
+        /// <returns>The RelativeStrengthIndex indicator for the requested symbol over the specified period</returns>
         public RelativeStrengthIndex RSI(string symbol, int period, MovingAverageType movingAverageType = MovingAverageType.Simple, Resolution? resolution = null)
         {
             var name = CreateIndicatorName(symbol, "RSI" + period, resolution);
             var rsi = new RelativeStrengthIndex(name, period, movingAverageType);
             RegisterIndicator(symbol, rsi, resolution, x => x.Value);
             return rsi;
+        }
+
+        /// <summary>
+        /// Creates a new CommodityChannelIndex indicator. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose CCI we want</param>
+        /// <param name="period">The period over which to compute the CCI</param>
+        /// <param name="movingAverageType">The type of moving average to use in computing the typical price averge</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>The CommodityChannelIndex indicator for the requested symbol over the specified period</returns>
+        public CommodityChannelIndex CCI(string symbol, int period, MovingAverageType movingAverageType = MovingAverageType.Simple, Resolution? resolution = null) {
+            var name = CreateIndicatorName(symbol, "CCI" + period, resolution);
+            var cci = new CommodityChannelIndex(name, period, movingAverageType);
+            RegisterIndicator(symbol, cci, resolution);
+            return cci;
         }
 
         /// <summary>

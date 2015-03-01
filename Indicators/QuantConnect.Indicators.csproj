@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="AroonOscillator.cs" />
     <Compile Include="AverageTrueRange.cs" />
+    <Compile Include="CommodityChannelIndex.cs" />
     <Compile Include="CompositeIndicator.cs" />
     <Compile Include="ConstantIndicator.cs" />
     <Compile Include="Delay.cs" />
@@ -58,6 +59,7 @@
     <Compile Include="IndicatorDataPoint.cs" />
     <Compile Include="IndicatorExtensions.cs" />
     <Compile Include="IReadOnlyWindow.cs" />
+    <Compile Include="MeanAbsoluteDeviation.cs" />
     <Compile Include="Minimum.cs" />
     <Compile Include="Momentum.cs" />
     <Compile Include="MomentumPercent.cs" />
