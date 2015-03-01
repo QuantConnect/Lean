@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
@@ -21,7 +22,7 @@ namespace QuantConnect.Indicators
     /// An indicator that will always return the same value.
     /// </summary>
     /// <typeparam name="T">The type of input this indicator takes</typeparam>
-    public class ConstantIndicator<T> : IndicatorBase<T>
+    public sealed class ConstantIndicator<T> : IndicatorBase<T>
         where T : BaseData
     {
         private readonly decimal _value;
@@ -43,6 +44,8 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             _value = value;
+
+            Current = new IndicatorDataPoint(DateTime.MinValue, value);
         }
 
         /// <summary>

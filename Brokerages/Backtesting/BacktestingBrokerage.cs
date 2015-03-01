@@ -19,7 +19,6 @@ using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages.Backtesting
 {

@@ -20,7 +20,7 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class OfExtensionMethodTests
+    public class IndicatorExtensionsTests
     {
         [Test]
         public void PipesDataUsingOfFromFirstToSecond()
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Indicators
             var identity = new Identity("identity");
             var sma = new SimpleMovingAverage(3);
 
-            identity.DataConsolidated += (sender, consolidated) =>
+            identity.Updated += (sender, consolidated) =>
             {
                 sma.Update(consolidated);
             };
@@ -108,6 +108,17 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsTrue(sma.IsReady);
 
             Assert.AreEqual(1.5m, sma);
+        }
+
+        [Test]
+        public void IsConstantReturnsTrue()
+        {
+            var k = new ConstantIndicator<IndicatorDataPoint>("k", 1m);
+
+            if (k.GetType().IsSubclassOfGeneric(typeof (ConstantIndicator<>)))
+            {
+                
+            }
         }
     }
 }

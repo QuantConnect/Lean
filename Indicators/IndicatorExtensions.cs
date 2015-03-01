@@ -47,7 +47,7 @@ namespace QuantConnect.Indicators
         public static IndicatorBase<IndicatorDataPoint> Of<T>(this IndicatorBase<IndicatorDataPoint> second, IndicatorBase<T> first, bool waitForFirstToReady = true)
             where T : BaseData
         {
-            first.DataConsolidated += (sender, consolidated) =>
+            first.Updated += (sender, consolidated) =>
             {
                 // only send the data along if we're ready
                 if (!waitForFirstToReady || first.IsReady)
