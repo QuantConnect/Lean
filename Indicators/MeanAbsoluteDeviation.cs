@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators {
     /// This indicator computes the n-period mean absolute deviation.
     /// </summary>
     public class MeanAbsoluteDeviation : WindowIndicator<IndicatorDataPoint> {
-        private readonly IndicatorBase<IndicatorDataPoint> _mean;
+        public IndicatorBase<IndicatorDataPoint> Mean { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the MeanAbsoluteDeviation class with the specified period.
@@ -43,7 +43,7 @@ namespace QuantConnect.Indicators {
         /// <param name="period">The sample size of the mean absoluate deviation</param>
         public MeanAbsoluteDeviation(string name, int period)
             : base(name, period) {
-            _mean = MovingAverageType.Simple.AsIndicator(string.Format("{0}_{1}", name, "Mean"), period);
+            Mean = MovingAverageType.Simple.AsIndicator(string.Format("{0}_{1}", name, "Mean"), period);
         }
 
         /// <summary>
@@ -60,11 +60,11 @@ namespace QuantConnect.Indicators {
         /// <param name="window">The window for the input history</param>
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input) {
-            _mean.Update(window[0]);
+            Mean.Update(input);
             if (Samples < 2) {
                 return 0m;
             }
-            return window.Average(v => Math.Abs(v - _mean.Current.Value));
+            return window.Average(v => Math.Abs(v - Mean.Current.Value));
         }
     }
 }

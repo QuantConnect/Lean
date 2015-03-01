@@ -31,8 +31,8 @@ namespace QuantConnect.Indicators {
     /// </summary>
     public class CommodityChannelIndex : TradeBarIndicator {
 
-        /// <summary>This constanst is used to ensure that CCI values fall between +100 and -100, 70% to 80% of the time</summary>
-        private readonly decimal _k = 0.015m;
+        /// <summary>This constant is used to ensure that CCI values fall between +100 and -100, 70% to 80% of the time</summary>
+        private const decimal _k = 0.015m;
         private readonly int _period;
 
         /// <summary>
@@ -44,12 +44,12 @@ namespace QuantConnect.Indicators {
         /// <summary>
         /// Keep track of the simple moving average of the typical price
         /// </summary>
-        private readonly IndicatorBase<IndicatorDataPoint> _typicalPriceAverage;
+        public IndicatorBase<IndicatorDataPoint> TypicalPriceAverage { get; private set; }
 
         /// <summary>
         /// Keep track of the mean absolute deviation of the typical price
         /// </summary>
-        private readonly IndicatorBase<IndicatorDataPoint> _typicalPriceMeanDeviation;
+        public IndicatorBase<IndicatorDataPoint> TypicalPriceMeanDeviation { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the CommodityChannelIndex class
@@ -71,15 +71,15 @@ namespace QuantConnect.Indicators {
             : base(name) {
             _period = period;
             MovingAverageType = movingAverageType;
-            _typicalPriceAverage = movingAverageType.AsIndicator(name + "_TypicalPriceAvg", period);
-            _typicalPriceMeanDeviation = new MeanAbsoluteDeviation(name + "_TypicalPriceMAD", period);
+            TypicalPriceAverage = movingAverageType.AsIndicator(name + "_TypicalPriceAvg", period);
+            TypicalPriceMeanDeviation = new MeanAbsoluteDeviation(name + "_TypicalPriceMAD", period);
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady {
-            get { return _typicalPriceAverage.IsReady && _typicalPriceMeanDeviation.IsReady; }
+            get { return TypicalPriceAverage.IsReady && TypicalPriceMeanDeviation.IsReady; }
         }
 
         /// <summary>
@@ -90,13 +90,13 @@ namespace QuantConnect.Indicators {
         protected override decimal ComputeNextValue(TradeBar input) {
             decimal typicalPrice = (input.High + input.Low + input.Close) / 3.0m;
 
-            _typicalPriceAverage.Update(input.Time, typicalPrice);
-            _typicalPriceMeanDeviation.Update(input.Time, typicalPrice);
+            TypicalPriceAverage.Update(input.Time, typicalPrice);
+            TypicalPriceMeanDeviation.Update(input.Time, typicalPrice);
 
-            if (_typicalPriceMeanDeviation.Current == 0.0m) {
+            if (TypicalPriceMeanDeviation.Current == 0.0m) {
                 return 0.0m;
             }
-            return (typicalPrice - _typicalPriceAverage.Current) / (_k * _typicalPriceMeanDeviation.Current);
+            return (typicalPrice - TypicalPriceAverage.Current) / (_k * TypicalPriceMeanDeviation.Current);
         }
     }
 }
