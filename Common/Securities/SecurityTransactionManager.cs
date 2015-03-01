@@ -336,7 +336,7 @@ namespace QuantConnect.Securities
                 var orderFees = _securities[order.Symbol].Model.GetOrderFee(order.Quantity, order.Price);
 
                 //Return the total buying power for the order, including fees:
-                return (Math.Abs(order.Value) / _securities[order.Symbol].Leverage) + orderFees; 
+                return Math.Abs(order.Value) + orderFees; 
             } 
             catch(Exception err)
             {
