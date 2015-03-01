@@ -37,28 +37,26 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Creates a new SequentialIndicator such that data from 'first' is piped into 'second'
+        /// Configures the second indicator to receive automatic updates from the first by attaching an event handler
+        /// to first.DataConsolidated
         /// </summary>
-        /// <param name="second">The indicator that wraps the first</param>
-        /// <param name="first">The indicator to be wrapped</param>
-        /// <returns>A new SequentialIndicator that pipes data from first to second</returns>
-        public static SequentialIndicator<T> Of<T>(this IndicatorBase<IndicatorDataPoint> second, IndicatorBase<T> first) 
+        /// <param name="second">The indicator that receives data from the first</param>
+        /// <param name="first">The indicator that sends data via DataConsolidated even to the second</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to alway send updates to second</param>
+        /// <returns>The reference to the second indicator to allow for method chaining</returns>
+        public static IndicatorBase<IndicatorDataPoint> Of<T>(this IndicatorBase<IndicatorDataPoint> second, IndicatorBase<T> first, bool waitForFirstToReady = true)
             where T : BaseData
         {
-            return new SequentialIndicator<T>(first, second);
-        }
+            first.DataConsolidated += (sender, consolidated) =>
+            {
+                // only send the data along if we're ready
+                if (!waitForFirstToReady || first.IsReady)
+                {
+                    second.Update(consolidated);
+                }
+            };
 
-        /// <summary>
-        /// Creates a new SequentialIndicator such that data from 'first' is piped into 'second'
-        /// </summary>
-        /// <param name="second">The indicator that wraps the first</param>
-        /// <param name="first">The indicator to be wrapped</param>
-        /// <param name="name">The name of the new indicator</param>
-        /// <returns>A new SequentialIndicator that pipes data from first to second</returns>
-        public static SequentialIndicator<T> Of<T>(this IndicatorBase<IndicatorDataPoint> second, IndicatorBase<T> first, string name)
-            where T : BaseData
-        {
-            return new SequentialIndicator<T>(first, second);
+            return second;
         }
 
         /// <summary>

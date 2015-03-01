@@ -14,6 +14,7 @@
 */
 using System;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 
 namespace QuantConnect.Indicators
 {
@@ -21,7 +22,7 @@ namespace QuantConnect.Indicators
     /// Provides a base type for all indicators
     /// </summary>
     /// <typeparam name="T">The type of data input into this indicator</typeparam>
-    public abstract class IndicatorBase<T>
+    public abstract class IndicatorBase<T> : IDataConsolidator
         where T : BaseData
     {
         /// <summary>the most recent input that was given to this indicator</summary>
@@ -78,6 +79,9 @@ namespace QuantConnect.Indicators
                 _previousInput = input;
                 var nextValue = ComputeNextValue(input);
                 Current = new IndicatorDataPoint(input.Time, nextValue);
+
+                // let others know we've produced a new data point
+                OnDataConsolidated(Current);
             }
             return IsReady;
         }
@@ -116,5 +120,65 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
         protected abstract decimal ComputeNextValue(T input);
+
+        #region IDataConsolidator implementation
+
+        /// <summary>
+        /// Event handler that fires after this indicator is updated
+        /// </summary>
+        public event DataConsolidatedHandler DataConsolidated;
+
+        /// <summary>
+        /// Gets the most recently produced piece of data output by this indicator
+        /// </summary>
+        public BaseData Consolidated
+        {
+            get { return Current; }
+        }
+
+        /// <summary>
+        /// Gets the type consumed by this indicator
+        /// </summary>
+        public Type InputType
+        {
+            get { return typeof(T); }
+        }
+
+        /// <summary>
+        /// Gets the IndicatorDataPoint type
+        /// </summary>
+        public Type OutputType
+        {
+            get { return typeof(IndicatorDataPoint); }
+        }
+
+        /// <summary>
+        /// Updates the state of this indicator with the given value and returns true
+        /// if this indicator is ready, false otherwise
+        /// </summary>
+        /// <param name="data">The value to use to update this indicator</param>
+        /// <returns>True if this indicator is ready, false otherwise</returns>
+        public void Update(BaseData data)
+        {
+            var typed = data as T;
+            if (typed == null)
+            {
+                throw new ArgumentException("Expected input of type " + typeof(T).Name + " but received " + data.GetType().Name);
+            }
+
+            Update(typed);
+        }
+
+        /// <summary>
+        /// Event invocator for the DataConsolidated event
+        /// </summary>
+        /// <param name="consolidated">This is the new piece of data produced by this indicator</param>
+        protected virtual void OnDataConsolidated(BaseData consolidated)
+        {
+            var handler = DataConsolidated;
+            if (handler != null) handler(this, consolidated);
+        }
+
+        #endregion
     }
 }

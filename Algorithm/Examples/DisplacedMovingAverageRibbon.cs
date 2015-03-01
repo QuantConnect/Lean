@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.Examples
     public class DisplacedMovingAverageRibbon : QCAlgorithm
     {
         private const string Symbol = "SPY";
-        private SequentialIndicator<IndicatorDataPoint>[] ribbon;
+        private IndicatorBase<IndicatorDataPoint>[] ribbon;
         public override void Initialize()
         {
             SetStartDate(2009, 01, 01);

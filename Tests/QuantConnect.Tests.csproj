@@ -76,7 +76,7 @@
     <Compile Include="Indicators\MovingAverageTypeExtensionsTests.cs" />
     <Compile Include="Indicators\RelativeStrengthIndexTests.cs" />
     <Compile Include="Indicators\RollingWindowTests.cs" />
-    <Compile Include="Indicators\SequentialIndicatorTests.cs" />
+    <Compile Include="Indicators\OfExtensionMethodTests.cs" />
     <Compile Include="Indicators\SimpleMovingAverageTests.cs" />
     <Compile Include="Indicators\StandardDeviationTests.cs" />
     <Compile Include="Indicators\TestHelper.cs" />
