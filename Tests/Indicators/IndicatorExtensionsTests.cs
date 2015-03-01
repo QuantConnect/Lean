@@ -111,14 +111,87 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void IsConstantReturnsTrue()
+        public void PlusAddsLeftAndRightAfterBothUpdated()
         {
-            var k = new ConstantIndicator<IndicatorDataPoint>("k", 1m);
+            var left = new Identity("left");
+            var right = new Identity("right");
+            var composite = left.Plus(right);
 
-            if (k.GetType().IsSubclassOfGeneric(typeof (ConstantIndicator<>)))
-            {
-                
-            }
+            left.Update(DateTime.Today, 1m);
+            right.Update(DateTime.Today, 1m);
+            Assert.AreEqual(2m, composite.Current.Value);
+
+            left.Update(DateTime.Today, 2m);
+            Assert.AreEqual(2m, composite.Current.Value);
+
+            left.Update(DateTime.Today, 3m);
+            Assert.AreEqual(2m, composite.Current.Value);
+
+            right.Update(DateTime.Today, 4m);
+            Assert.AreEqual(7m, composite.Current.Value);
+        }
+
+        [Test]
+        public void MinusSubtractsLeftAndRightAfterBothUpdated()
+        {
+            var left = new Identity("left");
+            var right = new Identity("right");
+            var composite = left.Minus(right);
+
+            left.Update(DateTime.Today, 1m);
+            right.Update(DateTime.Today, 1m);
+            Assert.AreEqual(0m, composite.Current.Value);
+
+            left.Update(DateTime.Today, 2m);
+            Assert.AreEqual(0m, composite.Current.Value);
+
+            left.Update(DateTime.Today, 3m);
+            Assert.AreEqual(0m, composite.Current.Value);
+
+            right.Update(DateTime.Today, 4m);
+            Assert.AreEqual(-1m, composite.Current.Value);
+        }
+
+        [Test]
+        public void OverDivdesLeftAndRightAfterBothUpdated()
+        {
+            var left = new Identity("left");
+            var right = new Identity("right");
+            var composite = left.Over(right);
+
+            left.Update(DateTime.Today, 1m);
+            right.Update(DateTime.Today, 1m);
+            Assert.AreEqual(1m, composite.Current.Value);
+
+            left.Update(DateTime.Today, 2m);
+            Assert.AreEqual(1m, composite.Current.Value);
+
+            left.Update(DateTime.Today, 3m);
+            Assert.AreEqual(1m, composite.Current.Value);
+
+            right.Update(DateTime.Today, 4m);
+            Assert.AreEqual(3m / 4m, composite.Current.Value);
+        }
+
+        [Test]
+        public void TimesMultipliesLeftAndRightAfterBothUpdated()
+        {
+            var left = new Identity("left");
+            var right = new Identity("right");
+            var composite = left.Times(right);
+
+            left.Update(DateTime.Today, 1m);
+            right.Update(DateTime.Today, 1m);
+            Assert.AreEqual(1m, composite.Current.Value);
+
+            left.Update(DateTime.Today, 2m);
+            Assert.AreEqual(1m, composite.Current.Value);
+
+            left.Update(DateTime.Today, 3m);
+            Assert.AreEqual(1m, composite.Current.Value);
+
+            right.Update(DateTime.Today, 4m);
+            Assert.AreEqual(12m, composite.Current.Value);
         }
     }
 }

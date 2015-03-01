@@ -106,6 +106,10 @@ namespace QuantConnect.Indicators
             return _composer.Invoke(Left, Right);
         }
 
+        /// <summary>
+        /// Configures the event handlers for Left.Updated and Right.Updated to update this instance when
+        /// they both have new data.
+        /// </summary>
         private void ConfigureEventHandlers()
         {
             // if either of these are constants then there's no reason
