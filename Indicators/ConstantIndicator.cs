@@ -45,6 +45,8 @@ namespace QuantConnect.Indicators
         {
             _value = value;
 
+            // set this immediatelyso it always has the .Value property correctly set, the
+            // time will be updated anytime this indicators Update method gets called.
             Current = new IndicatorDataPoint(DateTime.MinValue, value);
         }
 
