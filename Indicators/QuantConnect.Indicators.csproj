@@ -63,6 +63,7 @@
     <Compile Include="Minimum.cs" />
     <Compile Include="Momentum.cs" />
     <Compile Include="MomentumPercent.cs" />
+    <Compile Include="MoneyFlowIndex.cs" />
     <Compile Include="MovingAverageConvergenceDivergence.cs" />
     <Compile Include="MovingAverageType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
