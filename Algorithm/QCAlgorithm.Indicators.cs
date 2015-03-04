@@ -239,6 +239,20 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new MoneyFlowIndex indicator. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose MFI we want</param>
+        /// <param name="period">The period over which to compute the MFI</param>
+        /// <returns>The MoneyFlowIndex indicator for the requested symbol over the specified period</returns>
+        public MoneyFlowIndex MFI(string symbol, int period, Resolution? resolution = null) {
+            var name = CreateIndicatorName(symbol, "MFI" + period, resolution);
+            var mfi = new MoneyFlowIndex(name, period);
+            RegisterIndicator(symbol, mfi, resolution);
+            return mfi;
+        }
+
+        /// <summary>
         /// Creates a new StandardDeviation indicator. This will return the population standard deviation of samples over the specified period.
         /// </summary>
         /// <param name="symbol">The symbol whose STD we want</param>
