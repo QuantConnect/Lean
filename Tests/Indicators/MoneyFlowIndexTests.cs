@@ -22,7 +22,7 @@ namespace QuantConnect.Tests.Indicators {
         [Test]
         public void ComparesAgainstExternalData() {
             var mfi = new MoneyFlowIndex(20);
-            TestHelper.TestIndicator(mfi, "spy_with_cci.txt", "Money Flow Index 20");
+            TestHelper.TestIndicator(mfi, "spy_mfi.txt", "Money Flow Index 20");
         }
     }
 }

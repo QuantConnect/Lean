@@ -68,6 +68,7 @@
     <Compile Include="MovingAverageType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RelativeStrengthIndex.cs" />
+    <Compile Include="Sum.cs" />
     <Compile Include="RollingWindow.cs" />
     <Compile Include="SimpleMovingAverage.cs" />
     <Compile Include="MovingAverageTypeExtensions.cs" />

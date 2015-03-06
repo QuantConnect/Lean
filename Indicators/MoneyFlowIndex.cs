@@ -34,21 +34,32 @@ namespace QuantConnect.Indicators {
     /// </summary>
     public class MoneyFlowIndex : TradeBarIndicator {
 
-        /// <summary>Keep track of postive money flow for postive money flow sum</summary>
-        public RollingWindow<decimal> _positiveMoneyFlowWindow { get; private set; }
-
-        /// <summary>Keep track of negative money flow for negative money flow sum</summary>
-        public RollingWindow<decimal> _negativeMoneyFlowWindow { get; private set; }
-
         /// <summary>The sum of positive money flow to compute money flow ratio</summary>
-        public decimal _positiveMoneyFlowSum { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> PositiveMoneyFlow { get; private set; }
 
         /// <summary>The sum of negative money flow to compute money flow ratio</summary>
-        public decimal _negativeMoneyFlowSum { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> NegativeMoneyFlow { get; private set; }
 
         /// <summary>The current and previous typical price is used to determine postive or negative money flow</summary>
-        public decimal _previousTypicalPrice { get; private set; }
+        public decimal PreviousTypicalPrice { get; private set; }
 
+        /// <summary>The compostion of the negative and postive money flow sums to compute the MFI</summary>
+        private CompositeIndicator<IndicatorDataPoint> _mfiComposite;
+
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady {
+            get { return _mfiComposite.IsReady; }
+        }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset() {
+            _mfiComposite.Reset();
+            base.Reset();
+        }
 
         /// <summary>
         /// Initializes a new instance of the MoneyFlowIndex class
@@ -66,15 +77,12 @@ namespace QuantConnect.Indicators {
         /// <param name="period">The period of the negative and postive money flow</param>
         public MoneyFlowIndex(string name, int period)
             : base(name) {
-            _positiveMoneyFlowWindow = new RollingWindow<decimal>(period);
-            _negativeMoneyFlowWindow = new RollingWindow<decimal>(period);
-        }
+            PositiveMoneyFlow = new Sum(name + "_PositiveMoneyFlowSum", period);
+            NegativeMoneyFlow = new Sum(name + "_NegativeMoneyFlowSum", period);
 
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady {
-            get { return _positiveMoneyFlowWindow.IsReady && _negativeMoneyFlowWindow.IsReady; }
+            _mfiComposite = new CompositeIndicator<IndicatorDataPoint>(PositiveMoneyFlow, NegativeMoneyFlow, (l, r) => {
+                return 100m * l.Current.Value / (l.Current.Value + r.Current.Value);
+            });
         }
 
         /// <summary>
@@ -83,32 +91,19 @@ namespace QuantConnect.Indicators {
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input) {
+            decimal typicalPrice = (input.High + input.Low + input.Close) / 3.0m;
+            decimal moneyFlow = typicalPrice * input.Volume;
+
+            PositiveMoneyFlow.Update(input.Time, typicalPrice > PreviousTypicalPrice ? moneyFlow : 0.0m);
+            NegativeMoneyFlow.Update(input.Time, typicalPrice < PreviousTypicalPrice ? moneyFlow : 0.0m);            
+            PreviousTypicalPrice = typicalPrice;
+
             if (!IsReady) {
                 return 50.0m;
             }
 
-            // Compute typical price and raw money flow
-            decimal typicalPrice = (input.High + input.Low + input.Close) / 3.0m;
-            decimal moneyFlow = typicalPrice * input.Volume;
-
-            // Compute positive money flow sum
-            decimal positiveMoneyFlow = typicalPrice > _previousTypicalPrice ? moneyFlow : 0.0m;
-            _positiveMoneyFlowSum += positiveMoneyFlow;
-            _positiveMoneyFlowWindow.Add(positiveMoneyFlow);
-            _positiveMoneyFlowSum -= _positiveMoneyFlowWindow.MostRecentlyRemoved;
-
-            // Compute negative money flow sum
-            decimal negativeMoneyFlow = typicalPrice < _previousTypicalPrice ? moneyFlow : 0.0m;
-            _negativeMoneyFlowSum += negativeMoneyFlow;
-            _negativeMoneyFlowWindow.Add(negativeMoneyFlow);
-            _negativeMoneyFlowSum -= _negativeMoneyFlowWindow.MostRecentlyRemoved;
-
-            // Update previous typical price
-            _previousTypicalPrice = typicalPrice;
-
-            return 100m * _positiveMoneyFlowSum / (_positiveMoneyFlowSum + _negativeMoneyFlowSum);
+            return _mfiComposite.Current.Value;
         }
-
     }
 }
 
