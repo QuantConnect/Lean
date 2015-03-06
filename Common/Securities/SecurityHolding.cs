@@ -140,7 +140,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return AveragePrice * Convert.ToDecimal(Quantity) / _leverage;
+                return AveragePrice * Convert.ToDecimal(Quantity) / Leverage;
             }
         }
 
