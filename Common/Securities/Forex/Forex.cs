@@ -46,7 +46,7 @@ namespace QuantConnect.Securities.Forex
         {
             //Holdings for new Vehicle:
             Cache = new ForexCache();
-            Holdings = new ForexHolding(symbol, this.Model);
+            Holdings = new ForexHolding(symbol, leverage, this.Model);
             Exchange = new ForexExchange();
             Model = new ForexTransactionModel();
         }

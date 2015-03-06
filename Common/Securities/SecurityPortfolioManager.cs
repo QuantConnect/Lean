@@ -252,9 +252,9 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                //Sum sum of holdings
+                //Sum of unlevered cost of holdings
                 return (from position in Securities.Values
-                        select position.Holdings.AbsoluteHoldingsCost / position.Leverage).Sum();
+                        select position.Holdings.UnleveredAbsoluteHoldingsCost).Sum();
             }
         }
 
@@ -411,17 +411,13 @@ namespace QuantConnect.Securities
         ///     Similarly the desired trade direction can impact the buying power available
         /// </remarks>
         /// <returns>Decimal total buying power for this symbol</returns>
-        public decimal GetFreeCash(string symbol, OrderDirection direction = OrderDirection.Hold) 
+        public virtual decimal GetFreeCash(string symbol, OrderDirection direction = OrderDirection.Hold) 
         {
             //Each asset has different leverage values, so affects our cash position in different ways.
             var holdings = Securities[symbol].Holdings;
-            var remainingCash = Cash;
 
-            var price = Securities[symbol].Price;
-            var leverage = Securities[symbol].Leverage;
-
-            if (direction == OrderDirection.Hold) return remainingCash;
-            //Log.Debug("SecurityPortfolioManager.GetBuyingPower(): Direction: " + direction.ToString());
+            if (direction == OrderDirection.Hold) return Cash;
+            //Log.Debug("SecurityPortfolioManager.GetFreeCash(): Direction: " + direction.ToString());
 
 
             //If the order is in the same direction as holdings, our remaining cash is our cash
@@ -431,12 +427,9 @@ namespace QuantConnect.Securities
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        return remainingCash;
+                        return Cash;
                     case OrderDirection.Sell:
-                        var profit = (price - holdings.AveragePrice) * holdings.AbsoluteQuantity;
-                        var assetCost = holdings.AveragePrice * holdings.AbsoluteQuantity / leverage;
-                        return (profit + assetCost) * 2 + remainingCash;
-
+                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + Cash;
                 }
             }
             else if (Securities[symbol].Holdings.IsShort)
@@ -444,16 +437,14 @@ namespace QuantConnect.Securities
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        var profit = (holdings.AveragePrice - price) * holdings.AbsoluteQuantity;
-                        var assetCost = holdings.AveragePrice * holdings.AbsoluteQuantity / leverage;
-                        return (profit + assetCost) * 2 + remainingCash;
+                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + Cash;
                     case OrderDirection.Sell:
-                        return remainingCash;
+                        return Cash;
                 }
             }
 
-            //No holdings buying power is cash x leverage
-            return remainingCash;
+            //No holdings, return cash
+            return Cash;
         }
 
 

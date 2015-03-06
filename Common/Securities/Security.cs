@@ -214,7 +214,7 @@ namespace QuantConnect.Securities
 
             //Holdings for new Vehicle:
             Cache = new SecurityCache();
-            Holdings = new SecurityHolding(symbol, type, Model);
+            Holdings = new SecurityHolding(symbol, type, leverage, Model);
             Exchange = new SecurityExchange();
         }
 
