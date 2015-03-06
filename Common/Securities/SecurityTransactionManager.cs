@@ -313,7 +313,7 @@ namespace QuantConnect.Securities
         /// <returns>True if suficient capital.</returns>
         public bool GetSufficientCapitalForOrder(SecurityPortfolioManager portfolio, Order order)
         {
-            if (Math.Abs(GetOrderRequiredBuyingPower(order)) > portfolio.GetBuyingPower(order.Symbol, order.Direction)) 
+            if (Math.Abs(GetOrderCashImpact(order)) > portfolio.GetFreeCash(order.Symbol, order.Direction)) 
             {
                 //Log.Debug("Symbol: " + order.Symbol + " Direction: " + order.Direction.ToString() + " Quantity: " + order.Quantity);
                 //Log.Debug("GetOrderRequiredBuyingPower(): " + Math.Abs(GetOrderRequiredBuyingPower(order)) + " PortfolioGetBuyingPower(): " + portfolio.GetBuyingPower(order.Symbol, order.Direction)); 
@@ -327,7 +327,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="order">Order to check</param>
         /// <returns>decimal cash required to purchase order</returns>
-        private decimal GetOrderRequiredBuyingPower(Order order)
+        private decimal GetOrderCashImpact(Order order)
         {
             try
             {
@@ -335,8 +335,8 @@ namespace QuantConnect.Securities
                 //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
                 var orderFees = _securities[order.Symbol].Model.GetOrderFee(order.Quantity, order.Price);
 
-                //Return the total buying power for the order, including fees:
-                return Math.Abs(order.Value) + orderFees; 
+                //Return the total cash impact for the order, including fees:
+                return Math.Abs(order.Value) / _securities[order.Symbol].Leverage + orderFees; 
             } 
             catch(Exception err)
             {
