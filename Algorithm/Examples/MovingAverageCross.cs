@@ -29,11 +29,14 @@ namespace QuantConnect.Algorithm.Examples
     public class MovingAverageCross : QCAlgorithm
     {
         private const string Symbol = "SPY";
-
+        private DateTime previous;
         private ExponentialMovingAverage fast;
         private ExponentialMovingAverage slow;
         private SimpleMovingAverage[] ribbon;
 
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
         public override void Initialize()
         {
             // set up our analysis span
@@ -54,7 +57,11 @@ namespace QuantConnect.Algorithm.Examples
             ribbon = Enumerable.Range(0, ribbonCount).Select(x => SMA(Symbol, (x + 1)*ribbonInterval, Resolution.Daily)).ToArray();
         }
 
-        private DateTime previous;
+        
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
             // a couple things to notice in this method:

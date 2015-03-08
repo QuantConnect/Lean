@@ -31,6 +31,7 @@ namespace QuantConnect.Algorithm.Examples
         // we'll use this to tell us when the month has ended
         DateTime LastRotationTime = DateTime.MinValue;
         TimeSpan RotationInterval = TimeSpan.FromDays(30);
+        private bool first = true;
 
         // these are the growth symbols we'll rotate through
         List<string> GrowthSymbols = new List<string>
@@ -52,6 +53,9 @@ namespace QuantConnect.Algorithm.Examples
         // we'll hold some computed data in these guys
         List<SymbolData> SymbolData = new List<SymbolData>();
 
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
         public override void Initialize()
         {
             SetCash(25000);
@@ -73,7 +77,11 @@ namespace QuantConnect.Algorithm.Examples
             }
         }
 
-        private bool first = true;
+
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
             try

@@ -47,11 +47,14 @@ namespace QuantConnect.Algorithm.Examples
     /// </summary>
     public class DataConsolidation : QCAlgorithm
     {
-        TradeBar last;
-        
+        TradeBar _last;
+
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
         public override void Initialize()
         {
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Minute);
+            AddSecurity(SecurityType.Equity, "SPY");
 
             // we have data for these dates locally
             var start = new DateTime(2013, 10, 07, 09, 30, 0);
@@ -93,16 +96,24 @@ namespace QuantConnect.Algorithm.Examples
             SubscriptionManager.AddConsolidator("SPY", three_oneDayBar);
         }
 
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="bars">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars bars)
         {
             // we need to declare this method
         }
 
+        /// <summary>
+        /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
+        /// </summary>
+        /// <param name="symbol">Asset symbol for this end of day event. Forex and equities have different closing hours.</param>
         public override void OnEndOfDay(string symbol)
         {
             // close up shop each day and reset our 'last' value so we start tomorrow fresh
             Liquidate(symbol);
-            last = null;
+            _last = null;
         }
 
         /// <summary>
@@ -112,17 +123,17 @@ namespace QuantConnect.Algorithm.Examples
         /// </summary>
         private void ThirtyMinuteBarHandler(object sender, TradeBar consolidated)
         {
-            if (last != null && consolidated.Close > last.Close)
+            if (_last != null && consolidated.Close > _last.Close)
             {
                 Log(consolidated.Time.ToString("o") + " >> SPY >> LONG  >> 100 >> " + Portfolio["SPY"].Quantity);
                 Order("SPY", 100);
             }
-            else if (last != null && consolidated.Close < last.Close)
+            else if (_last != null && consolidated.Close < _last.Close)
             {
                 Log(consolidated.Time.ToString("o") + " >> SPY >> SHORT >> 100 >> " + Portfolio["SPY"].Quantity);
                 Order("SPY", -100);
             }
-            last = consolidated;
+            _last = consolidated;
         }
 
         /// <summary>

@@ -40,6 +40,9 @@ namespace QuantConnect.Algorithm.Examples
         List<CorrelationPair> prices = new List<CorrelationPair>();
         int minimumCorrelationHistory = 50;
 
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
         public override void Initialize()
         {
             SetStartDate(2008, 1, 8);
@@ -64,6 +67,11 @@ namespace QuantConnect.Algorithm.Examples
             today.CurrencyPrice = Convert.ToDouble(data.Close);
         }
 
+        /// <summary>
+        /// OnData is the primary entry point for youm algorithm. New data is piped into your algorithm here
+        /// via TradeBars objects.
+        /// </summary>
+        /// <param name="data">TradeBars IDictionary object</param>
         public void OnData(Nifty data)
         {
             try
@@ -109,8 +117,10 @@ namespace QuantConnect.Algorithm.Examples
             }
         }
 
-
-        //Plot Nifty
+        /// <summary>
+        /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
+        /// </summary>
+        /// <remarks>Method is called 10 minutes before closing to allow user to close out position.</remarks>
         public override void OnEndOfDay()
         {
             //if(niftyData != null)
@@ -120,23 +130,48 @@ namespace QuantConnect.Algorithm.Examples
         }
     }
 
+    /// <summary>
+    /// NIFTY Custom Data Class
+    /// </summary>
     public class Nifty : BaseData
     {
+        /// <summary>
+        /// Opening Price
+        /// </summary>
         public decimal Open = 0;
+        /// <summary>
+        /// High Price
+        /// </summary>
         public decimal High = 0;
+        /// <summary>
+        /// Low Price
+        /// </summary>
         public decimal Low = 0;
+        /// <summary>
+        /// Closing Price
+        /// </summary>
         public decimal Close = 0;
 
+        /// <summary>
+        /// Default initializer for NIFTY.
+        /// </summary>
         public Nifty()
         {
-            this.Symbol = "NIFTY";
+            Symbol = "NIFTY";
         }
 
+        /// <summary>
+        /// Return the URL string source of the file. This will be converted to a stream 
+        /// </summary>
         public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
         {
             return "https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1";
         }
 
+        /// <summary>
+        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object 
+        /// each time it is called. 
+        /// </summary>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
         {
             //New Nifty object
@@ -166,23 +201,48 @@ namespace QuantConnect.Algorithm.Examples
     }
 
 
+    /// <summary>
+    /// Dollar Rupe is a custom data type we create for this algorithm
+    /// </summary>
     public class DollarRupee : BaseData
     {
+        /// <summary>
+        /// Open Price 
+        /// </summary>
         public decimal Open = 0;
+        /// <summary>
+        /// High Price
+        /// </summary>
         public decimal High = 0;
+        /// <summary>
+        /// Low Price
+        /// </summary>
         public decimal Low = 0;
+        /// <summary>
+        /// Closing Price
+        /// </summary>
         public decimal Close = 0;
 
+        /// <summary>
+        /// Default constructor for the custom data class.
+        /// </summary>
         public DollarRupee()
         {
-            this.Symbol = "USDINR";
+            Symbol = "USDINR";
         }
 
+        /// <summary>
+        /// Return the URL string source of the file. This will be converted to a stream 
+        /// </summary>
         public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
         {
             return "https://www.dropbox.com/s/m6ecmkg9aijwzy2/USDINR.csv?dl=1";
         }
 
+        /// <summary>
+        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object 
+        /// each time it is called. 
+        /// </summary>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
         {
             //New USDINR object
@@ -205,22 +265,38 @@ namespace QuantConnect.Algorithm.Examples
         }
     }
 
+    /// <summary>
+    /// Correlation Pair is a helper class to combine two data points which we'll use to perform the correlation. 
+    /// </summary>
     public class CorrelationPair
     {
+        /// <summary>
+        /// Date of the correlation pair
+        /// </summary>
         public DateTime Date = new DateTime();
+
+        /// <summary>
+        /// Nifty price for this correlation pair
+        /// </summary>
         public double NiftyPrice = 0;
+
+        /// <summary>
+        /// Currency price for this correlation pair
+        /// </summary>
         public double CurrencyPrice = 0;
 
+        /// <summary>
+        /// Default initializer
+        /// </summary>
         public CorrelationPair()
-        {
+        { }
 
-        }
-
+        /// <summary>
+        /// Date based correlation pair initializer
+        /// </summary>
         public CorrelationPair(DateTime date)
         {
             Date = date.Date;
         }
     }
-
-
 }

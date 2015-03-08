@@ -31,6 +31,9 @@ namespace QuantConnect.Algorithm.Examples
     /// </summary>
     public class CustomDataBitcoinAlgorithm : QCAlgorithm
     {
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
         public override void Initialize()
         {
             //Weather data we have is within these days:
@@ -73,12 +76,39 @@ namespace QuantConnect.Algorithm.Examples
     public class Bitcoin : BaseData
     {
         //Set the defaults:
+        /// <summary>
+        /// Opening Price
+        /// </summary>
         public decimal Open = 0;
+
+        /// <summary>
+        /// High Price
+        /// </summary>
         public decimal High = 0;
+        
+        /// <summary>
+        /// Low Price
+        /// </summary>
         public decimal Low = 0;
+
+        /// <summary>
+        /// Closing Price
+        /// </summary>
         public decimal Close = 0;
+
+        /// <summary>
+        /// Volume in BTC
+        /// </summary>
         public decimal VolumeBTC = 0;
+
+        /// <summary>
+        /// Volume in USD
+        /// </summary>
         public decimal VolumeUSD = 0;
+
+        /// <summary>
+        /// Weighted Average Price
+        /// </summary>
         public decimal WeightedPrice = 0;
 
         /// <summary>
