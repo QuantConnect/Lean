@@ -30,11 +30,15 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class AverageTrueRange : TradeBarIndicator
     {
-        /// <summary>The input we received last time, this is used in ComputeTrueRange</summary>
-        private TradeBar _previousInput;
-
         /// <summary>This indicator is used to smooth the TrueRange computation</summary>
+        /// <remarks>This is not exposed publicly since it is the same value as this indicator, meaning
+        /// that this '_smoother' computers the ATR directly, so exposing it publicly would be duplication</remarks>
         private readonly IndicatorBase<IndicatorDataPoint> _smoother;
+
+        /// <summary>
+        /// Gets the true range which is the more volatile calculation to be smoothed by this indicator
+        /// </summary>
+        public IndicatorBase<TradeBar> TrueRange { get; private set; } 
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -54,6 +58,17 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             _smoother = movingAverageType.AsIndicator(string.Format("{0}_{1}", name, movingAverageType), period);
+
+            TradeBar previous = null;
+            TrueRange = new FunctionalIndicator<TradeBar>(name + "_TrueRange", currentBar =>
+            {
+                // in our ComputeNextValue function we'll just call the ComputeTrueRange
+                var nextValue = ComputeTrueRange(previous, currentBar);
+                previous = currentBar;
+                return nextValue;
+            }   // in our IsReady function we just need at least one sample
+            , trueRangeIndicator => trueRangeIndicator.Samples >= 1
+            );
         }
 
         /// <summary>
@@ -99,13 +114,20 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(TradeBar input)
         {
             // compute the true range and then send it to our smoother
+            TrueRange.Update(input);
+            _smoother.Update(input.Time, TrueRange);
 
-            var trueRange = ComputeTrueRange(_previousInput, input);
-
-            _smoother.Update(input.Time, trueRange);
-
-            _previousInput = input;
             return _smoother.Current.Value;
+        }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _smoother.Reset();
+            TrueRange.Reset();
+            base.Reset();
         }
     }
 }
