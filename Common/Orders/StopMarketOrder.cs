@@ -34,6 +34,17 @@ namespace QuantConnect.Orders
         public decimal StopPrice;
 
         /// <summary>
+        /// Value of the order at stop price
+        /// </summary>
+        public override decimal Value
+        {
+            get
+            {
+                return Convert.ToDecimal(Quantity) * StopPrice;
+            }
+        }
+
+        /// <summary>
         /// Default constructor for JSON Deserialization:
         /// </summary>
         public StopMarketOrder()

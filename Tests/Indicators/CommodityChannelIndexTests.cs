@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -14,25 +14,15 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Brokerages.InteractiveBrokers;
-using QuantConnect.Configuration;
+using QuantConnect.Indicators;
 
-namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
-{
-    [SetUpFixture]
-    [Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
-    public class SetupInteractiveBrokers
-    {
-        [SetUp]
-        public void InitializeGateway()
-        {
-            InteractiveBrokersGatewayRunner.Start(Config.Get("ib-account"));
-        }
-
-        [TearDown]
-        public void KillGateway()
-        {
-            InteractiveBrokersGatewayRunner.Stop();
+namespace QuantConnect.Tests.Indicators {
+    [TestFixture]
+    public class CommodityChannelIndexTests {
+        [Test]
+        public void ComparesAgainstExternalData() {
+            var cci = new CommodityChannelIndex(14);
+            TestHelper.TestIndicator(cci, "spy_with_cci.txt", "Commodity Channel Index (CCI) 14", 1e-2);
         }
     }
 }

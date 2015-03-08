@@ -21,8 +21,14 @@ using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Algorithm.Examples
 {
+    /// <summary>
+    /// Custom Data Example Algorithm using Fillforward to 
+    /// </summary>
     public class CustomDataWithFillForward : QCAlgorithm
     {
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
         public override void Initialize()
         {
             SetStartDate(2014, 05, 01);
@@ -43,122 +49,13 @@ namespace QuantConnect.Algorithm.Examples
             Securities["SPY"].Exchange = new EquityExchange();
         }
 
-        private int lastHour = 0;
-        private DateTime? last = null; 
-        private readonly List<FakeTradeBarCustom> _data = new List<FakeTradeBarCustom>();
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="custom">TradeBars IDictionary object with your stock data</param>
         public void OnData(FakeTradeBarCustom custom)
         {
             Console.WriteLine(custom.Time.ToString("o") + " FF " + (custom.IsFillForward ? "1" : "0") + " " + custom.Symbol);
-            _data.Add(custom);
         }
-
-
-        public static readonly List<string> StockSymbols = new List<string>
-        {
-            "ABT",
-            "ABBV",
-            "ACE",
-            "ACN",
-            "ACT",
-            "ADBE",
-            "ADT",
-            "AES",
-            "AET",
-            "AFL",
-            "AMG",
-            "A",
-            "GAS",
-            "APD",
-            "ARG",
-            "AKAM",
-            "AA",
-            "ALXN",
-            "ATI",
-            "ALLE",
-            "AGN",
-            "ADS",
-            "ALL",
-            "ALTR",
-            "MO",
-            "AMZN",
-            "AEE",
-            "AEP",
-            "AXP",
-            "AIG",
-            "AMT",
-            "AMP",
-            "ABC",
-            "AME",
-            "AMGN",
-            "APH",
-            "APC",
-            "ADI",
-            "AON",
-            "APA",
-            "AIV",
-            "AAPL",
-            "AMAT",
-            "ADM",
-            "AIZ",
-            "T",
-            "ADSK",
-            "ADP",
-            "AN",
-            "AZO",
-            "AVGO",
-            "AVB",
-            "AVY",
-            "AVP",
-            "BHI",
-            "BLL",
-            "BAC",
-            "BK",
-            "BCR",
-            "BAX",
-            "BBT",
-            "BDX",
-            "BBBY",
-            "BMS",
-            "BRK.B",
-            "BBY",
-            "BIIB",
-            "BLK",
-            "HRB",
-            "BA",
-            "BWA",
-            "BXP",
-            "BSX",
-            "BMY",
-            "BRCM",
-            "BF.B",
-            "CHRW",
-            "CA",
-            "CVC",
-            "COG",
-            "CAM",
-            "CPB",
-            "COF",
-            "CAH",
-            "CFN",
-            "KMX",
-            "CCL",
-            "CAT",
-            "CBG",
-            "CBS",
-            "CELG",
-            "CNP",
-            "CTL",
-            "CERN",
-            "CF",
-            "SCHW"
-        };
-
-        public List<string> ForexSymbols = new List<string>
-        {
-            "EURUSD",
-            "NZDUSD",
-            "USDJPY",
-            "USDCAD"
-        };
     }
 }

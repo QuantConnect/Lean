@@ -41,6 +41,18 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void IsReadyAfterPeriodUpdates()
+        {
+            var sma = new SimpleMovingAverage(3);
+
+            sma.Update(DateTime.UtcNow, 1m);
+            sma.Update(DateTime.UtcNow, 1m);
+            Assert.IsFalse(sma.IsReady);
+            sma.Update(DateTime.UtcNow, 1m);
+            Assert.IsTrue(sma.IsReady);
+        }
+
+        [Test]
         public void ResetsProperly()
         {
             var sma = new SimpleMovingAverage(3);

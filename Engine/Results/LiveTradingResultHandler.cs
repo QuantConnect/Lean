@@ -319,7 +319,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                     foreach (var holding in _algorithm.Portfolio.Values.Where(x => x.AbsoluteQuantity > 0).OrderBy(x => x.Symbol))
                     {
-                        holdings.Add(holding.Symbol, new Holding(holding));
+                        holdings.Add(holding.Symbol, new Holding(holding, _algorithm.Securities[holding.Symbol].Type));
                     }
 
                     //Add the algorithm statistics first.
@@ -341,16 +341,13 @@ namespace QuantConnect.Lean.Engine.Results
                     runtimeStatistics.Add("Volume:", "$" + _algorithm.Portfolio.TotalSaleVolume.ToString("N2"));
 
                     // since we're sending multiple packets, let's do it async and forget about it
-                    Task.Factory.StartNew(() =>
-                    {
-                        // chart data can get big so let's break them up into groups
-                        var splitPackets = SplitPackets(deltaCharts, deltaOrders, holdings, deltaStatistics, runtimeStatistics, serverStatistics);
+                    // chart data can get big so let's break them up into groups
+                    var splitPackets = SplitPackets(deltaCharts, deltaOrders, holdings, deltaStatistics, runtimeStatistics, serverStatistics);
 
-                        foreach (var liveResultPacket in splitPackets)
-                        {
-                            Engine.Notify.Send(liveResultPacket);
-                        }
-                    });
+                    foreach (var liveResultPacket in splitPackets)
+                    {
+                        Engine.Notify.Send(liveResultPacket);
+                    }
 
                     //Send full packet to storage.
                     if (DateTime.Now > _nextChartsUpdate)
@@ -726,7 +723,7 @@ namespace QuantConnect.Lean.Engine.Results
                 var charts = new Dictionary<string, Chart>(Charts);
 
                 //Create a packet:
-                LiveResultPacket result = new LiveResultPacket((LiveNodePacket)job, new LiveResult(charts, orders, profitLoss, holdings, statistics, runtime));
+                var result = new LiveResultPacket((LiveNodePacket)job, new LiveResult(charts, orders, profitLoss, holdings, statistics, runtime));
 
                 //Save the processing time:
                 result.ProcessingTime = (DateTime.Now - _startTime).TotalSeconds;

@@ -13,19 +13,34 @@
  * limitations under the License.
 */
 using System;
+using System.Diagnostics;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
+    /// Event handler type for the IndicatorBase.Updated event
+    /// </summary>
+    /// <param name="sender">The indicator that fired the event</param>
+    /// <param name="updated">The new piece of data produced by the indicator</param>
+    public delegate void IndicatorUpdatedHandler(object sender, IndicatorDataPoint updated);
+
+    /// <summary>
     /// Provides a base type for all indicators
     /// </summary>
     /// <typeparam name="T">The type of data input into this indicator</typeparam>
+    [DebuggerDisplay("{ToDetailedString()}")]
     public abstract class IndicatorBase<T>
         where T : BaseData
     {
         /// <summary>the most recent input that was given to this indicator</summary>
         private T _previousInput;
+
+        /// <summary>
+        /// Event handler that fires after this indicator is updated
+        /// </summary>
+        public event IndicatorUpdatedHandler Updated;
 
         /// <summary>
         /// Initializes a new instance of the Indicator class using the specified name.
@@ -51,7 +66,7 @@ namespace QuantConnect.Indicators
         /// Gets the current state of this indicator. If the state has not been updated
         /// then the time on the value will equal DateTime.MinValue.
         /// </summary>
-        public IndicatorDataPoint Current { get; private set; }
+        public IndicatorDataPoint Current { get; protected set; }
 
         /// <summary>
         /// Gets the number of samples processed by this indicator
@@ -78,6 +93,9 @@ namespace QuantConnect.Indicators
                 _previousInput = input;
                 var nextValue = ComputeNextValue(input);
                 Current = new IndicatorDataPoint(input.Time, nextValue);
+
+                // let others know we've produced a new data point
+                OnUpdated(Current);
             }
             return IsReady;
         }
@@ -111,10 +129,29 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Provides a more detailed string of this indicator in the form of {Name} - {Value}
+        /// </summary>
+        /// <returns>A detailed string of this indicator's current state</returns>
+        public string ToDetailedString()
+        {
+            return string.Format("{0} - {1}", Name, this);
+        }
+
+        /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
         protected abstract decimal ComputeNextValue(T input);
+
+        /// <summary>
+        /// Event invocator for the Updated event
+        /// </summary>
+        /// <param name="consolidated">This is the new piece of data produced by this indicator</param>
+        protected virtual void OnUpdated(IndicatorDataPoint consolidated)
+        {
+            var handler = Updated;
+            if (handler != null) handler(this, consolidated);
+        }
     }
 }

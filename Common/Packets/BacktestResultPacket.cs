@@ -147,7 +147,10 @@ namespace QuantConnect.Packets
         {
             try
             {
-                var packet = JsonConvert.DeserializeObject<BacktestResultPacket>(json);
+                var packet = JsonConvert.DeserializeObject<BacktestResultPacket>(json, new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.Auto
+                });
                 CompileId          = packet.CompileId;
                 Channel            = packet.Channel;
                 PeriodFinish       = packet.PeriodFinish;
@@ -161,7 +164,6 @@ namespace QuantConnect.Packets
                 DateRequested      = packet.DateRequested;
                 Name               = packet.Name;
                 ProjectId          = packet.ProjectId;
-                RunMode            = packet.RunMode;
                 Results            = packet.Results;
                 ProcessingTime     = packet.ProcessingTime;
                 TradeableDates     = packet.TradeableDates;

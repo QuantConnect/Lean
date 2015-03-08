@@ -70,7 +70,10 @@ namespace QuantConnect.Algorithm.Examples
     {
         private IAlgorithm _algo;
 
-        //Save instance of algorithm namespace
+        /// <summary>
+        /// Save instance of the algorithm namespace
+        /// </summary>
+        /// <param name="algo"></param>
         public ExchangeDataFilter(IAlgorithm algo)
         {
             _algo = algo;
@@ -112,7 +115,9 @@ namespace QuantConnect.Algorithm.Examples
                 {"V", "Venture"}
             };
 
-            // Allowed exchanges for this filter: top 4
+            /// <summary>
+            /// Select allowed exchanges for this filter: e.g. top 4
+            /// </summary>
             public static List<string> AllowedExchanges = new List<string>() { 
                 "P",    //NYSE ARCA - SPY PRIMARY EXCHANGE
                         //https://www.google.com/finance?q=NYSEARCA%3ASPY&ei=XcA2VKCSLs228waMhYCIBg

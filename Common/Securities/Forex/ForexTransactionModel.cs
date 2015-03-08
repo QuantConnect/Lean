@@ -33,7 +33,7 @@ namespace QuantConnect.Securities.Forex
     /// </summary>
     /// <seealso cref="SecurityTransactionModel"/>
     /// <seealso cref="ISecurityTransactionModel"/>
-    public class ForexTransactionModel : ISecurityTransactionModel {
+    public class ForexTransactionModel : SecurityTransactionModel, ISecurityTransactionModel {
 
         /******************************************************** 
         * CLASS PRIVATE VARIABLES
@@ -70,7 +70,7 @@ namespace QuantConnect.Securities.Forex
         /// <returns>OrderEvent packet with the full or partial fill information</returns>
         /// <seealso cref="OrderEvent"/>
         /// <seealso cref="Order"/>
-        public OrderEvent MarketFill(Security asset, MarketOrder order)
+        public override OrderEvent MarketFill(Security asset, MarketOrder order)
         {
             var fill = new OrderEvent(order);
             try
@@ -117,7 +117,7 @@ namespace QuantConnect.Securities.Forex
         /// <returns>OrderEvent packet with the full or partial fill information</returns>
         /// <seealso cref="OrderEvent"/>
         /// <seealso cref="Order"/>
-        public OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
+        public override OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
             var fill = new OrderEvent(order);
             try
@@ -170,7 +170,7 @@ namespace QuantConnect.Securities.Forex
         /// <returns>OrderEvent packet with the full or partial fill information</returns>
         /// <seealso cref="OrderEvent"/>
         /// <seealso cref="Order"/>
-        public OrderEvent LimitFill(Security asset, LimitOrder order)
+        public override OrderEvent LimitFill(Security asset, LimitOrder order)
         {
             //Initialise;
             var fill = new OrderEvent(order);
@@ -234,7 +234,7 @@ namespace QuantConnect.Securities.Forex
         /// </summary>
         /// <returns>Decimal value of the slippage approximation</returns>
         /// <seealso cref="Order"/>
-        public virtual decimal GetSlippageApproximation(Security security, Order order)
+        public override decimal GetSlippageApproximation(Security security, Order order)
         {
             //Return 0 by default
             decimal slippage = 0;
@@ -279,7 +279,7 @@ namespace QuantConnect.Securities.Forex
         ///     out of date but the data has the spread built into historical data. >> New data source needed.
         /// </remarks>
         /// <returns>Decimal value of the order fee</returns>
-        public virtual decimal GetOrderFee(decimal quantity, decimal price)
+        public override decimal GetOrderFee(decimal quantity, decimal price)
         {
             //Modelled order fee to 0; Assume spread is the fee for most FX brokerages.
             return 0;

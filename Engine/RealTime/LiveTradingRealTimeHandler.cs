@@ -86,6 +86,18 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
         }
 
+
+        /// <summary>
+        /// Market hours for today for each security type in the algorithm
+        /// </summary>
+        public Dictionary<SecurityType, MarketToday> MarketToday
+        {
+            get
+            {
+                return _today;
+            }
+        }
+
         /******************************************************** 
         * PUBLIC CONSTRUCTOR
         *********************************************************/
@@ -121,8 +133,12 @@ namespace QuantConnect.Lean.Engine.RealTime
             //Continue looping until exit triggered:
             while (!_exitTriggered)
             {
-                Thread.Sleep(1000);
+                //Trigger as close to second as reasonable. 1.00, 2.00 etc.
+                var nextSecond = DateTime.Now.RoundUp(TimeSpan.FromSeconds(1));
+                var delay = Convert.ToInt32((nextSecond - DateTime.Now).TotalMilliseconds);
+                Thread.Sleep(delay < 0 ? 1 : delay);
 
+                //Set the current time:
                 SetTime(DateTime.Now);
 
                 //Refresh event processing:
@@ -149,68 +165,135 @@ namespace QuantConnect.Lean.Engine.RealTime
             {
                 //Clear the previous days events to reset with today:
                 ClearEvents();
-
-                //Find unique security types in the collection.
-                var uniqueSecurityTypes = (from security in _algorithm.Securities.Values 
-                                           select security.Type).Distinct();
-
-                //Refresh market status information so we can setup end of day events:
-                foreach (var type in uniqueSecurityTypes)
-                {
-                    if (!_today.ContainsKey(type))
-                    {
-                        //Setup storage
-                        _today.Add(type, new MarketToday());
-                    }
-                    //Refresh the market information
-                    _today[type] = Engine.Api.MarketToday(type);
-                }
+                
+                //Refresh the market hours store:
+                RefreshMarketHoursToday();
 
                 // END OF DAY REAL TIME EVENT:
-                // Load Today variables based on security type:
-                foreach (var security in _algorithm.Securities.Values)
-                {
-                    DateTime? endOfDayEventTime = null;
-
-                    if (!security.IsDynamicallyLoadedData)
-                    {
-                        //If the market is open, set the end of day event time:
-                        if (_today[security.Type].Status == "open")
-                        {
-                            endOfDayEventTime = DateTime.Now.Date + _today[security.Type].Open.End.Subtract(_endOfDayDelta);
-                        }
-                    }
-                    else
-                    {
-                        //If custom/dynamic data get close time from user defined security object.
-                        endOfDayEventTime = DateTime.Now.Date + security.Exchange.MarketClose.Subtract(_endOfDayDelta);
-                    }
-
-                    //2. Set this time as the handler for EOD event:
-                    if (endOfDayEventTime.HasValue)
-                    {
-                        Log.Trace("LiveTradingRealTimeHandler.SetupEvents(): Setup EOD Event for " + endOfDayEventTime.Value.ToString("u"));
-                        var symbol = security.Symbol;
-                        AddEvent(new RealTimeEvent(endOfDayEventTime.Value, () =>
-                        {
-                            try
-                            {
-                                _algorithm.OnEndOfDay();
-                                _algorithm.OnEndOfDay(symbol);
-                                Log.Trace("LiveTradingRealTimeHandler: Fired On End of Day Event(" + symbol + ") for Day( " + _time.ToShortDateString() + ")");
-                            }
-                            catch (Exception err)
-                            {
-                                Engine.ResultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
-                                Log.Error("LiveTradingRealTimeHandler.SetupEvents.Trigger OnEndOfDay(): " + err.Message);
-                            }
-                        }, true));
-                    }
-                }
+                SetupEndOfDayEvent();
             }
             catch (Exception err)
             {
                 Log.Error("LiveTradingRealTimeHandler.SetupEvents(): " + err.Message);
+            }
+        }
+
+
+        /// <summary>
+        /// Setup the end of day event handler for all symbols in the users algorithm. 
+        /// End of market hours are determined by the market hours today property.
+        /// </summary>
+        private void SetupEndOfDayEvent()
+        {
+            // Load Today variables based on security type:
+            foreach (var security in _algorithm.Securities.Values)
+            {
+                DateTime? endOfDayEventTime = null;
+
+                if (!security.IsDynamicallyLoadedData)
+                {
+                    //If the market is open, set the end of day event time:
+                    if (_today[security.Type].Status == "open")
+                    {
+                        endOfDayEventTime = _today[security.Type].Open.End.Subtract(_endOfDayDelta);
+                    }
+                }
+                else
+                {
+                    //If custom/dynamic data get close time from user defined security object.
+                    endOfDayEventTime = DateTime.Now.Date + security.Exchange.MarketClose.Subtract(_endOfDayDelta);
+                }
+
+                //2. Set this time as the handler for EOD event:
+                if (endOfDayEventTime.HasValue)
+                {
+                    Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents(): Setup EOD Event for {0}", endOfDayEventTime.Value.ToString("u")));
+
+                    var symbol = security.Symbol;
+                    AddEvent(new RealTimeEvent(endOfDayEventTime.Value, () =>
+                    {
+                        try
+                        {
+                            _algorithm.OnEndOfDay();
+                            _algorithm.OnEndOfDay(symbol);
+                            Log.Trace(string.Format("LiveTradingRealTimeHandler: Fired On End of Day Event({0}) for Day({1})", symbol, _time.ToShortDateString()));
+                        }
+                        catch (Exception err)
+                        {
+                            Engine.ResultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
+                            Log.Error("LiveTradingRealTimeHandler.SetupEvents.Trigger OnEndOfDay(): " + err.Message);
+                        }
+                    }, true));
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Refresh the Today variable holding the market hours information
+        /// </summary>
+        private void RefreshMarketHoursToday()
+        {
+            _today.Clear();
+
+            //Setup the Security Open Close Market Hours:
+            foreach (var sub in _feed.Subscriptions)
+            {
+                var security = _algorithm.Securities[sub.Symbol];
+
+                //Get the data for this asset from the QC API.
+                if (!_today.ContainsKey(security.Type))
+                {
+                    //Setup storage
+                    _today.Add(security.Type, new MarketToday());
+                    //Refresh the market information
+                    _today[security.Type] = Engine.Api.MarketToday(security.Type);
+                    Log.Trace(
+                        string.Format(
+                            "LiveTradingRealTimeHandler.SetupEvents(): Daily Market Hours Setup for Security Type: {0} Start: {1} Stop: {2}",
+                            security.Type, _today[security.Type].Open.Start, _today[security.Type].Open.End));
+                }
+
+                //Based on the type of security, set the market hours information for the exchange class.
+                switch (security.Type)
+                {
+                    case SecurityType.Equity:
+                        //If we're open set both market open&close to midnight, so it won't open.
+                        if (_today[SecurityType.Equity].Status != "open")
+                        {
+                            _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = TimeSpan.FromHours(0);
+                            _algorithm.Securities[sub.Symbol].Exchange.MarketClose = TimeSpan.FromHours(0);
+                        } 
+                        else if (sub.ExtendedMarketHours)
+                        {
+                            _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = _today[SecurityType.Equity].PreMarket.Start.TimeOfDay;
+                            _algorithm.Securities[sub.Symbol].Exchange.MarketClose = _today[SecurityType.Equity].PostMarket.End.TimeOfDay;
+                            Log.Trace(
+                                string.Format(
+                                    "LiveTradingRealTimeHandler.SetupEvents(Equity): Extended market hours set: Symbol: {0} Start: {1} End: {2}",
+                                    sub.Symbol, _today[SecurityType.Equity].PreMarket.Start,
+                                    _today[SecurityType.Equity].PostMarket.End));
+                        }
+                        else
+                        {
+                            _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = _today[SecurityType.Equity].Open.Start.TimeOfDay;
+                            _algorithm.Securities[sub.Symbol].Exchange.MarketClose = _today[SecurityType.Equity].Open.End.TimeOfDay;
+                            Log.Trace(
+                                string.Format(
+                                    "LiveTradingRealTimeHandler.SetupEvents(Equity): Normal market hours set: Symbol: {0} Start: {1} End: {2}",
+                                    sub.Symbol, _today[SecurityType.Equity].Open.Start, _today[SecurityType.Equity].Open.End));
+                        }
+                        break;
+
+                    case SecurityType.Forex:
+                        _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = _today[SecurityType.Forex].Open.Start.TimeOfDay;
+                        _algorithm.Securities[sub.Symbol].Exchange.MarketClose = _today[SecurityType.Forex].Open.End.TimeOfDay;
+                        Log.Trace(
+                            string.Format(
+                                "LiveTradingRealTimeHandler.SetupEvents(Forex): Normal market hours set: Symbol: {0} Start: {1} End: {2}",
+                                sub.Symbol, _today[SecurityType.Forex].Open.Start, _today[SecurityType.Forex].Open.End));
+                        break;
+                }
             }
         }
 
@@ -263,7 +346,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             //Reset all the daily events
             if (_time.Date != time.Date)
             {
-                //Each day needs the events reset (have different closing times).
+                //Each day needs the events reset to update the market hours and set daily targets/events.
                 SetupEvents(time);
             }
 

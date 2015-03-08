@@ -79,14 +79,19 @@ namespace QuantConnect
         /// <summary>
         /// Create a simple JSON holdings from a Security holding class.
         /// </summary>
-        /// <param name="holding"></param>
-        public Holding(Securities.SecurityHolding holding)
+        /// <param name="holding">Holdings object we'll use to initialize the transport</param>
+        /// <param name="type">Type of the asset holding</param>
+        public Holding(Securities.SecurityHolding holding, SecurityType type)
         {
             Symbol = holding.Symbol;
             Type = holding.Type;
             Quantity = holding.Quantity;
-            AveragePrice = holding.AveragePrice;
-            MarketPrice = holding.Price;
+
+            var rounding = 2;
+            if (type == SecurityType.Forex) rounding = 4;
+
+            AveragePrice = Math.Round(holding.AveragePrice, rounding);
+            MarketPrice = Math.Round(holding.Price, rounding);
         }
     }
 

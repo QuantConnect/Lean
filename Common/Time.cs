@@ -18,6 +18,7 @@
 **********************************************************/
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 
@@ -115,53 +116,39 @@ namespace QuantConnect
         /// </summary>
         /// <param name="dateToParse">String date time to parse</param>
         /// <returns>Date time</returns>
-        public static DateTime ParseDate(string dateToParse) 
+        public static DateTime ParseDate(string dateToParse)
         {
-            var date = DateTime.Now;
-            try {
-                //First try the exact option:
-                try 
+            try
+            {
+                //First try the exact options:
+                DateTime date;
+                if (DateTime.TryParseExact(dateToParse, DateFormat.SixCharacter, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
                 {
-                    date = DateTime.ParseExact(dateToParse, DateFormat.SixCharacter, System.Globalization.CultureInfo.InvariantCulture);
-                } 
-                catch 
+                    return date;
+                }
+                if (DateTime.TryParseExact(dateToParse, DateFormat.EightCharacter, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
                 {
-
-                    try 
-                    {
-                        date = DateTime.ParseExact(dateToParse, DateFormat.EightCharacter, System.Globalization.CultureInfo.InvariantCulture);
-                    } 
-                    catch
-                    {
-                        try 
-                        {
-                            date = DateTime.ParseExact(dateToParse.Substring(0, 19), DateFormat.JsonFormat, System.Globalization.CultureInfo.InvariantCulture);
-                        } 
-                        catch 
-                        {
-                            try 
-                            {
-                                date = DateTime.ParseExact(dateToParse, DateFormat.US, System.Globalization.CultureInfo.InvariantCulture);
-                            } 
-                            catch {
-                                if (DateTime.TryParse(dateToParse, out date) == false) 
-                                {
-                                    Log.Error("Time.ParseDate(): Malformed Date: " + dateToParse);
-                                } 
-                                else 
-                                {
-                                    return date;
-                                }
-                            }
-                        }
-                    }                        
-                }                    
-            } 
-            catch (Exception err) 
+                    return date;
+                }
+                if (DateTime.TryParseExact(dateToParse.Substring(0, 19), DateFormat.JsonFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+                if (DateTime.TryParseExact(dateToParse, DateFormat.US, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+                if (DateTime.TryParse(dateToParse, out date))
+                {
+                    return date;
+                }
+            }
+            catch (Exception err)
             {
                 Log.Error("Time.ParseDate(): " + err.Message);
             }
-            return date;
+            
+            return DateTime.Now;
         }
 
 

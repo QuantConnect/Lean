@@ -84,7 +84,8 @@ namespace QuantConnect
         public static bool ExecuteWithTimeLimit(TimeSpan timeSpan, Action codeBlock, long memoryCap = 1024)
         {
             var message = "";
-            var dtEnd = DateTime.Now + timeSpan;
+            var end = DateTime.Now + timeSpan;
+            var memoryLogger = DateTime.Now + TimeSpan.FromMinutes(1);
 
             //Convert to bytes
             memoryCap *= 1024 * 1024;
@@ -92,11 +93,13 @@ namespace QuantConnect
             ResetCancelToken();
 
             //Thread:
-            var task = Task.Factory.StartNew(codeBlock, cancelToken);            
+            var task = Task.Factory.StartNew(codeBlock, cancelToken);
 
-            while (!task.IsCompleted && DateTime.Now < dtEnd)
+            while (!task.IsCompleted && DateTime.Now < end)
             {
-                if (GC.GetTotalMemory(false) > memoryCap)
+                var memoryUsed = GC.GetTotalMemory(false);
+
+                if (memoryUsed > memoryCap)
                 {
                     if (GC.GetTotalMemory(true) > memoryCap)
                     {
@@ -104,7 +107,18 @@ namespace QuantConnect
                         break;
                     }
                 }
-                Thread.Sleep(1000);
+
+                if (DateTime.Now > memoryLogger)
+                {
+                    if (memoryUsed > (memoryCap * 0.8))
+                    {
+                        memoryUsed = GC.GetTotalMemory(true);
+                        Log.Error("Execution Security Error: Memory usage over 80% capacity.");
+                    }
+                    Console.WriteLine(DateTime.Now.ToString("u") + " Isolator.ExecuteWithTimeLimit(): Used: " + Math.Round(Convert.ToDouble(memoryUsed / (1024 * 1024))));
+                    memoryLogger = DateTime.Now.AddMinutes(1);
+                }
+                Thread.Sleep(100);
             }
 
             if (task.IsCompleted == false && message == "")
@@ -121,6 +135,5 @@ namespace QuantConnect
             }
             return task.IsCompleted;
         }
-
     }
 }

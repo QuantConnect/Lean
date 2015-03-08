@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 foreach (var order in orders)
                 {
                     _interactiveBrokersBrokerage.CancelOrder(order);
-                    manualResetEvent.WaitOne();
+                    manualResetEvent.WaitOne(1500);
                     manualResetEvent.Reset();
                 }
 
@@ -85,6 +85,23 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         }
 
         [Test]
+        public void PlacedOrderHasNewBrokerageOrderID()
+        {
+            var ib = _interactiveBrokersBrokerage;
+
+            var order = new MarketOrder(Symbol, 1, DateTime.Now, type: Type);
+            ib.PlaceOrder(order);
+
+            var brokerageID = order.BrokerId.Single();
+            Assert.AreNotEqual(0, brokerageID);
+
+            order = new MarketOrder(Symbol, 1, DateTime.Now, type: Type);
+            ib.PlaceOrder(order);
+
+            Assert.AreNotEqual(brokerageID, order.BrokerId.Single());
+        }
+
+        [Test]
         public void ClientPlacesMarketOrder()
         {
             bool orderFilled = false;
@@ -101,7 +118,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             };
             
             const int buyQuantity = 1;
-            var order = new Order(Symbol, Type, buyQuantity, OrderType.Market, DateTime.Now);
+            var order = new MarketOrder(Symbol, buyQuantity, DateTime.Now, type: Type);
             ib.PlaceOrder(order);
 
             manualResetEvent.WaitOne(2500);
@@ -127,7 +144,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             };
 
             // sell a single share
-            var order = new Order(Symbol, Type, -1, OrderType.Market, DateTime.UtcNow);
+            var order = new MarketOrder(Symbol, -1, DateTime.UtcNow, type: Type);
             ib.PlaceOrder(order);
 
             manualResetEvent.WaitOne(2500);
@@ -158,7 +175,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             // get the current market price, couldn't get RequestMarketData to fire tick events
             int id = 0;
-            ib.PlaceOrder(new Order(Symbol, Type, 1, OrderType.Market, DateTime.UtcNow) { Id = ++id });
+            ib.PlaceOrder(new MarketOrder(Symbol, 1, DateTime.UtcNow, type: Type) { Id = ++id });
 
             manualResetEvent.WaitOne(2000);
             manualResetEvent.Reset();
@@ -196,7 +213,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             // get the current market price, couldn't get RequestMarketData to fire tick events
             int id = 0;
-            ib.PlaceOrder(new Order(Symbol, Type, 1, OrderType.Market, DateTime.UtcNow) { Id = ++id });
+            ib.PlaceOrder(new MarketOrder(Symbol, 1, DateTime.UtcNow, type: Type) { Id = ++id });
 
             manualResetEvent.WaitOne(2000);
             manualResetEvent.Reset();
@@ -207,10 +224,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             // make a box around the current price +- a little
 
             const int quantity = 1;
-            var order = new Order(Symbol, Type, +quantity, OrderType.StopMarket, DateTime.Now, fillPrice - delta) { Id = ++id };
+            var order = new StopMarketOrder(Symbol, +quantity, fillPrice - delta, DateTime.Now, type: Type) { Id = ++id };
             ib.PlaceOrder(order);
 
-            ib.PlaceOrder(new Order(Symbol, Type, -quantity, OrderType.StopMarket, DateTime.Now, fillPrice + delta) { Id = ++id });
+            ib.PlaceOrder(new StopMarketOrder(Symbol, -quantity, fillPrice + delta, DateTime.Now, type: Type) { Id = ++id });
 
             manualResetEvent.WaitOne(1000);
 
@@ -278,11 +295,11 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             // buy some currency
             const int quantity = 25000;
-            var order = new Order(Symbol, Type, -quantity, OrderType.Market, DateTime.UtcNow);
+            var order = new MarketOrder(Symbol, -quantity, DateTime.UtcNow, type: Type);
             ib.PlaceOrder(order);
 
             // wait for the order to go through
-            manualResetEvent.WaitOne();
+            manualResetEvent.WaitOne(1500);
 
             // wait a little longer for the account update to be sent
             Thread.Sleep(250);
@@ -314,8 +331,8 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             {
                 manualResetEvent.Set();
             };
-            ib.PlaceOrder(new Order(Symbol, Type, 25000, OrderType.Market, new DateTime()));
-            manualResetEvent.WaitOne();
+            ib.PlaceOrder(new MarketOrder(Symbol, 25000, new DateTime(), type: Type));
+            manualResetEvent.WaitOne(1500);
             
             Thread.Sleep(50);
 
@@ -349,12 +366,12 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             {
                 var quantity = 25000;
                 //if (i%2 == 0) quantity *= -1;
-                ib.PlaceOrder(new Order(Symbol, Type, quantity, OrderType.Market, new DateTime()));
+                ib.PlaceOrder(new MarketOrder(Symbol, quantity, new DateTime(), type: Type));
                 
-                orderEventFired.WaitOne();
+                orderEventFired.WaitOne(1500);
                 orderEventFired.Reset();
 
-                accountChangedFired.WaitOne();
+                accountChangedFired.WaitOne(1500);
                 accountChangedFired.Reset();
             }
 
@@ -376,10 +393,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 manualResetEvent.Set();
             };
 
-            var order = new Order(Symbol, Type, 1, OrderType.Market, DateTime.Now);
+            var order = new MarketOrder(Symbol, 1, DateTime.Now, type: Type);
             ib.PlaceOrder(order);
 
-            manualResetEvent.WaitOne();
+            manualResetEvent.WaitOne(1500);
 
             decimal balanceAfterTrade = ib.GetCashBalance();
 
@@ -403,9 +420,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 }
             };
 
-            var order = new Order(Symbol, Type, 25000, OrderType.Market, new DateTime());
+            var order = new MarketOrder(Symbol, 25000, new DateTime(), type: Type);
             ib.PlaceOrder(order);
-            orderEventFired.WaitOne();
+            orderEventFired.WaitOne(1500);
 
             var executions = ib.GetExecutions(null, null, null, DateTime.Now, null);
             var execution = executions.OrderByDescending(x => x.Execution.Time).First();

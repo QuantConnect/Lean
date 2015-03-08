@@ -245,134 +245,142 @@ namespace QuantConnect.Lean.Engine
             var instanceMarketOpen = false;
             //Log.Debug("SubscriptionDataReader.MoveNext(): Starting MoveNext...");
 
-            //Calls this when no file, first "moveNext()" in refresh source.
-            if (_endOfStream || _reader == null || _reader.EndOfStream)
+            try
             {
-                if (_reader == null) 
+                //Calls this when no file, first "moveNext()" in refresh source.
+                if (_endOfStream || _reader == null || _reader.EndOfStream)
                 {
-                    //Handle the 1% of time:: getReader failed e.g. missing day so skip day:
-                    Current = null;
-                } 
-                else
-                { 
-                    //This is a MoveNext() after reading the last line of file:
-                    _lastBarOfStream = Current;
-                }
-                _endOfStream = true;
-                return false;
-            }
-
-            //Log.Debug("SubscriptionDataReader.MoveNext(): Launching While-InstanceNotNull && not EOS: " + reader.EndOfStream);
-            //var attempts = 0;
-            //Keep looking until output's an instance:
-            while (instance == null && !_reader.EndOfStream) //&& attempts++ < 10  
-            {
-                //Get the next string line from file, create instance of BaseData:
-                var line = _reader.ReadLine();
-                try 
-                {
-                    //Using Fasterflex method invokers.
-                    instance = _readerMethodInvoker(_dataFactory, _config, line, _date, _feedEndpoint) as BaseData;
-                } 
-                catch (Exception err) 
-                {
-                    //Log.Debug("SubscriptionDataReader.MoveNext(): Error invoking instance: " + err.Message);
-                    Engine.ResultHandler.RuntimeError("Error invoking " + _config.Symbol + " data reader. Line: " + line + " Error: " + err.Message, err.StackTrace);
+                    if (_reader == null)
+                    {
+                        //Handle the 1% of time:: getReader failed e.g. missing day so skip day:
+                        Current = null;
+                    }
+                    else
+                    {
+                        //This is a MoveNext() after reading the last line of file:
+                        _lastBarOfStream = Current;
+                    }
                     _endOfStream = true;
-                    continue;
+                    return false;
                 }
 
-                if (instance != null)
+                //Log.Debug("SubscriptionDataReader.MoveNext(): Launching While-InstanceNotNull && not EOS: " + reader.EndOfStream);
+                //var attempts = 0;
+                //Keep looking until output's an instance:
+                while (instance == null && !_reader.EndOfStream) //&& attempts++ < 10  
                 {
-                    instanceMarketOpen = _security.Exchange.DateTimeIsOpen(instance.Time);
-
-                    //Apply custom user data filters:
+                    //Get the next string line from file, create instance of BaseData:
+                    var line = _reader.ReadLine();
                     try
                     {
-                        if (!_security.DataFilter.Filter(_security, instance))
+                        //Using Fasterflex method invokers.
+                        instance = _readerMethodInvoker(_dataFactory, _config, line, _date, _feedEndpoint) as BaseData;
+                    }
+                    catch (Exception err)
+                    {
+                        //Log.Debug("SubscriptionDataReader.MoveNext(): Error invoking instance: " + err.Message);
+                        Engine.ResultHandler.RuntimeError("Error invoking " + _config.Symbol + " data reader. Line: " + line + " Error: " + err.Message, err.StackTrace);
+                        _endOfStream = true;
+                        continue;
+                    }
+
+                    if (instance != null)
+                    {
+                        instanceMarketOpen = _security.Exchange.DateTimeIsOpen(instance.Time);
+
+                        //Apply custom user data filters:
+                        try
+                        {
+                            if (!_security.DataFilter.Filter(_security, instance))
+                            {
+                                instance = null;
+                                continue;
+                            }
+                        }
+                        catch (Exception err)
+                        {
+                            Log.Error("SubscriptionDataReader.MoveNext(): Error applying filter: " + err.Message);
+                            Engine.ResultHandler.RuntimeError("Runtime error applying data filter. Assuming filter pass: " + err.Message, err.StackTrace);
+                        }
+
+                        if (instance == null)
+                        {
+                            Log.Trace("SubscriptionDataReader.MoveNext(): Instance null, continuing...");
+                            continue;
+                        }
+
+
+                        //Check if we're in date range of the data request
+                        if (instance.Time < _periodStart)
+                        {
+                            _lastBarOutsideMarketHours = instance;
+                            instance = null;
+                            continue;
+                        }
+                        if (instance.Time > _periodFinish)
                         {
                             instance = null;
                             continue;
                         }
-                    }
-                    catch (Exception err)
-                    {
-                        Log.Error("SubscriptionDataReader.MoveNext(): Error applying filter: " + err.Message);
-                        Engine.ResultHandler.RuntimeError("Runtime error applying data filter. Assuming filter pass: " + err.Message, err.StackTrace);
-                    }
 
-                    if (instance == null) 
-                    {
-                        Log.Trace("SubscriptionDataReader.MoveNext(): Instance null, continuing...");
-                        continue;
-                    }
-                        
+                        //Save bar for extended market hours (fill forward).
+                        if (!instanceMarketOpen)
+                        {
+                            _lastBarOutsideMarketHours = instance;
+                        }
 
-                    //Check if we're in date range of the data request
-                    if (instance.Time < _periodStart) 
-                    {
-                        _lastBarOutsideMarketHours = instance;
-                        instance = null;
-                        continue;
-                    }
-                    if (instance.Time > _periodFinish) 
-                    {
-                        instance = null;
-                        continue;
-                    }
-
-                    //Save bar for extended market hours (fill forward).
-                    if (!instanceMarketOpen) 
-                    {
-                        _lastBarOutsideMarketHours = instance;
-                    }
-
-                    //However, if we only want market hours data, don't return yet: Discard and continue looping.
-                    if (!_config.ExtendedMarketHours && !instanceMarketOpen) 
-                    {
-                        instance = null;
+                        //However, if we only want market hours data, don't return yet: Discard and continue looping.
+                        if (!_config.ExtendedMarketHours && !instanceMarketOpen)
+                        {
+                            instance = null;
+                        }
                     }
                 }
-            }
 
-            //Handle edge conditions: First Bar Read: 
-            // -> Use previous bar from yesterday if available
-            if (Current == null) 
-            {
-                //Handle first loop where not set yet:
-                if (_lastBarOfStream == null) 
+                //Handle edge conditions: First Bar Read: 
+                // -> Use previous bar from yesterday if available
+                if (Current == null)
                 {
-                    //For first bar, fill forward from premarket data where possible
-                    _lastBarOfStream = _lastBarOutsideMarketHours ?? instance;
+                    //Handle first loop where not set yet:
+                    if (_lastBarOfStream == null)
+                    {
+                        //For first bar, fill forward from premarket data where possible
+                        _lastBarOfStream = _lastBarOutsideMarketHours ?? instance;
+                    }
+                    //If current not set yet, set Previous to yesterday/last bar read. 
+                    Previous = _lastBarOfStream;
                 }
-                //If current not set yet, set Previous to yesterday/last bar read. 
-                Previous = _lastBarOfStream;
-            } 
-            else 
-            {
-                Previous = Current;
-            }
-
-            Current = instance;
-                
-            //End of Stream: rewind reader to last 
-            if (_reader.EndOfStream && instance == null) 
-            {
-                //Log.Debug("SubscriptionDataReader.MoveNext(): Reader EOS.");
-                _endOfStream = true;
-
-                if (_isFillForward && Previous != null)
+                else
                 {
-                    //If instance == null, current is null, so clone previous to record the final sample:
-                    Current = Previous.Clone(true);
-                    //When market closes fastforward current bar to the last bar fill forwarded to close time.
-                    Current.Time = _security.Exchange.TimeOfDayClosed(Previous.Time);
-                    // Save the previous bar as last bar before next stream (for fill forwrd).
-                    _lastBarOfStream = Previous;
+                    Previous = Current;
                 }
+
+                Current = instance;
+
+                //End of Stream: rewind reader to last 
+                if (_reader.EndOfStream && instance == null)
+                {
+                    //Log.Debug("SubscriptionDataReader.MoveNext(): Reader EOS.");
+                    _endOfStream = true;
+
+                    if (_isFillForward && Previous != null)
+                    {
+                        //If instance == null, current is null, so clone previous to record the final sample:
+                        Current = Previous.Clone(true);
+                        //When market closes fastforward current bar to the last bar fill forwarded to close time.
+                        Current.Time = _security.Exchange.TimeOfDayClosed(Previous.Time);
+                        // Save the previous bar as last bar before next stream (for fill forwrd).
+                        _lastBarOfStream = Previous;
+                    }
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception err)
+            {
+                Log.Error("SubscriptionDataReader.MoveNext(): " + err.Message);
                 return false;
             }
-            return true;
         }
 
         /// <summary>

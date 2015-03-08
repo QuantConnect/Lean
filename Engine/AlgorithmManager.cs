@@ -131,7 +131,7 @@ namespace QuantConnect.Lean.Engine
             var backwardsCompatibilityMode = false;
             var tradebarsType = typeof (TradeBars);
             var ticksType = typeof(Ticks);
-            var startingPerformance = setup.StartingCapital;
+            var startingPortfolioValue = setup.StartingCapital;
             var backtestMode = (job.Type == PacketType.BacktestNode);
             var methodInvokers = new Dictionary<Type, MethodInvoker>();
 
@@ -206,25 +206,28 @@ namespace QuantConnect.Lean.Engine
                     //Execute with TimeLimit Monitor:
                     if (Isolator.IsCancellationRequested) return;
 
-                    //Refresh the realtime event monitor:
-                    realtime.SetTime(time);
-
                     //Fire EOD if the time packet we just processed is greater 
-                    if (backtestMode && _previousTime.Date != time.Date)
+                    if (backtestMode)
                     {
-                        //Sample the portfolio value over time for chart.
-                        results.SampleEquity(_previousTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
+                        //Refresh the realtime event monitor: 
+                        //in backtest mode use the algorithms clock as realtime.
+                        realtime.SetTime(time);
 
-                        if (startingPerformance == 0)
+                        //On day-change sample equity and daily performance for statistics calculations
+                        if (_previousTime.Date != time.Date)
                         {
-                            results.SamplePerformance(_previousTime.Date, 0);
+                            //Sample the portfolio value over time for chart.
+                            results.SampleEquity(_previousTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
+                            if (startingPortfolioValue == 0)
+                            {
+                                results.SamplePerformance(_previousTime.Date, 0);
+                            }
+                            else
+                            {
+                                results.SamplePerformance(_previousTime.Date, Math.Round((algorithm.Portfolio.TotalPortfolioValue - startingPortfolioValue) * 100 / startingPortfolioValue, 10));
+                            }
+                            startingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
                         }
-                        else
-                        {
-                            results.SamplePerformance(_previousTime.Date, Math.Round((algorithm.Portfolio.TotalPortfolioValue - startingPerformance) * 100 / startingPerformance, 10));
-                        }
-
-                        startingPerformance = algorithm.Portfolio.TotalPortfolioValue;
                     }
 
                     //Check if the user's signalled Quit: loop over data until day changes.
@@ -367,6 +370,7 @@ namespace QuantConnect.Lean.Engine
 
                 // Process any required events of the results handler such as sampling assets, equity, or stock prices.
                 results.ProcessSynchronousEvents();
+
             } // End of ForEach DataStream
 
             //Stream over:: Send the final packet and fire final events:
@@ -417,7 +421,7 @@ namespace QuantConnect.Lean.Engine
             //Take final samples:
             results.SampleRange(algorithm.GetChartUpdates());
             results.SampleEquity(_frontier, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
-            results.SamplePerformance(_frontier, Math.Round((algorithm.Portfolio.TotalPortfolioValue - startingPerformance) * 100 / startingPerformance, 10));
+            results.SamplePerformance(_frontier, Math.Round((algorithm.Portfolio.TotalPortfolioValue - startingPortfolioValue) * 100 / startingPortfolioValue, 10));
         } // End of Run();
 
         /// <summary>

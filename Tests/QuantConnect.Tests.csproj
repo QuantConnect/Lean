@@ -64,15 +64,18 @@
     <Compile Include="Common\SeriesSamplerTests.cs" />
     <Compile Include="Common\Util\ComposerTests.cs" />
     <Compile Include="Common\Util\ExpressionBuilderTests.cs" />
+    <Compile Include="Common\Util\ExtensionsTests.cs" />
     <Compile Include="Indicators\AroonOscillatorTests.cs" />
     <Compile Include="Indicators\AverageTrueRangeTests.cs" />
     <Compile Include="Indicators\BollingerBandsTests.cs" />
+    <Compile Include="Indicators\CommodityChannelIndexTests.cs" />
     <Compile Include="Indicators\CompositeIndicatorTests.cs" />
     <Compile Include="Indicators\DelayTests.cs" />
     <Compile Include="Indicators\ExponentialMovingAverageTests.cs" />
     <Compile Include="Indicators\IdentityTests.cs" />
     <Compile Include="Indicators\IndicatorTests.cs" />
     <Compile Include="Indicators\MaximumTests.cs" />
+    <Compile Include="Indicators\MeanAbsoluteDeviationTests.cs" />
     <Compile Include="Indicators\MinimumTests.cs" />
     <Compile Include="Indicators\MomentumPercentTests.cs" />
     <Compile Include="Indicators\MomentumTests.cs" />
@@ -80,7 +83,7 @@
     <Compile Include="Indicators\MovingAverageTypeExtensionsTests.cs" />
     <Compile Include="Indicators\RelativeStrengthIndexTests.cs" />
     <Compile Include="Indicators\RollingWindowTests.cs" />
-    <Compile Include="Indicators\SequentialIndicatorTests.cs" />
+    <Compile Include="Indicators\IndicatorExtensionsTests.cs" />
     <Compile Include="Indicators\SimpleMovingAverageTests.cs" />
     <Compile Include="Indicators\StandardDeviationTests.cs" />
     <Compile Include="Indicators\TestHelper.cs" />
@@ -147,6 +150,9 @@
     <Content Include="TestData\spy_with_indicators.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />

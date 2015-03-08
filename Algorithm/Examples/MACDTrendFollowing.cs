@@ -29,6 +29,9 @@ namespace QuantConnect.Algorithm.Examples
         private MovingAverageConvergenceDivergence macd;
         private string Symbol = "SPY";
 
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
         public override void Initialize()
         {
             SetStartDate(2009, 01, 01);
@@ -40,6 +43,10 @@ namespace QuantConnect.Algorithm.Examples
             macd = MACD(Symbol, 9, 26, 9, MovingAverageType.Exponential, Resolution.Daily);
         }
 
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
             // only once per day

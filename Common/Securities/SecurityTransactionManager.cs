@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 
@@ -255,23 +256,52 @@ namespace QuantConnect.Securities
                 }
 
                 var order = Orders[orderId];
-                if (order.Status != OrderStatus.Submitted) 
+                if (order.Status != OrderStatus.Submitted && order.Type != OrderType.Market) 
                 {
                     Log.Error("Security.TransactionManager.RemoveOutstandingOrder(): Order already filled");
                     return;
                 }
 
-                var orderToRemove = new Order("", order.SecurityType,  0, OrderType.Market, new DateTime())
-                {
-                    Id = orderId,
-                    Status = OrderStatus.Canceled
-                };
-                OrderQueue.Enqueue(orderToRemove);
+                //Update the status of the order
+                order.Status = OrderStatus.Canceled;
+
+                //Send back to queue to be reprocessed with new status
+                OrderQueue.Enqueue(order);
             }
             catch (Exception err)
             {
                 Log.Error("TransactionManager.RemoveOrder(): " + err.Message);
             }
+        }
+
+
+        /// <summary>
+        /// Get the order by its id
+        /// </summary>
+        /// <param name="orderId">Order id to fetch</param>
+        /// <returns></returns>
+        public Order GetOrderById(int orderId)
+        {
+            Order order = null;
+            try
+            {
+                if (!Orders.TryGetValue(orderId, out order))
+                {
+                    var pending = OrderQueue.ToList();
+
+                    var pendingOrder = (from o in pending 
+                                        where o.Id == orderId 
+                                        select o).FirstOrDefault();
+
+                    return pendingOrder;
+                }
+                return order;
+            }
+            catch (Exception err)
+            {
+                Log.Error("TransactionManager.RemoveOrder(): " + err.Message);
+            }
+            return order;
         }
 
         /// <summary>
@@ -298,9 +328,14 @@ namespace QuantConnect.Securities
         /// <returns>decimal cash required to purchase order</returns>
         private decimal GetOrderRequiredBuyingPower(Order order)
         {
-            try 
+            try
             {
-                return Math.Abs(order.Value) / _securities[order.Symbol].Leverage;    
+                //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
+                //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
+                var orderFees = _securities[order.Symbol].Model.GetOrderFee(order.Quantity, order.Price);
+
+                //Return the total buying power for the order, including fees:
+                return Math.Abs(order.Value) + orderFees; 
             } 
             catch(Exception err)
             {

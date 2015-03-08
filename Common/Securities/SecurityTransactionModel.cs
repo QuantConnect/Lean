@@ -65,7 +65,7 @@ namespace QuantConnect.Securities
         /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
         /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
         /// <seealso cref="LimitFill(Security, LimitOrder)"/>
-        public OrderEvent MarketFill(Security asset, MarketOrder order)
+        public virtual OrderEvent MarketFill(Security asset, MarketOrder order)
         {
             //Default order event to return.
             var fill = new OrderEvent(order);
@@ -76,7 +76,7 @@ namespace QuantConnect.Securities
                 order.Status = OrderStatus.Filled;
 
                 //For backtesting, we assuming the order is 100% filled on first attempt.
-                fill.FillPrice = asset.Price;
+                fill.FillPrice = order.Price;
                 fill.FillQuantity = order.Quantity;
                 fill.Status = order.Status;
             }
@@ -96,7 +96,7 @@ namespace QuantConnect.Securities
         /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
         /// <seealso cref="MarketFill(Security, MarketOrder)"/>
         /// <seealso cref="LimitFill(Security, LimitOrder)"/>
-        public OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
+        public virtual OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
             //Default order event to return.
             var fill = new OrderEvent(order);
@@ -106,23 +106,31 @@ namespace QuantConnect.Securities
                 //If its cancelled don't need anymore checks:
                 if (fill.Status == OrderStatus.Canceled) return fill;
 
+                //Get the range of prices in the last bar:
+                decimal minimumPrice;
+                decimal maximumPrice;
+                DataMinMaxPrices(asset, out minimumPrice, out maximumPrice);
+
                 //Check if the Stop Order was filled: opposite to a limit order
                 switch (order.Direction)
                 {
                     case OrderDirection.Sell:
                         //-> 1.1 Sell Stop: If Price below setpoint, Sell:
-                        if (asset.Price < order.StopPrice)
+                        if (minimumPrice < order.StopPrice)
                         {
                             order.Status = OrderStatus.Filled;
-                            order.Price = asset.Price;
+                            // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
+                            order.Price = Math.Min(order.StopPrice, asset.Price); 
                         }
                         break;
+
                     case OrderDirection.Buy:
                         //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
-                        if (asset.Price > order.StopPrice)
+                        if (maximumPrice > order.StopPrice)
                         {
                             order.Status = OrderStatus.Filled;
-                            order.Price = asset.Price;
+                            // Assuming worse case scenario fill - fill at highest of the stop & asset price.
+                            order.Price = Math.Max(order.StopPrice, asset.Price);
                         }
                         break;
                 }
@@ -136,7 +144,89 @@ namespace QuantConnect.Securities
             }
             catch (Exception err)
             {
-                Log.Error("SecurityTransactionModel.TransOrderDirection.StopFill(): " + err.Message);
+                Log.Error("SecurityTransactionModel.StopMarketFill(): " + err.Message);
+            }
+
+            return fill;
+        }
+
+
+        /// <summary>
+        /// Default stop limit fill model implementation in base class security. (Stop Limit Order Type)
+        /// </summary>
+        /// <param name="asset">Security asset we're filling</param>
+        /// <param name="order">Order packet to model</param>
+        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
+        /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
+        /// <seealso cref="LimitFill(Security, LimitOrder)"/>
+        /// <remarks>
+        ///     There is no good way to model limit orders with OHLC because we never know whether the market has 
+        ///     gapped past our fill price. We have to make the assumption of a fluid, high volume market.
+        /// 
+        ///     Stop limit orders we also can't be sure of the order of the H - L values for the limit fill. The assumption
+        ///     was made the limit fill will be done with closing price of the bar after the stop has been triggered..
+        /// </remarks>
+        public virtual OrderEvent StopLimitFill(Security asset, StopLimitOrder order)
+        {
+            //Default order event to return.
+            var fill = new OrderEvent(order);
+
+            try
+            {
+                //If its cancelled don't need anymore checks:
+                if (fill.Status == OrderStatus.Canceled) return fill;
+
+                //Get the range of prices in the last bar:
+                decimal minimumPrice;
+                decimal maximumPrice;
+                DataMinMaxPrices(asset, out minimumPrice, out maximumPrice);
+
+                //Check if the Stop Order was filled: opposite to a limit order
+                switch (order.Direction)
+                {
+                    case OrderDirection.Buy:
+                        //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
+                        if (maximumPrice > order.StopPrice || order.StopTriggered)
+                        {
+                            order.StopTriggered = true;
+
+                            // Fill the limit order, using closing price of bar:
+                            // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
+                            if (asset.Price < order.LimitPrice)
+                            {
+                                order.Status = OrderStatus.Filled;
+                                order.Price = order.LimitPrice;
+                            }
+                        }
+                        break;
+
+                    case OrderDirection.Sell:
+                        //-> 1.1 Sell Stop: If Price below setpoint, Sell:
+                        if (minimumPrice < order.StopPrice || order.StopTriggered)
+                        {
+                            order.StopTriggered = true;
+
+                            // Fill the limit order, using minimum price of the bar
+                            // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
+                            if (asset.Price > order.LimitPrice)
+                            {
+                                order.Status = OrderStatus.Filled;
+                                order.Price = order.LimitPrice; // Fill at limit price not asset price.
+                            }
+                        }
+                        break;
+                }
+
+                if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled)
+                {
+                    fill.FillQuantity = order.Quantity;
+                    fill.FillPrice = order.Price;
+                    fill.Status = order.Status;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error("SecurityTransactionModel.StopLimitFill(): " + err.Message);
             }
 
             return fill;
@@ -151,7 +241,7 @@ namespace QuantConnect.Securities
         /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
         /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
         /// <seealso cref="MarketFill(Security, MarketOrder)"/>
-        public OrderEvent LimitFill(Security asset, LimitOrder order)
+        public virtual OrderEvent LimitFill(Security asset, LimitOrder order)
         {
             //Initialise;
             var fill = new OrderEvent(order);
@@ -161,40 +251,31 @@ namespace QuantConnect.Securities
                 //If its cancelled don't need anymore checks:
                 if (fill.Status == OrderStatus.Canceled) return fill;
 
-                //Depending on the resolution, return different data types:
-                var marketData = asset.GetLastData();
-
-                decimal marketDataMinPrice;
-                decimal marketDataMaxPrice;
-                if (marketData.DataType == MarketDataType.TradeBar)
-                {
-                    marketDataMinPrice = ((TradeBar)marketData).Low;
-                    marketDataMaxPrice = ((TradeBar)marketData).High;
-                }
-                else
-                {
-                    marketDataMinPrice = marketData.Value;
-                    marketDataMaxPrice = marketData.Value;
-                }
+                //Get the range of prices in the last bar:
+                decimal minimumPrice;
+                decimal maximumPrice;
+                DataMinMaxPrices(asset, out minimumPrice, out maximumPrice);
 
                 //-> Valid Live/Model Order: 
                 switch (order.Direction)
                 {
                     case OrderDirection.Buy:
                         //Buy limit seeks lowest price
-                        if (marketDataMinPrice < order.LimitPrice)
+                        if (minimumPrice < order.LimitPrice)
                         {
                             //Set order fill:
                             order.Status = OrderStatus.Filled;
-                            order.Price = asset.Price;
+                            // Set order fill price to limit price: 99% of times limit orders fill at their limit price
+                            order.Price = order.LimitPrice; 
                         }
                         break;
                     case OrderDirection.Sell:
                         //Sell limit seeks highest price possible
-                        if (marketDataMaxPrice > order.LimitPrice)
+                        if (maximumPrice > order.LimitPrice)
                         {
                             order.Status = OrderStatus.Filled;
-                            order.Price = asset.Price;
+                            // Set order fill price to limit price: 99% of times limit orders fill at their limit price
+                            order.Price = order.LimitPrice;
                         }
                         break;
                 }
@@ -202,7 +283,7 @@ namespace QuantConnect.Securities
                 if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled)
                 {
                     fill.FillQuantity = order.Quantity;
-                    fill.FillPrice = asset.Price;
+                    fill.FillPrice = order.Price;
                     fill.Status = order.Status;
                 }
             }
@@ -232,6 +313,29 @@ namespace QuantConnect.Securities
         public virtual decimal GetOrderFee(decimal quantity, decimal price)
         {
             return 0;
+        }
+
+
+        /// <summary>
+        /// Get the minimum and maximum price for this security in the last bar:
+        /// </summary>
+        /// <param name="asset">Security asset we're checking</param>
+        /// <param name="minimumPrice">Minimum price in the last data bar</param>
+        /// <param name="maximumPrice">Minimum price in the last data bar</param>
+        public void DataMinMaxPrices(Security asset, out decimal minimumPrice, out decimal maximumPrice)
+        {
+            var marketData = asset.GetLastData();
+
+            if (marketData.DataType == MarketDataType.TradeBar)
+            {
+                minimumPrice = ((TradeBar)marketData).Low;
+                maximumPrice = ((TradeBar)marketData).High;
+            }
+            else
+            {
+                minimumPrice = marketData.Value;
+                maximumPrice = marketData.Value;
+            }
         }
 
 

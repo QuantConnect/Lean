@@ -64,7 +64,6 @@ namespace QuantConnect.Lean.Engine
             _subscriptions = feed.Subscriptions.Count;
             var frontier = frontierOrigin;
             var nextEmitTime = DateTime.MinValue;
-            var newData = new SortedDictionary<DateTime, Dictionary<int, List<BaseData>>>();
 
             //Wait for datafeeds to be ready, wait for first data to arrive:
             while (feed.Bridge.Length != _subscriptions) Thread.Sleep(100);
@@ -74,7 +73,7 @@ namespace QuantConnect.Lean.Engine
             {
                 //Reset items which are not fill forward:
                 earlyBirdTicks = 0; 
-                newData = new SortedDictionary<DateTime, Dictionary<int, List<BaseData>>>();
+                var newData = new SortedDictionary<DateTime, Dictionary<int, List<BaseData>>>();
 
                 // spin wait until the feed catches up to our frontier
                 WaitForDataOrEndOfBridges(feed, frontier);

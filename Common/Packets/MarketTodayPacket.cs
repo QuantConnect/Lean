@@ -95,13 +95,13 @@ namespace QuantConnect.Packets
         /// Start time for this market hour category
         /// </summary>
         [JsonProperty(PropertyName = "tsStart")]
-        public TimeSpan Start;
+        public DateTime Start;
 
         /// <summary>
         /// End time for this market hour category
         /// </summary>
         [JsonProperty(PropertyName = "tsEnd")]
-        public TimeSpan End;
+        public DateTime End;
         
         /// <summary>
         /// Market hours initializer given an hours since midnight measure for the market hours today
@@ -110,8 +110,8 @@ namespace QuantConnect.Packets
         /// <param name="defaultEnd">Time in hours since midnight to end this open period.</param>
         public MarketHours(double defaultStart, double defaultEnd)
         {
-            Start = TimeSpan.FromHours(defaultStart);
-            End = TimeSpan.FromHours(defaultEnd);
+            Start = DateTime.Now.Date.AddHours(defaultStart);
+            End = DateTime.Now.Date.AddHours(defaultEnd);
         }
     }
 

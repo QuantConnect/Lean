@@ -34,8 +34,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     {
         // next valid order id for this client
         private int _nextValidID;
-        // the last known cash balance in the account
-
         // next valid client id for the gateway/tws
         private static int _nextClientID;
 
@@ -388,6 +386,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // we timed out our wait for next valid id... we'll just log it
                 Log.Error("InteractiveBrokersBrokerage.Connect(): Timed out waiting for next valid ID event to fire.");
             }
+
+            _client.RequestAccountUpdates(true, _account);
         }
 
         /// <summary>
@@ -575,13 +575,42 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 price = ibOrder.AuxPrice;
             }
 
-            var order = new Order(MapSymbol(contract),
-                ConvertSecurityType(contract.SecurityType),
-                ibOrder.TotalQuantity,
-                ConvertOrderType(ibOrder.OrderType),
-                new DateTime(), // not sure how to get this data
-                price
-                );
+            Order order;
+            var mappedSymbol = MapSymbol(contract);
+            var securityType = ConvertSecurityType(contract.SecurityType);
+            var orderType = ConvertOrderType(ibOrder.OrderType);
+            switch (orderType)
+            {
+                case OrderType.Market:
+                    order = new MarketOrder(mappedSymbol,
+                        ibOrder.TotalQuantity,
+                        new DateTime() // not sure how to get this data
+                        ) {SecurityType = securityType};
+                    break;
+                case OrderType.Limit:
+                    order = new LimitOrder(mappedSymbol,
+                        ibOrder.TotalQuantity,
+                        ibOrder.LimitPrice,
+                        new DateTime()
+                        ) {SecurityType = securityType};
+                    break;
+                case OrderType.StopMarket:
+                    order = new LimitOrder(mappedSymbol,
+                        ibOrder.TotalQuantity,
+                        ibOrder.LimitPrice,
+                        new DateTime()
+                        ) {SecurityType = securityType};
+                    break;
+                case OrderType.StopLimit:
+                    order = new LimitOrder(mappedSymbol,
+                        ibOrder.TotalQuantity,
+                        ibOrder.LimitPrice,
+                        new DateTime()
+                        ) {SecurityType = securityType};
+                    break;
+                default:
+                    throw new InvalidEnumArgumentException("orderType", (int) orderType, typeof (OrderType));
+            }
 
             order.BrokerId.Add(ibOrder.OrderId);
 

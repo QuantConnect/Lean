@@ -505,10 +505,10 @@ namespace QuantConnect.Algorithm
         { 
             //Validate the start date:
             //1. Check range;
-            //if (start < (new DateTime(1998, 01, 01))) 
-            //{
-            //    throw new Exception("Please select data between January 1st, 1998 to July 31st, 2012.");
-            //}
+            if (start < (new DateTime(1900, 01, 01)))
+            {
+                throw new Exception("Please select a stat date after January 1st, 1900.");
+            }
 
             //2. Check end date greater:
             if (_endDate != new DateTime()) 

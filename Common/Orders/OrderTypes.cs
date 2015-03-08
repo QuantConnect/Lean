@@ -40,7 +40,12 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Stop Market Order Type - Fill at market price when break target price
         /// </summary>
-        StopMarket
+        StopMarket,
+
+        /// <summary>
+        /// Stop limit order type - trigger fill once pass the stop price; but limit fill to limit price.
+        /// </summary>
+        StopLimit
     }
 
 

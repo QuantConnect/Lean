@@ -23,6 +23,14 @@ namespace QuantConnect.Indicators
         private decimal _sum;
 
         /// <summary>
+        ///     Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady
+        {
+            get { return Samples >= Period; }
+        }
+
+        /// <summary>
         ///     Initializes a new instance of the SimpleMovingAverage class with the specified name and period
         /// </summary>
         /// <param name="name">The name of this indicator</param>

@@ -32,7 +32,14 @@ namespace QuantConnect.Algorithm.Examples
     public class DisplacedMovingAverageRibbon : QCAlgorithm
     {
         private const string Symbol = "SPY";
-        private SequentialIndicator<IndicatorDataPoint>[] ribbon;
+        private IndicatorBase<IndicatorDataPoint>[] _ribbon;
+
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
+        /// <seealso cref="QCAlgorithm.SetStartDate(System.DateTime)"/>
+        /// <seealso cref="QCAlgorithm.SetEndDate(System.DateTime)"/>
+        /// <seealso cref="QCAlgorithm.SetCash(decimal)"/>
         public override void Initialize()
         {
             SetStartDate(2009, 01, 01);
@@ -47,7 +54,7 @@ namespace QuantConnect.Algorithm.Examples
             // define our sma as the base of the ribbon
             var sma = new SimpleMovingAverage(period);
 
-            ribbon = Enumerable.Range(0, count).Select(x =>
+            _ribbon = Enumerable.Range(0, count).Select(x =>
             {
                 // define our offset to the zero sma, these various offsets will create our 'displaced' ribbon
                 var delay = new Delay(offset*(x+1));
@@ -62,22 +69,26 @@ namespace QuantConnect.Algorithm.Examples
             }).ToArray();
         }
 
-        private DateTime previous;
+        private DateTime _previous;
 
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
             // wait for our entire ribbon to be ready
-            if (!ribbon.All(x => x.IsReady)) return;
+            if (!_ribbon.All(x => x.IsReady)) return;
 
             // only once per day
-            if (previous.Date == data.Time.Date) return;
+            if (_previous.Date == data.Time.Date) return;
 
             Plot(Symbol, "Price", data[Symbol].Price);
-            Plot(Symbol, ribbon);
+            Plot(Symbol, _ribbon);
 
 
             // check for a buy signal
-            var values = ribbon.Select(x => x.Current.Value).ToArray();
+            var values = _ribbon.Select(x => x.Current.Value).ToArray();
 
             var holding = Portfolio[Symbol];
             if (holding.Quantity <= 0 && IsAscending(values))
@@ -89,7 +100,7 @@ namespace QuantConnect.Algorithm.Examples
                 Liquidate(Symbol);
             }
 
-            previous = data.Time;
+            _previous = data.Time;
         }
 
         /// <summary>

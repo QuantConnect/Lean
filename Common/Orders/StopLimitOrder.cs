@@ -24,18 +24,27 @@ namespace QuantConnect.Orders
     * ORDER CLASS DEFINITION
     *********************************************************/
     /// <summary>
-    /// Limit order type definition
+    /// Stop Market Order Type Definition
     /// </summary>
-    public class LimitOrder : Order
+    public class StopLimitOrder : Order
     {
         /// <summary>
-        /// Limit price for this order.
+        /// Stop price for this stop market order.
+        /// </summary>
+        public decimal StopPrice;
+
+        /// <summary>
+        /// Signal showing the "StopLimitOrder" has been converted into a Limit Order
+        /// </summary>
+        public bool StopTriggered = false;
+
+        /// <summary>
+        /// Limit price for the stop limit order
         /// </summary>
         public decimal LimitPrice;
 
-
         /// <summary>
-        /// Value of the order at limit price if a limit order
+        /// Maximum value of the order at is the stop limit price
         /// </summary>
         public override decimal Value
         {
@@ -46,33 +55,34 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Added a default constructor for JSON Deserialization:
+        /// Default constructor for JSON Deserialization:
         /// </summary>
-        public LimitOrder()
+        public StopLimitOrder()
         {
-            Type = OrderType.Limit;
+            Type = OrderType.StopLimit;
         }
 
         /// <summary>
-        /// New limit order constructor
+        /// New Stop Market Order constructor - 
         /// </summary>
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
         /// <param name="type">Type of the security order</param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
-        /// <param name="order">Order type (market, limit or stoploss order)</param>
+        /// <param name="limitPrice">Maximum price to fill the order</param>
         /// <param name="time">Time the order was placed</param>
-        /// <param name="limitPrice">Price the order should be filled at if a limit order</param>
+        /// <param name="stopPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public LimitOrder(string symbol, int quantity, decimal limitPrice, DateTime time, string tag = "", SecurityType type = SecurityType.Base) :
-            base(symbol, quantity, OrderType.Limit, time, 0, tag, type)
+        public StopLimitOrder(string symbol, int quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag = "", SecurityType type = SecurityType.Base) :
+            base(symbol, quantity, OrderType.StopLimit, time, 0, tag, type)
         {
+            StopPrice = stopPrice;
             LimitPrice = limitPrice;
-            Type = OrderType.Limit;
+            Type = OrderType.StopLimit;
 
             if (tag == "")
             {
-                //Default tag values to display limit price in GUI.
-                Tag = "Limit Price: " + limitPrice.ToString("C");
+                //Default tag values to display stop price in GUI.
+                Tag = "Stop Price: " + stopPrice.ToString("C") + " Limit Price: " + limitPrice.ToString("C");
             }
         }
     }
