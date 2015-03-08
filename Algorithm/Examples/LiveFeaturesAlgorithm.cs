@@ -83,11 +83,34 @@ namespace QuantConnect
     public class Bitcoin : BaseData
     {
         //Set the defaults:
+        /// <summary>
+        /// Open Price
+        /// </summary>
         public decimal Open = 0;
+        
+        /// <summary>
+        /// High Price
+        /// </summary>
         public decimal High = 0;
+        
+        /// <summary>
+        /// Low Price
+        /// </summary>
         public decimal Low = 0;
+
+        /// <summary>
+        /// Closing Price
+        /// </summary>
         public decimal Close = 0;
+        
+        /// <summary>
+        /// Volume in BTC
+        /// </summary>
         public decimal VolumeBTC = 0;
+        
+        /// <summary>
+        /// Volume in USD:
+        /// </summary>
         public decimal WeightedPrice = 0;
 
         /// <summary>
@@ -95,7 +118,7 @@ namespace QuantConnect
         /// </summary>
         public Bitcoin()
         {
-            this.Symbol = "BTC";
+            Symbol = "BTC";
         }
 
         /// <summary>

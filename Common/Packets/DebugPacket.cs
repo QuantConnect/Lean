@@ -57,20 +57,6 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "iProjectID")]
         public int ProjectId;
 
-        /// Boolean flag indicating this is a live message and should bypass messaging restrictions
-        [JsonProperty(PropertyName = "bLiveMessage")]
-        public bool LiveMessage 
-        {
-            get
-            {
-                if (AlgorithmId != null && AlgorithmId.Length > 2)
-                {
-                    return AlgorithmId.Substring(0, 2) == "L:";
-                }
-                return false;
-            }
-        }
-
         /******************************************************** 
         * CLASS CONSTRUCTOR
         *********************************************************/

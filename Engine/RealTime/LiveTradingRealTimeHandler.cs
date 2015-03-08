@@ -135,7 +135,8 @@ namespace QuantConnect.Lean.Engine.RealTime
             {
                 //Trigger as close to second as reasonable. 1.00, 2.00 etc.
                 var nextSecond = DateTime.Now.RoundUp(TimeSpan.FromSeconds(1));
-                Thread.Sleep(Convert.ToInt32((nextSecond - DateTime.Now).TotalMilliseconds));
+                var delay = Convert.ToInt32((nextSecond - DateTime.Now).TotalMilliseconds);
+                Thread.Sleep(delay < 0 ? 1 : delay);
 
                 //Set the current time:
                 SetTime(DateTime.Now);
