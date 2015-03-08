@@ -164,7 +164,6 @@ namespace QuantConnect.Packets
                 DateRequested      = packet.DateRequested;
                 Name               = packet.Name;
                 ProjectId          = packet.ProjectId;
-                RunMode            = packet.RunMode;
                 Results            = packet.Results;
                 ProcessingTime     = packet.ProcessingTime;
                 TradeableDates     = packet.TradeableDates;
