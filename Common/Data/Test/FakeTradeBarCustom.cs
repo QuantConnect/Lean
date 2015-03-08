@@ -25,13 +25,20 @@ namespace QuantConnect.Data.Test
     public abstract class FakeTradeBarCustom : TradeBar
     {
         private readonly SecurityType _type;
+        private static readonly Random _random = new Random();
 
+        /// <summary>
+        /// Constructor for fake tradebar data by type
+        /// </summary>
+        /// <param name="type">Asset type</param>
         protected FakeTradeBarCustom(SecurityType type)
         {
             _type = type;
         }
 
-        private static readonly Random _random = new Random();
+        /// <summary>
+        /// TradeBar Reader: Fetch the data from the QC storage and feed it line by line into the engine.
+        /// </summary>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
         {
             if (_random.NextDouble() < 0.01)
@@ -45,8 +52,14 @@ namespace QuantConnect.Data.Test
             return CreateFromTradeBar(tradeBar);
         }
 
+        /// <summary>
+        /// Create the tradebar required in inherited classes
+        /// </summary>
         protected abstract BaseData CreateFromTradeBar(TradeBar tradeBar);
 
+        /// <summary>
+        /// Get Source for Fake Data
+        /// </summary>
         public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
         {
             // this is really a base security type, but we're pulling data from the equities/forex
@@ -55,6 +68,9 @@ namespace QuantConnect.Data.Test
             return file;
         }
 
+        /// <summary>
+        /// Cloner for tradebar
+        /// </summary>
         public override BaseData Clone()
         {
             return ObjectActivator.Clone(this) as FakeTradeBarCustom;
@@ -66,11 +82,17 @@ namespace QuantConnect.Data.Test
     /// </summary>
     public class FakeEquityTradeBarCustom : FakeTradeBarCustom
     {
+        /// <summary>
+        /// Constructor for creating fake equity data
+        /// </summary>
         public FakeEquityTradeBarCustom() 
             : base(SecurityType.Equity)
         {
         }
 
+        /// <summary>
+        /// Create the tradebar required in inherited classes
+        /// </summary>
         protected override BaseData CreateFromTradeBar(TradeBar tradeBar)
         {
             return new FakeEquityTradeBarCustom
@@ -93,11 +115,17 @@ namespace QuantConnect.Data.Test
     /// </summary>
     public class FakeForexTradeBarCustom : FakeTradeBarCustom
     {
+        /// <summary>
+        /// Forex Type Fake Tradebar Constructor
+        /// </summary>
         public FakeForexTradeBarCustom() 
             : base(SecurityType.Forex)
         {
         }
 
+        /// <summary>
+        /// Create the tradebar required in inherited classes
+        /// </summary>
         protected override BaseData CreateFromTradeBar(TradeBar tradeBar)
         {
             return new FakeForexTradeBarCustom
