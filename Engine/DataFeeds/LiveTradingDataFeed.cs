@@ -56,7 +56,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _exitTriggered = false;
         private List<string> _symbols = new List<string>();
         private Dictionary<int, StreamStore> _streamStore = new Dictionary<int, StreamStore>();
-        private bool _hibernate = false;
         private List<decimal> _realtimePrices;
 
         /******************************************************** 
@@ -236,9 +235,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         sourceDate = now.Date;
                     }
 
-                    //If hibernate stop sending data until market opens
-                    if (_hibernate) continue;
-
                     switch (_subscriptions[i].Resolution)
                     { 
                         //This is a second resolution data source:
@@ -317,9 +313,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Scan for the required time period to stream:
             Log.Trace("LiveTradingDataFeed.Stream(): Waiting for updated market hours...", true);
 
-            //Wait for one of our equity securities to be open! Attempt to reopen stream when day changes.
-            Hibernate();
-
             //Awake:
             Log.Trace("LiveTradingDataFeed.Stream(): Market open, starting stream for " + string.Join(",", _symbols));
 
@@ -346,14 +339,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
-                    //If we did hibernate we'll probably need a new session variable, or Quit if signalled.
-                    if (Hibernate())
-                    {
-                        //We're coming out of a long term hibernation
-                    }
-
                     if (_exitTriggered) return;
-                    Thread.Sleep(1);
+                    if (ticks.Count() == 0) Thread.Sleep(5);
                 }
             });
 
@@ -402,12 +389,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
-                    //If we did hibernate we'll probably need a new session variable, or Quit if signalled.
-                    if (Hibernate())
-                    {
-                        //We're coming out of a long term hibernation
-                    }
-
                     if (_exitTriggered) return;
                     Thread.Sleep(10);
                 }
@@ -453,40 +434,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _exitTriggered = true;
                 PurgeData();
             }
-        }
-
-        /// <summary>
-        /// Conditionally hibernate if the market has closed to avoid constantly pinging 
-        /// the API or trying to login while the market is closed.
-        /// </summary>
-        public bool Hibernate()
-        {
-            //Wait for one of our equity securities to be open! Attempt to reopen stream when day changes.
-            var hibernateDate = DateTime.Now.Date;
-            var announced = false;
-            
-            //Wait here while market is closed and its the same date: when date changes refresh the market hours for the new day:
-            while (!AnySecurityOpen() && hibernateDate.Date == DateTime.Now.Date && !_exitTriggered)
-            {
-                if (!_hibernate) 
-                {
-                    Log.Trace("LiveTradingDataFeed.Hibernate(): All securities closed, hibernating until market open. Closing Datafeed.");
-                    Engine.ResultHandler.DebugMessage("All securities closed, hibernating until market open.");
-                    announced = true;
-                    _hibernate = true;
-                    Engine.Queue.CloseDataQueue();
-                }
-                Thread.Sleep(1000); 
-            }
-
-            if (_hibernate && !_exitTriggered)
-            {
-                Log.Trace("LiveTradingDataFeed.Hibernate(): Re-Opening Datafeed.");
-                Engine.Queue.OpenDataQueue();
-            }
-
-            _hibernate = false;
-            return announced;
         }
 
         /// <summary>
