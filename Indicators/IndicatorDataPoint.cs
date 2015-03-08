@@ -19,12 +19,22 @@ using QuantConnect.Data;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    ///     Represents a piece of data at a specific time
+    /// Represents a piece of data at a specific time
     /// </summary>
     public class IndicatorDataPoint : BaseData, IEquatable<IndicatorDataPoint>
     {
         /// <summary>
-        ///     Initializes a new instance of the DataPoint type using the specified time/data
+        /// Initializes a new default instance of IndicatorDataPoint with a time of
+        /// DateTime.MinValue and a Value of 0m.
+        /// </summary>
+        public IndicatorDataPoint()
+        {
+            Value = 0m;
+            Time = DateTime.MinValue;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the DataPoint type using the specified time/data
         /// </summary>
         /// <param name="time">The time this data was produced</param>
         /// <param name="value">The data</param>
@@ -35,10 +45,10 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     Indicates whether the current object is equal to another object of the same type.
+        /// Indicates whether the current object is equal to another object of the same type.
         /// </summary>
         /// <returns>
-        ///     true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.
+        /// true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.
         /// </returns>
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(IndicatorDataPoint other)
@@ -51,10 +61,10 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     Returns a string representation of this DataPoint instance using ISO8601 formatting for the date
+        /// Returns a string representation of this DataPoint instance using ISO8601 formatting for the date
         /// </summary>
         /// <returns>
-        ///     A <see cref="T:System.String" /> containing a fully qualified type name.
+        /// A <see cref="T:System.String" /> containing a fully qualified type name.
         /// </returns>
         /// <filterpriority>2</filterpriority>
         public override string ToString()
@@ -63,10 +73,10 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     Indicates whether this instance and a specified object are equal.
+        /// Indicates whether this instance and a specified object are equal.
         /// </summary>
         /// <returns>
-        ///     true if <paramref name="obj" /> and this instance are the same type and represent the same value; otherwise, false.
+        /// true if <paramref name="obj" /> and this instance are the same type and represent the same value; otherwise, false.
         /// </returns>
         /// <param name="obj">Another object to compare to. </param>
         /// <filterpriority>2</filterpriority>
@@ -77,10 +87,10 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     Returns the hash code for this instance.
+        /// Returns the hash code for this instance.
         /// </summary>
         /// <returns>
-        ///     A 32-bit signed integer that is the hash code for this instance.
+        /// A 32-bit signed integer that is the hash code for this instance.
         /// </returns>
         /// <filterpriority>2</filterpriority>
         public override int GetHashCode()
@@ -92,7 +102,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     Returns the data held within the instance
+        /// Returns the data held within the instance
         /// </summary>
         /// <param name="instance">The DataPoint instance</param>
         /// <returns>The data held within the instance</returns>

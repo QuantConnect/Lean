@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.Examples
     public class DisplacedMovingAverageRibbon : QCAlgorithm
     {
         private const string Symbol = "SPY";
-        private SequentialIndicator<IndicatorDataPoint>[] _ribbon;
+        private IndicatorBase<IndicatorDataPoint>[] _ribbon;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.

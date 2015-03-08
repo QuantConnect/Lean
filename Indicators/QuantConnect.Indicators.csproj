@@ -68,7 +68,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RelativeStrengthIndex.cs" />
     <Compile Include="RollingWindow.cs" />
-    <Compile Include="SequentialIndicator.cs" />
     <Compile Include="SimpleMovingAverage.cs" />
     <Compile Include="MovingAverageTypeExtensions.cs" />
     <Compile Include="Maximum.cs" />

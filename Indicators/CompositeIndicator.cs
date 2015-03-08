@@ -21,9 +21,14 @@ namespace QuantConnect.Indicators
     /// This indicator is capable of wiring up two separate indicators into a single indicator
     /// such that the output of each will be sent to a user specified function.
     /// </summary>
+    /// <remarks>
+    /// This type is initialized such that there is no need to call the Update function. This indicator
+    /// will have its values automatically updated each time a new piece of data is received from both
+    /// the left and right indicators.
+    /// </remarks>
     /// <typeparam name="T">The type of data input into this indicator</typeparam>
     public class CompositeIndicator<T> : IndicatorBase<T>
-        where T : BaseData
+        where T : BaseData, new()
     {
         /// <summary>
         /// Delegate type used to compose the output of two indicators into a new value.
@@ -72,6 +77,7 @@ namespace QuantConnect.Indicators
             _composer = composer;
             Left = left;
             Right = right;
+            ConfigureEventHandlers();
         }
 
         /// <summary>
@@ -87,6 +93,7 @@ namespace QuantConnect.Indicators
             _composer = composer;
             Left = left;
             Right = right;
+            ConfigureEventHandlers();
         }
 
         /// <summary>
@@ -96,9 +103,53 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(T input)
         {
-            Left.Update(input);
-            Right.Update(input);
             return _composer.Invoke(Left, Right);
+        }
+
+        /// <summary>
+        /// Configures the event handlers for Left.Updated and Right.Updated to update this instance when
+        /// they both have new data.
+        /// </summary>
+        private void ConfigureEventHandlers()
+        {
+            // if either of these are constants then there's no reason
+            bool leftIsConstant = Left.GetType().IsSubclassOfGeneric(typeof (ConstantIndicator<>));
+            bool rightIsConstant = Right.GetType().IsSubclassOfGeneric(typeof (ConstantIndicator<>));
+
+            // wire up the Updated events such that when we get a new piece of data from both left and right
+            // we'll call update on this indicator. It's important to note that the CompositeIndicator only uses
+            // the timestamp that gets passed into the Update function, his compuation is soley a function
+            // of the left and right indicator via '_composer'
+
+            IndicatorDataPoint newLeftData = null;
+            IndicatorDataPoint newRightData = null;
+            Left.Updated += (sender, updated) =>
+            {
+                newLeftData = updated;
+
+                // if we have left and right data (or if right is a constant) then we need to update
+                if (newRightData != null || rightIsConstant)
+                {
+                    Update(new T {Time = updated.Time});
+                    // reset these to null after each update
+                    newLeftData = null;
+                    newRightData = null;
+                }
+            };
+
+            Right.Updated += (sender, updated) =>
+            {
+                newRightData = updated;
+
+                // if we have left and right data (or if left is a constant) then we need to update
+                if (newLeftData != null || leftIsConstant)
+                {
+                    Update(new T { Time = updated.Time });
+                    // reset these to null after each update
+                    newLeftData = null;
+                    newRightData = null;
+                }
+            };
         }
     }
 }

@@ -60,6 +60,7 @@
     <Compile Include="Common\OSTests.cs" />
     <Compile Include="Common\SeriesSamplerTests.cs" />
     <Compile Include="Common\Util\ExpressionBuilderTests.cs" />
+    <Compile Include="Common\Util\ExtensionsTests.cs" />
     <Compile Include="Indicators\AroonOscillatorTests.cs" />
     <Compile Include="Indicators\AverageTrueRangeTests.cs" />
     <Compile Include="Indicators\BollingerBandsTests.cs" />
@@ -78,7 +79,7 @@
     <Compile Include="Indicators\MovingAverageTypeExtensionsTests.cs" />
     <Compile Include="Indicators\RelativeStrengthIndexTests.cs" />
     <Compile Include="Indicators\RollingWindowTests.cs" />
-    <Compile Include="Indicators\SequentialIndicatorTests.cs" />
+    <Compile Include="Indicators\IndicatorExtensionsTests.cs" />
     <Compile Include="Indicators\SimpleMovingAverageTests.cs" />
     <Compile Include="Indicators\StandardDeviationTests.cs" />
     <Compile Include="Indicators\TestHelper.cs" />

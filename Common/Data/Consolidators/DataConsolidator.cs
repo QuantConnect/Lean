@@ -87,7 +87,7 @@ namespace QuantConnect.Data.Consolidators
             var handler = DataConsolidated;
             if (handler != null) handler(this, consolidated);
 
-            // assign the Consolidated property after the even handlers are fired,
+            // assign the Consolidated property after the event handlers are fired,
             // this allows the event handlers to look at the new consolidated data
             // and the previous consolidated data at the same time without extra bookkeeping
             Consolidated = consolidated;
