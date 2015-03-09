@@ -49,6 +49,14 @@ namespace QuantConnect.Queues
         }
 
         /// <summary>
+        /// Gets true if configured to run in paper trading mode
+        /// </summary>
+        private bool PaperMode
+        {
+            get { return Config.GetBool("paper-mode"); }
+        }
+
+        /// <summary>
         /// Physical location of Algorithm DLL.
         /// </summary>
         private string AlgorithmLocation
@@ -85,9 +93,9 @@ namespace QuantConnect.Queues
                 var liveJob = new LiveNodePacket
                 {
                     ResultEndpoint = ResultHandlerEndpoint.LiveTrading,
-                    SetupEndpoint = SetupHandlerEndpoint.PaperTrading,
+                    SetupEndpoint = PaperMode ? SetupHandlerEndpoint.PaperTrading : SetupHandlerEndpoint.Brokerage,
                     DataEndpoint = DataFeedEndpoint.LiveTrading,
-                    TransactionEndpoint = TransactionHandlerEndpoint.Backtesting,
+                    TransactionEndpoint = TransactionHandlerEndpoint.Brokerage,
                     RealTimeEndpoint = RealTimeEndpoint.LiveTrading,
                     Type = PacketType.LiveNode,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),

@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -44,8 +43,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly IB.IBClient _client;
         private readonly IB.AgentDescription _agentDescription;
 
-        // the key here is the QC order ID
-        private readonly ConcurrentDictionary<int, Order>  _outstandingOrders = new ConcurrentDictionary<int, Order>();
         private readonly Dictionary<string, string> _accountProperties = new Dictionary<string, string>(); 
 
         /// <summary>
@@ -125,14 +122,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             try
             {
-                // add the order to our outstanding orders collection
-                if (!_outstandingOrders.TryAdd(order.Id, order))
-                {
-                    // this order has already been placed
-                    Log.Trace("InteractiveBrokersBrokerage.PlaceOrder(): Attempted to place order for existing order ID");
-                    return false;
-                }
-
                 Log.Trace("InteractiveBrokersBrokerage.PlaceOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity);
 
                 IBPlaceOrder(order);
@@ -154,19 +143,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             try
             {
-                Order outstanding;
-                if (!_outstandingOrders.TryGetValue(order.Id, out outstanding))
-                {
-                    Log.Trace("InteractiveBrokersBrokerage.UpdateOrder(): Unable to update order " + order.Id + " because it is no longer outstanding");
-                    return false;
-                }
-
-                if (!(outstanding.Status != OrderStatus.Filled && outstanding.Status != OrderStatus.Canceled))
-                {
-                    Log.Trace("InteractiveBrokersBrokerage.UpdateOrder(): Unable to update order " + order.Id + " because it is " + outstanding.Status);
-                    return false;
-                }
-
                 Log.Trace("InteractiveBrokersBrokerage.UpdateOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity + " Status: " + order.Status);
 
                 IBPlaceOrder(order);
@@ -487,27 +463,26 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private void HandleOrderStatusUpdates(object sender, IB.OrderStatusEventArgs update)
         {
             try
-            { 
-                // don't use .Values since it will require us to copy the dictionary
-                var order = _outstandingOrders.FirstOrDefault(x => x.Value.BrokerId.Contains(update.OrderId)).Value;
-                if (order == null)
+            {
+                var status = ConvertOrderStatus(update.Status);
+                if (status != OrderStatus.PartiallyFilled && status != OrderStatus.Filled)
                 {
-                    Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): BrokerIds:" + string.Join(",", _outstandingOrders.SelectMany(x => x.Value.BrokerId)));
-                    Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Unable to resolve order " + update.OrderId);
+                    // only fire fill events
                     return;
                 }
 
-                Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdtes(): QC OrderID: " + order.Id + " IB OrderID: " + update.OrderId + " Status: " + update.Status);
+                var executions = GetExecutions(null, null, null, DateTime.Now.AddDays(-1.25), null);
+                var order = executions.First(x => x.OrderId == update.OrderId);
 
-                var orderEvent = new OrderEvent(order.Id, order.Symbol, ConvertOrderStatus(update.Status), update.AverageFillPrice, update.Filled, "Interactive Brokers Fill Event");
+                // mark sells as negative quantities
+                var fillQuantity = order.Execution.Side == IB.ExecutionSide.Bought ? update.Filled : -update.Filled;
+                var orderEvent = new OrderEvent(0, MapSymbol(order.Contract), status, update.AverageFillPrice, fillQuantity, "Interactive Brokers Fill Event");
                 orderEvent.BrokerageIds.Add(update.OrderId);
                 OnOrderEvent(orderEvent);
-
-                if (update.Remaining == 0)
-                {
-                    // the order is completed and no longer outstanding
-                    _outstandingOrders.TryRemove(order.Id, out order);
-                }
+            }
+            catch(InvalidOperationException err)
+            {
+                Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Unable to resolve executions for BrokerageID: " + update.OrderId + " - " + err.Message);
             }
             catch (Exception err)
             {
@@ -565,19 +540,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private Order ConvertOrder(IB.Order ibOrder, IB.Contract contract)
         {
-            decimal price = 0;
-            if (ibOrder.LimitPrice != 0)
-            {
-                price = ibOrder.LimitPrice;
-            }
-            else if (ibOrder.AuxPrice != 0)
-            {
-                price = ibOrder.AuxPrice;
-            }
-
             Order order;
             var mappedSymbol = MapSymbol(contract);
-            var securityType = ConvertSecurityType(contract.SecurityType);
             var orderType = ConvertOrderType(ibOrder.OrderType);
             switch (orderType)
             {
@@ -585,41 +549,35 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     order = new MarketOrder(mappedSymbol,
                         ibOrder.TotalQuantity,
                         new DateTime() // not sure how to get this data
-                        ) {SecurityType = securityType};
+                        );
                     break;
                 case OrderType.Limit:
                     order = new LimitOrder(mappedSymbol,
                         ibOrder.TotalQuantity,
                         ibOrder.LimitPrice,
                         new DateTime()
-                        ) {SecurityType = securityType};
+                        );
                     break;
                 case OrderType.StopMarket:
                     order = new LimitOrder(mappedSymbol,
                         ibOrder.TotalQuantity,
                         ibOrder.LimitPrice,
                         new DateTime()
-                        ) {SecurityType = securityType};
+                        );
                     break;
                 case OrderType.StopLimit:
                     order = new LimitOrder(mappedSymbol,
                         ibOrder.TotalQuantity,
                         ibOrder.LimitPrice,
                         new DateTime()
-                        ) {SecurityType = securityType};
+                        );
                     break;
                 default:
                     throw new InvalidEnumArgumentException("orderType", (int) orderType, typeof (OrderType));
             }
 
+            order.SecurityType = ConvertSecurityType(contract.SecurityType);
             order.BrokerId.Add(ibOrder.OrderId);
-
-            // assign the QC order ID if we can find the order in our collection
-            var outstandingOrder = _outstandingOrders.FirstOrDefault(x => x.Value.BrokerId.Contains(ibOrder.OrderId));
-            if (outstandingOrder.Value != null)
-            {
-                order.Id = outstandingOrder.Value.Id;
-            }
 
             return order;
         }

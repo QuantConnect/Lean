@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -67,10 +68,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _brokerage = brokerage;
             _brokerage.OrderEvent += (sender, fill) =>
             {
+                // we need to set the fill's order ID. This really comes down to the individual brokerage classes not
+                // knowning anything about this 'OrderId' property and it is instead managed from the outside. This was
+                // chosen since it is not technically the responsibility of an IBrokerage implementation to worry about
+                // QC OrderId -> BrokerageId mappings.
+                var order = _orders.First(x => x.Value.BrokerId.Any(y => fill.BrokerageIds.Contains(y)));
+                if (order.Value != null)
+                {
+                    fill.OrderId = order.Value.Id;
+                    fill.Symbol = order.Value.Symbol;
+                    order.Value.Status = fill.Status;
+                }
+
                 // save that the order event took place, we're initializing the list with a capacity of 2 to reduce number of mallocs
                 //these hog memory
                 //List<OrderEvent> orderEvents = _orderEvents.GetOrAdd(orderEvent.OrderId, i => new List<OrderEvent>(2));
-                //orderEvents.Add(orderEvent);
+                //orderEvents.Add(orderEvent)
 
                 //Apply the filled order to our portfolio:
                 if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)

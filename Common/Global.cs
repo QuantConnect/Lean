@@ -283,7 +283,9 @@ namespace QuantConnect
     public enum TransactionHandlerEndpoint 
     { 
         /// Use Backtesting Models to Process Transactions
-        Backtesting
+        Backtesting,
+        /// Use a brokerage for live/paper trading in realtime
+        Brokerage,
         /// Use Interactive Brokers to Process Transactions
         //InteractiveBrokers,
         /// Use FXCM to Process Transactions

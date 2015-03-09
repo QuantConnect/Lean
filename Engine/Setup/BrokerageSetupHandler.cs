@@ -60,6 +60,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         public BrokerageSetupHandler()
         {
+            Errors = new List<string>();
             MaximumRuntime = TimeSpan.FromDays(10*365);
         }
 
@@ -185,8 +186,14 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 // populate the algorithm with the account's current holdings
                 var holdings = brokerage.GetAccountHoldings();
+                var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Min(x => x.Value.Resolution));
                 foreach (var holding in holdings)
                 {
+                    if (!algorithm.Portfolio.ContainsKey(holding.Symbol))
+                    {
+                        // for items not directly requested set leverage to 1 and at the min resolution
+                        algorithm.AddSecurity(holding.Type, holding.Symbol, minResolution.Value, true, 1.0m, false);
+                    }
                     algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int)holding.Quantity);
                 }
             }

@@ -547,6 +547,11 @@ namespace QuantConnect.Lean.Engine
             ITransactionHandler th;
             switch (job.TransactionEndpoint)
             {
+                case TransactionHandlerEndpoint.Brokerage:
+                    th = new BrokerageTransactionHandler(algorithm, brokerage);
+                    Log.Trace("Engine.GetTransactionHandler(): Selected Brokerage Transaction Models.");
+                    break;
+
                 //Operation from local files:
                 default:
                     th = new BacktestingTransactionHandler(algorithm, brokerage as BacktestingBrokerage);
@@ -571,7 +576,7 @@ namespace QuantConnect.Lean.Engine
                 //Local backtesting and live trading result handler route messages to the local console.
                 case ResultHandlerEndpoint.Console:
                     Log.Trace("Engine.GetResultHandler(): Selected Console Output.");
-                    rh = new ConsoleResultHandler((BacktestNodePacket)job);
+                    rh = new ConsoleResultHandler(job);
                     break;
 
                 // Backtesting route messages to user browser.
@@ -598,7 +603,7 @@ namespace QuantConnect.Lean.Engine
         private static ISetupHandler GetSetupHandler(SetupHandlerEndpoint setupMethod)
         {
             var sh = default(ISetupHandler);
-            if (IsLocal) return new ConsoleSetupHandler();
+            //if (IsLocal) return new ConsoleSetupHandler();
 
             switch (setupMethod)
             {
