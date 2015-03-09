@@ -322,7 +322,7 @@ namespace QuantConnect.Securities
         /// <param name="asset">Security asset we're checking</param>
         /// <param name="minimumPrice">Minimum price in the last data bar</param>
         /// <param name="maximumPrice">Minimum price in the last data bar</param>
-        public void DataMinMaxPrices(Security asset, out decimal minimumPrice, out decimal maximumPrice)
+        public virtual void DataMinMaxPrices(Security asset, out decimal minimumPrice, out decimal maximumPrice)
         {
             var marketData = asset.GetLastData();
 

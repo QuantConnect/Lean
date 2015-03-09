@@ -41,8 +41,8 @@ namespace QuantConnect.Securities.Forex
         /// <summary>
         /// Forex Holding Class
         /// </summary>
-        public ForexHolding(string symbol, ISecurityTransactionModel transactionModel)
-            : base(symbol, SecurityType.Forex, transactionModel)
+        public ForexHolding(string symbol, decimal leverage, ISecurityTransactionModel transactionModel)
+            : base(symbol, SecurityType.Forex, leverage, transactionModel)
         {
             //Nothing to do.
         }
