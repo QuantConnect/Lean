@@ -340,7 +340,7 @@ namespace QuantConnect.Securities
             } 
             catch(Exception err)
             {
-                Log.Error("Security.TransactionManager.GetOrderRequiredBuyingPower(): " + err.Message);
+                Log.Error("Security.TransactionManager.GetOrderCashImpact(): " + err.Message);
             }
             //Prevent all orders if leverage is 0.
             return decimal.MaxValue;
