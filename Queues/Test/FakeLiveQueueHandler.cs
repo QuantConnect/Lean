@@ -32,11 +32,13 @@ namespace QuantConnect.Queues.Test
         private const int _createDataGapsEvery = 2;
         private readonly TimeSpan _maxDataGap = TimeSpan.FromMinutes(1);
         private static readonly TimeSpan _emitEvery = TimeSpan.FromSeconds(1.0);
-        
+
         private static readonly DateTime _start = DateTime.Now;
         private readonly HashSet<Subscription> _subscriptions = new HashSet<Subscription>();
 
         private readonly Stopwatch _lastEmit = Stopwatch.StartNew();
+
+        /// <inheritdoc />
         public override IEnumerable<Tick> GetNextTicks()
         {
             // instead of sleeping, model real world where we just don't have data to pull from the queue
@@ -70,6 +72,7 @@ namespace QuantConnect.Queues.Test
             }
         }
 
+        /// <inheritdoc />
         public override void Subscribe(IDictionary<SecurityType, List<string>> symbols)
         {
             foreach (var type in symbols)
@@ -89,6 +92,7 @@ namespace QuantConnect.Queues.Test
             }
         }
 
+        /// <inheritdoc />
         public override void Unsubscribe(IDictionary<SecurityType, List<string>> symbols)
         {
             foreach (var type in symbols)

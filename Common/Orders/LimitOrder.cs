@@ -59,7 +59,6 @@ namespace QuantConnect.Orders
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
         /// <param name="type">Type of the security order</param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
-        /// <param name="order">Order type (market, limit or stoploss order)</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="limitPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>

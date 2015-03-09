@@ -294,7 +294,7 @@ namespace QuantConnect.Securities.Forex
         /// <seealso cref="OrderEvent"/>
         /// <seealso cref="Order"/>
         [Obsolete("Fill(Security, Order) method has been made obsolete, use fill methods directly instead (e.g. MarketFill(Security, MarketOrder)).")]
-        public virtual OrderEvent Fill(Security vehicle, Order order)
+        public override OrderEvent Fill(Security vehicle, Order order)
         {
             return new OrderEvent(order);
         }
@@ -309,7 +309,7 @@ namespace QuantConnect.Securities.Forex
         /// <seealso cref="OrderEvent"/>
         /// <seealso cref="Order"/>
         [Obsolete("MarketFill(Security, Order) method has been made obsolete, use MarketFill(Security, MarketOrder) method instead.")]
-        public virtual OrderEvent MarketFill(Security security, Order order)
+        public override OrderEvent MarketFill(Security security, Order order)
         {
             return MarketFill(security, order as MarketOrder);
         }
@@ -324,7 +324,7 @@ namespace QuantConnect.Securities.Forex
         /// <seealso cref="OrderEvent"/>
         /// <seealso cref="Order"/>
         [Obsolete("StopFill(Security, Order) method has been made obsolete, use StopMarketFill(Security, StopMarketOrder) method instead.")]
-        public virtual OrderEvent StopFill(Security asset, Order order)
+        public override OrderEvent StopFill(Security asset, Order order)
         {
             return StopMarketFill(asset, order as StopMarketOrder);
         }
@@ -339,7 +339,7 @@ namespace QuantConnect.Securities.Forex
         /// <seealso cref="OrderEvent"/>
         /// <seealso cref="Order"/>
         [Obsolete("LimitFill(Security, Order) method has been made obsolete, use LimitFill(Security, LimitOrder) method instead.")]
-        public virtual OrderEvent LimitFill(Security security, Order order)
+        public override OrderEvent LimitFill(Security security, Order order)
         {
             return LimitFill(security, order as LimitOrder);
         }

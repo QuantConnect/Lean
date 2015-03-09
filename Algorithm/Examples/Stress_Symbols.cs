@@ -22,7 +22,6 @@ namespace QuantConnect
             //Set cash to 250k for test algorithm
             SetCash(250000);
 
-            int count = 0;
             foreach (var symbol in StockSymbols)
             {
                 AddSecurity(SecurityType.Equity, symbol, Resolution.Second, true);

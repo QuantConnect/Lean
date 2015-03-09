@@ -592,7 +592,6 @@ namespace QuantConnect.Algorithm
         /// <param name="minuteLimit">Maximum number of minute level assets the live mode can support with selected server</param>
         /// <param name="secondLimit">Maximum number of second level assets the live mode can support with selected server</param>
         /// /// <param name="tickLimit">Maximum number of tick level assets the live mode can support with selected server</param>
-        /// <param name="ramEstimate">Estimate of the max ram usage possible</param>
         /// <remarks>Sets the live behaviour of the algorithm including the selected server (ram) limits.</remarks>
         public void SetAssetLimits(int minuteLimit = 500, int secondLimit = 100, int tickLimit = 30)
         {

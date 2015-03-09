@@ -358,7 +358,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Checks the specified type to see if it is a subclass of the <paramref name="possibleSuperType"/></param>. This method will
+        /// Checks the specified type to see if it is a subclass of the <paramref name="possibleSuperType"/>. This method will
         /// crawl up the inheritance heirarchy to check for equality using generic type definitions (if exists)
         /// </summary>
         /// <param name="type">The type to be checked as a subclass of <paramref name="possibleSuperType"/></param>

@@ -143,7 +143,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     var liveJob = baseJob as LiveNodePacket;
                     
                     //Live Job Parameters:
-                    liveJob.UserId = liveJob.UserId;
                     liveJob.DeployId = "LOCALHOST";
                     liveJob.IssuedAt = DateTime.Now.Subtract(TimeSpan.FromSeconds(86399 - 60));     //For testing, first access token expires in 60 sec. refresh.
                     liveJob.LifeTime = TimeSpan.FromSeconds(86399);
