@@ -462,11 +462,11 @@ namespace QuantConnect.Algorithm
             }
 
             //1. To set a fraction of whole, we need to know the whole: Cash * Leverage for remaining buying power:
-            var total = Portfolio.TotalHoldingsValue + Portfolio.Cash * Securities[symbol].Leverage;
+            var security = Securities[symbol];
+            var total = Portfolio.TotalHoldingsValue + Portfolio.Cash * security.Leverage;
 
             //2. Difference between our target % and our current holdings: (relative +- number).
             var deltaValue = (total * percentage) - Portfolio[symbol].HoldingsValue;
-
             var deltaQuantity = 0m;
 
             //Potential divide by zero error for zero prices assets.
@@ -479,6 +479,21 @@ namespace QuantConnect.Algorithm
             //Determine if we need to place an order:
             if (Math.Abs(deltaQuantity) > 0)
             {
+                //Add in the fees: 
+                var projectedFees = security.Model.GetOrderFee(deltaQuantity, security.Price);
+
+                //Adjust the target quantity down by percentage of fees: 
+                // e.g. Target Quantity = 1000, fees = 10, value = 1000
+                // newQuantity = 1000 * 99% == $990 max possible given projected fees.
+                // e.g. Target Quantity = -1000, fees = 10, value = -1000
+                // newQuantity = -1000 * 99% == -$990 max possible given projected fees.
+                var direction = (deltaQuantity > 0) ? 1 : -1;
+                deltaQuantity = Math.Floor(deltaQuantity * ((deltaValue - projectedFees * direction) / deltaValue));
+
+                //Add in a safety margin to avoid out of cash errors from changes in market pricing:
+                deltaQuantity = Math.Floor(deltaQuantity*0.99m);
+
+                Debug(string.Format("TOTAL {0}, VALUE {1}, QUANTITY {2}", total, deltaValue, deltaQuantity));
                 MarketOrder(symbol, (int)deltaQuantity, false, tag);
             }
         }
