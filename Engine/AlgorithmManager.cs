@@ -366,10 +366,10 @@ namespace QuantConnect.Lean.Engine
                     //Save the previous time for the sample calculations
                     _previousTime = time;
 
-                } // End of Time Loop
+                    // Process any required events of the results handler such as sampling assets, equity, or stock prices.
+                    results.ProcessSynchronousEvents();
 
-                // Process any required events of the results handler such as sampling assets, equity, or stock prices.
-                results.ProcessSynchronousEvents();
+                } // End of Time Loop
 
             } // End of ForEach DataStream
 
