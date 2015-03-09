@@ -48,7 +48,6 @@ namespace QuantConnect.Securities
         private bool _isFillDataForward = false;
         private bool _isExtendedMarketHours = false;
         private bool _isDynamicallyLoadedData = false;
-        private decimal _leverage = 1;
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -191,7 +190,6 @@ namespace QuantConnect.Securities
             _type = type;
             _resolution = resolution;
             _isFillDataForward = fillDataForward;
-            _leverage = leverage;
             _isExtendedMarketHours = extendedMarketHours;
             _isDynamicallyLoadedData = isDynamicallyLoadedData;
 
@@ -279,9 +277,9 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal Leverage
         {
-            get 
-            { 
-                return _leverage; 
+            get
+            {
+                return Holdings.Leverage;
             }
         }
 
@@ -404,7 +402,7 @@ namespace QuantConnect.Securities
         /// <param name="leverage">Leverage for this asset</param>
         public void SetLeverage(decimal leverage)
         {
-            _leverage = leverage;
+            Holdings.SetLeverage(leverage);
         }
 
     } // End Security

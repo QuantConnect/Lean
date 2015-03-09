@@ -379,6 +379,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Set the leverage for this security.
+        /// </summary>
+        /// <param name="leverage">Decimal leverage</param>
+        public virtual void SetLeverage(decimal leverage)
+        {
+            _leverage = leverage;
+        }
+
+        /// <summary>
         /// Update local copy of closing price value.
         /// </summary>
         /// <param name="closingPrice">Price of the underlying asset to be used for calculating market price / portfolio value</param>
