@@ -256,6 +256,18 @@ namespace QuantConnect.Lean.Engine.Results
                                 var runtime = packet as RuntimeErrorPacket;
                                 Engine.Notify.RuntimeError(_backtestId, runtime.Message, runtime.StackTrace);
                                 break;
+
+                            case PacketType.HandledError:
+                                var handled = packet as HandledErrorPacket;
+                                Log.Error("BacktestingResultHandler.Run(): HandledError Packet: " + handled.Message);
+                                Engine.Notify.Send(handled);
+                                break;
+
+                            default:
+                                //Default case..
+                                Engine.Notify.Send(packet);
+                                Log.Trace("BacktestingResultHandler.Run(): Default packet type: " + packet.Type);
+                                break;
                         }
                     }
                 }
@@ -823,12 +835,6 @@ namespace QuantConnect.Lean.Engine.Results
             //Send out the log messages:
             _algorithm.LogMessages.ForEach(x => LogMessage(x));
             _algorithm.LogMessages.Clear();
-
-            //Set the running statistics:
-            foreach (var pair in _algorithm.RuntimeStatistics)
-            {
-                RuntimeStatistic(pair.Key, pair.Value);
-            }
         }
 
     } // End Result Handler Thread:
