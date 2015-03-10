@@ -43,21 +43,20 @@ namespace QuantConnect.Indicators {
         /// <summary>The current and previous typical price is used to determine postive or negative money flow</summary>
         public decimal PreviousTypicalPrice { get; private set; }
 
-        /// <summary>The compostion of the negative and postive money flow sums to compute the MFI</summary>
-        private CompositeIndicator<IndicatorDataPoint> _mfiComposite;
-
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady {
-            get { return _mfiComposite.IsReady; }
+            get { return PositiveMoneyFlow.IsReady && NegativeMoneyFlow.IsReady; }
         }
 
         /// <summary>
         /// Resets this indicator to its initial state
         /// </summary>
         public override void Reset() {
-            _mfiComposite.Reset();
+            PreviousTypicalPrice = 0.0m;
+            PositiveMoneyFlow.Reset();
+            NegativeMoneyFlow.Reset();
             base.Reset();
         }
 
@@ -77,12 +76,8 @@ namespace QuantConnect.Indicators {
         /// <param name="period">The period of the negative and postive money flow</param>
         public MoneyFlowIndex(string name, int period)
             : base(name) {
-            PositiveMoneyFlow = new Sum(name + "_PositiveMoneyFlowSum", period);
-            NegativeMoneyFlow = new Sum(name + "_NegativeMoneyFlowSum", period);
-
-            _mfiComposite = new CompositeIndicator<IndicatorDataPoint>(PositiveMoneyFlow, NegativeMoneyFlow, (l, r) => {
-                return 100m * l.Current.Value / (l.Current.Value + r.Current.Value);
-            });
+            PositiveMoneyFlow = new Sum(name + "_PositiveMoneyFlow", period);
+            NegativeMoneyFlow = new Sum(name + "_NegativeMoneyFlow", period);
         }
 
         /// <summary>
@@ -98,11 +93,12 @@ namespace QuantConnect.Indicators {
             NegativeMoneyFlow.Update(input.Time, typicalPrice < PreviousTypicalPrice ? moneyFlow : 0.0m);            
             PreviousTypicalPrice = typicalPrice;
 
-            if (!IsReady) {
-                return 50.0m;
+            decimal totalMoneyFlow = PositiveMoneyFlow.Current.Value + NegativeMoneyFlow.Current.Value;
+            if (totalMoneyFlow == 0.0m) {
+                return 100.0m;
             }
 
-            return _mfiComposite.Current.Value;
+            return 100m * PositiveMoneyFlow.Current.Value / totalMoneyFlow;
         }
     }
 }
