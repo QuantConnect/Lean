@@ -416,7 +416,7 @@ namespace QuantConnect.Securities
             //Each asset has different leverage values, so affects our cash position in different ways.
             var holdings = Securities[symbol].Holdings;
 
-            if (direction == OrderDirection.Hold) return Cash;
+            if (direction == OrderDirection.Hold || !Invested) return Cash;
             //Log.Debug("SecurityPortfolioManager.GetFreeCash(): Direction: " + direction.ToString());
 
 
