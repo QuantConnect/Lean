@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,59 +25,59 @@ using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Interfaces  
+namespace QuantConnect.Interfaces
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
-    /// Interface for QuantConnect algorithm implementations. All algorithms must implement these 
+    /// Interface for QuantConnect algorithm implementations. All algorithms must implement these
     /// basic members to allow interaction with the Lean Backtesting Engine.
     /// </summary>
     public interface IAlgorithm
     {
-        /******************************************************** 
+        /********************************************************
         * INTERFACE PROPERTIES:
         *********************************************************/
         /// <summary>
         /// Data subscription manager controls the information and subscriptions the algorithms recieves.
-        /// Subscription configurations can be added through the Subscription Manager. 
+        /// Subscription configurations can be added through the Subscription Manager.
         /// </summary>
-        SubscriptionManager SubscriptionManager 
+        SubscriptionManager SubscriptionManager
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Security object collection class stores an array of objects representing representing each security/asset 
-        /// we have a subscription for. 
+        /// Security object collection class stores an array of objects representing representing each security/asset
+        /// we have a subscription for.
         /// </summary>
         /// <remarks>It is an IDictionary implementation and can be indexed by symbol</remarks>
-        SecurityManager Securities 
-        { 
-            get; 
-            set; 
+        SecurityManager Securities
+        {
+            get;
+            set;
         }
 
         /// <summary>
-        /// Security portfolio management class provides wrapper and helper methods for the Security.Holdings class such as 
+        /// Security portfolio management class provides wrapper and helper methods for the Security.Holdings class such as
         /// IsLong, IsShort, TotalProfit
         /// </summary>
         /// <remarks>Portfolio is a wrapper and helper class encapsulating the Securities[].Holdings objects</remarks>
-        SecurityPortfolioManager Portfolio 
-        { 
-            get; 
-            set; 
+        SecurityPortfolioManager Portfolio
+        {
+            get;
+            set;
         }
 
         /// <summary>
-        /// Security transaction manager class controls the store and processing of orders. 
+        /// Security transaction manager class controls the store and processing of orders.
         /// </summary>
         /// <remarks>The orders and their associated events are accessible here. When a new OrderEvent is recieved the algorithm portfolio is updated.</remarks>
         SecurityTransactionManager Transactions
-        { 
-            get; 
+        {
+            get;
             set;
         }
 
@@ -86,7 +86,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         NotificationManager Notify
         {
-            get; 
+            get;
             set;
         }
 
@@ -94,7 +94,7 @@ namespace QuantConnect.Interfaces
         /// Public name for the algorithm.
         /// </summary>
         /// <remarks>Not currently used but preserved for API integrity</remarks>
-        string Name 
+        string Name
         {
             get;
             set;
@@ -112,7 +112,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Current date/time.
         /// </summary>
-        DateTime Time 
+        DateTime Time
         {
             get;
         }
@@ -122,7 +122,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <seealso cref="SetStartDate(DateTime)"/>
         /// <seealso cref="SetStartDate(int,int,int)"/>
-        DateTime StartDate 
+        DateTime StartDate
         {
             get;
         }
@@ -130,7 +130,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Get Requested Backtest End Date
         /// </summary>
-        DateTime EndDate 
+        DateTime EndDate
         {
             get;
         }
@@ -138,7 +138,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// AlgorithmId for the backtest
         /// </summary>
-        string AlgorithmId 
+        string AlgorithmId
         {
             get;
         }
@@ -146,7 +146,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Accessor for Filled Orders:
         /// </summary>
-        ConcurrentDictionary<int, Order> Orders 
+        ConcurrentDictionary<int, Order> Orders
         {
             get;
         }
@@ -154,7 +154,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Run Backtest Mode for the algorithm: Automatic, Parallel or Series.
         /// </summary>
-        RunMode RunMode 
+        RunMode RunMode
         {
             get;
         }
@@ -202,7 +202,7 @@ namespace QuantConnect.Interfaces
             get;
         }
 
-        /******************************************************** 
+        /********************************************************
         * INTERFACE METHODS
         *********************************************************/
         /// <summary>
@@ -235,7 +235,7 @@ namespace QuantConnect.Interfaces
         void Debug(string message);
 
         /// <summary>
-        /// Save entry to the Log 
+        /// Save entry to the Log
         /// </summary>
         /// <param name="message">String message</param>
         void Log(string message);
@@ -262,14 +262,14 @@ namespace QuantConnect.Interfaces
         void OnEndOfAlgorithm();
 
         /// <summary>
-        /// EXPERTS ONLY:: [-!-Async Code-!-] 
+        /// EXPERTS ONLY:: [-!-Async Code-!-]
         /// New order event handler: on order status changes (filled, partially filled, cancelled etc).
         /// </summary>
         /// <param name="newEvent">Event information</param>
         void OnOrderEvent(OrderEvent newEvent);
 
         /// <summary>
-        /// Set the DateTime Frontier: This is the master time and is 
+        /// Set the DateTime Frontier: This is the master time and is
         /// </summary>
         /// <param name="time"></param>
         void SetDateTime(DateTime time);
@@ -368,7 +368,7 @@ namespace QuantConnect.Interfaces
         List<int> Liquidate(string symbolToLiquidate = "");
 
         /// <summary>
-        /// Terminate the algorithm on exiting the current event processor. 
+        /// Terminate the algorithm on exiting the current event processor.
         /// If have holdings at the end of the algorithm/day they will be liquidated at market prices.
         /// If running a series analysis this command skips the current day (and doesn't liquidate).
         /// </summary>
@@ -393,7 +393,6 @@ namespace QuantConnect.Interfaces
         /// <param name="minuteLimit">Maximum number of minute level assets the live mode can support with selected server</param>
         /// <param name="secondLimit">Maximum number of second level assets the live mode can support with selected server</param>
         /// /// <param name="tickLimit">Maximum number of tick level assets the live mode can support with selected server</param>
-        /// <param name="ramEstimate">Estimate of the maximum ram usage possible (mb)</param>
         /// <remarks>Sets the live behaviour of the algorithm including the selected server (ram) limits.</remarks>
         void SetAssetLimits(int minuteLimit = 50, int secondLimit = 10, int tickLimit = 5);
 
@@ -405,7 +404,7 @@ namespace QuantConnect.Interfaces
         void SetRuntimeStatistic(string name, string value);
 
         /// <summary>
-        /// Get the quit flag state. 
+        /// Get the quit flag state.
         /// </summary>
         /// <returns>Boolean quit flag</returns>
         bool GetQuit();

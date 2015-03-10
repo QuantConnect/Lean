@@ -293,7 +293,7 @@ namespace QuantConnect.Securities.Equity
         /// <param name="order">Order class to check if filled.</param>
         /// <returns>OrderEvent packet with the full or partial fill information</returns>
         [Obsolete("Fill(Security, Order) method has been made obsolete, use fill methods directly instead (e.g. MarketFill(security, marketOrder)).")]
-        public virtual OrderEvent Fill(Security vehicle, Order order)
+        public override OrderEvent Fill(Security vehicle, Order order)
         {
             return new OrderEvent(order);
         }
@@ -305,7 +305,7 @@ namespace QuantConnect.Securities.Equity
         /// <param name="order">Order to update</param>
         /// <returns>OrderEvent packet with the full or partial fill information</returns>
         [Obsolete("MarketFill(Security, Order) method has been made obsolete, use MarketFill(Security, MarketOrder) method instead.")]
-        public virtual OrderEvent MarketFill(Security security, Order order)
+        public override OrderEvent MarketFill(Security security, Order order)
         {
             return MarketFill(security, order as MarketOrder);
         }
@@ -318,7 +318,7 @@ namespace QuantConnect.Securities.Equity
         /// <param name="order">Stop Order to Check, return filled if true</param>
         /// <returns>OrderEvent packet with the full or partial fill information</returns>
         [Obsolete("StopFill(Security, Order) method has been made obsolete, use StopMarketFill(Security, StopMarketOrder) method instead.")]
-        public virtual OrderEvent StopFill(Security security, Order order)
+        public override OrderEvent StopFill(Security security, Order order)
         {
             return StopMarketFill(security, order as StopMarketOrder);
         }
@@ -331,7 +331,7 @@ namespace QuantConnect.Securities.Equity
         /// <param name="order">Limit order in market</param>
         /// <returns>OrderEvent packet with the full or partial fill information</returns>
         [Obsolete("LimitFill(Security, Order) method has been made obsolete, use LimitFill(Security, LimitOrder) method instead.")]
-        public virtual OrderEvent LimitFill(Security security, Order order)
+        public override OrderEvent LimitFill(Security security, Order order)
         {
             return LimitFill(security, order as LimitOrder);
         }

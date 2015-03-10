@@ -10,6 +10,7 @@ namespace QuantConnect.Logging
     {
         private const string DateFormat = "yyyyMMdd HH:mm:ss";
 
+        /// <inheritdoc />
         public void Error(string text)
         {
             var original = Console.ForegroundColor;
@@ -40,11 +41,13 @@ namespace QuantConnect.Logging
             }
         }
 
+        /// <inheritdoc />
         public void Debug(string text)
         {
             Console.WriteLine(DateTime.Now.ToString(DateFormat) + " DEBUGGING :: " + text);
         }
 
+        /// <inheritdoc />
         public void Trace(string text)
         {
             Console.WriteLine(DateTime.Now.ToString(DateFormat) + " Trace:: " + text);

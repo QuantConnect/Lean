@@ -135,7 +135,6 @@ namespace QuantConnect.Statistics
             decimal winRate = 0;
             decimal lossRate = 0;
             decimal totalNetProfit = 0;
-            decimal averageAnnualReturn = 0;
             double fractionOfYears = 1;
             decimal profitLossValue = 0, runningCash = startingCash;
             decimal algoCompoundingPerformance = 0;

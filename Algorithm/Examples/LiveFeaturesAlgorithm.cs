@@ -148,7 +148,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Backtesting & Live Bitcoin Decoder:
+        /// Backtesting &amp; Live Bitcoin Decoder:
         /// </summary>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
         {
