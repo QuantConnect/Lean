@@ -165,6 +165,18 @@ namespace QuantConnect.Securities
             }
         }
 
+
+        /// <summary>
+        /// Get the last order id.
+        /// </summary>
+        public int LastOrderId
+        {
+            get
+            {
+                return _orderId;
+            }
+        }
+
         /******************************************************** 
         * CLASS METHODS
         *********************************************************/
@@ -240,6 +252,14 @@ namespace QuantConnect.Securities
             return 0;
         }
 
+        /// <summary>
+        /// Added alias for RemoveOrder - 
+        /// </summary>
+        /// <param name="orderId">Order id we wish to cancel</param>
+        public virtual void CancelOrder(int orderId)
+        {
+            RemoveOrder(orderId);
+        }
 
         /// <summary>
         /// Remove this order from outstanding queue: user is requesting a cancel.
@@ -274,6 +294,21 @@ namespace QuantConnect.Securities
                 Log.Error("TransactionManager.RemoveOrder(): " + err.Message);
             }
         }
+
+
+        /// <summary>
+        /// Get a list of all open orders.
+        /// </summary>
+        /// <returns>List of open orders.</returns>
+        public List<Order> GetOpenOrders()
+        {
+            var openOrders = (from order in Orders.Values
+                where (order.Status == OrderStatus.Submitted ||
+                       order.Status == OrderStatus.New)
+                select order).ToList();
+
+            return openOrders;
+        } 
 
 
         /// <summary>
@@ -313,10 +348,16 @@ namespace QuantConnect.Securities
         /// <returns>True if suficient capital.</returns>
         public bool GetSufficientCapitalForOrder(SecurityPortfolioManager portfolio, Order order)
         {
-            if (Math.Abs(GetOrderCashImpact(order)) > portfolio.GetFreeCash(order.Symbol, order.Direction)) 
+            var increasingPosition = true;
+            var currentAbsoluteHoldings = _securities[order.Symbol].Holdings.AbsoluteQuantity;
+            var newAbsoluteHoldings = Math.Abs(order.Quantity + _securities[order.Symbol].Holdings.Quantity);
+            if (newAbsoluteHoldings < currentAbsoluteHoldings) increasingPosition = false;
+
+            if (increasingPosition && Math.Abs(GetOrderCashImpact(order)) > portfolio.GetFreeCash(order.Symbol, order.Direction))
             {
                 //Log.Debug("Symbol: " + order.Symbol + " Direction: " + order.Direction.ToString() + " Quantity: " + order.Quantity);
                 //Log.Debug("GetOrderRequiredBuyingPower(): " + Math.Abs(GetOrderRequiredBuyingPower(order)) + " PortfolioGetBuyingPower(): " + portfolio.GetBuyingPower(order.Symbol, order.Direction)); 
+                Log.Error(string.Format("Transactions.GetSufficientCapitalForOrder(): Id: {0}, Cash Impact: {1}, Free Cash: {2}", order.Id, GetOrderCashImpact(order), portfolio.GetFreeCash(order.Symbol, order.Direction)));
                 return false;
             }
             return true;
