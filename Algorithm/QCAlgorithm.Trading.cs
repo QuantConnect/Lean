@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -467,33 +468,34 @@ namespace QuantConnect.Algorithm
 
             //2. Difference between our target % and our current holdings: (relative +- number).
             var deltaValue = (total * percentage) - Portfolio[symbol].HoldingsValue;
-            var deltaQuantity = 0m;
 
-            //Potential divide by zero error for zero prices assets.
+            //3. Calculate the rough first pass of quantity: avoid Potential divide by zero error for zero prices assets.
+            var deltaQuantity = 0m;
             if (Math.Abs(Securities[symbol].Price) > 0)
             {
                 //3. Now rebalance the symbol requested:
                 deltaQuantity = Math.Round(deltaValue / Securities[symbol].Price);
             }
 
-            //Determine if we need to place an order:
+            //4. Determine if we need to place an order:
             if (Math.Abs(deltaQuantity) > 0)
             {
-                //Add in the fees: 
+                //5. Calculate accurate quantity factoring in fees:
                 var projectedFees = security.Model.GetOrderFee(deltaQuantity, security.Price);
 
-                //Adjust the target quantity down by percentage of fees: 
+                //5.1 Long Short Constant Multiplier:
+                var direction = (deltaQuantity > 0) ? 1 : -1;
+
+                //5.2 Multiply fees by leverage because each share's cash impact is only value/leverage. Changing quantity linearly won't work.
+                var feesCashImpact = (projectedFees * direction * security.Leverage);
+
+                //5.3 Adjust the target quantity down by percentage of fees: 
                 // e.g. Target Quantity = 1000, fees = 10, value = 1000
                 // newQuantity = 1000 * 99% == $990 max possible given projected fees.
                 // e.g. Target Quantity = -1000, fees = 10, value = -1000
                 // newQuantity = -1000 * 99% == -$990 max possible given projected fees.
-                var direction = (deltaQuantity > 0) ? 1 : -1;
-                deltaQuantity = Math.Floor(deltaQuantity * ((deltaValue - projectedFees * direction) / deltaValue));
+                deltaQuantity = Math.Floor((deltaValue - feesCashImpact) / security.Price);
 
-                //Add in a safety margin to avoid out of cash errors from changes in market pricing:
-                deltaQuantity = Math.Floor(deltaQuantity*0.99m);
-
-                Debug(string.Format("TOTAL {0}, VALUE {1}, QUANTITY {2}", total, deltaValue, deltaQuantity));
                 MarketOrder(symbol, (int)deltaQuantity, false, tag);
             }
         }
