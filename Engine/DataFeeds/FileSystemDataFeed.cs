@@ -84,6 +84,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool IsActive { get; private set; }
 
         /// <summary>
+        /// Flag indicating the file system has loaded all files.
+        /// </summary>
+        public bool LoadingComplete { get; private set; }
+
+        /// <summary>
         /// Furthest point in time that the data has loaded into the bridges.
         /// </summary>
         public DateTime LoadedDataFrontier { get; private set; }
@@ -364,7 +369,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (earlyBirdTicks > 0 && earlyBirdTicks > frontier.Ticks) {
                         //Jump increment to the nearest second, in the future: Round down, add increment
                         frontier = (new DateTime(earlyBirdTicks)).RoundDown(increment) + increment;
-                    } 
+                    }
                     else 
                     {
                         //Otherwise step one forward.
@@ -378,13 +383,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             } // End of All Days:
 
             Log.Trace(DataFeed + ".Run(): Data Feed Completed.");
+            LoadingComplete = true;
 
             //Make sure all bridges empty before declaring "end of bridge":
             while (!EndOfBridges && !_exitTriggered)
             {
-                for (var i = 0; i < subscriptions; i++) 
+                for (var i = 0; i < subscriptions; i++)
                 {
-                    if (Bridge[i].Count == 0 && SubscriptionReaderManagers[i].EndOfStream) 
+                    if (Bridge[i].Count == 0 && SubscriptionReaderManagers[i].EndOfStream)
                     {
                         EndOfBridge[i] = true;
                     }

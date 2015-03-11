@@ -136,6 +136,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Data has completely loaded and we don't expect any more.
+        /// </summary>
+        public bool LoadingComplete
+        {
+            get { return false; }
+        }
+
+        /// <summary>
         /// The most advanced moment in time for which the data feed has completed loading data
         /// </summary>
         public DateTime LoadedDataFrontier { get; private set; }

@@ -160,6 +160,7 @@ namespace QuantConnect.Lean.Engine
                 Thread.Sleep(1);
             }
 
+            //Waiting for data in the bridges:
             while (!AllBridgesHaveData(feed) && now.ElapsedMilliseconds < loopTimeout)
             {
                 Thread.Sleep(1);
@@ -169,7 +170,7 @@ namespace QuantConnect.Lean.Engine
             //this acts as a virtual lock around the bridge so we can wait for the feed
             //to be ahead of us
             // if we're out of data then the feed will never update (it will stay here forever if there's no more data, so use a timeout!!)
-            while (dataStreamFrontier > feed.LoadedDataFrontier && !feed.EndOfBridges && now.ElapsedMilliseconds < loopTimeout)
+            while (dataStreamFrontier > feed.LoadedDataFrontier && (!feed.EndOfBridges && !feed.LoadingComplete) && now.ElapsedMilliseconds < loopTimeout)
             {
                 Thread.Sleep(1);
             }
