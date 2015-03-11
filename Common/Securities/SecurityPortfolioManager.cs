@@ -637,7 +637,7 @@ namespace QuantConnect.Securities
         /// </remarks>
         /// <param name="time">Time of order processed </param>
         /// <param name="transactionProfitLoss">Profit Loss.</param>
-        private void AddTransactionRecord(DateTime time, decimal transactionProfitLoss)
+        public void AddTransactionRecord(DateTime time, decimal transactionProfitLoss)
         {
             var clone = time;
             while (Transactions.TransactionRecord.ContainsKey(clone))
