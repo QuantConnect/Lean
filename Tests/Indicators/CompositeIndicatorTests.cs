@@ -70,5 +70,28 @@ namespace QuantConnect.Tests.Indicators
             right.Update(DateTime.Today, 1m);
             Assert.AreEqual(2m, composite.Current.Value);
         }
+
+        [Test]
+        public void ResetsProperly() {
+            var left = new Maximum("left", 2);
+            var right = new Minimum("right", 2);
+            var composite = new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => l + r);
+
+            left.Update(DateTime.Today, 1m);
+            right.Update(DateTime.Today,-1m);
+
+            left.Update(DateTime.Today.AddDays(1), -1m);
+            right.Update(DateTime.Today.AddDays(1), 1m);
+
+            Assert.AreEqual(left.PeriodsSinceMaximum, 1);
+            Assert.AreEqual(right.PeriodsSinceMinimum, 1);
+
+            composite.Reset();
+            TestHelper.AssertIndicatorIsInDefaultState(composite);
+            TestHelper.AssertIndicatorIsInDefaultState(left);
+            TestHelper.AssertIndicatorIsInDefaultState(right);
+            Assert.AreEqual(left.PeriodsSinceMaximum, 0);
+            Assert.AreEqual(right.PeriodsSinceMinimum, 0);
+        }
     }
 }

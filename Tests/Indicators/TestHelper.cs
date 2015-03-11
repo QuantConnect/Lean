@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Globalization;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -155,11 +156,13 @@ namespace QuantConnect.Tests.Indicators
         {
             bool first = true;
             int targetIndex = -1;
+            bool fileHasVolume = false;
             foreach (var line in File.ReadLines(Path.Combine("TestData", externalDataFilename)))
             {
                 var parts = line.Split(',');
                 if (first)
                 {
+                    fileHasVolume = parts[5].Trim() == "Volume";
                     first = false;
                     for (int i = 0; i < parts.Length; i++)
                     {
@@ -179,7 +182,7 @@ namespace QuantConnect.Tests.Indicators
                     High = parts[2].ToDecimal(),
                     Low = parts[3].ToDecimal(),
                     Close = parts[4].ToDecimal(),
-                    //Volume = long.Parse(parts[5])
+                    Volume = fileHasVolume ? long.Parse(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
                 };
 
                 indicator.Update(tradebar);
