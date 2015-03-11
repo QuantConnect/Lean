@@ -53,16 +53,18 @@ namespace QuantConnect.Orders
     /// Order duration in market
     /// </summary>
     public enum OrderDuration
-    { 
+    {
         /// <summary>
         /// Order good until its filled.
         /// </summary>
         GTC,
 
+        /*
         /// <summary>
         /// Order valid for today only: -- CURRENTLY ONLY GTC ORDER DURATION TYPE IN BACKTESTS.
         /// </summary>
-        //Day
+        Day
+        */
     }
 
 

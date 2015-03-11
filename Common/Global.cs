@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,15 +21,15 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Logging;
 
-namespace QuantConnect 
+namespace QuantConnect
 {
-    /******************************************************** 
+    /********************************************************
     * GLOBAL CONST
     *********************************************************/
     /// <summary>
     /// Shortcut date format strings
     /// </summary>
-    public static class DateFormat 
+    public static class DateFormat
     {
         /// Year-Month-Date 6 Character Date Representation
         public static string SixCharacter = "yyMMdd";
@@ -48,7 +48,7 @@ namespace QuantConnect
     }
 
 
-    /******************************************************** 
+    /********************************************************
     * GLOBAL STRUCT DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -95,15 +95,15 @@ namespace QuantConnect
         }
     }
 
-    /******************************************************** 
+    /********************************************************
     * GLOBAL ENUMS DEFINITIONS
     *********************************************************/
     /// <summary>
     /// Processing runmode of the backtest.
     /// </summary>
     /// <obsolete>The runmode enum is now obsolete and all tasks are run in series mode. This was done to ensure algorithms have memory of the day before.</obsolete>
-    public enum RunMode 
-    { 
+    public enum RunMode
+    {
         /// Automatically detect the runmode of the algorithm: series for minute data, parallel for second-tick
         Automatic,
         /// Series runmode for the algorithm
@@ -116,8 +116,8 @@ namespace QuantConnect
     /// <summary>
     /// Multilanguage support enum: which language is this project for the interop bridge converter.
     /// </summary>
-    public enum Language 
-    { 
+    public enum Language
+    {
         /// <summary>
         /// C# Language Project
         /// </summary>
@@ -138,7 +138,7 @@ namespace QuantConnect
     /// <summary>
     /// User / Algorithm Job Subscription Level
     /// </summary>
-    public enum UserPlan 
+    public enum UserPlan
     {
         /// <summary>
         /// Free User (Backtesting).
@@ -158,7 +158,7 @@ namespace QuantConnect
     public enum ServerType
     {
         /// <summary>
-        /// Additional server 
+        /// Additional server
         /// </summary>
         Server512,
 
@@ -177,10 +177,10 @@ namespace QuantConnect
     /// <summary>
     /// Type of tradable security / underlying asset
     /// </summary>
-    public enum SecurityType 
+    public enum SecurityType
     {
         /// <summary>
-        /// Base class for all security types: 
+        /// Base class for all security types:
         /// </summary>
         Base,
 
@@ -200,10 +200,10 @@ namespace QuantConnect
         Commodity,
 
         /// <summary>
-        /// FOREX Security 
+        /// FOREX Security
         /// </summary>
         Forex,
-        
+
         /// <summary>
         /// Future Security Type
         /// </summary>
@@ -213,7 +213,7 @@ namespace QuantConnect
     /// <summary>
     /// Market data style: is the market data a summary (OHLC style) bar, or is it a time-price value.
     /// </summary>
-    public enum MarketDataType 
+    public enum MarketDataType
     {
         /// Base market data type
         Base,
@@ -226,8 +226,8 @@ namespace QuantConnect
     /// <summary>
     /// Datafeed enum options for selecting the source of the datafeed.
     /// </summary>
-    public enum DataFeedEndpoint 
-    { 
+    public enum DataFeedEndpoint
+    {
         /// Backtesting Datafeed Endpoint
         Backtesting,
         /// Loading files off the local system
@@ -242,7 +242,7 @@ namespace QuantConnect
     /// Realtime events handler options for handling realtime events in the algorithm
     /// </summary>
     public enum RealTimeEndpoint
-    { 
+    {
         /// Backtesting Faked RealTime Events
         Backtesting,
         /// Live Trading RealTime Events
@@ -280,16 +280,18 @@ namespace QuantConnect
     /// <summary>
     /// Transaction handler options for selecting who processes the transactions
     /// </summary>
-    public enum TransactionHandlerEndpoint 
-    { 
+    public enum TransactionHandlerEndpoint
+    {
         /// Use Backtesting Models to Process Transactions
         Backtesting,
         /// Use a brokerage for live/paper trading in realtime
         Brokerage,
+        /*
         /// Use Interactive Brokers to Process Transactions
-        //InteractiveBrokers,
+        InteractiveBrokers,
         /// Use FXCM to Process Transactions
-        //FXCM
+        FXCM
+        */
     }
 
     /// <summary>
@@ -308,7 +310,7 @@ namespace QuantConnect
     /// Types of tick data - trades or quote ticks.
     /// </summary>
     /// <remarks>QuantConnect currently only has trade tick data but can handle quote tick data with the same data structures.</remarks>
-    public enum TickType 
+    public enum TickType
     {
         /// Trade type tick object.
         Trade,
@@ -320,7 +322,7 @@ namespace QuantConnect
     /// Resolution of data requested.
     /// </summary>
     /// <remarks>Always sort the enum from the smallest to largest resolution</remarks>
-    public enum Resolution 
+    public enum Resolution
     {
         /// Tick Resolution (1)
         Tick,
@@ -335,7 +337,7 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Wrapper for algorithm status enum to include the charting subscription. 
+    /// Wrapper for algorithm status enum to include the charting subscription.
     /// </summary>
     public class AlgorithmControl
     {
@@ -390,49 +392,49 @@ namespace QuantConnect
     /// <summary>
     /// enum Period - Enum of all the analysis periods, AS integers. Reference "Period" Array to access the values
     /// </summary>
-    public enum Period 
+    public enum Period
     {
-        /// Period Short Codes - 10 
+        /// Period Short Codes - 10
         TenSeconds = 10,
-        /// Period Short Codes - 30 Second 
+        /// Period Short Codes - 30 Second
         ThirtySeconds = 30,
-        /// Period Short Codes - 60 Second 
+        /// Period Short Codes - 60 Second
         OneMinute = 60,
-        /// Period Short Codes - 120 Second 
+        /// Period Short Codes - 120 Second
         TwoMinutes = 120,
-        /// Period Short Codes - 180 Second 
+        /// Period Short Codes - 180 Second
         ThreeMinutes = 180,
-        /// Period Short Codes - 300 Second 
+        /// Period Short Codes - 300 Second
         FiveMinutes = 300,
-        /// Period Short Codes - 600 Second 
+        /// Period Short Codes - 600 Second
         TenMinutes = 600,
-        /// Period Short Codes - 900 Second 
+        /// Period Short Codes - 900 Second
         FifteenMinutes = 900,
-        /// Period Short Codes - 1200 Second 
+        /// Period Short Codes - 1200 Second
         TwentyMinutes = 1200,
-        /// Period Short Codes - 1800 Second 
+        /// Period Short Codes - 1800 Second
         ThirtyMinutes = 1800,
-        /// Period Short Codes - 3600 Second 
+        /// Period Short Codes - 3600 Second
         OneHour = 3600,
-        /// Period Short Codes - 7200 Second 
+        /// Period Short Codes - 7200 Second
         TwoHours = 7200,
-        /// Period Short Codes - 14400 Second 
+        /// Period Short Codes - 14400 Second
         FourHours = 14400,
-        /// Period Short Codes - 21600 Second 
+        /// Period Short Codes - 21600 Second
         SixHours = 21600
     }
 
 
-    /******************************************************** 
+    /********************************************************
     * GLOBAL MARKETS
     *********************************************************/
     /// <summary>
     /// Global Market Short Codes and their full versions: (used in tick objects)
     /// </summary>
-    public static class MarketCodes 
+    public static class MarketCodes
     {
         /// US Market Codes
-        public static Dictionary<string, string> US = new Dictionary<string, string>() 
+        public static Dictionary<string, string> US = new Dictionary<string, string>()
         {
             {"A", "American Stock Exchange"},
             {"B", "Boston Stock Exchange"},
@@ -455,7 +457,7 @@ namespace QuantConnect
         };
 
         /// Canada Market Short Codes:
-        public static Dictionary<string, string> Canada = new Dictionary<string, string>() 
+        public static Dictionary<string, string> Canada = new Dictionary<string, string>()
         {
             {"T", "Toronto"},
             {"V", "Venture"}
@@ -466,13 +468,13 @@ namespace QuantConnect
     /// <summary>
     /// US Public Holidays - Not Tradeable:
     /// </summary>
-    public static class USHoliday 
+    public static class USHoliday
     {
         /// <summary>
         /// Public Holidays
         /// </summary>
-        public static List<DateTime> Dates = new List<DateTime>() 
-        { 
+        public static List<DateTime> Dates = new List<DateTime>()
+        {
             /* New Years Day*/
             new DateTime(1998, 01, 01),
             new DateTime(1999, 01, 01),
@@ -491,7 +493,7 @@ namespace QuantConnect
             new DateTime(2014, 01, 01),
             new DateTime(2015, 01, 01),
             new DateTime(2016, 01, 01),
-            
+
             /* Day of Mouring */
             new DateTime(2007, 01, 02),
 

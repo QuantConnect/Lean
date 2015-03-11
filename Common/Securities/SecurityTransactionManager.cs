@@ -165,6 +165,18 @@ namespace QuantConnect.Securities
             }
         }
 
+
+        /// <summary>
+        /// Get the last order id.
+        /// </summary>
+        public int LastOrderId
+        {
+            get
+            {
+                return _orderId;
+            }
+        }
+
         /******************************************************** 
         * CLASS METHODS
         *********************************************************/
@@ -241,6 +253,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Added alias for RemoveOrder - 
+        /// </summary>
+        /// <param name="orderId">Order id we wish to cancel</param>
+        public virtual void CancelOrder(int orderId)
+        {
+            RemoveOrder(orderId);
+        }
+
+        /// <summary>
         /// Remove this order from outstanding queue: user is requesting a cancel.
         /// </summary>
         /// <param name="orderId">Specific order id to remove</param>
@@ -273,6 +294,21 @@ namespace QuantConnect.Securities
                 Log.Error("TransactionManager.RemoveOrder(): " + err.Message);
             }
         }
+
+
+        /// <summary>
+        /// Get a list of all open orders.
+        /// </summary>
+        /// <returns>List of open orders.</returns>
+        public List<Order> GetOpenOrders()
+        {
+            var openOrders = (from order in Orders.Values
+                where (order.Status == OrderStatus.Submitted ||
+                       order.Status == OrderStatus.New)
+                select order).ToList();
+
+            return openOrders;
+        } 
 
 
         /// <summary>
@@ -312,10 +348,16 @@ namespace QuantConnect.Securities
         /// <returns>True if suficient capital.</returns>
         public bool GetSufficientCapitalForOrder(SecurityPortfolioManager portfolio, Order order)
         {
-            if (Math.Abs(GetOrderRequiredBuyingPower(order)) > portfolio.GetBuyingPower(order.Symbol, order.Direction)) 
+            var increasingPosition = true;
+            var currentAbsoluteHoldings = _securities[order.Symbol].Holdings.AbsoluteQuantity;
+            var newAbsoluteHoldings = Math.Abs(order.Quantity + _securities[order.Symbol].Holdings.Quantity);
+            if (newAbsoluteHoldings < currentAbsoluteHoldings) increasingPosition = false;
+
+            if (increasingPosition && Math.Abs(GetOrderCashImpact(order)) > portfolio.GetFreeCash(order.Symbol, order.Direction))
             {
                 //Log.Debug("Symbol: " + order.Symbol + " Direction: " + order.Direction.ToString() + " Quantity: " + order.Quantity);
                 //Log.Debug("GetOrderRequiredBuyingPower(): " + Math.Abs(GetOrderRequiredBuyingPower(order)) + " PortfolioGetBuyingPower(): " + portfolio.GetBuyingPower(order.Symbol, order.Direction)); 
+                Log.Error(string.Format("Transactions.GetSufficientCapitalForOrder(): Id: {0}, Cash Impact: {1}, Free Cash: {2}", order.Id, GetOrderCashImpact(order), portfolio.GetFreeCash(order.Symbol, order.Direction)));
                 return false;
             }
             return true;
@@ -326,7 +368,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="order">Order to check</param>
         /// <returns>decimal cash required to purchase order</returns>
-        private decimal GetOrderRequiredBuyingPower(Order order)
+        private decimal GetOrderCashImpact(Order order)
         {
             try
             {
@@ -334,12 +376,12 @@ namespace QuantConnect.Securities
                 //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
                 var orderFees = _securities[order.Symbol].Model.GetOrderFee(order.Quantity, order.Price);
 
-                //Return the total buying power for the order, including fees:
-                return Math.Abs(order.Value) + orderFees; 
+                //Return the total cash impact for the order, including fees:
+                return Math.Abs(order.Value) / _securities[order.Symbol].Leverage + orderFees; 
             } 
             catch(Exception err)
             {
-                Log.Error("Security.TransactionManager.GetOrderRequiredBuyingPower(): " + err.Message);
+                Log.Error("Security.TransactionManager.GetOrderCashImpact(): " + err.Message);
             }
             //Prevent all orders if leverage is 0.
             return decimal.MaxValue;

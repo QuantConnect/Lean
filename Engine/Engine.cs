@@ -237,7 +237,7 @@ namespace QuantConnect.Lean.Engine
                         //-> Pull job from QuantConnect job queue, or, pull local build:
                         job = Queue.NextJob(out algorithmPath); // Blocking.
 
-                        if (!IsLocal && (job.Version < Version || (job.Version == Version && job.Redelivered)))
+                        if (!IsLocal && LiveMode && (job.Version < Version || (job.Version == Version && job.Redelivered)))
                         {
                             //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
                             //In this event kill the old algorithm and leave a message so the user can later review.

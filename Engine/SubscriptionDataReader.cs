@@ -533,7 +533,10 @@ namespace QuantConnect.Lean.Engine
             const string cache = "./cache/data";
             SubscriptionStreamReader reader = null;
             if (!Directory.Exists(cache)) Directory.CreateDirectory(cache);
-            foreach (var file in Directory.EnumerateFiles(cache)) File.Delete(file);
+            foreach (var file in Directory.EnumerateFiles(cache))
+            {
+                if (File.GetCreationTime(file) < DateTime.Now.AddHours(-24)) File.Delete(file); 
+            }
 
             //1. Download this source file as fast as possible:
             //1.1 Create filename from source:

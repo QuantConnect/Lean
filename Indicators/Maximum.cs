@@ -54,6 +54,7 @@ namespace QuantConnect.Indicators
         {
         }
 
+        /// <inheritdoc />
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
             if (Samples == 1 || input.Value >= Current.Value)

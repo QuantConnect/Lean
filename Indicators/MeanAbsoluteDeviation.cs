@@ -26,8 +26,8 @@ namespace QuantConnect.Indicators {
 
         /// <summary>
         /// Initializes a new instance of the MeanAbsoluteDeviation class with the specified period.
-        /// 
-        /// Evaluates the mean absolute deviation of samples in the lookback period. 
+        ///
+        /// Evaluates the mean absolute deviation of samples in the lookback period.
         /// </summary>
         /// <param name="period">The sample size of the standard deviation</param>
         public MeanAbsoluteDeviation(int period)
@@ -36,8 +36,8 @@ namespace QuantConnect.Indicators {
 
         /// <summary>
         /// Initializes a new instance of the MeanAbsoluteDeviation class with the specified period.
-        /// 
-        /// Evaluates the mean absolute deviation of samples in the lookback period. 
+        ///
+        /// Evaluates the mean absolute deviation of samples in the lookback period.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The sample size of the mean absoluate deviation</param>

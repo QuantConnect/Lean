@@ -36,6 +36,7 @@ namespace QuantConnect.Securities
         private decimal _averagePrice = 0;
         private int     _quantity = 0;
         private decimal _price = 0;
+        private decimal _leverage = 1;
         private readonly string  _symbol = "";
         private readonly SecurityType _securityType;
         private decimal _totalSaleVolume = 0;
@@ -51,20 +52,20 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Create a new holding class instance setting the initial properties to $0.
         /// </summary>
-        public SecurityHolding(string symbol, ISecurityTransactionModel transactionModel)
-            : this(symbol, SecurityType.Equity, transactionModel)
+        public SecurityHolding(string symbol, decimal leverage, ISecurityTransactionModel transactionModel)
+            : this(symbol, SecurityType.Equity, leverage, transactionModel)
         {
         }
 
         /// <summary>
         /// Create a new holding class instance setting the initial properties to $0.
         /// </summary>
-        public SecurityHolding(string symbol, SecurityType type, ISecurityTransactionModel transactionModel)
+        public SecurityHolding(string symbol, SecurityType type, decimal leverage, ISecurityTransactionModel transactionModel)
         {
             _model = transactionModel;
             _symbol = symbol;
+            _leverage = leverage;
             _securityType = type;
-
             //Total Sales Volume for the day
             _totalSaleVolume = 0;
             _lastTradeProfit = 0;
@@ -120,6 +121,7 @@ namespace QuantConnect.Securities
                 return _securityType;
             }
         }
+        
 
         /// <summary>
         /// Acquisition cost of the security total holdings.
@@ -129,6 +131,17 @@ namespace QuantConnect.Securities
             get 
             {
                 return AveragePrice * Convert.ToDecimal(Quantity);
+            }
+        }
+
+        /// <summary>
+        /// Unlevered Acquisition cost of the security total holdings.
+        /// </summary>
+        public virtual decimal UnleveredHoldingsCost
+        {
+            get
+            {
+                return AveragePrice * Convert.ToDecimal(Quantity) / Leverage;
             }
         }
 
@@ -144,7 +157,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Absolute unlevered holdings cost for current holdings.
+        /// Absolute holdings cost for current holdings.
         /// </summary>
         /// <seealso cref="HoldingsCost"/>
         public virtual decimal AbsoluteHoldingsCost 
@@ -152,6 +165,17 @@ namespace QuantConnect.Securities
             get 
             {
                 return Math.Abs(HoldingsCost);
+            }
+        }
+
+        /// <summary>
+        /// Unlevered absolute acquisition cost of the security total holdings.
+        /// </summary>
+        public virtual decimal UnleveredAbsoluteHoldingsCost
+        {
+            get
+            {
+                return Math.Abs(UnleveredHoldingsCost);
             }
         }
 
@@ -188,7 +212,6 @@ namespace QuantConnect.Securities
                 return (AbsoluteQuantity > 0);
             }
         }
-
 
         /// <summary>
         /// Boolean flat indicating if we hold any of the security
@@ -354,6 +377,15 @@ namespace QuantConnect.Securities
         {
             _averagePrice = averagePrice;
             _quantity = quantity;
+        }
+
+        /// <summary>
+        /// Set the leverage for this security.
+        /// </summary>
+        /// <param name="leverage">Decimal leverage</param>
+        public virtual void SetLeverage(decimal leverage)
+        {
+            _leverage = leverage;
         }
 
         /// <summary>

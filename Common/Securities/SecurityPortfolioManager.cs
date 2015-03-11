@@ -252,9 +252,9 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                //Sum sum of holdings
+                //Sum of unlevered cost of holdings
                 return (from position in Securities.Values
-                        select position.Holdings.AbsoluteHoldingsCost / position.Leverage).Sum();
+                        select position.Holdings.UnleveredAbsoluteHoldingsCost).Sum();
             }
         }
 
@@ -411,39 +411,40 @@ namespace QuantConnect.Securities
         ///     Similarly the desired trade direction can impact the buying power available
         /// </remarks>
         /// <returns>Decimal total buying power for this symbol</returns>
-        public decimal GetBuyingPower(string symbol, OrderDirection direction = OrderDirection.Hold) 
+        public virtual decimal GetFreeCash(string symbol, OrderDirection direction = OrderDirection.Hold) 
         {
             //Each asset has different leverage values, so affects our cash position in different ways.
-            // Basically position affect on cash = holdings / leverage
-            var holdings = (Securities[symbol].Holdings.AbsoluteQuantity * Securities[symbol].Close);
-            var remainingBuyingPower = Cash * Securities[symbol].Leverage;
+            var holdings = Securities[symbol].Holdings;
 
-            if (direction == OrderDirection.Hold) return remainingBuyingPower;
-            //Log.Debug("SecurityPortfolioManager.GetBuyingPower(): Direction: " + direction.ToString());
+            if (direction == OrderDirection.Hold || !Invested) return Cash;
+            //Log.Debug("SecurityPortfolioManager.GetFreeCash(): Direction: " + direction.ToString());
 
+
+            //If the order is in the same direction as holdings, our remaining cash is our cash
+            //In the opposite direction, our remaining cash is 2 x current value of assets + our cash
             if (Securities[symbol].Holdings.IsLong)
             {
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        return remainingBuyingPower;
+                        return Cash;
                     case OrderDirection.Sell:
-                        return holdings * 2  + remainingBuyingPower;
+                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + Cash;
                 }
-            } 
-            else if (Securities[symbol].Holdings.IsShort) 
+            }
+            else if (Securities[symbol].Holdings.IsShort)
             {
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        return holdings*2 + remainingBuyingPower;
+                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + Cash;
                     case OrderDirection.Sell:
-                        return remainingBuyingPower;
+                        return Cash;
                 }
             }
 
-            //No holdings buying power is cash x leverage
-            return remainingBuyingPower;
+            //No holdings, return cash
+            return Cash;
         }
 
 

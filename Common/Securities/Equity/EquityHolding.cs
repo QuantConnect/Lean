@@ -41,8 +41,8 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Constructor for equities holdings.
         /// </summary>
-        public EquityHolding(string symbol, ISecurityTransactionModel transactionModel)
-            : base(symbol, SecurityType.Equity, transactionModel)
+        public EquityHolding(string symbol, decimal leverage, ISecurityTransactionModel transactionModel)
+            : base(symbol, SecurityType.Equity, leverage,  transactionModel)
         {
         }
 

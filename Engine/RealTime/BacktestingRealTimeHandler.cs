@@ -37,7 +37,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         *********************************************************/
         //Threading
         private DateTime _time = new DateTime();
-        private bool _exitTriggered = false;
+        private bool _exitTriggered;
         private bool _isActive = true;
         private AlgorithmNodePacket _job;
 
