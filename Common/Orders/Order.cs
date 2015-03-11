@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,13 +22,13 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Orders
 {
-    /******************************************************** 
+    /********************************************************
     * BASE ORDER CLASS DEFINITION - DEFAULT TO MARKET ORDER.
     *********************************************************/
     /// <summary>
     /// Order struct for placing new trade
     /// </summary>
-    public abstract class Order 
+    public abstract class Order
     {
         /// <summary>
         /// Order ID.
@@ -49,7 +49,7 @@ namespace QuantConnect.Orders
         /// Symbol of the Asset
         /// </summary>
         public string Symbol;
-        
+
         /// <summary>
         /// Price of the Order.
         /// </summary>
@@ -78,7 +78,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Order duration - GTC or Day. Day not supported in backtests.
         /// </summary>
-        public OrderDuration Duration = OrderDuration.GTC;
+        public OrderDuration Duration;
 
         /// <summary>
         /// Tag the order with some custom data
@@ -88,20 +88,20 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The symbol's security type
         /// </summary>
-        public SecurityType SecurityType = SecurityType.Equity;
+        public SecurityType SecurityType;
 
         /// <summary>
         /// Order Direction Property based off Quantity.
         /// </summary>
-        public OrderDirection Direction 
+        public OrderDirection Direction
         {
-            get 
+            get
             {
-                if (Quantity > 0) 
+                if (Quantity > 0)
                 {
                     return OrderDirection.Buy;
-                } 
-                if (Quantity < 0) 
+                }
+                if (Quantity < 0)
                 {
                     return OrderDirection.Sell;
                 }
@@ -112,9 +112,9 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Get the absolute quantity for this order
         /// </summary>
-        public decimal AbsoluteQuantity 
+        public decimal AbsoluteQuantity
         {
-            get 
+            get
             {
                 return Math.Abs(Quantity);
             }
@@ -123,15 +123,15 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Value of the order at limit price if a limit order, or market price if a market order.
         /// </summary>
-        public abstract decimal Value 
-        { 
-            get; 
+        public abstract decimal Value
+        {
+            get;
         }
 
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
-        public Order()
+        protected Order()
         {
             Time = new DateTime();
             Price = 0;
@@ -156,7 +156,7 @@ namespace QuantConnect.Orders
         /// <param name="time">Time the order was placed</param>
         /// <param name="price">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public Order(string symbol, int quantity, OrderType order, DateTime time, decimal price = 0, string tag = "", SecurityType type = SecurityType.Base)
+        protected Order(string symbol, int quantity, OrderType order, DateTime time, decimal price = 0, string tag = "", SecurityType type = SecurityType.Base)
         {
             Time = time;
             Price = price;
@@ -181,7 +181,7 @@ namespace QuantConnect.Orders
         /// <param name="time">Time the order was placed</param>
         /// <param name="price">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public Order(string symbol, SecurityType type, int quantity, OrderType order, DateTime time, decimal price = 0, string tag = "") 
+        protected Order(string symbol, SecurityType type, int quantity, OrderType order, DateTime time, decimal price = 0, string tag = "")
         {
             Time = time;
             Price = price;
@@ -196,5 +196,4 @@ namespace QuantConnect.Orders
             ContingentId = 0;
         }
     }
-
 } // End QC Namespace:

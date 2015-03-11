@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,13 +21,13 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Logging;
 
-namespace QuantConnect 
+namespace QuantConnect
 {
     /// <summary>
     /// Single Parent Chart Object for Custom Charting
     /// </summary>
     [JsonObjectAttribute]
-    public class Chart 
+    public class Chart
     {
         /// Name of the Chart:
         public string Name = "";
@@ -36,7 +36,7 @@ namespace QuantConnect
         public ChartType ChartType = ChartType.Overlay;
 
         /// List of Series Objects for this Chart:
-        public Dictionary<string, Series> Series = new Dictionary<string,Series>();
+        public Dictionary<string, Series> Series = new Dictionary<string, Series>();
 
         /// <summary>
         /// Default constructor for chart:
@@ -48,7 +48,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="name">Name of the Chart</param>
         /// <param name="type"> Type of the chart</param>
-        public Chart(string name, ChartType type = ChartType.Overlay) 
+        public Chart(string name, ChartType type = ChartType.Overlay)
         {
             Name = name;
             Series = new Dictionary<string, Series>();
@@ -59,14 +59,14 @@ namespace QuantConnect
         /// Add a reference to this chart series:
         /// </summary>
         /// <param name="series">Chart series class object</param>
-        public void AddSeries(Series series) 
+        public void AddSeries(Series series)
         {
             //If we dont already have this series, add to the chrt:
             if (!Series.ContainsKey(series.Name))
             {
                 Series.Add(series.Name, series);
             }
-            else 
+            else
             {
                 throw new Exception("Chart.AddSeries(): Chart series name already exists");
             }
@@ -76,23 +76,23 @@ namespace QuantConnect
         /// Fetch the updates of the chart, and save the index position.
         /// </summary>
         /// <returns></returns>
-        public Chart GetUpdates() 
+        public Chart GetUpdates()
         {
             var copy = new Chart(Name, ChartType);
             try
-            {   
+            {
                 foreach (var series in Series.Values)
                 {
                     copy.AddSeries(series.GetUpdates());
                 }
             }
-            catch (Exception err) {
+            catch (Exception err)
+            {
                 Log.Error("Chart.GetUpdates(): " + err.Message);
             }
             return copy;
         }
     }
-
 
     /// <summary>
     /// Chart Series Object - Series data and properties for a chart:
@@ -135,7 +135,7 @@ namespace QuantConnect
         /// <param name="name">Name of the chart series</param>
         /// <param name="type">Type of the chart series</param>
         /// <param name="unit">Unit of the serier</param>
-        public Series(string name, SeriesType type = SeriesType.Line, string unit = "$") 
+        public Series(string name, SeriesType type = SeriesType.Line, string unit = "$")
         {
             Name = name;
             Values = new List<ChartPoint>();
@@ -149,7 +149,7 @@ namespace QuantConnect
         /// <param name="time">Time of the chart point</param>
         /// <param name="value">Value of the chart point</param>
         /// <param name="liveMode">This is a live mode point</param>
-        public void AddPoint(DateTime time, decimal value, bool liveMode = false) 
+        public void AddPoint(DateTime time, decimal value, bool liveMode = false)
         {
             //Round off the chart values to significant figures:
             var v = ((double)value).RoundToSignificantDigits(5);
@@ -160,17 +160,16 @@ namespace QuantConnect
             }
         }
 
-
         /// <summary>
         /// Get the updates since the last call to this function.
         /// </summary>
         /// <returns>List of the updates from the series</returns>
-        public Series GetUpdates() 
+        public Series GetUpdates()
         {
             var copy = new Series(Name, SeriesType, Unit);
             try
             {
-                //Add the updates since the last 
+                //Add the updates since the last
                 for (var i = _updatePosition; i < Values.Count; i++)
                 {
                     copy.Values.Add(Values[i]);
@@ -178,13 +177,13 @@ namespace QuantConnect
                 //Shuffle the update point to now:
                 _updatePosition = Values.Count;
             }
-            catch (Exception err) {
+            catch (Exception err)
+            {
                 Log.Error("Series.GetUpdates(): " + err.Message);
             }
             return copy;
         }
     }
-
 
     /// <summary>
     /// Single Chart Point Value Type for QCAlgorithm.Plot();
@@ -199,26 +198,25 @@ namespace QuantConnect
         public decimal y;
 
         ///Constructor for datetime-value arguements:
-        public ChartPoint(DateTime time, decimal value) 
+        public ChartPoint(DateTime time, decimal value)
         {
             x = Convert.ToInt64(Time.DateTimeToUnixTimeStamp(time.ToUniversalTime()));
             y = value;
         }
 
         ///Cloner Constructor:
-        public ChartPoint(ChartPoint point) 
+        public ChartPoint(ChartPoint point)
         {
             x = point.x;
             y = point.y;
         }
     }
 
-
     /// <summary>
     /// Available types of charts
     /// </summary>
-    public enum SeriesType 
-    { 
+    public enum SeriesType
+    {
         /// Line Plot for Value Types
         Line,
         /// Scatter Plot for Chart Distinct Types
@@ -234,12 +232,11 @@ namespace QuantConnect
     /// <summary>
     /// Type of chart - should we draw the series as overlayed or stacked
     /// </summary>
-    public enum ChartType 
-    { 
+    public enum ChartType
+    {
         /// Overlayed stacked
         Overlay,
         /// Stacked series on top of each other.
         Stacked
     }
-
 } // End QC Namespace:

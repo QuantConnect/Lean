@@ -20,7 +20,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Logging;
@@ -36,16 +35,16 @@ namespace QuantConnect.Lean.Engine.RealTime
         * PRIVATE VARIABLES
         *********************************************************/
         //Threading
-        private DateTime _time = new DateTime();
+        private DateTime _time;
         private bool _exitTriggered;
         private bool _isActive = true;
         private AlgorithmNodePacket _job;
 
         //Events:
-        private List<RealTimeEvent> _events;
+        private readonly List<RealTimeEvent> _events;
 
         //Algorithm and Handlers:
-        private IAlgorithm _algorithm;
+        private readonly IAlgorithm _algorithm;
         private Dictionary<SecurityType, MarketToday> _today;
 
         /******************************************************** 
@@ -92,7 +91,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             get
             {
                 throw new NotImplementedException("MarketToday is not currently needed in backtesting mode");
-                return _today;
             }
         }
 
@@ -173,10 +171,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void ScanEvents()
         {
-            for (var i = 0; i < _events.Count; i++)
-            {
-                _events[i].Scan(_time);
-            }
+            _events.ForEach(x => x.Scan(_time));
         }
 
         /// <summary>
@@ -192,12 +187,8 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void ResetEvents()
         {
-            for (var i = 0; i < _events.Count; i++)
-            {
-                _events[i].Reset();
-            }
+            _events.ForEach(x => x.Reset());
         }
-
 
         /// <summary>
         /// Set the time for the realtime event handler.
