@@ -124,18 +124,23 @@ namespace QuantConnect.Lean.Engine
                 if (earlyBirdTicks > 0)
                 {
                     //Seek forward in time to next data event from stream: there's nothing here for us to do now: why loop over empty seconds?
-                    frontier = (new DateTime(earlyBirdTicks));
+                    frontier = new DateTime(earlyBirdTicks);
                 }
                 else
                 {
                     frontier += increment;
                 }
 
-                //Submit the next data array, even if there's no data, allow emits every second to allow event handling (liquidate/stop/ect...)
-                if (newData.Count > 0 || (Engine.LiveMode && DateTime.Now > nextEmitTime))
+                if (newData.Count > 0)
+                {   
+                    yield return newData;
+                }
+
+                //Allow loop pass through emits every second to allow event handling (liquidate/stop/ect...)
+                if (Engine.LiveMode && DateTime.Now > nextEmitTime)
                 {
                     nextEmitTime = DateTime.Now + TimeSpan.FromSeconds(1);
-                    yield return newData;
+                    yield return new SortedDictionary<DateTime, Dictionary<int, List<BaseData>>>();
                 }
             }
             Log.Trace("DataStream.GetData(): All Streams Completed.");
