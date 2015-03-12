@@ -14,6 +14,7 @@
 */
 using System;
 using System.Diagnostics;
+using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 
@@ -84,7 +85,7 @@ namespace QuantConnect.Indicators
             if (_previousInput != null && input.Time < _previousInput.Time)
             {
                 // if we receive a time in the past, throw
-                throw new ArgumentException("This is a forward only indicator.");
+                throw new ArgumentException("This is a forward only indicator: Input: " + input.Time.ToString("u") + " Previous: " + _previousInput.Time.ToString("u"));
             }
             if (!ReferenceEquals(input, _previousInput))
             {
