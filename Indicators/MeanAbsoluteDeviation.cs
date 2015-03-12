@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,13 +15,17 @@
 
 using System;
 using System.Linq;
-using System.Collections.Generic;
 
-namespace QuantConnect.Indicators {
+namespace QuantConnect.Indicators
+{
     /// <summary>
     /// This indicator computes the n-period mean absolute deviation.
     /// </summary>
-    public class MeanAbsoluteDeviation : WindowIndicator<IndicatorDataPoint> {
+    public class MeanAbsoluteDeviation : WindowIndicator<IndicatorDataPoint>
+    {
+        /// <summary>
+        /// Gets the mean for the given period.
+        /// </summary>
         public IndicatorBase<IndicatorDataPoint> Mean { get; private set; }
 
         /// <summary>
@@ -31,7 +35,8 @@ namespace QuantConnect.Indicators {
         /// </summary>
         /// <param name="period">The sample size of the standard deviation</param>
         public MeanAbsoluteDeviation(int period)
-            : this("MAD" + period, period) {
+            : this("MAD" + period, period)
+        {
         }
 
         /// <summary>
@@ -42,14 +47,16 @@ namespace QuantConnect.Indicators {
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The sample size of the mean absoluate deviation</param>
         public MeanAbsoluteDeviation(string name, int period)
-            : base(name, period) {
+            : base(name, period)
+        {
             Mean = MovingAverageType.Simple.AsIndicator(string.Format("{0}_{1}", name, "Mean"), period);
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady {
+        public override bool IsReady
+        {
             get { return Samples >= Period; }
         }
 
@@ -59,9 +66,11 @@ namespace QuantConnect.Indicators {
         /// <param name="input">The input given to the indicator</param>
         /// <param name="window">The window for the input history</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input) {
+        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        {
             Mean.Update(input);
-            if (Samples < 2) {
+            if (Samples < 2)
+            {
                 return 0m;
             }
             return window.Average(v => Math.Abs(v - Mean.Current.Value));

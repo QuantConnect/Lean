@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,6 +28,7 @@ namespace QuantConnect
     /// </summary>
     public class LiveTradingFeaturesAlgorithm : QCAlgorithm
     {
+        /// <inheritdoc />
         public override void Initialize()
         {
             SetStartDate(2013, 1, 1);
@@ -44,7 +45,7 @@ namespace QuantConnect
             AddData<Bitcoin>("BTC", Resolution.Second);
         }
 
-        //New Bitcoin Data Event:
+        /// <inheritdoc />
         public void OnData(Bitcoin data)
         {
             if (LiveMode) //Live Mode Property
@@ -64,6 +65,7 @@ namespace QuantConnect
             }
         }
 
+        /// <inheritdoc />
         public void OnData(TradeBars data)
         {
             if (!Portfolio.HoldStock && data.ContainsKey("AAPL"))
@@ -86,32 +88,32 @@ namespace QuantConnect
         /// <summary>
         /// Open Price
         /// </summary>
-        public decimal Open = 0;
-        
+        public decimal Open;
+
         /// <summary>
         /// High Price
         /// </summary>
-        public decimal High = 0;
-        
+        public decimal High;
+
         /// <summary>
         /// Low Price
         /// </summary>
-        public decimal Low = 0;
+        public decimal Low;
 
         /// <summary>
         /// Closing Price
         /// </summary>
-        public decimal Close = 0;
-        
+        public decimal Close;
+
         /// <summary>
         /// Volume in BTC
         /// </summary>
-        public decimal VolumeBTC = 0;
-        
+        public decimal VolumeBTC;
+
         /// <summary>
         /// Volume in USD:
         /// </summary>
-        public decimal WeightedPrice = 0;
+        public decimal WeightedPrice;
 
         /// <summary>
         /// Default Constructor Required.
@@ -206,13 +208,44 @@ namespace QuantConnect
     /// </summary>
     public class LiveBitcoin
     {
+        /// <summary>
+        /// Timestamp for Bitcoin tick
+        /// </summary>
         public int Timestamp = 0;
+
+        /// <summary>
+        /// Last Price for Bitcoin tick
+        /// </summary>
         public decimal Last = 0;
+
+        /// <summary>
+        /// High Price for Bitcoin tick
+        /// </summary>
         public decimal High = 0;
+
+        /// <summary>
+        /// Low Price for Bitcoin tick
+        /// </summary>
         public decimal Low = 0;
+
+        /// <summary>
+        /// Bid Price for Bitcoin tick
+        /// </summary>
         public decimal Bid = 0;
+
+        /// <summary>
+        /// Ask Price for Bitcoin tick
+        /// </summary>
         public decimal Ask = 0;
+
+        /// <summary>
+        /// VWAP for Bitcoin tick
+        /// </summary>
         public decimal VWAP = 0;
+
+        /// <summary>
+        /// Volume for Bitcoin tick
+        /// </summary>
         public decimal Volume = 0;
     }
 }

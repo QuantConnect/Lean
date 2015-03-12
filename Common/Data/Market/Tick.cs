@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class Tick : BaseData
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS VARIABLES
         *********************************************************/
         /// <summary>
@@ -40,7 +40,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Quantity of the tick sale or quote offer.
         /// </summary>
-        public int Quantity = 0;
+        public int Quantity;
 
         /// <summary>
         /// Exchange we are executing on. String short code expanded in the MarketCodes.US global dictionary
@@ -55,19 +55,19 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Bool whether this is a suspicious tick
         /// </summary>
-        public bool Suspicious = false;
+        public bool Suspicious;
 
         /// <summary>
         /// Bid Price for Tick
         /// </summary>
         /// <remarks>QuantConnect does not currently have quote data but was designed to handle ticks and quotes</remarks>
-        public decimal BidPrice = 0;
+        public decimal BidPrice;
 
         /// <summary>
         /// Asking price for the Tick quote.
         /// </summary>
         /// <remarks>QuantConnect does not currently have quote data but was designed to handle ticks and quotes</remarks>
-        public decimal AskPrice = 0;
+        public decimal AskPrice;
 
         /// <summary>
         /// Alias for "Value" - the last sale for this asset.
@@ -80,16 +80,7 @@ namespace QuantConnect.Data.Market
             }
         }
 
-        // In Base Class: Last Trade Tick:
-        //public decimal Price = 0;
-
-        // In Base Class: Ticker String Symbol of the Asset
-        //public string Symbol = "";
-
-        // In Base Class: DateTime of this SnapShot
-        //public DateTime Time = new DateTime();
-
-        /******************************************************** 
+        /********************************************************
         * CLASS CONSTRUCTORS
         *********************************************************/
         /// <summary>
@@ -112,7 +103,7 @@ namespace QuantConnect.Data.Market
         /// Cloner constructor for fill formward engine implementation. Clone the original tick into this new tick:
         /// </summary>
         /// <param name="original">Original tick we're cloning</param>
-        public Tick(Tick original) 
+        public Tick(Tick original)
         {
             Symbol = original.Symbol;
             Time = new DateTime(original.Time.Ticks);
@@ -143,9 +134,8 @@ namespace QuantConnect.Data.Market
             AskPrice = ask;
         }
 
-
         /// <summary>
-        /// Initializer for a last-trade equity tick with bid or ask prices. 
+        /// Initializer for a last-trade equity tick with bid or ask prices.
         /// </summary>
         /// <param name="time">Full date and time</param>
         /// <param name="symbol">Underlying equity security symbol</param>
