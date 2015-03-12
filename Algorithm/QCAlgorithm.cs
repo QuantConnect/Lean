@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,17 +26,17 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
-    /// QC Algorithm Base Class - Handle the basic requirements of a trading algorithm, 
-    /// allowing user to focus on event methods. The QCAlgorithm class implements Portfolio, 
+    /// QC Algorithm Base Class - Handle the basic requirements of a trading algorithm,
+    /// allowing user to focus on event methods. The QCAlgorithm class implements Portfolio,
     /// Securities, Transactions and Data Subscription Management.
     /// </summary>
-    public partial class QCAlgorithm : MarshalByRefObject, IAlgorithm 
+    public partial class QCAlgorithm : MarshalByRefObject, IAlgorithm
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         private DateTime _time;
@@ -50,13 +50,13 @@ namespace QuantConnect.Algorithm
         private List<string> _debugMessages = new List<string>();
         private List<string> _logMessages = new List<string>();
         private List<string> _errorMessages = new List<string>();
-        
+
         //Error tracking to avoid message flooding:
         private string _previousDebugMessage = "";
         private string _previousErrorMessage = "";
         private bool _sentNoDataError = false;
 
-        /******************************************************** 
+        /********************************************************
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -66,14 +66,14 @@ namespace QuantConnect.Algorithm
         public QCAlgorithm()
         {
             //Initialise the Algorithm Helper Classes:
-            //- Note - ideally these wouldn't be here, but because of the DLL we need to make the classes shared across 
+            //- Note - ideally these wouldn't be here, but because of the DLL we need to make the classes shared across
             //  the Worker & Algorithm, limiting ability to do anything else.
             Securities = new SecurityManager();
             Transactions = new SecurityTransactionManager(Securities);
             Portfolio = new SecurityPortfolioManager(Securities, Transactions);
             Notify = new NotificationManager(false); // Notification manager defaults to disabled.
 
-            //Initialise Data Manager 
+            //Initialise Data Manager
             SubscriptionManager = new SubscriptionManager();
 
             //Initialise Algorithm RunMode to Series - Parallel Mode deprecated:
@@ -90,83 +90,79 @@ namespace QuantConnect.Algorithm
             Console.Initialize(this);
         }
 
-
-        /******************************************************** 
+        /********************************************************
         * CLASS PUBLIC VARIABLES
         *********************************************************/
         /// <summary>
-        /// Security collection is an array of the security objects such as Equities and FOREX. Securities data 
+        /// Security collection is an array of the security objects such as Equities and FOREX. Securities data
         /// manages the properties of tradeable assets such as price, open and close time and holdings information.
         /// </summary>
         public SecurityManager Securities
-        { 
-            get; 
-            set; 
+        {
+            get;
+            set;
         }
 
         /// <summary>
         /// Portfolio object provieds easy access to the underlying security-holding properties; summed together in a way to make them useful.
-        /// This saves the user time by providing common portfolio requests in a single 
+        /// This saves the user time by providing common portfolio requests in a single
         /// </summary>
-        public SecurityPortfolioManager Portfolio 
-        { 
-            get; 
-            set; 
+        public SecurityPortfolioManager Portfolio
+        {
+            get;
+            set;
         }
-
 
         /// <summary>
         /// Generic Data Manager - Required for compiling all data feeds in order, and passing them into algorithm event methods.
         /// The subscription manager contains a list of the data feed's we're subscribed to and properties of each data feed.
         /// </summary>
-        public SubscriptionManager SubscriptionManager 
-        { 
-            get; 
-            set; 
+        public SubscriptionManager SubscriptionManager
+        {
+            get;
+            set;
         }
-
 
         /// <summary>
         /// Notification Manager for Sending Live Runtime Notifications to users about important events.
         /// </summary>
         public NotificationManager Notify
         {
-            get; 
+            get;
             set;
         }
 
         /// <summary>
-        /// Public name for the algorithm as automatically generated by the IDE. Intended for helping distinguish logs by noting 
+        /// Public name for the algorithm as automatically generated by the IDE. Intended for helping distinguish logs by noting
         /// the algorithm-id.
         /// </summary>
         /// <seealso cref="AlgorithmId"/>
-        public string Name 
+        public string Name
         {
             get;
             set;
         }
 
-
         /// <summary>
-        /// Read-only value for current time frontier of the algorithm and event horizon. 
+        /// Read-only value for current time frontier of the algorithm and event horizon.
         /// </summary>
         /// <remarks>During backtesting this is primarily sourced from the data feed. During live trading the time is updated from the system clock.</remarks>
-        public DateTime Time 
+        public DateTime Time
         {
-            get 
+            get
             {
                 return _time;
             }
         }
 
         /// <summary>
-        /// Value of the user set start-date from the backtest. 
+        /// Value of the user set start-date from the backtest.
         /// </summary>
         /// <remarks>This property is set with SetStartDate() and defaults to the earliest QuantConnect data available - Jan 1st 1998. It is ignored during live trading </remarks>
         /// <seealso cref="SetStartDate(DateTime)"/>
-        public DateTime StartDate 
+        public DateTime StartDate
         {
-            get 
+            get
             {
                 return _startDate;
             }
@@ -177,45 +173,45 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <remarks> This property is set with SetEndDate() and defaults to today. It is ignored during live trading.</remarks>
         /// <seealso cref="SetEndDate(DateTime)"/>
-        public DateTime EndDate 
+        public DateTime EndDate
         {
-            get 
+            get
             {
                 return _endDate;
             }
         }
 
         /// <summary>
-        /// Algorithm Id for this backtest or live algorithm. 
+        /// Algorithm Id for this backtest or live algorithm.
         /// </summary>
         /// <remarks>A unique identifier for </remarks>
-        public string AlgorithmId 
+        public string AlgorithmId
         {
-            get 
+            get
             {
                 return _algorithmId;
             }
         }
 
         /// <summary>
-        /// Control the server setup run style for the backtest: Automatic, Parallel or Series. 
+        /// Control the server setup run style for the backtest: Automatic, Parallel or Series.
         /// </summary>
         /// <remark>
-        ///     Series mode runs all days through one computer, allowing memory of the previous days. 
+        ///     Series mode runs all days through one computer, allowing memory of the previous days.
         ///     Parallel mode runs all days separately which maximises speed but gives no memory of a previous day trading.
         /// </remark>
         /// <obsolete>The RunMode enum propert is now obsolete. All algorithms will default to RunMode.Series for series backtests.</obsolete>
         [Obsolete("The RunMode enum propert is now obsolete. All algorithms will default to RunMode.Series for series backtests.")]
-        public RunMode RunMode 
+        public RunMode RunMode
         {
-            get 
+            get
             {
                 return _runMode;
             }
         }
 
         /// <summary>
-        /// Boolean property indicating the algorithm is currently running in live mode. 
+        /// Boolean property indicating the algorithm is currently running in live mode.
         /// </summary>
         /// <remarks>Intended for use where certain behaviors will be enabled while the algorithm is trading live: such as notification emails, or displaying runtime statistics.</remarks>
         public bool LiveMode
@@ -232,11 +228,11 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Debug(string)"/>
         public List<string> DebugMessages
         {
-            get 
+            get
             {
                 return _debugMessages;
             }
-            set 
+            set
             {
                 _debugMessages = value;
             }
@@ -246,13 +242,13 @@ namespace QuantConnect.Algorithm
         /// Storage for log messages before the event handlers have passed control back to the Lean Engine.
         /// </summary>
         /// <seealso cref="Log(string)"/>
-        public List<string> LogMessages 
+        public List<string> LogMessages
         {
-            get 
+            get
             {
                 return _logMessages;
             }
-            set 
+            set
             {
                 _logMessages = value;
             }
@@ -275,7 +271,7 @@ namespace QuantConnect.Algorithm
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -284,7 +280,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="SetStartDate(DateTime)"/>
         /// <seealso cref="SetEndDate(DateTime)"/>
         /// <seealso cref="SetCash(decimal)"/>
-        public virtual void Initialize() 
+        public virtual void Initialize()
         {
             //Setup Required Data
             throw new NotImplementedException("Please override the Intitialize() method");
@@ -314,48 +310,27 @@ namespace QuantConnect.Algorithm
             //throw new NotImplementedException("OnTick has been made obsolete. Please use OnData(Ticks data) instead.");
         }
 
-        // <summary>
-        // Event - v2.0 TRADEBAR EVENT HANDLER: (Pattern) Basic template for user to override when requesting tradebar data.
-        // </summary>
-        // <param name="data"></param>
-        //public void OnData(TradeBars data)
-        //{
-        //
-        //}
-
-        // <summary>
-        // Event - v2.0 TICK EVENT HANDLER: (Pattern) Basic template for user to override when requesting tick data.
-        // </summary>
-        // <param name="data">List of Tick Data</param>
-        //public void OnData(Ticks data)
-        //{
-        //
-        //}
-
         /// <summary>
         /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
         /// </summary>
         /// <remarks>Method is called 10 minutes before closing to allow user to close out position.</remarks>
         public virtual void OnEndOfDay()
         {
-
         }
 
         /// <summary>
         /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
         /// </summary>
         /// <param name="symbol">Asset symbol for this end of day event. Forex and equities have different closing hours.</param>
-        public virtual void OnEndOfDay(string symbol) 
+        public virtual void OnEndOfDay(string symbol)
         {
-            
         }
 
         /// <summary>
         /// End of algorithm run event handler. This method is called at the end of a backtest or live trading operation. Intended for closing out logs.
         /// </summary>
-        public virtual void OnEndOfAlgorithm() 
-        { 
-            
+        public virtual void OnEndOfAlgorithm()
+        {
         }
 
         /// <summary>
@@ -365,7 +340,6 @@ namespace QuantConnect.Algorithm
         /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
         public virtual void OnOrderEvent(OrderEvent orderEvent)
         {
-   
         }
 
         /// <summary>
@@ -373,7 +347,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <remarks>For internal use only to advance time.</remarks>
         /// <param name="frontier">Current datetime.</param>
-        public void SetDateTime(DateTime frontier) 
+        public void SetDateTime(DateTime frontier)
         {
             _time = frontier;
         }
@@ -385,7 +359,7 @@ namespace QuantConnect.Algorithm
         /// <obsolete>This method is now obsolete and has no replacement. All algorithms now run in Series mode.</obsolete>
         /// <param name="mode">Enum RunMode with options Series, Parallel or Automatic. Automatic scans your requested symbols and resolutions and makes a decision on the fastest analysis</param>
         [Obsolete("This method is now obsolete and has no replacement. All algorithms now run in Series mode.")]
-        public void SetRunMode(RunMode mode) 
+        public void SetRunMode(RunMode mode)
         {
             if (mode != RunMode.Parallel) return;
             Debug("Algorithm.SetRunMode(): RunMode-Parallel Type has been deprecated. Series analysis selected instead");
@@ -394,7 +368,7 @@ namespace QuantConnect.Algorithm
 
 
         /// <summary>
-        /// Set initial cash for the strategy while backtesting. During live mode this value is ignored 
+        /// Set initial cash for the strategy while backtesting. During live mode this value is ignored
         /// and replaced with the actual cash of your brokerage account.
         /// </summary>
         /// <param name="startingCash">Starting cash for the strategy backtest</param>
@@ -405,7 +379,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Set initial cash for the strategy while backtesting. During live mode this value is ignored 
+        /// Set initial cash for the strategy while backtesting. During live mode this value is ignored
         /// and replaced with the actual cash of your brokerage account.
         /// </summary>
         /// <param name="startingCash">Starting cash for the strategy backtest</param>
@@ -416,17 +390,17 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Set initial cash for the strategy while backtesting. During live mode this value is ignored 
+        /// Set initial cash for the strategy while backtesting. During live mode this value is ignored
         /// and replaced with the actual cash of your brokerage account.
         /// </summary>
         /// <param name="startingCash">Starting cash for the strategy backtest</param>
-        public void SetCash(decimal startingCash) 
+        public void SetCash(decimal startingCash)
         {
-            if (!_locked) 
+            if (!_locked)
             {
                 Portfolio.SetCash(startingCash);
             }
-            else 
+            else
             {
                 throw new Exception("Algorithm.SetCash(): Cannot change cash available after algorithm initialized.");
             }
@@ -438,12 +412,12 @@ namespace QuantConnect.Algorithm
         /// <param name="day">Int starting date 1-30</param>
         /// <param name="month">Int month starting date</param>
         /// <param name="year">Int year starting date</param>
-        /// <remarks> 
-        ///     Wrapper for SetStartDate(DateTime). 
-        ///     Must be less than end date. 
+        /// <remarks>
+        ///     Wrapper for SetStartDate(DateTime).
+        ///     Must be less than end date.
         ///     Ignored in live trading mode.
         /// </remarks>
-        public void SetStartDate(int year, int month, int day) 
+        public void SetStartDate(int year, int month, int day)
         {
             try
             {
@@ -454,21 +428,21 @@ namespace QuantConnect.Algorithm
 
                 SetStartDate(start);
             }
-            catch (Exception err) 
+            catch (Exception err)
             {
                 throw new Exception("Date Invalid: " + err.Message);
             }
         }
 
         /// <summary>
-        /// Set the end date for a backtest run 
+        /// Set the end date for a backtest run
         /// </summary>
         /// <param name="day">Int end date 1-30</param>
         /// <param name="month">Int month end date</param>
         /// <param name="year">Int year end date</param>
         /// <remarks>Wrapper for SetEndDate(datetime).</remarks>
         /// <seealso cref="SetEndDate(DateTime)"/>
-        public void SetEndDate(int year, int month, int day) 
+        public void SetEndDate(int year, int month, int day)
         {
             try
             {
@@ -479,7 +453,7 @@ namespace QuantConnect.Algorithm
 
                 SetEndDate(end);
             }
-            catch (Exception err) 
+            catch (Exception err)
             {
                 throw new Exception("Date Invalid: " + err.Message);
             }
@@ -496,13 +470,13 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Set the start date for the backtest 
+        /// Set the start date for the backtest
         /// </summary>
         /// <param name="start">Datetime Start date for backtest</param>
         /// <remarks>Must be less than end date and within data available</remarks>
         /// <seealso cref="SetStartDate(DateTime)"/>
-        public void SetStartDate(DateTime start) 
-        { 
+        public void SetStartDate(DateTime start)
+        {
             //Validate the start date:
             //1. Check range;
             if (start < (new DateTime(1900, 01, 01)))
@@ -511,19 +485,19 @@ namespace QuantConnect.Algorithm
             }
 
             //2. Check end date greater:
-            if (_endDate != new DateTime()) 
+            if (_endDate != new DateTime())
             {
-                if (start > _endDate) 
+                if (start > _endDate)
                 {
                     throw new Exception("Please select start date less than end date.");
                 }
             }
 
             //3. Check not locked already:
-            if (!_locked) 
+            if (!_locked)
             {
                 _startDate = start;
-            } 
+            }
             else
             {
                 throw new Exception("Algorithm.SetStartDate(): Cannot change start date after algorithm initialized.");
@@ -536,30 +510,30 @@ namespace QuantConnect.Algorithm
         /// <param name="end">Datetime value for end date</param>
         /// <remarks>Must be greater than the start date</remarks>
         /// <seealso cref="SetEndDate(DateTime)"/>
-        public void SetEndDate(DateTime end) 
-        { 
+        public void SetEndDate(DateTime end)
+        {
             //Validate:
             //1. Check Range:
-            if (end > DateTime.Now.Date.AddDays(-1)) 
+            if (end > DateTime.Now.Date.AddDays(-1))
             {
                 end = DateTime.Now.Date.AddDays(-1);
             }
 
             //2. Check start date less:
-            if (_startDate != new DateTime()) 
+            if (_startDate != new DateTime())
             {
-                if (end < _startDate) 
+                if (end < _startDate)
                 {
                     throw new Exception("Please select end date greater than start date.");
                 }
             }
 
             //3. Check not locked already:
-            if (!_locked) 
+            if (!_locked)
             {
                 _endDate = end;
             }
-            else 
+            else
             {
                 throw new Exception("Algorithm.SetEndDate(): Cannot change end date after algorithm initialized.");
             }
@@ -569,7 +543,7 @@ namespace QuantConnect.Algorithm
         /// Lock the algorithm initialization to avoid user modifiying cash and data stream subscriptions
         /// </summary>
         /// <remarks>Intended for Internal QC Lean Engine use only to prevent accidental manipulation of important properties</remarks>
-        public void SetLocked() 
+        public void SetLocked()
         {
             _locked = true;
         }
@@ -577,7 +551,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Set live mode state of the algorithm run: Public setter for the algorithm property LiveMode.
         /// </summary>
-        public void SetLiveMode(bool live) 
+        public void SetLiveMode(bool live)
         {
             if (!_locked)
             {
@@ -624,17 +598,17 @@ namespace QuantConnect.Algorithm
         /// <param name="leverage">Custom leverage per security</param>
         /// <param name="extendedMarketHours">Extended market hours</param>
         /// <remarks> AddSecurity(SecurityType securityType, string symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours)</remarks>
-        public void AddSecurity(SecurityType securityType, string symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours) 
+        public void AddSecurity(SecurityType securityType, string symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours)
         {
             try
             {
-                if (!_locked) 
+                if (!_locked)
                 {
                     symbol = symbol.ToUpper();
                     //If it hasn't been set, use some defaults based on the portfolio type:
-                    if (leverage <= 0) 
+                    if (leverage <= 0)
                     {
-                        switch (securityType) 
+                        switch (securityType)
                         {
                             case SecurityType.Equity:
                                 leverage = 2;   //Cash Ac. = 1, RegT Std = 2 or PDT = 4.
@@ -650,14 +624,14 @@ namespace QuantConnect.Algorithm
 
                     //Add the symbol to Data Manager -- generate unified data streams for algorithm events
                     SubscriptionManager.Add(securityType, symbol, resolution, fillDataForward, extendedMarketHours);
-                    
+
                 }
-                else 
+                else
                 {
                     throw new Exception("Algorithm.AddSecurity(): Cannot add another security after algorithm running.");
                 }
             }
-            catch (Exception err) 
+            catch (Exception err)
             {
                 Error("Algorithm.AddSecurity(): " + err.Message);
             }
@@ -674,8 +648,8 @@ namespace QuantConnect.Algorithm
         {
             if (_locked) return;
 
-            //Add this new generic data as a tradeable security: 
-            // Defaults:extended market hours"      = true because we want events 24 hours, 
+            //Add this new generic data as a tradeable security:
+            // Defaults:extended market hours"      = true because we want events 24 hours,
             //          fillforward                 = false because only want to trigger when there's new custom data.
             //          leverage                    = 1 because no leverage on nonmarket data?
             AddData<T>(symbol, resolution, fillDataForward: false, leverage: 1m);
@@ -697,7 +671,7 @@ namespace QuantConnect.Algorithm
             //Add this to the data-feed subscriptions
             SubscriptionManager.Add(typeof(T), SecurityType.Base, symbol, resolution, fillDataForward, extendedMarketHours: true);
 
-            //Add this new generic data as a tradeable security: 
+            //Add this new generic data as a tradeable security:
             Securities.Add(symbol, SecurityType.Base, resolution, fillDataForward, leverage, extendedMarketHours: true, isDynamicallyLoadedData: true);
         }
 
@@ -720,7 +694,7 @@ namespace QuantConnect.Algorithm
         /// <param name="message">String message to log.</param>
         /// <seealso cref="Debug"/>
         /// <seealso cref="Error(string)"/>
-        public void Log(string message) 
+        public void Log(string message)
         {
             if (message == "") return;
             _logMessages.Add(message);
@@ -757,7 +731,7 @@ namespace QuantConnect.Algorithm
         /// Terminate the algorithm after processing the current event handler.
         /// </summary>
         /// <param name="message">Exit message to display on quitting</param>
-        public void Quit(string message = "") 
+        public void Quit(string message = "")
         {
             Debug("Quit(): " + message);
             _quit = true;
@@ -770,7 +744,7 @@ namespace QuantConnect.Algorithm
         /// <param name="quit">Boolean quit state</param>
         /// <seealso cref="Quit"/>
         /// <seealso cref="GetQuit"/>
-        public void SetQuit(bool quit) 
+        public void SetQuit(bool quit)
         {
             _quit = quit;
         }
@@ -782,13 +756,13 @@ namespace QuantConnect.Algorithm
         /// <remarks>Intended for internal use by the QuantConnect Lean Engine only.</remarks>
         /// <seealso cref="Quit"/>
         /// <seealso cref="SetQuit"/>
-        public bool GetQuit() 
+        public bool GetQuit()
         {
             return _quit;
         }
 
     }
 
-// End Algorithm Template
+    // End Algorithm Template
 
 } // End QC Namespace

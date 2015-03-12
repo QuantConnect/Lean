@@ -11,7 +11,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
+
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
@@ -64,7 +66,7 @@ namespace QuantConnect.Queues
         * CLASS METHODS
         *********************************************************/
         /// <summary>
-        /// Desktop/Local initialization of task/queue provider. 
+        /// Desktop/Local initialization of task/queue provider.
         /// </summary>
         public void Initialize(bool liveMode)
         {
@@ -92,11 +94,12 @@ namespace QuantConnect.Queues
                     Type = PacketType.LiveNode,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation)
                 };
+
                 return liveJob;
             }
 
             //Default run a backtesting job.
-            var backtestJob = new BacktestNodePacket(0, 0, "", new byte[] {}, 10000, "local")
+            var backtestJob = new BacktestNodePacket(0, 0, "", new byte[] { }, 10000, "local")
             {
                 ResultEndpoint = ResultHandlerEndpoint.Console,
                 SetupEndpoint = SetupHandlerEndpoint.Console,
@@ -106,6 +109,7 @@ namespace QuantConnect.Queues
                 Type = PacketType.BacktestNode,
                 Algorithm = File.ReadAllBytes(AlgorithmLocation)
             };
+
             return backtestJob;
         }
 

@@ -28,7 +28,12 @@ namespace QuantConnect
     /// </summary>
     public class LiveTradingFeaturesAlgorithm : QCAlgorithm
     {
-        /// <inheritdoc />
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
+        /// <seealso cref="QCAlgorithm.SetStartDate(DateTime)"/>
+        /// <seealso cref="QCAlgorithm.SetEndDate(DateTime)"/>
+        /// <seealso cref="QCAlgorithm.SetCash(decimal)"/>
         public override void Initialize()
         {
             SetStartDate(2013, 1, 1);
@@ -45,7 +50,9 @@ namespace QuantConnect
             AddData<Bitcoin>("BTC", Resolution.Second);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Process a new Bitcoin data ticker
+        /// </summary>
         public void OnData(Bitcoin data)
         {
             if (LiveMode) //Live Mode Property
@@ -77,7 +84,6 @@ namespace QuantConnect
             }
         }
     }
-
 
     /// <summary>
     /// Custom Data Type: Bitcoin data from Quandl - http://www.quandl.com/help/api-for-bitcoin-data

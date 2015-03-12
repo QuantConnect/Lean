@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {

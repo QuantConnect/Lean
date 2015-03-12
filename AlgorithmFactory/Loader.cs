@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,13 +21,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 
-namespace QuantConnect.AlgorithmFactory 
+namespace QuantConnect.AlgorithmFactory
 {
     /********************************************************
     * CLASS DEFINITIONS
@@ -55,7 +54,7 @@ namespace QuantConnect.AlgorithmFactory
         /// <summary>
         /// The algorithm's interface type that we'll be trying to load
         /// </summary>
-        private static readonly Type AlgorithmInterfaceType = typeof (IAlgorithm);
+        private static readonly Type AlgorithmInterfaceType = typeof(IAlgorithm);
 
         /// <summary>
         /// The full type name of QCAlgorithm, this is so we don't pick him up when querying for types
@@ -78,7 +77,7 @@ namespace QuantConnect.AlgorithmFactory
         /// </param>
         /// <param name="multipleTypeNameResolverFunction">
         /// Used to resolve multiple type names found in assembly to a single type name, if null, defaults to names => names.SingleOrDefault()
-        /// 
+        ///
         /// When we search an assembly for derived types of IAlgorithm, sometimes the assembly will contain multiple matching types. This is the case
         /// for the QuantConnect.Algorithm assembly in this solution.  In order to pick the correct type, consumers must specify how to pick the type,
         /// that's what this function does, it picks the correct type from the list of types found within the assembly.
@@ -106,7 +105,7 @@ namespace QuantConnect.AlgorithmFactory
         {
             IAlgorithm algorithm;
             bool success = TryCreateAlgorithmInstance(assemblyPath, out algorithm, out errorMessage);
-            algorithmInstance = (T) algorithm;
+            algorithmInstance = (T)algorithm;
             return success;
         }
 
@@ -116,23 +115,20 @@ namespace QuantConnect.AlgorithmFactory
         /// <param name="assemblyPath">Location of the DLL</param>
         /// <param name="algorithmInstance">Output algorithm instance</param>
         /// <param name="errorMessage">Output error message on failure</param>
-        /// <returns>Bool true on successfully loading the class.</returns>        
-        public bool TryCreateAlgorithmInstance(string assemblyPath, out IAlgorithm algorithmInstance, out string errorMessage) 
+        /// <returns>Bool true on successfully loading the class.</returns>
+        public bool TryCreateAlgorithmInstance(string assemblyPath, out IAlgorithm algorithmInstance, out string errorMessage)
         {
             //Default initialisation of Assembly.
             algorithmInstance = null;
             errorMessage = "";
 
             //First most basic check:
-            if (!File.Exists(assemblyPath)) 
+            if (!File.Exists(assemblyPath))
             {
                 return false;
             }
 
-            //Create a new app domain with a generic name.
-            //CreateAppDomain();
-
-            try 
+            try
             {
                 //Load the assembly:
                 var assembly = Assembly.LoadFrom(assemblyPath);
@@ -143,7 +139,7 @@ namespace QuantConnect.AlgorithmFactory
                     return false;
                 }
 
-                //Get the list of extention classes in the library: 
+                //Get the list of extention classes in the library:
                 var types = GetExtendedTypeNames(assembly);
                 Log.Trace("Loader.CreateInstance(): Assembly types: " + string.Join(",", types));
 
@@ -167,10 +163,9 @@ namespace QuantConnect.AlgorithmFactory
                         return false;
                     }
                 }
+
                 //Load the assembly into this AppDomain:
                 algorithmInstance = (IAlgorithm)assembly.CreateInstance(types[0], true);
-                //Load into another appDomain - 10x slower because of serialization.
-                //algorithmInstance = (T)appDomain.CreateInstanceFromAndUnwrap(assemblyPath, lTypes[0]);
 
                 if (algorithmInstance != null)
                 {
@@ -178,11 +173,11 @@ namespace QuantConnect.AlgorithmFactory
                 }
 
             }
-            catch (ReflectionTypeLoadException err) 
+            catch (ReflectionTypeLoadException err)
             {
                 Log.Error("Loader.CreateInstance(1): " + err.LoaderExceptions[0]);
                 if (err.InnerException != null) errorMessage = err.InnerException.Message;
-            } 
+            }
             catch (Exception err)
             {
                 Log.Error("Loader.CreateInstance(2): " + err.Message);
@@ -207,7 +202,7 @@ namespace QuantConnect.AlgorithmFactory
         /// </summary>
         /// <param name="assembly">Assembly dll we're loading.</param>
         /// <returns>String list of types available.</returns>
-        public static List<string> GetExtendedTypeNames(Assembly assembly) 
+        public static List<string> GetExtendedTypeNames(Assembly assembly)
         {
             var types = new List<string>();
             try
@@ -251,7 +246,7 @@ namespace QuantConnect.AlgorithmFactory
         /// <param name="assemblyPath">Location of the DLL</param>
         /// <param name="algorithmInstance">Output algorithm instance</param>
         /// <param name="errorMessage">Output error message on failure</param>
-        /// <returns>bool success</returns>     
+        /// <returns>bool success</returns>
         public bool TryCreateAlgorithmInstanceWithIsolator(string assemblyPath, out IAlgorithm algorithmInstance, out string errorMessage)
         {
             IAlgorithm instance = null;
@@ -276,15 +271,17 @@ namespace QuantConnect.AlgorithmFactory
         }
 
         /// <summary>
-        /// Create a safe application domain with a random name. 
+        /// Create a safe application domain with a random name.
         /// </summary>
         /// <remarks>Not used in lean engine. Running the library in an app domain is 10x slower.</remarks>
         /// <param name="appDomainName">Set the name if required</param>
         /// <returns>True on successful creation.</returns>
-        private AppDomain CreateAppDomain(string appDomainName = "") {
+        private AppDomain CreateAppDomain(string appDomainName = "")
+        {
 
             //Create new domain name if not supplied:
-            if (string.IsNullOrEmpty(appDomainName)) {
+            if (string.IsNullOrEmpty(appDomainName))
+            {
                 appDomainName = "qclibrary" + Guid.NewGuid().ToString().GetHashCode().ToString("x");
             }
 
@@ -296,14 +293,14 @@ namespace QuantConnect.AlgorithmFactory
             return appDomain;
         }
 
-
         /// <summary>
         /// Unload this factory's appDomain.
         /// </summary>
         /// <remarks>Not used in lean engine. Running the library in an app domain is 10x slower.</remarks>
         /// <seealso cref="CreateAppDomain"/>
-        public void Unload() {
-            if (appDomain != null) 
+        public void Unload()
+        {
+            if (appDomain != null)
             {
                 AppDomain.Unload(appDomain);
                 appDomain = null;

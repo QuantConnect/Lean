@@ -228,10 +228,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         break;
                 }
             }
+
             return increment;
         }
-
-
 
         /// <summary>
         /// Main routine for datafeed analysis.
@@ -314,8 +313,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             if (activeStreams == 0)
                             {
                                 frontier = frontier.Date + TimeSpan.FromDays(1);
-                                //if (frontier.ToString("yyyy-MMM-dd") == "2013-May-03") System.Diagnostics.Debugger.Break();
-                                //Log.Debug("FileSystemDataFeed.Run(): No Active Streams; moving to next day.");
                             }
                             continue;
                         }
@@ -409,7 +406,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// If this is a fillforward subscription, look at the previous time, and current time, and add new 
+        /// If this is a fillforward subscription, look at the previous time, and current time, and add new
         /// objects to queue until current time to fill up the gaps.
         /// </summary>
         /// <param name="manager">Subscription to process</param>

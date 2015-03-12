@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -67,21 +67,19 @@ namespace QuantConnect.Configuration
         /// </summary>
         private static void Initialize()
         {
-            var file = "";
-			
-			if (_loaded) return;
+            if (_loaded) return;
 
             // if we find the configuration, load it, otherwise just stick with the defaults in _settings
             if (File.Exists(_config))
             {
-                file = File.ReadAllText(_config);
+                var file = File.ReadAllText(_config);
                 _settings = JsonConvert.DeserializeObject<Dictionary<string, string>>(file);
                 Log.Trace("Config.Initialize(): Located Config.");
             }
 
             _loaded = true;
         }
-        
+
         /// <summary>
         /// Get the matching config setting from the file searching for this key.
         /// </summary>
@@ -109,6 +107,7 @@ namespace QuantConnect.Configuration
             {
                 Log.Error("Config.Get(): " + err.Message);
             }
+
             return value;
         }
 
@@ -162,11 +161,12 @@ namespace QuantConnect.Configuration
                 return defaultValue;
             }
 
-            var type = typeof (T);
+            var type = typeof(T);
             if (type.IsEnum)
             {
-                return (T) Enum.Parse(type, value);
+                return (T)Enum.Parse(type, value);
             }
+
             return (T)Convert.ChangeType(value, type);
         }
     }

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,8 +45,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly IB.AgentDescription _agentDescription;
 
         // the key here is the QC order ID
-        private readonly ConcurrentDictionary<int, Order>  _outstandingOrders = new ConcurrentDictionary<int, Order>();
-        private readonly Dictionary<string, string> _accountProperties = new Dictionary<string, string>(); 
+        private readonly ConcurrentDictionary<int, Order> _outstandingOrders = new ConcurrentDictionary<int, Order>();
+        private readonly Dictionary<string, string> _accountProperties = new Dictionary<string, string>();
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
@@ -180,7 +180,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // this could be better
                 foreach (var id in order.BrokerId)
                 {
-                    _client.CancelOrder((int) id);
+                    _client.CancelOrder((int)id);
                 }
             }
             catch (Exception err)
@@ -200,7 +200,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var orders = new List<Order>();
 
             var manualResetEvent = new ManualResetEvent(false);
-            
+
             // define our handlers
             EventHandler<IB.OpenOrderEventArgs> clientOnOpenOrder = (sender, args) => orders.Add(ConvertOrder(args.Order, args.Contract));
             EventHandler<EventArgs> clientOnOpenOrderEnd = (sender, args) => manualResetEvent.Set();
@@ -258,7 +258,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     break;
                 }
                 catch (Exception err)
-                { 
+                {
                     // max out at 10 attempts to connect
                     if (attempt++ < 10)
                     {
@@ -336,7 +336,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Trace(message);
             }
-            
+
             OnError(new InteractiveBrokersException(e.ErrorCode, e.TickerId, e.ErrorMsg));
         }
 
@@ -348,7 +348,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             //https://www.interactivebrokers.com/en/software/api/apiguide/java/updateaccountvalue.htm
 
             try
-            { 
+            {
                 // not sure if we need to track all the information
                 if (_accountProperties.ContainsKey(e.Key))
                 {
@@ -377,7 +377,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private void HandleOrderStatusUpdates(object sender, IB.OrderStatusEventArgs update)
         {
             try
-            { 
+            {
                 // don't use .Values since it will require us to copy the dictionary
                 var order = _outstandingOrders.FirstOrDefault(x => x.Value.BrokerId.Contains(update.OrderId)).Value;
                 if (order == null)
@@ -437,7 +437,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // not yet supported
-            //ibOrder.ParentId = 
+            //ibOrder.ParentId =
             //ibOrder.OcaGroup =
 
             ibOrder.AllOrNone = false;
@@ -466,15 +466,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             switch (orderType)
             {
-                default:
-                case OrderType.Market:
-                    order = new MarketOrder(contract.Symbol, ibOrder.TotalQuantity, new DateTime(), "", securityType);
-                    break;
                 case OrderType.Limit:
-                    order = new LimitOrder(contract.Symbol, ibOrder.TotalQuantity, price, new DateTime(), "", securityType);
+                    order = new LimitOrder(contract.Symbol, ibOrder.TotalQuantity, price, new DateTime(), string.Empty, securityType);
                     break;
+
                 case OrderType.StopMarket:
-                    order = new StopMarketOrder(contract.Symbol, ibOrder.TotalQuantity, price, new DateTime(), "", securityType);
+                    order = new StopMarketOrder(contract.Symbol, ibOrder.TotalQuantity, price, new DateTime(), string.Empty, securityType);
+                    break;
+
+                case OrderType.Market:
+                default:
+                    order = new MarketOrder(contract.Symbol, ibOrder.TotalQuantity, new DateTime(), string.Empty, securityType);
                     break;
             }
 
@@ -503,11 +505,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             switch (direction)
             {
-                case OrderDirection.Buy:  return IB.ActionSide.Buy;
+                case OrderDirection.Buy: return IB.ActionSide.Buy;
                 case OrderDirection.Sell: return IB.ActionSide.Sell;
                 case OrderDirection.Hold: return IB.ActionSide.Undefined;
                 default:
-                    throw new InvalidEnumArgumentException("direction", (int) direction, typeof (OrderDirection));
+                    throw new InvalidEnumArgumentException("direction", (int)direction, typeof(OrderDirection));
             }
         }
 
@@ -518,9 +520,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             switch (type)
             {
-                case OrderType.Market:      return IB.OrderType.Market;
-                case OrderType.Limit:       return IB.OrderType.Limit;
-                case OrderType.StopMarket:  return IB.OrderType.Stop;
+                case OrderType.Market: return IB.OrderType.Market;
+                case OrderType.Limit: return IB.OrderType.Limit;
+                case OrderType.StopMarket: return IB.OrderType.Stop;
                 default:
                     throw new InvalidEnumArgumentException("type", (int)type, typeof(OrderType));
             }
@@ -534,8 +536,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             switch (type)
             {
                 case IB.OrderType.Market: return OrderType.Market;
-                case IB.OrderType.Limit:  return OrderType.Limit;
-                case IB.OrderType.Stop:   return OrderType.StopMarket;
+                case IB.OrderType.Limit: return OrderType.Limit;
+                case IB.OrderType.Stop: return OrderType.StopMarket;
                 default:
                     throw new InvalidEnumArgumentException("type", (int)type, typeof(OrderType));
             }
@@ -550,33 +552,33 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 case IB.OrderStatus.ApiPending:
                 case IB.OrderStatus.PendingSubmit:
-                case IB.OrderStatus.PreSubmitted: 
+                case IB.OrderStatus.PreSubmitted:
                     return OrderStatus.New;
 
                 case IB.OrderStatus.ApiCancelled:
                 case IB.OrderStatus.PendingCancel:
-                case IB.OrderStatus.Canceled: 
+                case IB.OrderStatus.Canceled:
                     return OrderStatus.Canceled;
 
-                case IB.OrderStatus.Submitted: 
+                case IB.OrderStatus.Submitted:
                     return OrderStatus.Submitted;
 
-                case IB.OrderStatus.Filled: 
+                case IB.OrderStatus.Filled:
                     return OrderStatus.Filled;
 
-                case IB.OrderStatus.PartiallyFilled: 
+                case IB.OrderStatus.PartiallyFilled:
                     return OrderStatus.PartiallyFilled;
 
-                case IB.OrderStatus.Error: 
+                case IB.OrderStatus.Error:
                     return OrderStatus.Invalid;
 
                 case IB.OrderStatus.Inactive:
                     Log.Error("InteractiveBrokersBrokerage.ConvertOrderStatus(): Inactive order");
                     return OrderStatus.None;
 
-                case IB.OrderStatus.None: 
+                case IB.OrderStatus.None:
                     return OrderStatus.None;
-                    
+
                 // not sure how to map these guys
                 default:
                     throw new InvalidEnumArgumentException("status", (int)status, typeof(IB.OrderStatus));

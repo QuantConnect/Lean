@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +24,7 @@ using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Core;
 using QuantConnect.Logging;
 
-namespace QuantConnect 
+namespace QuantConnect
 {
     /********************************************************
     * CLASS DEFINITIONS
@@ -142,9 +142,9 @@ namespace QuantConnect
                 Log.Error("QC.Data.ZipData(): " + err.Message);
                 success = false;
             }
+
             return success;
         }
-
 
         /// <summary>
         /// Uncompress zip data byte array into a dictionary string array of filename-contents.
@@ -190,9 +190,9 @@ namespace QuantConnect
             {
                 Log.Error("Data.UnzipData(): " + err.Message);
             }
+
             return data;
         }
-
 
         /// <summary>
         /// Compress a given file and delete the original file. Automatically rename the file to name.zip.
@@ -237,9 +237,9 @@ namespace QuantConnect
             {
                 Log.Error("QC.Data.Zip(): " + err.Message);
             }
+
             return zipPath;
         } // End Zip:
-
 
         /// <summary>
         /// Unzip a local file and return its contents via streamreader.
@@ -278,6 +278,7 @@ namespace QuantConnect
             {
                 Log.Error("Data.UnZip(3): " + filename + " >> " + err.Message);
             }
+
             return reader;
         } // End UnZip
 
@@ -290,7 +291,7 @@ namespace QuantConnect
             StreamReader reader = null;
             try
             {
-                //Initialise:                    
+                //Initialise:
                 MemoryStream file;
 
                 //If file exists, open a zip stream for it.
@@ -351,7 +352,7 @@ namespace QuantConnect
 
                     //Save the file name for later:
                     files.Add(fullZipToPath);
-                    //Log.Trace("Data.UnzipToFolder(): Input File: " + zipFile + ", Output Directory: " + fullZipToPath); 
+                    //Log.Trace("Data.UnzipToFolder(): Input File: " + zipFile + ", Output Directory: " + fullZipToPath);
 
                     //Copy the data in buffer chunks
                     using (var streamWriter = File.Create(fullZipToPath))
@@ -368,9 +369,9 @@ namespace QuantConnect
                     zf.Close(); // Ensure we release resources
                 }
             }
+
             return files;
         } // End UnZip
-
 
         /// <summary>
         /// Extracts all file from a zip archive and copies them to a destination folder.
@@ -379,13 +380,12 @@ namespace QuantConnect
         /// <param name="destination">The destination folder to extract the file to.</param>
         public static void UnTarFiles(string source, string destination)
         {
-            var inStream = File.OpenRead(source);
-            var tarArchive = TarArchive.CreateInputTarArchive(inStream);
-            tarArchive.ExtractContents(destination);
-            tarArchive.Close();
-            inStream.Close();
+            using (var inStream = File.OpenRead(source))
+            using (var tarArchive = TarArchive.CreateInputTarArchive(inStream))
+            {
+                tarArchive.ExtractContents(destination);
+            }
         }
-
 
         /// <summary>
         /// Extract tar.gz files to disk
@@ -394,15 +394,12 @@ namespace QuantConnect
         /// <param name="destination">Location folder to unzip to</param>
         public static void UnTarGzFiles(string source, string destination)
         {
-            var inStream = File.OpenRead(source);
-            var gzipStream = new GZipInputStream(inStream);
-            var tarArchive = TarArchive.CreateInputTarArchive(gzipStream);
-            tarArchive.ExtractContents(destination);
-            tarArchive.Close();
-            gzipStream.Close();
-            inStream.Close();
+            using (var inStream = File.OpenRead(source))
+            using (var gzipStream = new GZipInputStream(inStream))
+            using (var tarArchive = TarArchive.CreateInputTarArchive(gzipStream))
+            {
+                tarArchive.ExtractContents(destination);
+            }
         }
-
-
     } // End OS Class
 } // End QC Namespace

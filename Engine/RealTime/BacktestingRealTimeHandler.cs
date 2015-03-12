@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,7 +66,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public List<RealTimeEvent> Events
         {
-            get 
+            get
             {
                 return _events;
             }
@@ -100,7 +100,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Setup the algorithm data, cash, job start end date etc.
         /// </summary>
-        public BacktestingRealTimeHandler(IAlgorithm algorithm, AlgorithmNodePacket job) 
+        public BacktestingRealTimeHandler(IAlgorithm algorithm, AlgorithmNodePacket job)
         {
             //Initialize:
             _algorithm = algorithm;
@@ -131,7 +131,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 //1. Setup End of Day Events:
                 var closingToday = date.Date + security.Exchange.MarketClose.Add(TimeSpan.FromMinutes(-10));
                 var symbol = security.Symbol;
-                AddEvent(new RealTimeEvent( closingToday, () =>
+                AddEvent(new RealTimeEvent(closingToday, () =>
                 {
                     try
                     {
@@ -146,7 +146,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 }));
             }
         }
-        
+
         /// <summary>
         /// Normally this would run the realtime event monitoring. Backtesting is in fastforward so the realtime is linked to the backtest clock.
         /// This thread does nothing. Wait until the job is over.

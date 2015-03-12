@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,6 @@ using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Packets;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -66,16 +65,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public List<SubscriptionDataConfig> Subscriptions
         {
-            get  { return _subscriptions; }
+            get { return _subscriptions; }
             set { _subscriptions = value; }
         }
-
 
         /// <summary>
         /// Prices of the datafeed this instant for dynamically updating security values (and calculation of the total portfolio value in realtime).
         /// </summary>
         /// <remarks>Indexed in order of the subscriptions</remarks>
-        public List<decimal> RealtimePrices 
+        public List<decimal> RealtimePrices
         {
             get { return _realtimePrices; }
         }
@@ -192,7 +190,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-
         /// <summary>
         /// Execute the primary thread for retrieving stock data.
         /// 1. Subscribe to the streams requested.
@@ -244,7 +241,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     switch (_subscriptions[i].Resolution)
-                    { 
+                    {
                         //This is a second resolution data source:
                         case Resolution.Second:
                             //Enqueue our live data:
@@ -270,7 +267,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             while (!_exitTriggered && !_endOfBridges)
             {
                 resumeRun.WaitOne();
-                
+
                 try
                 {
                     //Scan the Stream Store Queue's and if there are any shuffle them over to the bridge for synchronization:
@@ -325,7 +322,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Log.Trace("LiveTradingDataFeed.Stream(): Market open, starting stream for " + string.Join(",", _symbols));
 
             //Micro-thread for polling for new data from data source:
-            var liveThreadTask = new Task(()=> 
+            var liveThreadTask = new Task(() =>
             {
                 //Blocking ForEach - Should stay within this loop as long as there is a data-connection
                 while (true)
@@ -348,14 +345,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     if (_exitTriggered) return;
-                    if (ticks.Count() == 0) Thread.Sleep(5);
+                    if (!ticks.Any()) Thread.Sleep(5);
                 }
             });
 
             // Micro-thread for custom data/feeds. This onl supports polling at this time. todo: Custom data sockets
             var customFeedsTask = new Task(() =>
             {
-                while(true)
+                while (true)
                 {
                     for (var i = 0; i < Subscriptions.Count; i++)
                     {
@@ -371,7 +368,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     //Attempt 10 times to download the updated data:
                                     var attempts = 0;
                                     var feedSuccess = false;
-                                    do 
+                                    do
                                     {
                                         feedSuccess = _subscriptionManagers[i].MoveNext();
                                         if (!feedSuccess) Thread.Sleep(1000);   //Network issues may cause download to fail. Sleep a little to make it more robust.
@@ -406,7 +403,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             liveThreadTask.Start();
 
             // define what tasks we're going to wait on, we use a task from result in place of the custom task, just in case we never start it
-            var tasks = new Task[2] {liveThreadTask, Task.FromResult(1)};
+            var tasks = new Task[2] { liveThreadTask, Task.FromResult(1) };
 
             // if we have any dynamically loaded data, start the custom thread
             if (_isDynamicallyLoadedData.Any(x => x))
@@ -415,10 +412,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 customFeedsTask.Start();
                 tasks[1] = customFeedsTask;
             }
-                
+
             Task.WaitAll(tasks);
 
-            //Once we're here the tasks have died, signal 
+            //Once we're here the tasks have died, signal
             if (!_exitTriggered) _endOfBridges = true;
 
             Log.Trace(string.Format("LiveTradingDataFeed.Stream(): Stream Task Completed. Exit Signal: {0}", _exitTriggered));
@@ -455,7 +452,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-
         /// <summary>
         /// Return true when at least one security is open.
         /// </summary>
@@ -471,6 +467,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     break;
                 }
             }
+
             return open;
         }
 

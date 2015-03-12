@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,14 +24,13 @@ using QuantConnect.Data;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 
-
 namespace QuantConnect.Lean.Engine
 {
     /********************************************************
     * QUANTCONNECT NAMESPACES
     *********************************************************/
     /// <summary>
-    /// Data stream class takes a datafeed hander and converts it into a synchronized enumerable data format for looping 
+    /// Data stream class takes a datafeed hander and converts it into a synchronized enumerable data format for looping
     /// in the primary algorithm thread.
     /// </summary>
     public static class DataStream
@@ -45,7 +44,7 @@ namespace QuantConnect.Lean.Engine
         /********************************************************
         * CLASS PROPERTIES
         *********************************************************/
-        
+
         /********************************************************
         * CLASS METHODS
         *********************************************************/
@@ -72,7 +71,7 @@ namespace QuantConnect.Lean.Engine
             while (!feed.EndOfBridges)
             {
                 //Reset items which are not fill forward:
-                earlyBirdTicks = 0; 
+                earlyBirdTicks = 0;
                 var newData = new SortedDictionary<DateTime, Dictionary<int, List<BaseData>>>();
 
                 // spin wait until the feed catches up to our frontier
@@ -112,14 +111,14 @@ namespace QuantConnect.Lean.Engine
                                 //Log.Debug("DataStream.GetData(): Added Datapoint: Time:" + point.Time.ToShortTimeString() + " Symbol: " + point.Symbol);
                             }
                         }
-                        else 
+                        else
                         {
                             //Should never fail:
                             Log.Error("DataStream.GetData(): Failed to dequeue bridge item");
                         }
                     }
                 }
-                
+
                 //Update the frontier and start again.
                 if (earlyBirdTicks > 0)
                 {
@@ -176,10 +175,9 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-
         /// <summary>
         /// Check if all the bridges have data or are dead before starting the analysis
-        /// 
+        ///
         /// This determines whether or not the data stream can pull data from the data feed.
         /// </summary>
         /// <param name="feed">Feed Interface with concurrent connection between producer and consumer</param>

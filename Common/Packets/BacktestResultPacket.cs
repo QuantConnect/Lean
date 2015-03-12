@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,46 +26,46 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
     /// Backtest result packet: send backtest information to GUI for user consumption.
     /// </summary>
-    public class BacktestResultPacket : Packet 
+    public class BacktestResultPacket : Packet
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS VARIABLES
         *********************************************************/
         /// <summary>
         /// User Id placing this task
         /// </summary>
         [JsonProperty(PropertyName = "iUserID")]
-        public int UserId = 0;
+        public int UserId;
 
         /// <summary>
         /// Project Id of the this task.
         /// </summary>
         [JsonProperty(PropertyName = "iProjectID")]
-        public int ProjectId = 0;
+        public int ProjectId;
 
         /// <summary>
         /// User Session Id
         /// </summary>
         [JsonProperty(PropertyName = "sSessionID")]
-        public string SessionId = "";
+        public string SessionId = String.Empty;
 
         /// <summary>
         /// BacktestId for this result packet
         /// </summary>
         [JsonProperty(PropertyName = "sBacktestID")]
-        public string BacktestId = "";
+        public string BacktestId = String.Empty;
 
         /// <summary>
         /// Compile Id for the algorithm which generated this result packet.
         /// </summary>
         [JsonProperty(PropertyName = "sCompileID")]
-        public string CompileId = "";
+        public string CompileId = String.Empty;
 
         /// <summary>
         /// Start of the backtest period as defined in Initialize() method.
@@ -95,7 +95,7 @@ namespace QuantConnect.Packets
         /// Progress of the backtest as a percentage from 0-1 based on the days lapsed from start-finish.
         /// </summary>
         [JsonProperty(PropertyName = "dProgress")]
-        public decimal Progress = 0;
+        public decimal Progress;
 
         /// <summary>
         /// Runmode for this backtest.
@@ -121,15 +121,15 @@ namespace QuantConnect.Packets
         /// Processing time of the algorithm (from moment the algorithm arrived on the algorithm node)
         /// </summary>
         [JsonProperty(PropertyName = "dProcessingTime")]
-        public double ProcessingTime = 0;
+        public double ProcessingTime;
 
         /// <summary>
         /// Estimated number of tradeable days in the backtest based on the start and end date or the backtest
         /// </summary>
         [JsonProperty(PropertyName = "iTradeableDates")]
-        public int TradeableDates = 0;
+        public int TradeableDates;
 
-        /******************************************************** 
+        /********************************************************
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -138,12 +138,12 @@ namespace QuantConnect.Packets
         public BacktestResultPacket()
             : base(PacketType.BacktestResult)
         { }
-        
+
         /// <summary>
         /// Compose the packet from a JSON string:
         /// </summary>
-        public BacktestResultPacket(string json) 
-            : base (PacketType.BacktestResult)
+        public BacktestResultPacket(string json)
+            : base(PacketType.BacktestResult)
         {
             try
             {
@@ -151,29 +151,28 @@ namespace QuantConnect.Packets
                 {
                     TypeNameHandling = TypeNameHandling.Auto
                 });
-                CompileId          = packet.CompileId;
-                Channel            = packet.Channel;
-                PeriodFinish       = packet.PeriodFinish;
-                PeriodStart        = packet.PeriodStart;
-                Progress           = packet.Progress;
-                SessionId          = packet.SessionId;
-                BacktestId         = packet.BacktestId;
-                Type               = packet.Type;
-                UserId             = packet.UserId;
-                DateFinished       = packet.DateFinished;
-                DateRequested      = packet.DateRequested;
-                Name               = packet.Name;
-                ProjectId          = packet.ProjectId;
-                Results            = packet.Results;
-                ProcessingTime     = packet.ProcessingTime;
-                TradeableDates     = packet.TradeableDates;
-            } 
+                CompileId = packet.CompileId;
+                Channel = packet.Channel;
+                PeriodFinish = packet.PeriodFinish;
+                PeriodStart = packet.PeriodStart;
+                Progress = packet.Progress;
+                SessionId = packet.SessionId;
+                BacktestId = packet.BacktestId;
+                Type = packet.Type;
+                UserId = packet.UserId;
+                DateFinished = packet.DateFinished;
+                DateRequested = packet.DateRequested;
+                Name = packet.Name;
+                ProjectId = packet.ProjectId;
+                Results = packet.Results;
+                ProcessingTime = packet.ProcessingTime;
+                TradeableDates = packet.TradeableDates;
+            }
             catch (Exception err)
             {
                 Log.Trace("BacktestResultPacket(): Error converting json: " + err.Message);
             }
         }
-
 
         /// <summary>
         /// Compose result data packet - with tradable dates from the backtest job task and the partial result packet.
@@ -200,11 +199,11 @@ namespace QuantConnect.Packets
                 SessionId = job.SessionId;
                 TradeableDates = job.TradeableDates;
             }
-            catch (Exception err) {
+            catch (Exception err)
+            {
                 Log.Error("BacktestResultPacket.Constructor: " + err.Message);
             }
         }
-            
     } // End Queue Packet:
 
 
@@ -217,12 +216,12 @@ namespace QuantConnect.Packets
         /// Chart updates in this backtest since the last backtest result packet was sent.
         /// </summary>
         public IDictionary<string, Chart> Charts = new Dictionary<string, Chart>();
-        
+
         /// <summary>
         /// Order updates since the last backtest result packet was sent.
         /// </summary>
         public IDictionary<int, Order> Orders = new Dictionary<int, Order>();
-        
+
         /// <summary>
         /// Profit and loss results from closed trades.
         /// </summary>
@@ -237,8 +236,8 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Default Constructor
         /// </summary>
-        public BacktestResult() {
-            
+        public BacktestResult()
+        {
         }
 
         /// <summary>

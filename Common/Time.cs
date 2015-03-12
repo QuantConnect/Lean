@@ -43,16 +43,30 @@ namespace QuantConnect
             private readonly DateTime _utcDateTime;
             private readonly TimeZoneInfo _timeZone;
 
+            /// <summary>
+            /// Creates a new instance
+            /// </summary>
+            /// <param name="dateTime">The local date and time.</param>
+            /// <param name="timeZone">The local time zone.</param>
             public DateTimeWithZone(DateTime dateTime, TimeZoneInfo timeZone)
             {
                 _utcDateTime = TimeZoneInfo.ConvertTimeToUtc(dateTime, timeZone);
                 _timeZone = timeZone;
             }
 
+            /// <summary>
+            /// Gets the date and time information, as UTC.
+            /// </summary>
             public DateTime UniversalTime { get { return _utcDateTime; } }
 
+            /// <summary>
+            /// Gets the time zone
+            /// </summary>
             public TimeZoneInfo TimeZone { get { return _timeZone; } }
 
+            /// <summary>
+            /// Gets the date and time information, relative to the <see cref="TimeZone"/>.
+            /// </summary>
             public DateTime LocalTime
             {
                 get
@@ -230,9 +244,9 @@ namespace QuantConnect
             Log.Trace("Time.TradeableDates(): Security Count: " + securities.Count);
             try
             {
-                foreach (var day in Time.EachDay(start, finish))
+                foreach (var day in EachDay(start, finish))
                 {
-                    if (Time.TradableDate(securities, day))
+                    if (TradableDate(securities, day))
                     {
                         count++;
                     }

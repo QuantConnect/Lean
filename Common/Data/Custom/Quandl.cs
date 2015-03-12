@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,27 +23,27 @@ using System.Globalization;
 
 namespace QuantConnect.Data.Custom
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
-    /// Quandl Data Type - Import generic data from quandl, without needing to define Reader methods. 
+    /// Quandl Data Type - Import generic data from quandl, without needing to define Reader methods.
     /// This reads the headers of the data imported, and dynamically creates properties for the imported data.
     /// </summary>
     public class Quandl : DynamicData
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         private bool _isInitialized = false;
         private readonly List<string> _propertyNames = new List<string>();
         private string _authCode = "";
 
-        /******************************************************** 
+        /********************************************************
         * CLASS CONSTRUCTOR
         *********************************************************/
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -83,7 +83,7 @@ namespace QuantConnect.Data.Custom
             }
 
             // we know that there is a close property, we want to set that to 'Value'
-            data.Value = (decimal) data.GetProperty("Close");
+            data.Value = (decimal)data.GetProperty("Close");
 
             return data;
         }
@@ -100,7 +100,6 @@ namespace QuantConnect.Data.Custom
         {
             return @"https://www.quandl.com/api/v1/datasets/" + config.Symbol + ".csv?sort_order=asc&exclude_headers=false&auth_token=" + _authCode;
         }
-
 
         /// <summary>
         /// Set the auth code for the quandl set to the QuantConnect auth code.

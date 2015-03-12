@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
-using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
@@ -20,13 +19,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly int _fastForward = 5;
         private readonly TimeSpan _period = TimeSpan.FromHours(0.5);
         private readonly int _delay = 1;
-        
+
         /// <summary>
         /// Defines the number of ticks produced per
         /// </summary>
         public int FastForward
         {
-            get { return _fastForward;}
+            get { return _fastForward; }
         }
 
         /// <summary>
@@ -34,7 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="algorithm">The algorithm under analysis</param>
         /// <param name="job">The job for the algorithm</param>
-        public TestLiveTradingDataFeed(IAlgorithm algorithm, LiveNodePacket job) 
+        public TestLiveTradingDataFeed(IAlgorithm algorithm, LiveNodePacket job)
             : base(algorithm, job)
         {
             _start = DateTime.Now;
@@ -73,7 +72,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return ticks;
         }
 
-
         /// <summary>
         /// Calculate the next fake value for our fake data:
         /// </summary>
@@ -85,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var percentage = ((current - start).TotalHours / period.TotalHours);
 
-            return ( (decimal) Math.Sin(percentage) * 100 ) + 1000;
+            return ((decimal)Math.Sin(percentage) * 100) + 1000;
         }
     }
 }

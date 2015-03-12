@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,46 +26,46 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
     /// Live result packet from a lean engine algorithm.
     /// </summary>
-    public class LiveResultPacket : Packet 
+    public class LiveResultPacket : Packet
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS VARIABLES
         *********************************************************/
         /// <summary>
         /// User Id sending result packet
         /// </summary>
         [JsonProperty(PropertyName = "iUserID")]
-        public int UserId = 0;
+        public int UserId;
 
         /// <summary>
         /// Project Id of the result packet
         /// </summary>
         [JsonProperty(PropertyName = "iProjectID")]
-        public int ProjectId = 0;
+        public int ProjectId;
 
         /// <summary>
         /// User session Id who issued the result packet
         /// </summary>
         [JsonProperty(PropertyName = "sSessionID")]
-        public string SessionId = "";
+        public string SessionId = String.Empty;
 
         /// <summary>
         /// Live Algorithm Id (DeployId) for this result packet
         /// </summary>
         [JsonProperty(PropertyName = "sDeployID")]
-        public string DeployId = "";
+        public string DeployId = String.Empty;
 
         /// <summary>
         /// Compile Id algorithm which generated this result packet
         /// </summary>
         [JsonProperty(PropertyName = "sCompileID")]
-        public string CompileId = "";
+        public string CompileId = String.Empty;
 
         /// <summary>
         /// Result data object for this result packet
@@ -77,9 +77,9 @@ namespace QuantConnect.Packets
         /// Processing time / running time for the live algorithm.
         /// </summary>
         [JsonProperty(PropertyName = "dProcessingTime")]
-        public double ProcessingTime = 0;
+        public double ProcessingTime;
 
-        /******************************************************** 
+        /********************************************************
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -88,7 +88,7 @@ namespace QuantConnect.Packets
         public LiveResultPacket()
             : base(PacketType.LiveResult)
         { }
-        
+
         /// <summary>
         /// Compose the packet from a JSON string:
         /// </summary>
@@ -98,30 +98,29 @@ namespace QuantConnect.Packets
             try
             {
                 var packet = JsonConvert.DeserializeObject<LiveResultPacket>(json);
-                CompileId          = packet.CompileId;
-                Channel            = packet.Channel;
-                SessionId          = packet.SessionId;
-                DeployId           = packet.DeployId;
-                Type               = packet.Type;
-                UserId             = packet.UserId;
-                ProjectId          = packet.ProjectId;
-                Results            = packet.Results;
-                ProcessingTime     = packet.ProcessingTime;
-            } 
+                CompileId = packet.CompileId;
+                Channel = packet.Channel;
+                SessionId = packet.SessionId;
+                DeployId = packet.DeployId;
+                Type = packet.Type;
+                UserId = packet.UserId;
+                ProjectId = packet.ProjectId;
+                Results = packet.Results;
+                ProcessingTime = packet.ProcessingTime;
+            }
             catch (Exception err)
             {
                 Log.Trace("LiveResultPacket(): Error converting json: " + err.Message);
             }
         }
 
-
         /// <summary>
         /// Compose Live Result Data Packet - With tradable dates
         /// </summary>
         /// <param name="job">Job that started this request</param>
         /// <param name="results">Results class for the Backtest job</param>
-        public LiveResultPacket(LiveNodePacket job, LiveResult results) 
-            :base (PacketType.LiveResult)
+        public LiveResultPacket(LiveNodePacket job, LiveResult results)
+            : base(PacketType.LiveResult)
         {
             try
             {
@@ -134,7 +133,8 @@ namespace QuantConnect.Packets
                 SessionId = job.SessionId;
                 Channel = job.Channel;
             }
-            catch (Exception err) {
+            catch (Exception err)
+            {
                 Log.Error("LiveResultPacket.Constructor: " + err.Message);
             }
         }
@@ -155,12 +155,12 @@ namespace QuantConnect.Packets
         /// Holdings dictionary of algorithm holdings information
         /// </summary>
         public Dictionary<string, Holding> Holdings = new Dictionary<string, Holding>();
-        
+
         /// <summary>
         /// Order updates since the last result packet
         /// </summary>
         public Dictionary<int, Order> Orders = new Dictionary<int, Order>();
-        
+
         /// <summary>
         /// Trade profit and loss information since the last algorithm result packet
         /// </summary>
@@ -185,7 +185,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Default Constructor
         /// </summary>
-        public LiveResult() 
+        public LiveResult()
         { }
 
         /// <summary>
@@ -200,7 +200,7 @@ namespace QuantConnect.Packets
             Holdings = holdings;
             RuntimeStatistics = runtime;
             ServerStatistics = serverStatistics ?? OS.GetServerStatistics();
-        } 
+        }
     }
 
 } // End of Namespace:

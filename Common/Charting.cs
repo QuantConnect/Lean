@@ -122,7 +122,7 @@ namespace QuantConnect
         public SeriesType SeriesType = SeriesType.Line;
 
         /// Get the index of the last fetch update request to only retrieve the "delta" of the previous request.
-        private int _updatePosition = 0;
+        private int _updatePosition;
 
         /// <summary>
         /// Default constructor for chart series
@@ -188,7 +188,7 @@ namespace QuantConnect
     /// <summary>
     /// Single Chart Point Value Type for QCAlgorithm.Plot();
     /// </summary>
-    [JsonObjectAttribute]
+    [JsonObject]
     public struct ChartPoint
     {
         /// Time of this chart point: lower case for javascript encoding simplicty
@@ -219,12 +219,16 @@ namespace QuantConnect
     {
         /// Line Plot for Value Types
         Line,
+
         /// Scatter Plot for Chart Distinct Types
         Scatter,
+
         /// Charts
         Candle,
+
         /// Bar chart.
         Bar,
+
         /// Flag indicators
         Flag
     }
@@ -236,6 +240,7 @@ namespace QuantConnect
     {
         /// Overlayed stacked
         Overlay,
+
         /// Stacked series on top of each other.
         Stacked
     }

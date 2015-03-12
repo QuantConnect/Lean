@@ -32,8 +32,8 @@ namespace QuantConnect.Lean.Engine
     /// Wrapper on stream reader to make it compatible with reading real files, or calling live REST endpoints.
     /// </summary>
     /// <remarks>
-    ///     BaseData class can accept live REST endpoints as data sources which are polled on the frequency
-    ///     specified in the custom data resolution.
+    /// BaseData class can accept live REST endpoints as data sources which are polled on the frequency
+    /// specified in the custom data resolution.
     /// </remarks>
     public class SubscriptionStreamReader : IStreamReader
     {
@@ -68,6 +68,7 @@ namespace QuantConnect.Lean.Engine
                         eos = false;
                         break;
                 }
+
                 return eos;
             }
         }
@@ -136,6 +137,7 @@ namespace QuantConnect.Lean.Engine
                     }
                     break;
             }
+
             return line;
         }
 
@@ -162,7 +164,6 @@ namespace QuantConnect.Lean.Engine
         }
 
     } // End of Class
-
 
     /// <summary>
     /// IStream Reader for enchancing the basic SR classes to include REST calls.
