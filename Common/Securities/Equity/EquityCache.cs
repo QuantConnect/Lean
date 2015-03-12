@@ -2,7 +2,7 @@
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * 
@@ -18,7 +18,7 @@
 **********************************************************/
 namespace QuantConnect.Securities.Equity
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     ********************************************************/
     /// <summary>
@@ -28,11 +28,11 @@ namespace QuantConnect.Securities.Equity
     /// <seealso cref="SecurityCache"/>
     public class EquityCache : SecurityCache
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS VARIABLES
         *********************************************************/
 
-        /******************************************************** 
+        /********************************************************
         * CONSTRUCTOR/DELEGATE DEFINITIONS
         *********************************************************/
         /// <summary>
@@ -44,7 +44,7 @@ namespace QuantConnect.Securities.Equity
             //Nothing to do:
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
 

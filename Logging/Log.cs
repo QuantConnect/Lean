@@ -20,12 +20,9 @@ using System;
 using System.Threading;
 using System.Text;
 using System.Collections;
-using System.Diagnostics;
-using System.IO;
 
 namespace QuantConnect.Logging
 {
-
     /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/

@@ -2,7 +2,7 @@
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * 
@@ -25,7 +25,7 @@ using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -33,17 +33,17 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionManager
     {
-        /******************************************************** 
+        /********************************************************
         * PUBLIC VARIABLES
         *********************************************************/
         /// Generic Market Data Requested and Object[] Arguements to Get it:
         public List<SubscriptionDataConfig> Subscriptions;
 
-        /******************************************************** 
+        /********************************************************
         * PRIVATE VARIABLES
         *********************************************************/
         
-        /******************************************************** 
+        /********************************************************
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -55,7 +55,7 @@ namespace QuantConnect.Data
             Subscriptions = new List<SubscriptionDataConfig>();
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PROPERTIES
         *********************************************************/
         /// <summary>
@@ -69,7 +69,7 @@ namespace QuantConnect.Data
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>

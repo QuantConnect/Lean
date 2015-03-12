@@ -2,7 +2,7 @@
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * 
@@ -21,7 +21,7 @@ using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities 
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -29,7 +29,7 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityHolding
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS VARIABLES
         *********************************************************/
         //Working Variables
@@ -45,7 +45,7 @@ namespace QuantConnect.Securities
         private decimal _totalFees = 0;
         private ISecurityTransactionModel _model;
 
-        /******************************************************** 
+        /********************************************************
         * CONSTRUCTOR DEFINITION
         *********************************************************/
 
@@ -71,7 +71,7 @@ namespace QuantConnect.Securities
             _lastTradeProfit = 0;
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PROPERTIES
         *********************************************************/
         /// <summary>
@@ -330,7 +330,7 @@ namespace QuantConnect.Securities
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS 
         *********************************************************/
         /// <summary>

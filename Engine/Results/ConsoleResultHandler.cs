@@ -2,7 +2,7 @@
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * 
@@ -34,7 +34,7 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public class ConsoleResultHandler : IResultHandler
     {
-        /******************************************************** 
+        /********************************************************
         * PRIVATE VARIABLES
         *********************************************************/
         private bool _isActive;
@@ -50,7 +50,7 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly TimeSpan _resamplePeriod;
         private readonly TimeSpan _notificationPeriod;
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC PROPERTIES
         *********************************************************/
         /// <summary>
@@ -121,7 +121,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -158,7 +158,7 @@ namespace QuantConnect.Lean.Engine.Results
             _notificationPeriod = TimeSpan.FromSeconds(5);
         }
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC METHODS
         *********************************************************/
         /// <summary>

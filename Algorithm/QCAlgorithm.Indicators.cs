@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,25 +22,24 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
-
 namespace QuantConnect.Algorithm
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     public partial class QCAlgorithm
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS PRIVATE VARIABLES
         *********************************************************/
 
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PUBLIC PROPERTIES
         *********************************************************/
 
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
 
@@ -156,7 +155,7 @@ namespace QuantConnect.Algorithm
         {
             return AROON(symbol, period, period, resolution);
         }
-        
+
         /// <summary>
         /// Creates a new AroonOscillator indicator which will compute the AroonUp and AroonDown (as well as the delta)
         /// </summary>
@@ -244,6 +243,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose MFI we want</param>
         /// <param name="period">The period over which to compute the MFI</param>
+        /// <param name="resolution">The resolution requested</param>
         /// <returns>The MoneyFlowIndex indicator for the requested symbol over the specified period</returns>
         public MoneyFlowIndex MFI(string symbol, int period, Resolution? resolution = null) {
             var name = CreateIndicatorName(symbol, "MFI" + period, resolution);
@@ -341,7 +341,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to register against</param>
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="consolidator">The consolidator to receive raw subscription data</param>
-        public void RegisterIndicator<T>(string symbol, IndicatorBase<T> indicator, IDataConsolidator consolidator) 
+        public void RegisterIndicator<T>(string symbol, IndicatorBase<T> indicator, IDataConsolidator consolidator)
             where T : BaseData
         {
             // register the consolidator for automatic updates via SubscriptionManager

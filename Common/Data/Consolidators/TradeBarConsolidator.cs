@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,7 @@ namespace QuantConnect.Data.Consolidators
     /// <summary>
     /// A data consolidator that can make bigger bars from smaller ones over a given
     /// time span or a count of pieces of data.
-    /// 
+    ///
     /// Use this consolidator to turn data of a lower resolution into data of a higher resolution,
     /// for example, if you subscribe to minute data but want to have a 15 minute bar.
     /// </summary>
@@ -30,12 +30,16 @@ namespace QuantConnect.Data.Consolidators
     {
         //The minimum timespan between creating new bars.
         private readonly TimeSpan? _period;
+
         //The number of data updates between creating new bars.
         private readonly int? _maxCount;
+
         //The number of pieces of data we've accumulated since our last emit
         private int _currentCount;
+
         //The working bar used for aggregating the data
         private TradeBar _workingBar;
+
         //The last time we emitted a consolidated bar
         private DateTime? _lastEmit;
 
@@ -51,14 +55,19 @@ namespace QuantConnect.Data.Consolidators
                 case Resolution.Tick:
                     // we want to always produce data for ticks, don't wait, just
                     return new TradeBarConsolidator(0);
+
                 case Resolution.Second:
                     return new TradeBarConsolidator(TimeSpan.FromSeconds(1));
+
                 case Resolution.Minute:
                     return new TradeBarConsolidator(TimeSpan.FromMinutes(1));
+
                 case Resolution.Hour:
                     return new TradeBarConsolidator(TimeSpan.FromHours(1));
+
                 case Resolution.Daily:
                     return new TradeBarConsolidator(TimeSpan.FromDays(1));
+
                 default:
                     throw new ArgumentOutOfRangeException("resolution");
             }
@@ -98,14 +107,14 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public override Type OutputType
         {
-            get { return typeof (TradeBar); }
+            get { return typeof(TradeBar); }
         }
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced. We define this as a 'new'
         /// event so we can expose it as a TradeBar instead of a BaseData instance
         /// </summary>
-        public new event EventHandler<TradeBar> DataConsolidated; 
+        public new event EventHandler<TradeBar> DataConsolidated;
 
         /// <summary>
         /// Updates this consolidator with the specified data. This method is
@@ -128,7 +137,7 @@ namespace QuantConnect.Data.Consolidators
                     fireDataConsolidated = true;
                 }
             }
-            
+
             if (_period.HasValue)
             {
                 if (!_lastEmit.HasValue)

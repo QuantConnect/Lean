@@ -2,7 +2,7 @@
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * 
@@ -27,7 +27,7 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -40,7 +40,7 @@ namespace QuantConnect.Lean.Engine
     /// </remarks>
     public class StreamStore
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         //Internal lock object
@@ -52,7 +52,7 @@ namespace QuantConnect.Lean.Engine
         private object _lock = new Object();
         private ConcurrentQueue<BaseData> _queue = new ConcurrentQueue<BaseData>();
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PUBLIC PROPERTIES:
         *********************************************************/
         /// <summary>
@@ -103,7 +103,7 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -120,7 +120,7 @@ namespace QuantConnect.Lean.Engine
             _queue = new ConcurrentQueue<BaseData>();
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>

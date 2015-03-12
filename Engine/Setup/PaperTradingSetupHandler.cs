@@ -2,7 +2,7 @@
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * 
@@ -36,11 +36,11 @@ namespace QuantConnect.Lean.Engine.Setup
     /// </summary>
     public class PaperTradingSetupHandler : ISetupHandler
     {
-        /******************************************************** 
+        /********************************************************
         * PRIVATE VARIABLES
         *********************************************************/
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC PROPERTIES
         *********************************************************/
         /// <summary>
@@ -73,7 +73,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <remarks>For live trading its almost impossible to limit the order number</remarks>
         public int MaxOrders { get; private set; }
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -88,7 +88,7 @@ namespace QuantConnect.Lean.Engine.Setup
             Errors = new List<string>();
         }
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC METHODS
         *********************************************************/
         /// <summary>

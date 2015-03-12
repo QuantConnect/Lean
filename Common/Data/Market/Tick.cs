@@ -186,7 +186,7 @@ namespace QuantConnect.Data.Market
 
                 // Which security type is this data feed:
                 switch (config.Security)
-                { 
+                {
                     case SecurityType.Equity:
                         Symbol = config.Symbol;
                         Time = date.Date.AddMilliseconds(Convert.ToInt64(csv[0]));
@@ -218,7 +218,7 @@ namespace QuantConnect.Data.Market
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>

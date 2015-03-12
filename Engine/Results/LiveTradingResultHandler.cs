@@ -2,7 +2,7 @@
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * 
@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.Results
     /// <remarks>Live trading result handler is quite busy. It sends constant price updates, equity updates and order/holdings updates.</remarks>
     public class LiveTradingResultHandler : IResultHandler
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS VARIABLES
         *********************************************************/
         // Required properties for the cloud app.
@@ -76,7 +76,7 @@ namespace QuantConnect.Lean.Engine.Results
         private List<LogEntry> _logStore;
         private DateTime _nextSample;
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PROPERTIES
         *********************************************************/
         /// <summary>
@@ -148,7 +148,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -174,7 +174,7 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>

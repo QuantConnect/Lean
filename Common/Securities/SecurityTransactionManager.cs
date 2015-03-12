@@ -2,7 +2,7 @@
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * 
@@ -25,7 +25,7 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Securities 
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -33,7 +33,7 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityTransactionManager 
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         private SecurityManager _securities;
@@ -45,11 +45,11 @@ namespace QuantConnect.Securities
         private decimal _minimumOrderSize = 0;
         private int _minimumOrderQuantity = 1;
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PUBLIC VARIABLES
         *********************************************************/
 
-        /******************************************************** 
+        /********************************************************
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -73,7 +73,7 @@ namespace QuantConnect.Securities
             _transactionRecord = new Dictionary<DateTime, decimal>();
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PROPERTIES
         *********************************************************/
         /// <summary>
@@ -177,7 +177,7 @@ namespace QuantConnect.Securities
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>

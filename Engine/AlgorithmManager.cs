@@ -2,7 +2,7 @@
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * 
@@ -33,7 +33,7 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine
 {
-    /******************************************************** 
+    /********************************************************
     * QUANTCONNECT NAMESPACES
     *********************************************************/
     /// <summary>
@@ -41,7 +41,7 @@ namespace QuantConnect.Lean.Engine
     /// </summary>
     public static class AlgorithmManager
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS VARIABLES
         *********************************************************/
         private static DateTime _previousTime;
@@ -51,7 +51,7 @@ namespace QuantConnect.Lean.Engine
         private static readonly object _lock = new object();
         private static string _algorithmId = "";
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PROPERTIES
         *********************************************************/
         /// <summary>
@@ -111,7 +111,7 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>
