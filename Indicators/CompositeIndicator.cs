@@ -64,6 +64,15 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset() {
+            Left.Reset();
+            Right.Reset();
+            base.Reset();
+        }
+
+        /// <summary>
         /// Creates a new CompositeIndicator capable of taking the output from the left and right indicators
         /// and producing a new value via the composer delegate specified
         /// </summary>

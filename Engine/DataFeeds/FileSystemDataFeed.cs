@@ -85,6 +85,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool IsActive { get; private set; }
 
         /// <summary>
+        /// Flag indicating the file system has loaded all files.
+        /// </summary>
+        public bool LoadingComplete { get; private set; }
+
+        /// <summary>
         /// Furthest point in time that the data has loaded into the bridges.
         /// </summary>
         public DateTime LoadedDataFrontier { get; private set; }
@@ -376,6 +381,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             } // End of All Days:
 
             Log.Trace(DataFeed + ".Run(): Data Feed Completed.");
+            LoadingComplete = true;
 
             //Make sure all bridges empty before declaring "end of bridge":
             while (!EndOfBridges && !_exitTriggered)

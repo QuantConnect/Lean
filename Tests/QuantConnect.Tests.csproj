@@ -75,6 +75,7 @@
     <Compile Include="Indicators\MinimumTests.cs" />
     <Compile Include="Indicators\MomentumPercentTests.cs" />
     <Compile Include="Indicators\MomentumTests.cs" />
+    <Compile Include="Indicators\MoneyFlowIndexTests.cs" />
     <Compile Include="Indicators\MovingAverageConvergenceDivergenceTests.cs" />
     <Compile Include="Indicators\MovingAverageTypeExtensionsTests.cs" />
     <Compile Include="Indicators\RelativeStrengthIndexTests.cs" />
@@ -82,6 +83,7 @@
     <Compile Include="Indicators\IndicatorExtensionsTests.cs" />
     <Compile Include="Indicators\SimpleMovingAverageTests.cs" />
     <Compile Include="Indicators\StandardDeviationTests.cs" />
+    <Compile Include="Indicators\SumTests.cs" />
     <Compile Include="Indicators\TestHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="packages.config" />

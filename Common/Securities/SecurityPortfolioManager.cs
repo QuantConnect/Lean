@@ -416,7 +416,7 @@ namespace QuantConnect.Securities
             //Each asset has different leverage values, so affects our cash position in different ways.
             var holdings = Securities[symbol].Holdings;
 
-            if (direction == OrderDirection.Hold) return Cash;
+            if (direction == OrderDirection.Hold || !Invested) return Cash;
             //Log.Debug("SecurityPortfolioManager.GetFreeCash(): Direction: " + direction.ToString());
 
 
@@ -637,7 +637,7 @@ namespace QuantConnect.Securities
         /// </remarks>
         /// <param name="time">Time of order processed </param>
         /// <param name="transactionProfitLoss">Profit Loss.</param>
-        private void AddTransactionRecord(DateTime time, decimal transactionProfitLoss)
+        public void AddTransactionRecord(DateTime time, decimal transactionProfitLoss)
         {
             var clone = time;
             while (Transactions.TransactionRecord.ContainsKey(clone))
