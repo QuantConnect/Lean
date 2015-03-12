@@ -80,6 +80,7 @@ namespace QuantConnect
             {
                 Log.Error("Time.UnixTimeStampToDateTime(): " + unixTimeStamp + err.Message);
             }
+
             return time;
         }
 
@@ -99,6 +100,7 @@ namespace QuantConnect
             {
                 Log.Error("Time.DateTimeToUnixTimeStamp(): " + time.ToOADate() + err.Message);
             }
+
             return timestamp;
         }
 
@@ -200,7 +202,11 @@ namespace QuantConnect
             {
                 foreach (var security in securities.Values)
                 {
-                    if (security.Exchange.DateIsOpen(day)) tradeable = true;
+                    if (security.Exchange.DateIsOpen(day))
+                    {
+                        tradeable = true;
+                        break;
+                    }
                 }
             }
             catch (Exception err)
@@ -236,6 +242,7 @@ namespace QuantConnect
             {
                 Log.Error("Time.TradeableDates(): " + err.Message);
             }
+
             return count;
         }
     } // End Time Class
