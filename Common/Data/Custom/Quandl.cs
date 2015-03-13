@@ -38,6 +38,7 @@ namespace QuantConnect.Data.Custom
         private bool _isInitialized = false;
         private readonly List<string> _propertyNames = new List<string>();
         private string _authCode = "";
+        private static string _valueColumn = "Close";
 
         /******************************************************** 
         * CLASS CONSTRUCTOR
@@ -83,7 +84,7 @@ namespace QuantConnect.Data.Custom
             }
 
             // we know that there is a close property, we want to set that to 'Value'
-            data.Value = (decimal) data.GetProperty("Close");
+            data.Value = (decimal)data.GetProperty(_valueColumn);
 
             return data;
         }
@@ -109,6 +110,16 @@ namespace QuantConnect.Data.Custom
         public void SetAuthCode(string authCode)
         {
             _authCode = authCode;
+        }
+
+
+        /// <summary>
+        /// Set the value column for this Quandl data set:
+        /// </summary>
+        /// <param name="column">Column name</param>
+        public static void SetValueColumn(string column)
+        {
+            _valueColumn = column;
         }
     }
 
