@@ -388,6 +388,12 @@ namespace QuantConnect.Interfaces
         void SetLiveMode(bool live);
 
         /// <summary>
+        /// Set the maximum number of orders the algortihm is allowed to process.
+        /// </summary>
+        /// <param name="max">Maximum order count int</param>
+        void SetMaximumOrders(int max);
+
+        /// <summary>
         /// Set the maximum number of assets allowable to ensure good memory usage / avoid linux killing job.
         /// </summary>
         /// <param name="minuteLimit">Maximum number of minute level assets the live mode can support with selected server</param>

@@ -201,8 +201,19 @@ namespace QuantConnect.Lean.Engine.Setup
             _startingCaptial = algorithm.Portfolio.Cash;
 
             //Max Orders: 100 per day:
-            _maxOrders = (int)(job.PeriodFinish - job.PeriodStart).TotalDays * 100;
+            if (!Engine.IsLocal && job.UserPlan != UserPlan.Free)
+            {
+                _maxOrders = 10000;
 
+            }
+            else
+            {
+                _maxOrders = int.MaxValue;
+            }
+
+            //Set back to the algorithm,
+            algorithm.SetMaximumOrders(_maxOrders);
+            
             //Starting date of the algorithm:
             _startingDate = job.PeriodStart;
 
