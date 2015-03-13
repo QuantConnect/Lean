@@ -38,11 +38,28 @@ namespace QuantConnect.Data.Custom
         private bool _isInitialized = false;
         private readonly List<string> _propertyNames = new List<string>();
         private string _authCode = "";
-        private static string _valueColumn = "Close";
+        private string _valueColumn;
 
         /******************************************************** 
         * CLASS CONSTRUCTOR
         *********************************************************/
+        /// <summary>
+        /// Default quandl constructor uses Close as its value column
+        /// </summary>
+        protected Quandl()
+        {
+            _valueColumn = "Close";
+        }
+        
+        /// <summary>
+        /// Constructor for creating customized quandl instance which doesn't use "Close" as its value item.
+        /// </summary>
+        /// <param name="valueColumnName"></param>
+        protected Quandl(string valueColumnName)
+        {
+            _valueColumn = valueColumnName;
+        }
+
 
         /******************************************************** 
         * CLASS METHODS
@@ -117,7 +134,7 @@ namespace QuantConnect.Data.Custom
         /// Set the value column for this Quandl data set:
         /// </summary>
         /// <param name="column">Column name</param>
-        public static void SetValueColumn(string column)
+        public void SetValueColumn(string column)
         {
             _valueColumn = column;
         }

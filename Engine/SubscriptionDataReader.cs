@@ -209,9 +209,10 @@ namespace QuantConnect.Lean.Engine
             _getSourceMethod = _dataFactory.GetType().GetMethod("GetSource", new[] { typeof(SubscriptionDataConfig), typeof(DateTime), typeof(DataFeedEndpoint) });
 
             //If its quandl set the access token in data factory:
-            if (_dataFactory.GetType().Name == "Quandl")
+            var quandl = _dataFactory as Quandl;
+            if (quandl != null)
             {
-                ((Quandl)_dataFactory).SetAuthCode(Config.Get("quandl-auth-token"));
+                quandl.SetAuthCode(Config.Get("quandl-auth-token"));   
             }
 
             //Load the entire factor and symbol mapping tables into memory
