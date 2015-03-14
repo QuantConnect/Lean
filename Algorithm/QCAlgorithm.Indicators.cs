@@ -393,12 +393,20 @@ namespace QuantConnect.Algorithm
                     return TradeBarConsolidator.FromResolution(resolution.Value);
                 }
 
-                // TODO : Add default IDataConsolidator for Tick
-                // if it is tick data we would need a different consolidator, what should the default consolidator of tick data be?
-                // I imagine it would be something that produces a TradeBar from ticks!
+                // if our type can be used as a tick then we'll use the tick consolidator
+                // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to Tick
+                if (typeof (Tick).IsAssignableFrom(subscription.Type))
+                {
+                    return TickConsolidator.FromResolution(resolution.Value);
+                }
 
+                // no matter what we can always consolidate based on the time-value pair of BaseData, later we'll need a check
+                // to see if it's custom code and derives from 'DynamicData' and if so, we'll make the DynamicDataConsolidator (future work)
+                return BaseDataConsolidator.FromResolution(resolution.Value);
 
                 // if it is custom data I don't think we can resolve a default consolidator for the type unless it was assignable to trade bar
+                // TODO : Implement DynamicDataConsolidator, first try trade bar, then fall back on time-value pair data
+                //        Maybe allow for configuration to specify your 'value' propery?
             }
             catch (InvalidOperationException)
             {
