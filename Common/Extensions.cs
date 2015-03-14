@@ -385,5 +385,30 @@ namespace QuantConnect
             }
             return false;
         }
+
+        /// <summary>
+        /// Converts the Resolution instance into a TimeSpan instance
+        /// </summary>
+        /// <param name="resolution">The resolution to be converted</param>
+        /// <returns>A TimeSpan instance that represents the resolution specified</returns>
+        public static TimeSpan ToTimeSpan(this Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Resolution.Tick:
+                    // ticks can be instantaneous
+                    return TimeSpan.FromTicks(0);
+                case Resolution.Second:
+                    return TimeSpan.FromSeconds(1);
+                case Resolution.Minute:
+                    return TimeSpan.FromMinutes(1);
+                case Resolution.Hour:
+                    return TimeSpan.FromHours(1);
+                case Resolution.Daily:
+                    return TimeSpan.FromDays(1);
+                default:
+                    throw new ArgumentOutOfRangeException("resolution");
+            }
+        }
     }
 }
