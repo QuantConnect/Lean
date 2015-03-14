@@ -24,19 +24,48 @@ namespace QuantConnect.Data.Consolidators
     /// 
     /// This type acts as the base for other consolidators that produce bars on a given time step or for a count of data.
     /// </summary>
-    public class TradeBarConsolidatorBase<T> : DataConsolidator<T>
+    public abstract class TradeBarConsolidatorBase<T> : DataConsolidator<T>
         where T : BaseData
     {
-        private readonly TradeBarCreatorBase<T> _tradeBarCreator;
+
+        //The minimum timespan between creating new bars.
+        private readonly TimeSpan? _period;
+        //The number of data updates between creating new bars.
+        private readonly int? _maxCount;
+        //The number of pieces of data we've accumulated since our last emit
+        private int _currentCount;
+        //The working bar used for aggregating the data
+        private TradeBar _workingBar;
+        //The last time we emitted a consolidated bar
+        private DateTime? _lastEmit;
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the period
         /// </summary>
-        /// <param name="tradeBarCreator">The trade bar creator responsible for aggregate the T data into trade bars</param>
-        public TradeBarConsolidatorBase(TradeBarCreatorBase<T> tradeBarCreator)
+        /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
+        protected TradeBarConsolidatorBase(TimeSpan period)
         {
-            _tradeBarCreator = tradeBarCreator;
-            InitializeTradeBarCreatorEventHandler();
+            _period = period;
+        }
+
+        /// <summary>
+        /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data
+        /// </summary>
+        /// <param name="maxCount">The number of pieces to accept before emiting a consolidated bar</param>
+        protected TradeBarConsolidatorBase(int maxCount)
+        {
+            _maxCount = maxCount;
+        }
+
+        /// <summary>
+        /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data or the period, whichever comes first
+        /// </summary>
+        /// <param name="maxCount">The number of pieces to accept before emiting a consolidated bar</param>
+        /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
+        protected TradeBarConsolidatorBase(int maxCount, TimeSpan period)
+        {
+            _maxCount = maxCount;
+            _period = period;
         }
 
         /// <summary>
@@ -60,7 +89,47 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="data">The new data for the consolidator</param>
         public override void Update(T data)
         {
-            _tradeBarCreator.Update(data);
+            AggregateBar(ref _workingBar, data);
+
+            //Decide to fire the event
+            var fireDataConsolidated = false;
+            if (_maxCount.HasValue)
+            {
+                // we're in count mode
+                _currentCount++;
+                if (_currentCount >= _maxCount.Value)
+                {
+                    _currentCount = 0;
+                    fireDataConsolidated = true;
+                }
+            }
+
+            if (_period.HasValue)
+            {
+                if (!_lastEmit.HasValue)
+                {
+                    // we're in time span mode and not initialized
+                    _lastEmit = data.Time;
+                }
+
+                // we're in time span mode and initialized
+                if (data.Time - _lastEmit.Value >= _period.Value)
+                {
+                    fireDataConsolidated = true;
+                }
+
+            }
+
+            //Fire the event
+            if (fireDataConsolidated)
+            {
+                if (_period.HasValue)
+                {
+                    _lastEmit = data.Time;
+                }
+                OnDataConsolidated(_workingBar);
+                _workingBar = null;
+            }
         }
 
         /// <summary>
@@ -77,11 +146,11 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Wires up the event handler on _tradeBarCreator to call OnDataConsolidated
+        /// Aggregates the new 'data' into the 'workingBar'. The 'workingBar' will be
+        /// null following the event firing
         /// </summary>
-        private void InitializeTradeBarCreatorEventHandler()
-        {
-            _tradeBarCreator.TradeBarCreated += (sender, bar) => OnDataConsolidated(bar);
-        }
+        /// <param name="workingBar">The bar we're building, null if the event was just fired and we're starting a new trade bar</param>
+        /// <param name="data">The new data</param>
+        protected abstract void AggregateBar(ref TradeBar workingBar, T data);
     }
 }

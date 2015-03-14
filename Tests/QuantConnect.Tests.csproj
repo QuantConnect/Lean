@@ -56,10 +56,7 @@
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageTests.cs" />
     <Compile Include="Common\Data\IdentityDataConsolidatorTests.cs" />
     <Compile Include="Common\Data\SequentialConsolidatorTests.cs" />
-    <Compile Include="Common\Data\TickTradeBarCreatorTests.cs" />
     <Compile Include="Common\Data\TradeBarConsolidatorTests.cs" />
-    <Compile Include="Common\Data\TradeBarCreatorBaseTests.cs" />
-    <Compile Include="Common\Data\TradeBarCreatorTests.cs" />
     <Compile Include="Common\OSTests.cs" />
     <Compile Include="Common\SeriesSamplerTests.cs" />
     <Compile Include="Common\Util\ExpressionBuilderTests.cs" />

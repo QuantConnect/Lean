@@ -43,7 +43,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public TradeBarConsolidator(TimeSpan period)
-            : base(new TradeBarCreator(period))
+            : base(period)
         {
         }
 
@@ -52,7 +52,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="maxCount">The number of pieces to accept before emiting a consolidated bar</param>
         public TradeBarConsolidator(int maxCount)
-            : base(new TradeBarCreator(maxCount))
+            : base(maxCount)
         {
         }
 
@@ -62,8 +62,34 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="maxCount">The number of pieces to accept before emiting a consolidated bar</param>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public TradeBarConsolidator(int maxCount, TimeSpan period)
-            : base(new TradeBarCreator(maxCount, period))
+            : base(maxCount, period)
         {
+        }
+
+        protected override void AggregateBar(ref TradeBar workingBar, TradeBar data)
+        {
+            if (workingBar == null)
+            {
+                workingBar = new TradeBar
+                {
+                    Time = data.Time,
+                    Symbol = data.Symbol,
+                    Open = data.Open,
+                    High = data.High,
+                    Low = data.Low,
+                    Close = data.Close,
+                    Volume = data.Volume,
+                    DataType = MarketDataType.TradeBar
+                };
+            }
+            else
+            {
+                //Aggregate the working bar
+                workingBar.Close = data.Close;
+                workingBar.Volume += data.Volume;
+                if (data.Low < workingBar.Low) workingBar.Low = data.Low;
+                if (data.High > workingBar.High) workingBar.High = data.High;
+            }
         }
     }
 }
