@@ -24,16 +24,6 @@ namespace QuantConnect.Data.Consolidators
     public class TickConsolidator : TradeBarConsolidatorBase<Tick>
     {
         /// <summary>
-        /// Create a new TickConsolidator for the desired resolution
-        /// </summary>
-        /// <param name="resolution">The resoluton desired</param>
-        /// <returns>A consolidator that produces data on the resolution interval</returns>
-        public static TickConsolidator FromResolution(Resolution resolution)
-        {
-            return new TickConsolidator(resolution.ToTimeSpan());
-        }
-
-        /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the period
         /// </summary>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>

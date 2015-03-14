@@ -342,7 +342,9 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="symbol">Key/Symbol for data</param>
         /// <param name="resolution">Resolution of the data</param>
-        void AddData<T>(string symbol, Resolution resolution = Resolution.Second);
+        /// <param name="isTradeBar">Set to true if this data has Open, High, Low, and Close properties</param>
+        /// <param name="hasVolume">Set to true if this data has a Volume property</param>
+        void AddData<T>(string symbol, Resolution resolution = Resolution.Second, bool isTradeBar = false, bool hasVolume = false);
 
         /// <summary>
         /// Set the starting capital for the strategy

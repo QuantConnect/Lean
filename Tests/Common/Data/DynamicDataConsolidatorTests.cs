@@ -1,0 +1,263 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using NUnit.Framework;
+using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Custom;
+using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
+
+namespace QuantConnect.Tests.Common.Data
+{
+    [TestFixture]
+    public class DynamicDataConsolidatorTests
+    {
+        [Test]
+        public void AggregatesTimeValuePairsWithOutVolumeProperly()
+        {
+            TradeBar newTradeBar = null;
+            var consolidator = new DynamicDataConsolidator(4, false, false);
+            consolidator.DataConsolidated += (sender, tradeBar) =>
+            {
+                newTradeBar = tradeBar;
+            };
+            var reference = DateTime.Today;
+            var bar1 = new CustomData
+            {
+                Symbol = "SPY",
+                Time = reference,
+                Value = 5
+            };
+            consolidator.Update(bar1);
+            Assert.IsNull(newTradeBar);
+
+            var bar2 = new CustomData
+            {
+                Symbol = "SPY",
+                Time = reference.AddHours(1),
+                Value = 10
+            };
+            consolidator.Update(bar2);
+            Assert.IsNull(newTradeBar);
+            var bar3 = new CustomData
+            {
+                Symbol = "SPY",
+                Time = reference.AddHours(2),
+                Value = 1
+            };
+            consolidator.Update(bar3);
+            Assert.IsNull(newTradeBar);
+
+            var bar4 = new CustomData
+            {
+                Symbol = "SPY",
+                Time = reference.AddHours(3),
+                Value = 9
+            };
+            consolidator.Update(bar4);
+            Assert.IsNotNull(newTradeBar);
+
+            Assert.AreEqual("SPY", newTradeBar.Symbol);
+            Assert.AreEqual(bar1.Time, newTradeBar.Time);
+            Assert.AreEqual(bar1.Value, newTradeBar.Open);
+            Assert.AreEqual(bar2.Value, newTradeBar.High);
+            Assert.AreEqual(bar3.Value, newTradeBar.Low);
+            Assert.AreEqual(bar4.Value, newTradeBar.Close);
+            Assert.AreEqual(0, newTradeBar.Volume);
+        }
+
+        [Test]
+        public void AggregatesTimeValuePairsWithVolumeProperly()
+        {
+            TradeBar newTradeBar = null;
+            var consolidator = new DynamicDataConsolidator(4, false, true);
+            consolidator.DataConsolidated += (sender, tradeBar) =>
+            {
+                newTradeBar = tradeBar;
+            };
+            var reference = DateTime.Today;
+            dynamic bar1 = new CustomData
+            {
+                Symbol = "SPY",
+                Time = reference,
+                Value = 5,
+            };
+            bar1.Volume = 75L;
+
+            consolidator.Update(bar1);
+            Assert.IsNull(newTradeBar);
+
+            dynamic bar2 = new CustomData
+            {
+                Symbol = "SPY",
+                Time = reference.AddHours(1),
+                Value = 10
+            };
+            bar2.Volume = 100L;
+
+            consolidator.Update(bar2);
+            Assert.IsNull(newTradeBar);
+            dynamic bar3 = new CustomData
+            {
+                Symbol = "SPY",
+                Time = reference.AddHours(2),
+                Value = 1
+            };
+            bar3.Volume = 115L;
+
+            consolidator.Update(bar3);
+            Assert.IsNull(newTradeBar);
+
+            dynamic bar4 = new CustomData
+            {
+                Symbol = "SPY",
+                Time = reference.AddHours(3),
+                Value = 9
+            };
+            bar4.Volume = 85L;
+
+            consolidator.Update(bar4);
+            Assert.IsNotNull(newTradeBar);
+
+            Assert.AreEqual("SPY", newTradeBar.Symbol);
+            Assert.AreEqual(bar1.Time, newTradeBar.Time);
+            Assert.AreEqual(bar1.Value, newTradeBar.Open);
+            Assert.AreEqual(bar2.Value, newTradeBar.High);
+            Assert.AreEqual(bar3.Value, newTradeBar.Low);
+            Assert.AreEqual(bar4.Value, newTradeBar.Close);
+            Assert.AreEqual(bar1.Volume + bar2.Volume + bar3.Volume + bar4.Volume, newTradeBar.Volume);
+        }
+
+        [Test]
+        public void AggregatesTradeBarsWithVolumeProperly()
+        {
+            TradeBar consolidated = null;
+            var consolidator = new DynamicDataConsolidator(3, true, true);
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                consolidated = bar;
+            };
+
+            var reference = DateTime.Today;
+            dynamic bar1 = new CustomData();
+            bar1.Symbol = "SPY";
+            bar1.Time = reference;
+            bar1.Open = 10;
+            bar1.High = 100m;
+            bar1.Low = 1m;
+            bar1.Close = 50m;
+            bar1.Volume = 75L;
+
+            dynamic bar2 = new CustomData();
+            bar2.Symbol = "SPY";
+            bar2.Time = reference.AddHours(1);
+            bar2.Open = 50m;
+            bar2.High = 123m;
+            bar2.Low = 35m;
+            bar2.Close = 75m;
+            bar2.Volume = 100L;
+
+            dynamic bar3 = new CustomData();
+            bar3.Symbol = "SPY";
+            bar3.Time = reference.AddHours(1);
+            bar3.Open = 75m;
+            bar3.High = 100m;
+            bar3.Low = 50m;
+            bar3.Close = 83m;
+            bar3.Volume = 125L;
+
+            consolidator.Update(bar1);
+            Assert.IsNull(consolidated);
+
+            consolidator.Update(bar2);
+            Assert.IsNull(consolidated);
+
+            consolidator.Update(bar3);
+
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual("SPY", consolidated.Symbol);
+            Assert.AreEqual(bar1.Open, consolidated.Open);
+            Assert.AreEqual(Math.Max(bar1.High, Math.Max(bar2.High, bar3.High)), consolidated.High);
+            Assert.AreEqual(Math.Min(bar1.Low, Math.Min(bar2.Low, bar3.Low)), consolidated.Low);
+            Assert.AreEqual(bar3.Close, consolidated.Close);
+            Assert.AreEqual(bar1.Volume + bar2.Volume + bar3.Volume, consolidated.Volume);
+        }
+
+        [Test]
+        public void AggregatesTradeBarsWithOutVolumeProperly()
+        {
+            TradeBar consolidated = null;
+            var consolidator = new DynamicDataConsolidator(3, true, false);
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                consolidated = bar;
+            };
+
+            var reference = DateTime.Today;
+            dynamic bar1 = new CustomData();
+            bar1.Symbol = "SPY";
+            bar1.Time = reference;
+            bar1.Open = 10;
+            bar1.High = 100m;
+            bar1.Low = 1m;
+            bar1.Close = 50m;
+
+            dynamic bar2 = new CustomData();
+            bar2.Symbol = "SPY";
+            bar2.Time = reference.AddHours(1);
+            bar2.Open = 50m;
+            bar2.High = 123m;
+            bar2.Low = 35m;
+            bar2.Close = 75m;
+
+            dynamic bar3 = new CustomData();
+            bar3.Symbol = "SPY";
+            bar3.Time = reference.AddHours(1);
+            bar3.Open = 75m;
+            bar3.High = 100m;
+            bar3.Low = 50m;
+            bar3.Close = 83m;
+
+            consolidator.Update(bar1);
+            Assert.IsNull(consolidated);
+
+            consolidator.Update(bar2);
+            Assert.IsNull(consolidated);
+
+            consolidator.Update(bar3);
+
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual("SPY", consolidated.Symbol);
+            Assert.AreEqual(bar1.Open, consolidated.Open);
+            Assert.AreEqual(Math.Max(bar1.High, Math.Max(bar2.High, bar3.High)), consolidated.High);
+            Assert.AreEqual(Math.Min(bar1.Low, Math.Min(bar2.Low, bar3.Low)), consolidated.Low);
+            Assert.AreEqual(bar3.Close, consolidated.Close);
+            Assert.AreEqual(0, consolidated.Volume);
+        }
+
+        [Test]
+        [ExpectedException(typeof (Exception), MatchType = MessageMatch.Contains, ExpectedMessage = "missing: open, high, low, close, volume")]
+        public void ThrowsErrorWhenDataShapeIsNotExpected()
+        {
+            var consolidator = new DynamicDataConsolidator(1, true, true);
+            var data = new CustomData();
+            consolidator.Update(data);
+        }
+
+        private class CustomData : DynamicData
+        {
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+            {
+                throw new NotImplementedException();
+            }
+        }
+    }
+}

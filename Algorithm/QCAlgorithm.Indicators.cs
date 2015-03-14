@@ -390,14 +390,21 @@ namespace QuantConnect.Algorithm
                 // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to TradeBar
                 if (typeof(TradeBar).IsAssignableFrom(subscription.Type))
                 {
-                    return TradeBarConsolidator.FromResolution(resolution.Value);
+                    return new TradeBarConsolidator(resolution.Value.ToTimeSpan());
                 }
 
                 // if our type can be used as a tick then we'll use the tick consolidator
                 // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to Tick
                 if (typeof (Tick).IsAssignableFrom(subscription.Type))
                 {
-                    return TickConsolidator.FromResolution(resolution.Value);
+                    return new TickConsolidator(resolution.Value.ToTimeSpan());
+                }
+
+                // if our type can be used as a DynamicData then we'll use the DynamicDataConsolidator, inspect
+                // the subscription to figure out the isTradeBar and hasVolume flags
+                if (typeof (DynamicData).IsAssignableFrom(subscription.Type))
+                {
+                    return new DynamicDataConsolidator(resolution.Value.ToTimeSpan(), subscription.IsTradeBar, subscription.HasVolume);
                 }
 
                 // no matter what we can always consolidate based on the time-value pair of BaseData, later we'll need a check
@@ -413,8 +420,6 @@ namespace QuantConnect.Algorithm
                 // this will happen if wedid not find the subscription, let's give the user a decent error message
                 throw new Exception("Please register to receive data for symbol '" + symbol + "' using the AddSecurity() function.");
             }
-
-            throw new NotSupportedException("QCAlgorithm.ResolveConsolidator(): Currently this only supports TradeBar data.");
         }
 
         /// <summary>

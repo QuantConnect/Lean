@@ -24,6 +24,7 @@ namespace QuantConnect.Data.Consolidators
     /// 
     /// This type acts as the base for other consolidators that produce bars on a given time step or for a count of data.
     /// </summary>
+    /// <typeparam name="T">The input type into the consolidator's Update method</typeparam>
     public abstract class TradeBarConsolidatorBase<T> : DataConsolidator<T>
         where T : BaseData
     {

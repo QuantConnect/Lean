@@ -88,7 +88,7 @@ namespace QuantConnect.Data
             {
                 dataType = typeof(Tick);
             }
-            Add(dataType, security, symbol, resolution, fillDataForward, extendedMarketHours);
+            Add(dataType, security, symbol, resolution, fillDataForward, extendedMarketHours, true, true);
         }
 
 
@@ -101,12 +101,14 @@ namespace QuantConnect.Data
         /// <param name="resolution">Resolution of Asset Required</param>
         /// <param name="fillDataForward">when there is no data pass the last tradebar forward</param>
         /// <param name="extendedMarketHours">Request premarket data as well when true </param>
-        public void Add(Type dataType, SecurityType security, string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false) 
+        /// <param name="isTradeBar">Set to true if this data has Open, High, Low, and Close properties</param>
+        /// <param name="hasVolume">Set to true if this data has a Volume property</param>
+        public void Add(Type dataType, SecurityType security, string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false, bool isTradeBar = false, bool hasVolume = false) 
         {
             //Clean:
             symbol = symbol.ToUpper();
             //Create:
-            var newConfig = new SubscriptionDataConfig(dataType, security, symbol, resolution, fillDataForward, extendedMarketHours);
+            var newConfig = new SubscriptionDataConfig(dataType, security, symbol, resolution, fillDataForward, extendedMarketHours, isTradeBar, hasVolume);
             //Add to subscription list: make sure we don't have his symbol:
             Subscriptions.Add(newConfig);
         }
