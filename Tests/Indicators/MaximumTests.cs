@@ -76,5 +76,19 @@ namespace QuantConnect.Tests.Indicators
 
             Assert.AreEqual(max.Period, max.PeriodsSinceMaximum);
         }
+
+        [Test]
+        public void ResetsProperly()
+        {
+            var max = new Maximum(3);
+            max.Update(DateTime.Today, 1m);
+            max.Update(DateTime.Today.AddSeconds(1), 2m);
+            max.Update(DateTime.Today.AddSeconds(2), 1m);
+            Assert.IsTrue(max.IsReady);
+
+            max.Reset();
+            Assert.AreEqual(0, max.PeriodsSinceMaximum);
+            TestHelper.AssertIndicatorIsInDefaultState(max);
+        }
     }
 }

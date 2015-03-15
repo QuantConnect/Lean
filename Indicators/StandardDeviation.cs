@@ -53,7 +53,8 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady {
+        public override bool IsReady
+        {
             get { return Samples >= Period; }
         }
 
@@ -65,7 +66,8 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            if (Samples < 2) {
+            if (Samples < 2)
+            {
                 return 0m;
             }
             IEnumerable<double> doubleValues = window.Select(i => Convert.ToDouble(i.Value));

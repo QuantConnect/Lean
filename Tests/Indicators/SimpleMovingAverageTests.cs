@@ -66,6 +66,7 @@ namespace QuantConnect.Tests.Indicators
             sma.Reset();
 
             TestHelper.AssertIndicatorIsInDefaultState(sma);
+            TestHelper.AssertIndicatorIsInDefaultState(sma.RollingSum);
             sma.Update(DateTime.UtcNow, 2.0m);
             Assert.AreEqual(sma.Current.Value, 2.0m);
         }

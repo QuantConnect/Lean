@@ -63,10 +63,7 @@ namespace QuantConnect.Tests.Indicators
 
             ema.Reset();
 
-            Assert.IsFalse(ema.IsReady);
-            Assert.AreEqual(0, ema.Samples);
-            Assert.AreEqual(0m, ema.Current.Value);
-            Assert.AreEqual(DateTime.MinValue, ema.Current.Time);
+            TestHelper.AssertIndicatorIsInDefaultState(ema);
         }
 
         [Test]
