@@ -407,13 +407,8 @@ namespace QuantConnect.Algorithm
                     return new DynamicDataConsolidator(resolution.Value.ToTimeSpan(), subscription.IsTradeBar, subscription.HasVolume);
                 }
 
-                // no matter what we can always consolidate based on the time-value pair of BaseData, later we'll need a check
-                // to see if it's custom code and derives from 'DynamicData' and if so, we'll make the DynamicDataConsolidator (future work)
-                return BaseDataConsolidator.FromResolution(resolution.Value);
-
-                // if it is custom data I don't think we can resolve a default consolidator for the type unless it was assignable to trade bar
-                // TODO : Implement DynamicDataConsolidator, first try trade bar, then fall back on time-value pair data
-                //        Maybe allow for configuration to specify your 'value' propery?
+                // no matter what we can always consolidate based on the time-value pair of BaseData
+                return new BaseDataConsolidator(resolution.Value.ToTimeSpan());
             }
             catch (InvalidOperationException)
             {
