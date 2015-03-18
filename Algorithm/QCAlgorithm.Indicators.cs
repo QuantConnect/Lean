@@ -373,48 +373,49 @@ namespace QuantConnect.Algorithm
         protected IDataConsolidator ResolveConsolidator(string symbol, Resolution? resolution)
         {
             symbol = symbol.ToUpper();
+            SubscriptionDataConfig subscription;
             try
             {
                 // find our subscription to this symbol
-                var subscription = SubscriptionManager.Subscriptions.First(x => x.Symbol == symbol);
-
-                // if the resolution is null or if the requested resolution matches the subscription, return identity
-                if (!resolution.HasValue || subscription.Resolution == resolution.Value)
-                {
-                    // since there's a generic type parameter that we don't have access to, we'll just use the activator
-                    var identityConsolidatorType = typeof (IdentityDataConsolidator<>).MakeGenericType(subscription.Type);
-                    return (IDataConsolidator) Activator.CreateInstance(identityConsolidatorType);
-                }
-
-                // if our type can be used as a trade bar, then let's just make one of those
-                // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to TradeBar
-                if (typeof(TradeBar).IsAssignableFrom(subscription.Type))
-                {
-                    return new TradeBarConsolidator(resolution.Value.ToTimeSpan());
-                }
-
-                // if our type can be used as a tick then we'll use the tick consolidator
-                // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to Tick
-                if (typeof (Tick).IsAssignableFrom(subscription.Type))
-                {
-                    return new TickConsolidator(resolution.Value.ToTimeSpan());
-                }
-
-                // if our type can be used as a DynamicData then we'll use the DynamicDataConsolidator, inspect
-                // the subscription to figure out the isTradeBar and hasVolume flags
-                if (typeof (DynamicData).IsAssignableFrom(subscription.Type))
-                {
-                    return new DynamicDataConsolidator(resolution.Value.ToTimeSpan(), subscription.IsTradeBar, subscription.HasVolume);
-                }
-
-                // no matter what we can always consolidate based on the time-value pair of BaseData
-                return new BaseDataConsolidator(resolution.Value.ToTimeSpan());
+                subscription = SubscriptionManager.Subscriptions.First(x => x.Symbol == symbol);
             }
             catch (InvalidOperationException)
             {
                 // this will happen if wedid not find the subscription, let's give the user a decent error message
                 throw new Exception("Please register to receive data for symbol '" + symbol + "' using the AddSecurity() function.");
             }
+
+            // if the resolution is null or if the requested resolution matches the subscription, return identity
+            if (!resolution.HasValue || subscription.Resolution == resolution.Value)
+            {
+                // since there's a generic type parameter that we don't have access to, we'll just use the activator
+                var identityConsolidatorType = typeof (IdentityDataConsolidator<>).MakeGenericType(subscription.Type);
+                return (IDataConsolidator) Activator.CreateInstance(identityConsolidatorType);
+            }
+
+            // if our type can be used as a trade bar, then let's just make one of those
+            // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to TradeBar
+            if (typeof (TradeBar).IsAssignableFrom(subscription.Type))
+            {
+                return new TradeBarConsolidator(resolution.Value.ToTimeSpan());
+            }
+
+            // if our type can be used as a tick then we'll use the tick consolidator
+            // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to Tick
+            if (typeof (Tick).IsAssignableFrom(subscription.Type))
+            {
+                return new TickConsolidator(resolution.Value.ToTimeSpan());
+            }
+
+            // if our type can be used as a DynamicData then we'll use the DynamicDataConsolidator, inspect
+            // the subscription to figure out the isTradeBar and hasVolume flags
+            if (typeof (DynamicData).IsAssignableFrom(subscription.Type))
+            {
+                return new DynamicDataConsolidator(resolution.Value.ToTimeSpan(), subscription.IsTradeBar, subscription.HasVolume);
+            }
+
+            // no matter what we can always consolidate based on the time-value pair of BaseData
+            return new BaseDataConsolidator(resolution.Value.ToTimeSpan());
         }
 
         /// <summary>
