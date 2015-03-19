@@ -36,7 +36,7 @@ namespace QuantConnect.Configuration
         * CLASS VARIABLES
         *********************************************************/
         //Location of the configuration file.
-        private const string _config = "config.json";
+        private static string _config = "config.json";
 
         //Has the configuration been loaded from disk:
         private static bool _loaded;
@@ -83,13 +83,27 @@ namespace QuantConnect.Configuration
         }
         
         /// <summary>
+        /// Sets a custom file name
+        /// </summary>
+        /// <param name="customFileName"></param>
+        private static void SetCustomFileName(string customFileName)
+        {
+            _loaded = false;
+            _config = customFileName;
+        }
+
+        /// <summary>
         /// Get the matching config setting from the file searching for this key.
         /// </summary>
         /// <param name="key">String key value we're seaching for in the config file.</param>
         /// <param name="defaultValue"></param>
+        /// <param name="customFileName"></param>
         /// <returns>String value of the configuration setting or empty string if nothing found.</returns>
-        public static string Get(string key, string defaultValue = "")
+        public static string Get(string key, string defaultValue = "", string customFileName = "")
         {
+            if (!String.IsNullOrEmpty(customFileName))
+                SetCustomFileName(customFileName);
+
             var value = "";
             try
             {
@@ -117,10 +131,11 @@ namespace QuantConnect.Configuration
         /// </summary>
         /// <param name="key">String value of the configuration key.</param>
         /// <param name="defaultValue">The default value to use if not found in configuration</param>
+        /// <param name="customFileName"></param>
         /// <returns>Boolean value of the config setting.</returns>
-        public static bool GetBool(string key, bool defaultValue = false)
+        public static bool GetBool(string key, bool defaultValue = false, string customFileName = "")
         {
-            return GetValue(key, defaultValue);
+            return GetValue(key, defaultValue, customFileName);
         }
 
         /// <summary>
@@ -128,10 +143,11 @@ namespace QuantConnect.Configuration
         /// </summary>
         /// <param name="key">Search key from the config file</param>
         /// <param name="defaultValue">The default value to use if not found in configuration</param>
+        /// <param name="customFileName"></param>
         /// <returns>Int value of the config setting.</returns>
-        public static int GetInt(string key, int defaultValue = 0)
+        public static int GetInt(string key, int defaultValue = 0, string customFileName = "")
         {
-            return GetValue(key, defaultValue);
+            return GetValue(key, defaultValue, customFileName);
         }
 
         /// <summary>
@@ -139,10 +155,11 @@ namespace QuantConnect.Configuration
         /// </summary>
         /// <param name="key">Search key from the config file</param>
         /// <param name="defaultValue">The default value to use if not found in configuration</param>
+        /// <param name="customFileName"></param>
         /// <returns>Double value of the config setting.</returns>
-        public static double GetDouble(string key, double defaultValue = 0.0)
+        public static double GetDouble(string key, double defaultValue = 0.0, string customFileName = "")
         {
-            return GetValue(key, defaultValue);
+            return GetValue(key, defaultValue, customFileName);
         }
 
         /// <summary>
@@ -152,9 +169,13 @@ namespace QuantConnect.Configuration
         /// <typeparam name="T">The requested type</typeparam>
         /// <param name="key">Search key from the config file</param>
         /// <param name="defaultValue">The default value to use if not found in configuration</param>
+        /// <param name="customFileName"></param>
         /// <returns>Converted value of the config setting.</returns>
-        public static T GetValue<T>(string key, T defaultValue = default(T))
+        public static T GetValue<T>(string key, T defaultValue = default(T), string customFileName = "")
         {
+            if (!String.IsNullOrEmpty(customFileName))
+                SetCustomFileName(customFileName);
+
             var value = Get(key);
             if (string.IsNullOrEmpty(value))
             {
