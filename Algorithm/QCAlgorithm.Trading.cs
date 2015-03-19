@@ -350,6 +350,7 @@ namespace QuantConnect.Algorithm
             if (Orders.Count > _maxOrders)
             {
                 Error(string.Format("You have exceeded maximum number of orders ({0}), for unlimited orders upgrade your account.", _maxOrders));
+                _quit = true;
                 return -5;
             }
 
@@ -454,7 +455,7 @@ namespace QuantConnect.Algorithm
             //Error checks:
             if (!Portfolio.ContainsKey(symbol))
             {
-                Debug(symbol.ToUpper() + " not found in portfolio. Request this data when initializing the algorithm.");
+                Error(symbol.ToUpper() + " not found in portfolio. Request this data when initializing the algorithm.");
                 return;
             }
 
