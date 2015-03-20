@@ -203,9 +203,8 @@ namespace QuantConnect
         /// <returns>Last 4 character string of string.</returns>
         public static string GetExtension(this string str)
         {
-            // Filter the query string part if the input contains one.
-            var src = Regex.Replace(str, @"([^\?]*)(\?.*)?", "$1");
-            var ext = src.Substring(Math.Max(0, src.Length - 4));
+            // Extract the extension, filter the query string part if the input contains one.
+            var ext = Regex.Replace(str, @".*(\.[^\.\?]{2,4})(\?.*)?$", "$1");
             var allowedExt = new List<string>() { ".zip", ".csv", ".json" };
             if (!allowedExt.Contains(ext))
             {
