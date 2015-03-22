@@ -130,11 +130,11 @@ namespace QuantConnect.Tests.Common.Data
 
             consolidator.Update(new TradeBar {Close = 2m, Time = reference.AddMinutes(1)});
             Assert.IsNotNull(consolidated);
-            Assert.AreEqual(2, consolidated.Close);
+            Assert.AreEqual(1, consolidated.Close);
 
             consolidator.Update(new TradeBar {Close = 3m, Time = reference.AddMinutes(2)});
             Assert.IsNotNull(consolidated);
-            Assert.AreEqual(3, consolidated.Close);
+            Assert.AreEqual(2, consolidated.Close);
         }
 
         [Test]
@@ -222,27 +222,27 @@ namespace QuantConnect.Tests.Common.Data
 
             //10:02 - new/fire
             consolidator.Update(new TradeBar {Time = reference.AddMinutes(2)});
-            Assert.AreEqual(reference.AddMinutes(2), consolidated.Time);
+            Assert.AreEqual(reference.AddMinutes(1), consolidated.Time);
 
             //10:03 - new/fire
             consolidator.Update(new TradeBar {Time = reference.AddMinutes(3)});
-            Assert.AreEqual(reference.AddMinutes(3), consolidated.Time);
+            Assert.AreEqual(reference.AddMinutes(2), consolidated.Time);
 
             //10:05 - new/fire
             consolidator.Update(new TradeBar {Time = reference.AddMinutes(5)});
-            Assert.AreEqual(reference.AddMinutes(5), consolidated.Time);
+            Assert.AreEqual(reference.AddMinutes(3), consolidated.Time);
 
             //10:08 - new/fire
             consolidator.Update(new TradeBar {Time = reference.AddMinutes(8)});
-            Assert.AreEqual(reference.AddMinutes(8), consolidated.Time);
+            Assert.AreEqual(reference.AddMinutes(5), consolidated.Time);
 
             //10:08:01 - new
             consolidator.Update(new TradeBar {Time = reference.AddMinutes(8).AddSeconds(1)});
-            Assert.AreEqual(reference.AddMinutes(8), consolidated.Time);
+            Assert.AreEqual(reference.AddMinutes(5), consolidated.Time);
 
-            //10:08 - new/fire
+            //10:09 - new/fire
             consolidator.Update(new TradeBar {Time = reference.AddMinutes(9)});
-            Assert.AreEqual(reference.AddMinutes(8).AddSeconds(1), consolidated.Time);
+            Assert.AreEqual(reference.AddMinutes(8), consolidated.Time);
 
         }
 
@@ -306,6 +306,42 @@ namespace QuantConnect.Tests.Common.Data
             foreach (var bar in StreamTradeBars(start, end, TimeSpan.FromMinutes(1)))
             {
                 consolidator.Update(bar);
+            }
+        }
+
+        [Test]
+        public void TimeSpanConsolidatorDelayedAggregationTest()
+        {
+            // define a three minute consolidator 
+            int timeSpanUnits = 3;
+            var consolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(timeSpanUnits));
+
+            TradeBar consolidated = null;
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                consolidated = bar;
+            };
+
+            var refDateTime = new DateTime(2014, 12, 1, 10, 00, 0);
+
+            // loop for 3 times the timeSpanUnits + 1, so it would consolidate the bars 3 times
+            for (int i=1; i <= timeSpanUnits * 3 + 1 ; ++i) 
+            {
+                refDateTime = refDateTime.AddMinutes(1);
+                consolidator.Update(new TradeBar { Time = refDateTime });
+
+                if (i <= timeSpanUnits)  // before initial consolidation happens
+                {
+                    Assert.IsNull(consolidated);
+                }
+                else 
+                {
+                    Assert.IsNotNull(consolidated);
+                    if (i-1 % timeSpanUnits == 0) // i = 4, 7, 10
+                    {
+                        Assert.AreEqual(refDateTime.AddMinutes(-(timeSpanUnits-1)), consolidated.Time);
+                    }
+                }
             }
         }
 

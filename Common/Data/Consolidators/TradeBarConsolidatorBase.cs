@@ -90,10 +90,13 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="data">The new data for the consolidator</param>
         public override void Update(T data)
         {
-            AggregateBar(ref _workingBar, data);
-
             //Decide to fire the event
             var fireDataConsolidated = false;
+
+            // decide to aggregate data before or after firing OnDataConsolidated event
+            // always aggregate before firing if in counting mode
+            bool aggregateBeforeFire = _maxCount.HasValue; 
+
             if (_maxCount.HasValue)
             {
                 // we're in count mode
@@ -119,6 +122,16 @@ namespace QuantConnect.Data.Consolidators
                     fireDataConsolidated = true;
                 }
 
+                // special case: always fire before event trigger when TimeSpan is zero
+                if (_period.Value == TimeSpan.Zero)
+                {
+                    aggregateBeforeFire = true;
+                }
+            }
+
+            if (aggregateBeforeFire)
+            {
+                AggregateBar(ref _workingBar, data);
             }
 
             //Fire the event
@@ -130,6 +143,11 @@ namespace QuantConnect.Data.Consolidators
                 }
                 OnDataConsolidated(_workingBar);
                 _workingBar = null;
+            }
+
+            if (!aggregateBeforeFire)
+            {
+                AggregateBar(ref _workingBar, data);
             }
         }
 
