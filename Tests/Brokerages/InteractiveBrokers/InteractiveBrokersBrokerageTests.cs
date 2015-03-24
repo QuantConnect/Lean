@@ -160,7 +160,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             var manualResetEvent = new ManualResetEvent(false);
             var ib = _interactiveBrokersBrokerage;
 
-            decimal aapl = 100m;
+            decimal price = 100m;
             decimal delta = 85.0m; // if we can't get a price then make the delta huge
             ib.OrderEvent += (sender, orderEvent) =>
             {
@@ -169,7 +169,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                     orderFilled = true;
                     manualResetEvent.Set();
                 }
-                aapl = orderEvent.FillPrice;
+                price = orderEvent.FillPrice;
                 delta = 0.02m;
             };
 
@@ -183,10 +183,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             // make a box around the current price +- a little
 
             const int quantity = 1;
-            var order = new LimitOrder(Symbol, +quantity, aapl - delta, DateTime.Now, null, Type) { Id = ++id };
+            var order = new LimitOrder(Symbol, +quantity, price - delta, DateTime.Now, null, Type) { Id = ++id };
             ib.PlaceOrder(order);
 
-            ib.PlaceOrder(new LimitOrder(Symbol, -quantity, aapl + delta, DateTime.Now, null, Type) { Id = ++id });
+            ib.PlaceOrder(new LimitOrder(Symbol, -quantity, price + delta, DateTime.Now, null, Type) { Id = ++id });
 
             manualResetEvent.WaitOne(1000);
 
