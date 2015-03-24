@@ -109,6 +109,7 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (order.Status == OrderStatus.New)
             {
+                if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
                 return true;
             }
             return false;
@@ -123,6 +124,7 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (order.Status == OrderStatus.Update)
             {
+                if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
                 return true;
             }
             return false;
@@ -137,6 +139,7 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (order.Status == OrderStatus.Canceled)
             {
+                if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
                 return true;
             }
             return false;
@@ -209,6 +212,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 if (order.Status != OrderStatus.None)
                 {
                     //If the fill models come back suggesting filled, process the affects on portfolio
+                    fill.Symbol = order.Symbol;
                     OnOrderEvent(fill);
                 }
             }
