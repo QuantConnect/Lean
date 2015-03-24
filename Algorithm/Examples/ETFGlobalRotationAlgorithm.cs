@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.Examples
     /// <summary>
     /// ETF Global Rotation Strategy
     /// </summary>
-    public class ETFGlobalRotation : QCAlgorithm
+    public class ETFGlobalRotationAlgorithm : QCAlgorithm
     {
         // we'll use this to tell us when the month has ended
         DateTime LastRotationTime = DateTime.MinValue;

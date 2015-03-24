@@ -28,7 +28,7 @@ namespace QuantConnect.Indicators
         private readonly decimal _value;
 
         /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// Gets true since the ConstantIndicator is always ready to return the same value
         /// </summary>
         public override bool IsReady
         {
@@ -58,6 +58,14 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(T input)
         {
             return _value;
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+
+            // re-initialize the current value, constant should ALWAYS return this value
+            Current = new IndicatorDataPoint(DateTime.MinValue, _value);
         }
     }
 }

@@ -124,18 +124,23 @@ namespace QuantConnect.Lean.Engine
                 if (earlyBirdTicks > 0)
                 {
                     //Seek forward in time to next data event from stream: there's nothing here for us to do now: why loop over empty seconds?
-                    frontier = (new DateTime(earlyBirdTicks));
+                    frontier = new DateTime(earlyBirdTicks);
                 }
                 else
                 {
                     frontier += increment;
                 }
 
-                //Submit the next data array, even if there's no data, allow emits every second to allow event handling (liquidate/stop/ect...)
-                if (newData.Count > 0 || (Engine.LiveMode && DateTime.Now > nextEmitTime))
+                if (newData.Count > 0)
+                {   
+                    yield return newData;
+                }
+
+                //Allow loop pass through emits every second to allow event handling (liquidate/stop/ect...)
+                if (Engine.LiveMode && DateTime.Now > nextEmitTime)
                 {
                     nextEmitTime = DateTime.Now + TimeSpan.FromSeconds(1);
-                    yield return newData;
+                    yield return new SortedDictionary<DateTime, Dictionary<int, List<BaseData>>>();
                 }
             }
             Log.Trace("DataStream.GetData(): All Streams Completed.");
@@ -160,6 +165,7 @@ namespace QuantConnect.Lean.Engine
                 Thread.Sleep(1);
             }
 
+            //Waiting for data in the bridges:
             while (!AllBridgesHaveData(feed) && now.ElapsedMilliseconds < loopTimeout)
             {
                 Thread.Sleep(1);
@@ -169,7 +175,7 @@ namespace QuantConnect.Lean.Engine
             //this acts as a virtual lock around the bridge so we can wait for the feed
             //to be ahead of us
             // if we're out of data then the feed will never update (it will stay here forever if there's no more data, so use a timeout!!)
-            while (dataStreamFrontier > feed.LoadedDataFrontier && !feed.EndOfBridges && now.ElapsedMilliseconds < loopTimeout)
+            while (dataStreamFrontier > feed.LoadedDataFrontier && (!feed.EndOfBridges && !feed.LoadingComplete) && now.ElapsedMilliseconds < loopTimeout)
             {
                 Thread.Sleep(1);
             }

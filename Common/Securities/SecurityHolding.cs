@@ -121,6 +121,17 @@ namespace QuantConnect.Securities
                 return _securityType;
             }
         }
+
+        /// <summary>
+        /// Leverage of the underlying security.
+        /// </summary>
+        public virtual decimal Leverage
+        {
+            get
+            {
+                return _leverage;
+            }
+        }
         
 
         /// <summary>

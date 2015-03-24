@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.Examples
     /// will go long when the 15 crosses above the 30 and will liquidate when the 15 crosses
     /// back below the 30.
     /// </summary>
-    public class MovingAverageCross : QCAlgorithm
+    public class MovingAverageCrossAlgorithm : QCAlgorithm
     {
         private const string Symbol = "SPY";
         private DateTime previous;

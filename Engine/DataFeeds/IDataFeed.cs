@@ -101,6 +101,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         DateTime LoadedDataFrontier { get; }
 
+        /// <summary>
+        /// Data has completely loaded and we don't expect any more.
+        /// </summary>
+        bool LoadingComplete
+        {
+            get;
+        }
+
         /******************************************************** 
         * INTERFACE METHODS
         *********************************************************/

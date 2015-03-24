@@ -17,11 +17,14 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
-namespace QuantConnect.Tests.Indicators {
+namespace QuantConnect.Tests.Indicators
+{
     [TestFixture]
-    public class MeanAbsoluteDeviationTests {
+    public class MeanAbsoluteDeviationTests
+    {
         [Test]
-        public void ComputesCorrectly() {
+        public void ComputesCorrectly()
+        {
             // Indicator output was compared against the octave code:
             // mad = @(v) mean(abs(v - mean(v)));
             var std = new MeanAbsoluteDeviation(3);
@@ -41,6 +44,21 @@ namespace QuantConnect.Tests.Indicators {
 
             std.Update(reference.AddDays(5), 3m);
             Assert.AreEqual(1.777777777777778m, Decimal.Round(std.Current.Value, 15));
+        }
+
+        [Test]
+        public void ResetsProperly()
+        {
+            var std = new MeanAbsoluteDeviation(3);
+            std.Update(DateTime.Today, 1m);
+            std.Update(DateTime.Today.AddSeconds(1), 2m);
+            std.Update(DateTime.Today.AddSeconds(1), 1m);
+            Assert.IsTrue(std.IsReady);
+
+            std.Reset();
+
+            TestHelper.AssertIndicatorIsInDefaultState(std);
+            TestHelper.AssertIndicatorIsInDefaultState(std.Mean);
         }
     }
 }

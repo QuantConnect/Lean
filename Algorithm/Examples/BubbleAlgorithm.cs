@@ -26,12 +26,12 @@ namespace QuantConnect
 {
     /// <summary>
     /// Based on a macroeconomic indicator(CAPE Ratio), we are looking for entry/exit points for momentum stocks
-    /// CAPE data: January 1990 - December 2014 
+    /// CAPE data: January 1990 - December 2014. By Tim Co.
     /// Goals:    
     ///     Capitalize in overvalued markets by generating returns with momentum and selling before the crash
     ///     Capitalize in undervalued markets by purchasing stocks at bottom of trough
     /// </summary>
-    public class Bubble : QCAlgorithm
+    public class BubbleAlgorithm : QCAlgorithm
     {
         decimal currCape;
         decimal[] c = new decimal[4];

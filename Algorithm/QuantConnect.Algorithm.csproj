@@ -74,21 +74,23 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Examples\BubbleDetector.cs" />
-    <Compile Include="Examples\CustomDataWithFillForward.cs" />
-    <Compile Include="Examples\QuandlImporter.cs" />
+    <Compile Include="Examples\BubbleAlgorithm.cs" />
+    <Compile Include="Examples\CustomDataWithFillForwardAlgorithm.cs" />
+    <Compile Include="Examples\MultipleSymbolConsolidationAlgorithm.cs" />
+    <Compile Include="Examples\QuandlImporterAlgorithm.cs" />
     <Compile Include="Examples\BasicTemplateAlgorithm.cs" />
-    <Compile Include="Examples\CustomData_NitfyINR.cs" />
+    <Compile Include="Examples\CustomDataNIFTYAlgorithm.cs" />
     <Compile Include="Examples\DisplacedMovingAverageRibbon.cs" />
-    <Compile Include="Examples\ETFGlobalRotation.cs" />
-    <Compile Include="Examples\CustomData_Bitcoin.cs" />
-    <Compile Include="Examples\CustomCharting.cs" />
-    <Compile Include="Examples\CustomTickFilter.cs" />
-    <Compile Include="Examples\DataConsolidation.cs" />
-    <Compile Include="Examples\MACDTrendFollowing.cs" />
-    <Compile Include="Examples\MovingAverageCross.cs" />
-    <Compile Include="Examples\Stress_Symbols.cs" />
+    <Compile Include="Examples\ETFGlobalRotationAlgorithm.cs" />
+    <Compile Include="Examples\CustomDataBitcoinAlgorithm.cs" />
+    <Compile Include="Examples\CustomChartingAlgorithm.cs" />
+    <Compile Include="Examples\DataConsolidationAlgorithm.cs" />
+    <Compile Include="Examples\MACDTrendAlgorithm.cs" />
+    <Compile Include="Examples\MovingAverageCrossAlgorithm.cs" />
+    <Compile Include="Examples\QuandlFuturesDataAlgorithm.cs" />
+    <Compile Include="Examples\StressSymbolsAlgorithm.cs" />
     <Compile Include="Examples\LiveFeaturesAlgorithm.cs" />
+    <Compile Include="Examples\TickDataFilteringAlgorithm.cs" />
     <Compile Include="QCAlgorithm.cs" />
     <Compile Include="QCAlgorithm.Console.cs" />
     <Compile Include="QCAlgorithm.Trading.cs" />

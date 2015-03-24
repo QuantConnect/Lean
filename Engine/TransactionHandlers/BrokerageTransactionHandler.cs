@@ -83,7 +83,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 // save that the order event took place, we're initializing the list with a capacity of 2 to reduce number of mallocs
                 //these hog memory
                 //List<OrderEvent> orderEvents = _orderEvents.GetOrAdd(orderEvent.OrderId, i => new List<OrderEvent>(2));
-                //orderEvents.Add(orderEvent)
+                //orderEvents.Add(orderEvent);
 
                 //Apply the filled order to our portfolio:
                 if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)

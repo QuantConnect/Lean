@@ -289,6 +289,8 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void HandlesGappingAcrossDays()
         {
+            // this test requires inspection to verify we're getting clean bars on the correct times
+
             var consolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
 
             TradeBar consolidated = null;

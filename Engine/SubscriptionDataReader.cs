@@ -209,9 +209,10 @@ namespace QuantConnect.Lean.Engine
             _getSourceMethod = _dataFactory.GetType().GetMethod("GetSource", new[] { typeof(SubscriptionDataConfig), typeof(DateTime), typeof(DataFeedEndpoint) });
 
             //If its quandl set the access token in data factory:
-            if (_dataFactory.GetType().Name == "Quandl")
+            var quandl = _dataFactory as Quandl;
+            if (quandl != null)
             {
-                ((Quandl)_dataFactory).SetAuthCode(Config.Get("quandl-auth-token"));
+                quandl.SetAuthCode(Config.Get("quandl-auth-token"));   
             }
 
             //Load the entire factor and symbol mapping tables into memory
@@ -265,9 +266,8 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 //Log.Debug("SubscriptionDataReader.MoveNext(): Launching While-InstanceNotNull && not EOS: " + reader.EndOfStream);
-                //var attempts = 0;
                 //Keep looking until output's an instance:
-                while (instance == null && !_reader.EndOfStream) //&& attempts++ < 10  
+                while (instance == null && !_reader.EndOfStream)
                 {
                     //Get the next string line from file, create instance of BaseData:
                     var line = _reader.ReadLine();

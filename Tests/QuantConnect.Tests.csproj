@@ -57,8 +57,11 @@
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageFactoryTests.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageTests.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\SetupInteractiveBrokers.cs" />
+    <Compile Include="Common\Data\BaseDataConsolidatorTests.cs" />
+    <Compile Include="Common\Data\DynamicDataConsolidatorTests.cs" />
     <Compile Include="Common\Data\IdentityDataConsolidatorTests.cs" />
     <Compile Include="Common\Data\SequentialConsolidatorTests.cs" />
+    <Compile Include="Common\Data\TickConsolidatorTests.cs" />
     <Compile Include="Common\Data\TradeBarConsolidatorTests.cs" />
     <Compile Include="Common\OSTests.cs" />
     <Compile Include="Common\SeriesSamplerTests.cs" />
@@ -70,8 +73,10 @@
     <Compile Include="Indicators\BollingerBandsTests.cs" />
     <Compile Include="Indicators\CommodityChannelIndexTests.cs" />
     <Compile Include="Indicators\CompositeIndicatorTests.cs" />
+    <Compile Include="Indicators\ConstantIndicatorTests.cs" />
     <Compile Include="Indicators\DelayTests.cs" />
     <Compile Include="Indicators\ExponentialMovingAverageTests.cs" />
+    <Compile Include="Indicators\FunctionalIndicatorTests.cs" />
     <Compile Include="Indicators\IdentityTests.cs" />
     <Compile Include="Indicators\IndicatorTests.cs" />
     <Compile Include="Indicators\MaximumTests.cs" />
@@ -126,31 +131,31 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="TestData\spy_aroon_oscillator.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_atr.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_bollinger_bands.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_mfi.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_ohlcv.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_parabolic_SAR.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_with_adx.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_with_cci.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_with_indicators.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>

@@ -16,7 +16,8 @@
 using QuantConnect.Data.Market;
 
 
-namespace QuantConnect.Indicators {
+namespace QuantConnect.Indicators
+{
 
     /// <summary>
     ///     The Money Flow Index (MFI) is an oscillator that uses both price and volume to 
@@ -32,8 +33,8 @@ namespace QuantConnect.Indicators {
     ///     
     ///     Money Flow Index = 100 x  Positve Money Flow / ( Positve Money Flow + Negative Money Flow)
     /// </summary>
-    public class MoneyFlowIndex : TradeBarIndicator {
-
+    public class MoneyFlowIndex : TradeBarIndicator
+    {
         /// <summary>The sum of positive money flow to compute money flow ratio</summary>
         public IndicatorBase<IndicatorDataPoint> PositiveMoneyFlow { get; private set; }
 
@@ -46,14 +47,16 @@ namespace QuantConnect.Indicators {
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady {
+        public override bool IsReady
+        {
             get { return PositiveMoneyFlow.IsReady && NegativeMoneyFlow.IsReady; }
         }
 
         /// <summary>
         /// Resets this indicator to its initial state
         /// </summary>
-        public override void Reset() {
+        public override void Reset()
+        {
             PreviousTypicalPrice = 0.0m;
             PositiveMoneyFlow.Reset();
             NegativeMoneyFlow.Reset();
@@ -65,7 +68,7 @@ namespace QuantConnect.Indicators {
         /// </summary>
         /// <param name="period">The period of the negative and postive money flow</param>
         public MoneyFlowIndex(int period)
-            : this("MFI" + period, period) 
+            : this("MFI" + period, period)
         {
         }
 
@@ -75,7 +78,8 @@ namespace QuantConnect.Indicators {
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the negative and postive money flow</param>
         public MoneyFlowIndex(string name, int period)
-            : base(name) {
+            : base(name)
+        {
             PositiveMoneyFlow = new Sum(name + "_PositiveMoneyFlow", period);
             NegativeMoneyFlow = new Sum(name + "_NegativeMoneyFlow", period);
         }
@@ -85,20 +89,22 @@ namespace QuantConnect.Indicators {
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input) {
-            decimal typicalPrice = (input.High + input.Low + input.Close) / 3.0m;
-            decimal moneyFlow = typicalPrice * input.Volume;
+        protected override decimal ComputeNextValue(TradeBar input)
+        {
+            decimal typicalPrice = (input.High + input.Low + input.Close)/3.0m;
+            decimal moneyFlow = typicalPrice*input.Volume;
 
             PositiveMoneyFlow.Update(input.Time, typicalPrice > PreviousTypicalPrice ? moneyFlow : 0.0m);
-            NegativeMoneyFlow.Update(input.Time, typicalPrice < PreviousTypicalPrice ? moneyFlow : 0.0m);            
+            NegativeMoneyFlow.Update(input.Time, typicalPrice < PreviousTypicalPrice ? moneyFlow : 0.0m);
             PreviousTypicalPrice = typicalPrice;
 
             decimal totalMoneyFlow = PositiveMoneyFlow.Current.Value + NegativeMoneyFlow.Current.Value;
-            if (totalMoneyFlow == 0.0m) {
+            if (totalMoneyFlow == 0.0m)
+            {
                 return 100.0m;
             }
 
-            return 100m * PositiveMoneyFlow.Current.Value / totalMoneyFlow;
+            return 100m*PositiveMoneyFlow.Current.Value/totalMoneyFlow;
         }
     }
 }

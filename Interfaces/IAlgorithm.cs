@@ -342,7 +342,9 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="symbol">Key/Symbol for data</param>
         /// <param name="resolution">Resolution of the data</param>
-        void AddData<T>(string symbol, Resolution resolution = Resolution.Second);
+        /// <param name="isTradeBar">Set to true if this data has Open, High, Low, and Close properties</param>
+        /// <param name="hasVolume">Set to true if this data has a Volume property</param>
+        void AddData<T>(string symbol, Resolution resolution = Resolution.Second, bool isTradeBar = false, bool hasVolume = false);
 
         /// <summary>
         /// Set the starting capital for the strategy
@@ -386,6 +388,12 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="live">Bool live mode flag</param>
         void SetLiveMode(bool live);
+
+        /// <summary>
+        /// Set the maximum number of orders the algortihm is allowed to process.
+        /// </summary>
+        /// <param name="max">Maximum order count int</param>
+        void SetMaximumOrders(int max);
 
         /// <summary>
         /// Set the maximum number of assets allowable to ensure good memory usage / avoid linux killing job.

@@ -603,7 +603,6 @@ namespace QuantConnect.Lean.Engine
         private static ISetupHandler GetSetupHandler(SetupHandlerEndpoint setupMethod)
         {
             var sh = default(ISetupHandler);
-            //if (IsLocal) return new ConsoleSetupHandler();
 
             switch (setupMethod)
             {
