@@ -116,7 +116,8 @@ namespace QuantConnect.Lean.Engine.Setup
                     
                     //Set the limits on the algorithm assets (for local no limits)
                     algorithm.SetAssetLimits(999, 999, 999);
-                    
+                    algorithm.SetMaximumOrders(int.MaxValue);
+
                     //Setup Base Algorithm:
                     algorithm.Initialize();
 

@@ -155,6 +155,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 throw new ArgumentException("Expected BacktestNodePacket but received " + baseJob.GetType().Name);
             }
 
+            Log.Trace(string.Format("BacktestingSetupHandler.Setup(): Setting up job: Plan: {0}, UID: {1}, PID: {2}, Version: {3}, Source: {4}", job.UserPlan, job.UserId, job.ProjectId, job.Version, job.RequestSource));
+
             // Must be set since its defined as an out parameters
             brokerage = new BacktestingBrokerage(algorithm);
 
@@ -200,11 +202,10 @@ namespace QuantConnect.Lean.Engine.Setup
             //Get starting capital:
             _startingCaptial = algorithm.Portfolio.Cash;
 
-            //Max Orders: 100 per day:
-            if (!Engine.IsLocal && job.UserPlan != UserPlan.Free)
+            //Max Orders: 10k per backtest:
+            if (job.UserPlan == UserPlan.Free)
             {
                 _maxOrders = 10000;
-
             }
             else
             {
