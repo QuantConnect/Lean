@@ -57,6 +57,11 @@ namespace QuantConnect.Brokerages
         public abstract bool IsConnected { get; }
 
         /// <summary>
+        /// Broker Server/API Credentials 
+        /// </summary>
+        public abstract BrokerageAuth Credentials { get; }
+
+        /// <summary>
         /// Creates a new Brokerage instance with the specified name
         /// </summary>
         /// <param name="name">The name of the brokerage</param>

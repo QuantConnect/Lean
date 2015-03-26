@@ -67,6 +67,17 @@ namespace QuantConnect.Brokerages.Backtesting
         }
 
         /// <summary>
+        /// Broker Server/API Credentials 
+        /// </summary>
+        public override BrokerageAuth Credentials
+        {
+            get
+            {
+                throw new NotSupportedException();
+            }
+        }
+
+        /// <summary>
         /// Places a new order and assigns a new broker ID to the order
         /// </summary>
         /// <param name="order">The order to be placed</param>
@@ -195,5 +206,6 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             //NOP
         }
+
     }
 }
