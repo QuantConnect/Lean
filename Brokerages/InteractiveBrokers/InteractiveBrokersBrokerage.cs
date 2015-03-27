@@ -186,25 +186,27 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The open orders returned from IB</returns>
         public override List<Order> GetOpenOrders()
         {
-            // create a separate client for this request
-            using (var client = new IB.IBClient())
-            {
-                client.Connect(_host, _port, IncrementClientID());
-                var orders = new List<Order>();
+            var orders = new List<Order>();
 
-                var manualResetEvent = new ManualResetEvent(false);
+            var manualResetEvent = new ManualResetEvent(false);
 
-                // define our handlers
-                client.OpenOrder += (sender, args) => orders.Add(ConvertOrder(args.Order, args.Contract));
-                client.OpenOrderEnd += (sender, args) => manualResetEvent.Set();
+            // define our handlers
+            EventHandler<IB.OpenOrderEventArgs> clientOnOpenOrder = (sender, args) => orders.Add(ConvertOrder(args.Order, args.Contract));
+            EventHandler<EventArgs> clientOnOpenOrderEnd = (sender, args) => manualResetEvent.Set();
 
-                client.RequestOpenOrders();
+            _client.OpenOrder += clientOnOpenOrder;
+            _client.OpenOrderEnd += clientOnOpenOrderEnd;
 
-                // wait for our end signal
-                manualResetEvent.WaitOne();
+            _client.RequestOpenOrders();
 
-                return orders;
-            }
+            // wait for our end signal
+            manualResetEvent.WaitOne();
+
+            // remove our handlers
+            _client.OpenOrder -= clientOnOpenOrder;
+            _client.OpenOrderEnd -= clientOnOpenOrderEnd;
+
+            return orders;
         }
 
         /// <summary>
@@ -213,25 +215,27 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            // create a separate client for this request
-            using (var client = new IB.IBClient())
-            {
-                client.Connect(_host, _port, IncrementClientID());
+            var holdings = new List<Holding>();
+            var manualReseEvent = new ManualResetEvent(false);
 
-                var holdings = new List<Holding>();
-                var manualReseEvent = new ManualResetEvent(false);
+            // define our handlers
+            EventHandler<IB.UpdatePortfolioEventArgs> clientOnUpdatePortfolio = (sender, args) => holdings.Add(CreateHolding(args));
+            EventHandler<IB.AccountDownloadEndEventArgs> clientOnAccountDownloadEnd = (sender, args) => manualReseEvent.Set();
 
-                // define our handlers
-                client.UpdatePortfolio += (sender, args) => holdings.Add(CreateHolding(args));
-                client.AccountDownloadEnd += (sender, args) => manualReseEvent.Set();
+            _client.UpdatePortfolio += clientOnUpdatePortfolio;
+            _client.AccountDownloadEnd += clientOnAccountDownloadEnd;
 
-                client.RequestAccountUpdates(true, _account);
+            _client.RequestAccountUpdates(true, _account);
 
-                // wait for our end signal
-                manualReseEvent.WaitOne();
+            // wait for our end signal
+            manualReseEvent.WaitOne();
 
-                return holdings;
-            }
+            // remove our handlers
+
+            _client.UpdatePortfolio -= clientOnUpdatePortfolio;
+            _client.AccountDownloadEnd -= clientOnAccountDownloadEnd;
+
+            return holdings;
         }
 
         /// <summary>
@@ -240,30 +244,29 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The current USD cash balance available for trading</returns>
         public override decimal GetCashBalance()
         {
-            // create a separate client for this request
-            using (var client = new IB.IBClient())
+            decimal cash = 0m;
+            var manualResetEvent = new ManualResetEvent(false);
+
+            // define our handler
+            EventHandler<IB.UpdateAccountValueEventArgs> clientOnUpdateAccountValue = (sender, args) =>
             {
-                client.Connect(_host, _port, IncrementClientID());
-
-                decimal cash = 0m;
-                var manualResetEvent = new ManualResetEvent(false);
-
-                client.UpdateAccountValue += (sender, args) =>
+                if (args.Key == AccountValueKeys.CashBalance && args.Currency == "USD")
                 {
-                    if (args.Key == AccountValueKeys.CashBalance && args.Currency == "USD")
-                    {
-                        cash = args.Value.ToDecimal();
-                        manualResetEvent.Set();
-                    }
-                };
+                    cash = args.Value.ToDecimal();
+                    manualResetEvent.Set();
+                }
+            };
+            _client.UpdateAccountValue += clientOnUpdateAccountValue;
 
-                client.RequestAccountUpdates(true, _account);
+            _client.RequestAccountUpdates(true, _account);
 
-                // wait for our end signal
-                manualResetEvent.WaitOne();
+            // wait for our end signal
+            manualResetEvent.WaitOne();
 
-                return cash;
-            }
+            // remove our handler
+            _client.UpdateAccountValue -= clientOnUpdateAccountValue;
+
+            return cash;
         }
 
         /// <summary>
@@ -421,6 +424,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Trace(message);
             }
+
+            //if (e.ErrorMsg.Contains("Order Canceled"))
+            //{
+                // this isn't actually an error, reroute message as an order event
+                //var orderID = int.Parse(e.ErrorMsg.TrimStart().Split(' ')[0]);
+
+            //}
             
             OnError(new InteractiveBrokersException(e.ErrorCode, e.TickerId, e.ErrorMsg));
         }
@@ -510,7 +520,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // the order ids are generated for us by the SecurityTransactionManaer
             ibOrder.OrderId = id;
-            ibOrder.PermId = id;
             ibOrder.Action = ConvertOrderDirection(order.Direction);
             ibOrder.TotalQuantity = Math.Abs(order.Quantity);
             ibOrder.OrderType = ConvertOrderType(order.Type);

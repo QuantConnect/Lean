@@ -56,7 +56,6 @@
     <None Include="Algorithm\Test_SetHolding.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageFactoryTests.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageTests.cs" />
-    <Compile Include="Brokerages\InteractiveBrokers\SetupInteractiveBrokers.cs" />
     <Compile Include="Common\Data\BaseDataConsolidatorTests.cs" />
     <Compile Include="Common\Data\DynamicDataConsolidatorTests.cs" />
     <Compile Include="Common\Data\IdentityDataConsolidatorTests.cs" />

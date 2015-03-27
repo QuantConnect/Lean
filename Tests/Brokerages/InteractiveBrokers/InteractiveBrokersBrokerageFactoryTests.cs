@@ -36,6 +36,12 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             var brokerage = factory.CreateBrokerage(job, null); // IB factory doesn't use IAlgorithm instance
             Assert.IsNotNull(brokerage);
             Assert.IsInstanceOf<InteractiveBrokersBrokerage>(brokerage);
+
+            brokerage.Connect();
+            Assert.IsTrue(brokerage.IsConnected);
+
+            // this was launched by the factory
+            InteractiveBrokersGatewayRunner.Stop();
         }
     }
 }
