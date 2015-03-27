@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.Examples
     /// When a new 'consolidated' piece of data is produced by the IDataConsolidator, an event is fired
     /// with the argument of the new data.
     /// 
-    /// If you are unfamiliar with C# events, or evets in general, you may find this useful. This is
+    /// If you are unfamiliar with C# events, or events in general, you may find this useful. This is
     /// Microsoft's overview of events in C#
     /// 
     ///     http://msdn.microsoft.com/en-us/library/aa645739%28v=vs.71%29.aspx
@@ -84,13 +84,13 @@ namespace QuantConnect.Algorithm.Examples
             // next define our 3 count trade bar -- this produces a consolidated piece of data after it sees 3 pieces of data
             var threeCountConsolidator = new TradeBarConsolidator(3);
 
-            // here we combine them to make a new, 3 hour trade bar. The SequentialConsolidator allows composition of consolidators.
+            // here we combine them to make a new, 3 day trade bar. The SequentialConsolidator allows composition of consolidators.
             // it takes the consolidated output of one consolidator (in this case, the oneDayConsolidator) and pipes it through to
             // the threeCountConsolidator.  His output will be a 3 day bar.
             var three_oneDayBar = new SequentialConsolidator(oneDayConsolidator, threeCountConsolidator);
 
             // attach our handler
-            three_oneDayBar.DataConsolidated += (sender, consolidated) => ThreeHourBarConsolidatedHandler(sender, (TradeBar) consolidated);
+            three_oneDayBar.DataConsolidated += (sender, consolidated) => ThreeDayBarConsolidatedHandler(sender, (TradeBar) consolidated);
 
             // this call adds our 3 day to the manager to receive updates from the engine
             SubscriptionManager.AddConsolidator("SPY", three_oneDayBar);
@@ -137,11 +137,11 @@ namespace QuantConnect.Algorithm.Examples
         }
 
         /// <summary>
-        /// This is our even handler for our 3 hour trade bar defined above in Initialize(). So each time the consolidator
-        /// produces a new 3 hour bar, this function will be called automatically. The 'sender' parameter will be the
+        /// This is our event handler for our 3 day trade bar defined above in Initialize(). So each time the consolidator
+        /// produces a new 3 day bar, this function will be called automatically. The 'sender' parameter will be the
         /// instance of the IDataConsolidator that invoked the event, but you'll almost never need that!
         /// </summary>
-        private void ThreeHourBarConsolidatedHandler(object sender, TradeBar consolidated)
+        private void ThreeDayBarConsolidatedHandler(object sender, TradeBar consolidated)
         {
             Log(consolidated.Time.ToString("0") + " >> Plotting!");
             Plot(consolidated.Symbol, "3HourBar", consolidated.Close);
