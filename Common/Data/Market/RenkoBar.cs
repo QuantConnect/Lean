@@ -22,14 +22,9 @@ namespace QuantConnect.Data.Market
     public class RenkoBar : BaseData
     {
         /// <summary>
-        /// Gets the height of the bar (BarHigh - BarLow)
+        /// Gets the height of the bar
         /// </summary>
         public decimal BrickSize { get; private set; }
-
-        /// <summary>
-        /// Gets the percentage required for the value to move beyond the high or low end of a bar to create a new one
-        /// </summary>
-        public decimal Overlap { get; private set; }
 
         /// <summary>
         /// Gets the opening value that started this bar.
@@ -44,6 +39,16 @@ namespace QuantConnect.Data.Market
             get { return Value; }
             private set { Value = value; }
         }
+
+        /// <summary>
+        /// Gets the highest value encountered during this bar
+        /// </summary>
+        public decimal High { get; private set; }
+
+        /// <summary>
+        /// Gets the lowest value encountered during this bar
+        /// </summary>
+        public decimal Low { get; private set; }
 
         /// <summary>
         /// Gets the volume of trades during the bar.
@@ -84,8 +89,7 @@ namespace QuantConnect.Data.Market
         /// <param name="brickSize">The size of each renko brick</param>
         /// <param name="open">The opening price for the new bar</param>
         /// <param name="volume">Any initial volume associated with the data</param>
-        /// <param name="overlap">The percentage the value must move beyond the high/low to start a new bar</param>
-        public RenkoBar(string symbol, DateTime time, decimal brickSize, decimal open, long volume, decimal overlap = 1m)
+        public RenkoBar(string symbol, DateTime time, decimal brickSize, decimal open, long volume)
         {
             Symbol = symbol;
             Start = time;
@@ -94,7 +98,8 @@ namespace QuantConnect.Data.Market
             Open = open;
             Close = open;
             Volume = volume;
-            Overlap = overlap;
+            High = open;
+            Low = open;
         }
 
         /// <summary>
@@ -111,28 +116,33 @@ namespace QuantConnect.Data.Market
             if (Start == DateTime.MinValue) Start = time;
             End = time;
 
-            decimal lowClose = Open - BrickSize * Overlap;
-            decimal highClose = Open + BrickSize * Overlap;
+            // compute the min/max closes this renko bar can have
+            decimal lowClose = Open - BrickSize;
+            decimal highClose = Open + BrickSize;
 
             Close = Math.Min(highClose, Math.Max(lowClose, currentValue));
             Volume += volumeSinceLastUpdate;
 
-            if (currentValue < lowClose  || currentValue > highClose)
+            // determine if this data caused the bar to close
+            if (currentValue <= lowClose  || currentValue >= highClose)
             {
                 IsClosed = true;
             }
+
+            if (Close > High) High = Close;
+            if (Close < Low) Low = Close;
 
             return IsClosed;
         }
 
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
         {
-            throw new NotImplementedException("RenkoBar does not support the Reader function. This function should never be called on this type.");
+            throw new NotSupportedException("RenkoBar does not support the Reader function. This function should never be called on this type.");
         }
 
         public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
         {
-            throw new NotImplementedException("RenkoBar does not support the GetSource function. This function should never be called on this type.");
+            throw new NotSupportedException("RenkoBar does not support the GetSource function. This function should never be called on this type.");
         }
     }
 }

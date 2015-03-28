@@ -28,56 +28,56 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public new EventHandler<RenkoBar> DataConsolidated; 
         
-        private RenkoBar _currentBlock;
+        private RenkoBar _currentBar;
 
-        private readonly decimal _brickSize;
-        private readonly bool _evenBricks;
+        private readonly decimal _barSize;
+        private readonly bool _evenBars;
         private readonly Func<IBaseData, decimal> _selector;
         private readonly Func<IBaseData, long> _volumeSelector;
         
         /// <summary>
-        /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="brickSize"/>.
+        /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
         /// The value selector will by default select <see cref="IBaseData.Value"/>
         /// The volume selector will by default select zero.
         /// </summary>
-        /// <param name="brickSize">The constant value size of each block</param>
-        /// <param name="evenBricks">When true brick open/close will be a multiple of the brickSize</param>
-        public RenkoConsolidator(decimal brickSize, bool evenBricks = true)
+        /// <param name="barSize">The constant value size of each bar</param>
+        /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
+        public RenkoConsolidator(decimal barSize, bool evenBars = true)
         {
-            _brickSize = brickSize;
+            _barSize = barSize;
             _selector = x => x.Value;
             _volumeSelector = x => 0;
-            _evenBricks = evenBricks;
+            _evenBars = evenBars;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
         /// </summary>
-        /// <param name="brickSize">The size of each block in units of the value produced by <paramref name="selector"/></param>
+        /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RenkoBar"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does 
         /// not aggregate volume per bar.</param>
-        /// <param name="evenBricks">When true brick open/close will be a multiple of the brickSize</param>
-        public RenkoConsolidator(decimal brickSize, Func<IBaseData, decimal> selector, Func<IBaseData, long> volumeSelector = null, bool evenBricks = true)
+        /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
+        public RenkoConsolidator(decimal barSize, Func<IBaseData, decimal> selector, Func<IBaseData, long> volumeSelector = null, bool evenBars = true)
         {
-            if (brickSize < Extensions.GetDecimalEpsilon())
+            if (barSize < Extensions.GetDecimalEpsilon())
             {
-                throw new ArgumentOutOfRangeException("brickSize", "RenkoConsolidator block size must be positve and greater than 1e-28");
+                throw new ArgumentOutOfRangeException("barSize", "RenkoConsolidator bar size must be positve and greater than 1e-28");
             }
 
-            _brickSize = brickSize;
-            _evenBricks = evenBricks;
+            _barSize = barSize;
+            _evenBars = evenBars;
             _selector = selector ?? (x => x.Value);
             _volumeSelector = volumeSelector ?? (x => 0);
         }
 
         /// <summary>
-        /// Gets the block size used by this consolidator
+        /// Gets the bar size used by this consolidator
         /// </summary>
-        public decimal BrickSize
+        public decimal BarSize
         {
-            get { return _brickSize; }
+            get { return _barSize; }
         }
 
         /// <summary>
@@ -100,28 +100,28 @@ namespace QuantConnect.Data.Consolidators
 
             decimal? close = null;
             
-            // if we're already in a block then update it
-            if (_currentBlock != null)
+            // if we're already in a bar then update it
+            if (_currentBar != null)
             {
-                _currentBlock.Update(data.Time, currentValue, volume);
+                _currentBar.Update(data.Time, currentValue, volume);
 
-                // if the update caused this block to close, fire the event and reset the block
-                if (_currentBlock.IsClosed)
+                // if the update caused this bar to close, fire the event and reset the bar
+                if (_currentBar.IsClosed)
                 {
-                    close = _currentBlock.Close;
-                    OnDataConsolidated(_currentBlock);
-                    _currentBlock = null;
+                    close = _currentBar.Close;
+                    OnDataConsolidated(_currentBar);
+                    _currentBar = null;
                 }
             }
 
-            if (_currentBlock == null)
+            if (_currentBar == null)
             {
                 var open = close ?? currentValue;
-                if (_evenBricks && !close.HasValue)
+                if (_evenBars && !close.HasValue)
                 {
-                    open = Math.Ceiling(open/_brickSize)*_brickSize;
+                    open = Math.Ceiling(open/_barSize)*_barSize;
                 }
-                _currentBlock = new RenkoBar(data.Symbol, data.Time, _brickSize, open, volume);
+                _currentBar = new RenkoBar(data.Symbol, data.Time, _barSize, open, volume);
             }
         }
 
@@ -136,6 +136,52 @@ namespace QuantConnect.Data.Consolidators
             if (handler != null) handler(this, consolidated);
 
             base.OnDataConsolidated(consolidated);
+        }
+    }
+
+    /// <summary>
+    /// Provides a type safe wrapper on the RenkoConsolidator class. This just allows us to define our selector functions with the real type they'll be receiving
+    /// </summary>
+    /// <typeparam name="TInput"></typeparam>
+    public class RenkoConsolidator<TInput> : RenkoConsolidator
+        where TInput : IBaseData
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RenkoConsolidator" /> class.
+        /// </summary>
+        /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
+        /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="RenkoBar"/>. The default
+        /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
+        /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does 
+        /// not aggregate volume per bar.</param>
+        /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
+        public RenkoConsolidator(decimal barSize, Func<TInput, decimal> selector, Func<TInput, long> volumeSelector = null, bool evenBars = true)
+            : base(barSize, x => selector((TInput)x), volumeSelector == null ? (Func<IBaseData, long>) null : x => volumeSelector((TInput)x), evenBars)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
+        /// The value selector will by default select <see cref="IBaseData.Value"/>
+        /// The volume selector will by default select zero.
+        /// </summary>
+        /// <param name="barSize">The constant value size of each bar</param>
+        /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
+        public RenkoConsolidator(decimal barSize, bool evenBars = true)
+            : base(barSize, evenBars)
+        {
+        }
+
+        /// <summary>
+        /// Updates this consolidator with the specified data.
+        /// </summary>
+        /// <remarks>
+        /// Type safe shim method.
+        /// </remarks>
+        /// <param name="data">The new data for the consolidator</param>
+        public void Update(TInput data)
+        {
+            base.Update(data);
         }
     }
 }
