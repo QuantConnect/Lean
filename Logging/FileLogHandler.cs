@@ -22,6 +22,8 @@ namespace QuantConnect.Logging
     /// </summary>
     public class FileLogHandler : ILogHandler
     {
+        // we need to control synchronization to our stream writer since it's not inherently thread-safe
+        private readonly object _lock = new object();
         private readonly Lazy<TextWriter> _writer;
 
         /// <summary>
@@ -32,41 +34,47 @@ namespace QuantConnect.Logging
         public FileLogHandler(string filepath)
         {
             _writer = new Lazy<TextWriter>(
-                () => new StreamWriter(File.Open(filepath, FileMode.Append, FileAccess.Write))
+                () => new StreamWriter(File.Open(filepath, FileMode.Append, FileAccess.Write, FileShare.Read))
                 );
         }
 
         /// <inheritdoc />
         public void Error(string text)
         {
-            _writer.Value.WriteLine(GetMessage(text, "ERROR"));
-            _writer.Value.FlushAsync();
+            WriteMessage(text, "ERROR");
         }
 
         /// <inheritdoc />
         public void Debug(string text)
         {
-            _writer.Value.WriteLine(GetMessage(text, "DEBUG"));
+            WriteMessage(text, "DEBUG");
         }
 
         /// <inheritdoc />
         public void Trace(string text)
         {
-            _writer.Value.WriteLine(GetMessage(text, "TRACE"));
+            WriteMessage(text, "TRACE");
         }
 
         /// <inheritdoc />
         public void Dispose()
         {
-            if (_writer.IsValueCreated)
+            lock (_lock)
             {
-                _writer.Value.Dispose();
+                if (_writer.IsValueCreated)
+                {
+                    _writer.Value.Dispose();
+                }
             }
         }
 
-        private string GetMessage(string text, string level)
+        private void WriteMessage(string text, string level)
         {
-            return string.Format("{0} {1}:: {2}", DateTime.UtcNow.ToString("o"), level, text);
+            lock (_lock)
+            {
+                _writer.Value.WriteLine("{0} {1}:: {2}", DateTime.UtcNow.ToString("o"), level, text);
+                _writer.Value.Flush();
+            }
         }
     }
 }

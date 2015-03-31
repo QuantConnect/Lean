@@ -181,6 +181,11 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public static void Main(string[] args) 
         {
+            // pick an implementation of ILogHandler for the application
+            Log.LogHandler = IsLocal 
+                ? (ILogHandler) new ConsoleLogHandler() 
+                : new FileLogHandler("log.txt");
+
             //Initialize:
             var algorithmPath = "";
             AlgorithmNodePacket job = null;
