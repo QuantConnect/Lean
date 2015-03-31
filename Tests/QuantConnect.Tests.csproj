@@ -65,6 +65,7 @@
     <Compile Include="Common\SeriesSamplerTests.cs" />
     <Compile Include="Common\Util\ExpressionBuilderTests.cs" />
     <Compile Include="Common\Util\ExtensionsTests.cs" />
+    <Compile Include="Common\Util\FuncTextWriterTests.cs" />
     <Compile Include="Indicators\AroonOscillatorTests.cs" />
     <Compile Include="Indicators\AverageTrueRangeTests.cs" />
     <Compile Include="Indicators\BollingerBandsTests.cs" />

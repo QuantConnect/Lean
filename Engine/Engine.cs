@@ -472,6 +472,11 @@ namespace QuantConnect.Lean.Engine
 
             //Finally if ping thread still not complete, kill.
             if (statusPingThread != null && statusPingThread.IsAlive) statusPingThread.Abort();
+
+            if (Log.LogHandler != null)
+            {
+                Log.LogHandler.Dispose();
+            }
         }
 
 
