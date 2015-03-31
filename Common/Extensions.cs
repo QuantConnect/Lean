@@ -24,6 +24,7 @@ using System.Security.Cryptography;
 using System.Collections.Concurrent;
 using System.ComponentModel.Composition.Hosting;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Timers;
 
 namespace QuantConnect 
@@ -208,8 +209,10 @@ namespace QuantConnect
         /// </summary>
         /// <param name="str">String we're looking for the extension for.</param>
         /// <returns>Last 4 character string of string.</returns>
-        public static string GetExtension(this string str) {
-            var ext = str.Substring(Math.Max(0, str.Length - 4));
+        public static string GetExtension(this string str)
+        {
+            // Extract the extension, filter the query string part if the input contains one.
+            var ext = Regex.Replace(str, @".*(\.[^\.\?]{2,4})(\?.*)?$", "$1");
             var allowedExt = new List<string>() { ".zip", ".csv", ".json" };
             if (!allowedExt.Contains(ext))
             {

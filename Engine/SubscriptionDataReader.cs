@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Fasterflect;
 using QuantConnect.Securities;
 using QuantConnect.Logging;
@@ -540,7 +541,10 @@ namespace QuantConnect.Lean.Engine
 
             //1. Download this source file as fast as possible:
             //1.1 Create filename from source:
-            var filename = source.ToMD5() + source.GetExtension();
+            var ext = source.GetExtension();
+            //Compute the hash using the path/uri without the query string ONLY for known file types.
+            var hash = (ext == ".custom") ? source.ToMD5() : Regex.Replace(source, @"([^\?]*)(\?.*)?$", "$1").ToMD5();
+            var filename = hash + ext;
             var location = cache + @"/" + filename;
 
             //1.2 Based on Endpoint, Download File (Backtest) or directly open SR of source:
@@ -554,23 +558,29 @@ namespace QuantConnect.Lean.Engine
                     // check if this is not a local uri then download it to the local cache
                     if (uri.IsAbsoluteUri && !uri.IsLoopback)
                     {
-                        try
+                        //Skip download if the file is already in cache
+                        if (!File.Exists(location))
                         {
-                            using (var client = new WebClient())
+                            try
                             {
-                                client.Proxy = WebRequest.GetSystemWebProxy();
-                                client.DownloadFile(source, location);
-
-                                // reassign source since it's now on local disk
-                                source = location;
+                                using (var client = new WebClient())
+                                {
+                                    client.Proxy = WebRequest.GetSystemWebProxy();
+                                    client.DownloadFile(source, location);
+                                }
+                            }
+                            catch (Exception err)
+                            {
+                                Engine.ResultHandler.ErrorMessage(
+                                    "Error downloading custom data source file, skipped: " + source + " Err: " +
+                                    err.Message, err.StackTrace);
+                                Engine.ResultHandler.SamplePerformance(_date.Date, 0);
+                                return null;
                             }
                         }
-                        catch (Exception err)
-                        {
-                            Engine.ResultHandler.ErrorMessage("Error downloading custom data source file, skipped: " + source + " Err: " + err.Message, err.StackTrace);
-                            Engine.ResultHandler.SamplePerformance(_date.Date, 0);
-                            return null;
-                        }
+
+                        // reassign source since it's on local disk
+                        source = location;
                     }
 
                     //2. File downloaded. Open Stream:

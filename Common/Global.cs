@@ -480,7 +480,8 @@ namespace QuantConnect
             new DateTime(2009, 01, 01),
             new DateTime(2010, 01, 01),
             new DateTime(2011, 01, 01),
-            new DateTime(2012, 01, 02),
+            new DateTime(2012, 01, 01),
+            new DateTime(2012, 01, 02), //Observed
             new DateTime(2013, 01, 01),
             new DateTime(2014, 01, 01),
             new DateTime(2015, 01, 01),
@@ -658,13 +659,15 @@ namespace QuantConnect
             new DateTime(2002, 12, 25),
             new DateTime(2003, 12, 25),
             new DateTime(2004, 12, 24),
+            new DateTime(2005, 12, 25), //Observed
             new DateTime(2005, 12, 26),
             new DateTime(2006, 12, 25),
             new DateTime(2007, 12, 25),
             new DateTime(2008, 12, 25),
             new DateTime(2009, 12, 25),
             new DateTime(2010, 12, 24),
-            new DateTime(2011, 12, 26),
+            new DateTime(2011, 12, 25),
+            new DateTime(2011, 12, 26), //Observed
             new DateTime(2012, 12, 25),
             new DateTime(2013, 12, 25),
             new DateTime(2014, 12, 25),
