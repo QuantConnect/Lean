@@ -86,14 +86,20 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Updates this consolidator with the specified data. This method is
         /// responsible for raising the DataConsolidated event
+        /// In time span mode, the bar range is closed on the left and open on the right: [T, T+TimeSpan).
+        /// For example, if time span is 1 minute, we have [10:00, 10:01): so data at 10:01 is not 
+        /// included in the bar starting at 10:00.
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
         public override void Update(T data)
         {
-            AggregateBar(ref _workingBar, data);
-
             //Decide to fire the event
             var fireDataConsolidated = false;
+
+            // decide to aggregate data before or after firing OnDataConsolidated event
+            // always aggregate before firing in counting mode
+            bool aggregateBeforeFire = _maxCount.HasValue; 
+
             if (_maxCount.HasValue)
             {
                 // we're in count mode
@@ -119,6 +125,16 @@ namespace QuantConnect.Data.Consolidators
                     fireDataConsolidated = true;
                 }
 
+                // special case: always aggregate before event trigger when TimeSpan is zero
+                if (_period.Value == TimeSpan.Zero)
+                {
+                    aggregateBeforeFire = true;
+                }
+            }
+
+            if (aggregateBeforeFire)
+            {
+                AggregateBar(ref _workingBar, data);
             }
 
             //Fire the event
@@ -130,6 +146,11 @@ namespace QuantConnect.Data.Consolidators
                 }
                 OnDataConsolidated(_workingBar);
                 _workingBar = null;
+            }
+
+            if (!aggregateBeforeFire)
+            {
+                AggregateBar(ref _workingBar, data);
             }
         }
 
