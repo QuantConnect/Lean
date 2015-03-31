@@ -48,18 +48,12 @@ namespace QuantConnect.Logging
         *********************************************************/
 
         /// <summary>
-        /// 
+        /// Gets or sets the ILogHandler instance used as the global logging implementation.
         /// </summary>
         public static ILogHandler LogHandler
         {
-            get
-            {
-                return _logHandler;
-            }
-            set
-            {
-                _logHandler = value;
-            }
+            get { return _logHandler; }
+            set { _logHandler = value; }
         }
 
 
@@ -68,14 +62,8 @@ namespace QuantConnect.Logging
         /// </summary>
         public static bool DebuggingEnabled
         {
-            get
-            {
-                return _debuggingEnabled;
-            }
-            set
-            {
-                _debuggingEnabled = value;
-            }
+            get { return _debuggingEnabled; }
+            set { _debuggingEnabled = value; }
         }
 
 
@@ -84,14 +72,8 @@ namespace QuantConnect.Logging
         /// </summary>
         public static int DebuggingLevel
         {
-            get
-            {
-                return _level;
-            }
-            set
-            {
-                _level = value;
-            }
+            get { return _level; }
+            set { _level = value; }
         }
 
         /******************************************************** 

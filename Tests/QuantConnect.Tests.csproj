@@ -91,6 +91,7 @@
     <Compile Include="Indicators\StandardDeviationTests.cs" />
     <Compile Include="Indicators\SumTests.cs" />
     <Compile Include="Indicators\TestHelper.cs" />
+    <Compile Include="Logging\FileLogHandlerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="packages.config" />
     <None Include="TestData\CashTestingStrategy.csv">
@@ -102,7 +103,6 @@
     <Folder Include="API\" />
     <Folder Include="Config\" />
     <Folder Include="Engine\" />
-    <Folder Include="Logging\" />
     <Folder Include="Messaging\" />
     <Folder Include="Tasks\" />
   </ItemGroup>
@@ -126,6 +126,10 @@
     <ProjectReference Include="..\Interfaces\QuantConnect.Interfaces.csproj">
       <Project>{338F614C-4CD7-418A-BD31-8C6A8690CFBF}</Project>
       <Name>QuantConnect.Interfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
+      <Project>{01911409-86BE-4E7D-9947-DF714138610D}</Project>
+      <Name>QuantConnect.Logging</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
