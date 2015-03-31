@@ -85,9 +85,6 @@ namespace QuantConnect.Algorithm
             //Initialise Start and End Dates:
             _startDate = new DateTime(1998, 01, 01);
             _endDate = DateTime.Now.AddDays(-1);
-
-            //Init Console Override: Pass console messages through to IDE.
-            Console.Initialize(this);
         }
 
 

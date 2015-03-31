@@ -196,6 +196,7 @@
     <Compile Include="Time.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\ExpressionBuilder.cs" />
+    <Compile Include="Util\FuncTextWriter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />
     <Compile Include="Util\ObjectActivator.cs" />
   </ItemGroup>
