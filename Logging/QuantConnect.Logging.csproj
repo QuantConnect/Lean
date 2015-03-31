@@ -73,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConsoleLogHandler.cs" />
+    <Compile Include="FileLogHandler.cs" />
     <Compile Include="ILogHandler.cs" />
     <Compile Include="LogEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

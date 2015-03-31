@@ -194,6 +194,14 @@ namespace QuantConnect
             return (decimal)value;
         }
 
+        /// <summary>
+        /// Gets the smallest positive number that can be added to a decimal instance and return
+        /// a new value that does not == the old value
+        /// </summary>
+        public static decimal GetDecimalEpsilon()
+        {
+            return new decimal(1, 0, 0, false, 27); //1e-27m;
+        }
 
         /// <summary>
         /// Extension method to extract the extension part of this file name if it matches a safe list, or return a ".custom" extension for ones which do not match.

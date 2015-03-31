@@ -14,6 +14,7 @@
 */
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Globalization;
@@ -215,6 +216,37 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
+        public static IEnumerable<IReadOnlyDictionary<string, string>> GetCsvFileStream(string externalDataFilename)
+        {
+            var enumerator = File.ReadLines(Path.Combine("TestData", externalDataFilename)).GetEnumerator();
+            if (!enumerator.MoveNext())
+            {
+                yield break;
+            }
+
+            string[] header = enumerator.Current.Split(',');
+            while (enumerator.MoveNext())
+            {
+                var values = enumerator.Current.Split(',');
+                var headerAndValues = header.Zip(values, (h, v) => new {h, v});
+                var dictionary = headerAndValues.ToDictionary(x => x.h.Trim(), x => x.v.Trim(), StringComparer.OrdinalIgnoreCase);
+                yield return new ReadOnlyDictionary<string, string>(dictionary);
+            }
+        }
+
+        public static IEnumerable<TradeBar> GetTradeBarStream(string externalDataFilename, bool fileHasVolume = true)
+        {
+            return GetCsvFileStream(externalDataFilename).Select(values => new TradeBar
+            {
+                Time = Time.ParseDate(values.GetCsvValue("date", "time")),
+                Open = values.GetCsvValue("open").ToDecimal(),
+                High = values.GetCsvValue("high").ToDecimal(),
+                Low = values.GetCsvValue("low").ToDecimal(),
+                Close = values.GetCsvValue("close").ToDecimal(),
+                Volume = fileHasVolume ? long.Parse(values.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
+            });
+        }
+
         /// <summary>
         /// Asserts that the indicator has zero samples, is not ready, and has the default value
         /// </summary>
@@ -249,6 +281,20 @@ namespace QuantConnect.Tests.Indicators
                 }
                 delta = currentDelta;
             };
+        }
+
+        /// <summary>
+        /// Grabs the first value from the set of keys
+        /// </summary>
+        private static string GetCsvValue(this IReadOnlyDictionary<string, string> dictionary, params string[] keys)
+        {
+            string value = null;
+            if (keys.Any(key => dictionary.TryGetValue(key, out value)))
+            {
+                return value;
+            }
+
+            throw new ArgumentException("Unable to find column: " + string.Join(", ", keys));
         }
     }
 }
