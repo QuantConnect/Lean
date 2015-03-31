@@ -17,15 +17,16 @@
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
+
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
+using System.Diagnostics;
 using System.Globalization;
-using Fasterflect;
+using System.Threading;
 using QuantConnect.Brokerages.Backtesting;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
@@ -35,7 +36,6 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.Lean.Engine 
 {
@@ -201,7 +201,7 @@ namespace QuantConnect.Lean.Engine
 
             //Import external libraries specific to physical server location (cloud/local)
             var catalog = new AggregateCatalog();
-            catalog.Catalogs.Add(new DirectoryCatalog(@"../../Extensions"));
+            catalog.Catalogs.Add(new DirectoryCatalog(AppDomain.CurrentDomain.BaseDirectory));
             var container = new CompositionContainer(catalog);
             try
             {

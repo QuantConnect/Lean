@@ -165,6 +165,10 @@
       <Project>{3240aca4-bdd4-4d24-ac36-bbb651c39212}</Project>
       <Name>QuantConnect.Algorithm</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Api\QuantConnect.Api.csproj">
+      <Project>{c5d44209-49a0-4505-a870-043c5ef5fddf}</Project>
+      <Name>QuantConnect.Api</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Brokerages\QuantConnect.Brokerages.csproj">
       <Project>{2d3e13cf-2d14-4180-a42d-f0a13af0ade2}</Project>
       <Name>QuantConnect.Brokerages</Name>
@@ -189,9 +193,14 @@
       <Project>{01911409-86be-4e7d-9947-df714138610d}</Project>
       <Name>QuantConnect.Logging</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Extensions\" />
+    <ProjectReference Include="..\Messaging\QuantConnect.Messaging.csproj">
+      <Project>{f2e90e2d-ba25-40e2-b39a-0ba31e68f7f8}</Project>
+      <Name>QuantConnect.Messaging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Queues\QuantConnect.Queues.csproj">
+      <Project>{d6633172-1368-4df6-9444-825c3e00c819}</Project>
+      <Name>QuantConnect.Queues</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">
