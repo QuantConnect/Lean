@@ -35,6 +35,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private int _nextValidID;
         // next valid client id for the gateway/tws
         private static int _nextClientID;
+        // next valid request id for queries
+        private int _nextRequestID = 0;
 
         private readonly int _port;
         private readonly string _account;
@@ -43,7 +45,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly IB.IBClient _client;
         private readonly IB.AgentDescription _agentDescription;
 
-        private readonly Dictionary<string, string> _accountProperties = new Dictionary<string, string>(); 
+        private readonly Dictionary<string, string> _accountProperties = new Dictionary<string, string>();
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
@@ -286,24 +288,34 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Side = side ?? IB.ActionSide.Undefined
             };
 
-            // create separate client for this request
-            using (var client = new IB.IBClient())
+            var details = new List<IB.ExecDetailsEventArgs>();
+            var manualResetEvent = new ManualResetEvent(false);
+
+            int requestID = Interlocked.Increment(ref _nextRequestID);
+
+            // define our event handlers
+            EventHandler<IB.ExecutionDataEndEventArgs> clientOnExecutionDataEnd = (sender, args) =>
             {
-                client.Connect(_host, _port, IncrementClientID());
+                if (args.RequestId == requestID) manualResetEvent.Set();
+            };
+            EventHandler<IB.ExecDetailsEventArgs> clientOnExecDetails = (sender, args) =>
+            {
+                if (args.RequestId == requestID) details.Add(args);
+            };
+            
+            _client.ExecDetails += clientOnExecDetails;
+            _client.ExecutionDataEnd += clientOnExecutionDataEnd;
 
-                var details = new List<IB.ExecDetailsEventArgs>();
-                client.ExecDetails += (sender, args) => details.Add(args);
+            // no need to be fancy with request id since that's all this client does is 1 request
+            _client.RequestExecutions(requestID, filter);
 
-                var manualResetEvent = new ManualResetEvent(false);
-                client.ExecutionDataEnd += delegate { manualResetEvent.Set(); };
+            manualResetEvent.WaitOne();
 
-                // no need to be fancy with request id since that's all this client does is 1 request
-                client.RequestExecutions(1, filter);
+            // remove our event handlers
+            _client.ExecDetails -= clientOnExecDetails;
+            _client.ExecutionDataEnd -= clientOnExecutionDataEnd;
 
-                manualResetEvent.WaitOne();
-
-                return details;
-            }
+            return details;
         }
 
         /// <summary>
