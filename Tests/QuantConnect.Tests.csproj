@@ -53,6 +53,7 @@
     <None Include="Algorithm\Test_MixedAssets.cs" />
     <None Include="Algorithm\Test_OnEndOfDay.cs" />
     <None Include="Algorithm\Test_SetHolding.cs" />
+    <Compile Include="AssemblyInitialize.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageTests.cs" />
     <Compile Include="Common\Data\BaseDataConsolidatorTests.cs" />
     <Compile Include="Common\Data\DynamicDataConsolidatorTests.cs" />
