@@ -11,7 +11,7 @@ namespace QuantConnect.Interfaces
         /// Validate Brokerage Authentication Parameters
         /// </summary>
         /// <param name="message"></param>
-        /// <returns></returns>
+        /// <returns>rue for OK (ie. no error)</returns>
         bool Validate(out string message);
     }
 }

@@ -24,84 +24,23 @@ namespace QuantConnect.Brokerages
 {
     public class OandaBrokerageAuthentication : BrokerageAuthentication
     {
-        private static string _apiServer;
-        private static int _account;
-        private static string _accessToken;
-
-
-        public override string IntroMessage
-        {
-            get
-            {
-                return "The OANDA brokerage conector is ... and needs to be ..." +
-                       "this connected is currently untested code." + Environment.NewLine +
-                       "Use at your own risk !!!";
-            }
-        }
-
-        /// <summary>
-        /// Oanda API Server
-        /// </summary>
-        [WebUIAttribute(Prompt = "Enter the Oanda API Server URL"
-            , HelpUrl = "http://developer.oanda.com/rest-live/development-guide/"
-            , Mandatory=true)]
-        public string APIServer 
-        {
-            get 
-            { 
-                return _apiServer; 
-            }
-            set 
-            { 
-                _apiServer = value; 
-            }
-        }
-
-        /// <summary>
-        /// Oanda Account
-        /// </summary>
-        [WebUIAttribute(Prompt = "Enter your Oanda Account Number"
-            , Mandatory = true)]
-        public int Account
-        {
-            get
-            {
-                return _account;
-            }
-            set
-            {
-                _account = value;
-            }
-        }
-
-        /// <summary>
-        /// Oanda API Access Token
-        /// </summary>
-        [WebUIAttribute(Prompt = "Enter your Oanda Access Token"
-            , Mandatory = true)]
-        public string AccessToken
-        {
-            get
-            {
-                return _accessToken;
-            }
-            set
-            {
-                _accessToken = value;
-            }
-        }
+        private static string _apiServer   = null;
+        private static int    _account     = 0;
+        private static string _accessToken = null;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public OandaBrokerageAuthentication()
-        { }
+        public OandaBrokerageAuthentication(Dictionary<string, string> parameters)
+        { 
+            // todo: implementation
+        }
 
         /// <summary>
-        /// Validate the Input
+        /// Oanda Parameter Validation
         /// </summary>
         /// <param name="error"></param>
-        /// <returns></returns>
+        /// <returns>true for OK (ie. no error)</returns>
         public override bool Validate(out string error)
         {
             error = string.Empty;

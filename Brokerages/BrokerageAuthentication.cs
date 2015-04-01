@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -24,70 +25,16 @@ namespace QuantConnect.Brokerages
     public abstract class BrokerageAuthentication
     {
         /// <summary>
-        /// Input Validation
+        /// Validate Brokerage Authentication Parameters
         /// </summary>
         /// <param name="error">Error Message (out)</param>
         /// <returns>true for OK (ie. no error)</returns>
         public abstract bool Validate(out string error);
 
-        public abstract string IntroMessage { get; } 
-
-        [AttributeUsage(AttributeTargets.Property)]
-        public class WebUIAttribute : System.Attribute
-        {
-            private string prompt;
-            private string helpUrl;
-            private bool mandatory;
-
-            /// <summary>
-            /// User Prompt
-            /// </summary>
-            public string Prompt
-            {
-                get
-                {
-                    return prompt;
-                }
-                set
-                {
-
-                    prompt = value;
-                }
-            }
-
-            /// <summary>
-            /// User Help URL
-            /// </summary>
-            public string HelpUrl
-            {
-                get
-                {
-                    return helpUrl;
-                }
-                set
-                {
-
-                    helpUrl = value;
-                }
-            }
-
-            /// <summary>
-            /// Mandatory User Input
-            /// </summary>
-            public bool Mandatory
-            {
-                get
-                {
-                    return mandatory;
-                }
-                set
-                {
-
-                    mandatory = value;
-                }
-            }
-
-        }
+        /// <summary>
+        /// Brokerage Authentication Parameters
+        /// </summary>
+        public Dictionary<string, string> Parameters;
 
     }
 }
