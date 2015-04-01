@@ -21,6 +21,7 @@ using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
@@ -29,6 +30,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// </summary>
     public class BrokerageTransactionHandler : ITransactionHandler
     {
+        private int _outOfBandOrderIDs = -1;
         private bool _exitTriggered;
         private IAlgorithm _algorithm;
         private readonly IBrokerage _brokerage;
@@ -68,48 +70,21 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _brokerage = brokerage;
             _brokerage.OrderEvent += (sender, fill) =>
             {
-                // we need to set the fill's order ID. This really comes down to the individual brokerage classes not
-                // knowning anything about this 'OrderId' property and it is instead managed from the outside. This was
-                // chosen since it is not technically the responsibility of an IBrokerage implementation to worry about
-                // QC OrderId -> BrokerageId mappings.
-                var order = _orders.First(x => x.Value.BrokerId.Any(y => fill.BrokerageIds.Contains(y)));
-                if (order.Value != null)
-                {
-                    fill.OrderId = order.Value.Id;
-                    fill.Symbol = order.Value.Symbol;
-                    order.Value.Status = fill.Status;
-                }
-
-                // save that the order event took place, we're initializing the list with a capacity of 2 to reduce number of mallocs
-                //these hog memory
-                //List<OrderEvent> orderEvents = _orderEvents.GetOrAdd(orderEvent.OrderId, i => new List<OrderEvent>(2));
-                //orderEvents.Add(orderEvent);
-
-                //Apply the filled order to our portfolio:
-                if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)
-                {
-                    _algorithm.Portfolio.ProcessFill(fill);
-                }
-
-                //We have an event! :) Order filled, send it in to be handled by algorithm portfolio.
-                if (fill.Status != OrderStatus.None) //order.Status != OrderStatus.Submitted
-                {
-                    //Create new order event:
-                    Engine.ResultHandler.OrderEvent(fill);
-                    try
-                    {
-                        //Trigger our order event handler
-                        _algorithm.OnOrderEvent(fill);
-                    }
-                    catch (Exception err)
-                    {
-                        _algorithm.Error("Order Event Handler Error: " + err.Message);
-                    }
-                }
+                HandleOrderEvent(fill);
             };
 
-            //_brokerage.AccountChanged +=
-            //_brokerage.PortfolioChanged +=
+            // maintain proper portfolio cash balance
+            _brokerage.AccountChanged += (sender, account) =>
+            {
+                _algorithm.Portfolio.SetCash(account.CashBalance);
+            };
+
+            // these are usually handled via the fill events, but just in case there was
+            // some outside interaction with the brokerage, we can catch any discrepancies here
+            _brokerage.PortfolioChanged += (sender, update) =>
+            {
+                HandlePortfolioChanged(update);
+            };
 
             IsActive = true;
 
@@ -282,6 +257,69 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             else
             {
                 Log.Error("BrokerageTransactionHandler.HandleCancelledOrder(): Unable to cancel order with ID " + order.Id + ".");
+            }
+        }
+
+
+        private void HandlePortfolioChanged(PortfolioEvent update)
+        {
+            SecurityHolding holding;
+            if (!_algorithm.Portfolio.TryGetValue(update.Symbol, out holding))
+            {
+                // we're not currently tracking this item, so we'll just log that it happened
+                Log.Trace("BrokerageTransactionHandler - PortfolioChanged(): Portfolio update for untracked security: " + update.Symbol);
+                return;
+            }
+
+            int delta = update.Quantity - holding.Quantity;
+            if (delta != 0)
+            {
+                // there's been a change in the quantity that we didn't receive an update for already
+                // we'll mark this as an out of band trade with a negative QC order ID and no brokerage ID
+                int orderID = Interlocked.Decrement(ref _outOfBandOrderIDs);
+                var fill = new OrderEvent(orderID, update.Symbol, OrderStatus.Filled, update.AveragePrice, delta, "Out of band trade");
+                _algorithm.Portfolio.ProcessFill(fill);
+            }
+        }
+
+        private void HandleOrderEvent(OrderEvent fill)
+        {
+            // update the order status
+            var order = _algorithm.Transactions.GetOrderById(fill.OrderId);
+            if (order == null)
+            {
+                Log.Error("BrokerageTransactionHandler.HandleOrderEvnt(): Unable to locate Order with id " + fill.OrderId);
+                return;
+            }
+
+            // set the status of our order object based on the fill event
+            order.Status = fill.Status;
+
+            // save that the order event took place, we're initializing the list with a capacity of 2 to reduce number of mallocs
+            //these hog memory
+            //List<OrderEvent> orderEvents = _orderEvents.GetOrAdd(orderEvent.OrderId, i => new List<OrderEvent>(2));
+            //orderEvents.Add(orderEvent);
+
+            //Apply the filled order to our portfolio:
+            if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)
+            {
+                _algorithm.Portfolio.ProcessFill(fill);
+            }
+
+            //We have an event! :) Order filled, send it in to be handled by algorithm portfolio.
+            if (fill.Status != OrderStatus.None) //order.Status != OrderStatus.Submitted
+            {
+                //Create new order event:
+                Engine.ResultHandler.OrderEvent(fill);
+                try
+                {
+                    //Trigger our order event handler
+                    _algorithm.OnOrderEvent(fill);
+                }
+                catch (Exception err)
+                {
+                    _algorithm.Error("Order Event Handler Error: " + err.Message);
+                }
             }
         }
     }

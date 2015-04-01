@@ -310,6 +310,38 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         }
 
         [Test]
+        public void ClientFiresSingleOrderFilledEvent()
+        {
+            var ib = _interactiveBrokersBrokerage;
+
+            var order = new MarketOrder(Symbol, buyQuantity, new DateTime(), type: Type) {Id = 1};
+            _orders.Add(order);
+
+            int orderFilledEventCount = 0;
+            var orderFilledResetEvent = new ManualResetEvent(false);
+            ib.OrderEvent += (sender, fill) =>
+            {
+                if (fill.Status == OrderStatus.Filled)
+                {
+                    orderFilledEventCount++;
+                    orderFilledResetEvent.Set();
+                }
+
+                // mimic what the transaction handler would do
+                order.Status = fill.Status;
+            };
+
+            ib.PlaceOrder(order);
+
+            orderFilledResetEvent.WaitOneAssertFail(2500, "Didnt fire order filled event");
+
+            // wait a little to see if we get multiple fill events
+            Thread.Sleep(2000);
+
+            Assert.AreEqual(1, orderFilledEventCount);
+        }
+
+        [Test]
         public void GetsAccountHoldings()
         {
             var ib = _interactiveBrokersBrokerage;

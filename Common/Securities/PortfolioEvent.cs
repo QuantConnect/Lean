@@ -21,24 +21,31 @@ namespace QuantConnect.Securities
     public class PortfolioEvent
     {
         /// <summary>
-        /// The symbol that was changed
+        /// Gets the symbol that was changed
         /// </summary>
         public string Symbol { get; private set; }
 
         /// <summary>
-        /// The quantity held in the symbol
+        /// Gets the quantity held in the symbol
         /// </summary>
         public int Quantity { get; private set; }
+
+        /// <summary>
+        /// Gets the average price of each holding
+        /// </summary>
+        public decimal AveragePrice { get; private set; }
 
         /// <summary>
         /// Creates a PortfolioEvent
         /// </summary>
         /// <param name="symbol">The symbol that was changed</param>
         /// <param name="quantity">The quantity held in the symbol</param>
-        public PortfolioEvent(string symbol, int quantity)
+        /// <param name="averagePrice">The average price of each holding</param>
+        public PortfolioEvent(string symbol, int quantity, decimal averagePrice)
         {
             Symbol = symbol;
             Quantity = quantity;
+            AveragePrice = averagePrice;
         }
 
         /// <summary>

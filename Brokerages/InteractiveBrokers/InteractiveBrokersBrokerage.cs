@@ -270,37 +270,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The current USD cash balance available for trading</returns>
         public override decimal GetCashBalance()
         {
-            decimal cash = 0m;
-            using (var client = new IB.IBClient())
+            // spin until we get this update
+            while (!_accountProperties.ContainsKey(AccountValueKeys.CashBalance))
             {
-                client.Connect(_host, _port, IncrementClientID());
-
-                var manualResetEvent = new ManualResetEvent(false);
-
-                // define our handler
-                EventHandler<IB.UpdateAccountValueEventArgs> clientOnUpdateAccountValue = (sender, args) =>
-                {
-                    if (args.Key == AccountValueKeys.CashBalance && args.Currency == "USD")
-                    {
-                        cash = args.Value.ToDecimal();
-                        manualResetEvent.Set();
-                    }
-                };
-                client.UpdateAccountValue += clientOnUpdateAccountValue;
-
-                client.RequestAccountUpdates(true, _account);
-
-                // wait for our end signal
-                if (!manualResetEvent.WaitOne(1000))
-                {
-                    throw new TimeoutException("InteractiveBrokersBrokerage.GetCashBalance(): Operation took longer than 1 second.");
-                }
-
-                // remove our handler
-                client.UpdateAccountValue -= clientOnUpdateAccountValue;
+                Thread.Sleep(1);
             }
 
-            return cash;
+            return _accountProperties[AccountValueKeys.CashBalance].ToDecimal();
         }
 
         /// <summary>
@@ -504,6 +480,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // not sure if we need to track all the information
                 if (_accountProperties.ContainsKey(e.Key))
                 {
+                    if (e.Key == AccountValueKeys.CashBalance && e.Currency != "USD")
+                    {
+                        // we don't care about cash except USD for now
+                        return;
+                    }
+
                     _accountProperties[e.Key] = e.Value;
                 }
                 else
@@ -538,13 +520,27 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return;
                 }
 
-                var executions = GetExecutions(null, null, null, DateTime.Now.AddDays(-1.25), null);
-                var order = executions.First(x => x.OrderId == update.OrderId);
+                var order = _orderMapping.GetOrderByBrokerageId(update.OrderId);
+                if (order == null)
+                {
+                    Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Unable to locate order with BrokerageID " + update.OrderId);
+                    return;
+                }
+
+                if (order.Status == OrderStatus.Filled && status == OrderStatus.Filled)
+                {
+                    // for some reason we end up with duplicated fill events
+                    return;
+                }
 
                 // mark sells as negative quantities
-                var fillQuantity = order.Execution.Side == IB.ExecutionSide.Bought ? update.Filled : -update.Filled;
-                var orderEvent = new OrderEvent(0, MapSymbol(order.Contract), status, update.AverageFillPrice, fillQuantity, "Interactive Brokers Fill Event");
-                orderEvent.BrokerageIds.Add(update.OrderId);
+                var fillQuantity = order.Direction == OrderDirection.Buy ? update.Filled : -update.Filled;
+                var orderEvent = new OrderEvent(order, "Interactive Brokers Fill Event")
+                {
+                    Status = status,
+                    FillPrice = update.AverageFillPrice,
+                    FillQuantity = fillQuantity
+                };
                 OnOrderEvent(orderEvent);
             }
             catch(InvalidOperationException err)
@@ -564,7 +560,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             var symbol = MapSymbol(e.Contract);
             _accountHoldings[symbol] = e.Position;
-            OnPortfolioChanged(new PortfolioEvent(symbol, e.Position));
+            OnPortfolioChanged(new PortfolioEvent(symbol, e.Position, e.AverageCost));
         }
 
         /// <summary>
