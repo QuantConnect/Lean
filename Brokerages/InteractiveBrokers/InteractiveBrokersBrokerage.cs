@@ -63,7 +63,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Broker Server/API Credentials 
         /// </summary>
-        public override BrokerageAuth Credentials
+        public override BrokerageAuthentication Credentials
         {
             get
             {

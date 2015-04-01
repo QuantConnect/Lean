@@ -21,7 +21,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages
 {
-    public abstract class BrokerageAuth
+    public abstract class BrokerageAuthentication
     {
         /// <summary>
         /// Input Validation

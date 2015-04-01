@@ -59,7 +59,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Broker Server/API Credentials 
         /// </summary>
-        public abstract BrokerageAuth Credentials { get; }
+        public abstract BrokerageAuthentication Credentials { get; }
 
         /// <summary>
         /// Creates a new Brokerage instance with the specified name

@@ -22,7 +22,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages
 {
-    public class OandaBrokerageAuth : BrokerageAuth
+    public class OandaBrokerageAuthentication : BrokerageAuthentication
     {
         private static string _apiServer;
         private static int _account;
@@ -94,7 +94,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Constructor
         /// </summary>
-        public OandaBrokerageAuth()
+        public OandaBrokerageAuthentication()
         { }
 
         /// <summary>

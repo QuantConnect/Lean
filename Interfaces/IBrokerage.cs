@@ -69,5 +69,6 @@ namespace QuantConnect.Interfaces
         /// Disconnects the client from the broker's remote servers
         /// </summary>
         void Disconnect();
+
     }
 }

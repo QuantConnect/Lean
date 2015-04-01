@@ -23,7 +23,7 @@ namespace QuantConnect.Brokerages
 {
     class OandaBrokerage : Brokerage
     {
-        BrokerageAuth _credentials = null;
+        BrokerageAuthentication _credentials = null;
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
@@ -39,7 +39,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Broker Server/API Credentials 
         /// </summary>
-        public override BrokerageAuth Credentials
+        public override BrokerageAuthentication Credentials
         {
             get
             {
@@ -48,7 +48,7 @@ namespace QuantConnect.Brokerages
         }
 
 
-        public OandaBrokerage(BrokerageAuth credentials)
+        public OandaBrokerage(BrokerageAuthentication credentials)
             : base("Oanda Brokerage")
         {
             _credentials = credentials;
