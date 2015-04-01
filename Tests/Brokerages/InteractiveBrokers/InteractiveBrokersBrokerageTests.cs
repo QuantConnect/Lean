@@ -36,21 +36,11 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         private const string Symbol = "USDJPY";
         private const SecurityType Type = SecurityType.Forex;
 
-        [TestFixtureSetUp]
-        public void StartGateway()
-        {
-            InteractiveBrokersGatewayRunner.Start(Config.Get("ib-account"));
-        }
-
-        [TestFixtureTearDown]
-        public void StopGateway()
-        {
-            InteractiveBrokersGatewayRunner.Stop();
-        }
-
         [SetUp]
         public void InitializeBrokerage()
         {
+            InteractiveBrokersGatewayRunner.Start(Config.Get("ib-account"));
+
             // grabs account info from configuration
             _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(new OrderMapping(_orders));
             _interactiveBrokersBrokerage.Connect();
@@ -112,6 +102,8 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             _interactiveBrokersBrokerage.Dispose();
             _interactiveBrokersBrokerage = null;
+
+            InteractiveBrokersGatewayRunner.Stop();
         }
 
         [Test]
@@ -344,7 +336,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             ib.PlaceOrder(order);
 
             // wait for the order to go through
-            orderResetEvent.WaitOneAssertFail(1500, "Didn't receive order event");
+            orderResetEvent.WaitOneAssertFail(2500, "Didn't receive order event");
 
             // wait for account holdings to be updated
             Thread.Sleep(500);
@@ -369,20 +361,6 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             var ib = _interactiveBrokersBrokerage;
             var cashBalance = ib.GetCashBalance();
             Assert.AreNotEqual(0m, cashBalance);
-            
-            var manualResetEvent = new ManualResetEvent(false);
-            ib.AccountChanged += (sender, orderEvent) =>
-            {
-                manualResetEvent.Set();
-            };
-            var order = new MarketOrder(Symbol, buyQuantity, new DateTime(), type: Type);
-            _orders.Add(order);
-            ib.PlaceOrder(order);
-            manualResetEvent.WaitOne(1500);
-            
-            Thread.Sleep(50);
-
-            Assert.AreNotEqual(cashBalance, ib.GetCashBalance());
         }
 
         [Test]

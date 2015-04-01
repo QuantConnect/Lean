@@ -216,7 +216,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.RequestOpenOrders();
 
             // wait for our end signal
-            manualResetEvent.WaitOne();
+            if (!manualResetEvent.WaitOne(1000))
+            {
+                throw new TimeoutException("InteractiveBrokersBrokerage.GetOpenOrders(): Operation took longer than 1 second.");
+            }
 
             // remove our handlers
             _client.OpenOrder -= clientOnOpenOrder;
@@ -236,11 +239,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             using (var client = new IB.IBClient())
             {
                 client.Connect(_host, _port, IncrementClientID());
-                var manualReseEvent = new ManualResetEvent(false);
+                var manualResetEvent = new ManualResetEvent(false);
 
                 // define our handlers
                 EventHandler<IB.UpdatePortfolioEventArgs> clientOnUpdatePortfolio = (sender, args) => holdings.Add(CreateHolding(args));
-                EventHandler<IB.AccountDownloadEndEventArgs> clientOnAccountDownloadEnd = (sender, args) => manualReseEvent.Set();
+                EventHandler<IB.AccountDownloadEndEventArgs> clientOnAccountDownloadEnd = (sender, args) => manualResetEvent.Set();
 
                 client.UpdatePortfolio += clientOnUpdatePortfolio;
                 client.AccountDownloadEnd += clientOnAccountDownloadEnd;
@@ -248,7 +251,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 client.RequestAccountUpdates(true, _account);
 
                 // wait for our end signal
-                manualReseEvent.WaitOne();
+                if (!manualResetEvent.WaitOne(1000))
+                {
+                    throw new TimeoutException("InteractiveBrokersBrokerage.GetCashBalance(): Operation took longer than 1 second.");
+                }
 
                 // remove our handlers
 
@@ -286,7 +292,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 client.RequestAccountUpdates(true, _account);
 
                 // wait for our end signal
-                manualResetEvent.WaitOne();
+                if (!manualResetEvent.WaitOne(1000))
+                {
+                    throw new TimeoutException("InteractiveBrokersBrokerage.GetCashBalance(): Operation took longer than 1 second.");
+                }
 
                 // remove our handler
                 client.UpdateAccountValue -= clientOnUpdateAccountValue;
@@ -337,7 +346,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // no need to be fancy with request id since that's all this client does is 1 request
                 client.RequestExecutions(requestID, filter);
 
-                manualResetEvent.WaitOne();
+                if (!manualResetEvent.WaitOne(1000))
+                {
+                    throw new TimeoutException("InteractiveBrokersBrokerage.GetExecutions(): Operation took longer than 1 second.");
+                }
 
                 // remove our event handlers
                 client.ExecDetails -= clientOnExecDetails;
@@ -403,8 +415,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // pause for a moment to receive next valid ID message from gateway
             if (!waitForNextValidID.WaitOne(1000))
             {
-                // we timed out our wait for next valid id... we'll just log it
-                Log.Error("InteractiveBrokersBrokerage.Connect(): Timed out waiting for next valid ID event to fire.");
+                throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 1 second.");
             }
 
             _client.RequestAccountUpdates(true, _account);
