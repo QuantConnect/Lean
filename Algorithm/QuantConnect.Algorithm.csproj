@@ -76,6 +76,7 @@
   <ItemGroup>
     <Compile Include="Examples\BubbleAlgorithm.cs" />
     <Compile Include="Examples\CustomDataWithFillForwardAlgorithm.cs" />
+    <Compile Include="Examples\MultipleSymbolConsolidationAlgorithm.cs" />
     <Compile Include="Examples\QuandlImporterAlgorithm.cs" />
     <Compile Include="Examples\BasicTemplateAlgorithm.cs" />
     <Compile Include="Examples\CustomDataNIFTYAlgorithm.cs" />
@@ -87,11 +88,11 @@
     <Compile Include="Examples\MACDTrendAlgorithm.cs" />
     <Compile Include="Examples\MovingAverageCrossAlgorithm.cs" />
     <Compile Include="Examples\QuandlFuturesDataAlgorithm.cs" />
+    <Compile Include="Examples\RenkoConsolidatorAlgorithm.cs" />
     <Compile Include="Examples\StressSymbolsAlgorithm.cs" />
     <Compile Include="Examples\LiveFeaturesAlgorithm.cs" />
     <Compile Include="Examples\TickDataFilteringAlgorithm.cs" />
     <Compile Include="QCAlgorithm.cs" />
-    <Compile Include="QCAlgorithm.Console.cs" />
     <Compile Include="QCAlgorithm.Trading.cs" />
     <Compile Include="QCAlgorithm.Indicators.cs" />
     <Compile Include="QCAlgorithm.Plotting.cs" />

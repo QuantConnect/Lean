@@ -28,6 +28,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -484,6 +485,12 @@ namespace QuantConnect.Lean.Engine.Results
                 if (!types.Contains(security.Type)) types.Add(security.Type);
             }
             SecurityType(types);
+
+            // we need to forward Console.Write messages to the algorithm's Debug function
+            var debug = new FuncTextWriter(algorithm.Debug);
+            var error = new FuncTextWriter(algorithm.Error);
+            Console.SetOut(debug);
+            Console.SetError(error);
         }
 
         /// <summary>

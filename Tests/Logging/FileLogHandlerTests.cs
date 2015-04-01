@@ -12,31 +12,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using System;
 
-namespace QuantConnect.Logging
+using System;
+using System.IO;
+using NUnit.Framework;
+using QuantConnect.Logging;
+
+namespace QuantConnect.Tests.Logging
 {
-    /// <summary>
-    /// Interface for redirecting log output
-    /// </summary>
-    public interface ILogHandler : IDisposable
+    [TestFixture]
+    public class FileLogHandlerTests
     {
-        /// <summary>
-        /// Write error message to log
-        /// </summary>
-        /// <param name="text"></param>
-        void Error(string text);
-       
-        /// <summary>
-        /// Write debug message to log
-        /// </summary>
-        /// <param name="text"></param>
-        void Debug(string text);
-       
-        /// <summary>
-        /// Write debug message to log
-        /// </summary>
-        /// <param name="text"></param>
-        void Trace(string text);
+        [Test]
+        public void WritesMessageToFile()
+        {
+            const string file = "log.txt";
+            File.Delete(file);
+
+            var debugMessage = "*debug message*" + DateTime.UtcNow.ToString("o");
+            using (var log = new FileLogHandler(file))
+            {
+                log.Debug(debugMessage);
+            }
+
+            var contents = File.ReadAllText(file);
+            Assert.IsNotNull(contents);
+            Assert.IsTrue(contents.Contains(debugMessage));
+
+            File.Delete(file);
+        }
     }
 }
