@@ -54,6 +54,7 @@
     <None Include="Algorithm\Test_MixedAssets.cs" />
     <None Include="Algorithm\Test_OnEndOfDay.cs" />
     <None Include="Algorithm\Test_SetHolding.cs" />
+    <Compile Include="AssemblyInitialize.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageFactoryTests.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageTests.cs" />
     <Compile Include="Common\Data\BaseDataConsolidatorTests.cs" />
@@ -98,7 +99,9 @@
     <Compile Include="Logging\FileLogHandlerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="packages.config" />
-    <None Include="TestData\CashTestingStrategy.csv" />
+    <None Include="TestData\CashTestingStrategy.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Adapters\" />

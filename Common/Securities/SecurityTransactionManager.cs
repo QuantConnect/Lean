@@ -335,7 +335,7 @@ namespace QuantConnect.Securities
             }
             catch (Exception err)
             {
-                Log.Error("TransactionManager.RemoveOrder(): " + err.Message);
+                Log.Error("TransactionManager.GetOrderById(): " + err.Message);
             }
             return order;
         }
