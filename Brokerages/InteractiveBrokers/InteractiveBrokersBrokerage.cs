@@ -138,7 +138,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // fire off the event that says this order has been submitted
                 var submitted = new OrderEvent(order) {Status = OrderStatus.Submitted};
-                submitted.BrokerageIds.AddRange(order.BrokerId);
                 OnOrderEvent(submitted);
 
                 return true;

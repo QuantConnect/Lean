@@ -110,6 +110,11 @@ namespace QuantConnect.Brokerages.Backtesting
             if (order.Status == OrderStatus.New)
             {
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
+
+                // fire off the event that says this order has been submitted
+                var submitted = new OrderEvent(order) { Status = OrderStatus.Submitted };
+                OnOrderEvent(submitted);
+
                 return true;
             }
             return false;
@@ -140,6 +145,11 @@ namespace QuantConnect.Brokerages.Backtesting
             if (order.Status == OrderStatus.Canceled)
             {
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
+
+                // fire off the event that says this order has been submitted
+                var submitted = new OrderEvent(order) { Status = OrderStatus.Canceled };
+                OnOrderEvent(submitted);
+
                 return true;
             }
             return false;
