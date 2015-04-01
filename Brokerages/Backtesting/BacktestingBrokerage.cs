@@ -170,6 +170,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 var sufficientBuyingPower = _algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order);
 
                 var fill = new OrderEvent();
+                fill.Symbol = order.Symbol;
 
                 //Before we check this queued order make sure we have buying power:
                 if (sufficientBuyingPower)
@@ -212,7 +213,6 @@ namespace QuantConnect.Brokerages.Backtesting
                 if (order.Status != OrderStatus.None)
                 {
                     //If the fill models come back suggesting filled, process the affects on portfolio
-                    fill.Symbol = order.Symbol;
                     OnOrderEvent(fill);
                 }
             }
