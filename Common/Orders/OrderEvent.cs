@@ -133,7 +133,9 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return string.Format("OrderID: {0} Symbol: {1} Status: {2}", OrderId, Symbol, Status);
+            return FillQuantity == 0 
+                ? string.Format("OrderID: {0} Symbol: {1} Status: {2}", OrderId, Symbol, Status) 
+                : string.Format("OrderID: {0} Symbol: {1} Status: {2} Quantity: {3} FillPrice: {4}", OrderId, Symbol, Status, FillQuantity, FillPrice);
         }
     }
 

@@ -32,10 +32,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
             // launch the IB gateway
-            InteractiveBrokersGatewayRunner.Start(job.AccountId.ToString());
+            InteractiveBrokersGatewayRunner.Start(job.AccountId);
 
             // this needs to be fixed, LiveNodePacket.AccountId must be a string
-            return new InteractiveBrokersBrokerage(job.AccountId.ToString());
+            var orderMapping = algorithm.Transactions;
+            return new InteractiveBrokersBrokerage(orderMapping, job.AccountId);
         }
     }
 }

@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TestExtensions.cs" />
     <None Include="Algorithm\Test_Cash.cs" />
     <None Include="Algorithm\Test_LiveAlgorithm.cs" />
     <None Include="Algorithm\Test_MixedAssets.cs" />
