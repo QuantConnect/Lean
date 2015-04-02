@@ -27,14 +27,8 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Validate Brokerage Authentication Parameters
         /// </summary>
-        /// <param name="error">Error Message (out)</param>
         /// <returns>true for OK (ie. no error)</returns>
-        public abstract bool Validate(out string error);
-
-        /// <summary>
-        /// Brokerage Authentication Parameters
-        /// </summary>
-        public Dictionary<string, string> Parameters;
+        public abstract bool Validate();
 
     }
 }

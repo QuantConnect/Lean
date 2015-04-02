@@ -14,6 +14,9 @@
 */
 
 using System;
+using OANDARestLibrary;
+//using OANDARestLibrary.TradeLibrary;
+//using OANDARestLibrary.TradeLibrary.DataTypes;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -23,8 +26,6 @@ namespace QuantConnect.Brokerages
 {
     class OandaBrokerage : Brokerage
     {
-        BrokerageAuthentication _credentials = null;
-
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
@@ -36,24 +37,30 @@ namespace QuantConnect.Brokerages
             }
         }
 
-        /// <summary>
-        /// Broker Server/API Credentials 
-        /// </summary>
+        public OandaBrokerage(OandaBrokerageAuthentication credentials)
+            : base("Oanda Brokerage")
+        {
+            if (!credentials.IsValid)
+            {
+                throw new ArgumentException();
+            }
+
+            string requestString = credentials.APIServer + 
+                                   "v1/accounts/" + 
+                                   credentials.Account + 
+                                   "/trades";
+            //string responseString = MakeRequest(requestString);
+            
+
+            throw new NotImplementedException();
+        }
+
         public override BrokerageAuthentication Credentials
         {
             get
             {
-                return _credentials;
+                throw new NotImplementedException();
             }
-        }
-
-
-        public OandaBrokerage(BrokerageAuthentication credentials)
-            : base("Oanda Brokerage")
-        {
-            _credentials = credentials;
-
-            throw new NotImplementedException();
         }
 
 
