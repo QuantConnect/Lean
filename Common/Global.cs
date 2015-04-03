@@ -93,6 +93,22 @@ namespace QuantConnect
             AveragePrice = Math.Round(holding.AveragePrice, rounding);
             MarketPrice = Math.Round(holding.Price, rounding);
         }
+
+        /// <summary>
+        /// Clones this instance
+        /// </summary>
+        /// <returns>A new Holding object with the same values as this one</returns>
+        public Holding Clone()
+        {
+            return new Holding
+            {
+                AveragePrice = AveragePrice,
+                Symbol = Symbol,
+                Type = Type,
+                Quantity = Quantity,
+                MarketPrice = MarketPrice
+            };
+        }
     }
 
     /********************************************************

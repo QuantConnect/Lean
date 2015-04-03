@@ -36,6 +36,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine 
 {
@@ -200,18 +201,15 @@ namespace QuantConnect.Lean.Engine
             Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + +OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
 
             //Import external libraries specific to physical server location (cloud/local)
-            var catalog = new AggregateCatalog();
-            catalog.Catalogs.Add(new DirectoryCatalog(AppDomain.CurrentDomain.BaseDirectory));
-            var container = new CompositionContainer(catalog);
             try
             {
                 // grab the right export based on configuration
-                Notify = container.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler"));
-                Queue = container.GetExportedValueByTypeName<IQueueHandler>(Config.Get("queue-handler"));
-                Api = container.GetExportedValueByTypeName<IApi>(Config.Get("api-handler")); 
-            } 
+                Notify = Composer.Instance.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler"));
+                Queue = Composer.Instance.GetExportedValueByTypeName<IQueueHandler>(Config.Get("queue-handler"));
+                Api = Composer.Instance.GetExportedValueByTypeName<IApi>(Config.Get("api-handler"));
+            }
             catch (CompositionException compositionException)
-            { Log.Error("Engine.Main(): Failed to load library: " + compositionException); 
+            { Log.Error("Engine.Main(): Failed to load library: " + compositionException);
             }
 
             //Setup packeting, queue and controls system: These don't do much locally.
@@ -223,7 +221,7 @@ namespace QuantConnect.Lean.Engine
             var statusPingThread = new Thread(StateCheck.Ping.Run);
             statusPingThread.Start();
 
-            do 
+            do
             {
                 try
                 {

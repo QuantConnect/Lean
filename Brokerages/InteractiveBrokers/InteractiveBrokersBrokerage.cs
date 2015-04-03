@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -46,8 +47,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly IB.IBClient _client;
         private readonly IB.AgentDescription _agentDescription;
 
-        private readonly Dictionary<string, string> _accountProperties = new Dictionary<string, string>();
-        private readonly Dictionary<string, int> _accountHoldings = new Dictionary<string, int>(); 
+        private readonly ManualResetEvent _waitForNextValidID = new ManualResetEvent(false);
+        private readonly ManualResetEvent _accountHoldingsResetEvent = new ManualResetEvent(false);
+
+        private readonly ConcurrentDictionary<string, string> _accountProperties = new ConcurrentDictionary<string, string>();
+        // number of shares per symbol
+        private readonly ConcurrentDictionary<string, Holding> _accountHoldings = new ConcurrentDictionary<string, Holding>();
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
@@ -113,6 +118,29 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _clientID = IncrementClientID();
             _agentDescription = agentDescription;
             _client = new IB.IBClient();
+
+            // set up event handlers
+            _client.UpdatePortfolio += HandlePortfolioUpdates;
+            _client.OrderStatus += HandleOrderStatusUpdates;
+            _client.UpdateAccountValue += HandleUpdateAccountValue;
+            _client.Error += HandleError;
+            _client.AccountDownloadEnd += (sender, args) =>
+            {
+                Log.Trace("InteractiveBrokersBrokerage.AccounDownloadEnd(): Finished account download for " + args.AccountName);
+                _accountHoldingsResetEvent.Set();
+            };
+
+            // we need to wait until we receive the next valid id from the server
+            _client.NextValidId += (sender, e) =>
+            {
+                // only grab this id when we initialize, and we'll manually increment it here to avoid threading issues
+                if (_nextValidID == 0)
+                {
+                    _nextValidID = e.OrderId;
+                    _waitForNextValidID.Set();
+                }
+                Log.Trace("InteractiveBrokersBrokerage.HandleNextValidID(): " + e.OrderId);
+            };
         }
 
         /// <summary>
@@ -134,12 +162,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Trace("InteractiveBrokersBrokerage.PlaceOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity);
 
-                IBPlaceOrder(order);
-
-                // fire off the event that says this order has been submitted
-                var submitted = new OrderEvent(order) {Status = OrderStatus.Submitted};
-                OnOrderEvent(submitted);
-
+                IBPlaceOrder(order, true);
                 return true;
             }
             catch (Exception err)
@@ -160,7 +183,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Trace("InteractiveBrokersBrokerage.UpdateOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity + " Status: " + order.Status);
 
-                IBPlaceOrder(order);
+                IBPlaceOrder(order, false);
             }
             catch (Exception err)
             {
@@ -186,6 +209,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     _client.CancelOrder((int) id);
                 }
+
+                // canceled order events fired upon confirmation, see HandleError
             }
             catch (Exception err)
             {
@@ -206,12 +231,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var manualResetEvent = new ManualResetEvent(false);
 
             // define our handlers
-            EventHandler<IB.OpenOrderEventArgs> clientOnOpenOrder = (sender, args) => orders.Add(ConvertOrder(args.Order, args.Contract));
-            EventHandler<EventArgs> clientOnOpenOrderEnd = (sender, args) => manualResetEvent.Set();
+            EventHandler<IB.OpenOrderEventArgs> clientOnOpenOrder = (sender, args) =>
+            {
+                // convert IB order objects returned from RequestOpenOrders
+                orders.Add(ConvertOrder(args.Order, args.Contract));
+            };
+            EventHandler<EventArgs> clientOnOpenOrderEnd = (sender, args) =>
+            {
+                // this signals the end of our RequestOpenOrders call
+                manualResetEvent.Set();
+            };
 
             _client.OpenOrder += clientOnOpenOrder;
             _client.OpenOrderEnd += clientOnOpenOrderEnd;
-
+            
             _client.RequestOpenOrders();
 
             // wait for our end signal
@@ -233,35 +266,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            var holdings = new List<Holding>();
-
-            using (var client = new IB.IBClient())
-            {
-                client.Connect(_host, _port, IncrementClientID());
-                var manualResetEvent = new ManualResetEvent(false);
-
-                // define our handlers
-                EventHandler<IB.UpdatePortfolioEventArgs> clientOnUpdatePortfolio = (sender, args) => holdings.Add(CreateHolding(args));
-                EventHandler<IB.AccountDownloadEndEventArgs> clientOnAccountDownloadEnd = (sender, args) => manualResetEvent.Set();
-
-                client.UpdatePortfolio += clientOnUpdatePortfolio;
-                client.AccountDownloadEnd += clientOnAccountDownloadEnd;
-
-                client.RequestAccountUpdates(true, _account);
-
-                // wait for our end signal
-                if (!manualResetEvent.WaitOne(1000))
-                {
-                    throw new TimeoutException("InteractiveBrokersBrokerage.GetCashBalance(): Operation took longer than 1 second.");
-                }
-
-                // remove our handlers
-
-                client.UpdatePortfolio -= clientOnUpdatePortfolio;
-                client.AccountDownloadEnd -= clientOnAccountDownloadEnd;
-            }
-
-            return holdings;
+            return _accountHoldings.Select(x => x.Value.Clone()).ToList();
         }
 
         /// <summary>
@@ -270,12 +275,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The current USD cash balance available for trading</returns>
         public override decimal GetCashBalance()
         {
-            // spin until we get this update
-            while (!_accountProperties.ContainsKey(AccountValueKeys.CashBalance))
-            {
-                Thread.Sleep(1);
-            }
-
             return _accountProperties[AccountValueKeys.CashBalance].ToDecimal();
         }
 
@@ -341,24 +340,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             if (IsConnected) return;
 
-            // set up event handlers
-            _client.UpdatePortfolio += HandlePortfolioUpdates;
-            _client.OrderStatus += HandleOrderStatusUpdates;
-            _client.UpdateAccountValue += HandleUpdateAccountValue;
-            _client.Error += HandleError;
-
-            // we need to wait until we receive the next valid id from the server
-            var waitForNextValidID = new ManualResetEvent(false);
-            _client.NextValidId += (sender, e) =>
-            {
-                // only grab this id when we initialize, and we'll manually increment it here to avoid threading issues
-                if (_nextValidID == 0)
-                {
-                    _nextValidID = e.OrderId;
-                    waitForNextValidID.Set();
-                }
-                Log.Trace("InteractiveBrokersBrokerage.HandleNextValidID(): " + e.OrderId);
-            };
+            // we're going to receive fresh values for both of these collections, so clear them
+            _accountHoldings.Clear();
+            _accountProperties.Clear();
 
             int attempt = 1;
             while (true)
@@ -369,11 +353,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     // we're going to try and connect several times, if successful break
                     _client.Connect(_host, _port, _clientID);
-                    _client.RequestAccountUpdates(true, _account);
                     break;
                 }
                 catch (Exception err)
-                { 
+                {
                     // max out at 10 attempts to connect
                     if (attempt++ < 10)
                     {
@@ -388,12 +371,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // pause for a moment to receive next valid ID message from gateway
-            if (!waitForNextValidID.WaitOne(1000))
+            if (!_waitForNextValidID.WaitOne(1000))
             {
                 throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 1 second.");
             }
 
+            // wait for our account holdings to have been downloaded
             _client.RequestAccountUpdates(true, _account);
+            if (!_accountHoldingsResetEvent.WaitOne(5000))
+            {
+                throw new TimeoutException("InteractiveBrokersBrokerage.GetAccountHoldings(): Operation took longer than 5 seconds.");
+            }
         }
 
         /// <summary>
@@ -422,16 +410,38 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Places the order with InteractiveBrokers
         /// </summary>
         /// <param name="order">The order to be placed</param>
+        /// <param name="needsNewID">Set to true to generate a new order ID, false to leave it alone</param>
         /// <param name="exchange">The exchange to send the order to, defaults to "Smart" to use IB's smart routing</param>
-        private void IBPlaceOrder(Order order, string exchange = null)
+        private void IBPlaceOrder(Order order, bool needsNewID, string exchange = null)
         {
+            // connect will throw if it fails
+            Connect();
+
             if (!IsConnected)
             {
                 throw new InvalidOperationException("InteractiveBrokersBrokerage.IBPlaceOrder(): Unable to place order while not connected.");
             }
 
+            int ibOrderID = 0;
+            if (needsNewID)
+            {
+                // the order ids are generated for us by the SecurityTransactionManaer
+                int id = GetNextBrokerageOrderID();
+                order.BrokerId.Add(id);
+                ibOrderID = id;
+            }
+            else if (order.BrokerId.Any())
+            {
+                // this is *not* perfect code
+                ibOrderID = (int)order.BrokerId[0];
+            }
+            else
+            {
+                throw new ArgumentException("Expected order with populated BrokerId for updating orders.");
+            }
+
             var contract = CreateContract(order, exchange);
-            var ibOrder = ConvertOrder(order);
+            var ibOrder = ConvertOrder(order, ibOrderID);
 
             _client.PlaceOrder(ibOrder.OrderId, contract, ibOrder);
         }
@@ -441,7 +451,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandleError(object sender, IB.ErrorEventArgs e)
         {
-            if (e.ErrorMsg.Contains("Order Canceled"))
+            if (e.ErrorCode == (IB.ErrorMessage) 202) // this is the canceled order code
             {
                 // this isn't actually an error, reroute message as an order event
                 int brokerageId = e.TickerId;
@@ -477,21 +487,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             try
             {
-                // not sure if we need to track all the information
-                if (_accountProperties.ContainsKey(e.Key))
+                if (e.Key == AccountValueKeys.CashBalance && e.Currency != "USD")
                 {
-                    if (e.Key == AccountValueKeys.CashBalance && e.Currency != "USD")
-                    {
-                        // we don't care about cash except USD for now
-                        return;
-                    }
+                    // we don't care about cash except USD for now
+                    return;
+                }
 
-                    _accountProperties[e.Key] = e.Value;
-                }
-                else
-                {
-                    _accountProperties.Add(e.Key, e.Value);
-                }
+                _accountProperties[e.Key] = e.Value;
 
                 // we want to capture if the user's cash changes so we can reflect it in the algorithm
                 if (e.Key == AccountValueKeys.CashBalance && e.Currency == "USD")
@@ -514,9 +516,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             try
             {
                 var status = ConvertOrderStatus(update.Status);
-                if (status != OrderStatus.PartiallyFilled && status != OrderStatus.Filled)
+                if (status != OrderStatus.PartiallyFilled &&
+                    status != OrderStatus.Filled &&
+                    status != OrderStatus.Canceled &&
+                    status != OrderStatus.Submitted)
                 {
-                    // only fire fill events
+                    Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Status: " + status);
                     return;
                 }
 
@@ -524,12 +529,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 if (order == null)
                 {
                     Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Unable to locate order with BrokerageID " + update.OrderId);
-                    return;
-                }
-
-                if (order.Status == OrderStatus.Filled && status == OrderStatus.Filled)
-                {
-                    // for some reason we end up with duplicated fill events
                     return;
                 }
 
@@ -558,52 +557,56 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandlePortfolioUpdates(object sender, IB.UpdatePortfolioEventArgs e)
         {
-            var symbol = MapSymbol(e.Contract);
-            _accountHoldings[symbol] = e.Position;
-            OnPortfolioChanged(new PortfolioEvent(symbol, e.Position, e.AverageCost));
+            Log.Trace("InteractiveBrokersBrokerage.HandlePortfolioUpdates(): Resetting account holdings reset event.");
+            _accountHoldingsResetEvent.Reset();
+            var holding = CreateHolding(e);
+            _accountHoldings[holding.Symbol] = holding;
+            OnPortfolioChanged(new PortfolioEvent(holding.Symbol, e.Position, e.AverageCost));
         }
 
         /// <summary>
         /// Converts a QC order to an IB order
         /// </summary>
-        private IB.Order ConvertOrder(Order order)
+        private IB.Order ConvertOrder(Order order, int ibOrderID)
         {
-            var ibOrder = new IB.Order();
-            ibOrder.ClientId = _clientID;
-
-            int id = AddInteractiveBrokersOrderID(order);
-
-            // the order ids are generated for us by the SecurityTransactionManaer
-            ibOrder.OrderId = id;
-            ibOrder.Action = ConvertOrderDirection(order.Direction);
-            ibOrder.TotalQuantity = Math.Abs(order.Quantity);
-            ibOrder.OrderType = ConvertOrderType(order.Type);
+            var ibOrder = new IB.Order
+            {
+                ClientId = _clientID,
+                OrderId = ibOrderID,
+                Action = ConvertOrderDirection(order.Direction),
+                TotalQuantity = Math.Abs(order.Quantity),
+                OrderType = ConvertOrderType(order.Type),
+                AllOrNone = false,
+                Tif = IB.TimeInForce.GoodTillCancel,
+                Transmit = true,
+                Rule80A = _agentDescription
+            };
 
             var limitOrder = order as LimitOrder;
-            var marketOrder = order as StopMarketOrder;
+            var stopMarketOrder = order as StopMarketOrder;
             if (limitOrder != null)
             {
                 ibOrder.LimitPrice = limitOrder.LimitPrice;
             }
-            else if (marketOrder != null)
+            else if (stopMarketOrder != null)
             {
-                ibOrder.AuxPrice = marketOrder.StopPrice;
+                ibOrder.AuxPrice = stopMarketOrder.StopPrice;
             }
 
             // not yet supported
             //ibOrder.ParentId = 
             //ibOrder.OcaGroup =
 
-            ibOrder.AllOrNone = false;
-            ibOrder.Tif = IB.TimeInForce.GoodTillCancel;
-            ibOrder.Transmit = true;
-            ibOrder.Rule80A = _agentDescription;
-
             return ibOrder;
         }
 
         private Order ConvertOrder(IB.Order ibOrder, IB.Contract contract)
         {
+            // this function is called by GetOpenOrders which is mainly used by the setup handler to
+            // initialize algorithm state.  So the only time we'll be executing this code is when the account
+            // has orders sitting and waiting from before algo initialization...
+            // because of this we can't get the time accurately
+
             Order order;
             var mappedSymbol = MapSymbol(contract);
             var orderType = ConvertOrderType(ibOrder.OrderType);
@@ -623,15 +626,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         );
                     break;
                 case OrderType.StopMarket:
-                    order = new LimitOrder(mappedSymbol,
+                    order = new StopMarketOrder(mappedSymbol,
                         ibOrder.TotalQuantity,
-                        ibOrder.LimitPrice,
+                        ibOrder.AuxPrice,
                         new DateTime()
                         );
                     break;
                 case OrderType.StopLimit:
-                    order = new LimitOrder(mappedSymbol,
+                    order = new StopLimitOrder(mappedSymbol,
                         ibOrder.TotalQuantity,
+                        ibOrder.AuxPrice,
                         ibOrder.LimitPrice,
                         new DateTime()
                         );
@@ -852,15 +856,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Handles the threading issues of creating an IB order ID
         /// </summary>
         /// <returns>The new IB ID</returns>
-        private int AddInteractiveBrokersOrderID(Order order)
+        private int GetNextBrokerageOrderID()
         {
             // spin until we get a next valid id, this should only execute if we create a new instance
             // and immediately try to place an order
             while (_nextValidID == 0) { Thread.Yield(); }
 
-            int id = Interlocked.Increment(ref _nextValidID);
-            order.BrokerId.Add(id);
-            return id;
+            return Interlocked.Increment(ref _nextValidID);
         }
 
         /// <summary>

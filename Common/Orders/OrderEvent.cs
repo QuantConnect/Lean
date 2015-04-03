@@ -18,7 +18,6 @@
 **********************************************************/
 
 using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Orders
 {
@@ -83,11 +82,6 @@ namespace QuantConnect.Orders
         public string Message;
 
         /// <summary>
-        /// Brokerage Id for this order for when the brokerage splits orders into multiple pieces
-        /// </summary>
-        public List<long> BrokerageIds = new List<long>(); 
-
-        /// <summary>
         /// Order Constructor.
         /// </summary>
         /// <param name="id">Id of the parent order</param>
@@ -117,7 +111,6 @@ namespace QuantConnect.Orders
             Status = order.Status;
             Message = message;
             Symbol = order.Symbol;
-            BrokerageIds.AddRange(order.BrokerId);
 
             //Initialize to zero, manually set fill quantity
             FillQuantity = 0;

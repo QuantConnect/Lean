@@ -17,7 +17,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
-using System.ComponentModel.Composition.Primitives;
 using System.IO;
 using System.Linq;
 
@@ -31,17 +30,17 @@ namespace QuantConnect.Util
         /// <summary>
         /// Gets the singleton instance
         /// </summary>
-        public static Composer Instance = new Composer();
+        public static readonly Composer Instance = new Composer();
 
         private Composer()
         {
             // grab assemblies from current executing directory
-            var catalog = new DirectoryCatalog(Directory.GetCurrentDirectory());
+            var catalog = new DirectoryCatalog(AppDomain.CurrentDomain.BaseDirectory);
             _compositionContainer = new CompositionContainer(catalog);
             _exportedValues = new Dictionary<Type, IEnumerable>();
         }
 
-        private CompositionContainer _compositionContainer;
+        private readonly CompositionContainer _compositionContainer;
         private readonly Dictionary<Type, IEnumerable> _exportedValues;
         private readonly object _exportedValuesLockObject = new object();
 
@@ -61,39 +60,27 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Resets the composition container to use the specified catalog
+        /// Extension method to searches the composition container for an export that has a matching type name. This function
+        /// will first try to match on Type.AssemblyQualifiedName, then Type.FullName, and finally on Type.Name
+        /// 
+        /// This method will not throw if multiple types are found matching the name, it will just return the first one it finds.
         /// </summary>
-        /// <param name="catalog">The catalog containing parts to be exported</param>
-        public void SetCatalog(ComposablePartCatalog catalog)
+        /// <typeparam name="T">The type of the export</typeparam>
+        /// <param name="typeName">The name of the type to find. This can be an assembly qualified name, a full name, or just the type's name</param>
+        /// <returns>The export instance</returns>
+        public T GetExportedValueByTypeName<T>(string typeName)
+            where T : class
         {
-            if (catalog == null)
+            var values = Instance.GetExportedValues<T>().ToList();
+
+            // search the values by type to find the requested type
+            var matchingType = values.Select(x => x.GetType()).FirstOrDefault(type => type.MatchesTypeName(typeName));
+            if (matchingType == null)
             {
-                throw new ArgumentNullException("catalog");
+                throw new ArgumentException("Unable to locate any exports matching the requested typeName: " + typeName, "typeName");
             }
 
-            lock (_exportedValuesLockObject)
-            {
-                _exportedValues.Clear();
-                _compositionContainer = new CompositionContainer(catalog);
-            }
-        }
-
-        /// <summary>
-        /// Resets the composition container
-        /// </summary>
-        /// <param name="compositionContainer">The composition container to search for exports</param>
-        public void SetCompositionContainer(CompositionContainer compositionContainer)
-        {
-            if (compositionContainer == null)
-            {
-                throw new ArgumentNullException("compositionContainer");
-            }
-
-            lock (_exportedValuesLockObject)
-            {
-                _exportedValues.Clear();
-                _compositionContainer = compositionContainer;
-            }
+            return values.First(x => x.GetType() == matchingType);
         }
 
         /// <summary>

@@ -327,31 +327,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Extension method to searches the composition container for an export that has a matching type name. This function
-        /// will first try to match on Type.AssemblyQualifiedName, then Type.FullName, and finally on Type.Name
-        /// 
-        /// This method will not throw if multiple types are found matching the name, it will just return the first one it finds.
-        /// </summary>
-        /// <typeparam name="T">The type of the export</typeparam>
-        /// <param name="container">The container to search</param>
-        /// <param name="typeName">The name of the type to find. This can be an assembly qualified name, a full name, or just the type's name</param>
-        /// <returns>The export instance</returns>
-        public static T GetExportedValueByTypeName<T>(this CompositionContainer container, string typeName)
-            where T : class
-        {
-            var values = container.GetExportedValues<T>().ToList();
-
-            // search the values by type to find the requested type
-            var matchingType = values.Select(x => x.GetType()).FirstOrDefault(type => type.MatchesTypeName(typeName));
-            if (matchingType == null)
-            {
-                throw new ArgumentException("Unable to locate any exports matching the requested typeName: " + typeName, "typeName");
-            }
-
-            return values.First(x => x.GetType() == matchingType);
-        }
-
-        /// <summary>
         /// Function used to match a type against a string type name. This function compares on the AssemblyQualfiedName,
         /// the FullName, and then just the Name of the type.
         /// </summary>

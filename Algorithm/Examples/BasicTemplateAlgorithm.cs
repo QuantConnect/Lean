@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.Examples
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType.Forex, "USDJPY", Resolution.Second);
+            AddSecurity(SecurityType.Equity, "SPY", Resolution.Second);
         }
 
         /// <summary>
@@ -39,21 +39,10 @@ namespace QuantConnect.Algorithm.Examples
         /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
-            if (data.Time.Second == 0)
+            if (!Portfolio.Invested)
             {
-                MarketOrder("USDJPY", 1);
-            }
-            if (data.Time.Second == 15)
-            {
-                MarketOrder("USDJPY", -1);
-            }
-            if (data.Time.Second == 30)
-            {
-                MarketOrder("USDJPY", 1);
-            }
-            if (data.Time.Second == 45)
-            {
-                MarketOrder("USDJPY", -1);
+                SetHoldings("SPY", 1);
+                Debug("Purchased Stock");
             }
         }
     }

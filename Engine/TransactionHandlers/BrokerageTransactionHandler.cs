@@ -21,7 +21,6 @@ using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
@@ -77,13 +76,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _brokerage.AccountChanged += (sender, account) =>
             {
                 _algorithm.Portfolio.SetCash(account.CashBalance);
-            };
-
-            // these are usually handled via the fill events, but just in case there was
-            // some outside interaction with the brokerage, we can catch any discrepancies here
-            _brokerage.PortfolioChanged += (sender, update) =>
-            {
-                HandlePortfolioChanged(update);
             };
 
             IsActive = true;
@@ -257,28 +249,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             else
             {
                 Log.Error("BrokerageTransactionHandler.HandleCancelledOrder(): Unable to cancel order with ID " + order.Id + ".");
-            }
-        }
-
-
-        private void HandlePortfolioChanged(PortfolioEvent update)
-        {
-            SecurityHolding holding;
-            if (!_algorithm.Portfolio.TryGetValue(update.Symbol, out holding))
-            {
-                // we're not currently tracking this item, so we'll just log that it happened
-                Log.Trace("BrokerageTransactionHandler - PortfolioChanged(): Portfolio update for untracked security: " + update.Symbol);
-                return;
-            }
-
-            int delta = update.Quantity - holding.Quantity;
-            if (delta != 0)
-            {
-                // there's been a change in the quantity that we didn't receive an update for already
-                // we'll mark this as an out of band trade with a negative QC order ID and no brokerage ID
-                int orderID = Interlocked.Decrement(ref _outOfBandOrderIDs);
-                var fill = new OrderEvent(orderID, update.Symbol, OrderStatus.Filled, update.AveragePrice, delta, "Out of band trade");
-                _algorithm.Portfolio.ProcessFill(fill);
             }
         }
 

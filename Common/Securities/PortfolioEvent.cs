@@ -31,7 +31,7 @@ namespace QuantConnect.Securities
         public int Quantity { get; private set; }
 
         /// <summary>
-        /// Gets the average price of each holding
+        /// Gets the average price of the holding
         /// </summary>
         public decimal AveragePrice { get; private set; }
 
