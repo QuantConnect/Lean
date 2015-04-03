@@ -14,9 +14,11 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using OANDARestLibrary;
-//using OANDARestLibrary.TradeLibrary;
-//using OANDARestLibrary.TradeLibrary.DataTypes;
+using OANDARestLibrary.TradeLibrary;
+using OANDARestLibrary.TradeLibrary.DataTypes;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -26,6 +28,10 @@ namespace QuantConnect.Brokerages
 {
     class OandaBrokerage : Brokerage
     {
+        private static OandaBrokerageAuthentication _brokerageAuthentication;
+
+        private readonly Dictionary<string, string> _accountProperties = new Dictionary<string, string>(); 
+
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
@@ -37,44 +43,30 @@ namespace QuantConnect.Brokerages
             }
         }
 
-        public OandaBrokerage(OandaBrokerageAuthentication credentials)
+        public OandaBrokerage(OandaBrokerageAuthentication brokerageAuthentication)
             : base("Oanda Brokerage")
         {
-            if (!credentials.IsValid)
+            if (!brokerageAuthentication.IsValid())
             {
                 throw new ArgumentException();
             }
 
-            string requestString = credentials.APIServer + 
-                                   "v1/accounts/" + 
-                                   credentials.Account + 
-                                   "/trades";
-            //string responseString = MakeRequest(requestString);
-            
+            _brokerageAuthentication = brokerageAuthentication;
 
             throw new NotImplementedException();
         }
 
-        public override BrokerageAuthentication Credentials
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-
-        public override bool PlaceOrder(Order order)
+        public override bool PlaceOrder(QuantConnect.Orders.Order order)
         {
             throw new NotImplementedException();
         }
 
-        public override bool UpdateOrder(Order order)
+        public override bool UpdateOrder(QuantConnect.Orders.Order order)
         {
             throw new NotImplementedException();
         }
 
-        public override bool CancelOrder(Order order)
+        public override bool CancelOrder(QuantConnect.Orders.Order order)
         {
             throw new NotImplementedException();
         }
@@ -109,6 +101,74 @@ namespace QuantConnect.Brokerages
             base.OnError(e);
         }
 
+        #region Account Management
+        /// <summary>
+        /// Create a Sandbox Account
+        /// </summary>
+        /// <returns>AccountId, Username, Password</returns>
+        public static async Task<Dictionary<string, string>> CreateSandboxAccount()
+        {
+            var parameters = new Dictionary<string, string>();
 
+            var response = await Rest.CreateAccount();
+            parameters.Add("AccountId", response.accountId.ToString());
+            parameters.Add("Username", response.username);
+            parameters.Add("Password", response.password);
+
+            return parameters;
+        }
+
+        /// <summary>
+        /// Retrieves Account Information from Oanda
+        /// </summary>
+        /// <param name="accountId">Account ID (Number)</param>
+        /// <param name="user">Username is required for Sandbox access</param>
+        /// <returns>Account</returns>
+        public static async Task<Account> GetAccountInfo(int accountId, string user = "")
+        {
+            List<Account> accountList;
+            Account accountInfo = null;
+
+            if (String.IsNullOrEmpty(user))
+                accountList = await Rest.GetAccountListAsync();
+            else
+                accountList = await Rest.GetAccountListAsync(user);
+
+            foreach(var account in accountList)
+            {
+                if (account.accountId == accountId)
+                {
+                    accountInfo = await Rest.GetAccountDetailsAsync(account.accountId);
+                }
+            }
+
+            return accountInfo;
+        }
+        #endregion
+
+        #region Utility Methods
+        /// <summary>
+        /// Look up the Oanda RestAPI Environment
+        /// </summary>
+        /// <param name="apiServer"></param>
+        public static EEnvironment GetEnvironment(string apiServer)
+        {
+            var environment = EEnvironment.Sandbox;
+            switch (apiServer.ToLower())
+            {
+                case "sandbox":
+                    environment = EEnvironment.Sandbox;
+                    break;
+                case "practice":
+                    environment = EEnvironment.Practice;
+                    break;
+                case "trade":
+                    environment = EEnvironment.Trade;
+                    break;
+            }
+
+            return environment;
+        }
+        #endregion
     }
 }

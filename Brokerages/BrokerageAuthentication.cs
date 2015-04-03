@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -22,13 +23,18 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages
 {
-    public abstract class BrokerageAuthentication
+    public abstract class BrokerageAuthentication : IBrokerageAuthentication
     {
         /// <summary>
         /// Validate Brokerage Authentication Parameters
         /// </summary>
         /// <returns>true for OK (ie. no error)</returns>
-        public abstract bool Validate();
+        public abstract bool Validate(Dictionary<string, string> parameters, out StringBuilder messages);
 
+        /// <summary>
+        /// Authentication Parameters Validation State
+        /// </summary>
+        /// <returns></returns>
+        public abstract bool IsValid();
     }
 }

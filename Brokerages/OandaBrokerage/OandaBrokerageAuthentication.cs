@@ -18,7 +18,9 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using OANDARestLibrary;
+using OANDARestLibrary.TradeLibrary.DataTypes;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -30,132 +32,125 @@ namespace QuantConnect.Brokerages
     {
         // These are specific to Oanda
         private static string _apiServer   = null;
-        private static int    _account     = 0;
+        private static int    _accountId   = 0;
         private static string _accessToken = null;
-        //Credentials _oandaCredentials = null;
 
         // All Implementations
         private static bool   _isValid     = false;
-        private static string _lastError   = "Pending Validation";
 
         /// <summary>
         /// Constructor
         /// </summary>
         public OandaBrokerageAuthentication(out Dictionary<string, string> parameters)
         {
+            string apiServerPrompt   = "Enter the Oanda API Server (Sandbox, Practice, or Trade)";
+            string accountIdPrompt   = "Enter your Oanda Account Number for this Algoritm";
+            string accessTokenPrompt = "Enter your Oanda API Access Token";
+            
             parameters = new Dictionary<string, string>();
-            // todo: implementation
-            parameters.Add("APIServer", @"[""Practice"", ""Sandbox"", ""Trade""]");
-            parameters.Add("Account", "");
-            parameters.Add("AccessToken", "");
+            parameters.Add("APIServer", apiServerPrompt);
+            parameters.Add("AccountID", accountIdPrompt);
+            parameters.Add("AccessToken", accessTokenPrompt);
         }
 
         /// <summary>
         /// Oanda Parameter Validation
         /// </summary>
-        /// <returns>true for OK (ie. no error)</returns>
-        public override bool Validate()
+        /// <param name="parameters">Oanda Brokerage Parameters</param>
+        /// <param name="error">Error Message</param>
+        /// <returns>Error Status</returns>
+        public override bool Validate(Dictionary<string, string> parameters, out StringBuilder messages)
         {
-            
-            // Check APIServer
+            string apiServer   = parameters["APIServer"];
+            int accountId = 0; 
+            Int32.TryParse(parameters["AccountID"], out accountId);
+            string accessToken = parameters["AccessToken"];
 
-            // Check Account
+            messages = new StringBuilder();
 
-            // Check Access Token
+            // Assumes that validation will fail unless tests pass
+            _isValid = false;
 
-            // For OANDA a full call to the API server with the supplied
-            // values may be appropriate to validate the input (since this
-            // is a RestAPI, where another broker may provide some form
-            // of validation directly in their local API library.
-            switch (this.APIServer)
+            // APIServer
+            if (String.IsNullOrEmpty(apiServer))
             {
-                case "Practice":
-                    Credentials.SetCredentials(EEnvironment.Practice, this.AccessToken, this.Account);
-                    break;
-                case "Sandbox":
-                    Credentials.SetCredentials(EEnvironment.Sandbox, this.AccessToken, this.Account);
-                    break;
-                case "Trade":
-                    Credentials.SetCredentials(EEnvironment.Trade, this.AccessToken, this.Account);
-                    break;
-                default:
-                    _isValid   = true;
-                    _lastError = "Invalid API Server Value";
-                    return _isValid;
+                messages.AppendLine("Input Error: No API Server Provided");
             }
 
-            // Verify the Connection
-            string request = Rest.Server(EServer.Account) + "accounts";
-            string response = MakeRequest(request);
-
-            // todo: perform test
-
-            // If all tests pass:
-            _isValid   = true;
-            _lastError = "";
-
-            // If tests fail:
-            // _isValid = false;
-            // _lastError = <Error Message>
+            string[] environments = new string[] { "sandbox", "practice", "trade" };
+            if (Array.IndexOf(environments, apiServer.ToLower()) < 0)
+            {
+                messages.AppendLine("Input Error: Invalid API Environment Specified");
+            }
             
-            // On no error return String.Empty
-            return _isValid; // todo: - implementation
+            // Account
+            if (accountId <= 0)
+            {
+                messages.AppendLine("Input Error: No Account Number Provided");
+            }
 
+            // Access Token
+            if (String.IsNullOrEmpty(accessToken))
+            {
+                messages.AppendLine("Input Error: No Access Token Provided");
+            }
+
+            // Authentication with Special Handling for Sandbox Environment
+            string sandboxUser = null;
+            if (OandaBrokerage.GetEnvironment(apiServer) == EEnvironment.Sandbox)
+            {
+                Credentials.SetCredentials(OandaBrokerage.GetEnvironment(apiServer), "", 0);
+
+                var t1 = OandaBrokerage.CreateSandboxAccount();
+                t1.Wait();
+
+                Dictionary<string, string> sandboxParams = t1.Result;
+
+                Int32.TryParse(sandboxParams["AccountId"], out accountId);
+                sandboxUser = sandboxParams["Username"];
+
+                Credentials.SetSandboxCredentials(accountId, sandboxUser);
+
+                accessToken = "";
+            }
+            else
+                Credentials.SetCredentials(OandaBrokerage.GetEnvironment(apiServer), accessToken, accountId);
+
+            // Load Account Information
+            var t2 = OandaBrokerage.GetAccountInfo(accountId, sandboxUser);
+            Account account = null;
+            try
+            {
+                t2.Wait();
+                account = t2.Result;
+            }
+            catch (Exception ex)
+            {
+                messages.AppendLine(ex.Message);
+                if (ex.InnerException != null)
+                    messages.AppendLine(ex.InnerException.Message);
+            }
+
+            // Check the Response
+            if (account != null)
+                if (accountId == account.accountId)
+                {
+                    _isValid     = true;
+                    _apiServer   = apiServer;
+                    _accountId   = accountId;
+                    _accessToken = accessToken;
+                }
+            
+            // Return Results
+            return _isValid;
         }
         
         /// <summary>
         /// Result of Parameter Validation
         /// </summary>
-        public bool IsValid
+        public override bool IsValid()
         {
-            get { return _isValid;  }
-        }
-
-        /// <summary>
-        /// Last Error Message
-        /// </summary>
-        public string LastError
-        {
-            get { return _lastError;  }
-        }
-
-        // **** Oanda Specific Properties & Methods ****
-
-        /// <summary>
-        /// send a request and retrieve the response
-        /// </summary>
-        /// <param name="requestString">the request to send</param>
-        /// <returns>the response string</returns>
-        private static string MakeRequest(string requestString, string method = "GET", string postData = null)
-        {
-            var request = WebRequest.CreateHttp(requestString);
-            /*
-            // for non-sandbox requests
-            var accessToken = "<your access token here>";
-            request.Headers.Add("Authorization", "Bearer " + accessToken);
-            */
-            request.Method = method;
-            if (method == "POST")
-            {
-                var data = Encoding.UTF8.GetBytes(postData);
-                request.ContentType = "application/x-www-form-urlencoded";
-                request.ContentLength = data.Length;
-                using (var stream = request.GetRequestStream())
-                {
-                    stream.Write(data, 0, data.Length);
-                }
-            }
-            using (var response = request.GetResponse())
-            {
-                // todo: need to deal with this result without using System.IO
-                //       maybe implement a simple 'Connection Test' in the reference implementation
-                //using (var reader = new StreamReader(response.GetResponseStream()))
-                //{
-                //    string responseString = reader.ReadToEnd().Trim();
-                //    return responseString;
-                //}
-                throw new NotImplementedException();
-            }
+            return _isValid;
         }
 
         /// <summary>
@@ -169,9 +164,9 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Oanda Account Number
         /// </summary>
-        public int Account
+        public int AccountID
         {
-            get { return Convert.ToInt32(_account) ; }
+            get { return Convert.ToInt32(_accountId) ; }
         }
 
         /// <summary>
@@ -181,6 +176,5 @@ namespace QuantConnect.Brokerages
         {
             get { return _accessToken; }
         }
-
     }
 }
