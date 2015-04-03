@@ -131,6 +131,7 @@ namespace QuantConnect
             switch (datafeed)
             {
                 //Historical backtesting data:
+                case DataFeedEndpoint.FileSystem:
                 case DataFeedEndpoint.Backtesting:
                     source = "http://www.quandl.com/api/v1/datasets/BITCOIN/BITSTAMPUSD.csv?sort_order=asc";
                     break;
@@ -158,6 +159,7 @@ namespace QuantConnect
                 //Example Line Format:
                 //Date      Open   High    Low     Close   Volume (BTC)    Volume (Currency)   Weighted Price
                 //2011-09-13 5.8    6.0     5.65    5.97    58.37138238,    346.0973893944      5.929230648356
+                case DataFeedEndpoint.FileSystem:
                 case DataFeedEndpoint.Backtesting:
                     try
                     {
