@@ -195,5 +195,6 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             //NOP
         }
+
     }
 }

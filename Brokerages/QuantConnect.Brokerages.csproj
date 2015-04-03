@@ -43,6 +43,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="OANDARestLibrary">
+      <HintPath>..\..\rest-csharp-refimpl\Reference Implementation\OANDARestLibrary\bin\Release\OANDARestLibrary.dll</HintPath>
+    </Reference>
     <Reference Include="RestSharp">
       <HintPath>..\packages\RestSharp.105.0.1\lib\net4\RestSharp.dll</HintPath>
     </Reference>
@@ -58,10 +61,13 @@
   <ItemGroup>
     <Compile Include="Backtesting\BacktestingBrokerage.cs" />
     <Compile Include="Brokerage.cs" />
+    <Compile Include="BrokerageAuthentication.cs" />
     <Compile Include="BrokerageException.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersException.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersGatewayRunner.cs" />
+    <Compile Include="OandaBrokerage\OandaBrokerage.cs" />
+    <Compile Include="OandaBrokerage\OandaBrokerageAuthentication.cs" />
     <Compile Include="Paper\PaperBrokerage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
