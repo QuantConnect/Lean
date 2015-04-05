@@ -43,14 +43,10 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public OandaBrokerageAuthentication(out Dictionary<string, string> parameters)
         {
-            string apiServerPrompt   = "Enter the Oanda API Server (Sandbox, Practice, or Trade)";
-            string accountIdPrompt   = "Enter your Oanda Account Number for this Algoritm";
-            string accessTokenPrompt = "Enter your Oanda API Access Token";
-            
             parameters = new Dictionary<string, string>();
-            parameters.Add("APIServer", apiServerPrompt);
-            parameters.Add("AccountID", accountIdPrompt);
-            parameters.Add("AccessToken", accessTokenPrompt);
+            parameters.Add("APIServer", "");    // Prompt: Enter the Oanda API Server (Sandbox, Practice, or Trade)
+            parameters.Add("AccountID", "");    // Prompt: Enter your Oanda Account Number for this Algoritm
+            parameters.Add("AccessToken", "");  // Prompt: Enter your Oanda API Access Token
         }
 
         /// <summary>
