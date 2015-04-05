@@ -32,6 +32,12 @@ namespace QuantConnect.Brokerages
         public abstract bool Validate(Dictionary<string, string> parameters, out StringBuilder messages);
 
         /// <summary>
+        /// Is Authentication Required for this Brokerage
+        /// </summary>
+        /// <returns></returns>
+        public abstract bool IsRequired();
+
+        /// <summary>
         /// Authentication Parameters Validation State
         /// </summary>
         /// <returns></returns>

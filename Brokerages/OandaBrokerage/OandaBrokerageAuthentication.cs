@@ -144,7 +144,16 @@ namespace QuantConnect.Brokerages
             // Return Results
             return _isValid;
         }
-        
+
+        /// <summary>
+        /// Is Authentication Required for this Brokerage
+        /// </summary>
+        /// <returns></returns>
+        public override bool IsRequired()
+        {
+            return true;
+        }
+
         /// <summary>
         /// Result of Parameter Validation
         /// </summary>
