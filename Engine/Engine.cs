@@ -353,9 +353,9 @@ namespace QuantConnect.Lean.Engine
                             }
 
                             // Algorithm runtime error:
-                            if (AlgorithmManager.RunTimeError != null)
+                            if (algorithm.RunTimeError != null)
                             {
-                                throw AlgorithmManager.RunTimeError;
+                                throw algorithm.RunTimeError;
                             }
                         }
                         catch (Exception err)
