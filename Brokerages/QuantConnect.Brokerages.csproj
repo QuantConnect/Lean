@@ -47,6 +47,7 @@
       <HintPath>..\packages\RestSharp.105.0.1\lib\net4\RestSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
@@ -60,7 +61,7 @@
     <Compile Include="Brokerage.cs" />
     <Compile Include="BrokerageException.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
-    <Compile Include="InteractiveBrokers\InteractiveBrokersException.cs" />
+    <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerageFactory.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersGatewayRunner.cs" />
     <Compile Include="Paper\PaperBrokerage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

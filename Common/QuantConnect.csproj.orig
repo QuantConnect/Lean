@@ -84,13 +84,13 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MathNet.Numerics, Version=3.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="MathNet.Numerics, Version=3.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\MathNet.Numerics.3.5.0\lib\net40\MathNet.Numerics.dll</HintPath>
+      <HintPath>..\packages\MathNet.Numerics.3.3.0\lib\net40\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -105,25 +105,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Data\Consolidators\BaseDataConsolidator.cs" />
-    <Compile Include="Data\Consolidators\DynamicDataConsolidator.cs" />
-    <Compile Include="Data\Consolidators\RenkoConsolidator.cs" />
-    <Compile Include="Data\Consolidators\TickConsolidator.cs" />
-    <Compile Include="Data\Consolidators\TradeBarConsolidatorBase.cs" />
-    <Compile Include="Data\Market\RenkoBar.cs" />
-    <Compile Include="Brokerages\BrokerageMessageEvent.cs" />
-    <Compile Include="Brokerages\BrokerageMessageType.cs" />
+<<<<<<< HEAD
+=======
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
-    <Compile Include="Orders\StopLimitOrder.cs" />
-    <Compile Include="Orders\StopMarketOrder.cs" />
-    <Compile Include="Orders\LimitOrder.cs" />
-    <Compile Include="Orders\MarketOrder.cs" />
-    <Compile Include="Orders\OrderTypes.cs" />
-    <Compile Include="Orders\OrderErrors.cs" />
+>>>>>>> master
     <Compile Include="Packets\HandledErrorPacket.cs" />
     <Compile Include="Data\Test\FakeTradeBarCustom.cs" />
-    <Compile Include="Securities\IOrderIDMapping.cs" />
     <Compile Include="SeriesSampler.cs" />
     <Compile Include="Data\Custom\Quandl.cs" />
     <Compile Include="Data\DynamicData.cs" />
@@ -161,7 +149,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="Orders\Order.cs" />
     <Compile Include="Securities\AccountEvent.cs" />
-    <Compile Include="Securities\SecurityEvent.cs" />
+    <Compile Include="Securities\PortfolioEvent.cs" />
     <Compile Include="Securities\Equity\EquityCache.cs" />
     <Compile Include="Securities\Equity\EquityDataFilter.cs" />
     <Compile Include="Securities\Forex\ForexCache.cs" />
@@ -192,7 +180,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\Composer.cs" />
     <Compile Include="Util\ExpressionBuilder.cs" />
-    <Compile Include="Util\FuncTextWriter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />
     <Compile Include="Util\ObjectActivator.cs" />
   </ItemGroup>

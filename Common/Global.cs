@@ -60,6 +60,9 @@ namespace QuantConnect
         /// Symbol of the Holding:
         public string Symbol = "";
 
+        /// Type of the security
+        public SecurityType Type;
+
         /// Average Price of our Holding
         public decimal AveragePrice;
 
@@ -81,6 +84,7 @@ namespace QuantConnect
         public Holding(Securities.SecurityHolding holding, SecurityType type)
         {
             Symbol = holding.Symbol;
+            Type = holding.Type;
             Quantity = holding.Quantity;
 
             var rounding = 2;
@@ -88,6 +92,22 @@ namespace QuantConnect
 
             AveragePrice = Math.Round(holding.AveragePrice, rounding);
             MarketPrice = Math.Round(holding.Price, rounding);
+        }
+
+        /// <summary>
+        /// Clones this instance
+        /// </summary>
+        /// <returns>A new Holding object with the same values as this one</returns>
+        public Holding Clone()
+        {
+            return new Holding
+            {
+                AveragePrice = AveragePrice,
+                Symbol = Symbol,
+                Type = Type,
+                Quantity = Quantity,
+                MarketPrice = MarketPrice
+            };
         }
     }
 
@@ -266,7 +286,9 @@ namespace QuantConnect
         /// Configure algorithm+job for the console:
         Console,
         /// Paper trading algorithm+job internal state configuration
-        PaperTrading
+        PaperTrading,
+        /// Live trading against a user's brokerage
+        Brokerage
     }
 
     /// <summary>
@@ -275,7 +297,9 @@ namespace QuantConnect
     public enum TransactionHandlerEndpoint
     {
         /// Use Backtesting Models to Process Transactions
-        Backtesting
+        Backtesting,
+        /// Use a brokerage for live/paper trading in realtime
+        Brokerage,
         /*
         /// Use Interactive Brokers to Process Transactions
         InteractiveBrokers,

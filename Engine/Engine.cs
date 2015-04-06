@@ -36,6 +36,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine 
 {
@@ -201,18 +202,15 @@ namespace QuantConnect.Lean.Engine
             Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + +OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
 
             //Import external libraries specific to physical server location (cloud/local)
-            var catalog = new AggregateCatalog();
-            catalog.Catalogs.Add(new DirectoryCatalog(AppDomain.CurrentDomain.BaseDirectory));
-            var container = new CompositionContainer(catalog);
             try
             {
                 // grab the right export based on configuration
-                Notify = container.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler"));
-                JobQueue = container.GetExportedValueByTypeName<IJobQueueHandler>(Config.Get("job-queue-handler"));
-                Api = container.GetExportedValueByTypeName<IApi>(Config.Get("api-handler")); 
-            } 
+                Notify = Composer.Instance.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler"));
+                Queue = Composer.Instance.GetExportedValueByTypeName<IJobQueueHandler>(Config.Get("job-queue-handler"));
+                Api = Composer.Instance.GetExportedValueByTypeName<IApi>(Config.Get("api-handler"));
+            }
             catch (CompositionException compositionException)
-            { Log.Error("Engine.Main(): Failed to load library: " + compositionException); 
+            { Log.Error("Engine.Main(): Failed to load library: " + compositionException);
             }
 
             //Setup packeting, queue and controls system: These don't do much locally.
@@ -223,7 +221,7 @@ namespace QuantConnect.Lean.Engine
             var statusPingThread = new Thread(StateCheck.Ping.Run);
             statusPingThread.Start();
 
-            do 
+            do
             {
                 try
                 {
@@ -355,9 +353,9 @@ namespace QuantConnect.Lean.Engine
                             }
 
                             // Algorithm runtime error:
-                            if (AlgorithmManager.RunTimeError != null)
+                            if (algorithm.RunTimeError != null)
                             {
-                                throw AlgorithmManager.RunTimeError;
+                                throw algorithm.RunTimeError;
                             }
                         }
                         catch (Exception err)
@@ -552,6 +550,11 @@ namespace QuantConnect.Lean.Engine
             ITransactionHandler th;
             switch (job.TransactionEndpoint)
             {
+                case TransactionHandlerEndpoint.Brokerage:
+                    th = new BrokerageTransactionHandler(algorithm, brokerage);
+                    Log.Trace("Engine.GetTransactionHandler(): Selected Brokerage Transaction Models.");
+                    break;
+
                 //Operation from local files:
                 default:
                     th = new BacktestingTransactionHandler(algorithm, brokerage as BacktestingBrokerage);
@@ -576,7 +579,7 @@ namespace QuantConnect.Lean.Engine
                 //Local backtesting and live trading result handler route messages to the local console.
                 case ResultHandlerEndpoint.Console:
                     Log.Trace("Engine.GetResultHandler(): Selected Console Output.");
-                    rh = new ConsoleResultHandler((BacktestNodePacket)job);
+                    rh = new ConsoleResultHandler(job);
                     break;
 
                 // Backtesting route messages to user browser.
@@ -603,7 +606,6 @@ namespace QuantConnect.Lean.Engine
         private static ISetupHandler GetSetupHandler(SetupHandlerEndpoint setupMethod)
         {
             var sh = default(ISetupHandler);
-            if (IsLocal) return new ConsoleSetupHandler();
 
             switch (setupMethod)
             {
@@ -619,6 +621,10 @@ namespace QuantConnect.Lean.Engine
                     break;
                 case SetupHandlerEndpoint.PaperTrading:
                     sh = new PaperTradingSetupHandler();
+                    Log.Trace("Engine.GetSetupHandler(): Selected PaperTrading Algorithm Setup Handler.");
+                    break;
+                case SetupHandlerEndpoint.Brokerage:
+                    sh = new BrokerageSetupHandler();
                     Log.Trace("Engine.GetSetupHandler(): Selected PaperTrading Algorithm Setup Handler.");
                     break;
             }
