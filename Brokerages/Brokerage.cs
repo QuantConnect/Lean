@@ -45,7 +45,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Event that fires when an error is encountered in the brokerage
         /// </summary>
-        public event EventHandler<Exception> Error;
+        public event EventHandler<BrokerageMessageEvent> Message;
 
         /// <summary>
         /// Gets the name of the brokerage
@@ -155,21 +155,21 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Event invocator for the Error event
+        /// Event invocator for the Message event
         /// </summary>
         /// <param name="e">The error</param>
-        protected virtual void OnError(Exception e)
+        protected virtual void OnMessage(BrokerageMessageEvent e)
         {
             try
             {
-                Log.Error("Brokerage.OnError(): " + e.Message);
+                Log.Error("Brokerage.OnMessage(): " + e);
 
-                var handler = Error;
+                var handler = Message;
                 if (handler != null) handler(this, e);
             }
             catch (Exception ex)
             {
-                Log.Error("Brokerage.OnError(): Caught Error: " + ex.Message);
+                Log.Error("Brokerage.OnMessage(): Caught Error: " + ex.Message);
             }
         }
 

@@ -18,17 +18,21 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using Krs.Ats.IBNet;
 using NUnit.Framework;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using Order = QuantConnect.Orders.Order;
+using OrderStatus = QuantConnect.Orders.OrderStatus;
+using OrderType = QuantConnect.Orders.OrderType;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
     [TestFixture]
-    //[Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
+    [Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
     public class InteractiveBrokersBrokerageTests
     {
         private readonly List<Order> _orders = new List<Order>(); 
@@ -40,7 +44,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [SetUp]
         public void InitializeBrokerage()
         {
-            //InteractiveBrokersGatewayRunner.Start(Config.Get("ib-account"));
+            InteractiveBrokersGatewayRunner.Start(Config.Get("ib-account"));
 
             // grabs account info from configuration
             _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(new OrderMapping(_orders));
@@ -107,7 +111,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             }
             finally
             {
-                //InteractiveBrokersGatewayRunner.Stop();
+                InteractiveBrokersGatewayRunner.Stop();
             }
         }
 
@@ -153,33 +157,13 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 }
             };
 
-            ib.PortfolioChanged += (sender, args) =>
-            {
-                Log.Trace("--HOLDINGS-- ");
-                Log.Trace("--HOLDINGS-- " + args.Quantity);
-                Log.Trace("--HOLDINGS-- ");
-            };
-
             var order = new MarketOrder(Symbol, buyQuantity, DateTime.UtcNow, type: Type) {Id = 1};
             _orders.Add(order);
             ib.PlaceOrder(order);
 
-            Thread.Sleep(5000);
-
             manualResetEvent.WaitOne(2500);
-            manualResetEvent.Reset();
             var orderFromIB = AssertOrderOpened(orderFilled, ib, order);
             Assert.AreEqual(OrderType.Market, orderFromIB.Type);
-
-            Thread.Sleep(2500);
-
-            order = new MarketOrder(Symbol, buyQuantity, DateTime.UtcNow, type: Type) {Id = 2};
-            _orders.Add(order);
-            ib.PlaceOrder(order);
-
-            manualResetEvent.WaitOne(2500);
-
-            Thread.Sleep(2500);
         }
 
         [Test]
@@ -335,7 +319,6 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [Test]
         public void ClientCancelsLimitOrder()
         {
-            OrderStatus status = OrderStatus.New;
             var orderedResetEvent = new ManualResetEvent(false);
             var canceledResetEvent = new ManualResetEvent(false);
 

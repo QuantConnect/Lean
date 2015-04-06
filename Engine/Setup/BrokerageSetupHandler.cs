@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -54,6 +55,9 @@ namespace QuantConnect.Lean.Engine.Setup
         /// Maximum number of orders for the algorithm run -- applicable for backtests only.
         /// </summary>
         public int MaxOrders { get; private set; }
+
+        // saves ref to algo so we can call quit if runtime error encountered
+        private IAlgorithm _algorithm;
 
         /// <summary>
         /// Initializes a new BrokerageSetupHandler
@@ -103,6 +107,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <returns>True on successfully setting up the algorithm state, or false on error.</returns>
         public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket job)
         {
+            _algorithm = algorithm;
             brokerage = default(IBrokerage);
 
             // verify we were given the correct job packet type
@@ -144,7 +149,7 @@ namespace QuantConnect.Lean.Engine.Setup
                                 break;
                         }
 
-                        //Algorithm is backtesting, not live:
+                        //Algorithm is live, not backtesting:
                         algorithm.SetLiveMode(true);
 
                         //Initialise the algorithm, get the required data:
@@ -163,8 +168,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
 
                 // find the correct brokerage factory based on the specified brokerage in the live job packet
-                var composer = Composer.Instance;
-                var brokerageFactory = composer.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
+                var brokerageFactory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
 
                 // initialize the correct brokerage using the resolved factory
                 brokerage = brokerageFactory.CreateBrokerage(liveJob, algorithm);
@@ -213,6 +217,18 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <returns>True on successfully setting up the error handlers.</returns>
         public bool SetupErrorHandler(IResultHandler results, IBrokerage brokerage)
         {
+            var sync = new SynchronizationContext();
+            brokerage.Message += (sender, message) =>
+            {
+                if (message.Type == BrokerageMessageType.Error)
+                {
+                    results.RuntimeError(message.Message);
+                    _algorithm.Quit();
+
+                    // throw an exception from the main algorithm loop thread, where this handler was instantiated.
+                    sync.Send(state => { throw new Exception(message.Message); }, _algorithm);
+                }
+            };
             return true;
         }
 

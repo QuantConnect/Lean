@@ -62,7 +62,6 @@
     <Compile Include="BrokerageException.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerageFactory.cs" />
-    <Compile Include="InteractiveBrokers\InteractiveBrokersException.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersGatewayRunner.cs" />
     <Compile Include="Paper\PaperBrokerage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

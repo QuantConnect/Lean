@@ -27,9 +27,9 @@ namespace QuantConnect.Interfaces
         event EventHandler<AccountEvent> AccountChanged;
 
         /// <summary>
-        /// Event that fires when an error is encountered in the brokerage
+        /// Event that fires when a message is received from the brokerage
         /// </summary>
-        event EventHandler<Exception> Error;
+        event EventHandler<BrokerageMessageEvent> Message;
 
         /// <summary>
         /// Gets the name of the brokerage
