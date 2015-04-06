@@ -446,7 +446,7 @@ namespace QuantConnect.Algorithm
             {
                 var start = new DateTime(year, month, day);
 
-                // we really just want the date of the start, so it's 12am of the requested day (first moment of the day)
+                // We really just want the date of the start, so it's 12am of the requested day (first moment of the day)
                 start = start.Date;
 
                 SetStartDate(start);
@@ -504,7 +504,7 @@ namespace QuantConnect.Algorithm
             //1. Check range;
             if (start < (new DateTime(1900, 01, 01)))
             {
-                throw new Exception("Please select a stat date after January 1st, 1900.");
+                throw new Exception("Please select a start date after January 1st, 1900.");
             }
 
             //2. Check end date greater:
@@ -515,6 +515,9 @@ namespace QuantConnect.Algorithm
                     throw new Exception("Please select start date less than end date.");
                 }
             }
+
+            //3. Round up and subtract one tick:
+            start = start.RoundDown(TimeSpan.FromDays(1));
 
             //3. Check not locked already:
             if (!_locked) 
@@ -551,7 +554,10 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            //3. Check not locked already:
+            //3. Round up and subtract one tick:
+            end = end.RoundUp(TimeSpan.FromDays(1)).AddTicks(-1);
+
+            //4. Check not locked already:
             if (!_locked) 
             {
                 _endDate = end;
