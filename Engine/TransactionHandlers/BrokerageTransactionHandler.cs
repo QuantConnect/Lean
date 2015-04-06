@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -29,7 +28,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// </summary>
     public class BrokerageTransactionHandler : ITransactionHandler
     {
-        private int _outOfBandOrderIDs = -1;
         private bool _exitTriggered;
         private IAlgorithm _algorithm;
         private readonly IBrokerage _brokerage;
@@ -67,7 +65,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             _brokerage = brokerage;
-            _brokerage.OrderEvent += (sender, fill) =>
+            _brokerage.OrderStatusChanged += (sender, fill) =>
             {
                 HandleOrderEvent(fill);
             };
@@ -75,7 +73,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // maintain proper portfolio cash balance
             _brokerage.AccountChanged += (sender, account) =>
             {
-                _algorithm.Portfolio.SetCash(account.CashBalance);
+                //_algorithm.Portfolio.SetCash(account.CashBalance);
+
+                // how close are we?
+                decimal delta = _algorithm.Portfolio.Cash - account.CashBalance;
+                Log.Trace(string.Format("BrokerageTransactionHandler.AccountChanged(): Algo Cash: {0} Brokerage Cash: {1} Delta: {2}", algorithm.Portfolio.Cash, account.CashBalance, delta));
             };
 
             IsActive = true;

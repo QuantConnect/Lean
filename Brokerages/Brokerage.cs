@@ -30,12 +30,12 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Event that fires each time an order is filled
         /// </summary>
-        public event EventHandler<OrderEvent> OrderEvent;
+        public event EventHandler<OrderEvent> OrderStatusChanged;
 
         /// <summary>
         /// Event that fires each time portfolio holdings have changed
         /// </summary>
-        public event EventHandler<PortfolioEvent> PortfolioChanged;
+        public event EventHandler<SecurityEvent> SecurityHoldingUpdated;
 
         /// <summary>
         /// Event that fires each time a user's brokerage account is changed
@@ -107,7 +107,7 @@ namespace QuantConnect.Brokerages
             {
                 Log.Trace("Brokerage.OnOrderEvent(): " + e);
 
-                var handler = OrderEvent;
+                var handler = OrderStatusChanged;
                 if (handler != null) handler(this, e);
             }
             catch (Exception error)
@@ -120,13 +120,13 @@ namespace QuantConnect.Brokerages
         /// Event invocator for the PortfolioChanged event
         /// </summary>
         /// <param name="e">The PortfolioEvent</param>
-        protected virtual void OnPortfolioChanged(PortfolioEvent e)
+        protected virtual void OnPortfolioChanged(SecurityEvent e)
         {
             try
             {
                 Log.Trace("Brokerage.OnPortfolioChanged(): " + e);
 
-                var handler = PortfolioChanged;
+                var handler = SecurityHoldingUpdated;
                 if (handler != null) handler(this, e);
             }
             catch (Exception error)

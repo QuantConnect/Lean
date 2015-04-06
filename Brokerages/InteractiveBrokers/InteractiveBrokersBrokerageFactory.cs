@@ -24,19 +24,36 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// </summary>
     public class InteractiveBrokersBrokerageFactory : IBrokerageFactory
     {
+        /// <summary>
+        /// Gets the type of brokerage produced by this factory
+        /// </summary>
         public Type BrokerageType
         {
             get { return typeof (InteractiveBrokersBrokerage); }
         }
 
+        /// <summary>
+        /// Creates a new IBrokerage instance and set ups the environment for the brokerage
+        /// </summary>
+        /// <param name="job">The job packet to create the brokerage for</param>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <returns>A new brokerage instance</returns>
         public IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
             // launch the IB gateway
             InteractiveBrokersGatewayRunner.Start(job.AccountId);
 
-            // this needs to be fixed, LiveNodePacket.AccountId must be a string
-            var orderMapping = algorithm.Transactions;
-            return new InteractiveBrokersBrokerage(orderMapping, job.AccountId);
+            return new InteractiveBrokersBrokerage(algorithm.Transactions, job.AccountId);
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// Stops the InteractiveBrokersGatewayRunner
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            InteractiveBrokersGatewayRunner.Stop();
         }
     }
 }

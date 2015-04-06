@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,39 +13,39 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Securities
+namespace QuantConnect.Brokerages
 {
     /// <summary>
-    /// Messaging class signifying a change in a user's portfolio.
+    /// Represents a message received from a brokerage
     /// </summary>
-    public class PortfolioEvent
+    public class BrokerageMessageEvent
     {
         /// <summary>
-        /// Gets the symbol that was changed
+        /// Gets the type of brokerage message
         /// </summary>
-        public string Symbol { get; private set; }
+        public BrokerageMessageType Type { get; private set; }
 
         /// <summary>
-        /// Gets the quantity held in the symbol
+        /// Gets the brokerage specific code for this message, zero if no code was specified
         /// </summary>
-        public int Quantity { get; private set; }
+        public int Code { get; private set; }
 
         /// <summary>
-        /// Gets the average price of the holding
+        /// Gets the message text received from the brokerage
         /// </summary>
-        public decimal AveragePrice { get; private set; }
+        public string Message { get; private set; }
 
         /// <summary>
-        /// Creates a PortfolioEvent
+        /// Initializes a new instance of the BrokerageMessageEvent class
         /// </summary>
-        /// <param name="symbol">The symbol that was changed</param>
-        /// <param name="quantity">The quantity held in the symbol</param>
-        /// <param name="averagePrice">The average price of each holding</param>
-        public PortfolioEvent(string symbol, int quantity, decimal averagePrice)
+        /// <param name="type">The type of brokerage message</param>
+        /// <param name="code">The brokerage specific code</param>
+        /// <param name="message">The message text received from the brokerage</param>
+        public BrokerageMessageEvent(BrokerageMessageType type, int code, string message)
         {
-            Symbol = symbol;
-            Quantity = quantity;
-            AveragePrice = averagePrice;
+            Type = type;
+            Code = code;
+            Message = message;
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace QuantConnect.Securities
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return string.Format("Symbol: {0} Quantity: {1}", Symbol, Quantity);
+            return string.Format("{0} - Code: {1} - {2}", Type, Code, Message);
         }
     }
 }

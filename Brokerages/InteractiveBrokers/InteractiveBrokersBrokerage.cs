@@ -567,7 +567,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _accountHoldingsResetEvent.Reset();
             var holding = CreateHolding(e);
             _accountHoldings[holding.Symbol] = holding;
-            OnPortfolioChanged(new PortfolioEvent(holding.Symbol, e.Position, e.AverageCost));
+            OnPortfolioChanged(new SecurityEvent(holding.Symbol, e.Position, e.AverageCost));
         }
 
         /// <summary>

@@ -111,6 +111,8 @@
     <Compile Include="Data\Consolidators\TickConsolidator.cs" />
     <Compile Include="Data\Consolidators\TradeBarConsolidatorBase.cs" />
     <Compile Include="Data\Market\RenkoBar.cs" />
+    <Compile Include="Brokerages\BrokerageMessageEvent.cs" />
+    <Compile Include="Brokerages\BrokerageMessageType.cs" />
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />
@@ -159,7 +161,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="Orders\Order.cs" />
     <Compile Include="Securities\AccountEvent.cs" />
-    <Compile Include="Securities\PortfolioEvent.cs" />
+    <Compile Include="Securities\SecurityEvent.cs" />
     <Compile Include="Securities\Equity\EquityCache.cs" />
     <Compile Include="Securities\Equity\EquityDataFilter.cs" />
     <Compile Include="Securities\Forex\ForexCache.cs" />

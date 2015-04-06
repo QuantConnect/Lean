@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using QuantConnect.Brokerages;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -14,12 +15,12 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Event that fires each time an order is filled
         /// </summary>
-        event EventHandler<OrderEvent> OrderEvent;
+        event EventHandler<OrderEvent> OrderStatusChanged;
 
         /// <summary>
         /// Event that fires each time portfolio holdings have changed
         /// </summary>
-        event EventHandler<PortfolioEvent> PortfolioChanged;
+        event EventHandler<SecurityEvent> SecurityHoldingUpdated;
 
         /// <summary>
         /// Event that fires each time a user's brokerage account is changed

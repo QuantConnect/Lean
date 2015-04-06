@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.AlgorithmFactory;
+using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -157,7 +158,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     }
                     catch (Exception err)
                     {
-                        Errors.Add("Failed to initialize algorithm: Initialize(): " + err.Message);
+                        AddInitializationError(err.Message);
                     }
                 });
 
@@ -219,15 +220,29 @@ namespace QuantConnect.Lean.Engine.Setup
         {
             brokerage.Message += (sender, message) =>
             {
-                if (message.Type == BrokerageMessageType.Error)
+                // based on message type dispatch to result handler
+                switch (message.Type)
                 {
-                    _algorithm.RunTimeError = new Exception(message.Message);
-                    _algorithm.Quit();
+                    case BrokerageMessageType.Information:
+                        results.DebugMessage("Brokerage Info: " + message.Message);
+                        break;
+                    case BrokerageMessageType.Warning:
+                        results.DebugMessage("Brokerage Warning: " + message.Message);
+                        break;
+                    case BrokerageMessageType.Error:
+                        results.ErrorMessage("Brokerage Error: " + message.Message);
+                        _algorithm.RunTimeError = new Exception(message.Message);
+                        _algorithm.Quit();
+                        break;
                 }
             };
             return true;
         }
 
+        /// <summary>
+        /// Adds initializaion error to the Errors list
+        /// </summary>
+        /// <param name="message">The error message to be added</param>
         private void AddInitializationError(string message)
         {
             Errors.Add("Failed to initialize algorithm: Initialize(): " + message);

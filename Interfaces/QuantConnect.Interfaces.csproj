@@ -74,8 +74,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BrokerageMessageEvent.cs" />
-    <Compile Include="BrokerageMessageType.cs" />
     <Compile Include="IAlgorithm.cs" />
     <Compile Include="IApi.cs" />
     <Compile Include="IBrokerage.cs" />

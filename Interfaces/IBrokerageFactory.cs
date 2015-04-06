@@ -23,7 +23,7 @@ namespace QuantConnect.Interfaces
     /// Defines factory types for brokerages. Every IBrokerage is expected to also implement an IBrokerageFactory.
     /// </summary>
     [InheritedExport(typeof(IBrokerageFactory))]
-    public interface IBrokerageFactory
+    public interface IBrokerageFactory : IDisposable
     {
         /// <summary>
         /// Gets the type of brokerage produced by this factory

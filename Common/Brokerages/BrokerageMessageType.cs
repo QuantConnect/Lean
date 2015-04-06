@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Interfaces
+namespace QuantConnect.Brokerages
 {
     /// <summary>
     /// Specifies the type of message received from a brokerage

@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
                 var canceledResetEvent = new ManualResetEvent(false);
                 var filledResetEvent = new ManualResetEvent(false);
-                _interactiveBrokersBrokerage.OrderEvent += (sender, orderEvent) =>
+                _interactiveBrokersBrokerage.OrderStatusChanged += (sender, orderEvent) =>
                 {
                     if (orderEvent.Status == OrderStatus.Filled)
                     {
@@ -148,7 +148,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             var manualResetEvent = new ManualResetEvent(false);
             var ib = _interactiveBrokersBrokerage;
 
-            ib.OrderEvent += (sender, orderEvent) =>
+            ib.OrderStatusChanged += (sender, orderEvent) =>
             {
                 if (orderEvent.Status == OrderStatus.Filled)
                 {
@@ -174,7 +174,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             var ib = _interactiveBrokersBrokerage;
 
-            ib.OrderEvent += (sender, orderEvent) =>
+            ib.OrderStatusChanged += (sender, orderEvent) =>
             {
                 if (orderEvent.Status == OrderStatus.Filled)
                 {
@@ -203,7 +203,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             decimal price = 100m;
             decimal delta = 85.0m; // if we can't get a price then make the delta huge
-            ib.OrderEvent += (sender, orderEvent) =>
+            ib.OrderStatusChanged += (sender, orderEvent) =>
             {
                 if (orderEvent.Status == OrderStatus.Filled)
                 {
@@ -248,7 +248,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             decimal fillPrice = 100m;
             decimal delta = 85.0m; // if we can't get a price then make the delta huge
-            ib.OrderEvent += (sender, args) =>
+            ib.OrderStatusChanged += (sender, args) =>
             {
                 orderFilled = true;
                 fillPrice = args.FillPrice;
@@ -291,7 +291,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             var ib = _interactiveBrokersBrokerage;
 
             bool filled = false;
-            ib.OrderEvent += (sender, args) =>
+            ib.OrderStatusChanged += (sender, args) =>
             {
                 if (args.Status == OrderStatus.Filled)
                 {
@@ -324,7 +324,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             var ib = _interactiveBrokersBrokerage;
 
-            ib.OrderEvent += (sender, orderEvent) =>
+            ib.OrderStatusChanged += (sender, orderEvent) =>
             {
                 if (orderEvent.Status == OrderStatus.Submitted)
                 {
@@ -363,7 +363,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             int orderFilledEventCount = 0;
             var orderFilledResetEvent = new ManualResetEvent(false);
-            ib.OrderEvent += (sender, fill) =>
+            ib.OrderStatusChanged += (sender, fill) =>
             {
                 if (fill.Status == OrderStatus.Filled)
                 {
@@ -400,13 +400,13 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             // wait for order to complete before request account holdings
             var orderResetEvent = new ManualResetEvent(false);
-            ib.OrderEvent += (sender, fill) =>
+            ib.OrderStatusChanged += (sender, fill) =>
             {
                 if (fill.Status == OrderStatus.Filled) orderResetEvent.Set();
             };
 
             var portfolioResetEvent = new ManualResetEvent(false);
-            ib.PortfolioChanged += (sender, update) =>
+            ib.SecurityHoldingUpdated += (sender, update) =>
             {
                 portfolioResetEvent.Set();
             };
@@ -451,7 +451,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             var ib = _interactiveBrokersBrokerage;
 
             var orderEventFired = new ManualResetEvent(false);
-            ib.OrderEvent += (sender, args) =>
+            ib.OrderStatusChanged += (sender, args) =>
             {
                 if (args.Status == OrderStatus.Filled)
                 {
@@ -512,7 +512,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             var ib = _interactiveBrokersBrokerage;
 
             var orderEventFired = new ManualResetEvent(false);
-            ib.OrderEvent += (sender, args) =>
+            ib.OrderStatusChanged += (sender, args) =>
             {
                 if (args.Status == OrderStatus.Filled)
                 {
@@ -536,7 +536,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             var ib = _interactiveBrokersBrokerage;
 
             var orderEventFired = new ManualResetEvent(false);
-            ib.OrderEvent += (sender, args) =>
+            ib.OrderStatusChanged += (sender, args) =>
             {
                 if (args.Status == OrderStatus.Submitted)
                 {

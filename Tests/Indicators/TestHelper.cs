@@ -32,24 +32,6 @@ namespace QuantConnect.Tests.Indicators
     public static class TestHelper
     {
         /// <summary>
-        /// Gets the trade bar data from the specified file in the TestData directory
-        /// </summary>
-        /// <param name="filename">The file to read</param>
-        /// <returns>A stream of TradeBars parsed from the file</returns>
-        public static IEnumerable<TradeBar> GetDataStream(string filename)
-        {
-            return File.ReadLines(Path.Combine("TestData", filename)).Skip(1).Select(line => line.Split(',')).Select(parts => new TradeBar
-            {
-                Time = Time.ParseDate(parts[0]),
-                Open = parts[1].ToDecimal(),
-                High = parts[2].ToDecimal(),
-                Low = parts[3].ToDecimal(),
-                Close = parts[4].ToDecimal(),
-                Volume = (long) double.Parse(parts[5])
-            });
-        }
-
-        /// <summary>
         /// Gets a stream of IndicatorDataPoints that can be fed to an indicator. The data stream starts at {DateTime.Today, 1m} and
         /// increasing at {1 second, 1m}
         /// </summary>
@@ -234,6 +216,9 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
+        /// <summary>
+        /// Gets a stream of trade bars from the specified file
+        /// </summary>
         public static IEnumerable<TradeBar> GetTradeBarStream(string externalDataFilename, bool fileHasVolume = true)
         {
             return GetCsvFileStream(externalDataFilename).Select(values => new TradeBar

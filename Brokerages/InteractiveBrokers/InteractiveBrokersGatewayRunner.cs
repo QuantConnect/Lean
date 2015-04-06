@@ -26,6 +26,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// <summary>
     /// Handles launching and killing the IB Controller script
     /// </summary>
+    /// <remarks>
+    /// Requires TWS or IB Gateway and IBController installed to run
+    /// </remarks>
     public static class InteractiveBrokersGatewayRunner
     {
         // process that's running the IB Controller script
@@ -80,6 +83,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         public static void Stop()
         {
+            if (ScriptProcessID == 0)
+            {
+                return;
+            }
+
             try
             {
                 Log.Trace("InteractiveBrokersGatewayRunner.Stop(): Stopping IBController...");
@@ -91,6 +99,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     // kill all spawned processes
                     process.Kill();
                 }
+
+                ScriptProcessID = 0;
             }
             catch (Exception err)
             {
