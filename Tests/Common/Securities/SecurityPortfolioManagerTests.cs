@@ -15,11 +15,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -34,19 +38,16 @@ namespace QuantConnect.Tests.Common.Securities
 
             const string fillsFile = "TestData\\test_cash_fills.xml";
             const string equityFile = "TestData\\test_cash_equity.xml";
-            var serializer = new XmlSerializer(typeof (List<OrderEvent>));
-            List<OrderEvent> fills;
-            using (var stream = File.OpenRead(fillsFile))
-            {
-                fills = (List<OrderEvent>) serializer.Deserialize(stream);
-            }
 
-            serializer = new XmlSerializer(typeof (List<decimal>));
-            List<decimal> equity;
-            using (var stream = File.OpenRead(equityFile))
-            {
-                equity = (List<decimal>) serializer.Deserialize(stream);
-            }
+            var fills = XDocument.Load(fillsFile).Descendants("OrderEvent").Select(x => new OrderEvent(
+                x.Get<int>("OrderId"),
+                x.Get<string>("Symbol"),
+                x.Get<OrderStatus>("Status"),
+                x.Get<decimal>("FillPrice"),
+                x.Get<int>("FillQuantity"))
+                ).ToList();
+
+            var equity = XDocument.Load(equityFile).Descendants("decimal").Select(x => decimal.Parse(x.Value)).ToList();
 
             Assert.AreEqual(fills.Count + 1, equity.Count);
 
