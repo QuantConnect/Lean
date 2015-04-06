@@ -217,16 +217,12 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <returns>True on successfully setting up the error handlers.</returns>
         public bool SetupErrorHandler(IResultHandler results, IBrokerage brokerage)
         {
-            var sync = new SynchronizationContext();
             brokerage.Message += (sender, message) =>
             {
                 if (message.Type == BrokerageMessageType.Error)
                 {
-                    results.RuntimeError(message.Message);
+                    _algorithm.RunTimeError = new Exception(message.Message);
                     _algorithm.Quit();
-
-                    // throw an exception from the main algorithm loop thread, where this handler was instantiated.
-                    sync.Send(state => { throw new Exception(message.Message); }, _algorithm);
                 }
             };
             return true;
