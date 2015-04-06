@@ -307,6 +307,22 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new MeanAbsoluteDeviation indicator. This will return the population mean absolute deviation of samples over the specified period.
+        /// </summary>
+        /// <param name="symbol">The symbol whose STD we want</param>
+        /// <param name="period">The period over which to compute the STD</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The StandardDeviation indicator for the requested symbol over the speified period</returns>
+        public MeanAbsoluteDeviation MAD(string symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "MAD" + period, resolution);
+            var mad = new MeanAbsoluteDeviation(name, period);
+            RegisterIndicator(symbol, mad, resolution, selector);
+            return mad;
+        }
+
+        /// <summary>
         /// Creates a new BollingerBands indicator which will compute the MiddleBand, UpperBand, LowerBand, and StandardDeviation
         /// </summary>
         /// <param name="symbol">The symbol whose BollingerBands we seek</param>
