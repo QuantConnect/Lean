@@ -16,7 +16,6 @@
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
-
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Data.Market;
@@ -27,14 +26,9 @@ namespace QuantConnect.Interfaces
     /// <summary>
     /// Task requestor interface with cloud system
     /// </summary>
-    [InheritedExport(typeof(IQueueHandler))]
-    public interface IQueueHandler
+    [InheritedExport(typeof(IJobQueueHandler))]
+    public interface IJobQueueHandler
     {
-        /// <summary>
-        /// Initialize the task handler.
-        /// </summary>
-        void Initialize(bool liveMode);
-
         /// <summary>
         /// Request the next task to run through the engine:
         /// </summary>
@@ -46,33 +40,5 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="job">Work to do.</param>
         void AcknowledgeJob(AlgorithmNodePacket job);
-
-        /// <summary>
-        /// Get the next ticks from the live trading data queue
-        /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        IEnumerable<Tick> GetNextTicks();
-
-        /// <summary>
-        /// Open the data queue when coming out of hibernate.
-        /// </summary>
-        void OpenDataQueue();
-
-        /// <summary>
-        /// Stop pulling data from the queue temporarily.
-        /// </summary>
-        void CloseDataQueue();
-
-        /// <summary>
-        /// Adds the specified symbols to the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        void Subscribe(IDictionary<SecurityType, List<string>> symbols);
-
-        /// <summary>
-        /// Removes the specified symbols to the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        void Unsubscribe(IDictionary<SecurityType, List<string>> symbols);
     }
 }

@@ -124,7 +124,7 @@
     <Compile Include="AlgorithmManager.cs" />
     <Compile Include="DataFeeds\LiveTradingDataFeed.cs" />
     <Compile Include="DataFeeds\PaperTradingDataFeed.cs" />
-    <Compile Include="DataFeeds\TestLiveTradingDataFeed.cs" />
+    <Compile Include="DataFeeds\Queues\DataQueue.cs" />
     <Compile Include="DataStream.cs" />
     <Compile Include="RealTime\RealTimeEvent.cs" />
     <Compile Include="RealTime\LiveTradingRealTimeHandler.cs" />
@@ -219,6 +219,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <PropertyGroup>

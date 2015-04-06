@@ -107,7 +107,7 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Task requester / job queue handler for running the next algorithm task.
         /// </summary>
-        public static IQueueHandler Queue;
+        public static IJobQueueHandler JobQueue;
 
         /// <summary>
         /// Algorithm API handler for setting the per user restrictions on algorithm behaviour where applicable.
@@ -181,9 +181,10 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public static void Main(string[] args) 
         {
-            // pick an implementation of ILogHandler for the application
-            Log.LogHandler = IsLocal 
-                ? (ILogHandler) new ConsoleLogHandler() 
+            // Pick an implementation of ILogHandler for the application
+            // Using file log handler
+            Log.LogHandler = IsLocal
+                ? (ILogHandler)new ConsoleLogHandler() 
                 : new FileLogHandler("log.txt");
 
             //Initialize:
@@ -207,7 +208,7 @@ namespace QuantConnect.Lean.Engine
             {
                 // grab the right export based on configuration
                 Notify = container.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler"));
-                Queue = container.GetExportedValueByTypeName<IQueueHandler>(Config.Get("queue-handler"));
+                JobQueue = container.GetExportedValueByTypeName<IJobQueueHandler>(Config.Get("job-queue-handler"));
                 Api = container.GetExportedValueByTypeName<IApi>(Config.Get("api-handler")); 
             } 
             catch (CompositionException compositionException)
@@ -217,7 +218,6 @@ namespace QuantConnect.Lean.Engine
             //Setup packeting, queue and controls system: These don't do much locally.
             Api.Initialize();
             Notify.Initialize();
-            Queue.Initialize(_liveMode);
 
             //Start monitoring the backtest active status:
             var statusPingThread = new Thread(StateCheck.Ping.Run);
@@ -240,13 +240,13 @@ namespace QuantConnect.Lean.Engine
                     do
                     {
                         //-> Pull job from QuantConnect job queue, or, pull local build:
-                        job = Queue.NextJob(out algorithmPath); // Blocking.
+                        job = JobQueue.NextJob(out algorithmPath); // Blocking.
 
                         if (!IsLocal && LiveMode && (job.Version < Version || (job.Version == Version && job.Redelivered)))
                         {
                             //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
                             //In this event kill the old algorithm and leave a message so the user can later review.
-                            Queue.AcknowledgeJob(job);
+                            JobQueue.AcknowledgeJob(job);
                             Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, _collapseMessage);
                             Notify.SetChannel(job.Channel);
                             Notify.RuntimeError(job.AlgorithmId, _collapseMessage);
@@ -451,7 +451,7 @@ namespace QuantConnect.Lean.Engine
                 finally 
                 {
                     //Delete the message from the job queue:
-                    Queue.AcknowledgeJob(job);
+                    JobQueue.AcknowledgeJob(job);
                     Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
 
                     //No matter what for live mode; make sure we've set algorithm status in the API for "not running" conditions:
@@ -507,14 +507,9 @@ namespace QuantConnect.Lean.Engine
 
                 //Live Trading Data Source:
                 case DataFeedEndpoint.LiveTrading:
-                    df = new PaperTradingDataFeed(algorithm, (LiveNodePacket)job);
+                    var ds = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Config.Get("data-queue-handler"));
+                    df = new PaperTradingDataFeed(algorithm, ds, (LiveNodePacket)job);
                     Log.Trace("Engine.GetDataFeedHandler(): Selected LiveTrading Datafeed");
-                    break;
-
-                case DataFeedEndpoint.Test:
-                    var feed = new TestLiveTradingDataFeed(algorithm, (LiveNodePacket)job);
-                    df = feed;
-                    Log.Trace("Engine.GetDataFeedHandler(): Selected Test Datafeed at " + feed.FastForward + "x");
                     break;
             }
             return df;

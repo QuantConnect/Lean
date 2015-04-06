@@ -12,18 +12,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class PaperTradingDataFeed : LiveTradingDataFeed
     {
-        // this is unused right now, but will be used later
+        // Unused for now but will be used later:
         private readonly LiveNodePacket _job;
+
+        //Live data queue stream:
+        private readonly IDataQueueHandler _queue;
 
         /// <summary>
         /// Creates a new PaperTradingDataFeed for the algorithm/job
         /// </summary>
         /// <param name="algorithm">The algorithm to receive the data, used for a complete listing of active securities</param>
+        /// <param name="dataSource">Queable Source of the data</param>
         /// <param name="job">The job being run</param>
-        public PaperTradingDataFeed(IAlgorithm algorithm, LiveNodePacket job)
-            : base(algorithm)
+        public PaperTradingDataFeed(IAlgorithm algorithm, IDataQueueHandler dataSource, LiveNodePacket job)
+            : base(algorithm, dataSource)
         {
             _job = job;
+            _queue = dataSource;
 
             // create a lookup keyed by SecurityType
             var symbols = new Dictionary<SecurityType, List<string>>();
@@ -39,7 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // request for data from these symbols
-            Engine.Queue.Subscribe(symbols);
+            _queue.Subscribe(job, symbols);
         }
 
         /// <summary>
@@ -48,7 +53,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The next ticks to be processed</returns>
         public override IEnumerable<Tick> GetNextTicks()
         {
-            return Engine.Queue.GetNextTicks();
+            return _queue.GetNextTicks();
         }
     }
 }

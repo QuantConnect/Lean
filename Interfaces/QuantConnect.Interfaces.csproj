@@ -78,7 +78,8 @@
     <Compile Include="IApi.cs" />
     <Compile Include="IBrokerage.cs" />
     <Compile Include="IMessagingHandler.cs" />
-    <Compile Include="IQueueHandler.cs" />
+    <Compile Include="IDataQueueHandler.cs" />
+    <Compile Include="IJobQueueHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
