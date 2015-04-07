@@ -68,13 +68,14 @@ namespace QuantConnect.Algorithm
             //Initialise the Algorithm Helper Classes:
             //- Note - ideally these wouldn't be here, but because of the DLL we need to make the classes shared across 
             //  the Worker & Algorithm, limiting ability to do anything else.
-            Securities = new SecurityManager();
-            Transactions = new SecurityTransactionManager(Securities);
-            Portfolio = new SecurityPortfolioManager(Securities, Transactions);
-            Notify = new NotificationManager(false); // Notification manager defaults to disabled.
 
             //Initialise Data Manager 
             SubscriptionManager = new SubscriptionManager();
+
+            Securities = new SecurityManager();
+            Transactions = new SecurityTransactionManager(Securities);
+            Portfolio = new SecurityPortfolioManager(Securities, Transactions, new CashBook(SubscriptionManager));
+            Notify = new NotificationManager(false); // Notification manager defaults to disabled.
 
             //Initialise Algorithm RunMode to Series - Parallel Mode deprecated:
             _runMode = RunMode.Series;

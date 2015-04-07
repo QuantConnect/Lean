@@ -258,6 +258,9 @@ namespace QuantConnect.Lean.Engine
                         var dataPoints = newData[time][i];
                         var config = feed.Subscriptions[i];
 
+                        //On each time step push the real time prices to the cashbook so we can have updated conversion rates
+                        algorithm.Portfolio.CashBook.UpdateConversionRates(feed.RealtimePrices);
+
                         //Keep track of how many data points we've processed
                         _dataPointCount += dataPoints.Count;
 

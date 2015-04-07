@@ -17,6 +17,7 @@ using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -52,9 +53,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we're going to process fills and very our equity after each fill
             var securities = new SecurityManager();
+            var subscriptions = new SubscriptionManager();
             securities.Add("CASH", SecurityType.Base, leverage: 10);
             var transactions = new SecurityTransactionManager(securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new CashBook(subscriptions));
             portfolio.SetCash(equity[0]);
 
             for (int i = 0; i < fills.Count; i++)

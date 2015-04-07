@@ -123,6 +123,8 @@
     <Compile Include="Orders\OrderErrors.cs" />
     <Compile Include="Packets\HandledErrorPacket.cs" />
     <Compile Include="Data\Test\FakeTradeBarCustom.cs" />
+    <Compile Include="Securities\Cash.cs" />
+    <Compile Include="Securities\CashBook.cs" />
     <Compile Include="Securities\IOrderIDMapping.cs" />
     <Compile Include="SeriesSampler.cs" />
     <Compile Include="Data\Custom\Quandl.cs" />
