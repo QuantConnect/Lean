@@ -44,12 +44,12 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Update the current conversion rate for each cash type
         /// </summary>
-        /// <param name="realTimePrices">The list of real time prices directly from the data feed</param>
-        public void UpdateConversionRates(IReadOnlyList<decimal> realTimePrices)
+        /// <param name="data">The new, current data</param>
+        public void Update(Dictionary<int, List<BaseData>> data)
         {
             foreach (var cash in _storage.Values)
             {
-                cash.UpdateConversionRate(realTimePrices);
+                cash.Update(data);
             }
         }
 

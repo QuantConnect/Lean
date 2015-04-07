@@ -14,10 +14,14 @@
 */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 
 namespace QuantConnect.Securities
 {
+    /// <summary>
+    /// Represents a holding of a currency in cash.
+    /// </summary>
     public class Cash
     {
         /// <summary>
@@ -52,7 +56,12 @@ namespace QuantConnect.Securities
             get { return Quantity*ConversionRate; }
         }
 
-        public Cash(string symbol, SubscriptionManager subscriptons)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Cash"/> class
+        /// </summary>
+        /// <param name="symbol">The symbol used to represent this cash</param>
+        /// <param name="subscriptions">The subscription manager used to resolve forex pair for value conversion data</param>
+        public Cash(string symbol, SubscriptionManager subscriptions)
         {
             Symbol = symbol.ToUpper();
             if (Symbol == BaseCurrency)
@@ -65,9 +74,9 @@ namespace QuantConnect.Securities
             // we require a subscription that converts this into USD
             string normal = Symbol + BaseCurrency;
             string invert = BaseCurrency + Symbol;
-            for (int i = 0; i < subscriptons.Subscriptions.Count; i++)
+            for (int i = 0; i < subscriptions.Subscriptions.Count; i++)
             {
-                var config = subscriptons.Subscriptions[i];
+                var config = subscriptions.Subscriptions[i];
                 if (config.Security != SecurityType.Forex)
                 {
                     continue;
@@ -81,6 +90,7 @@ namespace QuantConnect.Securities
                 {
                     _subscriptionIndex = i;
                     _invertRealTimePrice = true;
+                    break;
                 }
             }
 
@@ -94,13 +104,20 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Update the current conversion rate
         /// </summary>
-        /// <param name="realTimePrices">The list of real time prices directly from the data feed</param>
-        public void UpdateConversionRate(IReadOnlyList<decimal> realTimePrices)
+        /// <param name="data">The list of real time prices directly from the data feed</param>
+        public void Update(Dictionary<int, List<BaseData>> data)
         {
             // conversions for base currencies are always identity
             if (_isBaseCurrency) return;
 
-            decimal rate = realTimePrices[_subscriptionIndex];
+            var realTimePrice = data[_subscriptionIndex];
+            if (!data.Any())
+            {
+                // if we don't have data we can't do anything
+                return;
+            }
+
+            decimal rate = realTimePrice[0].Value;
             if (_invertRealTimePrice)
             {
                 rate = 1/rate;
