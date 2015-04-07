@@ -409,7 +409,8 @@ namespace QuantConnect.Lean.Engine
                             }
 
                             //Diagnostics Completed, Send Result Packet:
-                            ResultHandler.DebugMessage("Algorithm Id:(" + job.AlgorithmId + ") completed analysis in " + timer.Elapsed.TotalSeconds.ToString("F2") + " seconds");
+                            ResultHandler.DebugMessage(string.Format("Algorithm Id:({0}) completed analysis in {1} seconds at {2}k data points per second", 
+                                job.AlgorithmId, timer.Elapsed.TotalSeconds.ToString("F2"), (int)AlgorithmManager.DataPointsPerSecond/1000));
                             ResultHandler.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, statistics, banner);
                         }
                         catch (Exception err)
