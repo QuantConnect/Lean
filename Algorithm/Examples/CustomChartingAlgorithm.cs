@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,18 +16,19 @@
 using System;
 using QuantConnect.Data.Market;
 
+
 namespace QuantConnect.Algorithm.Examples
 {
     /// <summary>
     /// 4.0 DEMONSTRATION OF CUSTOM CHARTING FLEXIBILITY:
-    ///
+    /// 
     /// The entire charting system of quantconnect is adaptable. You can adjust it to draw whatever you'd like.
-    ///
+    /// 
     /// Charts can be stacked, or overlayed on each other.
     /// Series can be candles, lines or scatter plots.
-    ///
+    /// 
     /// Even the default behaviours of QuantConnect can be overridden
-    ///
+    /// 
     /// </summary>
     public class CustomChartingAlgorithm : QCAlgorithm
     {
@@ -78,6 +79,7 @@ namespace QuantConnect.Algorithm.Examples
             resamplePeriod = TimeSpan.FromMinutes((endDate - startDate).TotalMinutes / 2000);
         }
 
+
         /// <summary>
         /// OnEndOfDay Event Handler - At the end of each trading day we fire this code.
         /// To avoid flooding, we recommend running your plotting at the end of each day.
@@ -87,6 +89,7 @@ namespace QuantConnect.Algorithm.Examples
             //Log the end of day prices:
             Plot("Trade Plot", "Price", lastPrice);
         }
+
 
         /// <summary>
         /// On receiving new tradebar data it will be passed into this function. The general pattern is:
@@ -109,6 +112,7 @@ namespace QuantConnect.Algorithm.Examples
                 Plot("Strategy Equity", "FastMA", fastMA);
                 Plot("Strategy Equity", "SlowMA", slowMA);
             }
+
 
             //On the 5th days when not invested buy:
             if (!Portfolio.Invested && Time.Day % 13 == 0)

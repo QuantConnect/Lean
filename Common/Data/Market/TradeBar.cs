@@ -1,17 +1,21 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
+/**********************************************************
+* USING NAMESPACES
+**********************************************************/
 
 using System;
 using System.Globalization;
@@ -20,12 +24,12 @@ using QuantConnect.Logging;
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// TradeBar class for second and minute resolution data:
+    /// TradeBar class for second and minute resolution data: 
     /// An OHLC implementation of the QuantConnect BaseData class with parameters for candles.
     /// </summary>
     public class TradeBar : BaseData
     {
-        /********************************************************
+        /******************************************************** 
         * CLASS VARIABLES
         *********************************************************/
         /// <summary>
@@ -66,7 +70,7 @@ namespace QuantConnect.Data.Market
         //In Base Class: DateTime Of this TradeBar
         //public DateTime Time;
 
-        /********************************************************
+        /******************************************************** 
         * CLASS CONSTRUCTORS
         *********************************************************/
         /// <summary>
@@ -78,19 +82,19 @@ namespace QuantConnect.Data.Market
             Time = new DateTime();
             Value = 0;
             DataType = MarketDataType.TradeBar;
-            Open = 0;
+            Open = 0; 
             High = 0;
-            Low = 0;
+            Low = 0; 
             Close = 0;
             Volume = 0;
         }
 
         /// <summary>
-        /// Cloner constructor for implementing fill forward.
+        /// Cloner constructor for implementing fill forward. 
         /// Return a new instance with the same values as this original.
         /// </summary>
         /// <param name="original">Original tradebar object we seek to clone</param>
-        public TradeBar(TradeBar original)
+        public TradeBar(TradeBar original) 
         {
             Time = new DateTime(original.Time.Ticks);
             Symbol = original.Symbol;
@@ -109,7 +113,7 @@ namespace QuantConnect.Data.Market
         /// <param name="baseDate">Base date of this tradebar line</param>
         /// <param name="line">CSV line from source data file</param>
         /// <param name="datafeed">Datafeed this csv line is sourced from (backtesting or live)</param>
-        public TradeBar(SubscriptionDataConfig config, string line, DateTime baseDate, DataFeedEndpoint datafeed = DataFeedEndpoint.Backtesting)
+        public TradeBar(SubscriptionDataConfig config, string line,  DateTime baseDate, DataFeedEndpoint datafeed = DataFeedEndpoint.Backtesting)
         {
             try
             {
@@ -169,7 +173,7 @@ namespace QuantConnect.Data.Market
             Volume = volume;
         }
 
-        /********************************************************
+        /******************************************************** 
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -180,7 +184,7 @@ namespace QuantConnect.Data.Market
         /// <param name="line">Line from the data file requested</param>
         /// <param name="date">Date of this reader request</param>
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed) 
         {
             //Initialize:
             var tradeBar = new TradeBar();
@@ -215,6 +219,7 @@ namespace QuantConnect.Data.Market
             return tradeBar;
         }
 
+
         /// <summary>
         /// Implement the Clone Method for the TradeBar:
         /// </summary>
@@ -224,6 +229,7 @@ namespace QuantConnect.Data.Market
             //Cleanest way to clone an object is to create a new instance using itself as the arguement.
             return new TradeBar(this);
         }
+
 
         /// <summary>
         /// Update the tradebar - build the bar from this pricing information:
@@ -244,6 +250,7 @@ namespace QuantConnect.Data.Market
             Close = lastTrade;
             Value = lastTrade;
         }
+
 
         /// <summary>
         /// Get Source for Custom Data File
@@ -271,7 +278,7 @@ namespace QuantConnect.Data.Market
                         dateFormat = "yyMMdd";
                     }
 
-                    var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol;
+                    var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol; 
                     source = @"../../../Data/" + config.Security.ToString().ToLower();
                     source += @"/" + config.Resolution.ToString().ToLower() + @"/" + symbol.ToLower() + @"/";
                     source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
@@ -284,5 +291,8 @@ namespace QuantConnect.Data.Market
             }
             return source;
         }
+
+
+
     } // End Trade Bar Class
 }

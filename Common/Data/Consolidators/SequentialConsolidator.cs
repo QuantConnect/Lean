@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,8 +29,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public IDataConsolidator First
         {
-            get;
-            private set;
+            get; private set;
         }
 
         /// <summary>
@@ -39,14 +38,13 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public IDataConsolidator Second
         {
-            get;
-            private set;
+            get; private set;
         }
 
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
         /// has not produced any data yet.
-        ///
+        /// 
         /// For a SequentialConsolidator, this is the output from the 'Second' consolidator.
         /// </summary>
         public BaseData Consolidated
@@ -101,7 +99,7 @@ namespace QuantConnect.Data.Consolidators
 
             // wire up the second one to get data from the first
             first.DataConsolidated += (sender, consolidated) => second.Update(consolidated);
-
+            
             // wire up the second one's events to also fire this consolidator's event so consumers
             // can attach
             second.DataConsolidated += (sender, consolidated) => OnDataConsolidated(consolidated);

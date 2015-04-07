@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,22 +27,23 @@ namespace QuantConnect.Data.Market
     /// Ticks collection which implements an IDictionary-string-list of ticks. This way users can iterate over the string indexed ticks of the requested symbol.
     /// </summary>
     /// <remarks>Ticks are timestamped to the nearest second in QuantConnect</remarks>
-    public class Ticks : BaseData, IDictionary<string, List<Tick>>
+    public class Ticks : BaseData, IDictionary<string, List<Tick>> 
     {
-        /********************************************************
+        /******************************************************** 
         * CLASS VARIABLES
         *********************************************************/
         //Private storage of ticks collection
         private Dictionary<string, List<Tick>> _ticks = new Dictionary<string, List<Tick>>();
 
-        /********************************************************
+
+        /******************************************************** 
         * CONSTRUCTOR METHODS
         *********************************************************/
         /// <summary>
         /// Default constructor for the ticks collection
         /// </summary>
         /// <param name="frontier"></param>
-        public Ticks(DateTime frontier)
+        public Ticks(DateTime frontier) 
         {
             Time = frontier;
             Symbol = "";
@@ -50,11 +51,11 @@ namespace QuantConnect.Data.Market
             DataType = MarketDataType.Tick;
         }
 
-        /********************************************************
+        /******************************************************** 
         * CLASS METHODS
-        *********************************************************/
+        *********************************************************/        
         /// <summary>
-        /// Ticks array reader - fetch the data from the QC storage and feed it line by line into the
+        /// Ticks array reader - fetch the data from the QC storage and feed it line by line into the 
         /// system.
         /// </summary>
         /// <param name="datafeed">Who is requesting this data, backtest or live streamer</param>
@@ -68,7 +69,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Clonable Interface; create a new instance of the object
+        /// Clonable Interface; create a new instance of the object 
         /// - Don't need to implement for Ticks array, each symbol-subscription is treated separately.
         /// </summary>
         /// <returns>BaseData clone of the Ticks Array</returns>
@@ -111,10 +112,9 @@ namespace QuantConnect.Data.Market
         {
             return _ticks.GetEnumerator();
         }
-
-        IEnumerator IEnumerable.GetEnumerator()
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            return ((IDictionary<string, List<Tick>>)this).GetEnumerator();
+            return ((IDictionary)this).GetEnumerator();
         }
 
         /// <summary>
@@ -245,7 +245,7 @@ namespace QuantConnect.Data.Market
                     return output;
                 }
 
-                throw new KeyNotFoundException(string.Format("'{0}' wasn't found in the Ticks object, likely because there was no-data at this moment in time. Please check the data exists before accessing it with data.ContainsKey(\"{0}\")", key));
+                throw new KeyNotFoundException("'" + key + "' wasn't found in the Ticks object, likely because there was no-data at this moment in time. Please check the data exists before accessing it with data.ContainsKey(\"" + key + "\")");
             }
             set
             {
@@ -286,24 +286,16 @@ namespace QuantConnect.Data.Market
         private static void Copy<T>(ICollection<T> source, T[] array, int arrayIndex)
         {
             if (array == null)
-            {
                 throw new ArgumentNullException("array");
-            }
 
             if (arrayIndex < 0 || arrayIndex > array.Length)
-            {
                 throw new ArgumentOutOfRangeException("arrayIndex");
-            }
 
             if ((array.Length - arrayIndex) < source.Count)
-            {
                 throw new ArgumentException("Destination array is not large enough. Check array.Length and arrayIndex.");
-            }
 
             foreach (var item in source)
-            {
                 array[arrayIndex++] = item;
-            }
         }
     }
 } // End QC Namespace

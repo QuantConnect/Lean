@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,14 +13,18 @@
  * limitations under the License.
 */
 
+/**********************************************************
+* USING NAMESPACES
+**********************************************************/
+
 using System;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 
-namespace QuantConnect.Securities.Interfaces
+namespace QuantConnect.Securities.Interfaces 
 {
-    /********************************************************
+    /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -30,7 +34,7 @@ namespace QuantConnect.Securities.Interfaces
     /// <seealso cref="ForexTransactionModel"/>
     public interface ISecurityTransactionModel
     {
-        /********************************************************
+        /******************************************************** 
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -40,12 +44,14 @@ namespace QuantConnect.Securities.Interfaces
         /// <param name="order">Order to update</param>
         OrderEvent MarketFill(Security asset, MarketOrder order);
 
+
         /// <summary>
         /// Stop Market Fill Model. Return an order event with the fill details.
         /// </summary>
         /// <param name="asset">Asset we're trading this order</param>
         /// <param name="order">Stop Order to Check, return filled if true</param>
         OrderEvent StopMarketFill(Security asset, StopMarketOrder order);
+
 
         /// <summary>
         /// Stop Limit Fill Model. Return an order event with the fill details.
@@ -55,6 +61,7 @@ namespace QuantConnect.Securities.Interfaces
         /// <returns></returns>
         OrderEvent StopLimitFill(Security asset, StopLimitOrder order);
 
+
         /// <summary>
         /// Limit Fill Model. Return an order event with the fill details.
         /// </summary>
@@ -62,10 +69,12 @@ namespace QuantConnect.Securities.Interfaces
         /// <param name="order">Order to fill. Alter the values directly if filled.</param>
         OrderEvent LimitFill(Security asset, LimitOrder order);
 
+
         /// <summary>
         /// Slippage Model. Return a decimal cash slippage approximation on the order.
         /// </summary>
         decimal GetSlippageApproximation(Security asset, Order order);
+
 
         /// <summary>
         /// Fee Model. Return the decimal fees from one order. Currently defaults to interactive
@@ -75,6 +84,7 @@ namespace QuantConnect.Securities.Interfaces
         /// <returns>Decimal value of the Order Fee</returns>
         decimal GetOrderFee(decimal quantity, decimal price);
 
+
         /// <summary>
         /// Perform neccessary check to see if the model has been filled, appoximate the best we can.
         /// </summary>
@@ -82,6 +92,7 @@ namespace QuantConnect.Securities.Interfaces
         /// <param name="order">Order class to check if filled.</param>
         [Obsolete("Fill(Security, Order) method has been made obsolete, use fill methods directly instead (e.g. MarketFill(security, marketOrder)).")]
         OrderEvent Fill(Security asset, Order order);
+
 
         /// <summary>
         /// Model the slippage on a market order: fixed percentage of order price
@@ -91,6 +102,7 @@ namespace QuantConnect.Securities.Interfaces
         [Obsolete("MarketFill(Security, Order) method has been made obsolete, use MarketFill(Security, MarketOrder) method instead.")]
         OrderEvent MarketFill(Security asset, Order order);
 
+
         /// <summary>
         /// Check if the model has stopped out our position yet: (Stop Market Order Type)
         /// </summary>
@@ -98,6 +110,7 @@ namespace QuantConnect.Securities.Interfaces
         /// <param name="order">Stop Order to Check, return filled if true</param>
         [Obsolete("StopFill(Security, Order) method has been made obsolete, use StopMarketFill(Security, StopMarketOrder) method instead.")]
         OrderEvent StopFill(Security asset, Order order);
+
 
         /// <summary>
         /// Model for a limit fill.

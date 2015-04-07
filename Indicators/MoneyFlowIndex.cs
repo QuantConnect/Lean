@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,21 +15,22 @@
 
 using QuantConnect.Data.Market;
 
+
 namespace QuantConnect.Indicators
 {
 
     /// <summary>
-    ///     The Money Flow Index (MFI) is an oscillator that uses both price and volume to
+    ///     The Money Flow Index (MFI) is an oscillator that uses both price and volume to 
     ///     measure buying and selling pressure
-    ///
+    ///     
     ///     Typical Price = (High + Low + Close)/3
     ///     Money Flow = Typical Price x Volume
-    ///     Positve Money Flow = Sum of the money flows of all days where the typical
+    ///     Positve Money Flow = Sum of the money flows of all days where the typical 
     ///         price is greater than the previous day's typical price
-    ///     Negative Money Flow = Sum of the money flows of all days where the typical
+    ///     Negative Money Flow = Sum of the money flows of all days where the typical 
     ///         price is less than the previous day's typical price
     ///     Money Flow Ratio = (14-period Positive Money Flow)/(14-period Negative Money Flow)
-    ///
+    ///     
     ///     Money Flow Index = 100 x  Positve Money Flow / ( Positve Money Flow + Negative Money Flow)
     /// </summary>
     public class MoneyFlowIndex : TradeBarIndicator
@@ -90,8 +91,8 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            decimal typicalPrice = (input.High + input.Low + input.Close) / 3.0m;
-            decimal moneyFlow = typicalPrice * input.Volume;
+            decimal typicalPrice = (input.High + input.Low + input.Close)/3.0m;
+            decimal moneyFlow = typicalPrice*input.Volume;
 
             PositiveMoneyFlow.Update(input.Time, typicalPrice > PreviousTypicalPrice ? moneyFlow : 0.0m);
             NegativeMoneyFlow.Update(input.Time, typicalPrice < PreviousTypicalPrice ? moneyFlow : 0.0m);
@@ -103,7 +104,7 @@ namespace QuantConnect.Indicators
                 return 100.0m;
             }
 
-            return 100m * PositiveMoneyFlow.Current.Value / totalMoneyFlow;
+            return 100m*PositiveMoneyFlow.Current.Value/totalMoneyFlow;
         }
     }
 }

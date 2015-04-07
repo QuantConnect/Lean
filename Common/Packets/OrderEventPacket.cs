@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,16 +23,16 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Packets
 {
-    /********************************************************
+    /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
-    /// Order event packet for passing updates on the state of an order to the portfolio.
+    /// Order event packet for passing updates on the state of an order to the portfolio. 
     /// </summary>
     /// <remarks>As an order is updated in pieces/partial fills the order fill price is passed back to the Algorithm Portfolio method</remarks>
     public class OrderEventPacket : Packet
     {
-        /********************************************************
+        /******************************************************** 
         * CLASS VARIABLES
         *********************************************************/
         /// <summary>
@@ -47,17 +47,15 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "sAlgorithmID")]
         public string AlgorithmId;
 
-        /********************************************************
+        /******************************************************** 
         * CLASS CONSTRUCTOR
         *********************************************************/
-
         /// <summary>
         /// Default constructor for JSON
         /// </summary>
         public OrderEventPacket()
-            : base(PacketType.OrderEvent)
-        {
-        }
+            : base (PacketType.OrderEvent)
+        { }
 
         /// <summary>
         /// Create a new instance of the order event packet
@@ -68,6 +66,7 @@ namespace QuantConnect.Packets
             AlgorithmId = algorithmId;
             Event = eventOrder;
         }
-
+    
     } // End Order Event Packet:
+
 } // End of Namespace:

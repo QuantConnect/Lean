@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -160,10 +160,10 @@ namespace QuantConnect.Brokerages.Backtesting
         /// </summary>
         public void Scan()
         {
-            //2. NOW ALL ORDERS IN ORDER DICTIONARY::>
+            //2. NOW ALL ORDERS IN ORDER DICTIONARY::> 
             //   Scan through Orders: Process fills. Trigger Events.
             //   Refresh the order model: look at the orders for ones - process every time.
-
+            
             // find orders that still need to be processed, be sure to sort them by their id so we
             // fill them in the proper order
             var orders = (from order in _orders
@@ -196,15 +196,12 @@ namespace QuantConnect.Brokerages.Backtesting
                             case OrderType.Limit:
                                 fill = model.LimitFill(_algorithm.Securities[order.Symbol], order as LimitOrder);
                                 break;
-
                             case OrderType.StopMarket:
                                 fill = model.StopMarketFill(_algorithm.Securities[order.Symbol], order as StopMarketOrder);
                                 break;
-
                             case OrderType.Market:
                                 fill = model.MarketFill(_algorithm.Securities[order.Symbol], order as MarketOrder);
                                 break;
-
                             case OrderType.StopLimit:
                                 fill = model.StopLimitFill(_algorithm.Securities[order.Symbol], order as StopLimitOrder);
                                 break;

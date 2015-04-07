@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,20 +38,20 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 
-namespace QuantConnect.Lean.Engine
+namespace QuantConnect.Lean.Engine 
 {
-    /********************************************************
+    /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
     /// LEAN ALGORITHMIC TRADING ENGINE: ENTRY POINT.
-    ///
-    /// The engine loads new tasks, create the algorithms and threads, and sends them
+    /// 
+    /// The engine loads new tasks, create the algorithms and threads, and sends them 
     /// to Algorithm Manager to be executed. It is the primary operating loop.
     /// </summary>
-    public class Engine
+    public class Engine 
     {
-        /********************************************************
+        /******************************************************** 
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         private static bool _liveMode = Config.GetBool("live-mode");
@@ -60,7 +60,7 @@ namespace QuantConnect.Lean.Engine
         private static IBrokerage _brokerage;
         private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
 
-        /********************************************************
+        /******************************************************** 
         * CLASS PUBLIC VARIABLES
         *********************************************************/
         /// <summary>
@@ -84,7 +84,7 @@ namespace QuantConnect.Lean.Engine
         public static ISetupHandler SetupHandler;
 
         /// <summary>
-        /// RealTime events handlers trigger function callbacks at specific times during the day for the algorithms.
+        /// RealTime events handlers trigger function callbacks at specific times during the day for the algorithms. 
         /// Works for backtests and live trading.
         /// </summary>
         public static IRealTimeHandler RealTimeHandler;
@@ -116,15 +116,14 @@ namespace QuantConnect.Lean.Engine
         public static IApi Api;
 
         /// <summary>
-        /// Version of the engine that is running. This is required for retiring old processing
+        /// Version of the engine that is running. This is required for retiring old processing 
         /// and live trading nodes during live trading.
         /// </summary>
         public static DateTime Version
         {
             get { return _version; }
         }
-
-        /********************************************************
+        /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
         /// <summary>
@@ -161,7 +160,7 @@ namespace QuantConnect.Lean.Engine
                 //Total Physical Ram Available:
                 var allocation = 1024;
                 var ram = Convert.ToInt32(OS.TotalPhysicalMemory);
-
+                
                 if (ram < allocation)
                 {
                     allocation = ram - 200;
@@ -175,17 +174,17 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        /********************************************************
+        /******************************************************** 
         * CLASS METHODS
         *********************************************************/
         /// <summary>
         /// Primary Analysis Thread:
         /// </summary>
-        public static void Main(string[] args)
+        public static void Main(string[] args) 
         {
             // pick an implementation of ILogHandler for the application
-            Log.LogHandler = IsLocal
-                ? (ILogHandler)new ConsoleLogHandler()
+            Log.LogHandler = IsLocal 
+                ? (ILogHandler) new ConsoleLogHandler() 
                 : new FileLogHandler("log.txt");
 
             //Initialize:
@@ -194,12 +193,12 @@ namespace QuantConnect.Lean.Engine
             var timer = Stopwatch.StartNew();
             var algorithm = default(IAlgorithm);
             _version = DateTime.ParseExact(Config.Get("version", DateTime.Now.ToString(DateFormat.UI)), DateFormat.UI, CultureInfo.InvariantCulture);
-
+            
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
             Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + _version);
             Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
-            Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
+            Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + +OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
 
             //Import external libraries specific to physical server location (cloud/local)
             try
@@ -210,8 +209,7 @@ namespace QuantConnect.Lean.Engine
                 Api = Composer.Instance.GetExportedValueByTypeName<IApi>(Config.Get("api-handler"));
             }
             catch (CompositionException compositionException)
-            {
-                Log.Error("Engine.Main(): Failed to load library: " + compositionException);
+            { Log.Error("Engine.Main(): Failed to load library: " + compositionException);
             }
 
             //Setup packeting, queue and controls system: These don't do much locally.
@@ -253,6 +251,7 @@ namespace QuantConnect.Lean.Engine
                             job = null;
                         }
                     } while (job == null);
+                    
 
                     //-> Initialize messaging system
                     Notify.SetChannel(job.Channel);
@@ -265,7 +264,7 @@ namespace QuantConnect.Lean.Engine
 
                     //-> Set the result handler type for this algorithm job, and launch the associated result thread.
                     ResultHandler = GetResultHandler(job);
-                    threadResults = new Thread(ResultHandler.Run, 0) { Name = "Result Thread" };
+                    threadResults = new Thread(ResultHandler.Run, 0) {Name = "Result Thread"};
                     threadResults.Start();
 
                     try
@@ -303,9 +302,9 @@ namespace QuantConnect.Lean.Engine
 
                         //Load the associated handlers for data, transaction and realtime events:
                         ResultHandler.SetAlgorithm(algorithm);
-                        DataFeed = GetDataFeedHandler(algorithm, job);
-                        TransactionHandler = GetTransactionHandler(algorithm, _brokerage, ResultHandler, job);
-                        RealTimeHandler = GetRealTimeHandler(algorithm, _brokerage, DataFeed, ResultHandler, job);
+                        DataFeed            = GetDataFeedHandler(algorithm, job);
+                        TransactionHandler  = GetTransactionHandler(algorithm, _brokerage, ResultHandler, job);
+                        RealTimeHandler     = GetRealTimeHandler(algorithm, _brokerage, DataFeed, ResultHandler, job);
 
                         //Set the error handlers for the brokerage asynchronous errors.
                         SetupHandler.SetupErrorHandler(ResultHandler, _brokerage);
@@ -314,12 +313,12 @@ namespace QuantConnect.Lean.Engine
                         ResultHandler.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Running);
 
                         //Launch the data, transaction and realtime handlers into dedicated threads
-                        threadFeed = new Thread(DataFeed.Run, 0) { Name = "DataFeed Thread" };
-                        threadTransactions = new Thread(TransactionHandler.Run, 0) { Name = "Transaction Thread" };
-                        threadRealTime = new Thread(RealTimeHandler.Run, 0) { Name = "RealTime Thread" };
+                        threadFeed = new Thread(DataFeed.Run, 0) {Name = "DataFeed Thread"};
+                        threadTransactions = new Thread(TransactionHandler.Run, 0) {Name = "Transaction Thread"};
+                        threadRealTime = new Thread(RealTimeHandler.Run, 0) {Name = "RealTime Thread"};
 
                         //Launch the data feed, result sending, and transaction models/handlers in separate threads.
-                        threadFeed.Start(); // Data feed pushing data packets into thread bridge;
+                        threadFeed.Start(); // Data feed pushing data packets into thread bridge; 
                         threadTransactions.Start(); // Transaction modeller scanning new order requests
                         threadRealTime.Start(); // RealTime scan time for time based events:
                         // Result manager scanning message queue: (started earlier)
@@ -332,8 +331,8 @@ namespace QuantConnect.Lean.Engine
                                 try
                                 {
                                     //Run Algorithm Job:
-                                    // -> Using this Data Feed,
-                                    // -> Send Orders to this TransactionHandler,
+                                    // -> Using this Data Feed, 
+                                    // -> Send Orders to this TransactionHandler, 
                                     // -> Send Results to ResultHandler.
                                     AlgorithmManager.Run(job, algorithm, DataFeed, TransactionHandler, ResultHandler, SetupHandler, RealTimeHandler);
                                 }
@@ -375,7 +374,7 @@ namespace QuantConnect.Lean.Engine
                         }
 
                         //Send result data back: this entire code block could be rewritten.
-                        // todo: - Split up statistics class, its enormous.
+                        // todo: - Split up statistics class, its enormous. 
                         // todo: - Make a dedicated Statistics.Benchmark class.
                         // todo: - Move all creation and transmission of statistics out of primary engine loop.
                         // todo: - Statistics.Generate(algorithm, resulthandler, transactionhandler);
@@ -422,7 +421,7 @@ namespace QuantConnect.Lean.Engine
                             Log.Error("Engine.Main(): Error sending analysis result: " + err.Message + "  ST >> " + err.StackTrace);
                         }
 
-                        //Before we return, send terminate commands to close up the threads
+                        //Before we return, send terminate commands to close up the threads 
                         timer.Stop(); //Algorithm finished running.
                         TransactionHandler.Exit();
                         DataFeed.Exit();
@@ -447,16 +446,16 @@ namespace QuantConnect.Lean.Engine
                 {
                     Log.Error("Engine.Main(): Error running algorithm: " + err.Message + " >> " + err.StackTrace);
                 }
-                finally
+                finally 
                 {
                     //Delete the message from the job queue:
                     Queue.AcknowledgeJob(job);
                     Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
 
                     //No matter what for live mode; make sure we've set algorithm status in the API for "not running" conditions:
-                    if (LiveMode && AlgorithmManager.State != AlgorithmStatus.Running && AlgorithmManager.State != AlgorithmStatus.RuntimeError)
+                    if (LiveMode && AlgorithmManager.State != AlgorithmStatus.Running && AlgorithmManager.State != AlgorithmStatus.RuntimeError) 
                         Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmManager.State);
-
+                    
                     //Attempt to clean up ram usage:
                     GC.Collect();
                 }
@@ -465,7 +464,7 @@ namespace QuantConnect.Lean.Engine
 
             // Send the exit signal and then kill the thread
             StateCheck.Ping.Exit();
-
+            
             // Make the console window pause so we can read log output before exiting and killing the application completely
             Console.ReadKey();
 
@@ -478,6 +477,8 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
+
+
         /// <summary>
         /// Get an instance of the data feed handler we're requesting for this work.
         /// </summary>
@@ -487,7 +488,7 @@ namespace QuantConnect.Lean.Engine
         private static IDataFeed GetDataFeedHandler(IAlgorithm algorithm, AlgorithmNodePacket job)
         {
             var df = default(IDataFeed);
-            switch (job.DataEndpoint)
+            switch (job.DataEndpoint) 
             {
                 //default:
                 ////Backtesting:
@@ -514,7 +515,6 @@ namespace QuantConnect.Lean.Engine
                     Log.Trace("Engine.GetDataFeedHandler(): Selected Test Datafeed at " + feed.FastForward + "x");
                     break;
             }
-
             return df;
         }
 
@@ -525,7 +525,7 @@ namespace QuantConnect.Lean.Engine
         {
             var rth = default(IRealTimeHandler);
             switch (job.RealTimeEndpoint)
-            {
+            { 
                 //Don't fire based on system time but virtualized backtesting time.
                 case RealTimeEndpoint.Backtesting:
                     Log.Trace("Engine.GetRealTimeHandler(): Selected Backtesting RealTimeEvent Handler");
@@ -538,9 +538,9 @@ namespace QuantConnect.Lean.Engine
                     rth = new LiveTradingRealTimeHandler(algorithm, feed, results);
                     break;
             }
-
             return rth;
         }
+
 
         /// <summary>
         /// Get an instance of the transaction handler set by the task.
@@ -566,7 +566,6 @@ namespace QuantConnect.Lean.Engine
                     Log.Trace("Engine.GetTransactionHandler(): Selected Backtesting Transaction Models.");
                     break;
             }
-
             return th;
         }
 
@@ -600,9 +599,9 @@ namespace QuantConnect.Lean.Engine
                     rh = new LiveTradingResultHandler((LiveNodePacket)job);
                     break;
             }
-
             return rh;
         }
+
 
         /// <summary>
         /// Get the setup handler for this algorithm, depending on its use case.
@@ -620,13 +619,11 @@ namespace QuantConnect.Lean.Engine
                     sh = new ConsoleSetupHandler();
                     Log.Trace("Engine.GetSetupHandler(): Selected Console Algorithm Setup Handler.");
                     break;
-
                 //Default, backtesting result handler:
                 case SetupHandlerEndpoint.Backtesting:
                     sh = new BacktestingSetupHandler();
                     Log.Trace("Engine.GetSetupHandler(): Selected Backtesting Algorithm Setup Handler.");
                     break;
-
                 case SetupHandlerEndpoint.PaperTrading:
                     sh = new PaperTradingSetupHandler();
                     Log.Trace("Engine.GetSetupHandler(): Selected PaperTrading Algorithm Setup Handler.");
@@ -639,5 +636,5 @@ namespace QuantConnect.Lean.Engine
             return sh;
         }
     } // End Algorithm Node Core Thread
-
+    
 } // End Namespace

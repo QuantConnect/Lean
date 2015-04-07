@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,7 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine
 {
-    /********************************************************
+    /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -34,7 +34,7 @@ namespace QuantConnect.Lean.Engine
     /// </summary>
     public class SubscriptionAdjustment
     {
-        /********************************************************
+        /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
         /// <summary>
@@ -48,7 +48,7 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        /********************************************************
+        /******************************************************** 
         * CLASS METHODS:
         *********************************************************/
 
@@ -64,7 +64,6 @@ namespace QuantConnect.Lean.Engine
             {
                 return true;
             }
-
             return false;
         }
 
@@ -83,9 +82,9 @@ namespace QuantConnect.Lean.Engine
                 if (splitDate.Date < searchDate.Date) break;
                 factor = factorTable[splitDate];
             }
-
             return factor;
         }
+
 
         /// <summary>
         /// Get the factor-table in memory.
@@ -109,9 +108,10 @@ namespace QuantConnect.Lean.Engine
                     factorTable.Add(Time.ParseDate(csv[0]), Convert.ToDecimal(csv[1], CultureInfo.InvariantCulture) * Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture));
                 }
             }
-
             return factorTable;
         }
+
+
 
         /// <summary>
         /// Get a map table for the symbol requested into memory.
@@ -139,6 +139,7 @@ namespace QuantConnect.Lean.Engine
             return symbolMapTable;
         }
 
+
         /// <summary>
         /// Get a historical mapped symbol for this requested symbol at this date in time.
         /// </summary>
@@ -164,9 +165,9 @@ namespace QuantConnect.Lean.Engine
             {
                 Log.Error("GetMappedTick(): " + err.Message);
             }
-
             return mappedSymbol;
         }
+
 
         /// <summary>
         /// Memory overload search method for finding the mapped symbol for this date.

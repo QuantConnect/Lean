@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,24 +20,25 @@
 
 using System;
 using System.IO;
+using Newtonsoft.Json;
 using QuantConnect.Logging;
 using RestSharp;
 
 namespace QuantConnect.Lean.Engine
 {
-    /********************************************************
+    /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
     /// Wrapper on stream reader to make it compatible with reading real files, or calling live REST endpoints.
     /// </summary>
     /// <remarks>
-    /// BaseData class can accept live REST endpoints as data sources which are polled on the frequency
-    /// specified in the custom data resolution.
+    ///     BaseData class can accept live REST endpoints as data sources which are polled on the frequency 
+    ///     specified in the custom data resolution.
     /// </remarks>
     public class SubscriptionStreamReader : IStreamReader
     {
-        /********************************************************
+        /******************************************************** 
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         private StreamReader _sr = null;
@@ -45,20 +46,20 @@ namespace QuantConnect.Lean.Engine
         private RestRequest _request = new RestRequest();
         private DataFeedEndpoint _dataFeed = DataFeedEndpoint.Backtesting;
 
-        /********************************************************
+        /******************************************************** 
         * CLASS PUBLIC PROPERTIES:
         *********************************************************/
         /// <summary>
-        /// End of stream boolean flag.
+        /// End of stream boolean flag. 
         /// </summary>
         /// <remarks>Files EOS is based on the underlying stream reader, but a REST API is always open.</remarks>
-        public bool EndOfStream
+        public bool EndOfStream 
         {
             get
             {
                 var eos = false;
                 switch (_dataFeed)
-                {
+                { 
                     case DataFeedEndpoint.FileSystem:
                     case DataFeedEndpoint.Backtesting:
                         eos = _sr.EndOfStream;
@@ -68,12 +69,12 @@ namespace QuantConnect.Lean.Engine
                         eos = false;
                         break;
                 }
-
                 return eos;
             }
         }
+        
 
-        /********************************************************
+        /******************************************************** 
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -107,7 +108,7 @@ namespace QuantConnect.Lean.Engine
             _dataFeed = datafeed;
         }
 
-        /********************************************************
+        /******************************************************** 
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -119,12 +120,12 @@ namespace QuantConnect.Lean.Engine
             var line = "";
 
             switch (_dataFeed)
-            {
+            { 
                 case DataFeedEndpoint.FileSystem:
                 case DataFeedEndpoint.Backtesting:
                     line = _sr.ReadLine();
                     break;
-
+                
                 case DataFeedEndpoint.LiveTrading:
                     try
                     {
@@ -137,7 +138,6 @@ namespace QuantConnect.Lean.Engine
                     }
                     break;
             }
-
             return line;
         }
 
@@ -165,13 +165,15 @@ namespace QuantConnect.Lean.Engine
 
     } // End of Class
 
+
     /// <summary>
     /// IStream Reader for enchancing the basic SR classes to include REST calls.
     /// </summary>
     public interface IStreamReader
     {
         /// IStream Reader Implementation - End of Stream.
-        bool EndOfStream { get; }
+        bool EndOfStream
+        { get; }
 
         /// IStream Reader Implementation - Read Line.
         string ReadLine();
