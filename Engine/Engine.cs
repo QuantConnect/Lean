@@ -206,7 +206,7 @@ namespace QuantConnect.Lean.Engine
             {
                 // grab the right export based on configuration
                 Notify = Composer.Instance.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler"));
-                Queue = Composer.Instance.GetExportedValueByTypeName<IJobQueueHandler>(Config.Get("job-queue-handler"));
+                JobQueue = Composer.Instance.GetExportedValueByTypeName<IJobQueueHandler>(Config.Get("job-queue-handler"));
                 Api = Composer.Instance.GetExportedValueByTypeName<IApi>(Config.Get("api-handler"));
             }
             catch (CompositionException compositionException)
@@ -505,7 +505,7 @@ namespace QuantConnect.Lean.Engine
 
                 //Live Trading Data Source:
                 case DataFeedEndpoint.LiveTrading:
-                    var ds = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Config.Get("data-queue-handler"));
+                    var ds = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Config.Get("data-queue-handler", "LiveDataQueue"));
                     df = new PaperTradingDataFeed(algorithm, ds, (LiveNodePacket)job);
                     Log.Trace("Engine.GetDataFeedHandler(): Selected LiveTrading Datafeed");
                     break;
