@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
-
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -97,15 +96,15 @@ namespace QuantConnect.Tests.Common.Data
             };
 
             var reference = new DateTime(2014, 12, 01, 01, 01, 00);
-            consolidator.Update(new TradeBar {Close = 1m, Time = reference});
+            consolidator.Update(new TradeBar { Close = 1m, Time = reference });
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(1, consolidated.Close);
 
-            consolidator.Update(new TradeBar {Close = 2m, Time = reference});
+            consolidator.Update(new TradeBar { Close = 2m, Time = reference });
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(2, consolidated.Close);
 
-            consolidator.Update(new TradeBar {Close = 3m, Time = reference});
+            consolidator.Update(new TradeBar { Close = 3m, Time = reference });
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(3, consolidated.Close);
         }
@@ -125,14 +124,14 @@ namespace QuantConnect.Tests.Common.Data
             };
 
             var reference = new DateTime(2014, 12, 01, 01, 01, 00);
-            consolidator.Update(new TradeBar {Close = 1m, Time = reference});
+            consolidator.Update(new TradeBar { Close = 1m, Time = reference });
             Assert.IsNull(consolidated);
 
-            consolidator.Update(new TradeBar {Close = 2m, Time = reference.AddMinutes(1)});
+            consolidator.Update(new TradeBar { Close = 2m, Time = reference.AddMinutes(1) });
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(1, consolidated.Close);
 
-            consolidator.Update(new TradeBar {Close = 3m, Time = reference.AddMinutes(2)});
+            consolidator.Update(new TradeBar { Close = 3m, Time = reference.AddMinutes(2) });
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(2, consolidated.Close);
         }
@@ -168,7 +167,7 @@ namespace QuantConnect.Tests.Common.Data
                 Low = 35,
                 Close = 75,
                 Volume = 100,
-                DataType = MarketDataType.TradeBar  
+                DataType = MarketDataType.TradeBar
             };
 
             var tb3 = new TradeBar
@@ -212,36 +211,36 @@ namespace QuantConnect.Tests.Common.Data
             var reference = new DateTime(2014, 12, 1, 10, 00, 0);
 
             //10:00 - new
-            consolidator.Update(new TradeBar {Time = reference});
+            consolidator.Update(new TradeBar { Time = reference });
             Assert.IsNull(consolidated);
 
             //10:01 - aggregate/fire
-            consolidator.Update(new TradeBar {Time = reference.AddMinutes(1)});
+            consolidator.Update(new TradeBar { Time = reference.AddMinutes(1) });
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(reference, consolidated.Time);
 
             //10:02 - new/fire
-            consolidator.Update(new TradeBar {Time = reference.AddMinutes(2)});
+            consolidator.Update(new TradeBar { Time = reference.AddMinutes(2) });
             Assert.AreEqual(reference.AddMinutes(1), consolidated.Time);
 
             //10:03 - new/fire
-            consolidator.Update(new TradeBar {Time = reference.AddMinutes(3)});
+            consolidator.Update(new TradeBar { Time = reference.AddMinutes(3) });
             Assert.AreEqual(reference.AddMinutes(2), consolidated.Time);
 
             //10:05 - new/fire
-            consolidator.Update(new TradeBar {Time = reference.AddMinutes(5)});
+            consolidator.Update(new TradeBar { Time = reference.AddMinutes(5) });
             Assert.AreEqual(reference.AddMinutes(3), consolidated.Time);
 
             //10:08 - new/fire
-            consolidator.Update(new TradeBar {Time = reference.AddMinutes(8)});
+            consolidator.Update(new TradeBar { Time = reference.AddMinutes(8) });
             Assert.AreEqual(reference.AddMinutes(5), consolidated.Time);
 
             //10:08:01 - new
-            consolidator.Update(new TradeBar {Time = reference.AddMinutes(8).AddSeconds(1)});
+            consolidator.Update(new TradeBar { Time = reference.AddMinutes(8).AddSeconds(1) });
             Assert.AreEqual(reference.AddMinutes(5), consolidated.Time);
 
             //10:09 - new/fire
-            consolidator.Update(new TradeBar {Time = reference.AddMinutes(9)});
+            consolidator.Update(new TradeBar { Time = reference.AddMinutes(9) });
             Assert.AreEqual(reference.AddMinutes(8), consolidated.Time);
 
         }
@@ -261,28 +260,28 @@ namespace QuantConnect.Tests.Common.Data
             var reference = new DateTime(2014, 12, 1, 10, 00, 0);
 
             //10:00 - new
-            consolidator.Update(new TradeBar {Time = reference});
+            consolidator.Update(new TradeBar { Time = reference });
             Assert.IsNull(consolidated);
 
             //10:01 - aggregate
-            consolidator.Update(new TradeBar {Time = reference.AddMinutes(1)});
+            consolidator.Update(new TradeBar { Time = reference.AddMinutes(1) });
             Assert.IsNull(consolidated);
-            
+
             //10:02 - fire
-            consolidator.Update(new TradeBar {Time = reference.AddMinutes(2)});
+            consolidator.Update(new TradeBar { Time = reference.AddMinutes(2) });
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(reference, consolidated.Time);
 
             //10:03 - new
-            consolidator.Update(new TradeBar {Time = reference.AddMinutes(3)});
+            consolidator.Update(new TradeBar { Time = reference.AddMinutes(3) });
             Assert.AreEqual(reference, consolidated.Time);
 
             //10:06 - aggregate/fire
-            consolidator.Update(new TradeBar {Time = reference.AddMinutes(6)});
+            consolidator.Update(new TradeBar { Time = reference.AddMinutes(6) });
             Assert.AreEqual(reference.AddMinutes(3), consolidated.Time);
 
             //10:08 - new/fire -- will have timestamp from 10:08, instead of 10:06
-            consolidator.Update(new TradeBar {Time = reference.AddMinutes(8)});
+            consolidator.Update(new TradeBar { Time = reference.AddMinutes(8) });
             Assert.AreEqual(reference.AddMinutes(8), consolidated.Time);
         }
 
@@ -302,21 +301,23 @@ namespace QuantConnect.Tests.Common.Data
 
             // from 1/1 9:30 to 1/2 12:00 by minute
             var start = new DateTime(2014, 01, 01, 09, 30, 00, 00);
-            var end =   new DateTime(2014, 01, 02, 12, 00, 00, 00);
+            var end = new DateTime(2014, 01, 02, 12, 00, 00, 00);
             foreach (var bar in StreamTradeBars(start, end, TimeSpan.FromMinutes(1)))
             {
                 consolidator.Update(bar);
             }
         }
 
-        [Test]
-        /// Testing the behavious where, the bar range is closed on the left and open on 
+        /// <summary>
+        /// Testing the behavious where, the bar range is closed on the left and open on
         /// the right in time span mode: [T, T+TimeSpan).
-        /// For example, if time span is 1 minute, we have [10:00, 10:01): so data at 
+        /// For example, if time span is 1 minute, we have [10:00, 10:01): so data at
         /// 10:01 is not included in the bar starting at 10:00.
+        /// </summary>
+        [Test]
         public void ClosedLeftOpenRightInTimeSpanModeTest()
         {
-            // define a three minute consolidator 
+            // define a three minute consolidator
             int timeSpanUnits = 3;
             var consolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(timeSpanUnits));
 
@@ -329,7 +330,7 @@ namespace QuantConnect.Tests.Common.Data
             var refDateTime = new DateTime(2014, 12, 1, 10, 00, 0);
 
             // loop for 3 times the timeSpanUnits + 1, so it would consolidate the bars 3 times
-            for (int i=0; i < 3*timeSpanUnits + 1 ; ++i) 
+            for (int i = 0; i < 3 * timeSpanUnits + 1; ++i)
             {
                 consolidator.Update(new TradeBar { Time = refDateTime });
 
@@ -337,7 +338,7 @@ namespace QuantConnect.Tests.Common.Data
                 {
                     Assert.IsNull(consolidated);
                 }
-                else 
+                else
                 {
                     Assert.IsNotNull(consolidated);
                     if (i % timeSpanUnits == 0) // i = 3, 6, 9
@@ -350,7 +351,7 @@ namespace QuantConnect.Tests.Common.Data
             }
         }
 
-        private readonly TimeSpan marketStop = new DateTime(2000, 1, 1, 12+4, 0, 0).TimeOfDay;
+        private readonly TimeSpan marketStop = new DateTime(2000, 1, 1, 12 + 4, 0, 0).TimeOfDay;
         private readonly TimeSpan marketStart = new DateTime(2000, 1, 1, 9, 30, 0).TimeOfDay;
         private IEnumerable<TradeBar> StreamTradeBars(DateTime start, DateTime end, TimeSpan resolution, bool skipAferMarketHours = true)
         {
@@ -364,9 +365,9 @@ namespace QuantConnect.Tests.Common.Data
                     current = current.Date.AddDays(1).Add(marketStart);
                     continue;
                 }
-                
+
                 // either we don't care about after market hours or it's within regular market hours
-                yield return new TradeBar {Time = current};
+                yield return new TradeBar { Time = current };
                 current = current + resolution;
             }
         }

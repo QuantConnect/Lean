@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,8 +22,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -32,7 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public interface IDataFeed
     {
-        /******************************************************** 
+        /********************************************************
         * INTERFACE PROPERTIES
         *********************************************************/
         /// <summary>
@@ -43,7 +41,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             get;
         }
 
-
         /// <summary>
         /// Prices of the datafeed this instant for dynamically updating security values (and calculation of the total portfolio value in realtime).
         /// </summary>
@@ -53,7 +50,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             get;
         }
 
-            /// <summary>
+        /// <summary>
         /// Cross-threading queues so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
         /// </summary>
         ConcurrentQueue<List<BaseData>>[] Bridge
@@ -109,7 +106,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             get;
         }
 
-        /******************************************************** 
+        /********************************************************
         * INTERFACE METHODS
         *********************************************************/
         /// <summary>
@@ -117,12 +114,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         void Run();
 
-
         /// <summary>
         /// External controller calls to signal a terminate of the thread.
         /// </summary>
         void Exit();
-
 
         /// <summary>
         /// Purge all remaining data in the thread.

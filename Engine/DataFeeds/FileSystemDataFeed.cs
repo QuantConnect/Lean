@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,14 +24,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -40,18 +39,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <remarks>Filesystem datafeeds are incredibly fast</remarks>
     public class FileSystemDataFeed : IDataFeed
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS VARIABLES
         *********************************************************/
         // Set types in public area to speed up:
-        private IAlgorithm _algorithm;
-        private BacktestNodePacket _job;
-        private bool _endOfStreams = false;
-        private int _subscriptions = 0;
-        private int _bridgeMax = 500000;
-        private bool _exitTriggered = false;
+        private readonly IAlgorithm _algorithm;
+        private readonly BacktestNodePacket _job;
+        private bool _endOfStreams;
+        private readonly int _subscriptions;
+        private readonly int _bridgeMax = 500000;
+        private bool _exitTriggered;
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PROPERTIES
         *********************************************************/
         /// <summary>
@@ -59,8 +58,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public List<SubscriptionDataConfig> Subscriptions { get; private set; }
 
-
-        public List<decimal> RealtimePrices { get; private set; } 
+        /// <summary>
+        /// List of the prices obtained from the feed.
+        /// </summary>
+        public List<decimal> RealtimePrices { get; private set; }
 
         /// <summary>
         /// Cross-threading queues so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
@@ -96,9 +97,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Signifying no more data across all bridges
         /// </summary>
-        public bool EndOfBridges 
+        public bool EndOfBridges
         {
-            get 
+            get
             {
                 for (var i = 0; i < Bridge.Length; i++)
                 {
@@ -121,7 +122,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public DateTime[] FillForwardFrontiers;
 
-        /******************************************************** 
+        /********************************************************
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -150,7 +151,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _bridgeMax = _bridgeMax / _subscriptions; //Set the bridge maximum count:
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -168,12 +169,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-
         /// <summary>
         /// Get the number of active streams still EndOfBridge array.
         /// </summary>
         /// <returns>Count of the number of streams with data</returns>
-        private int GetActiveStreams() 
+        private int GetActiveStreams()
         {
             //Get the number of active streams:
             var activeStreams = (from stream in EndOfBridge
@@ -182,22 +182,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return activeStreams;
         }
 
-
         /// <summary>
         /// Calculate the minimum increment to scan for data based on the data requested.
         /// </summary>
         /// <param name="includeTick">When true the subscriptions include a tick data source, meaning there is almost no increment.</param>
         /// <returns>Timespan to jump the data source so it efficiently orders the results</returns>
-        private TimeSpan CalculateIncrement(bool includeTick) 
+        private TimeSpan CalculateIncrement(bool includeTick)
         {
             var increment = TimeSpan.FromDays(1);
-            foreach (var config in Subscriptions) 
+            foreach (var config in Subscriptions)
             {
                 switch (config.Resolution)
-                { 
+                {
                     //Hourly TradeBars:
                     case Resolution.Hour:
-                        if (increment > TimeSpan.FromHours(1)) 
+                        if (increment > TimeSpan.FromHours(1))
                         {
                             increment = TimeSpan.FromHours(1);
                         }
@@ -213,7 +212,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     //Secondly Bars:
                     case Resolution.Second:
-                        if (increment > TimeSpan.FromSeconds(1)) 
+                        if (increment > TimeSpan.FromSeconds(1))
                         {
                             increment = TimeSpan.FromSeconds(1);
                         }
@@ -228,11 +227,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         break;
                 }
             }
+
             return increment;
         }
 
-
-        
         /// <summary>
         /// Main routine for datafeed analysis.
         /// </summary>
@@ -240,41 +238,39 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Run()
         {
             //Initialize Parameters:
-            long earlyBirdTicks = 0;
             var subscriptions = SubscriptionReaderManagers.Length;
-            // this is really the next frontier in the future
-            var frontier = new DateTime();
-            var tradeBarIncrements = TimeSpan.FromDays(1);
-            var increment = TimeSpan.FromDays(1);
-            var activeStreams = subscriptions;
 
+            // this is really the next frontier in the future
+            var activeStreams = subscriptions;
 
             //Initialize Activators:
             ResetActivators();
 
             //Calculate the increment based on the subscriptions:
-            tradeBarIncrements = CalculateIncrement(includeTick: false);     //TradeBars get fillforward, larger increments.
-            increment = CalculateIncrement(includeTick: true);               //Include ticks for small increment for frontier calcs.
+            var tradeBarIncrements = CalculateIncrement(includeTick: false);     //TradeBars get fillforward, larger increments.
+            var increment = CalculateIncrement(includeTick: true);               //Include ticks for small increment for frontier calcs.
 
             //Loop over each date in the job
             foreach (var date in Time.EachTradeableDay(_algorithm.Securities, _job.PeriodStart, _job.PeriodFinish))
             {
                 //Update the source-URL from the BaseData, reset the frontier to today. Update the source URL once per day.
-                frontier = date.Add(increment); //Frontier is in the future and looks back to all the data produced so far.
-                activeStreams = subscriptions;
+                var frontier = date.Add(increment); //Frontier is in the future and looks back to all the data produced so far.
                 //Log.Debug("FileSystemDataFeed.Run(): Date Changed: " + date.ToShortDateString());
 
                 //Initialize the feeds to this date:
-                for (var i = 0; i < subscriptions; i++) 
+                for (var i = 0; i < subscriptions; i++)
                 {
                     //Don't refresh source when we know the market is closed for this security:
                     //if (SubscriptionReaderManagers[i].MarketOpen(date)) { }
                     var success = SubscriptionReaderManagers[i].RefreshSource(date);
 
                     //If we know the market is closed for security then can declare bridge closed.
-                    if (success) {
+                    if (success)
+                    {
                         EndOfBridge[i] = false;
-                    } else {
+                    }
+                    else
+                    {
                         EndOfBridge[i] = true;
                     }
                 }
@@ -285,8 +281,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var active = GetActiveStreams();
                 //Log.Debug("FileSystemDataFeed.Run(): Active Streams: " + active);
 
-                //Pause here while bridges are full and the 
-                while (bridgeFullCount > 0 && ((subscriptions - active) == bridgeZeroCount) && !_exitTriggered) 
+                //Pause here while bridges are full and the
+                while (bridgeFullCount > 0 && ((subscriptions - active) == bridgeZeroCount) && !_exitTriggered)
                 {
                     bridgeFullCount = (from bridge in Bridge where bridge.Count >= _bridgeMax select bridge).Count();
                     bridgeZeroCount = (from bridge in Bridge where bridge.Count == 0 select bridge).Count();
@@ -299,9 +295,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 while ((frontier.Date == date.Date || frontier == date.Date.AddDays(1)) && !_exitTriggered)
                 {
                     var cache = new List<BaseData>[subscriptions];
-                    
+
                     //Reset Loop:
-                    earlyBirdTicks = 0;
+                    long earlyBirdTicks = 0;
 
                     //Go over all the subscriptions, one by one add a minute of data to the bridge.
                     for (var i = 0; i < subscriptions; i++)
@@ -317,8 +313,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             if (activeStreams == 0)
                             {
                                 frontier = frontier.Date + TimeSpan.FromDays(1);
-                                //if (frontier.ToString("yyyy-MMM-dd") == "2013-May-03") System.Diagnostics.Debugger.Break();
-                                //Log.Debug("FileSystemDataFeed.Run(): No Active Streams; moving to next day.");
                             }
                             continue;
                         }
@@ -350,7 +344,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         break;
                     }
 
-
                     //Add all the lists to the bridge, release the bridge
                     //we push all the data up to this frontier into the bridge at once
                     for (var i = 0; i < subscriptions; i++)
@@ -367,14 +360,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     //So that the data stream doesn't pull off data from the same time period in different events
                     LoadedDataFrontier = frontier;
 
-                    if (earlyBirdTicks > 0 && earlyBirdTicks > frontier.Ticks) {
+                    if (earlyBirdTicks > 0 && earlyBirdTicks > frontier.Ticks)
+                    {
                         //Jump increment to the nearest second, in the future: Round down, add increment
                         frontier = (new DateTime(earlyBirdTicks)).RoundDown(increment) + increment;
                     }
-                    else 
+                    else
                     {
                         //Otherwise step one forward.
-                        frontier += increment;  
+                        frontier += increment;
                     }
 
                 } // End of This Day.
@@ -411,9 +405,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IsActive = false;
         }
 
-
         /// <summary>
-        /// If this is a fillforward subscription, look at the previous time, and current time, and add new 
+        /// If this is a fillforward subscription, look at the previous time, and current time, and add new
         /// objects to queue until current time to fill up the gaps.
         /// </summary>
         /// <param name="manager">Subscription to process</param>
@@ -450,30 +443,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return;
             }
 
-            //Once per increment, add a new cache to the Bridge: 
+            //Once per increment, add a new cache to the Bridge:
             //If the current.Time is before market close, (e.g. suspended trading at 2pm) the date is always greater than currentTime and fillforward never runs.
-            //In this circumstance we need to keep looping till market/extended hours close even if no data. 
+            //In this circumstance we need to keep looping till market/extended hours close even if no data.
             for (var date = FillForwardFrontiers[i] + increment; (date < current.Time); date = date + increment)
             {
                 //If we don't want aftermarket data, rewind it backwards until the market closes.
-                if (!Subscriptions[i].ExtendedMarketHours) 
+                if (!Subscriptions[i].ExtendedMarketHours)
                 {
-                    if (!manager.MarketOpen(date)) 
+                    if (!manager.MarketOpen(date))
                     {
                         // Move fill forward so we don't waste time in this tight loop.
-                        //Question is where to shuffle the date? 
+                        //Question is where to shuffle the date?
                         // --> If BEFORE market open, shuffle forward.
                         // --> If AFTER market close, and current.Time after market close, quit loop.
                         date = current.Time;
-                        do 
+                        do
                         {
                             date = date - increment;
                         } while (manager.MarketOpen(date));
                         continue;
                     }
-                } 
-                else  
-                { 
+                }
+                else
+                {
                     //If we've asked for extended hours, and the security is no longer inside extended market hours, skip:
                     if (!manager.ExtendedMarketOpen(date))
                     {
@@ -490,7 +483,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-
         /// <summary>
         /// Send an exit signal to the thread.
         /// </summary>
@@ -499,7 +491,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _exitTriggered = true;
             PurgeData();
         }
-
 
         /// <summary>
         /// Loop over all the queues and clear them to fast-quit this thread and return to main.

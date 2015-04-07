@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using QuantConnect.Logging;
 
 namespace QuantConnect
 {
@@ -33,20 +32,25 @@ namespace QuantConnect
     {
         /// Year-Month-Date 6 Character Date Representation
         public static string SixCharacter = "yyMMdd";
+
         /// YYYY-MM-DD Eight Character Date Representation
         public static string EightCharacter = "yyyyMMdd";
+
         /// JSON Format Date Representation
         public static string JsonFormat = "yyyy-MM-ddThh:mm:ss";
+
         /// MySQL Format Date Representation
         public const string DB = "yyyy-MM-dd HH:mm:ss";
+
         /// QuantConnect UX Date Representation
         public const string UI = "yyyy-MM-dd HH:mm:ss";
+
         /// EXT Web Date Representation
         public const string EXT = "yyyy-MM-dd HH:mm:ss";
+
         /// en-US format
         public const string US = "M/d/yyyy h:mm:ss tt";
     }
-
 
     /********************************************************
     * GLOBAL STRUCT DEFINITIONS
@@ -54,7 +58,7 @@ namespace QuantConnect
     /// <summary>
     /// Singular holding of assets from backend live nodes:
     /// </summary>
-    [JsonObjectAttribute]
+    [JsonObject]
     public class Holding
     {
         /// Symbol of the Holding:
@@ -122,12 +126,13 @@ namespace QuantConnect
     {
         /// Automatically detect the runmode of the algorithm: series for minute data, parallel for second-tick
         Automatic,
+
         /// Series runmode for the algorithm
         Series,
+
         /// Parallel runmode for the algorithm
         Parallel
     }
-
 
     /// <summary>
     /// Multilanguage support enum: which language is this project for the interop bridge converter.
@@ -150,7 +155,6 @@ namespace QuantConnect
         Python
     }
 
-
     /// <summary>
     /// User / Algorithm Job Subscription Level
     /// </summary>
@@ -166,7 +170,6 @@ namespace QuantConnect
         /// </summary>
         Hobbyist
     }
-
 
     /// <summary>
     /// Live server types available through the web IDE. / QC deployment.
@@ -188,7 +191,6 @@ namespace QuantConnect
         /// </summary>
         Server2048
     }
-
 
     /// <summary>
     /// Type of tradable security / underlying asset
@@ -233,8 +235,10 @@ namespace QuantConnect
     {
         /// Base market data type
         Base,
+
         /// TradeBar market data type (OHLC summary bar)
         TradeBar,
+
         /// Tick market data type (price-time pair)
         Tick
     }
@@ -246,10 +250,13 @@ namespace QuantConnect
     {
         /// Backtesting Datafeed Endpoint
         Backtesting,
+
         /// Loading files off the local system
         FileSystem,
+
         /// Getting datafeed from a QC-Live-Cloud
         LiveTrading,
+
         /// Test live data feed
         Test
     }
@@ -261,6 +268,7 @@ namespace QuantConnect
     {
         /// Backtesting Faked RealTime Events
         Backtesting,
+
         /// Live Trading RealTime Events
         LiveTrading
     }
@@ -272,8 +280,10 @@ namespace QuantConnect
     {
         /// Send Results to the Backtesting Web Application
         Backtesting,
+
         /// Send the Results to the Local Console
         Console,
+
         /// Send Results to the Live Web Application
         LiveTrading,
     }
@@ -285,8 +295,10 @@ namespace QuantConnect
     {
         /// Configure algorithm+job for backtesting:
         Backtesting,
+
         /// Configure algorithm+job for the console:
         Console,
+
         /// Paper trading algorithm+job internal state configuration
         PaperTrading,
         /// Live trading against a user's brokerage
@@ -300,8 +312,10 @@ namespace QuantConnect
     {
         /// Use Backtesting Models to Process Transactions
         Backtesting,
+
         /// Use a brokerage for live/paper trading in realtime
         Brokerage,
+
         /*
         /// Use Interactive Brokers to Process Transactions
         InteractiveBrokers,
@@ -330,6 +344,7 @@ namespace QuantConnect
     {
         /// Trade type tick object.
         Trade,
+
         /// Quote type tick object.
         Quote
     }
@@ -342,12 +357,16 @@ namespace QuantConnect
     {
         /// Tick Resolution (1)
         Tick,
+
         /// Second Resolution (2)
         Second,
+
         /// Minute Resolution (3)
         Minute,
+
         /// Hour Resolution (4)
         Hour,
+
         /// Daily Resolution (5)
         Daily
     }
@@ -384,26 +403,33 @@ namespace QuantConnect
     {
         /// User initiated a quit request
         Quit,           //0
+
         /// Error compiling algorithm at start
         DeployError,    //1
+
         /// Waiting for a server
         InQueue,        //2
+
         /// Running algorithm
         Running,        //3
+
         /// Stopped algorithm or exited with runtime errors
         Stopped,        //4
+
         /// Liquidated algorithm
         Liquidated,     //5
         /// Algorithm has been deleted
         Deleted,        //6
+
         /// Algorithm completed running
         Completed,      //7
+
         /// Runtime Error Stoped Algorithm
         RuntimeError,    //8
+
         /// Error in the algorithm id (not used).
         Invalid
     }
-
 
     /// <summary>
     /// enum Period - Enum of all the analysis periods, AS integers. Reference "Period" Array to access the values
@@ -412,34 +438,46 @@ namespace QuantConnect
     {
         /// Period Short Codes - 10
         TenSeconds = 10,
+
         /// Period Short Codes - 30 Second
         ThirtySeconds = 30,
+
         /// Period Short Codes - 60 Second
         OneMinute = 60,
+
         /// Period Short Codes - 120 Second
         TwoMinutes = 120,
+
         /// Period Short Codes - 180 Second
         ThreeMinutes = 180,
+
         /// Period Short Codes - 300 Second
         FiveMinutes = 300,
+
         /// Period Short Codes - 600 Second
         TenMinutes = 600,
+
         /// Period Short Codes - 900 Second
         FifteenMinutes = 900,
+
         /// Period Short Codes - 1200 Second
         TwentyMinutes = 1200,
+
         /// Period Short Codes - 1800 Second
         ThirtyMinutes = 1800,
+
         /// Period Short Codes - 3600 Second
         OneHour = 3600,
+
         /// Period Short Codes - 7200 Second
         TwoHours = 7200,
+
         /// Period Short Codes - 14400 Second
         FourHours = 14400,
+
         /// Period Short Codes - 21600 Second
         SixHours = 21600
     }
-
 
     /********************************************************
     * GLOBAL MARKETS
@@ -479,7 +517,6 @@ namespace QuantConnect
             {"V", "Venture"}
         };
     }
-
 
     /// <summary>
     /// US Public Holidays - Not Tradeable:

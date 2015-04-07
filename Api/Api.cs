@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Api
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -29,15 +29,15 @@ namespace QuantConnect.Api
     /// </summary>
     public class Api : IApi
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS VARIABLES
         *********************************************************/
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PROPERTIES
         *********************************************************/
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS:
         *********************************************************/
         /// <summary>
@@ -54,7 +54,7 @@ namespace QuantConnect.Api
         /// <param name="userId">User ID</param>
         /// <param name="userToken">User API token</param>
         /// <returns>int[3] iUserBacktestLimit, iUserDailyLimit, remaining</returns>
-        public int[] ReadLogAllowance(int userId, string userToken) 
+        public int[] ReadLogAllowance(int userId, string userToken)
         {
             return new[] { Int32.MaxValue, Int32.MaxValue, Int32.MaxValue };
         }
@@ -111,7 +111,7 @@ namespace QuantConnect.Api
         /// <param name="sharpe">Sharpe ratio since inception</param>
         public void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe)
         {
-            // 
+            //
         }
 
         /// <summary>

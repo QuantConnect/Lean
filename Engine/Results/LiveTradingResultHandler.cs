@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.Results
     /// <remarks>Live trading result handler is quite busy. It sends constant price updates, equity updates and order/holdings updates.</remarks>
     public class LiveTradingResultHandler : IResultHandler
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS VARIABLES
         *********************************************************/
         // Required properties for the cloud app.
@@ -72,7 +72,7 @@ namespace QuantConnect.Lean.Engine.Results
         private List<LogEntry> _logStore;
         private DateTime _nextSample;
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PROPERTIES
         *********************************************************/
         /// <summary>
@@ -144,7 +144,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -169,8 +169,7 @@ namespace QuantConnect.Lean.Engine.Results
             _logStore = new List<LogEntry>();
         }
 
-
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -260,7 +259,6 @@ namespace QuantConnect.Lean.Engine.Results
             _isActive = false;
         } // End Run();
 
-
         /// <summary>
         /// Every so often send an update to the browser with the current state of the algorithm.
         /// </summary>
@@ -292,9 +290,6 @@ namespace QuantConnect.Lean.Engine.Results
 
                     //Reset loop variables:
                     _lastOrderId = (from order in deltaOrders.Values select order.Id).DefaultIfEmpty().Max();
-
-                    //Limit length of orders we pass back dynamically to avoid flooding.
-                    //if (deltaOrders.Count > 50) deltaOrders.Clear();
 
                     //Create and send back the changes in chart since the algorithm started.
                     var deltaCharts = new Dictionary<string, Chart>();
@@ -381,24 +376,24 @@ namespace QuantConnect.Lean.Engine.Results
                         try
                         {
                             Engine.Api.SendStatistics(
-                                _job.AlgorithmId, 
+                                _job.AlgorithmId,
                                 _algorithm.Portfolio.TotalUnrealizedProfit,
-                                _algorithm.Portfolio.TotalFees, 
+                                _algorithm.Portfolio.TotalFees,
                                 _algorithm.Portfolio.TotalProfit,
-                                _algorithm.Portfolio.TotalHoldingsValue, 
+                                _algorithm.Portfolio.TotalHoldingsValue,
                                 _algorithm.Portfolio.TotalPortfolioValue,
                                 ((_algorithm.Portfolio.TotalPortfolioValue - Engine.SetupHandler.StartingCapital) / Engine.SetupHandler.StartingCapital),
-                                _algorithm.Portfolio.TotalSaleVolume, 
+                                _algorithm.Portfolio.TotalSaleVolume,
                                 _lastOrderId, 0);
                         }
                         catch (Exception err)
                         {
-                            Log.Error("LiveTradingResultHandler.Update(): Error sending statistics: " + err.Message);   
+                            Log.Error("LiveTradingResultHandler.Update(): Error sending statistics: " + err.Message);
                         }
                         _nextStatisticsUpdate = DateTime.Now.AddMinutes(1);
                     }
 
-                    //Set the new update time after we've finished processing. 
+                    //Set the new update time after we've finished processing.
                     // The processing can takes time depending on how large the packets are.
                     _nextUpdate = DateTime.Now.AddSeconds(2);
 
@@ -409,10 +404,6 @@ namespace QuantConnect.Lean.Engine.Results
                 Log.Error("LiveTradingResultHandler().ProcessSeriesUpdate(): " + err.Message, true);
             }
         }
-
-
-
-
 
         /// <summary>
         /// Run over all the data and break it into smaller packets to ensure they all arrive at the terminal
@@ -472,7 +463,6 @@ namespace QuantConnect.Lean.Engine.Results
             // combine all the packets to be sent to through pubnub
             return packets.Concat(chartPackets);
         }
-
 
         /// <summary>
         /// Send a live trading debug message to the live console.
@@ -676,7 +666,6 @@ namespace QuantConnect.Lean.Engine.Results
             Console.SetError(error);
         }
 
-
         /// <summary>
         /// Send a algorithm status update to the user of the algorithms running state.
         /// </summary>
@@ -689,7 +678,6 @@ namespace QuantConnect.Lean.Engine.Results
             var packet = new AlgorithmStatusPacket(algorithmId, status, message);
             Messages.Enqueue(packet);
         }
-
 
         /// <summary>
         /// Set a dynamic runtime statistic to show in the (live) algorithm header
@@ -745,9 +733,8 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-
         /// <summary>
-        /// Process the log entries and save it to permanent storage 
+        /// Process the log entries and save it to permanent storage
         /// </summary>
         /// <param name="logs">Log list</param>
         public void StoreLog(IEnumerable<LogEntry> logs)
@@ -755,7 +742,7 @@ namespace QuantConnect.Lean.Engine.Results
             try
             {
                 //Concatenate and upload the log file:
-                var joined = string.Join("\r\n", logs.Select(x=>x.Message));
+                var joined = string.Join("\r\n", logs.Select(x => x.Message));
                 var key = "live/" + _job.UserId + "/" + _job.ProjectId + "/" + _job.DeployId + "-" + DateTime.UtcNow.ToString("yyyy-MM-dd-HH") + "-log.txt";
                 Engine.Api.Store(joined, key, StoragePermissions.Authenticated);
             }
@@ -905,9 +892,6 @@ namespace QuantConnect.Lean.Engine.Results
             var unixDateStart = Time.DateTimeToUnixTimeStamp(start);
             var unixDateStop = Time.DateTimeToUnixTimeStamp(stop);
 
-            //Log.Trace("LiveTradingResultHandler.Truncate: Start: " + start.ToString("u") + " Stop : " + stop.ToString("u"));
-            //Log.Trace("LiveTradingResultHandler.Truncate: Truncate Delta: " + (unixDateStop - unixDateStart) + " Incoming Points: " + result.Charts["Strategy Equity"].Series["Equity"].Values.Count);
-
             var charts = new Dictionary<string, Chart>();
             foreach (var chart in result.Charts.Values)
             {
@@ -923,8 +907,6 @@ namespace QuantConnect.Lean.Engine.Results
             result.Charts = charts;
             result.Orders = result.Orders.Values.Where(x => x.Time >= start && x.Time <= stop).ToDictionary(x => x.Id);
 
-            //Log.Trace("LiveTradingResultHandler.Truncate: Truncate Outgoing: " + result.Charts["Strategy Equity"].Series["Equity"].Values.Count);
-
             //For live charting convert to UTC
             foreach (var order in result.Orders)
             {
@@ -937,7 +919,6 @@ namespace QuantConnect.Lean.Engine.Results
             return string.Format("live/{0}/{1}/{2}-{3}_{4}.json", _job.UserId, _job.ProjectId, _job.DeployId, DateTime.UtcNow.ToString(dateFormat), suffix);
         }
 
-
         /// <summary>
         /// Set the chart name that we want data from.
         /// </summary>
@@ -947,7 +928,7 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Process the synchronous result events, sampling and message reading. 
+        /// Process the synchronous result events, sampling and message reading.
         /// This method is triggered from the algorithm manager thread.
         /// </summary>
         /// <remarks>Prime candidate for putting into a base class. Is identical across all result handlers.</remarks>
@@ -967,7 +948,7 @@ namespace QuantConnect.Lean.Engine.Results
                     {
                         var price = Engine.DataFeed.RealtimePrices[i];
                         var subscription = Engine.DataFeed.Subscriptions[i];
-                        
+
                         //Sample Portfolio Value:
                         _algorithm.Portfolio[subscription.Symbol].UpdatePrice(price);
 
@@ -1039,7 +1020,7 @@ namespace QuantConnect.Lean.Engine.Results
                             break;
                     }
                 }
-            } 
+            }
         }
     } // End Result Handler Thread:
 

@@ -26,13 +26,13 @@ namespace QuantConnect.Lean.Engine.Setup
     /// </summary>
     public class ConsoleSetupHandler : ISetupHandler
     {
-        /******************************************************** 
+        /********************************************************
         * PUBLIC PROPERTIES
         *********************************************************/
         /// <summary>
         /// Error which occured during setup may appear here.
         /// </summary>
-        public List<string> Errors { get;  set; }
+        public List<string> Errors { get; set; }
 
         /// <summary>
         /// Maximum runtime of the strategy. (Set to 10 years for local backtesting).
@@ -54,7 +54,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         public int MaxOrders { get; private set; }
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -69,7 +69,7 @@ namespace QuantConnect.Lean.Engine.Setup
             Errors = new List<string>();
         }
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC METHODS
         *********************************************************/
         /// <summary>
@@ -113,7 +113,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 if (baseJob.Type == PacketType.BacktestNode)
                 {
                     var backtestJob = baseJob as BacktestNodePacket;
-                    
+
                     //Set the limits on the algorithm assets (for local no limits)
                     algorithm.SetAssetLimits(999, 999, 999);
                     algorithm.SetMaximumOrders(int.MaxValue);
@@ -142,7 +142,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 else
                 {
                     var liveJob = baseJob as LiveNodePacket;
-                    
+
                     //Live Job Parameters:
                     liveJob.DeployId = "LOCALHOST";
                     liveJob.IssuedAt = DateTime.Now.Subtract(TimeSpan.FromSeconds(86399 - 60));     //For testing, first access token expires in 60 sec. refresh.

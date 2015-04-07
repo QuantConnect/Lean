@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ using System.Reflection;
 
 namespace QuantConnect.Data
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -34,13 +34,12 @@ namespace QuantConnect.Data
     /// <remarks>Intended for use with Quandl class.</remarks>
     public abstract class DynamicData : BaseData, IDynamicMetaObjectProvider
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         private readonly IDictionary<string, object> _storage = new Dictionary<string, object>();
 
-
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -65,19 +64,17 @@ namespace QuantConnect.Data
             {
                 Time = (DateTime)value;
             }
+
             if (name == "value")
             {
                 Value = (decimal)value;
             }
+
             if (name == "symbol")
             {
                 Symbol = (string)value;
             }
-            // reaodnly
-            //if (name == "Price")
-            //{
-            //    return Price = (decimal) value;
-            //}
+
             _storage[name] = value;
             return value;
         }
@@ -96,14 +93,17 @@ namespace QuantConnect.Data
             {
                 return Time;
             }
+
             if (name == "value")
             {
                 return Value;
             }
+
             if (name == "symbol")
             {
                 return Symbol;
             }
+
             if (name == "price")
             {
                 return Price;

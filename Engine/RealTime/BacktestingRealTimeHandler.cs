@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Logging;
@@ -32,23 +31,23 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public class BacktestingRealTimeHandler : IRealTimeHandler
     {
-        /******************************************************** 
+        /********************************************************
         * PRIVATE VARIABLES
         *********************************************************/
         //Threading
-        private DateTime _time = new DateTime();
+        private DateTime _time;
         private bool _exitTriggered;
         private bool _isActive = true;
         private AlgorithmNodePacket _job;
 
         //Events:
-        private List<RealTimeEvent> _events;
+        private readonly List<RealTimeEvent> _events;
 
         //Algorithm and Handlers:
-        private IAlgorithm _algorithm;
+        private readonly IAlgorithm _algorithm;
         private Dictionary<SecurityType, MarketToday> _today;
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC PROPERTIES
         *********************************************************/
         /// <summary>
@@ -67,7 +66,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public List<RealTimeEvent> Events
         {
-            get 
+            get
             {
                 return _events;
             }
@@ -92,17 +91,16 @@ namespace QuantConnect.Lean.Engine.RealTime
             get
             {
                 throw new NotImplementedException("MarketToday is not currently needed in backtesting mode");
-                return _today;
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC CONSTRUCTOR
         *********************************************************/
         /// <summary>
         /// Setup the algorithm data, cash, job start end date etc.
         /// </summary>
-        public BacktestingRealTimeHandler(IAlgorithm algorithm, AlgorithmNodePacket job) 
+        public BacktestingRealTimeHandler(IAlgorithm algorithm, AlgorithmNodePacket job)
         {
             //Initialize:
             _algorithm = algorithm;
@@ -111,7 +109,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             _today = new Dictionary<SecurityType, MarketToday>();
         }
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC METHODS
         *********************************************************/
         /// <summary>
@@ -133,7 +131,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 //1. Setup End of Day Events:
                 var closingToday = date.Date + security.Exchange.MarketClose.Add(TimeSpan.FromMinutes(-10));
                 var symbol = security.Symbol;
-                AddEvent(new RealTimeEvent( closingToday, () =>
+                AddEvent(new RealTimeEvent(closingToday, () =>
                 {
                     try
                     {
@@ -148,7 +146,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 }));
             }
         }
-        
+
         /// <summary>
         /// Normally this would run the realtime event monitoring. Backtesting is in fastforward so the realtime is linked to the backtest clock.
         /// This thread does nothing. Wait until the job is over.
@@ -157,7 +155,6 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             _isActive = false;
         }
-
 
         /// <summary>
         /// Add a new event to our list of events to scan.
@@ -198,7 +195,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
         }
 
-
         /// <summary>
         /// Set the time for the realtime event handler.
         /// </summary>
@@ -208,7 +204,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             //Check for day reset:
             if (_time.Date != time.Date)
             {
-                // Backtest Mode Only: 
+                // Backtest Mode Only:
                 // > Scan & trigger any remaining events which haven't been triggered (e.g. daily bar data with "daily event" at 4pm):
                 ScanEvents();
 
@@ -219,7 +215,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             //Set the time:
             _time = time;
 
-            // Backtest Mode Only: 
+            // Backtest Mode Only:
             // > Scan the event every time we set the time. This allows "fast-forwarding" of the realtime events into sync with backtest.
             ScanEvents();
         }

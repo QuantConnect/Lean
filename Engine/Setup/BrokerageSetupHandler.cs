@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
@@ -66,7 +65,7 @@ namespace QuantConnect.Lean.Engine.Setup
         public BrokerageSetupHandler()
         {
             Errors = new List<string>();
-            MaximumRuntime = TimeSpan.FromDays(10*365);
+            MaximumRuntime = TimeSpan.FromDays(10 * 365);
         }
 
         /// <summary>
@@ -132,8 +131,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 var initializeComplete = Isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(10), () =>
                 {
                     try
-                    {                
-                        //Set the live trading level asset/ram allocation limits. 
+                    {
+                        //Set the live trading level asset/ram allocation limits.
                         //Protects algorithm from linux killing the job by excess memory:
                         switch (job.ServerType)
                         {

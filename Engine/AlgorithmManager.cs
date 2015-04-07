@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,6 @@
 **********************************************************/
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using Fasterflect;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
@@ -33,7 +32,7 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine
 {
-    /******************************************************** 
+    /********************************************************
     * QUANTCONNECT NAMESPACES
     *********************************************************/
     /// <summary>
@@ -41,7 +40,7 @@ namespace QuantConnect.Lean.Engine
     /// </summary>
     public static class AlgorithmManager
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS VARIABLES
         *********************************************************/
         private static DateTime _previousTime;
@@ -50,7 +49,7 @@ namespace QuantConnect.Lean.Engine
         private static readonly object _lock = new object();
         private static string _algorithmId = "";
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PROPERTIES
         *********************************************************/
         /// <summary>
@@ -58,7 +57,7 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public static DateTime Frontier
         {
-            get 
+            get
             {
                 return _frontier;
             }
@@ -86,7 +85,6 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-
         /// <summary>
         /// Quit state flag for the running algorithm. When true the user has requested the backtest stops through a Quit() method.
         /// </summary>
@@ -99,7 +97,7 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -113,11 +111,11 @@ namespace QuantConnect.Lean.Engine
         /// <param name="setup">Setup handler object</param>
         /// <param name="realtime">Realtime processing object</param>
         /// <remarks>Modify with caution</remarks>
-        public static void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, ISetupHandler setup, IRealTimeHandler realtime) 
+        public static void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, ISetupHandler setup, IRealTimeHandler realtime)
         {
             //Initialize:
             var backwardsCompatibilityMode = false;
-            var tradebarsType = typeof (TradeBars);
+            var tradebarsType = typeof(TradeBars);
             var ticksType = typeof(Ticks);
             var startingPortfolioValue = setup.StartingCapital;
             var backtestMode = (job.Type == PacketType.BacktestNode);
@@ -133,7 +131,7 @@ namespace QuantConnect.Lean.Engine
 
             //Algorithm 1.0 Data Accessors.
             //If the users defined these methods, add them in manually. This allows keeping backwards compatibility to algorithm 1.0.
-            var oldTradeBarsMethodInfo = (algorithm.GetType()).GetMethod("OnTradeBar",   new[] { typeof(Dictionary<string, TradeBar>) });
+            var oldTradeBarsMethodInfo = (algorithm.GetType()).GetMethod("OnTradeBar", new[] { typeof(Dictionary<string, TradeBar>) });
             var oldTicksMethodInfo = (algorithm.GetType()).GetMethod("OnTick", new[] { typeof(Dictionary<string, List<Tick>>) });
 
             //Algorithm 2.0 Data Generics Accessors.
@@ -147,18 +145,18 @@ namespace QuantConnect.Lean.Engine
                 if (oldTradeBarsMethodInfo != null) methodInvokers.Add(tradebarsType, oldTradeBarsMethodInfo.DelegateForCallMethod());
                 if (oldTradeBarsMethodInfo != null) methodInvokers.Add(ticksType, oldTicksMethodInfo.DelegateForCallMethod());
             }
-            else 
-            { 
+            else
+            {
                 backwardsCompatibilityMode = false;
                 if (newTradeBarsMethodInfo != null) methodInvokers.Add(tradebarsType, newTradeBarsMethodInfo.DelegateForCallMethod());
                 if (newTicksMethodInfo != null) methodInvokers.Add(ticksType, newTicksMethodInfo.DelegateForCallMethod());
             }
 
             //Go through the subscription types and create invokers to trigger the event handlers for each custom type:
-            foreach (var config in feed.Subscriptions) 
+            foreach (var config in feed.Subscriptions)
             {
                 //If type is a tradebar, combine tradebars and ticks into unified array:
-                if (config.Type.Name != "TradeBar" && config.Type.Name != "Tick") 
+                if (config.Type.Name != "TradeBar" && config.Type.Name != "Tick")
                 {
                     //Get the matching method for this event handler - e.g. public void OnData(Quandl data) { .. }
                     var genericMethod = (algorithm.GetType()).GetMethod("OnData", new[] { config.Type });
@@ -179,13 +177,13 @@ namespace QuantConnect.Lean.Engine
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Debug("AlgorithmManager.Run(): Algorithm initialized, launching time loop.");
-            foreach (var newData in DataStream.GetData(feed, setup.StartingDate)) 
+            foreach (var newData in DataStream.GetData(feed, setup.StartingDate))
             {
                 //Check this backtest is still running:
                 if (_algorithmState != AlgorithmStatus.Running) break;
-                
+
                 //Go over each time stamp we've collected, pass it into the algorithm in order:
-                foreach (var time in newData.Keys) 
+                foreach (var time in newData.Keys)
                 {
                     //Set the time frontier:
                     _frontier = time;
@@ -193,10 +191,10 @@ namespace QuantConnect.Lean.Engine
                     //Execute with TimeLimit Monitor:
                     if (Isolator.IsCancellationRequested) return;
 
-                    //Fire EOD if the time packet we just processed is greater 
+                    //Fire EOD if the time packet we just processed is greater
                     if (backtestMode)
                     {
-                        //Refresh the realtime event monitor: 
+                        //Refresh the realtime event monitor:
                         //in backtest mode use the algorithms clock as realtime.
                         realtime.SetTime(time);
 
@@ -235,14 +233,14 @@ namespace QuantConnect.Lean.Engine
 
                     //Invoke all non-tradebars, non-ticks methods:
                     // --> i == Subscription Configuration Index, so we don't need to compare types.
-                    foreach (var i in newData[time].Keys) 
-                    {    
+                    foreach (var i in newData[time].Keys)
+                    {
                         //Data point and config of this point:
                         var dataPoints = newData[time][i];
                         var config = feed.Subscriptions[i];
 
                         //Create TradeBars Unified Data --> OR --> invoke generic data event. One loop.
-                        foreach (var dataPoint in dataPoints) 
+                        foreach (var dataPoint in dataPoints)
                         {
                             //Update the securities properties: first before calling user code to avoid issues with data
                             algorithm.Securities.Update(time, dataPoint);
@@ -267,11 +265,11 @@ namespace QuantConnect.Lean.Engine
                             {
                                 case "TradeBar":
                                     var bar = dataPoint as TradeBar;
-                                    try 
+                                    try
                                     {
-                                        if (bar != null) 
+                                        if (bar != null)
                                         {
-                                            if (backwardsCompatibilityMode) 
+                                            if (backwardsCompatibilityMode)
                                             {
                                                 if (!oldBars.ContainsKey(bar.Symbol)) oldBars.Add(bar.Symbol, bar);
                                             }
@@ -280,8 +278,8 @@ namespace QuantConnect.Lean.Engine
                                                 if (!newBars.ContainsKey(bar.Symbol)) newBars.Add(bar.Symbol, bar);
                                             }
                                         }
-                                    } 
-                                    catch (Exception err) 
+                                    }
+                                    catch (Exception err)
                                     {
                                         Log.Error(time.ToLongTimeString() + " >> " + bar.Time.ToLongTimeString() + " >> " + bar.Symbol + " >> " + bar.Value.ToString("C"));
                                         Log.Error("AlgorithmManager.Run(): Failed to add TradeBar (" + bar.Symbol + ") Time: (" + time.ToLongTimeString() + ") Count:(" + newBars.Count + ") " + err.Message);
@@ -290,27 +288,28 @@ namespace QuantConnect.Lean.Engine
 
                                 case "Tick":
                                     var tick = dataPoint as Tick;
-                                    if (tick != null) 
+                                    if (tick != null)
                                     {
-                                         if (backwardsCompatibilityMode) {
-                                             if (!oldTicks.ContainsKey(tick.Symbol)) { oldTicks.Add(tick.Symbol, new List<Tick>()); }
-                                             oldTicks[tick.Symbol].Add(tick);
-                                         } 
-                                         else 
-                                         {
-                                             if (!newTicks.ContainsKey(tick.Symbol)) { newTicks.Add(tick.Symbol, new List<Tick>()); }
-                                             newTicks[tick.Symbol].Add(tick);
-                                         }
+                                        if (backwardsCompatibilityMode)
+                                        {
+                                            if (!oldTicks.ContainsKey(tick.Symbol)) { oldTicks.Add(tick.Symbol, new List<Tick>()); }
+                                            oldTicks[tick.Symbol].Add(tick);
+                                        }
+                                        else
+                                        {
+                                            if (!newTicks.ContainsKey(tick.Symbol)) { newTicks.Add(tick.Symbol, new List<Tick>()); }
+                                            newTicks[tick.Symbol].Add(tick);
+                                        }
                                     }
                                     break;
 
                                 default:
                                     //Send data into the generic algorithm event handlers
-                                    try 
+                                    try
                                     {
                                         methodInvokers[config.Type](algorithm, dataPoint);
-                                    } 
-                                    catch (Exception err) 
+                                    }
+                                    catch (Exception err)
                                     {
                                         algorithm.RunTimeError = err;
                                         _algorithmState = AlgorithmStatus.RuntimeError;
@@ -323,7 +322,7 @@ namespace QuantConnect.Lean.Engine
                     }
 
                     //After we've fired all other events in this second, fire the pricing events:
-                    if (backwardsCompatibilityMode) 
+                    if (backwardsCompatibilityMode)
                     {
                         //Log.Debug("AlgorithmManager.Run(): Invoking v1.0 Event Handlers...");
                         try
@@ -331,22 +330,22 @@ namespace QuantConnect.Lean.Engine
                             if (oldTradeBarsMethodInfo != null && oldBars.Count > 0) methodInvokers[tradebarsType](algorithm, oldBars);
                             if (oldTicksMethodInfo != null && oldTicks.Count > 0) methodInvokers[ticksType](algorithm, oldTicks);
                         }
-                        catch (Exception err) 
+                        catch (Exception err)
                         {
                             algorithm.RunTimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
                             Log.Debug("AlgorithmManager.Run(): RuntimeError: Backwards Compatibility Mode: " + err.Message + " STACK >>> " + err.StackTrace);
                             return;
                         }
-                    } 
-                    else 
+                    }
+                    else
                     {
                         //Log.Debug("AlgorithmManager.Run(): Invoking v2.0 Event Handlers...");
                         try
                         {
                             if (newTradeBarsMethodInfo != null && newBars.Count > 0) methodInvokers[tradebarsType](algorithm, newBars);
                             if (newTicksMethodInfo != null && newTicks.Count > 0) methodInvokers[ticksType](algorithm, newTicks);
-                        } 
+                        }
                         catch (Exception err)
                         {
                             algorithm.RunTimeError = err;
@@ -424,14 +423,13 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Reset all variables required before next loops
         /// </summary>
-        public static void ResetManager() 
+        public static void ResetManager()
         {
             //Reset before the next loop/
             _frontier = new DateTime();
             _algorithmId = "";
             _algorithmState = AlgorithmStatus.Running;
         }
-
 
         /// <summary>
         /// Set the quit state.

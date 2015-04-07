@@ -199,8 +199,8 @@ namespace QuantConnect.Interfaces
         /// </summary>
         Exception RunTimeError
         {
-            get; 
-            set; 
+            get;
+            set;
         }
 
         /// <summary>

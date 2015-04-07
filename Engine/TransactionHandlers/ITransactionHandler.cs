@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,13 +13,6 @@
  * limitations under the License.
  *
 */
-
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
@@ -30,12 +23,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// <remarks>A new transaction handler is required for each each brokerage endpoint.</remarks>
     public interface ITransactionHandler
     {
-        /******************************************************** 
+        /********************************************************
         * INTERFACE PROPERTIES
         *********************************************************/
 
         /// <summary>
-        /// Boolean flag indicating the thread is busy. 
+        /// Boolean flag indicating the thread is busy.
         /// False indicates it is completely finished processing and ready to be terminated.
         /// </summary>
         bool IsActive
@@ -50,7 +43,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             get;
         }
-        /******************************************************** 
+        /********************************************************
         * INTERFACE METHODS
         *********************************************************/
         /// <summary>

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,10 +28,10 @@ namespace QuantConnect.Tests.Common.Util
         {
             var instances = Composer.Instance.GetExportedValues<IExport>().ToList();
             Assert.AreEqual(4, instances.Count);
-            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export1)));
-            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export2)));
-            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export3)));
-            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export4)));
+            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof(Export1)));
+            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof(Export2)));
+            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof(Export3)));
+            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof(Export4)));
         }
 
         [Test]
@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var instance = Composer.Instance.Single<IExport>(x => x.Id == 3);
             Assert.IsNotNull(instance);
-            Assert.IsInstanceOf(typeof (Export3), instance);
+            Assert.IsInstanceOf(typeof(Export3), instance);
         }
 
         [InheritedExport(typeof(IExport))]

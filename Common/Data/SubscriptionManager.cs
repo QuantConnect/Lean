@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -33,43 +33,43 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionManager
     {
-        /******************************************************** 
+        /********************************************************
         * PUBLIC VARIABLES
         *********************************************************/
         /// Generic Market Data Requested and Object[] Arguements to Get it:
         public List<SubscriptionDataConfig> Subscriptions;
 
-        /******************************************************** 
+        /********************************************************
         * PRIVATE VARIABLES
         *********************************************************/
-        
-        /******************************************************** 
+
+        /********************************************************
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
         /// Initialise the Generic Data Manager Class
         /// </summary>
-        public SubscriptionManager() 
+        public SubscriptionManager()
         {
             //Generic Type Data Holder:
             Subscriptions = new List<SubscriptionDataConfig>();
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PROPERTIES
         *********************************************************/
         /// <summary>
         /// Get the count of assets:
         /// </summary>
-        public int Count 
+        public int Count
         {
-            get 
-            { 
-                return Subscriptions.Count; 
+            get
+            {
+                return Subscriptions.Count;
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -84,13 +84,12 @@ namespace QuantConnect.Data
         {
             //Set the type: market data only comes in two forms -- ticks(trade by trade) or tradebar(time summaries)
             var dataType = typeof(TradeBar);
-            if (resolution == Resolution.Tick) 
+            if (resolution == Resolution.Tick)
             {
                 dataType = typeof(Tick);
             }
             Add(dataType, security, symbol, resolution, fillDataForward, extendedMarketHours, true, true);
         }
-
 
         /// <summary>
         /// Add Market Data Required - generic data typing support as long as Type implements IBaseData.
@@ -103,7 +102,7 @@ namespace QuantConnect.Data
         /// <param name="extendedMarketHours">Request premarket data as well when true </param>
         /// <param name="isTradeBar">Set to true if this data has Open, High, Low, and Close properties</param>
         /// <param name="hasVolume">Set to true if this data has a Volume property</param>
-        public void Add(Type dataType, SecurityType security, string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false, bool isTradeBar = false, bool hasVolume = false) 
+        public void Add(Type dataType, SecurityType security, string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false, bool isTradeBar = false, bool hasVolume = false)
         {
             //Clean:
             symbol = symbol.ToUpper();
@@ -131,7 +130,7 @@ namespace QuantConnect.Data
                     if (!consolidator.InputType.IsAssignableFrom(Subscriptions[i].Type))
                     {
                         throw new ArgumentException(string.Format("Type mismatch found between consolidator and symbol. " +
-                            "Symbol: {0} expects type {1} but tried to register consolidator with input type {2}", 
+                            "Symbol: {0} expects type {1} but tried to register consolidator with input type {2}",
                             symbol, Subscriptions[i].Type.Name, consolidator.InputType.Name)
                             );
                     }
@@ -144,7 +143,6 @@ namespace QuantConnect.Data
             throw new ArgumentException("Please subscribe to this symbol before adding a consolidator for it. Symbol: " + symbol);
         }
 
-
         /// <summary>
         /// Get the settings object for this ticker:
         /// </summary>
@@ -152,8 +150,8 @@ namespace QuantConnect.Data
         /// <returns>SubscriptionDataConfig Configuration Object</returns>
         private SubscriptionDataConfig GetSetting(string symbol)
         {
-            return (from config in Subscriptions 
-                    where config.Symbol == symbol.ToUpper() 
+            return (from config in Subscriptions
+                    where config.Symbol == symbol.ToUpper()
                     select config).SingleOrDefault();
         }
 

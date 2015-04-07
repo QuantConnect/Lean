@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,19 +22,18 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Logging;
 
-
-namespace QuantConnect.Securities 
+namespace QuantConnect.Securities
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
     /// Enumerable security management class for grouping security objects into an array and providing any common properties.
     /// </summary>
     /// <remarks>Implements IDictionary for the index searching of securities by symbol</remarks>
-    public class SecurityManager : IDictionary<string, Security> 
+    public class SecurityManager : IDictionary<string, Security>
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         //Internal dictionary implementation:
@@ -48,11 +47,11 @@ namespace QuantConnect.Securities
         private int _tickMemory = 34;
         private decimal _maxRamEstimate = 1024;
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PUBLIC VARIABLES
         *********************************************************/
 
-        /******************************************************** 
+        /********************************************************
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -60,16 +59,16 @@ namespace QuantConnect.Securities
         /// </summary>
         public SecurityManager()
         {
-            _securityManager = new Dictionary<string, Security>(); 
+            _securityManager = new Dictionary<string, Security>();
             _securityHoldings = new Dictionary<string, SecurityHolding>();
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PROPERTIES
         *********************************************************/
-        
 
-        /******************************************************** 
+
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -79,11 +78,10 @@ namespace QuantConnect.Securities
         /// <param name="symbol">symbol for security we're trading</param>
         /// <param name="security">security object</param>
         /// <seealso cref="Add(string,Resolution,bool)"/>
-        public void Add(string symbol, Security security) 
+        public void Add(string symbol, Security security)
         {
             _securityManager.Add(symbol, security);
         }
-
 
         /// <summary>
         /// Add a new security to the collection by symbol defaulting to SecurityType.Equity
@@ -91,11 +89,10 @@ namespace QuantConnect.Securities
         /// <param name="symbol">Symbol for the equity we're adding</param>
         /// <param name="resolution">Resolution of the securty we're adding</param>
         /// <param name="fillDataForward">Boolean flag indicating the security is fillforward</param>
-        public void Add(string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true) 
+        public void Add(string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true)
         {
             Add(symbol, SecurityType.Equity, resolution, fillDataForward);
         }
-
 
         /// <summary>
         /// Add a new security by all of its properties.
@@ -107,35 +104,35 @@ namespace QuantConnect.Securities
         /// <param name="leverage">Leverage for this security, default = 1</param>
         /// <param name="extendedMarketHours">Request all the data available, including the extended market hours from 4am - 8pm.</param>
         /// <param name="isDynamicallyLoadedData">Use dynamic data</param>
-        public void Add(string symbol, SecurityType type = SecurityType.Equity, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 1, bool extendedMarketHours = false, bool isDynamicallyLoadedData = false) 
+        public void Add(string symbol, SecurityType type = SecurityType.Equity, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 1, bool extendedMarketHours = false, bool isDynamicallyLoadedData = false)
         {
             //Upper case sybol:
             symbol = symbol.ToUpper();
 
             //Maximum Data Usage: mainly RAM constraints but this has never been fully tested.
-            if (GetResolutionCount(Resolution.Tick) >= _tickLimit && resolution == Resolution.Tick) 
+            if (GetResolutionCount(Resolution.Tick) >= _tickLimit && resolution == Resolution.Tick)
             {
                 throw new Exception("We currently only support " + _tickLimit + " tick assets at a time due to physical memory limitations.");
             }
-            if (GetResolutionCount(Resolution.Second) >= _secondLimit && resolution == Resolution.Second) 
+            if (GetResolutionCount(Resolution.Second) >= _secondLimit && resolution == Resolution.Second)
             {
                 throw new Exception("We currently only support  " + _secondLimit + "  second resolution securities at a time due to physical memory limitations.");
             }
-            if (GetResolutionCount(Resolution.Minute) >= _minuteLimit && resolution == Resolution.Minute) 
+            if (GetResolutionCount(Resolution.Minute) >= _minuteLimit && resolution == Resolution.Minute)
             {
                 throw new Exception("We currently only support  " + _minuteLimit + "  minute assets at a time due to physical memory limitations.");
             }
 
             //Current ram usage: this especially applies during live trading where micro servers have limited resources:
             var currentEstimatedRam = GetRamEstimate(GetResolutionCount(Resolution.Minute), GetResolutionCount(Resolution.Second), GetResolutionCount(Resolution.Tick));
-            
+
             if (currentEstimatedRam > _maxRamEstimate)
             {
                 throw new Exception("We estimate you will run out of memory (" + currentEstimatedRam + "mb of " + _maxRamEstimate + "mb physically available). Please reduce the number of symbols you're analysing or if in live trading upgrade your server to allow more memory.");
             }
 
             //If we don't already have this asset, add it to the securities list.
-            if (!_securityManager.ContainsKey(symbol)) 
+            if (!_securityManager.ContainsKey(symbol))
             {
                 switch (type)
                 {
@@ -151,8 +148,8 @@ namespace QuantConnect.Securities
                     default:
                         throw new Exception("We currently only support Equity and Forex Securities Types. Its still possible to trade futures but you must use generic data. Please see the QC University example 'Quandl Futures'.");
                 }
-            } 
-            else 
+            }
+            else
             {
                 //Otherwise, we already have it, just change its resolution:
                 Log.Trace("Algorithm.Securities.Add(): Changing security information will overwrite portfolio");
@@ -170,8 +167,7 @@ namespace QuantConnect.Securities
                 }
             }
         }
-        
-        
+
         /// <summary>
         /// Add a symbol-security by its key value pair.
         /// </summary>
@@ -183,7 +179,6 @@ namespace QuantConnect.Securities
             _securityHoldings.Add(pair.Key, pair.Value.Holdings);
         }
 
-
         /// <summary>
         /// Clear the securities array to delete all the portfolio and asset information.
         /// </summary>
@@ -192,7 +187,6 @@ namespace QuantConnect.Securities
         {
             _securityManager.Clear();
         }
-
 
         /// <summary>
         /// Check if this collection contains this key value pair.
@@ -205,7 +199,6 @@ namespace QuantConnect.Securities
             return _securityManager.Contains(pair);
         }
 
-
         /// <summary>
         /// Check if this collection contains this symbol.
         /// </summary>
@@ -216,7 +209,6 @@ namespace QuantConnect.Securities
         {
             return _securityManager.ContainsKey(symbol);
         }
-
 
         /// <summary>
         /// Copy from the internal array to an external array.
@@ -229,7 +221,6 @@ namespace QuantConnect.Securities
             _securityManager.CopyTo(array, number);
         }
 
-
         /// <summary>
         /// Count of the number of securities in the collection.
         /// </summary>
@@ -239,16 +230,14 @@ namespace QuantConnect.Securities
             get { return _securityManager.Count; }
         }
 
-
         /// <summary>
         /// Flag indicating if the internal arrray is read only.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         public bool IsReadOnly
         {
-            get { return _securityManager.IsReadOnly;  }
+            get { return _securityManager.IsReadOnly; }
         }
-
 
         /// <summary>
         /// Remove a key value of of symbol-securities from the collections.
@@ -261,7 +250,6 @@ namespace QuantConnect.Securities
             return _securityManager.Remove(pair);
         }
 
-
         /// <summary>
         /// Remove this symbol security: Dictionary interface implementation.
         /// </summary>
@@ -271,7 +259,6 @@ namespace QuantConnect.Securities
         {
             return _securityManager.Remove(symbol);
         }
-
         /// <summary>
         /// List of the symbol-keys in the collection of securities.
         /// </summary>
@@ -280,7 +267,6 @@ namespace QuantConnect.Securities
         {
             get { return _securityManager.Keys; }
         }
-
 
         /// <summary>
         /// Try and get this security object with matching symbol and return true on success.
@@ -303,17 +289,15 @@ namespace QuantConnect.Securities
             get { return _securityManager.Values; }
         }
 
-
         /// <summary>
         /// Get the enumerator for this security collection.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Enumerable key value pair</returns>
-        IEnumerator<KeyValuePair<string, Security>> IEnumerable<KeyValuePair<string, Security>>.GetEnumerator() 
+        IEnumerator<KeyValuePair<string, Security>> IEnumerable<KeyValuePair<string, Security>>.GetEnumerator()
         {
             return _securityManager.GetEnumerator();
         }
-
 
         /// <summary>
         /// Get the internal enumerator for the securities collection for use by the Portfolio object.
@@ -325,13 +309,12 @@ namespace QuantConnect.Securities
             return _securityHoldings;
         }
 
-
         /// <summary>
         /// Get the enumerator for this securities collection.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Enumerator.</returns>
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() 
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return _securityManager.GetEnumerator();
         }
@@ -350,38 +333,37 @@ namespace QuantConnect.Securities
                 if (!_securityManager.ContainsKey(symbol))
                 {
                     throw new Exception("This asset symbol (" + symbol + ") was not found in your security list. Please add this security or check it exists before using it with 'data.ContainsKey(\"" + symbol + "\")'");
-                } 
+                }
                 return _securityManager[symbol];
             }
-            set 
+            set
             {
                 _securityManager[symbol] = value;
                 _securityHoldings[symbol] = value.Holdings;
             }
         }
 
-
         /// <summary>
         /// Get the number of securities that have this resolution.
         /// </summary>
         /// <param name="resolution">Search resolution value.</param>
         /// <returns>Count of the securities</returns>
-        public int  GetResolutionCount(Resolution resolution) 
+        public int GetResolutionCount(Resolution resolution)
         {
             var count = 0;
-            try 
+            try
             {
                 count = (from security in _securityManager.Values
-                          where security.Resolution == resolution
-                          select security.Resolution).Count();
-            } 
-            catch (Exception err) 
+                         where security.Resolution == resolution
+                         select security.Resolution).Count();
+            }
+            catch (Exception err)
             {
                 Log.Error("Algorithm.Market.GetResolutionCount(): " + err.Message);
             }
+
             return count;
         }
-
 
         /// <summary>
         /// Limits on the number of minute, second and tick assets due to memory constraints.
@@ -414,9 +396,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="time">Time Frontier</param>
         /// <param name="data">Data packets to update</param>
-        public void Update(DateTime time, BaseData data) 
+        public void Update(DateTime time, BaseData data)
         {
-            try 
+            try
             {
                 //If its market data, look for the matching security symbol and update it:
                 foreach (var security in _securityManager.Values)
@@ -431,7 +413,7 @@ namespace QuantConnect.Securities
                     }
                 }
             }
-            catch (Exception err) 
+            catch (Exception err)
             {
                 Log.Error("Algorithm.Market.Update(): " + err.Message);
             }

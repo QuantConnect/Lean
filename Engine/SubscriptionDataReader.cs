@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,6 @@ using System.Reflection;
 using Fasterflect;
 using QuantConnect.Securities;
 using QuantConnect.Logging;
-using QuantConnect.AlgorithmFactory;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
@@ -34,7 +33,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -43,7 +42,7 @@ namespace QuantConnect.Lean.Engine
     /// <remarks>The class accepts any subscription configuration and automatically makes it availble to enumerate</remarks>
     public class SubscriptionDataReader : IEnumerator<BaseData>
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         /// Source string to create memory stream:
@@ -56,10 +55,10 @@ namespace QuantConnect.Lean.Engine
         private DateTime _date = new DateTime();
 
         ///End of stream from the reader
-        private bool _endOfStream = false;
+        private bool _endOfStream;
 
         /// Internal stream reader for processing data line by line:
-        private SubscriptionStreamReader _reader = null;
+        private SubscriptionStreamReader _reader;
 
         /// All streams done async via web protocols:
         private WebClient _web = new WebClient();
@@ -107,7 +106,7 @@ namespace QuantConnect.Lean.Engine
         private readonly DateTime _periodStart;
         private readonly DateTime _periodFinish;
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PUBLIC VARIABLES
         *********************************************************/
         /// <summary>
@@ -127,7 +126,6 @@ namespace QuantConnect.Lean.Engine
             get { return Current; }
         }
 
-
         /// <summary>
         /// Save an instance of the previous basedata we generated
         /// </summary>
@@ -142,7 +140,7 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public bool EndOfStream
         {
-            get 
+            get
             {
                 return _endOfStream || _reader == null;
             }
@@ -152,7 +150,7 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -188,7 +186,7 @@ namespace QuantConnect.Lean.Engine
             //Create the dynamic type-activators:
             _objectActivator = ObjectActivator.GetActivator(config.Type);
 
-            if (_objectActivator == null) 
+            if (_objectActivator == null)
             {
                 Engine.ResultHandler.ErrorMessage("Custom data type '" + config.Type.Name + "' missing parameterless constructor E.g. public " + config.Type.Name + "() { }");
                 _endOfStream = true;
@@ -212,19 +210,19 @@ namespace QuantConnect.Lean.Engine
             var quandl = _dataFactory as Quandl;
             if (quandl != null)
             {
-                quandl.SetAuthCode(Config.Get("quandl-auth-token"));   
+                quandl.SetAuthCode(Config.Get("quandl-auth-token"));
             }
 
             //Load the entire factor and symbol mapping tables into memory
-            try 
+            try
             {
                 if (_hasScaleFactors)
                 {
                     _priceFactors = SubscriptionAdjustment.GetFactorTable(config.Symbol);
                     _symbolMap = SubscriptionAdjustment.GetMapTable(config.Symbol);
                 }
-            } 
-            catch (Exception err) 
+            }
+            catch (Exception err)
             {
                 Log.Error("SubscriptionDataReader(): Fetching Price/Map Factors: " + err.Message);
                 _priceFactors = new SortedDictionary<DateTime, decimal>();
@@ -232,7 +230,7 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -240,7 +238,8 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         /// <remarks>This is a highly called method and should be kept lean as possible.</remarks>
         /// <returns>Boolean true on successful move next. Set Current public property.</returns>
-        public bool MoveNext() {
+        public bool MoveNext()
+        {
 
             BaseData instance = null;
             var instanceMarketOpen = false;
@@ -309,7 +308,6 @@ namespace QuantConnect.Lean.Engine
                             continue;
                         }
 
-
                         //Check if we're in date range of the data request
                         if (instance.Time < _periodStart)
                         {
@@ -337,7 +335,7 @@ namespace QuantConnect.Lean.Engine
                     }
                 }
 
-                //Handle edge conditions: First Bar Read: 
+                //Handle edge conditions: First Bar Read:
                 // -> Use previous bar from yesterday if available
                 if (Current == null)
                 {
@@ -347,7 +345,7 @@ namespace QuantConnect.Lean.Engine
                         //For first bar, fill forward from premarket data where possible
                         _lastBarOfStream = _lastBarOutsideMarketHours ?? instance;
                     }
-                    //If current not set yet, set Previous to yesterday/last bar read. 
+                    //If current not set yet, set Previous to yesterday/last bar read.
                     Previous = _lastBarOfStream;
                 }
                 else
@@ -357,7 +355,7 @@ namespace QuantConnect.Lean.Engine
 
                 Current = instance;
 
-                //End of Stream: rewind reader to last 
+                //End of Stream: rewind reader to last
                 if (_reader.EndOfStream && instance == null)
                 {
                     //Log.Debug("SubscriptionDataReader.MoveNext(): Reader EOS.");
@@ -384,17 +382,18 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
-        /// For backwards adjusted data the price is adjusted by a scale factor which is a combination of splits and dividends. 
+        /// For backwards adjusted data the price is adjusted by a scale factor which is a combination of splits and dividends.
         /// This backwards adjusted price is used by default and fed as the current price.
         /// </summary>
         /// <param name="date">Current date of the backtest.</param>
-        private void UpdateScaleFactors(DateTime date) {
+        private void UpdateScaleFactors(DateTime date)
+        {
             try
             {
                 _mappedSymbol = SubscriptionAdjustment.GetMappedSymbol(_symbolMap, date);
                 _priceFactor = SubscriptionAdjustment.GetTimePriceFactor(_priceFactors, date);
-            } 
-            catch (Exception err) 
+            }
+            catch (Exception err)
             {
                 Log.Error("SubscriptionDataReader.UpdateScaleFactors(): " + err.Message);
             }
@@ -407,18 +406,17 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         /// <param name="time">Date and time we're checking to see if the market is open</param>
         /// <returns>Boolean true on market open</returns>
-        public bool MarketOpen(DateTime time) 
+        public bool MarketOpen(DateTime time)
         {
             return _security.Exchange.DateTimeIsOpen(time);
         }
-
 
         /// <summary>
         /// Check if we're still in the extended market hours
         /// </summary>
         /// <param name="time">Time to scan</param>
         /// <returns>True on extended market hours</returns>
-        public bool ExtendedMarketOpen(DateTime time) 
+        public bool ExtendedMarketOpen(DateTime time)
         {
             return _security.Exchange.DateTimeIsExtendedOpen(time);
         }
@@ -427,11 +425,11 @@ namespace QuantConnect.Lean.Engine
         /// Reset the IEnumeration
         /// </summary>
         /// <remarks>Not used</remarks>
-        public void Reset() 
+        public void Reset()
         {
             throw new NotImplementedException("Reset method not implemented. Assumes loop will only be used once.");
         }
-        
+
         /// <summary>
         /// Fetch and set the location of the data from the user's BaseData factory:
         /// </summary>
@@ -444,7 +442,7 @@ namespace QuantConnect.Lean.Engine
             var newSource = "";
 
             //If we can find scale factor files on disk, use them. LiveTrading will aways use 1 by definition
-            if (_hasScaleFactors) 
+            if (_hasScaleFactors)
             {
                 UpdateScaleFactors(date);
             }
@@ -460,7 +458,7 @@ namespace QuantConnect.Lean.Engine
             newSource = GetSource(date);
 
             //When stream over stop looping on this data.
-            if (newSource == "") 
+            if (newSource == "")
             {
                 _endOfStream = true;
                 return false;
@@ -477,12 +475,12 @@ namespace QuantConnect.Lean.Engine
                 Dispose();
 
                 //Load the source:
-                try 
+                try
                 {
                     //Log.Debug("SubscriptionDataReader.RefreshSource(): Created new reader for source: " + source);
                     _reader = GetReader(_source);
-                } 
-                catch (Exception err) 
+                }
+                catch (Exception err)
                 {
                     Log.Error("SubscriptionDataReader.RefreshSource(): Failed to get reader: " + err.Message);
                     //Engine.ResultHandler.DebugMessage("Failed to get a reader for the data source. There may be an error in your custom data source reader. Skipping date (" + date.ToShortDateString() + "). Err: " + err.Message);
@@ -511,7 +509,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     MoveNext();
                 }
-                catch (Exception err) 
+                catch (Exception err)
                 {
                     throw new Exception("SubscriptionDataReader.RefreshSource(): Could not MoveNext to init stream: " + _source + " " + err.Message + " >> " + err.StackTrace);
                 }
@@ -521,21 +519,20 @@ namespace QuantConnect.Lean.Engine
             return true;
         }
 
-
         /// <summary>
         /// Using this source URL, download it to our cache and open a local reader.
         /// </summary>
         /// <param name="source">Source URL for the data:</param>
         /// <returns>StreamReader for the data source</returns>
         private SubscriptionStreamReader GetReader(string source)
-        { 
+        {
             //Prepare local folders:
             const string cache = "./cache/data";
             SubscriptionStreamReader reader = null;
             if (!Directory.Exists(cache)) Directory.CreateDirectory(cache);
             foreach (var file in Directory.EnumerateFiles(cache))
             {
-                if (File.GetCreationTime(file) < DateTime.Now.AddHours(-24)) File.Delete(file); 
+                if (File.GetCreationTime(file) < DateTime.Now.AddHours(-24)) File.Delete(file);
             }
 
             //1. Download this source file as fast as possible:
@@ -545,7 +542,7 @@ namespace QuantConnect.Lean.Engine
 
             //1.2 Based on Endpoint, Download File (Backtest) or directly open SR of source:
             switch (_feedEndpoint)
-            { 
+            {
                 case DataFeedEndpoint.FileSystem:
                 case DataFeedEndpoint.Backtesting:
 
@@ -606,22 +603,21 @@ namespace QuantConnect.Lean.Engine
             return reader;
         }
 
-
         /// <summary>
-        /// Stream the file over the net directly from its source. 
+        /// Stream the file over the net directly from its source.
         /// </summary>
         /// <param name="source">Source URL for the file</param>
         /// <remarks>Left here for potential future reference instead of downloading files we stream then from external source.</remarks>
         /// <returns>StreamReader Interface for the data source.</returns>
-        private StreamReader WebReader(string source) 
-        {    
+        private StreamReader WebReader(string source)
+        {
             //Initialize Required Variables for Web Reader:
             StreamReader reader;
 
             //Reopen the source with the new URL.
             _web = new WebClient();
             _web.Proxy = WebRequest.GetSystemWebProxy();
-            using (var stream = _web.OpenRead(source)) 
+            using (var stream = _web.OpenRead(source))
             {
                 //If its a zip, unzip it:
                 if (source.GetExtension() == ".zip")
@@ -639,15 +635,15 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Dispose of the Stream Reader and close out the source stream and file connections.
         /// </summary>
-        public void Dispose() 
-        { 
-            if (_reader != null) 
+        public void Dispose()
+        {
+            if (_reader != null)
             {
                 _reader.Close();
                 _reader.Dispose();
             }
 
-            if (_web != null) 
+            if (_web != null)
             {
                 _web.Dispose();
             }
@@ -662,13 +658,13 @@ namespace QuantConnect.Lean.Engine
         {
             var newSource = "";
             //Invoke our instance of this method.
-            if (_dataFactory != null) 
+            if (_dataFactory != null)
             {
                 try
                 {
                     newSource = _getSourceMethod.Invoke(_dataFactory, new object[] { _config, date, _feedEndpoint }) as String;
                 }
-                catch (Exception err) 
+                catch (Exception err)
                 {
                     Log.Error("SubscriptionDataReader.GetSource(): " + err.Message);
                     Engine.ResultHandler.ErrorMessage("Error getting string source location for custom data source: " + err.Message, err.StackTrace);

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +24,7 @@ using QuantConnect.Data.Consolidators;
 
 namespace QuantConnect.Data
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -32,21 +32,27 @@ namespace QuantConnect.Data
     /// </summary>
     public struct SubscriptionDataConfig
     {
-        /******************************************************** 
+        /********************************************************
         * STRUCT PUBLIC VARIABLES
         *********************************************************/
         /// Type of data
         public Type Type;
+
         /// Security type of this data subscription
         public SecurityType Security;
+
         /// Symbol of the asset we're requesting.
         public string Symbol;
+
         /// Resolution of the asset we're requesting, second minute or tick
         public Resolution Resolution;
+
         /// Timespan increment between triggers of this data:
         public TimeSpan Increment;
+
         /// True if wish to send old data when time gaps in data feed.
         public bool FillDataForward;
+
         /// Boolean Send Data from between 4am - 8am (Equities Setting Only)
         public bool ExtendedMarketHours;
         /// True if the data type has OHLC properties, even if dynamic data
@@ -56,12 +62,14 @@ namespace QuantConnect.Data
 
         /// Price Scaling Factor:
         public decimal PriceScaleFactor;
+
         ///Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
         public string MappedSymbol;
-        ///Consolidators that are registred with this subscription
-        public List<IDataConsolidator> Consolidators; 
 
-        /******************************************************** 
+        ///Consolidators that are registred with this subscription
+        public List<IDataConsolidator> Consolidators;
+
+        /********************************************************
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -94,18 +102,22 @@ namespace QuantConnect.Data
                     Increment = TimeSpan.FromSeconds(0);
                     FillDataForward = false;
                     break;
+
                 case Resolution.Second:
                     Increment = TimeSpan.FromSeconds(1);
                     break;
                 case Resolution.Minute:
                     Increment = TimeSpan.FromMinutes(1);
                     break;
+
                 case Resolution.Hour:
                     Increment = TimeSpan.FromHours(1);
                     break;
+
                 case Resolution.Daily:
                     Increment = TimeSpan.FromDays(1);
                     break;
+
                 default:
                     throw new InvalidEnumArgumentException("Unexpected Resolution: " + resolution);
             }
@@ -115,16 +127,16 @@ namespace QuantConnect.Data
         /// Update the price scaling factor for this subscription:
         /// -> Used for backwards scaling _equity_ prices to adjust for splits and dividends. Unused
         /// </summary>
-        public void SetPriceScaleFactor(decimal newFactor) 
+        public void SetPriceScaleFactor(decimal newFactor)
         {
             PriceScaleFactor = newFactor;
         }
 
         /// <summary>
-        /// Update the mapped symbol stored here: 
+        /// Update the mapped symbol stored here:
         /// </summary>
         /// <param name="newSymbol"></param>
-        public void SetMappedSymbol(string newSymbol) 
+        public void SetMappedSymbol(string newSymbol)
         {
             MappedSymbol = newSymbol;
         }

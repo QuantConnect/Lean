@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,26 +18,25 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
 
     public partial class QCAlgorithm
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         private bool _processingOrder = false;
         private int _maxOrders = 10000;
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PUBLIC PROPERTIES
         *********************************************************/
 
@@ -63,7 +62,7 @@ namespace QuantConnect.Algorithm
             get { return Transactions.Orders; }
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
 
@@ -162,7 +161,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Order(string, double)"/>
         public int Order(string symbol, double quantity)
         {
-            return Order(symbol, (int) quantity);
+            return Order(symbol, (int)quantity);
         }
 
         /// <summary>
@@ -172,7 +171,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Order(string, double)"/>
         public int Order(string symbol, decimal quantity)
         {
-            return Order(symbol, (int) quantity);
+            return Order(symbol, (int)quantity);
         }
 
         /// <summary>
@@ -299,7 +298,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Perform preorder checks to ensure we have sufficient capital, 
+        /// Perform preorder checks to ensure we have sufficient capital,
         /// the market is open, and we haven't exceeded maximum realistic orders per day.
         /// </summary>
         /// <returns>Negative order errors or zero for pass.</returns>
@@ -357,7 +356,6 @@ namespace QuantConnect.Algorithm
             return 0;
         }
 
-
         /// <summary>
         /// Liquidate all holdings. Called at the end of day for tick-strategies.
         /// </summary>
@@ -401,7 +399,6 @@ namespace QuantConnect.Algorithm
             }
         }
 
-
         /// <summary>
         /// Alias for SetHoldings to avoid the M-decimal errors.
         /// </summary>
@@ -426,7 +423,6 @@ namespace QuantConnect.Algorithm
         {
             SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings);
         }
-
 
         /// <summary>
         /// Alias for SetHoldings to avoid the M-decimal errors.
@@ -503,7 +499,7 @@ namespace QuantConnect.Algorithm
                 //5.2 Multiply fees by leverage because each share's cash impact is only value/leverage. Changing quantity linearly won't work.
                 var feesCashImpact = (projectedFees * direction * security.Leverage);
 
-                //5.3 Adjust the target quantity down by percentage of fees: 
+                //5.3 Adjust the target quantity down by percentage of fees:
                 // e.g. Target Quantity = 1000, fees = 10, value = 1000
                 // newQuantity = 1000 * 99% == $990 max possible given projected fees.
                 // e.g. Target Quantity = -1000, fees = 10, value = -1000
@@ -515,7 +511,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Obsolete implementation of Order method accepting a OrderType. This was deprecated since it 
+        /// Obsolete implementation of Order method accepting a OrderType. This was deprecated since it
         /// was impossible to generate other orders via this method. Any calls to this method will always default to a Market Order.
         /// </summary>
         /// <param name="symbol">Symbol we want to purchase</param>
@@ -531,7 +527,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Obsolete method for placing orders. 
+        /// Obsolete method for placing orders.
         /// </summary>
         /// <param name="symbol"></param>
         /// <param name="quantity"></param>

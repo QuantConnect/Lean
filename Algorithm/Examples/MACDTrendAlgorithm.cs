@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,6 @@
 using System;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-
 
 namespace QuantConnect.Algorithm.Examples
 {
@@ -56,7 +55,7 @@ namespace QuantConnect.Algorithm.Examples
 
             var holding = Portfolio[Symbol];
 
-            decimal signalDeltaPercent = (macd - macd.Signal)/macd.Fast;
+            decimal signalDeltaPercent = (macd - macd.Signal) / macd.Fast;
             var tolerance = 0.0025m;
 
             // if our macd is greater than our signal, then let's go long

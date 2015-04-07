@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     public class BrokerageTransactionHandler : ITransactionHandler
     {
         private bool _exitTriggered;
-        private IAlgorithm _algorithm;
+        private readonly IAlgorithm _algorithm;
         private readonly IBrokerage _brokerage;
 
         // pulled directly from the algorithm
@@ -38,16 +38,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// OrderQueue holds the newly updated orders from the user algorithm waiting to be processed. Once
         /// orders are processed they are moved into the Orders queue awaiting the brokerage response.
         /// </summary>
-        private ConcurrentQueue<Order> _orderQueue;
+        private readonly ConcurrentQueue<Order> _orderQueue;
 
         /// <summary>
         /// The orders queue holds orders which are sent to exchange, partially filled, completely filled or cancelled.
         /// Once the transaction thread has worked on them they get put here while witing for fill updates.
         /// </summary>
-        private ConcurrentDictionary<int, Order> _orders;
+        private readonly ConcurrentDictionary<int, Order> _orders;
 
         /// <summary>
-        /// OrderEvents is an orderid indexed collection of events attached to each order. Because an order might be filled in 
+        /// OrderEvents is an orderid indexed collection of events attached to each order. Because an order might be filled in
         /// multiple legs it is important to keep a record of each event.
         /// </summary>
         private ConcurrentDictionary<int, List<OrderEvent>> _orderEvents;
@@ -91,7 +91,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Boolean flag indicating the Run thread method is busy. 
+        /// Boolean flag indicating the Run thread method is busy.
         /// False indicates it is completely finished processing and ready to be terminated.
         /// </summary>
         public bool IsActive { get; private set; }
@@ -127,7 +127,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 if (order.Direction == OrderDirection.Hold)
                 {
                     Log.Error("BrokerageTransactionHandler.Run(): Encountered OrderDirection.Hold in OrderID: " + order.Id);
-                    
+
                     // move all orders into permanent storage
                     if (!_orders.TryAdd(order.Id, order))
                     {
@@ -140,7 +140,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 switch (order.Status)
                 {
                     case OrderStatus.New:
-                        HandleNewOrder(order); 
+                        HandleNewOrder(order);
                         break;
 
                     case OrderStatus.Update:

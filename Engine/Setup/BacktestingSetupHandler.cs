@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory;
-using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -37,7 +36,7 @@ namespace QuantConnect.Lean.Engine.Setup
     /// </summary>
     public class BacktestingSetupHandler : ISetupHandler
     {
-        /******************************************************** 
+        /********************************************************
         * PRIVATE VARIABLES
         *********************************************************/
         private TimeSpan _maxRuntime = TimeSpan.FromSeconds(300);
@@ -45,16 +44,16 @@ namespace QuantConnect.Lean.Engine.Setup
         private int _maxOrders = 0;
         private DateTime _startingDate = new DateTime(1998, 01, 01);
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC PROPERTIES
         *********************************************************/
         /// <summary>
         /// Internal errors list from running the setup proceedures.
         /// </summary>
         public List<string> Errors
-        { 
-            get; 
-            set; 
+        {
+            get;
+            set;
         }
 
         /// <summary>
@@ -63,12 +62,11 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <remarks>Maximum runtime is a formula based on the number and resolution of symbols requested, and the days backtesting</remarks>
         public TimeSpan MaximumRuntime
         {
-            get 
+            get
             {
                 return _maxRuntime;
             }
         }
-
 
         /// <summary>
         /// Starting capital according to the users initialize routine.
@@ -77,7 +75,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <seealso cref="QCAlgorithm.SetCash(decimal)"/>
         public decimal StartingCapital
         {
-            get 
+            get
             {
                 return _startingCaptial;
             }
@@ -101,24 +99,24 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <remarks>To stop algorithm flooding the backtesting system with hundreds of megabytes of order data we limit it to 100 per day</remarks>
         public int MaxOrders
         {
-            get 
+            get
             {
                 return _maxOrders;
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC CONSTRUCTOR
         *********************************************************/
         /// <summary>
         /// Initialize the backtest setup handler.
         /// </summary>
-        public BacktestingSetupHandler() 
+        public BacktestingSetupHandler()
         {
             Errors = new List<string>();
         }
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC METHODS
         *********************************************************/
         /// <summary>
@@ -172,7 +170,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 Errors.Add("Algorithm start date was never set");
                 return false;
             }
-            
+
             //Execute the initialize code:
             var initializeComplete = Isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(10), () =>
             {
@@ -214,7 +212,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
             //Set back to the algorithm,
             algorithm.SetMaximumOrders(_maxOrders);
-            
+
             //Starting date of the algorithm:
             _startingDate = job.PeriodStart;
 
@@ -226,9 +224,9 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 initializeComplete = false;
             }
+
             return initializeComplete;
         }
-
 
         /// <summary>
         /// Calculate the maximum runtime for this algorithm job.

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -35,7 +34,7 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public class LiveTradingRealTimeHandler : IRealTimeHandler
     {
-        /******************************************************** 
+        /********************************************************
         * PRIVATE VARIABLES
         *********************************************************/
         private DateTime _time = new DateTime();
@@ -50,7 +49,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         //Algorithm and Handlers:
         private IAlgorithm _algorithm;
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC PROPERTIES
         *********************************************************/
         /// <summary>
@@ -86,7 +85,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
         }
 
-
         /// <summary>
         /// Market hours for today for each security type in the algorithm
         /// </summary>
@@ -98,13 +96,13 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC CONSTRUCTOR
         *********************************************************/
         /// <summary>
         /// Initialize the realtime event handler with all information required for triggering daily events.
         /// </summary>
-        public LiveTradingRealTimeHandler(IAlgorithm algorithm, IDataFeed feed, IResultHandler results) 
+        public LiveTradingRealTimeHandler(IAlgorithm algorithm, IDataFeed feed, IResultHandler results)
         {
             //Initialize:
             _algorithm = algorithm;
@@ -114,11 +112,11 @@ namespace QuantConnect.Lean.Engine.RealTime
             _results = results;
         }
 
-        /******************************************************** 
+        /********************************************************
         * PUBLIC METHODS
         *********************************************************/
         /// <summary>
-        /// Execute the live realtime event thread montioring. 
+        /// Execute the live realtime event thread montioring.
         /// It scans every second monitoring for an event trigger.
         /// </summary>
         public void Run()
@@ -148,12 +146,11 @@ namespace QuantConnect.Lean.Engine.RealTime
             _isActive = false;
         }
 
-
         /// <summary>
         /// Set up the realtime event handlers for today.
         /// </summary>
         /// <remarks>
-        ///     We setup events for:to 
+        ///     We setup events for:to
         ///     - Refreshing of the brokerage session tokens.
         ///     - Getting the new daily market open close times.
         ///     - Setting up the "OnEndOfDay" events which close -10min before closing.
@@ -165,7 +162,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             {
                 //Clear the previous days events to reset with today:
                 ClearEvents();
-                
+
                 //Refresh the market hours store:
                 RefreshMarketHoursToday();
 
@@ -178,9 +175,8 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
         }
 
-
         /// <summary>
-        /// Setup the end of day event handler for all symbols in the users algorithm. 
+        /// Setup the end of day event handler for all symbols in the users algorithm.
         /// End of market hours are determined by the market hours today property.
         /// </summary>
         private void SetupEndOfDayEvent()
@@ -228,7 +224,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
         }
 
-
         /// <summary>
         /// Refresh the Today variable holding the market hours information
         /// </summary>
@@ -263,7 +258,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                         {
                             _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = TimeSpan.FromHours(0);
                             _algorithm.Securities[sub.Symbol].Exchange.MarketClose = TimeSpan.FromHours(0);
-                        } 
+                        }
                         else if (sub.ExtendedMarketHours)
                         {
                             _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = _today[SecurityType.Equity].PreMarket.Start.TimeOfDay;
@@ -318,7 +313,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Reset the events -- 
+        /// Reset the events
         /// All real time event handlers are self-resetting, and much auto-trigger a reset when the day changes.
         /// </summary>
         public void ResetEvents()

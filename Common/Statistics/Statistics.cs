@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,7 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.Statistics
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -37,7 +37,7 @@ namespace QuantConnect.Statistics
     /// <remarks>This is a particularly ugly class and one of the first ones written. It should be thrown out and re-written.</remarks>
     public class Statistics
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS VARIABLES
         *********************************************************/
         private static DateTime _benchmarkAge = new DateTime();
@@ -78,7 +78,7 @@ namespace QuantConnect.Statistics
             }
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -111,7 +111,6 @@ namespace QuantConnect.Statistics
             }
             return dictionary;
         }
-
 
         /// <summary>
         /// Run a full set of orders and return a Dictionary of statistics.
@@ -314,7 +313,7 @@ namespace QuantConnect.Statistics
                 if (profitLossRatio == -1) profitLossRatioHuman = "0";
 
                 //Add the over all results first, break down by year later:
-                statistics = new Dictionary<string, string>() { 
+                statistics = new Dictionary<string, string>() {
                     { "Total Trades", Math.Round(totalTrades, 0).ToString() },
                     { "Average Win", Math.Round(averageWin * 100, 2) + "%"  },
                     { "Average Loss", Math.Round(averageLoss * 100, 2) + "%" },
@@ -324,7 +323,7 @@ namespace QuantConnect.Statistics
                     { "Net Profit", Math.Round(totalNetProfit * 100, 3) + "%"},
                     { "Sharpe Ratio", Math.Round(SharpeRatio(listPerformance, riskFreeRate), 3).ToString() },
                     { "Loss Rate", Math.Round(lossRate * 100) + "%" },
-                    { "Win Rate", Math.Round(winRate * 100) + "%" }, 
+                    { "Win Rate", Math.Round(winRate * 100) + "%" },
                     { "Profit-Loss Ratio", profitLossRatioHuman },
                     { "Alpha", Math.Round(Alpha(listPerformance, listBenchmark, riskFreeRate), 3).ToString() },
                     { "Beta", Math.Round(Beta(listPerformance, listBenchmark), 3).ToString() },
@@ -371,7 +370,7 @@ namespace QuantConnect.Statistics
                 foreach (var price in lPrices)
                 {
                     if (price >= high) high = price;
-                    lDrawdowns.Add((price/high) - 1);
+                    lDrawdowns.Add((price / high) - 1);
                 }
                 dd = Math.Round(Math.Abs(lDrawdowns.Min()), rounding);
             }
@@ -420,9 +419,9 @@ namespace QuantConnect.Statistics
             {
                 Log.Error("Statistics.DrawdownValue(): " + err.Message);
             }
+
             return 0;
         } // End Drawdown:
-
 
         /// <summary>
         /// Annual compounded returns statistic based on the final-starting capital and years.
@@ -457,7 +456,7 @@ namespace QuantConnect.Statistics
         /// <returns>Annual variance value</returns>
         public static double AnnualVariance(List<double> performance, double tradingDaysPerYear = 252)
         {
-            return (performance.Variance())*tradingDaysPerYear;
+            return (performance.Variance()) * tradingDaysPerYear;
         }
 
         /// <summary>
@@ -474,7 +473,7 @@ namespace QuantConnect.Statistics
         {
             return Math.Sqrt(performance.Variance() * tradingDaysPerYear);
         }
-        
+
         /// <summary>
         /// Algorithm "beta" statistic - the covariance between the algorithm and benchmark performance, divided by benchmark's variance
         /// </summary>
@@ -511,7 +510,6 @@ namespace QuantConnect.Statistics
             return Math.Sqrt(AnnualVariance(algoPerformance) - 2 * Correlation.Pearson(algoPerformance, benchmarkPerformance) * AnnualStandardDeviation(algoPerformance) * AnnualStandardDeviation(benchmarkPerformance) + AnnualVariance(benchmarkPerformance));
         }
 
-        
         /// <summary>
         /// Information ratio - risk adjusted return
         /// </summary>

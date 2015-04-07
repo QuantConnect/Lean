@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,18 +28,20 @@ namespace QuantConnect.Queues.Test
     /// </summary>
     public class FakeLiveQueueHandler : Queue
     {
-        private readonly Random _random = new Random();
+        private static readonly TimeSpan _emitEvery = TimeSpan.FromSeconds(1.0);
+        private static readonly DateTime _start = DateTime.Now;
         private const int _tickCount = 1000;
         private const int _createDataGapsEvery = 2;
+
+        private readonly Random _random = new Random();
         private readonly TimeSpan _maxDataGap = TimeSpan.FromMinutes(1);
-        private static readonly TimeSpan _emitEvery = TimeSpan.FromSeconds(1.0);
-
-        private static readonly DateTime _start = DateTime.Now;
         private readonly HashSet<Subscription> _subscriptions = new HashSet<Subscription>();
-
         private readonly Stopwatch _lastEmit = Stopwatch.StartNew();
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Desktop/Local doesn't support live data from this handler
+        /// </summary>
+        /// <returns>Tick</returns>
         public override IEnumerable<Tick> GetNextTicks()
         {
             // instead of sleeping, model real world where we just don't have data to pull from the queue
@@ -73,7 +75,9 @@ namespace QuantConnect.Queues.Test
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Desktop/Local doesn't support live data from this handler
+        /// </summary>
         public override void Subscribe(IDictionary<SecurityType, List<string>> symbols)
         {
             foreach (var type in symbols)
@@ -93,7 +97,9 @@ namespace QuantConnect.Queues.Test
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Desktop/Local doesn't support live data from this handler
+        /// </summary>
         public override void Unsubscribe(IDictionary<SecurityType, List<string>> symbols)
         {
             foreach (var type in symbols)

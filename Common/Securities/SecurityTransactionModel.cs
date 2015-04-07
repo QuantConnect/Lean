@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,39 +22,38 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Interfaces;
 
-
-namespace QuantConnect.Securities 
+namespace QuantConnect.Securities
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
     /// Default security transaction model for user defined securities.
     /// </summary>
-    public class SecurityTransactionModel : ISecurityTransactionModel 
+    public class SecurityTransactionModel : ISecurityTransactionModel
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS PRIVATE VARIABLES
         *********************************************************/
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PUBLIC VARIABLES
         *********************************************************/
 
-        /******************************************************** 
+        /********************************************************
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
         /// Initialize the default transaction model class
         /// </summary>
-        public SecurityTransactionModel() 
-        {  }
+        public SecurityTransactionModel()
+        { }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PROPERTIES
         *********************************************************/
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -84,9 +83,9 @@ namespace QuantConnect.Securities
             {
                 Log.Error("SecurityTransactionModel.MarketFill(): " + err.Message);
             }
+
             return fill;
         }
-
 
         /// <summary>
         /// Default stop fill model implementation in base class security. (Stop Market Order Type)
@@ -120,7 +119,7 @@ namespace QuantConnect.Securities
                         {
                             order.Status = OrderStatus.Filled;
                             // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
-                            order.Price = Math.Min(order.StopPrice, asset.Price); 
+                            order.Price = Math.Min(order.StopPrice, asset.Price);
                         }
                         break;
 
@@ -150,7 +149,6 @@ namespace QuantConnect.Securities
             return fill;
         }
 
-
         /// <summary>
         /// Default stop limit fill model implementation in base class security. (Stop Limit Order Type)
         /// </summary>
@@ -160,9 +158,9 @@ namespace QuantConnect.Securities
         /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
         /// <seealso cref="LimitFill(Security, LimitOrder)"/>
         /// <remarks>
-        ///     There is no good way to model limit orders with OHLC because we never know whether the market has 
+        ///     There is no good way to model limit orders with OHLC because we never know whether the market has
         ///     gapped past our fill price. We have to make the assumption of a fluid, high volume market.
-        /// 
+        ///
         ///     Stop limit orders we also can't be sure of the order of the H - L values for the limit fill. The assumption
         ///     was made the limit fill will be done with closing price of the bar after the stop has been triggered..
         /// </remarks>
@@ -232,7 +230,6 @@ namespace QuantConnect.Securities
             return fill;
         }
 
-
         /// <summary>
         /// Default limit order fill model in the base security class.
         /// </summary>
@@ -256,7 +253,7 @@ namespace QuantConnect.Securities
                 decimal maximumPrice;
                 DataMinMaxPrices(asset, out minimumPrice, out maximumPrice);
 
-                //-> Valid Live/Model Order: 
+                //-> Valid Live/Model Order:
                 switch (order.Direction)
                 {
                     case OrderDirection.Buy:
@@ -266,7 +263,7 @@ namespace QuantConnect.Securities
                             //Set order fill:
                             order.Status = OrderStatus.Filled;
                             // Set order fill price to limit price: 99% of times limit orders fill at their limit price
-                            order.Price = order.LimitPrice; 
+                            order.Price = order.LimitPrice;
                         }
                         break;
                     case OrderDirection.Sell:
@@ -294,7 +291,6 @@ namespace QuantConnect.Securities
             return fill;
         }
 
-
         /// <summary>
         /// Get the slippage approximation for this order
         /// </summary>
@@ -306,7 +302,6 @@ namespace QuantConnect.Securities
             return 0;
         }
 
-
         /// <summary>
         /// Default security transaction model - no fees.
         /// </summary>
@@ -314,7 +309,6 @@ namespace QuantConnect.Securities
         {
             return 0;
         }
-
 
         /// <summary>
         /// Get the minimum and maximum price for this security in the last bar:
@@ -338,7 +332,6 @@ namespace QuantConnect.Securities
             }
         }
 
-
         /// <summary>
         /// Process an order to see if it has been filled and return the matching order event.
         /// </summary>
@@ -350,7 +343,6 @@ namespace QuantConnect.Securities
         {
             return new OrderEvent(order);
         }
-
 
         /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.
@@ -366,7 +358,6 @@ namespace QuantConnect.Securities
             return MarketFill(security, order as MarketOrder);
         }
 
-
         /// <summary>
         /// Default stop fill model implementation in base class security. (Stop Market Order Type)
         /// </summary>
@@ -380,7 +371,6 @@ namespace QuantConnect.Securities
         {
             return StopMarketFill(security, order as StopMarketOrder);
         }
-
 
         /// <summary>
         /// Default limit order fill model in the base security class.

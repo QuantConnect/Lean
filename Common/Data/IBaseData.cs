@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@ using System;
 
 namespace QuantConnect.Data
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -29,11 +29,11 @@ namespace QuantConnect.Data
     /// </summary>
     public interface IBaseData
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS PRIVATE VARIABLES
         *********************************************************/
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PUBLIC VARIABLES
         *********************************************************/
         /// <summary>
@@ -44,7 +44,7 @@ namespace QuantConnect.Data
             get;
             set;
         }
-        
+
         /// <summary>
         /// Time keeper of data -- all data is timeseries based.
         /// </summary>
@@ -53,8 +53,7 @@ namespace QuantConnect.Data
             get;
             set;
         }
-        
-        
+
         /// <summary>
         /// Symbol for underlying Security
         /// </summary>
@@ -63,7 +62,6 @@ namespace QuantConnect.Data
             get;
             set;
         }
-
 
         /// <summary>
         /// All timeseries data is a time-value pair:
@@ -74,7 +72,6 @@ namespace QuantConnect.Data
             set;
         }
 
-
         /// <summary>
         /// Alias of Value.
         /// </summary>
@@ -83,7 +80,7 @@ namespace QuantConnect.Data
             get;
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -94,16 +91,14 @@ namespace QuantConnect.Data
         /// <returns>BaseData type set by Subscription Method.</returns>
         BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed);
 
-
         /// <summary>
-        /// Return the URL string source of the file. This will be converted to a stream 
+        /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
         /// <param name="datafeed">Type of datafeed we're reqesting - backtest or live</param>
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source file</param>
         /// <returns>String URL of source file.</returns>
         string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed);
-
 
         /// <summary>
         /// Return a new instance clone of this object

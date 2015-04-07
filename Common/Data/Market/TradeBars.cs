@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,7 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class TradeBars : BaseData, IDictionary<string, TradeBar>
     {
-        /******************************************************** 
+        /********************************************************
         * CLASS VARIABLES
         *********************************************************/
         /// <summary>
@@ -39,25 +39,25 @@ namespace QuantConnect.Data.Market
         //Internally store the tradebars in a basic dictionary:
         private readonly Dictionary<string, TradeBar> _tradeBars = new Dictionary<string, TradeBar>();
 
-        /******************************************************** 
+        /********************************************************
         * CLASS CONSTRUCTOR:
         *********************************************************/
         /// <summary>
         /// TradeBars default initializer sets the time and values to zero.
         /// </summary>
-        public TradeBars() 
+        public TradeBars()
         {
             Time = new DateTime();
             Value = 0;
             Symbol = "";
             DataType = MarketDataType.TradeBar;
         }
-        
+
         /// <summary>
         /// Default constructor for tradebars collection at this time frontier: all tradebars in this collection occurred at this time.
         /// </summary>
         /// <param name="frontier">Time frontier of the algorithm and bars in this collection</param>
-        public TradeBars(DateTime frontier) 
+        public TradeBars(DateTime frontier)
         {
             Time = frontier;
             Value = 0;
@@ -65,7 +65,7 @@ namespace QuantConnect.Data.Market
             DataType = MarketDataType.TradeBar;
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -83,7 +83,6 @@ namespace QuantConnect.Data.Market
             throw new Exception("TradeBars class not implemented. Use TradeBar reader instead.");
         }
 
-
         /// <summary>
         /// Get source file URL/endpoint for this TradeBar subscription request
         /// </summary>
@@ -98,7 +97,6 @@ namespace QuantConnect.Data.Market
             throw new NotImplementedException();
         }
 
-
         /// <summary>
         /// Clone the underlying data type for fillforward methods.
         /// </summary>
@@ -110,14 +108,14 @@ namespace QuantConnect.Data.Market
             throw new NotImplementedException();
         }
 
-
         /// <summary>
         /// Add a TradeBar to this TradeBars collection.
         /// </summary>
         /// <param name="key">String symbol for tradebar</param>
         /// <param name="value">TradeBar value</param>
         /// <remarks>IDictionary implementation.</remarks>
-        public void Add(string key, TradeBar value) {
+        public void Add(string key, TradeBar value)
+        {
             _tradeBars.Add(key, value);
         }
 
@@ -130,9 +128,10 @@ namespace QuantConnect.Data.Market
         {
             return _tradeBars.GetEnumerator();
         }
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IDictionary)this).GetEnumerator();
+            return ((IDictionary<string, TradeBar>)this).GetEnumerator();
         }
 
         /// <summary>
@@ -140,9 +139,9 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>False - boolean flag if read only</returns>
-        public bool IsReadOnly 
+        public bool IsReadOnly
         {
-            get 
+            get
             {
                 return false;
             }
@@ -152,9 +151,9 @@ namespace QuantConnect.Data.Market
         /// Count the number of tradebar objects in the dictionary.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        public int Count 
+        public int Count
         {
-            get 
+            get
             {
                 return _tradeBars.Count;
             }
@@ -165,7 +164,7 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="key">Key ticker</param>
         /// <remarks>IDictionary implementation</remarks>
-        public bool Remove(string key) 
+        public bool Remove(string key)
         {
             return _tradeBars.Remove(key);
         }
@@ -176,7 +175,7 @@ namespace QuantConnect.Data.Market
         /// <param name="kvp">KeyValue pair to remove</param>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Boolean true on success</returns>
-        public bool Remove(KeyValuePair<string, TradeBar> kvp) 
+        public bool Remove(KeyValuePair<string, TradeBar> kvp)
         {
             return _tradeBars.Remove(kvp.Key);
         }
@@ -187,7 +186,8 @@ namespace QuantConnect.Data.Market
         /// <param name="kvp">Key-value pair to search for</param>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>True if found</returns>
-        public bool Contains(KeyValuePair<string, TradeBar> kvp) {
+        public bool Contains(KeyValuePair<string, TradeBar> kvp)
+        {
             return _tradeBars.ContainsKey(kvp.Key);
         }
 
@@ -197,7 +197,8 @@ namespace QuantConnect.Data.Market
         /// <param name="symbol">Security symbol</param>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>True if found.</returns>
-        public bool ContainsKey(string symbol) {
+        public bool ContainsKey(string symbol)
+        {
             return _tradeBars.ContainsKey(symbol);
         }
 
@@ -205,7 +206,8 @@ namespace QuantConnect.Data.Market
         /// Clear the TradeBars collection.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        public void Clear() {
+        public void Clear()
+        {
             _tradeBars.Clear();
         }
 
@@ -214,7 +216,8 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="kvp">KeyValue pair we'd like to add to the the dictionary</param>
         /// <remarks>IDictionary implementation</remarks>
-        public void Add(KeyValuePair<string, TradeBar> kvp) {
+        public void Add(KeyValuePair<string, TradeBar> kvp)
+        {
             _tradeBars.Add(kvp.Key, kvp.Value);
         }
 
@@ -222,8 +225,10 @@ namespace QuantConnect.Data.Market
         /// Collection of TradeBars (values) in this dictionary
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        public ICollection<TradeBar> Values {
-            get {
+        public ICollection<TradeBar> Values
+        {
+            get
+            {
                 return _tradeBars.Values;
             }
         }
@@ -232,8 +237,10 @@ namespace QuantConnect.Data.Market
         /// Collection of symbols (keys) in this dictionary
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        public ICollection<string> Keys {
-            get {
+        public ICollection<string> Keys
+        {
+            get
+            {
                 return _tradeBars.Keys;
             }
         }
@@ -254,13 +261,13 @@ namespace QuantConnect.Data.Market
                 {
                     return bar;
                 }
-                throw new KeyNotFoundException("'" + key + "' wasn't found in the TradeBars object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"" + key + "\")");
+                throw new KeyNotFoundException(string.Format("'{0}' wasn't found in the TradeBars object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{0}\")", key));
             }
             set
             {
                 if (!_tradeBars.ContainsKey(key))
                 {
-                    throw new KeyNotFoundException("'" + key + "' wasn't found in the TradeBars object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"" + key + "\")");
+                    throw new KeyNotFoundException(string.Format("'{0}' wasn't found in the TradeBars object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{0}\")", key));
                 }
                 _tradeBars[key] = value;
             }
@@ -292,18 +299,24 @@ namespace QuantConnect.Data.Market
         private static void Copy<T>(ICollection<T> source, T[] array, int arrayIndex)
         {
             if (array == null)
+            {
                 throw new ArgumentNullException("array");
+            }
 
             if (arrayIndex < 0 || arrayIndex > array.Length)
+            {
                 throw new ArgumentOutOfRangeException("arrayIndex");
+            }
 
             if ((array.Length - arrayIndex) < source.Count)
+            {
                 throw new ArgumentException("Destination array is not large enough. Check array.Length and arrayIndex.");
+            }
 
             foreach (var item in source)
+            {
                 array[arrayIndex++] = item;
+            }
         }
     }
-
-
 } // End QC Namespace
