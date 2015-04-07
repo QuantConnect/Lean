@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,18 +23,18 @@ using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm
 {
-    /********************************************************
+    /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
     public partial class QCAlgorithm
     {
-        /********************************************************
+        /******************************************************** 
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         private Dictionary<string, Chart> _charts = new Dictionary<string, Chart>();
         private Dictionary<string, string> _runtimeStatistics = new Dictionary<string, string>();
 
-        /********************************************************
+        /******************************************************** 
         * CLASS PUBLIC PROPERTIES
         *********************************************************/
         /// <summary>
@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm
             }
         }
 
-        /********************************************************
+        /******************************************************** 
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -76,6 +76,7 @@ namespace QuantConnect.Algorithm
             //By default plot to the primary chart:
             Plot("Strategy Equity", series, value);
         }
+
 
         /// <summary>
         /// Plot a chart using string series name, with int value. Alias of Plot();
@@ -112,8 +113,7 @@ namespace QuantConnect.Algorithm
         /// Plot a chart using string series name, with double value.
         /// </summary>
         /// <seealso cref="Plot(string,string,decimal)"/>
-        public void Plot(string series, double value)
-        {
+        public void Plot(string series, double value) {
             Plot(series, (decimal)value);
         }
 
@@ -168,7 +168,7 @@ namespace QuantConnect.Algorithm
         /// <param name="chart">Chart name</param>
         /// <param name="series">Series name</param>
         /// <param name="value">Value of the point</param>
-        public void Plot(string chart, string series, decimal value)
+        public void Plot(string chart, string series, decimal value) 
         {
             //Ignore the reserved chart names:
             if ((chart == "Strategy Equity" && series == "Equity") || (chart == "Daily Performance") || (chart == "Meta"))
@@ -179,10 +179,10 @@ namespace QuantConnect.Algorithm
             // If we don't have the chart, create it:
             if (!_charts.ContainsKey(chart))
             {
-                _charts.Add(chart, new Chart(chart));
+                _charts.Add(chart, new Chart(chart)); 
             }
 
-            if (!_charts[chart].Series.ContainsKey(series))
+            if (!_charts[chart].Series.ContainsKey(series)) 
             {
                 //Number of series in total.
                 var seriesCount = (from x in _charts.Values select x.Series.Count).Sum();
@@ -201,7 +201,7 @@ namespace QuantConnect.Algorithm
             {
                 _charts[chart].Series[series].AddPoint(Time, value, _liveMode);
             }
-            else
+            else 
             {
                 Debug("Exceeded maximum points per chart, data skipped.");
             }
@@ -236,7 +236,7 @@ namespace QuantConnect.Algorithm
                 _runtimeStatistics.Add(name, value);
             }
 
-            //Set
+            //Set 
             _runtimeStatistics[name] = value;
         }
 

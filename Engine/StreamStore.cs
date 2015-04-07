@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,20 +27,20 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine
 {
-    /********************************************************
+    /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
-    /// StreamStore manages the creation of data objects for live streams; including managing
+    /// StreamStore manages the creation of data objects for live streams; including managing 
     /// a fillforward data stream request.
     /// </summary>
     /// <remarks>
-    /// Streams data is pushed into update where it is appended to the data object to be consolidated. Once required time has lapsed for the bar the
+    /// Streams data is pushed into update where it is appended to the data object to be consolidated. Once required time has lapsed for the bar the 
     /// data is piped into a queue.
     /// </remarks>
     public class StreamStore
     {
-        /********************************************************
+        /******************************************************** 
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         //Internal lock object
@@ -52,7 +52,7 @@ namespace QuantConnect.Lean.Engine
         private object _lock = new Object();
         private ConcurrentQueue<BaseData> _queue = new ConcurrentQueue<BaseData>();
 
-        /********************************************************
+        /******************************************************** 
         * CLASS PUBLIC PROPERTIES:
         *********************************************************/
         /// <summary>
@@ -103,7 +103,7 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        /********************************************************
+        /******************************************************** 
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -120,7 +120,7 @@ namespace QuantConnect.Lean.Engine
             _queue = new ConcurrentQueue<BaseData>();
         }
 
-        /********************************************************
+        /******************************************************** 
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -131,9 +131,7 @@ namespace QuantConnect.Lean.Engine
         {
             //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
             while (_data != null && _data.Time < ComputeBarStartTime(data))
-            {
-                Thread.Sleep(1);
-            }
+            { Thread.Sleep(1); } 
 
             _data = data;
         }
@@ -148,9 +146,7 @@ namespace QuantConnect.Lean.Engine
             //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
             var barStartTime = ComputeBarStartTime(tick);
             while (_data != null && _data.Time < barStartTime)
-            {
-                Thread.Sleep(1);
-            }
+            { Thread.Sleep(1); } 
 
             lock (_lock)
             {
@@ -176,6 +172,7 @@ namespace QuantConnect.Lean.Engine
             } // End of Lock
         } // End of Update
 
+
         /// <summary>
         /// A time period has lapsed, trigger a save/queue of the current value of data.
         /// </summary>
@@ -190,8 +187,8 @@ namespace QuantConnect.Lean.Engine
                     if (_data == null && !fillForward)
                     {
                         Log.Debug("StreamStore.TriggerArchive(): No data to store, and not fill forward: " + Symbol);
-                    }
-
+                    } 
+                    
                     if (_data != null)
                     {
                         //Create clone and reset original

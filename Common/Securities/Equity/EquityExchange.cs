@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,41 +19,40 @@
 
 using System;
 
-namespace QuantConnect.Securities.Equity
+namespace QuantConnect.Securities.Equity 
 {
-    /********************************************************
+    /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
-    /// Equity exchange information
+    /// Equity exchange information 
     /// </summary>
     /// <seealso cref="SecurityExchange"/>
-    public class EquityExchange : SecurityExchange
+    public class EquityExchange : SecurityExchange 
     {
-        /********************************************************
+        /******************************************************** 
         * CLASS VARIABLES
         *********************************************************/
         private TimeSpan _marketOpen = TimeSpan.FromHours(9.5);
         private TimeSpan _marketClose = TimeSpan.FromHours(16);
 
-        /********************************************************
+        /******************************************************** 
         * CLASS CONSTRUCTION
         *********************************************************/
         /// <summary>
         /// Initialise equity exchange objects
         /// </summary>
-        public EquityExchange()
-            : base()
-        {
+        public EquityExchange() : 
+            base() {
         }
 
-        /********************************************************
+        /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
         /// <summary>
         /// Boolean flag indicating the equities exchange markets are open
         /// </summary>
-        public override bool ExchangeOpen
+        public override bool ExchangeOpen 
         {
             get
             {
@@ -64,9 +63,9 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Number of trading days in an equity calendar year - 252
         /// </summary>
-        public override int TradingDaysPerYear
+        public override int TradingDaysPerYear 
         {
-            get
+            get 
             {
                 return 252;
             }
@@ -90,7 +89,8 @@ namespace QuantConnect.Securities.Equity
             set { _marketClose = value; }
         }
 
-        /********************************************************
+
+        /******************************************************** 
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -102,9 +102,9 @@ namespace QuantConnect.Securities.Equity
         public override bool DateTimeIsOpen(DateTime dateToCheck)
         {
             //Market not open yet:
-            if (dateToCheck.TimeOfDay.TotalHours < 9.5 ||
-                dateToCheck.TimeOfDay.TotalHours >= 16 ||
-                dateToCheck.DayOfWeek == DayOfWeek.Saturday ||
+            if (dateToCheck.TimeOfDay.TotalHours < 9.5 || 
+                dateToCheck.TimeOfDay.TotalHours >= 16 || 
+                dateToCheck.DayOfWeek == DayOfWeek.Saturday || 
                 dateToCheck.DayOfWeek == DayOfWeek.Sunday)
             {
                 return false;
@@ -112,6 +112,7 @@ namespace QuantConnect.Securities.Equity
 
             return true;
         }
+
 
         /// <summary>
         /// Set the incoming datetime object date to the market open time.
@@ -124,6 +125,7 @@ namespace QuantConnect.Securities.Equity
             return time.Date.AddHours(9.5);
         }
 
+
         /// <summary>
         /// Set the datetime object to the time of day closed.
         /// </summary>
@@ -134,6 +136,7 @@ namespace QuantConnect.Securities.Equity
             //Set close time to 4pm for US equities.
             return time.Date.AddHours(16);
         }
+
 
         /// <summary>
         /// Check if the US Equity markets are open on today's *date*. Check the calendar holidays as well.
@@ -148,13 +151,13 @@ namespace QuantConnect.Securities.Equity
             }
 
             //Check the date first.
-            if (USHoliday.Dates.Contains(dateToCheck.Date))
-            {
+            if (USHoliday.Dates.Contains(dateToCheck.Date)) {
                 return false;
             }
 
             return true;
         }
+
 
         /// <summary>
         /// Check if this datetime is open, including extended market hours:

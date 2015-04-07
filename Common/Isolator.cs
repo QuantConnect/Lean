@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,18 +21,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Logging;
 
-namespace QuantConnect
+namespace QuantConnect 
 {
-    /********************************************************
+    /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
-    /// Isolator class - create a new instance of the algorithm and ensure it doesn't
+    /// Isolator class - create a new instance of the algorithm and ensure it doesn't 
     /// exceed memory or time execution limits.
     /// </summary>
     public class Isolator
     {
-        /********************************************************
+        /******************************************************** 
         * CLASS VARIABLES
         *********************************************************/
         /// <summary>
@@ -45,7 +45,8 @@ namespace QuantConnect
         /// </summary>
         public static CancellationToken cancelToken = new CancellationToken();
 
-        /********************************************************
+
+        /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
         /// <summary>
@@ -53,23 +54,25 @@ namespace QuantConnect
         /// </summary>
         public static bool IsCancellationRequested
         {
-            get
+            get 
             {
                 return cancelToken.IsCancellationRequested;
             }
         }
 
-        /********************************************************
+
+        /******************************************************** 
         * CLASS METHODS
         *********************************************************/
         /// <summary>
         /// Reset the cancellation token variables for a new task:
         /// </summary>
-        public static void ResetCancelToken()
+        public static void ResetCancelToken() 
         {
             cancellation = new CancellationTokenSource();
             cancelToken = cancellation.Token;
         }
+
 
         /// <summary>
         /// Execute a code block with a maximum limit on time and memory.
@@ -130,7 +133,6 @@ namespace QuantConnect
                 Log.Error("Security.ExecuteWithTimeLimit(): " + message);
                 throw new Exception(message);
             }
-
             return task.IsCompleted;
         }
     }

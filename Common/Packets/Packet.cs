@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,6 @@
 * USING NAMESPACES
 **********************************************************/
 
-using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -39,7 +38,7 @@ namespace QuantConnect.Packets
         /// User unique specific channel endpoint to send the packets
         /// </summary>
         [JsonProperty(PropertyName = "sChannel")]
-        public string Channel = String.Empty;
+        public string Channel = "";
 
         /// <summary>
         /// Initialize the base class and setup the packet type.
@@ -47,7 +46,7 @@ namespace QuantConnect.Packets
         /// <param name="type">PacketType for the class.</param>
         public Packet(PacketType type)
         {
-            Channel = String.Empty;
+            Channel = "";
             Type = type;
         }
     }

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,17 +22,17 @@ using System.Globalization;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 
-namespace QuantConnect
+namespace QuantConnect 
 {
-    /********************************************************
+    /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
     /// Time helper class collection for working with trading dates
     /// </summary>
-    public class Time
+    public class Time 
     {
-        /********************************************************
+        /******************************************************** 
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -40,51 +40,37 @@ namespace QuantConnect
         /// </summary>
         public struct DateTimeWithZone
         {
-            private readonly DateTime _utcDateTime;
-            private readonly TimeZoneInfo _timeZone;
+            private readonly DateTime utcDateTime;
+            private readonly TimeZoneInfo timeZone;
 
-            /// <summary>
-            /// Creates a new instance
-            /// </summary>
-            /// <param name="dateTime">The local date and time.</param>
-            /// <param name="timeZone">The local time zone.</param>
             public DateTimeWithZone(DateTime dateTime, TimeZoneInfo timeZone)
             {
-                _utcDateTime = TimeZoneInfo.ConvertTimeToUtc(dateTime, timeZone);
-                _timeZone = timeZone;
+                utcDateTime = TimeZoneInfo.ConvertTimeToUtc(dateTime, timeZone);
+                this.timeZone = timeZone;
             }
 
-            /// <summary>
-            /// Gets the date and time information, as UTC.
-            /// </summary>
-            public DateTime UniversalTime { get { return _utcDateTime; } }
+            public DateTime UniversalTime { get { return utcDateTime; } }
 
-            /// <summary>
-            /// Gets the time zone
-            /// </summary>
-            public TimeZoneInfo TimeZone { get { return _timeZone; } }
+            public TimeZoneInfo TimeZone { get { return timeZone; } }
 
-            /// <summary>
-            /// Gets the date and time information, relative to the <see cref="TimeZone"/>.
-            /// </summary>
             public DateTime LocalTime
             {
                 get
                 {
-                    return TimeZoneInfo.ConvertTime(_utcDateTime, _timeZone);
+                    return TimeZoneInfo.ConvertTime(utcDateTime, timeZone);
                 }
             }
         }
-
+        
         /// <summary>
         /// Create a C# DateTime from a UnixTimestamp
         /// </summary>
         /// <param name="unixTimeStamp">Double unix timestamp (Time since Midnight Jan 1 1970)</param>
         /// <returns>C# date timeobject</returns>
-        public static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
+        public static DateTime UnixTimeStampToDateTime(double unixTimeStamp) 
         {
             var time = DateTime.Now;
-            try
+            try 
             {
                 // Unix timestamp is seconds past epoch
                 time = new DateTime(1970, 1, 1, 0, 0, 0, 0);
@@ -94,7 +80,6 @@ namespace QuantConnect
             {
                 Log.Error("Time.UnixTimeStampToDateTime(): " + unixTimeStamp + err.Message);
             }
-
             return time;
         }
 
@@ -103,18 +88,17 @@ namespace QuantConnect
         /// </summary>
         /// <param name="time">C# datetime object</param>
         /// <returns>Double unix timestamp</returns>
-        public static double DateTimeToUnixTimeStamp(DateTime time)
+        public static double DateTimeToUnixTimeStamp(DateTime time) 
         {
             double timestamp = 0;
-            try
+            try 
             {
                 timestamp = (time - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds;
-            }
-            catch (Exception err)
+            } 
+            catch (Exception err) 
             {
                 Log.Error("Time.DateTimeToUnixTimeStamp(): " + time.ToOADate() + err.Message);
             }
-
             return timestamp;
         }
 
@@ -122,13 +106,13 @@ namespace QuantConnect
         /// Get the current time as a unix timestamp
         /// </summary>
         /// <returns>Double value of the unix as UTC timestamp</returns>
-        public static double TimeStamp()
+        public static double TimeStamp() 
         {
             return DateTimeToUnixTimeStamp(DateTime.UtcNow);
         }
 
         /// <summary>
-        /// Parse a standard YY MM DD date into a DateTime. Attempt common date formats
+        /// Parse a standard YY MM DD date into a DateTime. Attempt common date formats 
         /// </summary>
         /// <param name="dateToParse">String date time to parse</param>
         /// <returns>Date time</returns>
@@ -142,22 +126,18 @@ namespace QuantConnect
                 {
                     return date;
                 }
-
                 if (DateTime.TryParseExact(dateToParse, DateFormat.EightCharacter, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
                 {
                     return date;
                 }
-
                 if (DateTime.TryParseExact(dateToParse.Substring(0, 19), DateFormat.JsonFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
                 {
                     return date;
                 }
-
                 if (DateTime.TryParseExact(dateToParse, DateFormat.US, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
                 {
                     return date;
                 }
-
                 if (DateTime.TryParse(dateToParse, out date))
                 {
                     return date;
@@ -167,9 +147,10 @@ namespace QuantConnect
             {
                 Log.Error("Time.ParseDate(): " + err.Message);
             }
-
+            
             return DateTime.Now;
         }
+
 
         /// <summary>
         /// Define an enumerable date range and return each date as a datetime object in the date range
@@ -177,13 +158,12 @@ namespace QuantConnect
         /// <param name="from">DateTime start date</param>
         /// <param name="thru">DateTime end date</param>
         /// <returns>Enumerable date range</returns>
-        public static IEnumerable<DateTime> EachDay(DateTime from, DateTime thru)
+        public static IEnumerable<DateTime> EachDay(DateTime from, DateTime thru) 
         {
             for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1))
-            {
                 yield return day;
-            }
         }
+
 
         /// <summary>
         /// Define an enumerable date range of tradeable dates - skip the holidays and weekends when securities in this algorithm don't trade.
@@ -192,16 +172,17 @@ namespace QuantConnect
         /// <param name="from">Start date</param>
         /// <param name="thru">End date</param>
         /// <returns>Enumerable date range</returns>
-        public static IEnumerable<DateTime> EachTradeableDay(SecurityManager securities, DateTime from, DateTime thru)
+        public static IEnumerable<DateTime> EachTradeableDay(SecurityManager securities, DateTime from, DateTime thru) 
         {
-            for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1))
+            for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1)) 
             {
-                if (TradableDate(securities, day))
+                if (TradableDate(securities, day)) 
                 {
                     yield return day;
                 }
-            }
+            }   
         }
+
 
         /// <summary>
         /// Make sure this date is not a holiday, or weekend for the securities in this algorithm.
@@ -209,27 +190,23 @@ namespace QuantConnect
         /// <param name="securities">Security manager from the algorithm</param>
         /// <param name="day">DateTime to check if trade-able.</param>
         /// <returns>True if tradeable date</returns>
-        public static bool TradableDate(SecurityManager securities, DateTime day)
+        public static bool TradableDate(SecurityManager securities, DateTime day) 
         {
             var tradeable = false;
-            try
+            try 
             {
                 foreach (var security in securities.Values)
                 {
-                    if (security.Exchange.DateIsOpen(day))
-                    {
-                        tradeable = true;
-                        break;
-                    }
+                    if (security.Exchange.DateIsOpen(day)) tradeable = true;
                 }
-            }
+            } 
             catch (Exception err)
             {
                 Log.Error("Time.TradeableDate(): " + err.Message);
             }
-
             return tradeable;
         }
+
 
         /// <summary>
         /// Could of the number of tradeable dates within this period.
@@ -242,22 +219,23 @@ namespace QuantConnect
         {
             var count = 0;
             Log.Trace("Time.TradeableDates(): Security Count: " + securities.Count);
-            try
+            try 
             {
-                foreach (var day in EachDay(start, finish))
+                foreach (var day in Time.EachDay(start, finish)) 
                 {
-                    if (TradableDate(securities, day))
+                    if (Time.TradableDate(securities, day)) 
                     {
                         count++;
                     }
                 }
-            }
-            catch (Exception err)
+            } 
+            catch (Exception err) 
             {
                 Log.Error("Time.TradeableDates(): " + err.Message);
             }
-
             return count;
         }
+
+
     } // End Time Class
 } // End QC Namespace

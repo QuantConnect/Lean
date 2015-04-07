@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,32 +31,27 @@ namespace QuantConnect.Algorithm.Examples
         /// This is the period of bars we'll be creating
         /// </summary>
         public readonly TimeSpan BarPeriod = TimeSpan.FromMinutes(10);
-
         /// <summary>
         /// This is the period of our sma indicators
         /// </summary>
         public readonly int SimpleMovingAveragePeriod = 10;
-
         /// <summary>
         /// This is the number of consolidated bars we'll hold in symbol data for reference
         /// </summary>
         public readonly int RollingWindowSize = 10;
-
         /// <summary>
         /// Holds all of our data keyed by each symbol
         /// </summary>
         public readonly Dictionary<string, SymbolData> Data = new Dictionary<string, SymbolData>();
-
         /// <summary>
         /// Contains all of our equity symbols
         /// </summary>
         public readonly IReadOnlyList<string> EquitySymbols = new List<string>
         {
-            "AAPL",
-            "SPY",
+            "AAPL", 
+            "SPY", 
             "IBM"
         };
-
         /// <summary>
         /// Contains all of our forex symbols
         /// </summary>
@@ -153,7 +148,7 @@ namespace QuantConnect.Algorithm.Examples
             foreach (var kvp in Data.OrderBy(x => x.Value.Symbol))
             {
                 // we have too many symbols to plot them all, so plot ever other
-                if (kvp.Value.IsReady && ++i % 2 == 0)
+                if (kvp.Value.IsReady && ++i%2 == 0)
                 {
                     Plot(kvp.Value.Symbol, kvp.Value.SMA);
                 }

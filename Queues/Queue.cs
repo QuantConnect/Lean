@@ -1,19 +1,17 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
-
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
@@ -28,7 +26,7 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Queues
 {
-    /********************************************************
+    /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -36,7 +34,7 @@ namespace QuantConnect.Queues
     /// </summary>
     public class Queue : IQueueHandler
     {
-        /********************************************************
+        /******************************************************** 
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -62,11 +60,11 @@ namespace QuantConnect.Queues
             }
         }
 
-        /********************************************************
+        /******************************************************** 
         * CLASS METHODS
         *********************************************************/
         /// <summary>
-        /// Desktop/Local initialization of task/queue provider.
+        /// Desktop/Local initialization of task/queue provider. 
         /// </summary>
         public void Initialize(bool liveMode)
         {
@@ -95,12 +93,11 @@ namespace QuantConnect.Queues
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
                     Brokerage = Config.Get("live-mode-brokerage", "Paper Brokerage")
                 };
-
                 return liveJob;
             }
 
             //Default run a backtesting job.
-            var backtestJob = new BacktestNodePacket(0, 0, "", new byte[] { }, 10000, "local")
+            var backtestJob = new BacktestNodePacket(0, 0, "", new byte[] {}, 10000, "local")
             {
                 ResultEndpoint = ResultHandlerEndpoint.Console,
                 SetupEndpoint = SetupHandlerEndpoint.Console,
@@ -110,7 +107,6 @@ namespace QuantConnect.Queues
                 Type = PacketType.BacktestNode,
                 Algorithm = File.ReadAllBytes(AlgorithmLocation)
             };
-
             return backtestJob;
         }
 
@@ -131,6 +127,7 @@ namespace QuantConnect.Queues
         {
             throw new NotImplementedException("QuantConnect.Queues.Queue has not implemented live data.");
         }
+
 
         /// <summary>
         /// Open the data queue when coming out of hibernate.
@@ -163,5 +160,7 @@ namespace QuantConnect.Queues
         {
             throw new NotImplementedException("QuantConnect.Queues.Queue has not implemented live data.");
         }
+
     }
+
 }

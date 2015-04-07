@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,38 +13,40 @@
  * limitations under the License.
 */
 
+/**********************************************************
+* USING NAMESPACES
+**********************************************************/
+
 using System;
 
-namespace QuantConnect.Securities.Forex
+namespace QuantConnect.Securities.Forex 
 {
-    /********************************************************
+    /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
     /// Forex exchange class - information and helper tools for forex exchange properties
     /// </summary>
     /// <seealso cref="SecurityExchange"/>
-    public class ForexExchange : SecurityExchange
-    {
+    public class ForexExchange : SecurityExchange {
 
-        /********************************************************
+        /******************************************************** 
         * CLASS VARIABLES
         *********************************************************/
         private TimeSpan _marketOpen = TimeSpan.FromHours(0);
         private TimeSpan _marketClose = TimeSpan.FromDays(1).Subtract(TimeSpan.FromTicks(1));
 
-        /********************************************************
+        /******************************************************** 
         * CLASS CONSTRUCTION
         *********************************************************/
         /// <summary>
         /// Initialise forex exchange exchange
         /// </summary>
-        public ForexExchange()
-            : base()
-        {
+        public ForexExchange() : 
+            base() {
         }
 
-        /********************************************************
+        /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
         /// <summary>
@@ -58,6 +60,7 @@ namespace QuantConnect.Securities.Forex
             }
         }
 
+
         /// <summary>
         /// Number of trading days per year for this security, used for performance statistics.
         /// </summary>
@@ -69,6 +72,7 @@ namespace QuantConnect.Securities.Forex
                 return 313;
             }
         }
+
 
         /// <summary>
         /// Check this date time is open for the forex market.
@@ -89,6 +93,7 @@ namespace QuantConnect.Securities.Forex
             return true;
         }
 
+
         /// <summary>
         /// Check if this datetime is open for the FXCM markets:
         /// </summary>
@@ -103,6 +108,7 @@ namespace QuantConnect.Securities.Forex
             //Otherwise all other days at least partially open
             return true;
         }
+
 
         /// <summary>
         /// FOREX market opening time: midnight on week days, 5pm on Sunday
@@ -122,7 +128,7 @@ namespace QuantConnect.Securities.Forex
             set { _marketClose = value; }
         }
 
-        /********************************************************
+        /******************************************************** 
         * CLASS METHODS
         *********************************************************/
         /// <summary>
@@ -143,6 +149,7 @@ namespace QuantConnect.Securities.Forex
                     return time.Date;
             }
         }
+
 
         /// <summary>
         /// Time of day the market closes.
