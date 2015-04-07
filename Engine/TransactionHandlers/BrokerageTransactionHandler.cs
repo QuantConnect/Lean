@@ -65,38 +65,20 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             _brokerage = brokerage;
-            _brokerage.OrderEvent += (sender, fill) =>
+            _brokerage.OrderStatusChanged += (sender, fill) =>
             {
-                // save that the order event took place, we're initializing the list with a capacity of 2 to reduce number of mallocs
-                //these hog memory
-                //List<OrderEvent> orderEvents = _orderEvents.GetOrAdd(orderEvent.OrderId, i => new List<OrderEvent>(2));
-                //orderEvents.Add(orderEvent);
-
-                //Apply the filled order to our portfolio:
-                if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)
-                {
-                    _algorithm.Portfolio.ProcessFill(fill);
-                }
-
-                //We have an event! :) Order filled, send it in to be handled by algorithm portfolio.
-                if (fill.Status != OrderStatus.None) //order.Status != OrderStatus.Submitted
-                {
-                    //Create new order event:
-                    Engine.ResultHandler.OrderEvent(fill);
-                    try
-                    {
-                        //Trigger our order event handler
-                        _algorithm.OnOrderEvent(fill);
-                    }
-                    catch (Exception err)
-                    {
-                        _algorithm.Error("Order Event Handler Error: " + err.Message);
-                    }
-                }
+                HandleOrderEvent(fill);
             };
 
-            //_brokerage.AccountChanged +=
-            //_brokerage.PortfolioChanged +=
+            // maintain proper portfolio cash balance
+            _brokerage.AccountChanged += (sender, account) =>
+            {
+                //_algorithm.Portfolio.SetCash(account.CashBalance);
+
+                // how close are we?
+                decimal delta = _algorithm.Portfolio.Cash - account.CashBalance;
+                Log.Trace(string.Format("BrokerageTransactionHandler.AccountChanged(): Algo Cash: {0} Brokerage Cash: {1} Delta: {2}", algorithm.Portfolio.Cash, account.CashBalance, delta));
+            };
 
             IsActive = true;
 
@@ -269,6 +251,47 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             else
             {
                 Log.Error("BrokerageTransactionHandler.HandleCancelledOrder(): Unable to cancel order with ID " + order.Id + ".");
+            }
+        }
+
+        private void HandleOrderEvent(OrderEvent fill)
+        {
+            // update the order status
+            var order = _algorithm.Transactions.GetOrderById(fill.OrderId);
+            if (order == null)
+            {
+                Log.Error("BrokerageTransactionHandler.HandleOrderEvnt(): Unable to locate Order with id " + fill.OrderId);
+                return;
+            }
+
+            // set the status of our order object based on the fill event
+            order.Status = fill.Status;
+
+            // save that the order event took place, we're initializing the list with a capacity of 2 to reduce number of mallocs
+            //these hog memory
+            //List<OrderEvent> orderEvents = _orderEvents.GetOrAdd(orderEvent.OrderId, i => new List<OrderEvent>(2));
+            //orderEvents.Add(orderEvent);
+
+            //Apply the filled order to our portfolio:
+            if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)
+            {
+                _algorithm.Portfolio.ProcessFill(fill);
+            }
+
+            //We have an event! :) Order filled, send it in to be handled by algorithm portfolio.
+            if (fill.Status != OrderStatus.None) //order.Status != OrderStatus.Submitted
+            {
+                //Create new order event:
+                Engine.ResultHandler.OrderEvent(fill);
+                try
+                {
+                    //Trigger our order event handler
+                    _algorithm.OnOrderEvent(fill);
+                }
+                catch (Exception err)
+                {
+                    _algorithm.Error("Order Event Handler Error: " + err.Message);
+                }
             }
         }
     }

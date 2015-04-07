@@ -195,6 +195,15 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets the run time error from the algorithm, or null if none was encountered.
+        /// </summary>
+        Exception RunTimeError
+        {
+            get; 
+            set; 
+        }
+
+        /// <summary>
         /// Customizable dynamic statistics displayed during live trading:
         /// </summary>
         Dictionary<string, string> RuntimeStatistics

@@ -121,10 +121,9 @@ namespace QuantConnect.Lean.Engine.Setup
             var liveJob = job as LiveNodePacket; 
             brokerage = new PaperBrokerage(algorithm);
 
-            //For the console, let it set itself up primarily:
             try
             {
-                //Algorithm is backtesting, not live:
+                //Algorithm is live, not backtesting:
                 algorithm.SetLiveMode(true);
                 
                 //Set the live trading level asset/ram allocation limits. 
@@ -147,7 +146,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 //Initialize the algorithm
                 algorithm.Initialize();
 
-                //Try and use he live job packet cash if exists, otherwise resort to the user algo cash:
+                //Try and use the live job packet cash if exists, otherwise resort to the user algo cash:
                 if (liveJob != null && liveJob.BrokerageData.ContainsKey("project-paper-equity"))
                 {
                     var consistentCash = Convert.ToDecimal(liveJob.BrokerageData["project-paper-equity"]);

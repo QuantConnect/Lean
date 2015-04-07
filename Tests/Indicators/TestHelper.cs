@@ -216,6 +216,9 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
+        /// <summary>
+        /// Gets a stream of trade bars from the specified file
+        /// </summary>
         public static IEnumerable<TradeBar> GetTradeBarStream(string externalDataFilename, bool fileHasVolume = true)
         {
             return GetCsvFileStream(externalDataFilename).Select(values => new TradeBar

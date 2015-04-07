@@ -36,8 +36,9 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
-namespace QuantConnect.Lean.Engine
+namespace QuantConnect.Lean.Engine 
 {
     /******************************************************** 
     * CLASS DEFINITIONS
@@ -201,15 +202,12 @@ namespace QuantConnect.Lean.Engine
             Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
 
             //Import external libraries specific to physical server location (cloud/local)
-            var catalog = new AggregateCatalog();
-            catalog.Catalogs.Add(new DirectoryCatalog(AppDomain.CurrentDomain.BaseDirectory));
-            var container = new CompositionContainer(catalog);
             try
             {
                 // grab the right export based on configuration
-                Notify = container.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler"));
-                Queue = container.GetExportedValueByTypeName<IQueueHandler>(Config.Get("queue-handler"));
-                Api = container.GetExportedValueByTypeName<IApi>(Config.Get("api-handler"));
+                Notify = Composer.Instance.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler"));
+                Queue = Composer.Instance.GetExportedValueByTypeName<IQueueHandler>(Config.Get("queue-handler"));
+                Api = Composer.Instance.GetExportedValueByTypeName<IApi>(Config.Get("api-handler"));
             }
             catch (CompositionException compositionException)
             {
@@ -357,9 +355,9 @@ namespace QuantConnect.Lean.Engine
                             }
 
                             // Algorithm runtime error:
-                            if (AlgorithmManager.RunTimeError != null)
+                            if (algorithm.RunTimeError != null)
                             {
-                                throw AlgorithmManager.RunTimeError;
+                                throw algorithm.RunTimeError;
                             }
                         }
                         catch (Exception err)
@@ -560,6 +558,11 @@ namespace QuantConnect.Lean.Engine
             ITransactionHandler th;
             switch (job.TransactionEndpoint)
             {
+                case TransactionHandlerEndpoint.Brokerage:
+                    th = new BrokerageTransactionHandler(algorithm, brokerage);
+                    Log.Trace("Engine.GetTransactionHandler(): Selected Brokerage Transaction Models.");
+                    break;
+
                 //Operation from local files:
                 default:
                     th = new BacktestingTransactionHandler(algorithm, brokerage as BacktestingBrokerage);
@@ -585,7 +588,7 @@ namespace QuantConnect.Lean.Engine
                 //Local backtesting and live trading result handler route messages to the local console.
                 case ResultHandlerEndpoint.Console:
                     Log.Trace("Engine.GetResultHandler(): Selected Console Output.");
-                    rh = new ConsoleResultHandler((BacktestNodePacket)job);
+                    rh = new ConsoleResultHandler(job);
                     break;
 
                 // Backtesting route messages to user browser.
@@ -612,7 +615,6 @@ namespace QuantConnect.Lean.Engine
         private static ISetupHandler GetSetupHandler(SetupHandlerEndpoint setupMethod)
         {
             var sh = default(ISetupHandler);
-            if (IsLocal) return new ConsoleSetupHandler();
 
             switch (setupMethod)
             {
@@ -632,8 +634,11 @@ namespace QuantConnect.Lean.Engine
                     sh = new PaperTradingSetupHandler();
                     Log.Trace("Engine.GetSetupHandler(): Selected PaperTrading Algorithm Setup Handler.");
                     break;
+                case SetupHandlerEndpoint.Brokerage:
+                    sh = new BrokerageSetupHandler();
+                    Log.Trace("Engine.GetSetupHandler(): Selected PaperTrading Algorithm Setup Handler.");
+                    break;
             }
-
             return sh;
         }
     } // End Algorithm Node Core Thread

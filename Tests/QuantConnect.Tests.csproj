@@ -40,7 +40,9 @@
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -48,12 +50,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TestExtensions.cs" />
     <None Include="Algorithm\Test_Cash.cs" />
     <None Include="Algorithm\Test_LiveAlgorithm.cs" />
     <None Include="Algorithm\Test_MixedAssets.cs" />
     <None Include="Algorithm\Test_OnEndOfDay.cs" />
     <None Include="Algorithm\Test_SetHolding.cs" />
     <Compile Include="AssemblyInitialize.cs" />
+    <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageFactoryTests.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageTests.cs" />
     <Compile Include="Common\Data\BaseDataConsolidatorTests.cs" />
     <Compile Include="Common\Data\DynamicDataConsolidatorTests.cs" />
@@ -63,7 +67,9 @@
     <Compile Include="Common\Data\TickConsolidatorTests.cs" />
     <Compile Include="Common\Data\TradeBarConsolidatorTests.cs" />
     <Compile Include="Common\OSTests.cs" />
+    <Compile Include="Common\Securities\SecurityPortfolioManagerTests.cs" />
     <Compile Include="Common\SeriesSamplerTests.cs" />
+    <Compile Include="Common\Util\ComposerTests.cs" />
     <Compile Include="Common\Util\ExpressionBuilderTests.cs" />
     <Compile Include="Common\Util\ExtensionsTests.cs" />
     <Compile Include="Common\Util\FuncTextWriterTests.cs" />
@@ -150,6 +156,9 @@
     <Content Include="TestData\spy_mfi.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestData\spy_ohlcv.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\spy_parabolic_SAR.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -178,6 +187,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_with_williamsR14.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\test_cash_equity.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\test_cash_fills.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

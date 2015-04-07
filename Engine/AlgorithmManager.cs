@@ -45,7 +45,6 @@ namespace QuantConnect.Lean.Engine
         *********************************************************/
         private static DateTime _previousTime;
         private static DateTime _frontier;
-        private static Exception _runtimeError = new Exception();
         private static AlgorithmStatus _algorithmState = AlgorithmStatus.Running;
         private static readonly object _lock = new object();
         private static string _algorithmId = "";
@@ -61,17 +60,6 @@ namespace QuantConnect.Lean.Engine
             get
             {
                 return _frontier;
-            }
-        }
-
-        /// <summary>
-        /// Public flag for runtime error for this user
-        /// </summary>
-        public static Exception RunTimeError
-        {
-            get
-            {
-                return _runtimeError;
             }
         }
 
@@ -136,7 +124,6 @@ namespace QuantConnect.Lean.Engine
 
             //Initialize Properties:
             _frontier = setup.StartingDate;
-            _runtimeError = null;
             _algorithmId = job.AlgorithmId;
             _algorithmState = AlgorithmStatus.Running;
             _previousTime = setup.StartingDate.Date;
@@ -181,7 +168,7 @@ namespace QuantConnect.Lean.Engine
                     //If we couldnt find the event handler, let the user know we can't fire that event.
                     if (genericMethod == null)
                     {
-                        _runtimeError = new Exception("Data event handler not found, please create a function matching this template: public void OnData(" + config.Type.Name + " data) {  }");
+                        algorithm.RunTimeError = new Exception("Data event handler not found, please create a function matching this template: public void OnData(" + config.Type.Name + " data) {  }");
                         _algorithmState = AlgorithmStatus.RuntimeError;
                         return;
                     }
@@ -269,7 +256,7 @@ namespace QuantConnect.Lean.Engine
                             }
                             catch (Exception err)
                             {
-                                _runtimeError = err;
+                                algorithm.RunTimeError = err;
                                 _algorithmState = AlgorithmStatus.RuntimeError;
                                 Log.Error("AlgorithmManager.Run(): RuntimeError: Consolidators update: " + err.Message);
                                 return;
@@ -322,10 +309,10 @@ namespace QuantConnect.Lean.Engine
                                     try
                                     {
                                         methodInvokers[config.Type](algorithm, dataPoint);
-                                    }
-                                    catch (Exception err)
+                                    } 
+                                    catch (Exception err) 
                                     {
-                                        _runtimeError = err;
+                                        algorithm.RunTimeError = err;
                                         _algorithmState = AlgorithmStatus.RuntimeError;
                                         Log.Debug("AlgorithmManager.Run(): RuntimeError: Custom Data: " + err.Message + " STACK >>> " + err.StackTrace);
                                         return;
@@ -344,9 +331,9 @@ namespace QuantConnect.Lean.Engine
                             if (oldTradeBarsMethodInfo != null && oldBars.Count > 0) methodInvokers[tradebarsType](algorithm, oldBars);
                             if (oldTicksMethodInfo != null && oldTicks.Count > 0) methodInvokers[ticksType](algorithm, oldTicks);
                         }
-                        catch (Exception err)
+                        catch (Exception err) 
                         {
-                            _runtimeError = err;
+                            algorithm.RunTimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
                             Log.Debug("AlgorithmManager.Run(): RuntimeError: Backwards Compatibility Mode: " + err.Message + " STACK >>> " + err.StackTrace);
                             return;
@@ -362,7 +349,7 @@ namespace QuantConnect.Lean.Engine
                         }
                         catch (Exception err)
                         {
-                            _runtimeError = err;
+                            algorithm.RunTimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
                             Log.Debug("AlgorithmManager.Run(): RuntimeError: New Style Mode: " + err.Message + " STACK >>> " + err.StackTrace);
                             return;
@@ -392,7 +379,7 @@ namespace QuantConnect.Lean.Engine
             catch (Exception err)
             {
                 _algorithmState = AlgorithmStatus.RuntimeError;
-                _runtimeError = new Exception("Error running OnEndOfAlgorithm(): " + err.Message, err.InnerException);
+                algorithm.RunTimeError = new Exception("Error running OnEndOfAlgorithm(): " + err.Message, err.InnerException);
                 Log.Debug("AlgorithmManager.OnEndOfAlgorithm(): " + err.Message + " STACK >>> " + err.StackTrace);
                 return;
             }
@@ -441,7 +428,6 @@ namespace QuantConnect.Lean.Engine
         {
             //Reset before the next loop/
             _frontier = new DateTime();
-            _runtimeError = null;
             _algorithmId = "";
             _algorithmState = AlgorithmStatus.Running;
         }
