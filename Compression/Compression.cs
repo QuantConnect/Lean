@@ -92,9 +92,9 @@ namespace QuantConnect
                 Log.Error("QC.Data.ZipData(): " + err.Message);
                 success = false;
             }
+
             return success;
         }
-
 
         /// <summary>
         /// Create a zip file of the supplied file names and data using a byte array
@@ -282,7 +282,6 @@ namespace QuantConnect
             return reader;
         } // End UnZip
 
-
         /// <summary>
         /// Unzip a local file and return its contents via streamreader:
         /// </summary>
@@ -316,7 +315,6 @@ namespace QuantConnect
 
             return reader;
         } // End UnZip
-
 
         /// <summary>
         /// Unzip a local file and return its contents via streamreader to a local the same location as the ZIP.

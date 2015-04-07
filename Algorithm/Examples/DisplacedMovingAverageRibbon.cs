@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-
 
 namespace QuantConnect.Algorithm.Examples
 {
@@ -57,7 +56,7 @@ namespace QuantConnect.Algorithm.Examples
             _ribbon = Enumerable.Range(0, count).Select(x =>
             {
                 // define our offset to the zero sma, these various offsets will create our 'displaced' ribbon
-                var delay = new Delay(offset*(x+1));
+                var delay = new Delay(offset * (x + 1));
 
                 // define an indicator that takes the output of the sma and pipes it into our delay indicator
                 var delayedSma = delay.Of(sma);
@@ -85,7 +84,6 @@ namespace QuantConnect.Algorithm.Examples
 
             Plot(Symbol, "Price", data[Symbol].Price);
             Plot(Symbol, _ribbon);
-
 
             // check for a buy signal
             var values = _ribbon.Select(x => x.Current.Value).ToArray();

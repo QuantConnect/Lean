@@ -219,7 +219,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var sourceDate = DateTime.Now.Date;
             var resumeRun = new ManualResetEvent(true);
 
-            // This thread converts data into bars "on" the second - assuring the bars are close as 
+            // This thread converts data into bars "on" the second - assuring the bars are close as
             // possible to a second unit tradebar (starting at 0 milliseconds).
             var realtime = new RealTimeSynchronizedTimer(TimeSpan.FromSeconds(1), () =>
             {

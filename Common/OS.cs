@@ -124,7 +124,6 @@ namespace QuantConnect
             }
         }
 
-
         /// <summary>
         /// Character Separating directories in this OS:
         /// </summary>

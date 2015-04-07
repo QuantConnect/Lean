@@ -120,7 +120,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol whose max we want</param>
         /// <param name="period">The look back period over which to compute the max value</param>
         /// <param name="resolution">The resolution</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null and the symbol is of type TradeBar defaults to the High property, 
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null and the symbol is of type TradeBar defaults to the High property,
         /// otherwise it defaults to Value property of BaseData (x => x.Value)</param>
         /// <returns>A Maximum indicator that compute the max value and the periods since the max value</returns>
         public Maximum MAX(string symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
@@ -149,7 +149,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol whose min we want</param>
         /// <param name="period">The look back period over which to compute the min value</param>
         /// <param name="resolution">The resolution</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null and the symbol is of type TradeBar defaults to the Low property, 
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null and the symbol is of type TradeBar defaults to the Low property,
         /// otherwise it defaults to Value property of BaseData (x => x.Value)</param>
         /// <returns>A Minimum indicator that compute the in value and the periods since the min value</returns>
         public Minimum MIN(string symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
@@ -161,10 +161,10 @@ namespace QuantConnect.Algorithm
             if (selector == null)
             {
                 var subscription = GetSubscription(symbol);
-                if (typeof (TradeBar).IsAssignableFrom(subscription.Type))
+                if (typeof(TradeBar).IsAssignableFrom(subscription.Type))
                 {
                     // if we have trade bar data we'll use the Low property, if not x => x.Value will be set in RegisterIndicator
-                    selector = x => ((TradeBar) x).Low;
+                    selector = x => ((TradeBar)x).Low;
                 }
             }
 
@@ -184,7 +184,7 @@ namespace QuantConnect.Algorithm
         {
             return AROON(symbol, period, period, resolution, selector);
         }
-        
+
         /// <summary>
         /// Creates a new AroonOscillator indicator which will compute the AroonUp and AroonDown (as well as the delta)
         /// </summary>
@@ -395,11 +395,11 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="consolidator">The consolidator to receive raw subscription data</param>
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
-        public void RegisterIndicator<T>(string symbol, IndicatorBase<T> indicator, IDataConsolidator consolidator, Func<BaseData, T> selector = null) 
+        public void RegisterIndicator<T>(string symbol, IndicatorBase<T> indicator, IDataConsolidator consolidator, Func<BaseData, T> selector = null)
             where T : BaseData
         {
             // assign default using cast
-            selector = selector ?? (x => (T) x);
+            selector = selector ?? (x => (T)x);
 
             // register the consolidator for automatic updates via SubscriptionManager
             SubscriptionManager.AddConsolidator(symbol, consolidator);
@@ -436,27 +436,27 @@ namespace QuantConnect.Algorithm
             if (!resolution.HasValue || subscription.Resolution == resolution.Value)
             {
                 // since there's a generic type parameter that we don't have access to, we'll just use the activator
-                var identityConsolidatorType = typeof (IdentityDataConsolidator<>).MakeGenericType(subscription.Type);
-                return (IDataConsolidator) Activator.CreateInstance(identityConsolidatorType);
+                var identityConsolidatorType = typeof(IdentityDataConsolidator<>).MakeGenericType(subscription.Type);
+                return (IDataConsolidator)Activator.CreateInstance(identityConsolidatorType);
             }
 
             // if our type can be used as a trade bar, then let's just make one of those
             // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to TradeBar
-            if (typeof (TradeBar).IsAssignableFrom(subscription.Type))
+            if (typeof(TradeBar).IsAssignableFrom(subscription.Type))
             {
                 return new TradeBarConsolidator(resolution.Value.ToTimeSpan());
             }
 
             // if our type can be used as a tick then we'll use the tick consolidator
             // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to Tick
-            if (typeof (Tick).IsAssignableFrom(subscription.Type))
+            if (typeof(Tick).IsAssignableFrom(subscription.Type))
             {
                 return new TickConsolidator(resolution.Value.ToTimeSpan());
             }
 
             // if our type can be used as a DynamicData then we'll use the DynamicDataConsolidator, inspect
             // the subscription to figure out the isTradeBar and hasVolume flags
-            if (typeof (DynamicData).IsAssignableFrom(subscription.Type))
+            if (typeof(DynamicData).IsAssignableFrom(subscription.Type))
             {
                 return new DynamicDataConsolidator(resolution.Value.ToTimeSpan(), subscription.IsTradeBar, subscription.HasVolume);
             }

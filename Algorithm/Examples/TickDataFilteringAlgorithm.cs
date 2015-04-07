@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.Examples
         }
     }
     /// <summary>
-    /// Exchange filter class 
+    /// Exchange filter class
     /// </summary>
     public class ExchangeDataFilter : ISecurityDataFilter
     {
@@ -85,7 +85,7 @@ namespace QuantConnect.Algorithm.Examples
         public static class MarketCodesFilter
         {
             /// US Market Codes
-            public static Dictionary<string, string> US = new Dictionary<string, string>() 
+            public static Dictionary<string, string> US = new Dictionary<string, string>()
             {
                 {"A", "American Stock Exchange"},
                 {"B", "Boston Stock Exchange"},
@@ -108,7 +108,7 @@ namespace QuantConnect.Algorithm.Examples
             };
 
             /// Canada Market Short Codes:
-            public static Dictionary<string, string> Canada = new Dictionary<string, string>() 
+            public static Dictionary<string, string> Canada = new Dictionary<string, string>()
             {
                 {"T", "Toronto"},
                 {"V", "Venture"}
@@ -117,12 +117,11 @@ namespace QuantConnect.Algorithm.Examples
             /// <summary>
             /// Select allowed exchanges for this filter: e.g. top 4
             /// </summary>
-            public static List<string> AllowedExchanges = new List<string>() { 
+            public static List<string> AllowedExchanges = new List<string>() {
                 "P",    //NYSE ARCA - SPY PRIMARY EXCHANGE
                         //https://www.google.com/finance?q=NYSEARCA%3ASPY&ei=XcA2VKCSLs228waMhYCIBg
             };
         }
-
 
         /// <summary>
         /// Filter out a tick from this vehicle, with this new data:
@@ -147,6 +146,5 @@ namespace QuantConnect.Algorithm.Examples
             //Only allow those exchanges through.
             return false;
         }
-
     }
 }

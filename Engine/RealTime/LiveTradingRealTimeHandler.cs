@@ -146,7 +146,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             _isActive = false;
         }
 
-
         /// <summary>
         /// Set up the realtime event handlers for today.
         /// </summary>
@@ -298,7 +297,10 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void ScanEvents()
         {
-            _events.ForEach(e => e.Scan(_time));
+            for (var i = 0; i < _events.Count; i++)
+            {
+                _events[i].Scan(_time);
+            }
         }
 
         /// <summary>
@@ -316,7 +318,10 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void ResetEvents()
         {
-            _events.ForEach(e => e.Reset());
+            for (var i = 0; i < _events.Count; i++)
+            {
+                _events[i].Reset();
+            }
         }
 
         /// <summary>

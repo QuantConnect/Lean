@@ -138,8 +138,7 @@ namespace QuantConnect.Packets
                 Log.Error("LiveResultPacket.Constructor: " + err.Message);
             }
         }
-    } // End Queue Packet:
-
+    } // End Queue Packet
 
     /// <summary>
     /// Live results object class for packaging live result data.

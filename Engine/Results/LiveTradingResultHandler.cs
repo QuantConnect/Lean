@@ -169,7 +169,6 @@ namespace QuantConnect.Lean.Engine.Results
             _logStore = new List<LogEntry>();
         }
 
-
         /********************************************************
         * CLASS METHODS
         *********************************************************/
@@ -259,7 +258,6 @@ namespace QuantConnect.Lean.Engine.Results
             Log.Trace("LiveTradingResultHandler.Run(): Ending Thread...");
             _isActive = false;
         } // End Run();
-
 
         /// <summary>
         /// Every so often send an update to the browser with the current state of the algorithm.
@@ -668,7 +666,6 @@ namespace QuantConnect.Lean.Engine.Results
             Console.SetError(error);
         }
 
-
         /// <summary>
         /// Send a algorithm status update to the user of the algorithms running state.
         /// </summary>
@@ -921,7 +918,6 @@ namespace QuantConnect.Lean.Engine.Results
         {
             return string.Format("live/{0}/{1}/{2}-{3}_{4}.json", _job.UserId, _job.ProjectId, _job.DeployId, DateTime.UtcNow.ToString(dateFormat), suffix);
         }
-
 
         /// <summary>
         /// Set the chart name that we want data from.

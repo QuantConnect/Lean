@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,17 +23,17 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Interfaces;
 
-namespace QuantConnect.Securities.Equity 
+namespace QuantConnect.Securities.Equity
 {
     /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
-    /// Transaction model for equity security trades. 
+    /// Transaction model for equity security trades.
     /// </summary>
     /// <seealso cref="SecurityTransactionModel"/>
     /// <seealso cref="ISecurityTransactionModel"/>
-    public class EquityTransactionModel : SecurityTransactionModel, ISecurityTransactionModel 
+    public class EquityTransactionModel : SecurityTransactionModel, ISecurityTransactionModel
     {
         /********************************************************
         * CLASS PRIVATE VARIABLES
@@ -49,8 +49,8 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Initialise the transaction model class
         /// </summary>
-        public EquityTransactionModel() {
-
+        public EquityTransactionModel()
+        {
         }
 
         /********************************************************
@@ -102,7 +102,6 @@ namespace QuantConnect.Securities.Equity
             }
             return fill;
         }
-
 
         /// <summary>
         /// Check if the model has stopped out our position yet:
@@ -158,7 +157,6 @@ namespace QuantConnect.Securities.Equity
             return fill;
         }
 
-
         /// <summary>
         /// Check if the price MarketDataed to our limit price yet:
         /// </summary>
@@ -194,7 +192,7 @@ namespace QuantConnect.Securities.Equity
                     marketDataMaxPrice = marketData.Value;
                 }
 
-                //-> Valid Live/Model Order: 
+                //-> Valid Live/Model Order:
                 switch (order.Direction)
                 {
                     case OrderDirection.Buy:
@@ -233,20 +231,16 @@ namespace QuantConnect.Securities.Equity
             return fill;
         }
 
-        
-
-
         /// <summary>
         /// Get the slippage approximation for this order as a decimal value
         /// </summary>
         /// <param name="security">Security object we're working with</param>
         /// <param name="order">Order to approximate the slippage</param>
         /// <returns>Decimal value for he approximate slippage</returns>
-        public override decimal GetSlippageApproximation(Security security, Order order) 
+        public override decimal GetSlippageApproximation(Security security, Order order)
         {
             return 0;
         }
-
 
         /// <summary>
         /// Get the fees from one order
@@ -310,7 +304,6 @@ namespace QuantConnect.Securities.Equity
             return MarketFill(security, order as MarketOrder);
         }
 
-
         /// <summary>
         /// Check if the model has stopped out our position yet:
         /// </summary>
@@ -322,7 +315,6 @@ namespace QuantConnect.Securities.Equity
         {
             return StopMarketFill(security, order as StopMarketOrder);
         }
-
 
         /// <summary>
         /// Check if the price MarketDataed to our limit price yet:

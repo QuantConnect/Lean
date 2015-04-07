@@ -85,7 +85,6 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-
         /// <summary>
         /// Quit state flag for the running algorithm. When true the user has requested the backtest stops through a Quit() method.
         /// </summary>
@@ -192,10 +191,10 @@ namespace QuantConnect.Lean.Engine
                     //Execute with TimeLimit Monitor:
                     if (Isolator.IsCancellationRequested) return;
 
-                    //Fire EOD if the time packet we just processed is greater 
+                    //Fire EOD if the time packet we just processed is greater
                     if (backtestMode)
                     {
-                        //Refresh the realtime event monitor: 
+                        //Refresh the realtime event monitor:
                         //in backtest mode use the algorithms clock as realtime.
                         realtime.SetTime(time);
 
@@ -309,8 +308,8 @@ namespace QuantConnect.Lean.Engine
                                     try
                                     {
                                         methodInvokers[config.Type](algorithm, dataPoint);
-                                    } 
-                                    catch (Exception err) 
+                                    }
+                                    catch (Exception err)
                                     {
                                         algorithm.RunTimeError = err;
                                         _algorithmState = AlgorithmStatus.RuntimeError;
@@ -331,7 +330,7 @@ namespace QuantConnect.Lean.Engine
                             if (oldTradeBarsMethodInfo != null && oldBars.Count > 0) methodInvokers[tradebarsType](algorithm, oldBars);
                             if (oldTicksMethodInfo != null && oldTicks.Count > 0) methodInvokers[ticksType](algorithm, oldTicks);
                         }
-                        catch (Exception err) 
+                        catch (Exception err)
                         {
                             algorithm.RunTimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
@@ -431,7 +430,6 @@ namespace QuantConnect.Lean.Engine
             _algorithmId = "";
             _algorithmState = AlgorithmStatus.Running;
         }
-
 
         /// <summary>
         /// Set the quit state.

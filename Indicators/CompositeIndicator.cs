@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,7 +66,8 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Resets this indicator to its initial state
         /// </summary>
-        public override void Reset() {
+        public override void Reset()
+        {
             Left.Reset();
             Right.Reset();
             base.Reset();
@@ -122,8 +123,8 @@ namespace QuantConnect.Indicators
         private void ConfigureEventHandlers()
         {
             // if either of these are constants then there's no reason
-            bool leftIsConstant = Left.GetType().IsSubclassOfGeneric(typeof (ConstantIndicator<>));
-            bool rightIsConstant = Right.GetType().IsSubclassOfGeneric(typeof (ConstantIndicator<>));
+            bool leftIsConstant = Left.GetType().IsSubclassOfGeneric(typeof(ConstantIndicator<>));
+            bool rightIsConstant = Right.GetType().IsSubclassOfGeneric(typeof(ConstantIndicator<>));
 
             // wire up the Updated events such that when we get a new piece of data from both left and right
             // we'll call update on this indicator. It's important to note that the CompositeIndicator only uses
@@ -139,7 +140,7 @@ namespace QuantConnect.Indicators
                 // if we have left and right data (or if right is a constant) then we need to update
                 if (newRightData != null || rightIsConstant)
                 {
-                    Update(new T {Time = updated.Time});
+                    Update(new T { Time = updated.Time });
                     // reset these to null after each update
                     newLeftData = null;
                     newRightData = null;

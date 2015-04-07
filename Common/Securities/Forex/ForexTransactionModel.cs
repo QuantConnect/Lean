@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,17 +13,13 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Interfaces;
 
-namespace QuantConnect.Securities.Forex 
+namespace QuantConnect.Securities.Forex
 {
     /********************************************************
     * CLASS DEFINITIONS
@@ -33,7 +29,8 @@ namespace QuantConnect.Securities.Forex
     /// </summary>
     /// <seealso cref="SecurityTransactionModel"/>
     /// <seealso cref="ISecurityTransactionModel"/>
-    public class ForexTransactionModel : SecurityTransactionModel, ISecurityTransactionModel {
+    public class ForexTransactionModel : SecurityTransactionModel, ISecurityTransactionModel
+    {
 
         /********************************************************
         * CLASS PRIVATE VARIABLES
@@ -49,7 +46,8 @@ namespace QuantConnect.Securities.Forex
         /// <summary>
         /// Initialise the transaction model class
         /// </summary>
-        public ForexTransactionModel() {
+        public ForexTransactionModel()
+        {
 
         }
 
@@ -105,9 +103,9 @@ namespace QuantConnect.Securities.Forex
             {
                 Log.Error("Forex.ForexTransactionModel.MarketFill(): " + err.Message);
             }
+
             return fill;
         }
-
 
         /// <summary>
         /// Check if the model has stopped out our position yet: (Stop Market Order Type)
@@ -158,9 +156,9 @@ namespace QuantConnect.Securities.Forex
             {
                 Log.Error("ForexTransactionModel.StopFill(): " + err.Message);
             }
+
             return fill;
         }
-
 
         /// <summary>
         /// Analyse the market price of the security provided to see if the limit order has been filled.
@@ -195,7 +193,7 @@ namespace QuantConnect.Securities.Forex
                     marketDataMaxPrice = marketData.Value;
                 }
 
-                //-> Valid Live/Model Order: 
+                //-> Valid Live/Model Order:
                 if (order.Direction == OrderDirection.Buy)
                 {
                     //Buy limit seeks lowest price
@@ -225,9 +223,9 @@ namespace QuantConnect.Securities.Forex
             {
                 Log.Error("ForexTransactionModel.LimitFill(): " + err.Message);
             }
+
             return fill;
         }
-
 
         /// <summary>
         /// Get the slippage approximation for this order
@@ -238,19 +236,19 @@ namespace QuantConnect.Securities.Forex
         {
             //Return 0 by default
             decimal slippage = 0;
-            //For FOREX, the slippage is the Bid/Ask Spread for Tick, and an approximation for the 
+            //For FOREX, the slippage is the Bid/Ask Spread for Tick, and an approximation for the
             switch (security.Resolution)
             {
                 case Resolution.Minute:
                 case Resolution.Second:
                     //Get the last data packet:
-                    var lastBar = (TradeBar) security.GetLastData();
+                    var lastBar = (TradeBar)security.GetLastData();
                     //Assume slippage is 1/10,000th of the price
-                    slippage = lastBar.Value*0.00001m;
+                    slippage = lastBar.Value * 0.00001m;
                     break;
 
                 case Resolution.Tick:
-                    var lastTick = (Tick) security.GetLastData();
+                    var lastTick = (Tick)security.GetLastData();
                     switch (order.Direction)
                     {
                         case OrderDirection.Buy:
@@ -265,9 +263,9 @@ namespace QuantConnect.Securities.Forex
                     }
                     break;
             }
+
             return slippage;
         }
-
 
         /// <summary>
         /// Get the fees from this order
@@ -275,7 +273,7 @@ namespace QuantConnect.Securities.Forex
         /// <param name="quantity">Quantity of purchase</param>
         /// <param name="price">Price of the currency</param>
         /// <remarks>
-        ///     FXCM now uses a flat fee per trade instead of a spread model. This spread model is 
+        ///     FXCM now uses a flat fee per trade instead of a spread model. This spread model is
         ///     out of date but the data has the spread built into historical data. >> New data source needed.
         /// </remarks>
         /// <returns>Decimal value of the order fee</returns>
@@ -299,7 +297,6 @@ namespace QuantConnect.Securities.Forex
             return new OrderEvent(order);
         }
 
-
         /// <summary>
         /// Model the slippage on a market order: fixed percentage of order price
         /// </summary>
@@ -313,7 +310,6 @@ namespace QuantConnect.Securities.Forex
         {
             return MarketFill(security, order as MarketOrder);
         }
-
 
         /// <summary>
         /// Check if the model has stopped out our position yet: (Stop Market Order Type)
@@ -329,7 +325,6 @@ namespace QuantConnect.Securities.Forex
             return StopMarketFill(asset, order as StopMarketOrder);
         }
 
-
         /// <summary>
         /// Analyse the market price of the security provided to see if the limit order has been filled.
         /// </summary>
@@ -343,7 +338,6 @@ namespace QuantConnect.Securities.Forex
         {
             return LimitFill(security, order as LimitOrder);
         }
-
     } // End Algorithm Transaction Filling Classes
 
 } // End QC Namespace

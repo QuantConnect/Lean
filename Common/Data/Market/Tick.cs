@@ -170,7 +170,6 @@ namespace QuantConnect.Data.Market
             AskPrice = Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture);
         }
 
-
         /// <summary>
         /// Parse a tick data line from quantconnect zip source files.
         /// </summary>
@@ -249,7 +248,6 @@ namespace QuantConnect.Data.Market
             return _tick;
         }
 
-
         /// <summary>
         /// Get source for tick data feed - not used with QuantConnect data sources implementation.
         /// </summary>
@@ -274,7 +272,7 @@ namespace QuantConnect.Data.Market
                         dataType = TickType.Quote;
                         dateFormat = "yyMMdd";
                     }
-                    var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol; 
+                    var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol;
                     source = @"../../../Data/" + config.Security.ToString().ToLower();
                     source += @"/" + config.Resolution.ToString().ToLower() + @"/" + symbol.ToLower() + @"/";
                     source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
@@ -285,9 +283,9 @@ namespace QuantConnect.Data.Market
                     source = "";
                     break;
             }
+
             return source;
         }
-
 
         /// <summary>
         /// Update the tick price information - not used.
@@ -303,7 +301,6 @@ namespace QuantConnect.Data.Market
             AskPrice = askPrice;
             Quantity = Convert.ToInt32(volume);
         }
-
 
         /// <summary>
         /// Clone implementation for tick class:

@@ -38,9 +38,9 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 
-namespace QuantConnect.Lean.Engine 
+namespace QuantConnect.Lean.Engine
 {
-    /******************************************************** 
+    /********************************************************
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -181,11 +181,11 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Primary Analysis Thread:
         /// </summary>
-        public static void Main(string[] args) 
+        public static void Main(string[] args)
         {
             // pick an implementation of ILogHandler for the application
-            Log.LogHandler = IsLocal 
-                ? (ILogHandler) new ConsoleLogHandler() 
+            Log.LogHandler = IsLocal
+                ? (ILogHandler)new ConsoleLogHandler()
                 : new FileLogHandler("log.txt");
 
             //Initialize:
@@ -253,7 +253,6 @@ namespace QuantConnect.Lean.Engine
                             job = null;
                         }
                     } while (job == null);
-
 
                     //-> Initialize messaging system
                     Notify.SetChannel(job.Channel);
@@ -478,8 +477,6 @@ namespace QuantConnect.Lean.Engine
                 Log.LogHandler.Dispose();
             }
         }
-
-
 
         /// <summary>
         /// Get an instance of the data feed handler we're requesting for this work.

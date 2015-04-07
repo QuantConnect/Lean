@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,12 +15,11 @@
 
 using QuantConnect.Data.Market;
 
-
 namespace QuantConnect.Indicators
 {
     /// <summary>
     ///     Represents the traditional commodity channel index (CCI)
-    ///     
+    ///
     ///     CCI = (Typical Price - 20-period SMA of TP) / (.015 * Mean Deviation)
     ///     Typical Price (TP) = (High + Low + Close)/3
     ///     Constant = 0.015
@@ -89,7 +88,7 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            decimal typicalPrice = (input.High + input.Low + input.Close)/3.0m;
+            decimal typicalPrice = (input.High + input.Low + input.Close) / 3.0m;
 
             TypicalPriceAverage.Update(input.Time, typicalPrice);
             TypicalPriceMeanDeviation.Update(input.Time, typicalPrice);
@@ -102,7 +101,7 @@ namespace QuantConnect.Indicators
                 return 0.0m;
             }
 
-            return (typicalPrice - TypicalPriceAverage.Current)/weightedMeanDeviation;
+            return (typicalPrice - TypicalPriceAverage.Current) / weightedMeanDeviation;
         }
 
         public override void Reset()

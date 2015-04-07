@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,7 +46,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Internal errors list from running the setup proceedures.
         /// </summary>
-        public List<string> Errors { get;  set; }
+        public List<string> Errors { get; set; }
 
         /// <summary>
         /// Maximum runtime of the algorithm in seconds.
@@ -118,15 +118,15 @@ namespace QuantConnect.Lean.Engine.Setup
         public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket job)
         {
             var initializeComplete = false;
-            var liveJob = job as LiveNodePacket; 
+            var liveJob = job as LiveNodePacket;
             brokerage = new PaperBrokerage(algorithm);
 
             try
             {
                 //Algorithm is live, not backtesting:
                 algorithm.SetLiveMode(true);
-                
-                //Set the live trading level asset/ram allocation limits. 
+
+                //Set the live trading level asset/ram allocation limits.
                 //Protects algorithm from linux killing the job by excess memory:
                 switch (job.ServerType)
                 {

@@ -40,7 +40,7 @@ namespace QuantConnect.Data.Custom
         private string _authCode = "";
         private readonly string _valueColumn;
 
-        /******************************************************** 
+        /********************************************************
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
@@ -50,7 +50,7 @@ namespace QuantConnect.Data.Custom
         {
             _valueColumn = "Close";
         }
-        
+
         /// <summary>
         /// Constructor for creating customized quandl instance which doesn't use "Close" as its value item.
         /// </summary>
@@ -60,7 +60,7 @@ namespace QuantConnect.Data.Custom
             _valueColumn = valueColumnName;
         }
 
-        /******************************************************** 
+        /********************************************************
         * CLASS METHODS
         *********************************************************/
         /// <summary>

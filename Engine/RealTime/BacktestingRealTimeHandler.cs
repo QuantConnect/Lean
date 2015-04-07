@@ -156,7 +156,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             _isActive = false;
         }
 
-
         /// <summary>
         /// Add a new event to our list of events to scan.
         /// </summary>
@@ -171,7 +170,10 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void ScanEvents()
         {
-            _events.ForEach(x => x.Scan(_time));
+            for (var i = 0; i < _events.Count; i++)
+            {
+                _events[i].Scan(_time);
+            }
         }
 
         /// <summary>
@@ -187,7 +189,10 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void ResetEvents()
         {
-            _events.ForEach(x => x.Reset());
+            for (var i = 0; i < _events.Count; i++)
+            {
+                _events[i].Reset();
+            }
         }
 
         /// <summary>
@@ -199,7 +204,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             //Check for day reset:
             if (_time.Date != time.Date)
             {
-                // Backtest Mode Only: 
+                // Backtest Mode Only:
                 // > Scan & trigger any remaining events which haven't been triggered (e.g. daily bar data with "daily event" at 4pm):
                 ScanEvents();
 
@@ -210,7 +215,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             //Set the time:
             _time = time;
 
-            // Backtest Mode Only: 
+            // Backtest Mode Only:
             // > Scan the event every time we set the time. This allows "fast-forwarding" of the realtime events into sync with backtest.
             ScanEvents();
         }

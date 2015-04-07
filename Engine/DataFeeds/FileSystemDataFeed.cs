@@ -169,7 +169,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-
         /// <summary>
         /// Get the number of active streams still EndOfBridge array.
         /// </summary>
@@ -240,9 +239,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             //Initialize Parameters:
             var subscriptions = SubscriptionReaderManagers.Length;
+
             // this is really the next frontier in the future
             var activeStreams = subscriptions;
-
 
             //Initialize Activators:
             ResetActivators();

@@ -312,6 +312,15 @@ namespace QuantConnect.Algorithm
             //throw new NotImplementedException("OnTick has been made obsolete. Please use OnData(Ticks data) instead.");
         }
 
+        // <summary>
+        // Event - v2.0 TRADEBAR EVENT HANDLER: (Pattern) Basic template for user to override when requesting tradebar data.
+        // </summary>
+        // <param name="data"></param>
+        //public void OnData(TradeBars data)
+        //{
+        //
+        //}
+
         /// <summary>
         /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
         /// </summary>
@@ -367,7 +376,6 @@ namespace QuantConnect.Algorithm
             Debug("Algorithm.SetRunMode(): RunMode-Parallel Type has been deprecated. Series analysis selected instead");
             mode = RunMode.Series;
         }
-
 
         /// <summary>
         /// Set initial cash for the strategy while backtesting. During live mode this value is ignored
@@ -639,7 +647,6 @@ namespace QuantConnect.Algorithm
             }
         }
 
-
         /// <summary>
         /// AddData<typeparam name="T"/> a new user defined data source, requiring only the minimum config options.
         /// </summary>
@@ -671,7 +678,6 @@ namespace QuantConnect.Algorithm
 
             AddData<T>(symbol, resolution, fillDataForward: false, leverage: 1m, isTradeBar: isTradeBar, hasVolume: hasVolume);
         }
-
 
         /// <summary>
         /// AddData<typeparam name="T"/> a new user defined data source, requiring only the minimum config options.

@@ -178,7 +178,7 @@ namespace QuantConnect.Lean.Engine.Results
             double samples = 4000;
             double minimumSamplePeriod = 4;
             double totalMinutes = (job.PeriodFinish - job.PeriodStart).TotalMinutes;
-            var resampleMinutes = (totalMinutes < (minimumSamplePeriod * samples)) ? minimumSamplePeriod : (totalMinutes / samples); // Space out the sampling every 
+            var resampleMinutes = (totalMinutes < (minimumSamplePeriod * samples)) ? minimumSamplePeriod : (totalMinutes / samples); // Space out the sampling every
             _resamplePeriod = TimeSpan.FromMinutes(resampleMinutes);
             Log.Trace("BacktestingResultHandler(): Sample Period Set: " + resampleMinutes.ToString("00.00"));
 
@@ -779,10 +779,11 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 Log.Error("BacktestingResultHandler.ProcessLogMessages(): " + err.Message);
             }
+
             Log.Trace("BacktestingResultHandler.ProcessLogMessages(): Ready: " + remoteUrl);
+
             return remoteUrl;
         }
-
 
         /// <summary>
         /// Set the chart subscription we want data for. Not used in backtesting.

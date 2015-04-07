@@ -210,7 +210,7 @@ namespace QuantConnect.Lean.Engine
             var quandl = _dataFactory as Quandl;
             if (quandl != null)
             {
-                quandl.SetAuthCode(Config.Get("quandl-auth-token"));   
+                quandl.SetAuthCode(Config.Get("quandl-auth-token"));
             }
 
             //Load the entire factor and symbol mapping tables into memory
@@ -238,7 +238,8 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         /// <remarks>This is a highly called method and should be kept lean as possible.</remarks>
         /// <returns>Boolean true on successful move next. Set Current public property.</returns>
-        public bool MoveNext() {
+        public bool MoveNext()
+        {
 
             BaseData instance = null;
             var instanceMarketOpen = false;
@@ -381,11 +382,12 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
-        /// For backwards adjusted data the price is adjusted by a scale factor which is a combination of splits and dividends. 
+        /// For backwards adjusted data the price is adjusted by a scale factor which is a combination of splits and dividends.
         /// This backwards adjusted price is used by default and fed as the current price.
         /// </summary>
         /// <param name="date">Current date of the backtest.</param>
-        private void UpdateScaleFactors(DateTime date) {
+        private void UpdateScaleFactors(DateTime date)
+        {
             try
             {
                 _mappedSymbol = SubscriptionAdjustment.GetMappedSymbol(_symbolMap, date);
@@ -600,7 +602,6 @@ namespace QuantConnect.Lean.Engine
 
             return reader;
         }
-
 
         /// <summary>
         /// Stream the file over the net directly from its source.

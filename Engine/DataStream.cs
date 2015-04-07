@@ -131,7 +131,7 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 if (newData.Count > 0)
-                {   
+                {
                     yield return newData;
                 }
 

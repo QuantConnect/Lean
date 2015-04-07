@@ -13,10 +13,6 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using QuantConnect.Util;
 
@@ -143,7 +139,7 @@ namespace QuantConnect.Data
         * CLASS METHODS
         *********************************************************/
         /// <summary>
-        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object 
+        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
         /// each time it is called.
         /// </summary>
         /// <param name="config">Subscription data config setup object</param>
@@ -161,7 +157,6 @@ namespace QuantConnect.Data
         /// <param name="date">Date of this source file</param>
         /// <returns>String URL of source file.</returns>
         public abstract string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed);
-
 
         /// <summary>
         /// Update routine to build a bar/tick from a data update.

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,7 @@ using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 
-namespace QuantConnect.Securities 
+namespace QuantConnect.Securities
 {
     /********************************************************
     * CLASS DEFINITIONS
@@ -80,9 +80,9 @@ namespace QuantConnect.Securities
         /// Queue for holding all orders sent for processing.
         /// </summary>
         /// <remarks>Potentially for long term algorithms this will be a memory hog. Should consider dequeuing orders after a 1 day timeout</remarks>
-        public ConcurrentDictionary<int, Order> Orders 
+        public ConcurrentDictionary<int, Order> Orders
         {
-            get 
+            get
             {
                 return _orders;
             }
@@ -102,7 +102,7 @@ namespace QuantConnect.Securities
             {
                 return _orderQueue;
             }
-            set 
+            set
             {
                 _orderQueue = value;
             }
@@ -120,7 +120,7 @@ namespace QuantConnect.Securities
             {
                 return _orderEvents;
             }
-            set 
+            set
             {
                 _orderEvents = value;
             }
@@ -145,9 +145,9 @@ namespace QuantConnect.Securities
         /// Configurable minimum order value to ignore bad orders, or orders with unrealistic sizes
         /// </summary>
         /// <remarks>Default minimum order size is $0 value</remarks>
-        public decimal MinimumOrderSize 
+        public decimal MinimumOrderSize
         {
-            get 
+            get
             {
                 return _minimumOrderSize;
             }
@@ -157,14 +157,13 @@ namespace QuantConnect.Securities
         /// Configurable minimum order size to ignore bad orders, or orders with unrealistic sizes
         /// </summary>
         /// <remarks>Default minimum order size is 0 shares</remarks>
-        public int MinimumOrderQuantity 
+        public int MinimumOrderQuantity
         {
-            get 
+            get
             {
                 return _minimumOrderQuantity;
             }
         }
-
 
         /// <summary>
         /// Get the last order id.
@@ -185,9 +184,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="order">New order object to add to processing list</param>
         /// <returns>New unique, increasing orderid</returns>
-        public virtual int AddOrder(Order order) 
+        public virtual int AddOrder(Order order)
         {
-            try 
+            try
             {
                 //Ensure its flagged as a new order for the transaction handler.
                 order.Id = _orderId++;
@@ -208,13 +207,13 @@ namespace QuantConnect.Securities
         /// <param name="order">Order to Update</param>
         /// <remarks>Does not apply if the order is already fully filled</remarks>
         /// <returns>
-        ///     Id of the order we modified or 
+        ///     Id of the order we modified or
         ///     -5 if the order was already filled or cancelled
         ///     -6 if the order was not found in the cache
         /// </returns>
-        public int UpdateOrder(Order order) 
+        public int UpdateOrder(Order order)
         {
-            try 
+            try
             {
                 //Update the order from the behaviour
                 var id = order.Id;
@@ -237,14 +236,14 @@ namespace QuantConnect.Securities
 
                     //Send the order to transaction handler for update to be processed.
                     OrderQueue.Enqueue(order);
-                } 
-                else 
+                }
+                else
                 {
                     //-> Its not in the orders cache, shouldn't get here
                     return -6;
                 }
-            } 
-            catch (Exception err) 
+            }
+            catch (Exception err)
             {
                 Log.Error("Algorithm.Transactions.UpdateOrder(): " + err.Message);
                 return -7;
@@ -253,7 +252,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Added alias for RemoveOrder - 
+        /// Added alias for RemoveOrder -
         /// </summary>
         /// <param name="orderId">Order id we wish to cancel</param>
         public virtual void CancelOrder(int orderId)
@@ -265,19 +264,19 @@ namespace QuantConnect.Securities
         /// Remove this order from outstanding queue: user is requesting a cancel.
         /// </summary>
         /// <param name="orderId">Specific order id to remove</param>
-        public virtual void RemoveOrder(int orderId) 
+        public virtual void RemoveOrder(int orderId)
         {
             try
             {
                 //Error check
-                if (!Orders.ContainsKey(orderId)) 
+                if (!Orders.ContainsKey(orderId))
                 {
                     Log.Error("Security.TransactionManager.RemoveOutstandingOrder(): Cannot find this id.");
                     return;
                 }
 
                 var order = Orders[orderId];
-                if (order.Status != OrderStatus.Submitted && order.Type != OrderType.Market) 
+                if (order.Status != OrderStatus.Submitted && order.Type != OrderType.Market)
                 {
                     Log.Error("Security.TransactionManager.RemoveOutstandingOrder(): Order already filled");
                     return;
@@ -295,7 +294,6 @@ namespace QuantConnect.Securities
             }
         }
 
-
         /// <summary>
         /// Get a list of all open orders.
         /// </summary>
@@ -303,13 +301,12 @@ namespace QuantConnect.Securities
         public List<Order> GetOpenOrders()
         {
             var openOrders = (from order in Orders.Values
-                where (order.Status == OrderStatus.Submitted ||
-                       order.Status == OrderStatus.New)
-                select order).ToList();
+                              where (order.Status == OrderStatus.Submitted ||
+                                     order.Status == OrderStatus.New)
+                              select order).ToList();
 
             return openOrders;
-        } 
-
+        }
 
         /// <summary>
         /// Get the order by its id
@@ -325,8 +322,8 @@ namespace QuantConnect.Securities
                 {
                     var pending = OrderQueue.ToList();
 
-                    var pendingOrder = (from o in pending 
-                                        where o.Id == orderId 
+                    var pendingOrder = (from o in pending
+                                        where o.Id == orderId
                                         select o).FirstOrDefault();
 
                     return pendingOrder;
@@ -381,7 +378,7 @@ namespace QuantConnect.Securities
             if (increasingPosition && Math.Abs(GetOrderCashImpact(order)) > portfolio.GetFreeCash(order.Symbol, order.Direction))
             {
                 //Log.Debug("Symbol: " + order.Symbol + " Direction: " + order.Direction.ToString() + " Quantity: " + order.Quantity);
-                //Log.Debug("GetOrderRequiredBuyingPower(): " + Math.Abs(GetOrderRequiredBuyingPower(order)) + " PortfolioGetBuyingPower(): " + portfolio.GetBuyingPower(order.Symbol, order.Direction)); 
+                //Log.Debug("GetOrderRequiredBuyingPower(): " + Math.Abs(GetOrderRequiredBuyingPower(order)) + " PortfolioGetBuyingPower(): " + portfolio.GetBuyingPower(order.Symbol, order.Direction));
                 Log.Error(string.Format("Transactions.GetSufficientCapitalForOrder(): Id: {0}, Cash Impact: {1}, Free Cash: {2}", order.Id, GetOrderCashImpact(order), portfolio.GetFreeCash(order.Symbol, order.Direction)));
                 return false;
             }
@@ -402,9 +399,9 @@ namespace QuantConnect.Securities
                 var orderFees = _securities[order.Symbol].Model.GetOrderFee(order.Quantity, order.Price);
 
                 //Return the total cash impact for the order, including fees:
-                return Math.Abs(order.Value) / _securities[order.Symbol].Leverage + orderFees; 
-            } 
-            catch(Exception err)
+                return Math.Abs(order.Value) / _securities[order.Symbol].Leverage + orderFees;
+            }
+            catch (Exception err)
             {
                 Log.Error("Security.TransactionManager.GetOrderCashImpact(): " + err.Message);
             }

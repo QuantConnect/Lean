@@ -208,7 +208,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // this could be better
                 foreach (var id in order.BrokerId)
                 {
-                    _client.CancelOrder((int) id);
+                    _client.CancelOrder((int)id);
                 }
 
                 // canceled order events fired upon confirmation, see HandleError
@@ -245,7 +245,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _client.OpenOrder += clientOnOpenOrder;
             _client.OpenOrderEnd += clientOnOpenOrderEnd;
-            
+
             _client.RequestOpenOrders();
 
             // wait for our end signal
@@ -456,11 +456,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // figure out the message type based on our code collections below
             var brokerageMessageType = BrokerageMessageType.Information;
-            if (ErrorCodes.Contains((int) e.ErrorCode))
+            if (ErrorCodes.Contains((int)e.ErrorCode))
             {
                 brokerageMessageType = BrokerageMessageType.Error;
             }
-            else if (WarningCodes.Contains((int) e.ErrorCode))
+            else if (WarningCodes.Contains((int)e.ErrorCode))
             {
                 brokerageMessageType = BrokerageMessageType.Warning;
             }
@@ -471,11 +471,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // invalidate the order
                 var order = _orderMapping.GetOrderByBrokerageId(e.TickerId);
-                var orderEvent = new OrderEvent(order) {Status = OrderStatus.Invalid};
+                var orderEvent = new OrderEvent(order) { Status = OrderStatus.Invalid };
                 OnOrderEvent(orderEvent);
             }
 
-            OnMessage(new BrokerageMessageEvent(brokerageMessageType, (int) e.ErrorCode, e.ErrorMsg));
+            OnMessage(new BrokerageMessageEvent(brokerageMessageType, (int)e.ErrorCode, e.ErrorMsg));
         }
 
         /// <summary>
@@ -548,7 +548,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 };
                 OnOrderEvent(orderEvent);
             }
-            catch(InvalidOperationException err)
+            catch (InvalidOperationException err)
             {
                 Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Unable to resolve executions for BrokerageID: " + update.OrderId + " - " + err.Message);
             }
@@ -647,7 +647,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         );
                     break;
                 default:
-                    throw new InvalidEnumArgumentException("orderType", (int) orderType, typeof (OrderType));
+                    throw new InvalidEnumArgumentException("orderType", (int)orderType, typeof(OrderType));
             }
 
             order.SecurityType = ConvertSecurityType(contract.SecurityType);
@@ -792,7 +792,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     throw new InvalidEnumArgumentException("type", (int)type, typeof(SecurityType));
             }
         }
-        
+
         /// <summary>
         /// Maps SecurityType enum
         /// </summary>

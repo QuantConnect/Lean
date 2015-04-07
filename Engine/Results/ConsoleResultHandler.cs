@@ -520,7 +520,6 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-
         /// <summary>
         /// Not used
         /// </summary>

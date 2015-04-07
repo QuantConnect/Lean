@@ -53,7 +53,6 @@ namespace QuantConnect.Logging
             set { _logHandler = value; }
         }
 
-
         /// <summary>
         /// Global flag whether to enable debugging logging:
         /// </summary>
@@ -93,7 +92,6 @@ namespace QuantConnect.Logging
                 Console.WriteLine("Log.Error(): Error writing error: " + err.Message);
             }
         }
-
 
         /// <summary>
         /// Log trace

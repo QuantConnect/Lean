@@ -204,8 +204,7 @@ namespace QuantConnect.Packets
                 Log.Error("BacktestResultPacket.Constructor: " + err.Message);
             }
         }
-    } // End Queue Packet:
-
+    } // End Queue Packet
 
     /// <summary>
     /// Backtest results object class - result specific items from the packet.

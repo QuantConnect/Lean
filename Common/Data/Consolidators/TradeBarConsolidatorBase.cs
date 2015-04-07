@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@ namespace QuantConnect.Data.Consolidators
 {
     /// <summary>
     /// A data consolidator that can make bigger bars from any base data by using a TradeBarCreatorBase instance
-    /// 
+    ///
     /// This type acts as the base for other consolidators that produce bars on a given time step or for a count of data.
     /// </summary>
     /// <typeparam name="T">The input type into the consolidator's Update method</typeparam>
@@ -31,12 +31,16 @@ namespace QuantConnect.Data.Consolidators
 
         //The minimum timespan between creating new bars.
         private readonly TimeSpan? _period;
+
         //The number of data updates between creating new bars.
         private readonly int? _maxCount;
+
         //The number of pieces of data we've accumulated since our last emit
         private int _currentCount;
+
         //The working bar used for aggregating the data
         private TradeBar _workingBar;
+
         //The last time we emitted a consolidated bar
         private DateTime? _lastEmit;
 
@@ -87,7 +91,7 @@ namespace QuantConnect.Data.Consolidators
         /// Updates this consolidator with the specified data. This method is
         /// responsible for raising the DataConsolidated event
         /// In time span mode, the bar range is closed on the left and open on the right: [T, T+TimeSpan).
-        /// For example, if time span is 1 minute, we have [10:00, 10:01): so data at 10:01 is not 
+        /// For example, if time span is 1 minute, we have [10:00, 10:01): so data at 10:01 is not
         /// included in the bar starting at 10:00.
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
@@ -98,7 +102,7 @@ namespace QuantConnect.Data.Consolidators
 
             // decide to aggregate data before or after firing OnDataConsolidated event
             // always aggregate before firing in counting mode
-            bool aggregateBeforeFire = _maxCount.HasValue; 
+            bool aggregateBeforeFire = _maxCount.HasValue;
 
             if (_maxCount.HasValue)
             {

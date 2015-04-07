@@ -319,6 +319,4 @@ namespace QuantConnect.Data.Market
             }
         }
     }
-
-
 } // End QC Namespace

@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm
         private bool _processingOrder = false;
         private int _maxOrders = 10000;
 
-        /******************************************************** 
+        /********************************************************
         * CLASS PUBLIC PROPERTIES
         *********************************************************/
 
@@ -356,7 +356,6 @@ namespace QuantConnect.Algorithm
             return 0;
         }
 
-
         /// <summary>
         /// Liquidate all holdings. Called at the end of day for tick-strategies.
         /// </summary>
@@ -399,7 +398,6 @@ namespace QuantConnect.Algorithm
                 _maxOrders = max;
             }
         }
-
 
         /// <summary>
         /// Alias for SetHoldings to avoid the M-decimal errors.
@@ -501,7 +499,7 @@ namespace QuantConnect.Algorithm
                 //5.2 Multiply fees by leverage because each share's cash impact is only value/leverage. Changing quantity linearly won't work.
                 var feesCashImpact = (projectedFees * direction * security.Leverage);
 
-                //5.3 Adjust the target quantity down by percentage of fees: 
+                //5.3 Adjust the target quantity down by percentage of fees:
                 // e.g. Target Quantity = 1000, fees = 10, value = 1000
                 // newQuantity = 1000 * 99% == $990 max possible given projected fees.
                 // e.g. Target Quantity = -1000, fees = 10, value = -1000
@@ -513,7 +511,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Obsolete implementation of Order method accepting a OrderType. This was deprecated since it 
+        /// Obsolete implementation of Order method accepting a OrderType. This was deprecated since it
         /// was impossible to generate other orders via this method. Any calls to this method will always default to a Market Order.
         /// </summary>
         /// <param name="symbol">Symbol we want to purchase</param>

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,7 @@ namespace QuantConnect
     /// <summary>
     /// Based on a macroeconomic indicator(CAPE Ratio), we are looking for entry/exit points for momentum stocks
     /// CAPE data: January 1990 - December 2014. By Tim Co.
-    /// Goals:    
+    /// Goals:
     ///     Capitalize in overvalued markets by generating returns with momentum and selling before the crash
     ///     Capitalize in undervalued markets by purchasing stocks at bottom of trough
     /// </summary>
@@ -46,7 +46,6 @@ namespace QuantConnect
         Dictionary<string, RelativeStrengthIndex> rsiDic = new Dictionary<string, RelativeStrengthIndex>();
         Dictionary<string, MovingAverageConvergenceDivergence> macdDic = new Dictionary<string, MovingAverageConvergenceDivergence>();
 
-
         public override void Initialize()
         {
             SetCash(100000);
@@ -59,15 +58,15 @@ namespace QuantConnect
             // SetStartDate(2011, 1, 1);
             // SetEndDate(2014, 12, 1);
 
-            //2008 Financials: 
+            //2008 Financials:
             // symbols.Add("C");symbols.Add("AIG");symbols.Add("BAC");symbols.Add("HBOS");
             // SetStartDate(2003, 1, 1);
             // SetEndDate(2011, 1, 1);
 
-            //2000 Dot.com: 
+            //2000 Dot.com:
             // symbols.Add("IPET");symbols.Add("WBVN");symbols.Add("GCTY");
             // SetStartDate(1998, 1, 1);
-            // SetEndDate(2000, 1, 1); 
+            // SetEndDate(2000, 1, 1);
 
             //CAPE data
             AddData<CAPE>("CAPE");
@@ -99,7 +98,7 @@ namespace QuantConnect
             }
             //Replaces oldest Cape with current Cape
             //Checks to see if current Cape is lowest in the previous quarter
-            //Indicating a sell off 
+            //Indicating a sell off
             else
             {
                 Array.Copy(c, cCopy, 4);
@@ -120,7 +119,7 @@ namespace QuantConnect
         {
             try
             {
-                //Bubble territory 
+                //Bubble territory
                 if (currCape > 20 && newLow == false)
                 {
                     foreach (string stock in symbols)
@@ -148,7 +147,7 @@ namespace QuantConnect
                     foreach (string stock in symbols)
                     {
 
-                        //Sell stock based on MACD 
+                        //Sell stock based on MACD
                         if (Securities[stock].Holdings.Quantity > 0 && rsiDic[stock] > 30
                             && Time.Hour == 9 && Time.Minute == 30)
                         {
@@ -177,7 +176,6 @@ namespace QuantConnect
                 Error(err.Message);
             }
         }
-
 
         /// <summary>
         /// Buy this symbol
@@ -212,7 +210,7 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// CAPE Ratio for SP500 PE Ratio for avg inflation adjusted earnings for previous ten years 
+    /// CAPE Ratio for SP500 PE Ratio for avg inflation adjusted earnings for previous ten years
     /// Custom Data from DropBox
     /// Original Data from: http://www.econ.yale.edu/~shiller/data.htm
     /// </summary>
@@ -239,7 +237,7 @@ namespace QuantConnect
             try
             {
                 //Example File Format:
-                //Date   |  Price |  Div  | Earning | CPI  | FractionalDate | Interest Rate | RealPrice | RealDiv | RealEarnings | CAPE 
+                //Date   |  Price |  Div  | Earning | CPI  | FractionalDate | Interest Rate | RealPrice | RealDiv | RealEarnings | CAPE
                 //2014.06  1947.09  37.38   103.12   238.343    2014.37          2.6           1923.95     36.94        101.89     25.55
                 string[] data = line.Split(',');
                 //Dates must be in the format YYYY-MM-DD. If your data source does not have this format, you must use

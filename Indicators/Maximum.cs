@@ -77,7 +77,7 @@ namespace QuantConnect.Indicators
                 // so let's scour the window for the max and it's index
 
                 // this could be done more efficiently if we were to intelligently keep track of the 'next'
-                // maximum, so when one falls off, we have the other... but then we would also need the 'next, next' 
+                // maximum, so when one falls off, we have the other... but then we would also need the 'next, next'
                 // maximum, so on and so forth, for now this works.
 
                 var maximum = window.Select((v, i) => new
