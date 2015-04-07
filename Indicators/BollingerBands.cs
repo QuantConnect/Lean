@@ -61,7 +61,7 @@ namespace QuantConnect.Indicators
             LowerBand = MiddleBand.Minus(StandardDeviation.Times(kConstant), name + "_LowerBand");
             UpperBand = MiddleBand.Plus(StandardDeviation.Times(kConstant), name + "_UpperBand");
         }
-
+           
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>

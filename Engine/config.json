@@ -1,7 +1,7 @@
 ﻿{
     // algorithm selector
     "algorithm-type-name": "BasicTemplateAlgorithm",
-
+	 
     // engine
     "local": "true",
     "live-mode": "false",

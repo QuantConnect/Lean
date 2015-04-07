@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +24,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void ReturnsIdentityOnSinglePoint()
         {
-            var series = new Series { Name = "name" };
+            var series = new Series {Name = "name"};
             var reference = DateTime.Now;
             series.AddPoint(reference, 1m);
 
@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void DownSamples()
         {
-            var series = new Series { Name = "name" };
+            var series = new Series {Name = "name"};
             var reference = DateTime.UtcNow.Date;
             series.AddPoint(reference, 1m);
             series.AddPoint(reference.AddDays(1), 2m);
@@ -54,8 +54,8 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(series.Values[0].x, sampled.Values[0].x);
             Assert.AreEqual(series.Values[0].y, sampled.Values[0].y);
 
-            Assert.AreEqual((series.Values[1].x + series.Values[2].x) / 2, sampled.Values[1].x);
-            Assert.AreEqual((series.Values[1].y + series.Values[2].y) / 2, sampled.Values[1].y);
+            Assert.AreEqual((series.Values[1].x + series.Values[2].x)/2, sampled.Values[1].x);
+            Assert.AreEqual((series.Values[1].y + series.Values[2].y)/2, sampled.Values[1].y);
 
             Assert.AreEqual(series.Values[3].x, sampled.Values[2].x);
             Assert.AreEqual(series.Values[3].y, sampled.Values[2].y);
@@ -64,7 +64,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void SubSamples()
         {
-            var series = new Series { Name = "name" };
+            var series = new Series {Name = "name"};
             var reference = DateTime.UtcNow.Date;
             series.AddPoint(reference, 1m);
             series.AddPoint(reference.AddDays(1), 2m);

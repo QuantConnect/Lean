@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,9 +26,9 @@ namespace QuantConnect.Tests.Indicators
         public void EMAComputesCorrectly()
         {
             const int period = 4;
-            decimal[] values = { 1m, 10m, 100m, 1000m };
-            const decimal expFactor = 2m / (1m + period);
-
+            decimal[] values = {1m, 10m, 100m, 1000m};
+            const decimal expFactor = 2m/(1m + period);
+            
             var ema4 = new ExponentialMovingAverage(period);
 
             decimal current = 0m;
@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Indicators
                 }
                 else
                 {
-                    current = values[i] * expFactor + (1 - expFactor) * current;
+                    current = values[i]*expFactor + (1 - expFactor)*current;
                 }
                 Assert.AreEqual(current, ema4.Current.Value);
             }

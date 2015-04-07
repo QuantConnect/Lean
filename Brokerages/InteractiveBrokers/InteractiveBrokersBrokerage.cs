@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -208,7 +208,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // this could be better
                 foreach (var id in order.BrokerId)
                 {
-                    _client.CancelOrder((int)id);
+                    _client.CancelOrder((int) id);
                 }
 
                 // canceled order events fired upon confirmation, see HandleError
@@ -245,7 +245,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _client.OpenOrder += clientOnOpenOrder;
             _client.OpenOrderEnd += clientOnOpenOrderEnd;
-
+            
             _client.RequestOpenOrders();
 
             // wait for our end signal
@@ -456,11 +456,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // figure out the message type based on our code collections below
             var brokerageMessageType = BrokerageMessageType.Information;
-            if (ErrorCodes.Contains((int)e.ErrorCode))
+            if (ErrorCodes.Contains((int) e.ErrorCode))
             {
                 brokerageMessageType = BrokerageMessageType.Error;
             }
-            else if (WarningCodes.Contains((int)e.ErrorCode))
+            else if (WarningCodes.Contains((int) e.ErrorCode))
             {
                 brokerageMessageType = BrokerageMessageType.Warning;
             }
@@ -471,11 +471,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // invalidate the order
                 var order = _orderMapping.GetOrderByBrokerageId(e.TickerId);
-                var orderEvent = new OrderEvent(order) { Status = OrderStatus.Invalid };
+                var orderEvent = new OrderEvent(order) {Status = OrderStatus.Invalid};
                 OnOrderEvent(orderEvent);
             }
 
-            OnMessage(new BrokerageMessageEvent(brokerageMessageType, (int)e.ErrorCode, e.ErrorMsg));
+            OnMessage(new BrokerageMessageEvent(brokerageMessageType, (int) e.ErrorCode, e.ErrorMsg));
         }
 
         /// <summary>
@@ -548,7 +548,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 };
                 OnOrderEvent(orderEvent);
             }
-            catch (InvalidOperationException err)
+            catch(InvalidOperationException err)
             {
                 Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Unable to resolve executions for BrokerageID: " + update.OrderId + " - " + err.Message);
             }
@@ -600,7 +600,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // not yet supported
-            //ibOrder.ParentId =
+            //ibOrder.ParentId = 
             //ibOrder.OcaGroup =
 
             return ibOrder;
@@ -647,7 +647,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         );
                     break;
                 default:
-                    throw new InvalidEnumArgumentException("orderType", (int)orderType, typeof(OrderType));
+                    throw new InvalidEnumArgumentException("orderType", (int) orderType, typeof (OrderType));
             }
 
             order.SecurityType = ConvertSecurityType(contract.SecurityType);
@@ -683,11 +683,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             switch (direction)
             {
-                case OrderDirection.Buy: return IB.ActionSide.Buy;
+                case OrderDirection.Buy:  return IB.ActionSide.Buy;
                 case OrderDirection.Sell: return IB.ActionSide.Sell;
                 case OrderDirection.Hold: return IB.ActionSide.Undefined;
                 default:
-                    throw new InvalidEnumArgumentException("direction", (int)direction, typeof(OrderDirection));
+                    throw new InvalidEnumArgumentException("direction", (int) direction, typeof (OrderDirection));
             }
         }
 
@@ -698,9 +698,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             switch (type)
             {
-                case OrderType.Market: return IB.OrderType.Market;
-                case OrderType.Limit: return IB.OrderType.Limit;
-                case OrderType.StopMarket: return IB.OrderType.Stop;
+                case OrderType.Market:      return IB.OrderType.Market;
+                case OrderType.Limit:       return IB.OrderType.Limit;
+                case OrderType.StopMarket:  return IB.OrderType.Stop;
                 default:
                     throw new InvalidEnumArgumentException("type", (int)type, typeof(OrderType));
             }
@@ -714,8 +714,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             switch (type)
             {
                 case IB.OrderType.Market: return OrderType.Market;
-                case IB.OrderType.Limit: return OrderType.Limit;
-                case IB.OrderType.Stop: return OrderType.StopMarket;
+                case IB.OrderType.Limit:  return OrderType.Limit;
+                case IB.OrderType.Stop:   return OrderType.StopMarket;
                 default:
                     throw new InvalidEnumArgumentException("type", (int)type, typeof(OrderType));
             }
@@ -730,33 +730,33 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 case IB.OrderStatus.ApiPending:
                 case IB.OrderStatus.PendingSubmit:
-                case IB.OrderStatus.PreSubmitted:
+                case IB.OrderStatus.PreSubmitted: 
                     return OrderStatus.New;
 
                 case IB.OrderStatus.ApiCancelled:
                 case IB.OrderStatus.PendingCancel:
-                case IB.OrderStatus.Canceled:
+                case IB.OrderStatus.Canceled: 
                     return OrderStatus.Canceled;
 
-                case IB.OrderStatus.Submitted:
+                case IB.OrderStatus.Submitted: 
                     return OrderStatus.Submitted;
 
-                case IB.OrderStatus.Filled:
+                case IB.OrderStatus.Filled: 
                     return OrderStatus.Filled;
 
-                case IB.OrderStatus.PartiallyFilled:
+                case IB.OrderStatus.PartiallyFilled: 
                     return OrderStatus.PartiallyFilled;
 
-                case IB.OrderStatus.Error:
+                case IB.OrderStatus.Error: 
                     return OrderStatus.Invalid;
 
                 case IB.OrderStatus.Inactive:
                     Log.Error("InteractiveBrokersBrokerage.ConvertOrderStatus(): Inactive order");
                     return OrderStatus.None;
 
-                case IB.OrderStatus.None:
+                case IB.OrderStatus.None: 
                     return OrderStatus.None;
-
+                    
                 // not sure how to map these guys
                 default:
                     throw new InvalidEnumArgumentException("status", (int)status, typeof(IB.OrderStatus));
@@ -792,7 +792,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     throw new InvalidEnumArgumentException("type", (int)type, typeof(SecurityType));
             }
         }
-
+        
         /// <summary>
         /// Maps SecurityType enum
         /// </summary>

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using Krs.Ats.IBNet;
 using NUnit.Framework;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Configuration;
@@ -34,7 +35,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
     [Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
     public class InteractiveBrokersBrokerageTests
     {
-        private readonly List<Order> _orders = new List<Order>();
+        private readonly List<Order> _orders = new List<Order>(); 
         private InteractiveBrokersBrokerage _interactiveBrokersBrokerage;
         private const int buyQuantity = 100;
         private const string Symbol = "USDJPY";
@@ -156,7 +157,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 }
             };
 
-            var order = new MarketOrder(Symbol, buyQuantity, DateTime.UtcNow, type: Type) { Id = 1 };
+            var order = new MarketOrder(Symbol, buyQuantity, DateTime.UtcNow, type: Type) {Id = 1};
             _orders.Add(order);
             ib.PlaceOrder(order);
 
@@ -299,7 +300,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             };
 
             const decimal limitPrice = 10000m;
-            var order = new LimitOrder(Symbol, -buyQuantity, limitPrice, DateTime.UtcNow, type: Type) { Id = ++id };
+            var order = new LimitOrder(Symbol, -buyQuantity, limitPrice, DateTime.UtcNow, type: Type) {Id = ++id};
             _orders.Add(order);
             ib.PlaceOrder(order);
 
@@ -308,7 +309,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             {
                 //Thread.MemoryBarrier();
                 Thread.Sleep(1000);
-                order.LimitPrice = order.LimitPrice / 2;
+                order.LimitPrice = order.LimitPrice/2;
                 ib.UpdateOrder(order);
             }
 
@@ -357,7 +358,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             var ib = _interactiveBrokersBrokerage;
 
-            var order = new MarketOrder(Symbol, buyQuantity, new DateTime(), type: Type) { Id = 1 };
+            var order = new MarketOrder(Symbol, buyQuantity, new DateTime(), type: Type) {Id = 1};
             _orders.Add(order);
 
             int orderFilledEventCount = 0;
@@ -469,7 +470,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             const int orderCount = 3;
             for (int i = 0; i < orderCount; i++)
             {
-                var order = new MarketOrder(Symbol, buyQuantity * (i + 1), new DateTime(), type: Type) { Id = i + 1 };
+                var order = new MarketOrder(Symbol, buyQuantity*(i + 1), new DateTime(), type: Type) {Id = i + 1};
                 _orders.Add(order);
                 ib.PlaceOrder(order);
 
