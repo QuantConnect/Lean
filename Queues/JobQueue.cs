@@ -60,6 +60,14 @@ namespace QuantConnect.Queues
         * CLASS METHODS
         *********************************************************/
         /// <summary>
+        /// Initialize the job queue:
+        /// </summary>
+        public void Initialize()
+        {
+            //
+        }
+        
+        /// <summary>
         /// Desktop/Local Get Next Task - Get task from the Algorithm folder of VS Solution.
         /// </summary>
         /// <returns></returns>
