@@ -195,6 +195,7 @@
     <Compile Include="Util\FuncTextWriter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />
     <Compile Include="Util\ObjectActivator.cs" />
+    <Compile Include="Util\XElementExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
