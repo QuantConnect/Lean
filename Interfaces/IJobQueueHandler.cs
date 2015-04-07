@@ -30,6 +30,11 @@ namespace QuantConnect.Interfaces
     public interface IJobQueueHandler
     {
         /// <summary>
+        /// Initialize the internal state
+        /// </summary>
+        void Initialize();
+
+        /// <summary>
         /// Request the next task to run through the engine:
         /// </summary>
         /// <returns>Algorithm job to process</returns>
