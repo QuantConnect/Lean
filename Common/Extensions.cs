@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
 using System.ComponentModel.Composition.Hosting;
+using System.Globalization;
 using System.Linq;
 using System.Timers;
 
@@ -185,10 +186,7 @@ namespace QuantConnect
 
             if (decimalPlaces > 0) 
             {
-                var divider = 10;
-                for (var i = 1; i < decimalPlaces; i++) divider *= 10;
-
-                return (decimal)value / divider;
+                return (decimal)value / (int)Math.Pow(10, decimalPlaces);
             }
 
             return (decimal)value;

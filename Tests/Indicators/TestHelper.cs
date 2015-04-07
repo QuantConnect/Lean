@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Indicators
                     continue;
                 }
 
-                decimal close = decimal.Parse(parts[closeIndex]);
+                decimal close = decimal.Parse(parts[closeIndex], CultureInfo.InvariantCulture);
                 DateTime date = Time.ParseDate(parts[0]);
 
                 var data = new IndicatorDataPoint(date, close);
@@ -112,7 +112,7 @@ namespace QuantConnect.Tests.Indicators
                     continue;
                 }
 
-                double expected = double.Parse(parts[targetIndex]);
+                double expected = double.Parse(parts[targetIndex], CultureInfo.InvariantCulture);
                 customAssertion.Invoke(indicator, expected);
             }
         }
@@ -145,6 +145,7 @@ namespace QuantConnect.Tests.Indicators
         {
             TestIndicator(indicator, externalDataFilename, targetColumn, (i, expected) => Assert.AreEqual(expected, selector(indicator), epsilon, "Failed at " + i.Current.Time.ToString("o")));
         }
+
         /// <summary>
         /// Compare the specified indicator against external data using the specificied comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
@@ -183,7 +184,7 @@ namespace QuantConnect.Tests.Indicators
                     High = parts[2].ToDecimal(),
                     Low = parts[3].ToDecimal(),
                     Close = parts[4].ToDecimal(),
-                    Volume = fileHasVolume ? long.Parse(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
+                    Volume = fileHasVolume ? long.Parse(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : 0
                 };
 
                 indicator.Update(tradebar);
@@ -193,7 +194,7 @@ namespace QuantConnect.Tests.Indicators
                     continue;
                 }
 
-                double expected = double.Parse(parts[targetIndex]);
+                double expected = double.Parse(parts[targetIndex], CultureInfo.InvariantCulture);
                 customAssertion.Invoke(indicator, expected);
             }
         }
