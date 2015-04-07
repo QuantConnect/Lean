@@ -51,27 +51,28 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Set the core properties of basedata object:
+        /// Sets the property with the specified name to the value. This is a case-insensitve search.
         /// </summary>
-        /// <param name="name">string property name</param>
-        /// <param name="value">object property value</param>
-        /// <returns>return true if set successfully.</returns>
+        /// <param name="name">The property name to set</param>
+        /// <param name="value">The new property value</param>
+        /// <returns>Returns the input value back to the caller</returns>
         public object SetProperty(string name, object value)
         {
             name = name.ToLower();
 
             if (name == "time")
             {
-                return Time = (DateTime)value;
+                Time = (DateTime)value;
             }
+
             if (name == "value")
             {
-                return Value = (decimal)value;
+                Value = (decimal)value;
             }
 
             if (name == "symbol")
             {
-                return Symbol = (string)value;
+                Symbol = (string)value;
             }
 
             _storage[name] = value;
@@ -79,9 +80,9 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Fetch the core properties of the underlying base data object:
+        /// Gets the property's value with the specified name. This is a case-insensitve search.
         /// </summary>
-        /// <param name="name">BaseData Property name</param>
+        /// <param name="name">The property name to access</param>
         /// <returns>object value of BaseData</returns>
         public object GetProperty(string name)
         {
@@ -108,7 +109,25 @@ namespace QuantConnect.Data
                 return Price;
             }
 
-            return _storage[name];
+            object value;
+            if (!_storage.TryGetValue(name, out value))
+            {
+                // let the user know the property name that we couldn't find
+                throw new Exception("Property with name '" + name + "' does not exist.");
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Gets whether or not this dynamic data instance has a property with the specified name.
+        /// This is a case-insensitve search.
+        /// </summary>
+        /// <param name="name">The property name to check for</param>
+        /// <returns>True if the property exists, false otherwise</returns>
+        public bool HasProperty(string name)
+        {
+            return _storage.ContainsKey(name.ToLower());
         }
 
         /// <summary>

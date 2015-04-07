@@ -18,20 +18,26 @@ using NUnit.Framework;
 using QuantConnect.Indicators;
 using QuantConnect.Data.Market;
 
-namespace QuantConnect.Tests.Indicators {
+namespace QuantConnect.Tests.Indicators
+{
     [TestFixture]
-    public class MoneyFlowIndexTests {
+    public class MoneyFlowIndexTests
+    {
         [Test]
-        public void ComparesAgainstExternalData() {
+        public void ComparesAgainstExternalData()
+        {
             var mfi = new MoneyFlowIndex(20);
             TestHelper.TestIndicator(mfi, "spy_mfi.txt", "Money Flow Index 20");
         }
 
         [Test]
-        public void TestTradeBarsWithNoVolume() {
+        public void TestTradeBarsWithNoVolume()
+        {
             var mfi = new MoneyFlowIndex(3);
-            foreach (var data in TestHelper.GetDataStream(4)) {
-                var tradeBar = new TradeBar {
+            foreach (var data in TestHelper.GetDataStream(4))
+            {
+                var tradeBar = new TradeBar
+                {
                     Open = data.Value,
                     Close = data.Value,
                     High = data.Value,
@@ -45,10 +51,13 @@ namespace QuantConnect.Tests.Indicators {
         }
 
         [Test]
-        public void ResetsProperly() {
+        public void ResetsProperly()
+        {
             var mfi = new MoneyFlowIndex(3);
-            foreach (var data in TestHelper.GetDataStream(4)) {
-                var tradeBar = new TradeBar {
+            foreach (var data in TestHelper.GetDataStream(4))
+            {
+                var tradeBar = new TradeBar
+                {
                     Open = data.Value,
                     Close = data.Value,
                     High = data.Value,

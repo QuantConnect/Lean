@@ -53,21 +53,29 @@
     <None Include="Algorithm\Test_MixedAssets.cs" />
     <None Include="Algorithm\Test_OnEndOfDay.cs" />
     <None Include="Algorithm\Test_SetHolding.cs" />
+    <Compile Include="AssemblyInitialize.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageTests.cs" />
+    <Compile Include="Common\Data\BaseDataConsolidatorTests.cs" />
+    <Compile Include="Common\Data\DynamicDataConsolidatorTests.cs" />
     <Compile Include="Common\Data\IdentityDataConsolidatorTests.cs" />
+    <Compile Include="Common\Data\RenkoConsolidatorTests.cs" />
     <Compile Include="Common\Data\SequentialConsolidatorTests.cs" />
+    <Compile Include="Common\Data\TickConsolidatorTests.cs" />
     <Compile Include="Common\Data\TradeBarConsolidatorTests.cs" />
     <Compile Include="Common\OSTests.cs" />
     <Compile Include="Common\SeriesSamplerTests.cs" />
     <Compile Include="Common\Util\ExpressionBuilderTests.cs" />
     <Compile Include="Common\Util\ExtensionsTests.cs" />
+    <Compile Include="Common\Util\FuncTextWriterTests.cs" />
     <Compile Include="Indicators\AroonOscillatorTests.cs" />
     <Compile Include="Indicators\AverageTrueRangeTests.cs" />
     <Compile Include="Indicators\BollingerBandsTests.cs" />
     <Compile Include="Indicators\CommodityChannelIndexTests.cs" />
     <Compile Include="Indicators\CompositeIndicatorTests.cs" />
+    <Compile Include="Indicators\ConstantIndicatorTests.cs" />
     <Compile Include="Indicators\DelayTests.cs" />
     <Compile Include="Indicators\ExponentialMovingAverageTests.cs" />
+    <Compile Include="Indicators\FunctionalIndicatorTests.cs" />
     <Compile Include="Indicators\IdentityTests.cs" />
     <Compile Include="Indicators\IndicatorTests.cs" />
     <Compile Include="Indicators\MaximumTests.cs" />
@@ -85,16 +93,18 @@
     <Compile Include="Indicators\StandardDeviationTests.cs" />
     <Compile Include="Indicators\SumTests.cs" />
     <Compile Include="Indicators\TestHelper.cs" />
+    <Compile Include="Logging\FileLogHandlerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="packages.config" />
-    <None Include="TestData\CashTestingStrategy.csv" />
+    <None Include="TestData\CashTestingStrategy.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Adapters\" />
     <Folder Include="API\" />
     <Folder Include="Config\" />
     <Folder Include="Engine\" />
-    <Folder Include="Logging\" />
     <Folder Include="Messaging\" />
     <Folder Include="Tasks\" />
   </ItemGroup>
@@ -119,31 +129,56 @@
       <Project>{338F614C-4CD7-418A-BD31-8C6A8690CFBF}</Project>
       <Name>QuantConnect.Interfaces</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
+      <Project>{01911409-86BE-4E7D-9947-DF714138610D}</Project>
+      <Name>QuantConnect.Logging</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="TestData\spy_10_min.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\spy_aroon_oscillator.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_atr.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_bollinger_bands.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_mfi.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_parabolic_SAR.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_with_adx.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_with_cci.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_with_don50.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_with_indicators.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_with_obv.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_with_roc50.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_with_rocp50.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_with_stoch12k3.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_with_williamsR14.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>

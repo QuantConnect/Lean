@@ -45,5 +45,18 @@ namespace QuantConnect.Tests.Indicators
             std.Update(reference.AddDays(5), 3m);
             Assert.AreEqual(2.05480466765633m, std.Current.Value);
         }
+
+        [Test]
+        public void ResetsProperly()
+        {
+            var std = new StandardDeviation(3);
+            std.Update(DateTime.Today, 1m);
+            std.Update(DateTime.Today.AddSeconds(1), 5m);
+            std.Update(DateTime.Today.AddSeconds(2), 1m);
+            Assert.IsTrue(std.IsReady);
+
+            std.Reset();
+            TestHelper.AssertIndicatorIsInDefaultState(std);
+        }
     }
 }

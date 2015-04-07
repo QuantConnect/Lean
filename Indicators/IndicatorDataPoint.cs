@@ -45,6 +45,19 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Initializes a new instance of the DataPoint type using the specified time/data
+        /// </summary>
+        /// <param name="symbol">The symbol associated with this data</param>
+        /// <param name="time">The time this data was produced</param>
+        /// <param name="value">The data</param>
+        public IndicatorDataPoint(string symbol, DateTime time, decimal value)
+        {
+            Symbol = symbol;
+            Time = time;
+            Value = value;
+        }
+
+        /// <summary>
         /// Indicates whether the current object is equal to another object of the same type.
         /// </summary>
         /// <returns>

@@ -74,7 +74,6 @@ namespace QuantConnect.Configuration
             {
                 var file = File.ReadAllText(_config);
                 _settings = JsonConvert.DeserializeObject<Dictionary<string, string>>(file);
-                Log.Trace("Config.Initialize(): Located Config.");
             }
 
             _loaded = true;

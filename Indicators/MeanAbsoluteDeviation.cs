@@ -24,7 +24,7 @@ namespace QuantConnect.Indicators
     public class MeanAbsoluteDeviation : WindowIndicator<IndicatorDataPoint>
     {
         /// <summary>
-        /// Gets the mean for the given period.
+        /// Gets the mean used to compute the deviation
         /// </summary>
         public IndicatorBase<IndicatorDataPoint> Mean { get; private set; }
 
@@ -74,6 +74,15 @@ namespace QuantConnect.Indicators
                 return 0m;
             }
             return window.Average(v => Math.Abs(v - Mean.Current.Value));
+        }
+
+        /// <summary>
+        /// Resets this indicator and its sub-indicator Mean to their initial state
+        /// </summary>
+        public override void Reset()
+        {
+            Mean.Reset();
+            base.Reset();
         }
     }
 }

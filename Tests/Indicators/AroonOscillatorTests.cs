@@ -15,6 +15,7 @@
 
 using System;
 using NUnit.Framework;
+using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
@@ -50,6 +51,49 @@ namespace QuantConnect.Tests.Indicators
                 Console.WriteLine("Aroon failed {0} data points against an expected of {1}", totalFailures, maxFailures);
             }
             
+        }
+
+        [Test]
+        public void ResetsProperly()
+        {
+            var aroon = new AroonOscillator(3, 3);
+            aroon.Update(new TradeBar
+            {
+                Symbol = "SPY",
+                Time = DateTime.Today,
+                Open = 3m,
+                High = 7m,
+                Low = 2m,
+                Close = 5m,
+                Volume = 10
+            });
+            aroon.Update(new TradeBar
+            {
+                Symbol = "SPY",
+                Time = DateTime.Today.AddSeconds(1),
+                Open = 3m,
+                High = 7m,
+                Low = 2m,
+                Close = 5m,
+                Volume = 10
+            });
+            Assert.IsFalse(aroon.IsReady);
+            aroon.Update(new TradeBar
+            {
+                Symbol = "SPY",
+                Time = DateTime.Today.AddSeconds(2),
+                Open = 3m,
+                High = 7m,
+                Low = 2m,
+                Close = 5m,
+                Volume = 10
+            });
+            Assert.IsTrue(aroon.IsReady);
+
+            aroon.Reset();
+            TestHelper.AssertIndicatorIsInDefaultState(aroon);
+            TestHelper.AssertIndicatorIsInDefaultState(aroon.AroonUp);
+            TestHelper.AssertIndicatorIsInDefaultState(aroon.AroonDown);
         }
     }
 }

@@ -16,7 +16,8 @@
 using QuantConnect.Data.Market;
 
 
-namespace QuantConnect.Indicators {
+namespace QuantConnect.Indicators
+{
     /// <summary>
     ///     Represents the traditional commodity channel index (CCI)
     ///     
@@ -29,17 +30,15 @@ namespace QuantConnect.Indicators {
     ///     typical price. Second, take the absolute values of these numbers. Third,
     ///     sum the absolute values. Fourth, divide by the total number of periods (20).
     /// </summary>
-    public class CommodityChannelIndex : TradeBarIndicator {
-
+    public class CommodityChannelIndex : TradeBarIndicator
+    {
         /// <summary>This constant is used to ensure that CCI values fall between +100 and -100, 70% to 80% of the time</summary>
         private const decimal _k = 0.015m;
-        private readonly int _period;
 
         /// <summary>
         /// Gets the type of moving average
         /// </summary>
         public MovingAverageType MovingAverageType { get; private set; }
-
 
         /// <summary>
         /// Keep track of the simple moving average of the typical price
@@ -57,7 +56,7 @@ namespace QuantConnect.Indicators {
         /// <param name="period">The period of the standard deviation and moving average (middle band)</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
         public CommodityChannelIndex(int period, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : this("CCI" + period, period, movingAverageType) 
+            : this("CCI" + period, period, movingAverageType)
         {
         }
 
@@ -68,8 +67,8 @@ namespace QuantConnect.Indicators {
         /// <param name="period">The period of the standard deviation and moving average (middle band)</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
         public CommodityChannelIndex(string name, int period, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : base(name) {
-            _period = period;
+            : base(name)
+        {
             MovingAverageType = movingAverageType;
             TypicalPriceAverage = movingAverageType.AsIndicator(name + "_TypicalPriceAvg", period);
             TypicalPriceMeanDeviation = new MeanAbsoluteDeviation(name + "_TypicalPriceMAD", period);
@@ -78,7 +77,8 @@ namespace QuantConnect.Indicators {
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady {
+        public override bool IsReady
+        {
             get { return TypicalPriceAverage.IsReady && TypicalPriceMeanDeviation.IsReady; }
         }
 
@@ -87,16 +87,29 @@ namespace QuantConnect.Indicators {
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input) {
-            decimal typicalPrice = (input.High + input.Low + input.Close) / 3.0m;
+        protected override decimal ComputeNextValue(TradeBar input)
+        {
+            decimal typicalPrice = (input.High + input.Low + input.Close)/3.0m;
 
             TypicalPriceAverage.Update(input.Time, typicalPrice);
             TypicalPriceMeanDeviation.Update(input.Time, typicalPrice);
 
-            if (TypicalPriceMeanDeviation.Current == 0.0m) {
+            // compare this to zero, since if the mean deviation is very small we can get
+            // precision errors due to non-floating point math
+            var weightedMeanDeviation = _k * TypicalPriceMeanDeviation.Current;
+            if (weightedMeanDeviation == 0.0m)
+            {
                 return 0.0m;
             }
-            return (typicalPrice - TypicalPriceAverage.Current) / (_k * TypicalPriceMeanDeviation.Current);
+
+            return (typicalPrice - TypicalPriceAverage.Current)/weightedMeanDeviation;
+        }
+
+        public override void Reset()
+        {
+            TypicalPriceAverage.Reset();
+            TypicalPriceMeanDeviation.Reset();
+            base.Reset();
         }
     }
 }

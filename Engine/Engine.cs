@@ -17,14 +17,16 @@
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
+
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
+using System.Diagnostics;
 using System.Globalization;
+using System.Threading;
 using QuantConnect.Brokerages.Backtesting;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
@@ -34,11 +36,10 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.Lean.Engine
 {
-    /********************************************************
+    /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
     /// <summary>
@@ -179,8 +180,13 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Primary Analysis Thread:
         /// </summary>
-        public static void Main(string[] args)
+        public static void Main(string[] args) 
         {
+            // pick an implementation of ILogHandler for the application
+            Log.LogHandler = IsLocal 
+                ? (ILogHandler) new ConsoleLogHandler() 
+                : new FileLogHandler("log.txt");
+
             //Initialize:
             var algorithmPath = "";
             AlgorithmNodePacket job = null;
@@ -196,7 +202,7 @@ namespace QuantConnect.Lean.Engine
 
             //Import external libraries specific to physical server location (cloud/local)
             var catalog = new AggregateCatalog();
-            catalog.Catalogs.Add(new DirectoryCatalog(@"../../Extensions"));
+            catalog.Catalogs.Add(new DirectoryCatalog(AppDomain.CurrentDomain.BaseDirectory));
             var container = new CompositionContainer(catalog);
             try
             {
@@ -468,7 +474,14 @@ namespace QuantConnect.Lean.Engine
 
             //Finally if ping thread still not complete, kill.
             if (statusPingThread != null && statusPingThread.IsAlive) statusPingThread.Abort();
+
+            if (Log.LogHandler != null)
+            {
+                Log.LogHandler.Dispose();
+            }
         }
+
+
 
         /// <summary>
         /// Get an instance of the data feed handler we're requesting for this work.

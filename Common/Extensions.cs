@@ -192,6 +192,15 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets the smallest positive number that can be added to a decimal instance and return
+        /// a new value that does not == the old value
+        /// </summary>
+        public static decimal GetDecimalEpsilon()
+        {
+            return new decimal(1, 0, 0, false, 27); //1e-27m;
+        }
+
+        /// <summary>
         /// Extension method to extract the extension part of this file name if it matches a safe list, or return a ".custom" extension for ones which do not match.
         /// </summary>
         /// <param name="str">String we're looking for the extension for.</param>
@@ -375,6 +384,31 @@ namespace QuantConnect
                 type = type.BaseType;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Converts the Resolution instance into a TimeSpan instance
+        /// </summary>
+        /// <param name="resolution">The resolution to be converted</param>
+        /// <returns>A TimeSpan instance that represents the resolution specified</returns>
+        public static TimeSpan ToTimeSpan(this Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Resolution.Tick:
+                    // ticks can be instantaneous
+                    return TimeSpan.FromTicks(0);
+                case Resolution.Second:
+                    return TimeSpan.FromSeconds(1);
+                case Resolution.Minute:
+                    return TimeSpan.FromMinutes(1);
+                case Resolution.Hour:
+                    return TimeSpan.FromHours(1);
+                case Resolution.Daily:
+                    return TimeSpan.FromDays(1);
+                default:
+                    throw new ArgumentOutOfRangeException("resolution");
+            }
         }
     }
 }

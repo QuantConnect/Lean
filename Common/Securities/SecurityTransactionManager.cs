@@ -31,7 +31,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Algorithm Transactions Manager - Recording Transactions
     /// </summary>
-    public class SecurityTransactionManager 
+    public class SecurityTransactionManager : IOrderIDMapping
     {
         /********************************************************
         * CLASS PRIVATE VARIABLES
@@ -315,7 +315,7 @@ namespace QuantConnect.Securities
         /// Get the order by its id
         /// </summary>
         /// <param name="orderId">Order id to fetch</param>
-        /// <returns></returns>
+        /// <returns>The order with the specified id, or null if no match is found</returns>
         public Order GetOrderById(int orderId)
         {
             Order order = null;
@@ -335,9 +335,34 @@ namespace QuantConnect.Securities
             }
             catch (Exception err)
             {
-                Log.Error("TransactionManager.RemoveOrder(): " + err.Message);
+                Log.Error("TransactionManager.GetOrderById(): " + err.Message);
             }
             return order;
+        }
+
+        /// <summary>
+        /// Gets the order by its brokerage id
+        /// </summary>
+        /// <param name="brokerageId">The brokerage id to fetch</param>
+        /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
+        public Order GetOrderByBrokerageId(int brokerageId)
+        {
+            try
+            {
+                // first check the order queue since orders are moved from OrderQueue to Orders
+                var order = OrderQueue.FirstOrDefault(x => x.BrokerId.Contains(brokerageId));
+                if (order != null)
+                {
+                    return order;
+                }
+
+                return Orders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
+            }
+            catch (Exception err)
+            {
+                Log.Error("TransactionManager.GetOrderByBrokerageId(): " + err.Message);
+                return null;
+            }
         }
 
         /// <summary>

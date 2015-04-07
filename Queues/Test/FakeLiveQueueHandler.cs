@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Queues.Test
 {
@@ -90,7 +91,7 @@ namespace QuantConnect.Queues.Test
                         double milliseconds = _maxDataGap.TotalMilliseconds*value;
                         gap = TimeSpan.FromMilliseconds(milliseconds);
                     }
-                    Console.WriteLine("SYMBOL: " + symbol + " GAP: " + gap.TotalSeconds.ToString("0.00"));
+                    Log.Debug("SYMBOL: " + symbol + " GAP: " + gap.TotalSeconds.ToString("0.00"));
                     _subscriptions.Add(new Subscription(symbol, gap));
                 }
             }

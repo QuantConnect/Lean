@@ -275,8 +275,9 @@ namespace QuantConnect.Data.Market
                         dateFormat = "yyMMdd";
                     }
 
+                    var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol; 
                     source = @"../../../Data/" + config.Security.ToString().ToLower();
-                    source += @"/" + config.Resolution.ToString().ToLower() + @"/" + config.MappedSymbol.ToLower() + @"/";
+                    source += @"/" + config.Resolution.ToString().ToLower() + @"/" + symbol.ToLower() + @"/";
                     source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
                     break;
 

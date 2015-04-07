@@ -36,42 +36,31 @@ namespace QuantConnect.Logging
         *********************************************************/
         private static string _lastTraceText = "";
         private static string _lastErrorText = "";
-        private static bool _debuggingEnabled = false;
+        private static bool _debuggingEnabled;
         private static int _level = 1;
-        private static ILogHandler _logHandler = new ConsoleLogHandler();
+        private static ILogHandler _logHandler;
 
         /********************************************************
         * CLASS PROPERTIES
         *********************************************************/
 
         /// <summary>
-        ///
+        /// Gets or sets the ILogHandler instance used as the global logging implementation.
         /// </summary>
         public static ILogHandler LogHandler
         {
-            get
-            {
-                return _logHandler;
-            }
-            set
-            {
-                _logHandler = value;
-            }
+            get { return _logHandler; }
+            set { _logHandler = value; }
         }
+
 
         /// <summary>
         /// Global flag whether to enable debugging logging:
         /// </summary>
         public static bool DebuggingEnabled
         {
-            get
-            {
-                return _debuggingEnabled;
-            }
-            set
-            {
-                _debuggingEnabled = value;
-            }
+            get { return _debuggingEnabled; }
+            set { _debuggingEnabled = value; }
         }
 
         /// <summary>
@@ -79,14 +68,8 @@ namespace QuantConnect.Logging
         /// </summary>
         public static int DebuggingLevel
         {
-            get
-            {
-                return _level;
-            }
-            set
-            {
-                _level = value;
-            }
+            get { return _level; }
+            set { _level = value; }
         }
 
         /********************************************************

@@ -24,7 +24,7 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     /// <typeparam name="TInput">The type consumed by the consolidator</typeparam>
     public abstract class DataConsolidator<TInput> : IDataConsolidator
-        where TInput : BaseData
+        where TInput : class, IBaseData
     {
         /// <summary>
         /// Updates this consolidator with the specified data

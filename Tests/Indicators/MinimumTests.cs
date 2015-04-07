@@ -57,5 +57,19 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(0m, min.Current.Value);
             Assert.AreEqual(2, min.PeriodsSinceMinimum);
         }
+
+        [Test]
+        public void ResetsProperly()
+        {
+            var min = new Minimum(3);
+            min.Update(DateTime.Today, 1m);
+            min.Update(DateTime.Today.AddSeconds(1), 2m);
+            min.Update(DateTime.Today.AddSeconds(2), 1m);
+            Assert.IsTrue(min.IsReady);
+
+            min.Reset();
+            Assert.AreEqual(0, min.PeriodsSinceMinimum);
+            TestHelper.AssertIndicatorIsInDefaultState(min);
+        }
     }
 }

@@ -6,7 +6,7 @@ using QuantConnect.Data.Market;
 
 namespace QuantConnect
 {
-    public class Stress_Symbols : QCAlgorithm
+    public class StressSymbolsAlgorithm : QCAlgorithm
     {
         public IEnumerable<string> AllSymbols;
 

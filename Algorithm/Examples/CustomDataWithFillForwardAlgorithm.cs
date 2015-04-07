@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.Examples
     /// <summary>
     /// Custom Data Example Algorithm using Fillforward to 
     /// </summary>
-    public class CustomDataWithFillForward : QCAlgorithm
+    public class CustomDataWithFillForwardAlgorithm : QCAlgorithm
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.

@@ -14,6 +14,7 @@
 */
 using System;
 using QuantConnect.Data.Custom;
+using QuantConnect.Indicators;
 
 
 namespace QuantConnect.Algorithm.Examples
@@ -26,8 +27,9 @@ namespace QuantConnect.Algorithm.Examples
     /// The Quandl object has properties which match the spreadsheet headers.
     /// If you have multiple quandl streams look at data.Symbol to distinguish them.
     /// </summary>
-    public class QCUQuandlImporter : QCAlgorithm
+    public class QuandlImporterAlgorithm : QCAlgorithm
     {
+        private SimpleMovingAverage sma;
         string _quandlCode = "YAHOO/INDEX_SPY";
 
         /// Initialize the data and resolution you require for your strategy:
@@ -41,10 +43,12 @@ namespace QuantConnect.Algorithm.Examples
             SetCash(25000);
 
             //Add Generic Quandl Data:
-            AddData<Quandl>(_quandlCode);
+            AddData<Quandl>(_quandlCode, Resolution.Daily, true, true);
+
+            sma = SMA(_quandlCode, 14);
         }
 
-        /// Data Event Handler: New data arrives here. "TradeBars" type is a dictionary of strings so you can access it by symbol.
+        /// Data Event Handler: New data arrives here. "TradeBars" type is a dictionary of strings so you can access it by symbol
         public void OnData(Quandl data)
         {
             if (!Portfolio.HoldStock)
@@ -55,6 +59,8 @@ namespace QuantConnect.Algorithm.Examples
                 //Debug sends messages to the user console: "Time" is the algorithm time keeper object 
                 Debug("Purchased " + _quandlCode + " >> " + Time.ToShortDateString());
             }
+
+            Plot("SPY", sma);
         }
     }
 }

@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using QuantConnect.Data.Consolidators;
 
 namespace QuantConnect.Data
@@ -54,6 +55,10 @@ namespace QuantConnect.Data
 
         /// Boolean Send Data from between 4am - 8am (Equities Setting Only)
         public bool ExtendedMarketHours;
+        /// True if the data type has OHLC properties, even if dynamic data
+        public readonly bool IsTradeBar;
+        /// True if the data type has a Volume property, even if it is dynamic data
+        public readonly bool HasVolume;
 
         /// Price Scaling Factor:
         public decimal PriceScaleFactor;
@@ -76,7 +81,7 @@ namespace QuantConnect.Data
         /// <param name="resolution">Resolution of the asset we're requesting</param>
         /// <param name="fillForward">Fill in gaps with historical data</param>
         /// <param name="extendedHours">Equities only - send in data from 4am - 8pm</param>
-        public SubscriptionDataConfig(Type objectType, SecurityType securityType = SecurityType.Equity, string symbol = "", Resolution resolution = Resolution.Minute, bool fillForward = true, bool extendedHours = false)
+        public SubscriptionDataConfig(Type objectType, SecurityType securityType, string symbol, Resolution resolution, bool fillForward, bool extendedHours, bool isTradeBar, bool hasVolume)
         {
             Type = objectType;
             Security = securityType;
@@ -84,6 +89,8 @@ namespace QuantConnect.Data
             Symbol = symbol;
             FillDataForward = fillForward;
             ExtendedMarketHours = extendedHours;
+            IsTradeBar = isTradeBar;
+            HasVolume = hasVolume;
             PriceScaleFactor = 1;
             MappedSymbol = symbol;
             Consolidators = new List<IDataConsolidator>();
@@ -99,6 +106,9 @@ namespace QuantConnect.Data
                 case Resolution.Second:
                     Increment = TimeSpan.FromSeconds(1);
                     break;
+                case Resolution.Minute:
+                    Increment = TimeSpan.FromMinutes(1);
+                    break;
 
                 case Resolution.Hour:
                     Increment = TimeSpan.FromHours(1);
@@ -108,33 +118,9 @@ namespace QuantConnect.Data
                     Increment = TimeSpan.FromDays(1);
                     break;
 
-                case Resolution.Minute:
                 default:
-                    Increment = TimeSpan.FromMinutes(1);
-                    break;
+                    throw new InvalidEnumArgumentException("Unexpected Resolution: " + resolution);
             }
-        }
-
-        /// <summary>
-        /// User defined source of data configuration
-        /// </summary>
-        /// <param name="objectType">Type the user defines</param>
-        /// <param name="symbol">Symbol of the asset we'll trade</param>
-        /// <param name="source">String source of the data.</param>
-        public SubscriptionDataConfig(Type objectType, string symbol, string source)
-        {
-            Type = objectType;
-            Security = SecurityType.Base;
-            Resolution = Resolution.Second;
-            Increment = TimeSpan.FromSeconds(1);
-            Symbol = symbol;
-            Consolidators = new List<IDataConsolidator>();
-
-            //NOT NEEDED FOR USER DATA:*********//
-            FillDataForward = true;        //
-            ExtendedMarketHours = false;   //
-            PriceScaleFactor = 1;          //
-            MappedSymbol = symbol;         //
         }
 
         /// <summary>

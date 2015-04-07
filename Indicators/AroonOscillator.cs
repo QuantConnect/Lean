@@ -65,13 +65,15 @@ namespace QuantConnect.Indicators
             var max = new Maximum(name + "_Max", upPeriod);
             AroonUp = new FunctionalIndicator<IndicatorDataPoint>(name + "_AroonUp",
                 input => ComputeAroonUp(upPeriod, max, input), 
-                aroonUp => max.IsReady
+                aroonUp => max.IsReady,
+                () => max.Reset()
                 );
 
             var min = new Minimum(name + "_Min", downPeriod);
             AroonDown = new FunctionalIndicator<IndicatorDataPoint>(name + "_AroonDown",
                 input => ComputeAroonDown(downPeriod, min, input),
-                aroonDown => min.IsReady
+                aroonDown => min.IsReady,
+                () => min.Reset()
                 );
         }
 
@@ -112,6 +114,16 @@ namespace QuantConnect.Indicators
         {
             min.Update(input);
             return 100m * (downPeriod - min.PeriodsSinceMinimum) / downPeriod;
+        }
+
+        /// <summary>
+        /// Resets this indicator and both sub-indicators (AroonUp and AroonDown)
+        /// </summary>
+        public override void Reset()
+        {
+            AroonUp.Reset();
+            AroonDown.Reset();
+            base.Reset();
         }
     }
 }

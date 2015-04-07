@@ -131,7 +131,46 @@ namespace QuantConnect.Securities.Forex
         /********************************************************
         * CLASS METHODS
         *********************************************************/
+        /// <summary>
+        /// Time of day the market opens.
+        /// </summary>
+        /// <param name="time">DateTime object for this date</param>
+        /// <returns>DateTime the market is considered open</returns>
+        public override DateTime TimeOfDayOpen(DateTime time)
+        {
+            switch (time.DayOfWeek)
+            {
+                case DayOfWeek.Saturday:
+                    return time.Date.AddDays(1);
+                case DayOfWeek.Sunday:
+                    return time.Date.AddHours(17);
+                default:
+                    //Default to midnight, start of day.
+                    return time.Date;
+            }
+        }
 
+
+        /// <summary>
+        /// Time of day the market closes.
+        /// </summary>
+        /// <param name="time">DateTime object for this date</param>
+        /// <returns>DateTime the market day is considered closed</returns>
+        public override DateTime TimeOfDayClosed(DateTime time)
+        {
+            switch (time.DayOfWeek)
+            {
+                //Friday's close 1600.
+                case DayOfWeek.Friday:
+                    return time.Date.AddHours(16);
+                //Saturday never open.
+                case DayOfWeek.Saturday:
+                    return time.Date;
+                default:
+                    //Default to midnight, start of *next* day: ie. never closed.
+                    return time.Date.AddDays(1);
+            }
+        }
     } //End of ForexExchange
 
 } //End Namespace

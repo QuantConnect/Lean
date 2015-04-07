@@ -148,6 +148,8 @@ namespace QuantConnect.Securities
                     case SecurityType.Base:
                         Add(symbol, new Security(symbol, SecurityType.Base, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData));
                         break;
+                    default:
+                        throw new Exception("We currently only support Equity and Forex Securities Types. Its still possible to trade futures but you must use generic data. Please see the QC University example 'Quandl Futures'.");
                 }
             } 
             else 

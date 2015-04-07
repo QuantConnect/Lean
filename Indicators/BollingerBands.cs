@@ -84,5 +84,17 @@ namespace QuantConnect.Indicators
             LowerBand.Update(input);
             return input;
         }
+
+        /// <summary>
+        /// Resets this indicator and all sub-indicators (StandardDeviation, LowerBand, MiddleBand, UpperBand)
+        /// </summary>
+        public override void Reset()
+        {
+            StandardDeviation.Reset();
+            MiddleBand.Reset();
+            UpperBand.Reset();
+            LowerBand.Reset();
+            base.Reset();
+        }
     }
 }

@@ -260,9 +260,19 @@ namespace QuantConnect.Lean.Engine
                             algorithm.Securities.Update(time, dataPoint);
 
                             //Update registered consolidators for this symbol index
-                            for (var j = 0; j < config.Consolidators.Count; j++)
+                            try
                             {
-                                config.Consolidators[j].Update(dataPoint);
+                                for (var j = 0; j < config.Consolidators.Count; j++)
+                                {
+                                    config.Consolidators[j].Update(dataPoint);
+                                }
+                            }
+                            catch (Exception err)
+                            {
+                                _runtimeError = err;
+                                _algorithmState = AlgorithmStatus.RuntimeError;
+                                Log.Error("AlgorithmManager.Run(): RuntimeError: Consolidators update: " + err.Message);
+                                return;
                             }
 
                             switch (config.Type.Name)

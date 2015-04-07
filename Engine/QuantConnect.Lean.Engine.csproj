@@ -103,21 +103,6 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Accord">
-      <HintPath>..\packages\Accord.2.14.0\lib\net40\Accord.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.MachineLearning">
-      <HintPath>..\packages\Accord.MachineLearning.2.14.0\lib\net40\Accord.MachineLearning.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Math">
-      <HintPath>..\packages\Accord.Math.2.14.0\lib\net40\Accord.Math.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Neuro">
-      <HintPath>..\packages\Accord.Neuro.2.14.0\lib\net40\Accord.Neuro.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Statistics">
-      <HintPath>..\packages\Accord.Statistics.2.14.0\lib\net40\Accord.Statistics.dll</HintPath>
-    </Reference>
     <Reference Include="Fasterflect">
       <HintPath>..\packages\fasterflect.2.1.3\lib\net40\Fasterflect.dll</HintPath>
     </Reference>
@@ -134,17 +119,6 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.configuration" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Xml.Linq">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlgorithmManager.cs" />
@@ -191,6 +165,10 @@
       <Project>{3240aca4-bdd4-4d24-ac36-bbb651c39212}</Project>
       <Name>QuantConnect.Algorithm</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Api\QuantConnect.Api.csproj">
+      <Project>{c5d44209-49a0-4505-a870-043c5ef5fddf}</Project>
+      <Name>QuantConnect.Api</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Brokerages\QuantConnect.Brokerages.csproj">
       <Project>{2d3e13cf-2d14-4180-a42d-f0a13af0ade2}</Project>
       <Name>QuantConnect.Brokerages</Name>
@@ -215,9 +193,14 @@
       <Project>{01911409-86be-4e7d-9947-df714138610d}</Project>
       <Name>QuantConnect.Logging</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Extensions\" />
+    <ProjectReference Include="..\Messaging\QuantConnect.Messaging.csproj">
+      <Project>{f2e90e2d-ba25-40e2-b39a-0ba31e68f7f8}</Project>
+      <Name>QuantConnect.Messaging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Queues\QuantConnect.Queues.csproj">
+      <Project>{d6633172-1368-4df6-9444-825c3e00c819}</Project>
+      <Name>QuantConnect.Queues</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">

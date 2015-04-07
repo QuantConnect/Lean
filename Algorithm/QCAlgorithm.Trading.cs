@@ -34,8 +34,9 @@ namespace QuantConnect.Algorithm
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         private bool _processingOrder = false;
+        private int _maxOrders = 10000;
 
-        /********************************************************
+        /******************************************************** 
         * CLASS PUBLIC PROPERTIES
         *********************************************************/
 
@@ -345,9 +346,10 @@ namespace QuantConnect.Algorithm
             }
 
             //We've already processed too many orders: max 100 per day or the memory usage explodes
-            if (Orders.Count > (_endDate - _startDate).TotalDays * 100)
+            if (Orders.Count > _maxOrders)
             {
-                Error("You have exceeded 100 orders per day");
+                Error(string.Format("You have exceeded maximum number of orders ({0}), for unlimited orders upgrade your account.", _maxOrders));
+                _quit = true;
                 return -5;
             }
 
@@ -383,9 +385,21 @@ namespace QuantConnect.Algorithm
                 //Liquidate at market price.
                 orderIdList.Add(Order(symbol, quantity));
             }
-
             return orderIdList;
         }
+
+        /// <summary>
+        /// Maximum number of orders for the algorithm
+        /// </summary>
+        /// <param name="max"></param>
+        public void SetMaximumOrders(int max)
+        {
+            if (!_locked)
+            {
+                _maxOrders = max;
+            }
+        }
+
 
         /// <summary>
         /// Alias for SetHoldings to avoid the M-decimal errors.
@@ -439,7 +453,7 @@ namespace QuantConnect.Algorithm
             //Error checks:
             if (!Portfolio.ContainsKey(symbol))
             {
-                Debug(symbol.ToUpper() + " not found in portfolio. Request this data when initializing the algorithm.");
+                Error(symbol.ToUpper() + " not found in portfolio. Request this data when initializing the algorithm.");
                 return;
             }
 

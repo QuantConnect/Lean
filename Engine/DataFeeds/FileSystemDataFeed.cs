@@ -243,6 +243,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // this is really the next frontier in the future
             var activeStreams = subscriptions;
 
+
             //Initialize Activators:
             ResetActivators();
 
@@ -427,8 +428,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Data ended before the market closed: premature ending flag - continue filling forward until market close.
             if (manager.EndOfStream && manager.MarketOpen(current.Time))
             {
+                //Make sure we only fill forward to end of *today* -- don't fill forward tomorrow just because its also open.
+                var processingDate = FillForwardFrontiers[i].Date;
+
                 //Premature end of stream: fill manually until market closed.
-                for (var date = FillForwardFrontiers[i] + increment; manager.MarketOpen(date); date = date + increment)
+                for (var date = FillForwardFrontiers[i] + increment; (manager.MarketOpen(date) && date.Date == processingDate); date = date + increment)
                 {
                     var cache = new List<BaseData>(1);
                     var fillforward = current.Clone(true);

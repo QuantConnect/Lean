@@ -62,7 +62,6 @@ namespace QuantConnect.Algorithm.Examples
             }
         }
     }
-
     /// <summary>
     /// Exchange filter class 
     /// </summary>
@@ -150,5 +149,4 @@ namespace QuantConnect.Algorithm.Examples
         }
 
     }
-
 }

@@ -23,7 +23,7 @@ namespace QuantConnect.Algorithm.Examples
     /// <summary>
     /// MACD Example Algorithm
     /// </summary>
-    public class MACDTrendFollowing : QCAlgorithm
+    public class MACDTrendAlgorithm : QCAlgorithm
     {
         private DateTime previous;
         private MovingAverageConvergenceDivergence macd;

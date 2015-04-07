@@ -92,7 +92,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="second">The consolidator to receive first's output</param>
         public SequentialConsolidator(IDataConsolidator first, IDataConsolidator second)
         {
-            if (first.OutputType != second.InputType)
+            if (!second.InputType.IsAssignableFrom(first.OutputType))
             {
                 throw new ArgumentException("first.OutputType must equal second.OutputType!");
             }
