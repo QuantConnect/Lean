@@ -200,9 +200,9 @@ namespace QuantConnect.Lean.Engine
             try
             {
                 // grab the right export based on configuration
+                Api = Composer.Instance.GetExportedValueByTypeName<IApi>(Config.Get("api-handler"));
                 Notify = Composer.Instance.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler"));
                 JobQueue = Composer.Instance.GetExportedValueByTypeName<IJobQueueHandler>(Config.Get("job-queue-handler"));
-                Api = Composer.Instance.GetExportedValueByTypeName<IApi>(Config.Get("api-handler"));
             }
             catch (CompositionException compositionException)
             { Log.Error("Engine.Main(): Failed to load library: " + compositionException);
@@ -211,6 +211,7 @@ namespace QuantConnect.Lean.Engine
             //Setup packeting, queue and controls system: These don't do much locally.
             Api.Initialize();
             Notify.Initialize();
+            JobQueue.Initialize();
 
             //Start monitoring the backtest active status:
             var statusPingThread = new Thread(StateCheck.Ping.Run);
