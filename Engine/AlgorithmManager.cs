@@ -18,7 +18,6 @@
 **********************************************************/
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using Fasterflect;
 using QuantConnect.Algorithm;
@@ -52,7 +51,6 @@ namespace QuantConnect.Lean.Engine
         private static string _algorithmId = "";
 
         private static long _dataPointCount;
-        private static readonly Stopwatch _stopwatch = new Stopwatch();
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -106,12 +104,11 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Gets the number of data points processed per second
         /// </summary>
-        public static double DataPointsPerSecond
+        public static double DataPoints
         {
             get
             {
-                if (_stopwatch == null) return 0;
-                return _dataPointCount/_stopwatch.Elapsed.TotalSeconds;
+                return _dataPointCount;
             }
         }
 
@@ -194,9 +191,6 @@ namespace QuantConnect.Lean.Engine
                 }
             }
 
-            //Start recording how long we run for so we can compute ticks/second
-            _stopwatch.Start();
-
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Debug("AlgorithmManager.Run(): Algorithm initialized, launching time loop.");
             foreach (var newData in DataStream.GetData(feed, setup.StartingDate)) 
@@ -213,7 +207,6 @@ namespace QuantConnect.Lean.Engine
                     //Execute with TimeLimit Monitor:
                     if (Isolator.IsCancellationRequested)
                     {
-                        _stopwatch.Stop();
                         return;
                     }
 
@@ -284,7 +277,6 @@ namespace QuantConnect.Lean.Engine
                             }
                             catch (Exception err)
                             {
-                                _stopwatch.Stop();
                                 algorithm.RunTimeError = err;
                                 _algorithmState = AlgorithmStatus.RuntimeError;
                                 Log.Error("AlgorithmManager.Run(): RuntimeError: Consolidators update: " + err.Message);
@@ -340,7 +332,6 @@ namespace QuantConnect.Lean.Engine
                                     } 
                                     catch (Exception err) 
                                     {
-                                        _stopwatch.Stop();
                                         algorithm.RunTimeError = err;
                                         _algorithmState = AlgorithmStatus.RuntimeError;
                                         Log.Debug("AlgorithmManager.Run(): RuntimeError: Custom Data: " + err.Message + " STACK >>> " + err.StackTrace);
@@ -362,7 +353,6 @@ namespace QuantConnect.Lean.Engine
                         }
                         catch (Exception err) 
                         {
-                            _stopwatch.Stop();
                             algorithm.RunTimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
                             Log.Debug("AlgorithmManager.Run(): RuntimeError: Backwards Compatibility Mode: " + err.Message + " STACK >>> " + err.StackTrace);
@@ -379,7 +369,6 @@ namespace QuantConnect.Lean.Engine
                         } 
                         catch (Exception err)
                         {
-                            _stopwatch.Stop();
                             algorithm.RunTimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
                             Log.Debug("AlgorithmManager.Run(): RuntimeError: New Style Mode: " + err.Message + " STACK >>> " + err.StackTrace);
@@ -409,7 +398,6 @@ namespace QuantConnect.Lean.Engine
             }
             catch (Exception err)
             {
-                _stopwatch.Stop();
                 _algorithmState = AlgorithmStatus.RuntimeError;
                 algorithm.RunTimeError = new Exception("Error running OnEndOfAlgorithm(): " + err.Message, err.InnerException);
                 Log.Debug("AlgorithmManager.OnEndOfAlgorithm(): " + err.Message + " STACK >>> " + err.StackTrace);
