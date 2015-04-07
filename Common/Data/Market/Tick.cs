@@ -80,14 +80,14 @@ namespace QuantConnect.Data.Market
             }
         }
 
-        // In Base Class: Last Trade Tick:
-        //public decimal Price = 0;
+        //In Base Class: Alias of Closing:
+        //public decimal Price;
 
-        // In Base Class: Ticker String Symbol of the Asset
-        //public string Symbol = "";
+        //Symbol of Asset.
+        //In Base Class: public string Symbol;
 
-        // In Base Class: DateTime of this SnapShot
-        //public DateTime Time = new DateTime();
+        //In Base Class: DateTime Of this TradeBar
+        //public DateTime Time;
 
         /******************************************************** 
         * CLASS CONSTRUCTORS
@@ -259,7 +259,6 @@ namespace QuantConnect.Data.Market
             return _tick;
         }
 
-
         /// <summary>
         /// Get source for tick data feed - not used with QuantConnect data sources implementation.
         /// </summary>
@@ -295,6 +294,7 @@ namespace QuantConnect.Data.Market
                     source = "";
                     break;
             }
+
             return source;
         }
 

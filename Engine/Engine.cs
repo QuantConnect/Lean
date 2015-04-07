@@ -182,17 +182,12 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public static void Main(string[] args) 
         {
-            // Pick an implementation of ILogHandler for the application
-            // Using file log handler
-            Log.LogHandler = IsLocal
-                ? (ILogHandler)new ConsoleLogHandler() 
-                : new FileLogHandler("log.txt");
-
             //Initialize:
             var algorithmPath = "";
             AlgorithmNodePacket job = null;
             var timer = Stopwatch.StartNew();
             var algorithm = default(IAlgorithm);
+            Log.LogHandler = new CompositeLogHandler();
             _version = DateTime.ParseExact(Config.Get("version", DateTime.Now.ToString(DateFormat.UI)), DateFormat.UI, CultureInfo.InvariantCulture);
             
             //Name thread for the profiler:

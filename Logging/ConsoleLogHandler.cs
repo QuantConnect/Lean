@@ -23,7 +23,10 @@ namespace QuantConnect.Logging
     {
         private const string DateFormat = "yyyyMMdd HH:mm:ss";
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Write error message to log
+        /// </summary>
+        /// <param name="text">The error text to log</param>
         public void Error(string text)
         {
             var original = Console.ForegroundColor;
@@ -32,19 +35,28 @@ namespace QuantConnect.Logging
             Console.ForegroundColor = original;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Write debug message to log
+        /// </summary>
+        /// <param name="text">The debug text to log</param>
         public void Debug(string text)
         {
             Console.WriteLine(DateTime.Now.ToString(DateFormat) + " DEBUGGING :: " + text);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Write debug message to log
+        /// </summary>
+        /// <param name="text">The trace text to log</param>
         public void Trace(string text)
         {
             Console.WriteLine(DateTime.Now.ToString(DateFormat) + " Trace:: " + text);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
         }
