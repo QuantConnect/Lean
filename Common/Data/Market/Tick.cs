@@ -80,6 +80,15 @@ namespace QuantConnect.Data.Market
             }
         }
 
+        //In Base Class: Alias of Closing:
+        //public decimal Price;
+
+        //Symbol of Asset.
+        //In Base Class: public string Symbol;
+
+        //In Base Class: DateTime Of this TradeBar
+        //public DateTime Time;
+
         /********************************************************
         * CLASS CONSTRUCTORS
         *********************************************************/
