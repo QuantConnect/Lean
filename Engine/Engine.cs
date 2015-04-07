@@ -184,15 +184,20 @@ namespace QuantConnect.Lean.Engine
         {
             //Initialize:
             var algorithmPath = "";
+            string mode = "RELEASE";
             AlgorithmNodePacket job = null;
             var timer = Stopwatch.StartNew();
             var algorithm = default(IAlgorithm);
             Log.LogHandler = new CompositeLogHandler();
             _version = DateTime.ParseExact(Config.Get("version", DateTime.Now.ToString(DateFormat.UI)), DateFormat.UI, CultureInfo.InvariantCulture);
-            
+       
+            #if DEBUG 
+                mode = "DEBUG";
+            #endif
+
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
-            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + _version);
+            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + _version + " Mode: " + mode);
             Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
             Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + +OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
 
@@ -252,9 +257,6 @@ namespace QuantConnect.Lean.Engine
                     //-> Initialize messaging system
                     Notify.SetChannel(job.Channel);
 
-                    //-> Reset the backtest stopwatch; we're now running the algorithm.
-                    timer.Restart();
-
                     //-> Create SetupHandler to configure internal algorithm state:
                     SetupHandler = GetSetupHandler(job.SetupEndpoint);
 
@@ -291,6 +293,9 @@ namespace QuantConnect.Lean.Engine
                     //-> Using the job + initialization: load the designated handlers:
                     if (initializeComplete)
                     {
+                        //-> Reset the backtest stopwatch; we're now running the algorithm.
+                        timer.Restart();
+
                         //Set algorithm as locked; set it to live mode if we're trading live, and set it to locked for no further updates.
                         algorithm.SetAlgorithmId(job.AlgorithmId);
                         algorithm.SetLiveMode(LiveMode);
@@ -409,8 +414,9 @@ namespace QuantConnect.Lean.Engine
                             }
 
                             //Diagnostics Completed, Send Result Packet:
-                            ResultHandler.DebugMessage(string.Format("Algorithm Id:({0}) completed analysis in {1} seconds at {2}k data points per second", 
-                                job.AlgorithmId, timer.Elapsed.TotalSeconds.ToString("F2"), (int)AlgorithmManager.DataPointsPerSecond/1000));
+                            ResultHandler.DebugMessage(string.Format("Algorithm Id:({0}) completed in {1} seconds at {2}k data points per second. Processing total of {3} data points.",
+                                job.AlgorithmId, timer.Elapsed.TotalSeconds.ToString("F2"), (((int)AlgorithmManager.DataPoints / 1000) / timer.Elapsed.TotalSeconds).ToString("F0"), AlgorithmManager.DataPoints.ToString("N0")));
+
                             ResultHandler.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, statistics, banner);
                         }
                         catch (Exception err)
