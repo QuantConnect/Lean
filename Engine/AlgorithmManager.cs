@@ -18,6 +18,7 @@
 **********************************************************/
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using Fasterflect;
 using QuantConnect.Algorithm;
@@ -49,6 +50,9 @@ namespace QuantConnect.Lean.Engine
         private static AlgorithmStatus _algorithmState = AlgorithmStatus.Running;
         private static readonly object _lock = new object();
         private static string _algorithmId = "";
+
+        private static long _dataPointCount;
+        private static readonly Stopwatch _stopwatch = new Stopwatch();
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -99,6 +103,18 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
+        /// <summary>
+        /// Gets the number of data points processed per second
+        /// </summary>
+        public static double DataPointsPerSecond
+        {
+            get
+            {
+                if (_stopwatch == null) return 0;
+                return _dataPointCount/_stopwatch.Elapsed.TotalSeconds;
+            }
+        }
+
         /******************************************************** 
         * CLASS METHODS
         *********************************************************/
@@ -116,6 +132,7 @@ namespace QuantConnect.Lean.Engine
         public static void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, ISetupHandler setup, IRealTimeHandler realtime) 
         {
             //Initialize:
+            _dataPointCount = 0;
             var backwardsCompatibilityMode = false;
             var tradebarsType = typeof (TradeBars);
             var ticksType = typeof(Ticks);
@@ -163,7 +180,7 @@ namespace QuantConnect.Lean.Engine
                     //Get the matching method for this event handler - e.g. public void OnData(Quandl data) { .. }
                     var genericMethod = (algorithm.GetType()).GetMethod("OnData", new[] { config.Type });
 
-                    //Is we already have this Type-handler then don't add it to invokers again.
+                    //If we already have this Type-handler then don't add it to invokers again.
                     if (methodInvokers.ContainsKey(config.Type)) continue;
 
                     //If we couldnt find the event handler, let the user know we can't fire that event.
@@ -176,6 +193,9 @@ namespace QuantConnect.Lean.Engine
                     methodInvokers.Add(config.Type, genericMethod.DelegateForCallMethod());
                 }
             }
+
+            //Start recording how long we run for so we can compute ticks/second
+            _stopwatch.Start();
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Debug("AlgorithmManager.Run(): Algorithm initialized, launching time loop.");
@@ -191,7 +211,11 @@ namespace QuantConnect.Lean.Engine
                     _frontier = time;
 
                     //Execute with TimeLimit Monitor:
-                    if (Isolator.IsCancellationRequested) return;
+                    if (Isolator.IsCancellationRequested)
+                    {
+                        _stopwatch.Stop();
+                        return;
+                    }
 
                     //Fire EOD if the time packet we just processed is greater 
                     if (backtestMode)
@@ -241,6 +265,9 @@ namespace QuantConnect.Lean.Engine
                         var dataPoints = newData[time][i];
                         var config = feed.Subscriptions[i];
 
+                        //Keep track of how many data points we've processed
+                        _dataPointCount += dataPoints.Count;
+
                         //Create TradeBars Unified Data --> OR --> invoke generic data event. One loop.
                         foreach (var dataPoint in dataPoints) 
                         {
@@ -257,6 +284,7 @@ namespace QuantConnect.Lean.Engine
                             }
                             catch (Exception err)
                             {
+                                _stopwatch.Stop();
                                 algorithm.RunTimeError = err;
                                 _algorithmState = AlgorithmStatus.RuntimeError;
                                 Log.Error("AlgorithmManager.Run(): RuntimeError: Consolidators update: " + err.Message);
@@ -312,6 +340,7 @@ namespace QuantConnect.Lean.Engine
                                     } 
                                     catch (Exception err) 
                                     {
+                                        _stopwatch.Stop();
                                         algorithm.RunTimeError = err;
                                         _algorithmState = AlgorithmStatus.RuntimeError;
                                         Log.Debug("AlgorithmManager.Run(): RuntimeError: Custom Data: " + err.Message + " STACK >>> " + err.StackTrace);
@@ -333,6 +362,7 @@ namespace QuantConnect.Lean.Engine
                         }
                         catch (Exception err) 
                         {
+                            _stopwatch.Stop();
                             algorithm.RunTimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
                             Log.Debug("AlgorithmManager.Run(): RuntimeError: Backwards Compatibility Mode: " + err.Message + " STACK >>> " + err.StackTrace);
@@ -349,6 +379,7 @@ namespace QuantConnect.Lean.Engine
                         } 
                         catch (Exception err)
                         {
+                            _stopwatch.Stop();
                             algorithm.RunTimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
                             Log.Debug("AlgorithmManager.Run(): RuntimeError: New Style Mode: " + err.Message + " STACK >>> " + err.StackTrace);
@@ -378,6 +409,7 @@ namespace QuantConnect.Lean.Engine
             }
             catch (Exception err)
             {
+                _stopwatch.Stop();
                 _algorithmState = AlgorithmStatus.RuntimeError;
                 algorithm.RunTimeError = new Exception("Error running OnEndOfAlgorithm(): " + err.Message, err.InnerException);
                 Log.Debug("AlgorithmManager.OnEndOfAlgorithm(): " + err.Message + " STACK >>> " + err.StackTrace);
