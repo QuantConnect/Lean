@@ -13,12 +13,9 @@
  * limitations under the License.
 */
 using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Globalization;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Xml.Linq;
-using System.Xml.Serialization;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
@@ -47,7 +44,9 @@ namespace QuantConnect.Tests.Common.Securities
                 x.Get<int>("FillQuantity"))
                 ).ToList();
 
-            var equity = XDocument.Load(equityFile).Descendants("decimal").Select(x => decimal.Parse(x.Value)).ToList();
+            var equity = XDocument.Load(equityFile).Descendants("decimal")
+                .Select(x => decimal.Parse(x.Value, CultureInfo.InvariantCulture))
+                .ToList();
 
             Assert.AreEqual(fills.Count + 1, equity.Count);
 
