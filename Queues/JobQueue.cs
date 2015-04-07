@@ -15,11 +15,8 @@
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
-using System;
-using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Configuration;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
