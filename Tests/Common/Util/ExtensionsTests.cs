@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 
 namespace QuantConnect.Tests.Common.Util
@@ -38,6 +39,14 @@ namespace QuantConnect.Tests.Common.Util
         {
             Assert.IsTrue(typeof(Derived1).IsSubclassOfGeneric(typeof(Super<>)));
             Assert.IsTrue(typeof(Derived2).IsSubclassOfGeneric(typeof(Super<>)));
+        }
+
+        [Test]
+        public void DateTimeRoundDownFullDayDoesntRoundDownByDay()
+        {
+            var date = new DateTime(2000, 01, 01);
+            var rounded = date.RoundDown(TimeSpan.FromDays(1));
+            Assert.AreEqual(date, rounded);
         }
 
         private class Super<T>
