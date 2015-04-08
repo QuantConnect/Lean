@@ -24,9 +24,9 @@ namespace QuantConnect.Securities
     /// </summary>
     public class Cash
     {
-        private readonly bool _isBaseCurrency;
-        private readonly int _subscriptionIndex;
-        private readonly bool _invertRealTimePrice;
+        private int _subscriptionIndex;
+        private bool _invertRealTimePrice;
+        private bool _isBaseCurrency;
 
         /// <summary>
         /// Gets the symbol used to represent this cash
@@ -55,42 +55,13 @@ namespace QuantConnect.Securities
         /// Initializes a new instance of the <see cref="Cash"/> class
         /// </summary>
         /// <param name="symbol">The symbol used to represent this cash</param>
-        /// <param name="subscriptions">The subscription manager used to resolve forex pair for value conversion data</param>
-        public Cash(string symbol, SubscriptionManager subscriptions)
+        /// <param name="quantity">The quantity of this currency held</param>
+        /// <param name="conversionRate">The initial conversion rate of this currency into the <see cref="CashBook.BaseCurrency"/></param>
+        public Cash(string symbol, decimal quantity, decimal conversionRate)
         {
+            Quantity = quantity;
+            ConversionRate = conversionRate;
             Symbol = symbol.ToUpper();
-            if (Symbol == CashBook.BaseCurrency)
-            {
-                _isBaseCurrency = true;
-                ConversionRate = 1.0m;
-                return;
-            }
-            
-            // we require a subscription that converts this into the base currency
-            string normal = Symbol + CashBook.BaseCurrency;
-            string invert = CashBook.BaseCurrency + Symbol;
-            for (int i = 0; i < subscriptions.Subscriptions.Count; i++)
-            {
-                var config = subscriptions.Subscriptions[i];
-                if (config.Security != SecurityType.Forex)
-                {
-                    continue;
-                }
-                if (config.Symbol == normal)
-                {
-                    _subscriptionIndex = i;
-                    return;
-                }
-                if (config.Symbol == invert)
-                {
-                    _subscriptionIndex = i;
-                    _invertRealTimePrice = true;
-                    return;
-                }
-            }
-
-            // if this still hasn't been set then it's an error condition
-            throw new ArgumentException(string.Format("In order to maintain cash in {0} you are required to add a subscription for Forex pair {0}{1} or {1}{0}", Symbol, CashBook.BaseCurrency));
         }
 
         /// <summary>
@@ -125,6 +96,64 @@ namespace QuantConnect.Securities
             }
 
             ConversionRate = rate;
+        }
+
+        /// <summary>
+        /// Ensures that we have a data feed to conver this currency into the base currency.
+        /// This will add a subscription at the lowest resolution if one is not found.
+        /// </summary>
+        /// <param name="subscriptions">The subscription manager used for searching and adding subscriptions</param>
+        /// <param name="securities"></param>
+        public void EnsureCurrencyDataFeed(SubscriptionManager subscriptions, SecurityManager securities)
+        {
+            if (Symbol == CashBook.BaseCurrency)
+            {
+                _isBaseCurrency = true;
+                ConversionRate = 1.0m;
+                return;
+            }
+
+            // we require a subscription that converts this into the base currency
+            string normal = Symbol + CashBook.BaseCurrency;
+            string invert = CashBook.BaseCurrency + Symbol;
+            for (int i = 0; i < subscriptions.Subscriptions.Count; i++)
+            {
+                var config = subscriptions.Subscriptions[i];
+                if (config.Security != SecurityType.Forex)
+                {
+                    continue;
+                }
+                if (config.Symbol == normal)
+                {
+                    _subscriptionIndex = i;
+                    return;
+                }
+                if (config.Symbol == invert)
+                {
+                    _subscriptionIndex = i;
+                    _invertRealTimePrice = true;
+                    return;
+                }
+            }
+
+            // if we've made it here we didn't find a subscription, so we'll need to add one
+            var currencyPairs = Forex.Forex.CurrencyPairs;
+            var minimumResolution = subscriptions.Subscriptions.Min(x => x.Resolution);
+            for (int i = 0; i < currencyPairs.Count; i++)
+            {
+                var symbol = currencyPairs[i];
+                if (symbol == normal || symbol == invert)
+                {
+                    _subscriptionIndex = subscriptions.Subscriptions.Count;
+                    _invertRealTimePrice = symbol == invert;
+                    subscriptions.Add(SecurityType.Forex, symbol, minimumResolution, true, false);
+                    securities.Add(symbol, SecurityType.Forex, minimumResolution, true, 1m, false);
+                    return;
+                }
+            }
+
+            // if this still hasn't been set then it's an error condition
+            throw new ArgumentException(string.Format("In order to maintain cash in {0} you are required to add a subscription for Forex pair {0}{1} or {1}{0}", Symbol, CashBook.BaseCurrency));
         }
     }
 }

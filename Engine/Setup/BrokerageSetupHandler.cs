@@ -201,6 +201,9 @@ namespace QuantConnect.Lean.Engine.Setup
                     }
                     algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int)holding.Quantity);
                 }
+
+                // call this after we've initialized everything from the brokerage since we may have added some holdings/currencies
+                algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.SubscriptionManager, algorithm.Securities);
             }
             catch (Exception err)
             {

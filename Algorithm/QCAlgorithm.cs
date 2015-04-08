@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm
 
             Securities = new SecurityManager();
             Transactions = new SecurityTransactionManager(Securities);
-            Portfolio = new SecurityPortfolioManager(Securities, Transactions, new CashBook(SubscriptionManager));
+            Portfolio = new SecurityPortfolioManager(Securities, Transactions, new CashBook());
             Notify = new NotificationManager(false); // Notification manager defaults to disabled.
 
             //Initialise Algorithm RunMode to Series - Parallel Mode deprecated:

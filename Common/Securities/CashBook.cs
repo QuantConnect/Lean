@@ -33,7 +33,6 @@ namespace QuantConnect.Securities
         public const string BaseCurrency = "USD";
 
         private readonly Dictionary<string, Cash> _storage;
-        private readonly SubscriptionManager _subscriptionManager;
 
         /// <summary>
         /// Gets the total value of the cash book in units of the base currency
@@ -46,12 +45,10 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Initializes a new instance of the <see cref="CashBook"/> class.
         /// </summary>
-        /// <param name="subscriptionManager">The subscription manager used to look up subscription configurations</param>
-        public CashBook(SubscriptionManager subscriptionManager)
+        public CashBook()
         {
-            _subscriptionManager = subscriptionManager;
             _storage = new Dictionary<string, Cash>();
-            _storage.Add(BaseCurrency, new Cash(BaseCurrency, subscriptionManager));
+            _storage.Add(BaseCurrency, new Cash(BaseCurrency, 0, 1.0m));
         }
 
         /// <summary>
@@ -75,9 +72,21 @@ namespace QuantConnect.Securities
         /// portfolio value/starting capital impact caused by this currency position.</param>
         public void Add(string symbol, decimal quantity, decimal conversionRate)
         {
-            var cash = new Cash(symbol, _subscriptionManager) {Quantity = quantity};
-            cash.SetConversionRate(conversionRate);
+            var cash = new Cash(symbol, quantity, conversionRate);
             _storage.Add(symbol, cash);
+        }
+
+        /// <summary>
+        /// Checks the current subscriptions and adds necessary currency pair feeds to provide real time conversion data
+        /// </summary>
+        /// <param name="subscriptions"></param>
+        /// <param name="securities"></param>
+        public void EnsureCurrencyDataFeeds(SubscriptionManager subscriptions, SecurityManager securities)
+        {
+            foreach (var cash in _storage.Values)
+            {
+                cash.EnsureCurrencyDataFeed(subscriptions, securities);
+            }
         }
 
         #region IDictionary Implementation

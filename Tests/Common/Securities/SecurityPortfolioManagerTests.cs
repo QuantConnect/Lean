@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Common.Securities
             var subscriptions = new SubscriptionManager();
             securities.Add("CASH", SecurityType.Base, leverage: 10);
             var transactions = new SecurityTransactionManager(securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions, new CashBook(subscriptions));
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new CashBook());
             portfolio.SetCash(equity[0]);
 
             for (int i = 0; i < fills.Count; i++)

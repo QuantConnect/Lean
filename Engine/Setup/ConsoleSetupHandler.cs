@@ -120,6 +120,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     //Setup Base Algorithm:
                     algorithm.Initialize();
+                    algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.SubscriptionManager, algorithm.Securities);
 
                     //Construct the backtest job packet:
                     backtestJob.PeriodStart = algorithm.StartDate;
