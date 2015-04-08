@@ -65,7 +65,7 @@ namespace QuantConnect.Securities
             Securities = securityManager;
             Transactions = transactions;
             CashBook = cashBook;
-            _baseCurrencyCash = CashBook[QuantConnect.Securities.Cash.BaseCurrency];
+            _baseCurrencyCash = CashBook[CashBook.BaseCurrency];
         }
 
         /******************************************************** 
@@ -248,7 +248,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return _baseCurrencyCash.Quantity;
+                return CashBook.ValueInBaseCurrency;
             }
         }
 
@@ -342,7 +342,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return Cash + TotalUnrealisedProfit + TotalUnleveredAbsoluteHoldingsCost;
+                return CashBook.ValueInBaseCurrency + TotalUnrealisedProfit + TotalUnleveredAbsoluteHoldingsCost;
             }
         }
 
@@ -424,7 +424,8 @@ namespace QuantConnect.Securities
             //Each asset has different leverage values, so affects our cash position in different ways.
             var holdings = Securities[symbol].Holdings;
 
-            if (direction == OrderDirection.Hold || !Invested) return Cash;
+            var cashValue = CashBook.ValueInBaseCurrency;
+            if (direction == OrderDirection.Hold || !Invested) return cashValue;
             //Log.Debug("SecurityPortfolioManager.GetFreeCash(): Direction: " + direction.ToString());
 
 
@@ -435,9 +436,9 @@ namespace QuantConnect.Securities
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        return Cash;
+                        return cashValue;
                     case OrderDirection.Sell:
-                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + Cash;
+                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + cashValue;
                 }
             }
             else if (Securities[symbol].Holdings.IsShort)
@@ -445,14 +446,14 @@ namespace QuantConnect.Securities
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + Cash;
+                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + cashValue;
                     case OrderDirection.Sell:
-                        return Cash;
+                        return cashValue;
                 }
             }
 
             //No holdings, return cash
-            return Cash;
+            return cashValue;
         }
 
 

@@ -24,11 +24,6 @@ namespace QuantConnect.Securities
     /// </summary>
     public class Cash
     {
-        /// <summary>
-        /// Gets the base currency used
-        /// </summary>
-        public const string BaseCurrency = "USD";
-
         private readonly bool _isBaseCurrency;
         private readonly int _subscriptionIndex;
         private readonly bool _invertRealTimePrice;
@@ -64,16 +59,16 @@ namespace QuantConnect.Securities
         public Cash(string symbol, SubscriptionManager subscriptions)
         {
             Symbol = symbol.ToUpper();
-            if (Symbol == BaseCurrency)
+            if (Symbol == CashBook.BaseCurrency)
             {
                 _isBaseCurrency = true;
                 ConversionRate = 1.0m;
                 return;
             }
             
-            // we require a subscription that converts this into USD
-            string normal = Symbol + BaseCurrency;
-            string invert = BaseCurrency + Symbol;
+            // we require a subscription that converts this into the base currency
+            string normal = Symbol + CashBook.BaseCurrency;
+            string invert = CashBook.BaseCurrency + Symbol;
             for (int i = 0; i < subscriptions.Subscriptions.Count; i++)
             {
                 var config = subscriptions.Subscriptions[i];
@@ -84,21 +79,27 @@ namespace QuantConnect.Securities
                 if (config.Symbol == normal)
                 {
                     _subscriptionIndex = i;
-                    break;
+                    return;
                 }
                 if (config.Symbol == invert)
                 {
                     _subscriptionIndex = i;
                     _invertRealTimePrice = true;
-                    break;
+                    return;
                 }
             }
 
             // if this still hasn't been set then it's an error condition
-            if (_subscriptionIndex == -1)
-            {
-                throw new ArgumentException(string.Format("In order to maintain cash in {0} you are required to add a subscription for Forex pair {0}{1} or {1}{0}", Symbol, BaseCurrency));
-            }
+            throw new ArgumentException(string.Format("In order to maintain cash in {0} you are required to add a subscription for Forex pair {0}{1} or {1}{0}", Symbol, CashBook.BaseCurrency));
+        }
+
+        /// <summary>
+        /// Sets the <see cref="ConversionRate"/> for this cash into the base currency
+        /// </summary>
+        /// <param name="rate">The new conversion rate</param>
+        public void SetConversionRate(decimal rate)
+        {
+            ConversionRate = rate;
         }
 
         /// <summary>

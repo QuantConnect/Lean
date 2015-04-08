@@ -27,8 +27,21 @@ namespace QuantConnect.Securities
     /// </summary>
     public class CashBook : IDictionary<string, Cash>
     {
+        /// <summary>
+        /// Gets the base currency used
+        /// </summary>
+        public const string BaseCurrency = "USD";
+
         private readonly Dictionary<string, Cash> _storage;
         private readonly SubscriptionManager _subscriptionManager;
+
+        /// <summary>
+        /// Gets the total value of the cash book in units of the base currency
+        /// </summary>
+        public decimal ValueInBaseCurrency
+        {
+            get { return _storage.Values.Sum(x => x.ValueInBaseCurrency); }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CashBook"/> class.
@@ -38,7 +51,7 @@ namespace QuantConnect.Securities
         {
             _subscriptionManager = subscriptionManager;
             _storage = new Dictionary<string, Cash>();
-            _storage.Add(Cash.BaseCurrency, new Cash(Cash.BaseCurrency, subscriptionManager));
+            _storage.Add(BaseCurrency, new Cash(BaseCurrency, subscriptionManager));
         }
 
         /// <summary>
@@ -58,9 +71,12 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="symbol">The symbol used to reference the new cash</param>
         /// <param name="quantity">The amount of new cash to start</param>
-        public void Add(string symbol, decimal quantity)
+        /// <param name="conversionRate">The conversion rate used to determine the initial
+        /// portfolio value/starting capital impact caused by this currency position.</param>
+        public void Add(string symbol, decimal quantity, decimal conversionRate)
         {
             var cash = new Cash(symbol, _subscriptionManager) {Quantity = quantity};
+            cash.SetConversionRate(conversionRate);
             _storage.Add(symbol, cash);
         }
 

@@ -225,7 +225,9 @@ namespace QuantConnect.Lean.Engine
                         {
                             //Sample the portfolio value over time for chart.
                             results.SampleEquity(_previousTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
-                            if (startingPortfolioValue == 0)
+                            
+                            //Check for divide by zero
+                            if (startingPortfolioValue == 0m)
                             {
                                 results.SamplePerformance(_previousTime.Date, 0);
                             }
