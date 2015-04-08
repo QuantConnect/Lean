@@ -42,7 +42,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the conversion rate into base currency
         /// </summary>
-        public decimal ConversionRate { get; private set; }
+        public decimal ConversionRate { get; internal set; }
 
         /// <summary>
         /// Gets the value of this cash in the base currency
@@ -60,6 +60,10 @@ namespace QuantConnect.Securities
         /// <param name="conversionRate">The initial conversion rate of this currency into the <see cref="CashBook.BaseCurrency"/></param>
         public Cash(string symbol, decimal quantity, decimal conversionRate)
         {
+            if (symbol == null || symbol.Length != 3)
+            {
+                throw new ArgumentException("Cash symbols must be exactly 3 characters.");
+            }
             Quantity = quantity;
             ConversionRate = conversionRate;
             Symbol = symbol.ToUpper();
@@ -75,13 +79,13 @@ namespace QuantConnect.Securities
             if (_isBaseCurrency) return;
 
             List<BaseData> realTimePrice;
-            if (!data.TryGetValue(_subscriptionIndex, out realTimePrice) || !realTimePrice.Any())
+            if (!data.TryGetValue(_subscriptionIndex, out realTimePrice) || realTimePrice.Count == 0)
             {
                 // if we don't have data we can't do anything
                 return;
             }
 
-            decimal rate = realTimePrice[0].Value;
+            decimal rate = realTimePrice[realTimePrice.Count - 1].Value;
             if (_invertRealTimePrice)
             {
                 rate = 1/rate;

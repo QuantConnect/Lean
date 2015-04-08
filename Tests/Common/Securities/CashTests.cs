@@ -29,8 +29,22 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void ConstructorCapitalizedSymbol()
         {
-            var cash = new Cash("lower", 0, 0);
-            Assert.AreEqual("LOWER", cash.Symbol);
+            var cash = new Cash("low", 0, 0);
+            Assert.AreEqual("LOW", cash.Symbol);
+        }
+
+        [Test]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Cash symbols must be exactly 3 characters")]
+        public void ConstructorThrowsOnSymbolTooLong()
+        {
+            var cash = new Cash("too long", 0, 0);
+        }
+
+        [Test]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Cash symbols must be exactly 3 characters")]
+        public void ConstructorThrowsOnSymbolTooShort()
+        {
+            var cash = new Cash("s", 0, 0);
         }
 
         [Test]
@@ -51,7 +65,7 @@ namespace QuantConnect.Tests.Common.Securities
             const int quantity = 100;
             const decimal conversionRate = 1/100m;
             var cash = new Cash("JPY", quantity, conversionRate);
-            Assert.AreEqual(1m, cash.ValueInBaseCurrency);
+            Assert.AreEqual(quantity*conversionRate, cash.ValueInBaseCurrency);
         }
 
         [Test]
@@ -62,11 +76,12 @@ namespace QuantConnect.Tests.Common.Securities
             var cash = new Cash("JPY", quantity, conversionRate);
 
             var securities = new SecurityManager();
-            securities.Add("A", Resolution.Minute);
+            securities.Add("ABC", Resolution.Minute);
             var subscriptions = new SubscriptionManager();
-            subscriptions.Add(SecurityType.Equity, "A", Resolution.Minute);
+            subscriptions.Add(SecurityType.Equity, "ABC", Resolution.Minute);
             cash.EnsureCurrencyDataFeed(subscriptions, securities);
             Assert.AreEqual(1, subscriptions.Subscriptions.Count(x => x.Symbol == "USDJPY"));
+            Assert.AreEqual(1, securities.Values.Count(x => x.Symbol == "USDJPY"));
         }
 
         [Test]
@@ -91,12 +106,12 @@ namespace QuantConnect.Tests.Common.Securities
             var cash = new Cash("JPY", quantity, conversionRate);
 
             var subscriptions = new SubscriptionManager();
-            subscriptions.Add(SecurityType.Equity, "A", Resolution.Minute);
-            subscriptions.Add(SecurityType.Equity, "B", minimumResolution);
+            subscriptions.Add(SecurityType.Equity, "ABC", Resolution.Minute);
+            subscriptions.Add(SecurityType.Equity, "BCD", minimumResolution);
 
             var securities = new SecurityManager();
-            securities.Add("A", Resolution.Minute);
-            securities.Add("B", minimumResolution);
+            securities.Add("ABC", Resolution.Minute);
+            securities.Add("BCD", minimumResolution);
 
             cash.EnsureCurrencyDataFeed(subscriptions, securities);
             Assert.AreEqual(minimumResolution, subscriptions.Subscriptions.Single(x => x.Symbol == "USDJPY").Resolution);
@@ -110,11 +125,10 @@ namespace QuantConnect.Tests.Common.Securities
             var cash = new Cash("JPY", quantity, conversionRate);
 
             var subscriptions = new SubscriptionManager();
-            subscriptions.Add(SecurityType.Forex, "A", Resolution.Minute);
-            subscriptions.Add(SecurityType.Forex, "A", Resolution.Minute);
+            subscriptions.Add(SecurityType.Forex, "ABC", Resolution.Minute);
 
             var securities = new SecurityManager();
-            securities.Add("A", Resolution.Minute);
+            securities.Add("ABC", Resolution.Minute);
 
             cash.EnsureCurrencyDataFeed(subscriptions, securities);
             var config = subscriptions.Subscriptions.Single(x => x.Symbol == "USDJPY");

@@ -32,14 +32,14 @@ namespace QuantConnect.Securities
         /// </summary>
         public const string BaseCurrency = "USD";
 
-        private readonly Dictionary<string, Cash> _storage;
+        private readonly Dictionary<string, Cash> _currencies;
 
         /// <summary>
         /// Gets the total value of the cash book in units of the base currency
         /// </summary>
         public decimal ValueInBaseCurrency
         {
-            get { return _storage.Values.Sum(x => x.ValueInBaseCurrency); }
+            get { return _currencies.Values.Sum(x => x.ValueInBaseCurrency); }
         }
 
         /// <summary>
@@ -47,8 +47,8 @@ namespace QuantConnect.Securities
         /// </summary>
         public CashBook()
         {
-            _storage = new Dictionary<string, Cash>();
-            _storage.Add(BaseCurrency, new Cash(BaseCurrency, 0, 1.0m));
+            _currencies = new Dictionary<string, Cash>();
+            _currencies.Add(BaseCurrency, new Cash(BaseCurrency, 0, 1.0m));
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace QuantConnect.Securities
         /// <param name="data">The new, current data</param>
         public void Update(Dictionary<int, List<BaseData>> data)
         {
-            foreach (var cash in _storage.Values)
+            foreach (var cash in _currencies.Values)
             {
                 cash.Update(data);
             }
@@ -73,7 +73,7 @@ namespace QuantConnect.Securities
         public void Add(string symbol, decimal quantity, decimal conversionRate)
         {
             var cash = new Cash(symbol, quantity, conversionRate);
-            _storage.Add(symbol, cash);
+            _currencies.Add(symbol, cash);
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace QuantConnect.Securities
         /// <param name="securities"></param>
         public void EnsureCurrencyDataFeeds(SubscriptionManager subscriptions, SecurityManager securities)
         {
-            foreach (var cash in _storage.Values)
+            foreach (var cash in _currencies.Values)
             {
                 cash.EnsureCurrencyDataFeed(subscriptions, securities);
             }
@@ -93,57 +93,57 @@ namespace QuantConnect.Securities
 
         public int Count
         {
-            get { return _storage.Count; }
+            get { return _currencies.Count; }
         }
 
         public bool IsReadOnly
         {
-            get { return ((IDictionary<string, Cash>) _storage).IsReadOnly; }
+            get { return ((IDictionary<string, Cash>) _currencies).IsReadOnly; }
         }
 
         public void Add(KeyValuePair<string, Cash> item)
         {
-            _storage.Add(item.Key, item.Value);
+            _currencies.Add(item.Key, item.Value);
         }
 
         public void Add(string key, Cash value)
         {
-            _storage.Add(key, value);
+            _currencies.Add(key, value);
         }
 
         public void Clear()
         {
-            _storage.Clear();
+            _currencies.Clear();
         }
 
         public bool Remove(string key)
         {
-            return _storage.Remove(key);
+            return _currencies.Remove(key);
         }
 
         public bool Remove(KeyValuePair<string, Cash> item)
         {
-            return _storage.Remove(item.Key);
+            return _currencies.Remove(item.Key);
         }
 
         public bool ContainsKey(string key)
         {
-            return _storage.ContainsKey(key);
+            return _currencies.ContainsKey(key);
         }
 
         public bool TryGetValue(string key, out Cash value)
         {
-            return _storage.TryGetValue(key, out value);
+            return _currencies.TryGetValue(key, out value);
         }
 
         public bool Contains(KeyValuePair<string, Cash> item)
         {
-            return _storage.Contains(item);
+            return _currencies.Contains(item);
         }
 
         public void CopyTo(KeyValuePair<string, Cash>[] array, int arrayIndex)
         {
-            ((IDictionary<string, Cash>) _storage).CopyTo(array, arrayIndex);
+            ((IDictionary<string, Cash>) _currencies).CopyTo(array, arrayIndex);
         }
 
         public Cash this[string symbol]
@@ -151,33 +151,33 @@ namespace QuantConnect.Securities
             get
             {
                 Cash cash;
-                if (!_storage.TryGetValue(symbol, out cash))
+                if (!_currencies.TryGetValue(symbol, out cash))
                 {
                     throw new Exception("This cash symbol (" + symbol + ") was not found in your cash book.");
                 }
                 return cash;
             }
-            set { _storage[symbol] = value; }
+            set { _currencies[symbol] = value; }
         }
 
         public ICollection<string> Keys
         {
-            get { return _storage.Keys; }
+            get { return _currencies.Keys; }
         }
 
         public ICollection<Cash> Values
         {
-            get { return _storage.Values; }
+            get { return _currencies.Values; }
         }
 
         public IEnumerator<KeyValuePair<string, Cash>> GetEnumerator()
         {
-            return _storage.GetEnumerator();
+            return _currencies.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable) _storage).GetEnumerator();
+            return ((IEnumerable) _currencies).GetEnumerator();
         }
 
         #endregion

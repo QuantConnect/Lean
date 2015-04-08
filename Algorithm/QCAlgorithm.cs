@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm
 
             Securities = new SecurityManager();
             Transactions = new SecurityTransactionManager(Securities);
-            Portfolio = new SecurityPortfolioManager(Securities, Transactions, new CashBook());
+            Portfolio = new SecurityPortfolioManager(Securities, Transactions);
             Notify = new NotificationManager(false); // Notification manager defaults to disabled.
 
             //Initialise Algorithm RunMode to Series - Parallel Mode deprecated:
@@ -423,13 +423,31 @@ namespace QuantConnect.Algorithm
         /// and replaced with the actual cash of your brokerage account.
         /// </summary>
         /// <param name="startingCash">Starting cash for the strategy backtest</param>
-        public void SetCash(decimal startingCash) 
+        public void SetCash(decimal startingCash)
         {
-            if (!_locked) 
+            if (!_locked)
             {
                 Portfolio.SetCash(startingCash);
             }
-            else 
+            else
+            {
+                throw new Exception("Algorithm.SetCash(): Cannot change cash available after algorithm initialized.");
+            }
+        }
+
+        /// <summary>
+        /// Set the cash for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The cash symbol to set</param>
+        /// <param name="startingCash">Decimal cash value of portfolio</param>
+        /// <param name="conversionRate">The current conversion rate for the</param>
+        public void SetCash(string symbol, decimal startingCash, decimal conversionRate)
+        {
+            if (!_locked)
+            {
+                Portfolio.SetCash(symbol, startingCash, conversionRate);
+            }
+            else
             {
                 throw new Exception("Algorithm.SetCash(): Cannot change cash available after algorithm initialized.");
             }

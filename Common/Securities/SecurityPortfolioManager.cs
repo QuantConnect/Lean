@@ -60,11 +60,11 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Initialise security portfolio manager.
         /// </summary>
-        public SecurityPortfolioManager(SecurityManager securityManager, SecurityTransactionManager transactions, CashBook cashBook) 
+        public SecurityPortfolioManager(SecurityManager securityManager, SecurityTransactionManager transactions) 
         {
             Securities = securityManager;
             Transactions = transactions;
-            CashBook = cashBook;
+            CashBook = new CashBook();
             _baseCurrencyCash = CashBook[CashBook.BaseCurrency];
         }
 
@@ -403,12 +403,32 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Set the cash this algorithm is to manage.
+        /// Set the base currrency cash this algorithm is to manage.
         /// </summary>
         /// <param name="cash">Decimal cash value of portfolio</param>
         public void SetCash(decimal cash) 
         {
             _baseCurrencyCash.Quantity = cash;
+        }
+
+        /// <summary>
+        /// Set the cash for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The cash symbol to set</param>
+        /// <param name="cash">Decimal cash value of portfolio</param>
+        /// <param name="conversionRate">The current conversion rate for the</param>
+        public void SetCash(string symbol, decimal cash, decimal conversionRate)
+        {
+            Cash item;
+            if (CashBook.TryGetValue(symbol, out item))
+            {
+                item.Quantity = cash;
+                item.ConversionRate = conversionRate;
+            }
+            else
+            {
+                CashBook.Add(symbol, cash, conversionRate);
+            }
         }
 
         /// <summary>
