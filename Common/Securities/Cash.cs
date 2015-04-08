@@ -66,15 +66,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Sets the <see cref="ConversionRate"/> for this cash into the base currency
-        /// </summary>
-        /// <param name="rate">The new conversion rate</param>
-        public void SetConversionRate(decimal rate)
-        {
-            ConversionRate = rate;
-        }
-
-        /// <summary>
         /// Update the current conversion rate
         /// </summary>
         /// <param name="data">The list of real time prices directly from the data feed</param>
