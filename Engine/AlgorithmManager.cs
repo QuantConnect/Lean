@@ -255,7 +255,7 @@ namespace QuantConnect.Lean.Engine
                     var newBars = new TradeBars(time);
                     var newTicks = new Ticks(time);
 
-                    //Invoke all non-tradebars, non-ticks methods:
+                    //Invoke all non-tradebars, non-ticks methods and build up the TradeBars and Ticks dictionaries
                     // --> i == Subscription Configuration Index, so we don't need to compare types.
                     foreach (var i in newData[time].Keys) 
                     {    
@@ -265,6 +265,12 @@ namespace QuantConnect.Lean.Engine
 
                         //Keep track of how many data points we've processed
                         _dataPointCount += dataPoints.Count;
+
+                        //We don't want to pump data that we added just for currency conversions
+                        if (config.IsCurrencyConversionFeed)
+                        {
+                            continue;
+                        }
 
                         //Create TradeBars Unified Data --> OR --> invoke generic data event. One loop.
                         foreach (var dataPoint in dataPoints) 

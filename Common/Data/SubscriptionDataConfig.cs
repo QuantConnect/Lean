@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Data
 {
@@ -53,6 +54,8 @@ namespace QuantConnect.Data
         public readonly bool IsTradeBar;
         /// True if the data type has a Volume property, even if it is dynamic data
         public readonly bool HasVolume;
+        /// True if this subscription was added for the sole purpose of providing currency conversion rates via <see cref="CashBook.EnsureCurrencyDataFeeds"/>
+        public readonly bool IsCurrencyConversionFeed;
 
         /// Price Scaling Factor:
         public decimal PriceScaleFactor;
@@ -73,7 +76,7 @@ namespace QuantConnect.Data
         /// <param name="resolution">Resolution of the asset we're requesting</param>
         /// <param name="fillForward">Fill in gaps with historical data</param>
         /// <param name="extendedHours">Equities only - send in data from 4am - 8pm</param>
-        public SubscriptionDataConfig(Type objectType, SecurityType securityType, string symbol, Resolution resolution, bool fillForward, bool extendedHours, bool isTradeBar, bool hasVolume)
+        public SubscriptionDataConfig(Type objectType, SecurityType securityType, string symbol, Resolution resolution, bool fillForward, bool extendedHours, bool isTradeBar, bool hasVolume, bool isCurrencyConversionFeed)
         {
             Type = objectType;
             Security = securityType;
@@ -85,6 +88,7 @@ namespace QuantConnect.Data
             HasVolume = hasVolume;
             PriceScaleFactor = 1;
             MappedSymbol = symbol;
+            IsCurrencyConversionFeed = isCurrencyConversionFeed;
             Consolidators = new List<IDataConsolidator>();
 
             switch (resolution)

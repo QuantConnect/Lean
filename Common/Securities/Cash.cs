@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Securities
 {
@@ -139,14 +140,16 @@ namespace QuantConnect.Securities
             // if we've made it here we didn't find a subscription, so we'll need to add one
             var currencyPairs = Forex.Forex.CurrencyPairs;
             var minimumResolution = subscriptions.Subscriptions.Min(x => x.Resolution);
-            for (int i = 0; i < currencyPairs.Count; i++)
+            var objectType = minimumResolution == Resolution.Tick ? typeof (Tick) : typeof (TradeBar);
+            var isTradeBar = objectType == typeof (TradeBar);
+            foreach (var symbol in currencyPairs)
             {
-                var symbol = currencyPairs[i];
                 if (symbol == normal || symbol == invert)
                 {
-                    _subscriptionIndex = subscriptions.Subscriptions.Count;
                     _invertRealTimePrice = symbol == invert;
-                    subscriptions.Add(SecurityType.Forex, symbol, minimumResolution, true, false);
+                    _subscriptionIndex = subscriptions.Subscriptions.Count;
+                    var config = new SubscriptionDataConfig(objectType, SecurityType.Forex, symbol, Resolution.Minute, true, false, isTradeBar, isTradeBar, true);
+                    subscriptions.Subscriptions.Add(config);
                     securities.Add(symbol, SecurityType.Forex, minimumResolution, true, 1m, false);
                     return;
                 }
