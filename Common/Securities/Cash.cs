@@ -82,8 +82,8 @@ namespace QuantConnect.Securities
             // conversions for base currencies are always identity
             if (_isBaseCurrency) return;
 
-            var realTimePrice = data[_subscriptionIndex];
-            if (!data.Any())
+            List<BaseData> realTimePrice;
+            if (!data.TryGetValue(_subscriptionIndex, out realTimePrice) || !realTimePrice.Any())
             {
                 // if we don't have data we can't do anything
                 return;

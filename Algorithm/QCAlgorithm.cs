@@ -653,13 +653,34 @@ namespace QuantConnect.Algorithm
                                 break;
                         }
                     }
+                    
+                    // add currencies for forex types
+                    if (securityType == SecurityType.Forex)
+                    {
+                        if (symbol.Length != 6)
+                        {
+                            throw new ArgumentException("Unexpected currency pair format: " + symbol + ". Expected symbol of length 6, 3 characters per currency.");
+                        }
+                        // decompose the symbol into each currency pair
+                        string left = symbol.Substring(0, 3);
+                        string right = symbol.Substring(3);
+                        if (!Portfolio.CashBook.ContainsKey(left))
+                        {
+                            // since we have none it's safe to say the conversion is zero
+                            Portfolio.CashBook.Add(left, 0, 0);
+                        }
+                        if (!Portfolio.CashBook.ContainsKey(right))
+                        {
+                            // since we have none it's safe to say the conversion is zero
+                            Portfolio.CashBook.Add(right, 0, 0);
+                        }
+                    }
 
                     //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
                     Securities.Add(symbol, securityType, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData: false);
 
                     //Add the symbol to Data Manager -- generate unified data streams for algorithm events
                     SubscriptionManager.Add(securityType, symbol, resolution, fillDataForward, extendedMarketHours);
-                    
                 }
                 else 
                 {
