@@ -105,6 +105,11 @@ namespace QuantConnect.Securities
                 return;
             }
 
+            if (subscriptions.Count == 0)
+            {
+                throw new InvalidOperationException("Unable to add cash when no subscriptions are present. Please add subscriptions in the Initialize() method.");
+            }
+
             // we require a subscription that converts this into the base currency
             string normal = Symbol + CashBook.BaseCurrency;
             string invert = CashBook.BaseCurrency + Symbol;
@@ -139,7 +144,7 @@ namespace QuantConnect.Securities
                 {
                     _invertRealTimePrice = symbol == invert;
                     _subscriptionIndex = subscriptions.Subscriptions.Count;
-                    var config = new SubscriptionDataConfig(objectType, SecurityType.Forex, symbol, Resolution.Minute, true, false, isTradeBar, isTradeBar, true);
+                    var config = new SubscriptionDataConfig(objectType, SecurityType.Forex, symbol, minimumResolution, true, false, isTradeBar, isTradeBar, true);
                     subscriptions.Subscriptions.Add(config);
                     securities.Add(symbol, SecurityType.Forex, minimumResolution, true, 1m, false);
                     return;
