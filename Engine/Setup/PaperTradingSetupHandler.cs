@@ -145,6 +145,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 //Initialize the algorithm
                 algorithm.Initialize();
+                //Add currency data feeds that weren't explicity added in Initialize
                 algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.SubscriptionManager, algorithm.Securities);
 
                 //Try and use the live job packet cash if exists, otherwise resort to the user algo cash:
