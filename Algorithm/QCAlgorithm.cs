@@ -559,8 +559,8 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            //3. Round up and subtract one tick:
-            end = end.RoundUp(TimeSpan.FromDays(1)).AddTicks(-1);
+            //3. Make this at the very end of the requested date
+            end = end.RoundDown(TimeSpan.FromDays(1)).AddDays(1).AddTicks(-1);
 
             //4. Check not locked already:
             if (!_locked) 
