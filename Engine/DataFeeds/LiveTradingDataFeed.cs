@@ -57,6 +57,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private List<string> _symbols = new List<string>();
         private Dictionary<int, StreamStore> _streamStore = new Dictionary<int, StreamStore>();
         private List<decimal> _realtimePrices;
+        private IDataQueueHandler _dataQueue;
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -151,13 +152,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /******************************************************** 
         * CLASS CONSTRUCTOR
         *********************************************************/
+
         /// <summary>
         /// Live trading datafeed handler provides a base implementation of a live trading datafeed. Derived types
         /// need only implement the GetNextTicks() function to return unprocessed ticks from a data source.
         /// This creates a new data feed with a DataFeedEndpoint of LiveTrading.
         /// </summary>
         /// <param name="algorithm">Algorithm requesting data</param>
-        protected LiveTradingDataFeed(IAlgorithm algorithm)
+        /// <param name="_dataSource">Source of the live stream</param>
+        protected LiveTradingDataFeed(IAlgorithm algorithm, IDataQueueHandler _dataSource)
         {
             //Subscription Count:
             _subscriptions = algorithm.SubscriptionManager.Subscriptions;
@@ -169,6 +172,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _endOfBridge = new bool[Subscriptions.Count];
             _subscriptionManagers = new SubscriptionDataReader[Subscriptions.Count];
             _realtimePrices = new List<decimal>();
+
+            //Set the source of the live data:
+            _dataQueue = _dataSource;
 
             //Class Privates:
             _algorithm = algorithm;

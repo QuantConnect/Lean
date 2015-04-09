@@ -26,31 +26,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// <summary>
     /// Handles launching and killing the IB Controller script
     /// </summary>
+    /// <remarks>
+    /// Requires TWS or IB Gateway and IBController installed to run
+    /// </remarks>
     public static class InteractiveBrokersGatewayRunner
     {
         // process that's running the IB Controller script
         private static int ScriptProcessID;
-        private static string _account;
 
         // pick controller based on configuraiton, TWS or just the gateway, TWS is nice for running on desktops, default to TWS for desktop users
         private static readonly bool UseTWS = Config.GetBool("ib-use-tws");
         private static readonly string Controller = UseTWS ? "IBControllerStart" : "IBControllerGatewayStart";
-
-        /// <summary>
-        /// Gets whether or not the the IB Gateway or TWS is running
-        /// </summary>
-        public static bool IsRunning
-        {
-            get { return GetSpawnedProcesses(ScriptProcessID).Any(); }
-        }
-
-        /// <summary>
-        /// The account used to open this gateway
-        /// </summary>
-        public static string CurrentAccount
-        {
-            get { return _account; }
-        }
 
         /// <summary>
         /// Starts the IB Gateway
@@ -58,11 +44,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="account">The account tied to the gateway</param>
         public static void Start(string account)
         {
-            _account = account;
-
             try
             {
-                Log.Trace("IBGatewayRunner.Start(): Launching IBController for account " + account + "...");
+                Log.Trace("InteractiveBrokersGatewayRunner.Start(): Launching IBController for account " + account + "...");
 
                 ProcessStartInfo processStartInfo;
                 if (OS.IsWindows)
@@ -90,7 +74,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch (Exception err)
             {
-                Log.Error("IBGatewayRunner.Start(): " + err.Message);
+                Log.Error("InteractiveBrokersGatewayRunner.Start(): " + err.Message);
             }
         }
 
@@ -99,19 +83,28 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         public static void Stop()
         {
+            if (ScriptProcessID == 0)
+            {
+                return;
+            }
+
             try
             {
-                Log.Trace("IBGatewayRunner.Stop(): Stopping IBController...");
+                Log.Trace("InteractiveBrokersGatewayRunner.Stop(): Stopping IBController...");
 
-                foreach (var process in GetSpawnedProcesses(ScriptProcessID))
+                // we need to materialize this ienumerable since if we start killing some of them
+                // we may leave some daemon processes hanging
+                foreach (var process in GetSpawnedProcesses(ScriptProcessID).ToList())
                 {
                     // kill all spawned processes
                     process.Kill();
                 }
+
+                ScriptProcessID = 0;
             }
             catch (Exception err)
             {
-                Log.Error("IBGatewayRunner.Stop(): " + err.Message);
+                Log.Error("InteractiveBrokersGatewayRunner.Stop(): " + err.Message);
             }
         }
 

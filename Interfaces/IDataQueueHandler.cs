@@ -16,7 +16,6 @@
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
-
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Data.Market;
@@ -27,26 +26,9 @@ namespace QuantConnect.Interfaces
     /// <summary>
     /// Task requestor interface with cloud system
     /// </summary>
-    [InheritedExport(typeof(IQueueHandler))]
-    public interface IQueueHandler
+    [InheritedExport(typeof(IDataQueueHandler))]
+    public interface IDataQueueHandler
     {
-        /// <summary>
-        /// Initialize the task handler.
-        /// </summary>
-        void Initialize(bool liveMode);
-
-        /// <summary>
-        /// Request the next task to run through the engine:
-        /// </summary>
-        /// <returns>Algorithm job to process</returns>
-        AlgorithmNodePacket NextJob(out string algorithmPath);
-
-        /// <summary>
-        /// Signal task complete
-        /// </summary>
-        /// <param name="job">Work to do.</param>
-        void AcknowledgeJob(AlgorithmNodePacket job);
-
         /// <summary>
         /// Get the next ticks from the live trading data queue
         /// </summary>
@@ -66,13 +48,15 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Adds the specified symbols to the subscription
         /// </summary>
+        /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        void Subscribe(IDictionary<SecurityType, List<string>> symbols);
+        void Subscribe(LiveNodePacket job, IDictionary<SecurityType, List<string>> symbols);
 
         /// <summary>
         /// Removes the specified symbols to the subscription
         /// </summary>
+        /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        void Unsubscribe(IDictionary<SecurityType, List<string>> symbols);
+        void Unsubscribe(LiveNodePacket job, IDictionary<SecurityType, List<string>> symbols);
     }
 }

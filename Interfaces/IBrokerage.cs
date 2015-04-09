@@ -1,23 +1,26 @@
 using System;
+using System.Collections.Generic;
+using QuantConnect.Brokerages;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Brokerage interface that defines the operations all brokerages must implement.
+    /// Brokerage interface that defines the operations all brokerages must implement. The IBrokerage implementation
+    /// must have a matching IBrokerageFactory implementation.
     /// </summary>
     public interface IBrokerage
     {
         /// <summary>
         /// Event that fires each time an order is filled
         /// </summary>
-        event EventHandler<OrderEvent> OrderEvent;
+        event EventHandler<OrderEvent> OrderStatusChanged;
 
         /// <summary>
         /// Event that fires each time portfolio holdings have changed
         /// </summary>
-        event EventHandler<PortfolioEvent> PortfolioChanged;
+        event EventHandler<SecurityEvent> SecurityHoldingUpdated;
 
         /// <summary>
         /// Event that fires each time a user's brokerage account is changed
@@ -25,9 +28,9 @@ namespace QuantConnect.Interfaces
         event EventHandler<AccountEvent> AccountChanged;
 
         /// <summary>
-        /// Event that fires when an error is encountered in the brokerage
+        /// Event that fires when a message is received from the brokerage
         /// </summary>
-        event EventHandler<Exception> Error;
+        event EventHandler<BrokerageMessageEvent> Message;
 
         /// <summary>
         /// Gets the name of the brokerage
@@ -38,6 +41,24 @@ namespace QuantConnect.Interfaces
         /// Returns true if we're currently connected to the broker
         /// </summary>
         bool IsConnected { get; }
+
+        /// <summary>
+        /// Gets all open orders on the account
+        /// </summary>
+        /// <returns>The open orders returned from IB</returns>
+        List<Order> GetOpenOrders();
+
+        /// <summary>
+        /// Gets all holdings for the account
+        /// </summary>
+        /// <returns>The current holdings from the account</returns>
+        List<Holding> GetAccountHoldings(); 
+
+        /// <summary>
+        /// Gets the current USD cash balance in the brokerage account
+        /// </summary>
+        /// <returns>The current USD cash balance available for trading</returns>
+        decimal GetCashBalance();
 
         /// <summary>
         /// Places a new order and assigns a new broker ID to the order

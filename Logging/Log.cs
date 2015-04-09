@@ -41,7 +41,7 @@ namespace QuantConnect.Logging
         private static string _lastErrorText = "";
         private static bool _debuggingEnabled;
         private static int _level = 1;
-        private static ILogHandler _logHandler;
+        private static ILogHandler _logHandler = new ConsoleLogHandler();
 
         /******************************************************** 
         * CLASS PROPERTIES

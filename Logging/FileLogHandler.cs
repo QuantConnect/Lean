@@ -38,25 +38,45 @@ namespace QuantConnect.Logging
                 );
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FileLogHandler"/> class using 'log.txt' for the filepath.
+        /// </summary>
+        public FileLogHandler()
+            : this("log.txt")
+        {
+        }
+
+        /// <summary>
+        /// Write error message to log
+        /// </summary>
+        /// <param name="text">The error text to log</param>
         public void Error(string text)
         {
             WriteMessage(text, "ERROR");
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Write debug message to log
+        /// </summary>
+        /// <param name="text">The debug text to log</param>
         public void Debug(string text)
         {
             WriteMessage(text, "DEBUG");
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Write debug message to log
+        /// </summary>
+        /// <param name="text">The trace text to log</param>
         public void Trace(string text)
         {
             WriteMessage(text, "TRACE");
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
             lock (_lock)
@@ -68,6 +88,9 @@ namespace QuantConnect.Logging
             }
         }
 
+        /// <summary>
+        /// Writes the message to the writer
+        /// </summary>
         private void WriteMessage(string text, string level)
         {
             lock (_lock)

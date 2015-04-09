@@ -17,6 +17,8 @@
 * USING NAMESPACES
 **********************************************************/
 
+using System;
+using System.Collections.Generic;
 using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities.Forex 
@@ -96,6 +98,16 @@ namespace QuantConnect.Securities.Forex
         * CLASS METHODS
         *********************************************************/
 
+        /// <summary>
+        /// Gets the listing of currently supported currency pairs.
+        /// </summary>
+        /// <remarks>
+        /// This listing should be in sync with the data available at: https://www.quantconnect.com/data/FOREX#2.1.1
+        /// </remarks>
+        public static readonly IReadOnlyList<string> CurrencyPairs = new []
+        {
+            "AUDJPY", "AUDUSD", "EURCHF", "EURGBP", "EURJPY", "EURUSD", "GBPAUD", "GBPJPY", "GBPUSD", "NZDUSD", "USDCAD", "USDCHF", "USDJPY"
+        };
 
     } // End Market
 

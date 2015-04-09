@@ -46,10 +46,11 @@ namespace QuantConnect.Lean.Engine
         *********************************************************/
         private static DateTime _previousTime;
         private static DateTime _frontier;
-        private static Exception _runtimeError = new Exception();
         private static AlgorithmStatus _algorithmState = AlgorithmStatus.Running;
         private static readonly object _lock = new object();
         private static string _algorithmId = "";
+
+        private static long _dataPointCount;
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -62,17 +63,6 @@ namespace QuantConnect.Lean.Engine
             get 
             {
                 return _frontier;
-            }
-        }
-
-        /// <summary>
-        /// Public flag for runtime error for this user
-        /// </summary>
-        public static Exception RunTimeError
-        {
-            get 
-            {
-                return _runtimeError;
             }
         }
 
@@ -111,6 +101,17 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
+        /// <summary>
+        /// Gets the number of data points processed per second
+        /// </summary>
+        public static double DataPoints
+        {
+            get
+            {
+                return _dataPointCount;
+            }
+        }
+
         /******************************************************** 
         * CLASS METHODS
         *********************************************************/
@@ -128,6 +129,7 @@ namespace QuantConnect.Lean.Engine
         public static void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, ISetupHandler setup, IRealTimeHandler realtime) 
         {
             //Initialize:
+            _dataPointCount = 0;
             var backwardsCompatibilityMode = false;
             var tradebarsType = typeof (TradeBars);
             var ticksType = typeof(Ticks);
@@ -137,7 +139,6 @@ namespace QuantConnect.Lean.Engine
 
             //Initialize Properties:
             _frontier = setup.StartingDate;
-            _runtimeError = null;
             _algorithmId = job.AlgorithmId;
             _algorithmState = AlgorithmStatus.Running;
             _previousTime = setup.StartingDate.Date;
@@ -176,13 +177,13 @@ namespace QuantConnect.Lean.Engine
                     //Get the matching method for this event handler - e.g. public void OnData(Quandl data) { .. }
                     var genericMethod = (algorithm.GetType()).GetMethod("OnData", new[] { config.Type });
 
-                    //Is we already have this Type-handler then don't add it to invokers again.
+                    //If we already have this Type-handler then don't add it to invokers again.
                     if (methodInvokers.ContainsKey(config.Type)) continue;
 
                     //If we couldnt find the event handler, let the user know we can't fire that event.
                     if (genericMethod == null)
                     {
-                        _runtimeError = new Exception("Data event handler not found, please create a function matching this template: public void OnData(" + config.Type.Name + " data) {  }");
+                        algorithm.RunTimeError = new Exception("Data event handler not found, please create a function matching this template: public void OnData(" + config.Type.Name + " data) {  }");
                         _algorithmState = AlgorithmStatus.RuntimeError;
                         return;
                     }
@@ -203,8 +204,14 @@ namespace QuantConnect.Lean.Engine
                     //Set the time frontier:
                     _frontier = time;
 
+                    //On each time step push the real time prices to the cashbook so we can have updated conversion rates
+                    algorithm.Portfolio.CashBook.Update(newData[time]);
+
                     //Execute with TimeLimit Monitor:
-                    if (Isolator.IsCancellationRequested) return;
+                    if (Isolator.IsCancellationRequested)
+                    {
+                        return;
+                    }
 
                     //Fire EOD if the time packet we just processed is greater 
                     if (backtestMode)
@@ -218,7 +225,9 @@ namespace QuantConnect.Lean.Engine
                         {
                             //Sample the portfolio value over time for chart.
                             results.SampleEquity(_previousTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
-                            if (startingPortfolioValue == 0)
+                            
+                            //Check for divide by zero
+                            if (startingPortfolioValue == 0m)
                             {
                                 results.SamplePerformance(_previousTime.Date, 0);
                             }
@@ -246,13 +255,22 @@ namespace QuantConnect.Lean.Engine
                     var newBars = new TradeBars(time);
                     var newTicks = new Ticks(time);
 
-                    //Invoke all non-tradebars, non-ticks methods:
+                    //Invoke all non-tradebars, non-ticks methods and build up the TradeBars and Ticks dictionaries
                     // --> i == Subscription Configuration Index, so we don't need to compare types.
                     foreach (var i in newData[time].Keys) 
                     {    
                         //Data point and config of this point:
                         var dataPoints = newData[time][i];
                         var config = feed.Subscriptions[i];
+
+                        //Keep track of how many data points we've processed
+                        _dataPointCount += dataPoints.Count;
+
+                        //We don't want to pump data that we added just for currency conversions
+                        if (config.IsCurrencyConversionFeed)
+                        {
+                            continue;
+                        }
 
                         //Create TradeBars Unified Data --> OR --> invoke generic data event. One loop.
                         foreach (var dataPoint in dataPoints) 
@@ -270,7 +288,7 @@ namespace QuantConnect.Lean.Engine
                             }
                             catch (Exception err)
                             {
-                                _runtimeError = err;
+                                algorithm.RunTimeError = err;
                                 _algorithmState = AlgorithmStatus.RuntimeError;
                                 Log.Error("AlgorithmManager.Run(): RuntimeError: Consolidators update: " + err.Message);
                                 return;
@@ -325,7 +343,7 @@ namespace QuantConnect.Lean.Engine
                                     } 
                                     catch (Exception err) 
                                     {
-                                        _runtimeError = err;
+                                        algorithm.RunTimeError = err;
                                         _algorithmState = AlgorithmStatus.RuntimeError;
                                         Log.Debug("AlgorithmManager.Run(): RuntimeError: Custom Data: " + err.Message + " STACK >>> " + err.StackTrace);
                                         return;
@@ -346,7 +364,7 @@ namespace QuantConnect.Lean.Engine
                         }
                         catch (Exception err) 
                         {
-                            _runtimeError = err;
+                            algorithm.RunTimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
                             Log.Debug("AlgorithmManager.Run(): RuntimeError: Backwards Compatibility Mode: " + err.Message + " STACK >>> " + err.StackTrace);
                             return;
@@ -362,7 +380,7 @@ namespace QuantConnect.Lean.Engine
                         } 
                         catch (Exception err)
                         {
-                            _runtimeError = err;
+                            algorithm.RunTimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
                             Log.Debug("AlgorithmManager.Run(): RuntimeError: New Style Mode: " + err.Message + " STACK >>> " + err.StackTrace);
                             return;
@@ -392,7 +410,7 @@ namespace QuantConnect.Lean.Engine
             catch (Exception err)
             {
                 _algorithmState = AlgorithmStatus.RuntimeError;
-                _runtimeError = new Exception("Error running OnEndOfAlgorithm(): " + err.Message, err.InnerException);
+                algorithm.RunTimeError = new Exception("Error running OnEndOfAlgorithm(): " + err.Message, err.InnerException);
                 Log.Debug("AlgorithmManager.OnEndOfAlgorithm(): " + err.Message + " STACK >>> " + err.StackTrace);
                 return;
             }
@@ -441,7 +459,6 @@ namespace QuantConnect.Lean.Engine
         {
             //Reset before the next loop/
             _frontier = new DateTime();
-            _runtimeError = null;
             _algorithmId = "";
             _algorithmState = AlgorithmStatus.Running;
         }

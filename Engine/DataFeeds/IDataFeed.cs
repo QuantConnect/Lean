@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             get;
         }
 
-            /// <summary>
+        /// <summary>
         /// Cross-threading queues so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
         /// </summary>
         ConcurrentQueue<List<BaseData>>[] Bridge

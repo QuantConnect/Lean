@@ -120,6 +120,8 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     //Setup Base Algorithm:
                     algorithm.Initialize();
+                    //Add currency data feeds that weren't explicity added in Initialize
+                    algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.SubscriptionManager, algorithm.Securities);
 
                     //Construct the backtest job packet:
                     backtestJob.PeriodStart = algorithm.StartDate;
@@ -155,9 +157,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Endpoints:
                     liveJob.TransactionEndpoint = TransactionHandlerEndpoint.Backtesting;
                     liveJob.ResultEndpoint = ResultHandlerEndpoint.LiveTrading;
-
-                    bool testLiveTradingEnabled = Config.GetBool("test-live-trading-enabled", defaultValue: false);
-                    liveJob.DataEndpoint = testLiveTradingEnabled ? DataFeedEndpoint.Test : DataFeedEndpoint.LiveTrading;
+                    liveJob.DataEndpoint = DataFeedEndpoint.LiveTrading;
                     liveJob.RealTimeEndpoint = RealTimeEndpoint.LiveTrading;
                     liveJob.SetupEndpoint = SetupHandlerEndpoint.Console;
 
@@ -173,6 +173,7 @@ namespace QuantConnect.Lean.Engine.Setup
             catch (Exception err)
             {
                 Log.Error("ConsoleSetupHandler().Setup(): " + err.Message);
+                Errors.Add("Failed to initialize algorithm: Initialize(): " + err.Message);
             }
 
             if (Errors.Count == 0)

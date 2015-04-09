@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -29,12 +30,12 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Event that fires each time an order is filled
         /// </summary>
-        public event EventHandler<OrderEvent> OrderEvent;
+        public event EventHandler<OrderEvent> OrderStatusChanged;
 
         /// <summary>
         /// Event that fires each time portfolio holdings have changed
         /// </summary>
-        public event EventHandler<PortfolioEvent> PortfolioChanged;
+        public event EventHandler<SecurityEvent> SecurityHoldingUpdated;
 
         /// <summary>
         /// Event that fires each time a user's brokerage account is changed
@@ -44,7 +45,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Event that fires when an error is encountered in the brokerage
         /// </summary>
-        public event EventHandler<Exception> Error;
+        public event EventHandler<BrokerageMessageEvent> Message;
 
         /// <summary>
         /// Gets the name of the brokerage
@@ -106,7 +107,7 @@ namespace QuantConnect.Brokerages
             {
                 Log.Trace("Brokerage.OnOrderEvent(): " + e);
 
-                var handler = OrderEvent;
+                var handler = OrderStatusChanged;
                 if (handler != null) handler(this, e);
             }
             catch (Exception error)
@@ -119,13 +120,13 @@ namespace QuantConnect.Brokerages
         /// Event invocator for the PortfolioChanged event
         /// </summary>
         /// <param name="e">The PortfolioEvent</param>
-        protected virtual void OnPortfolioChanged(PortfolioEvent e)
+        protected virtual void OnPortfolioChanged(SecurityEvent e)
         {
             try
             {
                 Log.Trace("Brokerage.OnPortfolioChanged(): " + e);
 
-                var handler = PortfolioChanged;
+                var handler = SecurityHoldingUpdated;
                 if (handler != null) handler(this, e);
             }
             catch (Exception error)
@@ -154,22 +155,41 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Event invocator for the Error event
+        /// Event invocator for the Message event
         /// </summary>
         /// <param name="e">The error</param>
-        protected virtual void OnError(Exception e)
+        protected virtual void OnMessage(BrokerageMessageEvent e)
         {
             try
             {
-                Log.Error("Brokerage.OnError(): " + e.Message);
+                Log.Error("Brokerage.OnMessage(): " + e);
 
-                var handler = Error;
+                var handler = Message;
                 if (handler != null) handler(this, e);
             }
             catch (Exception ex)
             {
-                Log.Error("Brokerage.OnError(): Caught Error: " + ex.Message);
+                Log.Error("Brokerage.OnMessage(): Caught Error: " + ex.Message);
             }
         }
+
+        /// <summary>
+        /// Gets all open orders on the account. 
+        /// NOTE: The order objects returned do not have QC order IDs.
+        /// </summary>
+        /// <returns>The open orders returned from IB</returns>
+        public abstract List<Order> GetOpenOrders();
+
+        /// <summary>
+        /// Gets all holdings for the account
+        /// </summary>
+        /// <returns>The current holdings from the account</returns>
+        public abstract List<Holding> GetAccountHoldings();
+
+        /// <summary>
+        /// Gets the current USD cash balance in the brokerage account
+        /// </summary>
+        /// <returns>The current USD cash balance available for trading</returns>
+        public abstract decimal GetCashBalance();
     }
 }

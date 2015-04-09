@@ -195,6 +195,15 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets the run time error from the algorithm, or null if none was encountered.
+        /// </summary>
+        Exception RunTimeError
+        {
+            get; 
+            set; 
+        }
+
+        /// <summary>
         /// Customizable dynamic statistics displayed during live trading:
         /// </summary>
         Dictionary<string, string> RuntimeStatistics
@@ -351,6 +360,14 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="startingCash">decimal starting capital, default $100,000</param>
         void SetCash(decimal startingCash);
+
+        /// <summary>
+        /// Set the cash for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The cash symbol to set</param>
+        /// <param name="startingCash">Decimal cash value of portfolio</param>
+        /// <param name="conversionRate">The current conversion rate for the</param>
+        void SetCash(string symbol, decimal startingCash, decimal conversionRate);
 
         /// <summary>
         /// Send an order to the transaction manager.

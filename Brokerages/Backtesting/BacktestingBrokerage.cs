@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -67,6 +68,39 @@ namespace QuantConnect.Brokerages.Backtesting
         }
 
         /// <summary>
+        /// Gets all open orders on the account
+        /// </summary>
+        /// <returns>The open orders returned from IB</returns>
+        public override List<Order> GetOpenOrders()
+        {
+            return (from order in _orders
+                    where order.Value.Status != OrderStatus.Filled &&
+                          order.Value.Status != OrderStatus.Canceled &&
+                          order.Value.Status != OrderStatus.Invalid
+                    orderby order.Value.Id
+                    select order.Value).ToList();
+        }
+
+        /// <summary>
+        /// Gets all holdings for the account
+        /// </summary>
+        /// <returns>The current holdings from the account</returns>
+        public override List<Holding> GetAccountHoldings()
+        {
+            // grab everything from the portfolio with a non-zero absolute quantity
+            return _algorithm.Portfolio.Values.Where(x => x.AbsoluteQuantity > 0).OrderBy(x => x.Symbol).Select(holding => new Holding(holding, holding.Type)).ToList();
+        }
+
+        /// <summary>
+        /// Gets the current USD cash balance in the brokerage account
+        /// </summary>
+        /// <returns>The current USD cash balance available for trading</returns>
+        public override decimal GetCashBalance()
+        {
+            return _algorithm.Portfolio.Cash;
+        }
+
+        /// <summary>
         /// Places a new order and assigns a new broker ID to the order
         /// </summary>
         /// <param name="order">The order to be placed</param>
@@ -75,6 +109,12 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (order.Status == OrderStatus.New)
             {
+                if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
+
+                // fire off the event that says this order has been submitted
+                var submitted = new OrderEvent(order) { Status = OrderStatus.Submitted };
+                OnOrderEvent(submitted);
+
                 return true;
             }
             return false;
@@ -89,6 +129,7 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (order.Status == OrderStatus.Update)
             {
+                if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
                 return true;
             }
             return false;
@@ -103,6 +144,12 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (order.Status == OrderStatus.Canceled)
             {
+                if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
+
+                // fire off the event that says this order has been submitted
+                var canceled = new OrderEvent(order) { Status = OrderStatus.Canceled };
+                OnOrderEvent(canceled);
+
                 return true;
             }
             return false;
@@ -133,6 +180,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 var sufficientBuyingPower = _algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order);
 
                 var fill = new OrderEvent();
+                fill.Symbol = order.Symbol;
 
                 //Before we check this queued order make sure we have buying power:
                 if (sufficientBuyingPower)

@@ -59,7 +59,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public List<SubscriptionDataConfig> Subscriptions { get; private set; }
 
-
+        /// <summary>
+        /// Prices of the datafeed this instant for dynamically updating security values (and calculation of the total portfolio value in realtime).
+        /// </summary>
+        /// <remarks>Indexed in order of the subscriptions</remarks>
         public List<decimal> RealtimePrices { get; private set; } 
 
         /// <summary>

@@ -79,7 +79,8 @@
     <Compile Include="IBrokerage.cs" />
     <Compile Include="IBrokerageAuthentication.cs" />
     <Compile Include="IMessagingHandler.cs" />
-    <Compile Include="IQueueHandler.cs" />
+    <Compile Include="IDataQueueHandler.cs" />
+    <Compile Include="IJobQueueHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

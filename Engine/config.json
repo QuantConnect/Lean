@@ -8,6 +8,6 @@
 
     // handlers
     "messaging-handler": "QuantConnect.Messaging.Messaging",
-    "queue-handler": "QuantConnect.Queues.Queue",
+    "job-queue-handler": "QuantConnect.Queues.JobQueue",
     "api-handler": "QuantConnect.Api.Api"
 }

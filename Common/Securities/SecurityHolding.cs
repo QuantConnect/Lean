@@ -52,14 +52,6 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Create a new holding class instance setting the initial properties to $0.
         /// </summary>
-        public SecurityHolding(string symbol, decimal leverage, ISecurityTransactionModel transactionModel)
-            : this(symbol, SecurityType.Equity, leverage, transactionModel)
-        {
-        }
-
-        /// <summary>
-        /// Create a new holding class instance setting the initial properties to $0.
-        /// </summary>
         public SecurityHolding(string symbol, SecurityType type, decimal leverage, ISecurityTransactionModel transactionModel)
         {
             _model = transactionModel;
@@ -112,6 +104,17 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// The security type of the symbol
+        /// </summary>
+        public SecurityType Type
+        {
+            get
+            {
+                return _securityType;
+            }
+        }
+
+        /// <summary>
         /// Leverage of the underlying security.
         /// </summary>
         public virtual decimal Leverage
@@ -121,6 +124,7 @@ namespace QuantConnect.Securities
                 return _leverage;
             }
         }
+        
 
         /// <summary>
         /// Acquisition cost of the security total holdings.

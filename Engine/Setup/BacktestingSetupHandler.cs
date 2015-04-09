@@ -186,6 +186,8 @@ namespace QuantConnect.Lean.Engine.Setup
                     algorithm.SetDateTime(job.PeriodStart);
                     //Initialise the algorithm, get the required data:
                     algorithm.Initialize();
+                    //Add currency data feeds that weren't explicity added in Initialize
+                    algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.SubscriptionManager, algorithm.Securities);
                 }
                 catch (Exception err)
                 {

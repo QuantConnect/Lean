@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 using System;
+using System.IO;
 
 namespace QuantConnect.Logging
 {
@@ -22,29 +23,49 @@ namespace QuantConnect.Logging
     public class ConsoleLogHandler : ILogHandler
     {
         private const string DateFormat = "yyyyMMdd HH:mm:ss";
+        private readonly TextWriter _console;
 
-        /// <inheritdoc />
+        public ConsoleLogHandler()
+        {
+            // saves references to the real console text writer since in a deployed state we may overwrite this in order
+            // to redirect messages from algorithm to result handler
+            _console = Console.Out;
+        }
+
+        /// <summary>
+        /// Write error message to log
+        /// </summary>
+        /// <param name="text">The error text to log</param>
         public void Error(string text)
         {
             var original = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(DateTime.Now.ToString(DateFormat) + " ERROR:: " + text);
+            _console.WriteLine(DateTime.Now.ToString(DateFormat) + " ERROR:: " + text);
             Console.ForegroundColor = original;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Write debug message to log
+        /// </summary>
+        /// <param name="text">The debug text to log</param>
         public void Debug(string text)
         {
-            Console.WriteLine(DateTime.Now.ToString(DateFormat) + " DEBUGGING :: " + text);
+            _console.WriteLine(DateTime.Now.ToString(DateFormat) + " DEBUGGING :: " + text);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Write debug message to log
+        /// </summary>
+        /// <param name="text">The trace text to log</param>
         public void Trace(string text)
         {
-            Console.WriteLine(DateTime.Now.ToString(DateFormat) + " Trace:: " + text);
+            _console.WriteLine(DateTime.Now.ToString(DateFormat) + " Trace:: " + text);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
         }

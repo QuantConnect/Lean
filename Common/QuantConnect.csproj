@@ -111,6 +111,8 @@
     <Compile Include="Data\Consolidators\TickConsolidator.cs" />
     <Compile Include="Data\Consolidators\TradeBarConsolidatorBase.cs" />
     <Compile Include="Data\Market\RenkoBar.cs" />
+    <Compile Include="Brokerages\BrokerageMessageEvent.cs" />
+    <Compile Include="Brokerages\BrokerageMessageType.cs" />
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />
@@ -121,6 +123,8 @@
     <Compile Include="Orders\OrderErrors.cs" />
     <Compile Include="Packets\HandledErrorPacket.cs" />
     <Compile Include="Data\Test\FakeTradeBarCustom.cs" />
+    <Compile Include="Securities\Cash.cs" />
+    <Compile Include="Securities\CashBook.cs" />
     <Compile Include="Securities\IOrderIDMapping.cs" />
     <Compile Include="SeriesSampler.cs" />
     <Compile Include="Data\Custom\Quandl.cs" />
@@ -159,7 +163,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="Orders\Order.cs" />
     <Compile Include="Securities\AccountEvent.cs" />
-    <Compile Include="Securities\PortfolioEvent.cs" />
+    <Compile Include="Securities\SecurityEvent.cs" />
     <Compile Include="Securities\Equity\EquityCache.cs" />
     <Compile Include="Securities\Equity\EquityDataFilter.cs" />
     <Compile Include="Securities\Forex\ForexCache.cs" />
@@ -188,10 +192,12 @@
     <Compile Include="Realtime.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Util\Composer.cs" />
     <Compile Include="Util\ExpressionBuilder.cs" />
     <Compile Include="Util\FuncTextWriter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />
     <Compile Include="Util\ObjectActivator.cs" />
+    <Compile Include="Util\XElementExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">

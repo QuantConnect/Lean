@@ -36,6 +36,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine 
 {
@@ -107,7 +108,7 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Task requester / job queue handler for running the next algorithm task.
         /// </summary>
-        public static IQueueHandler Queue;
+        public static IJobQueueHandler JobQueue;
 
         /// <summary>
         /// Algorithm API handler for setting the per user restrictions on algorithm behaviour where applicable.
@@ -181,49 +182,47 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public static void Main(string[] args) 
         {
-            // pick an implementation of ILogHandler for the application
-            Log.LogHandler = IsLocal 
-                ? (ILogHandler) new ConsoleLogHandler() 
-                : new FileLogHandler("log.txt");
-
             //Initialize:
             var algorithmPath = "";
+            string mode = "RELEASE";
             AlgorithmNodePacket job = null;
             var timer = Stopwatch.StartNew();
             var algorithm = default(IAlgorithm);
+            Log.LogHandler = new CompositeLogHandler();
             _version = DateTime.ParseExact(Config.Get("version", DateTime.Now.ToString(DateFormat.UI)), DateFormat.UI, CultureInfo.InvariantCulture);
-            
+       
+            #if DEBUG 
+                mode = "DEBUG";
+            #endif
+
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
-            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + _version);
+            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + _version + " Mode: " + mode);
             Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
             Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + +OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
 
             //Import external libraries specific to physical server location (cloud/local)
-            var catalog = new AggregateCatalog();
-            catalog.Catalogs.Add(new DirectoryCatalog(AppDomain.CurrentDomain.BaseDirectory));
-            var container = new CompositionContainer(catalog);
             try
             {
                 // grab the right export based on configuration
-                Notify = container.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler"));
-                Queue = container.GetExportedValueByTypeName<IQueueHandler>(Config.Get("queue-handler"));
-                Api = container.GetExportedValueByTypeName<IApi>(Config.Get("api-handler")); 
-            } 
+                Api = Composer.Instance.GetExportedValueByTypeName<IApi>(Config.Get("api-handler"));
+                Notify = Composer.Instance.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler"));
+                JobQueue = Composer.Instance.GetExportedValueByTypeName<IJobQueueHandler>(Config.Get("job-queue-handler"));
+            }
             catch (CompositionException compositionException)
-            { Log.Error("Engine.Main(): Failed to load library: " + compositionException); 
+            { Log.Error("Engine.Main(): Failed to load library: " + compositionException);
             }
 
             //Setup packeting, queue and controls system: These don't do much locally.
             Api.Initialize();
             Notify.Initialize();
-            Queue.Initialize(_liveMode);
+            JobQueue.Initialize();
 
             //Start monitoring the backtest active status:
             var statusPingThread = new Thread(StateCheck.Ping.Run);
             statusPingThread.Start();
 
-            do 
+            do
             {
                 try
                 {
@@ -240,13 +239,13 @@ namespace QuantConnect.Lean.Engine
                     do
                     {
                         //-> Pull job from QuantConnect job queue, or, pull local build:
-                        job = Queue.NextJob(out algorithmPath); // Blocking.
+                        job = JobQueue.NextJob(out algorithmPath); // Blocking.
 
                         if (!IsLocal && LiveMode && (job.Version < Version || (job.Version == Version && job.Redelivered)))
                         {
                             //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
                             //In this event kill the old algorithm and leave a message so the user can later review.
-                            Queue.AcknowledgeJob(job);
+                            JobQueue.AcknowledgeJob(job);
                             Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, _collapseMessage);
                             Notify.SetChannel(job.Channel);
                             Notify.RuntimeError(job.AlgorithmId, _collapseMessage);
@@ -257,9 +256,6 @@ namespace QuantConnect.Lean.Engine
 
                     //-> Initialize messaging system
                     Notify.SetChannel(job.Channel);
-
-                    //-> Reset the backtest stopwatch; we're now running the algorithm.
-                    timer.Restart();
 
                     //-> Create SetupHandler to configure internal algorithm state:
                     SetupHandler = GetSetupHandler(job.SetupEndpoint);
@@ -297,6 +293,9 @@ namespace QuantConnect.Lean.Engine
                     //-> Using the job + initialization: load the designated handlers:
                     if (initializeComplete)
                     {
+                        //-> Reset the backtest stopwatch; we're now running the algorithm.
+                        timer.Restart();
+
                         //Set algorithm as locked; set it to live mode if we're trading live, and set it to locked for no further updates.
                         algorithm.SetAlgorithmId(job.AlgorithmId);
                         algorithm.SetLiveMode(LiveMode);
@@ -355,9 +354,9 @@ namespace QuantConnect.Lean.Engine
                             }
 
                             // Algorithm runtime error:
-                            if (AlgorithmManager.RunTimeError != null)
+                            if (algorithm.RunTimeError != null)
                             {
-                                throw AlgorithmManager.RunTimeError;
+                                throw algorithm.RunTimeError;
                             }
                         }
                         catch (Exception err)
@@ -415,7 +414,9 @@ namespace QuantConnect.Lean.Engine
                             }
 
                             //Diagnostics Completed, Send Result Packet:
-                            ResultHandler.DebugMessage("Algorithm Id:(" + job.AlgorithmId + ") completed analysis in " + timer.Elapsed.TotalSeconds.ToString("F2") + " seconds");
+                            ResultHandler.DebugMessage(string.Format("Algorithm Id:({0}) completed in {1} seconds at {2}k data points per second. Processing total of {3} data points.",
+                                job.AlgorithmId, timer.Elapsed.TotalSeconds.ToString("F2"), (((int)AlgorithmManager.DataPoints / 1000) / timer.Elapsed.TotalSeconds).ToString("F0"), AlgorithmManager.DataPoints.ToString("N0")));
+
                             ResultHandler.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, statistics, banner);
                         }
                         catch (Exception err)
@@ -451,7 +452,7 @@ namespace QuantConnect.Lean.Engine
                 finally 
                 {
                     //Delete the message from the job queue:
-                    Queue.AcknowledgeJob(job);
+                    JobQueue.AcknowledgeJob(job);
                     Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
 
                     //No matter what for live mode; make sure we've set algorithm status in the API for "not running" conditions:
@@ -507,14 +508,9 @@ namespace QuantConnect.Lean.Engine
 
                 //Live Trading Data Source:
                 case DataFeedEndpoint.LiveTrading:
-                    df = new PaperTradingDataFeed(algorithm, (LiveNodePacket)job);
+                    var ds = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Config.Get("data-queue-handler", "LiveDataQueue"));
+                    df = new PaperTradingDataFeed(algorithm, ds, (LiveNodePacket)job);
                     Log.Trace("Engine.GetDataFeedHandler(): Selected LiveTrading Datafeed");
-                    break;
-
-                case DataFeedEndpoint.Test:
-                    var feed = new TestLiveTradingDataFeed(algorithm, (LiveNodePacket)job);
-                    df = feed;
-                    Log.Trace("Engine.GetDataFeedHandler(): Selected Test Datafeed at " + feed.FastForward + "x");
                     break;
             }
             return df;
@@ -557,6 +553,11 @@ namespace QuantConnect.Lean.Engine
             ITransactionHandler th;
             switch (job.TransactionEndpoint)
             {
+                case TransactionHandlerEndpoint.Brokerage:
+                    th = new BrokerageTransactionHandler(algorithm, brokerage);
+                    Log.Trace("Engine.GetTransactionHandler(): Selected Brokerage Transaction Models.");
+                    break;
+
                 //Operation from local files:
                 default:
                     th = new BacktestingTransactionHandler(algorithm, brokerage as BacktestingBrokerage);
@@ -581,7 +582,7 @@ namespace QuantConnect.Lean.Engine
                 //Local backtesting and live trading result handler route messages to the local console.
                 case ResultHandlerEndpoint.Console:
                     Log.Trace("Engine.GetResultHandler(): Selected Console Output.");
-                    rh = new ConsoleResultHandler((BacktestNodePacket)job);
+                    rh = new ConsoleResultHandler(job);
                     break;
 
                 // Backtesting route messages to user browser.
@@ -608,7 +609,6 @@ namespace QuantConnect.Lean.Engine
         private static ISetupHandler GetSetupHandler(SetupHandlerEndpoint setupMethod)
         {
             var sh = default(ISetupHandler);
-            if (IsLocal) return new ConsoleSetupHandler();
 
             switch (setupMethod)
             {
@@ -624,6 +624,10 @@ namespace QuantConnect.Lean.Engine
                     break;
                 case SetupHandlerEndpoint.PaperTrading:
                     sh = new PaperTradingSetupHandler();
+                    Log.Trace("Engine.GetSetupHandler(): Selected PaperTrading Algorithm Setup Handler.");
+                    break;
+                case SetupHandlerEndpoint.Brokerage:
+                    sh = new BrokerageSetupHandler();
                     Log.Trace("Engine.GetSetupHandler(): Selected PaperTrading Algorithm Setup Handler.");
                     break;
             }

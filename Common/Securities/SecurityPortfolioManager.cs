@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 
@@ -42,9 +43,14 @@ namespace QuantConnect.Securities
         /// Local access to the transactions collection for the portfolio summation and updates.
         /// </summary>
         public SecurityTransactionManager Transactions;
+
+        /// <summary>
+        /// Gets the cash book that keeps track of all currency holdings
+        /// </summary>
+        public CashBook CashBook { get; private set; }
         
         //Record keeping variables
-        private decimal _cash = 100000;
+        private readonly Cash _baseCurrencyCash;
         private decimal _lastTradeProfit = 0;
         private decimal _profit = 0;
 
@@ -58,6 +64,8 @@ namespace QuantConnect.Securities
         {
             Securities = securityManager;
             Transactions = transactions;
+            CashBook = new CashBook();
+            _baseCurrencyCash = CashBook[CashBook.BaseCurrency];
         }
 
         /******************************************************** 
@@ -240,7 +248,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return _cash;
+                return CashBook.ValueInBaseCurrency;
             }
         }
 
@@ -334,7 +342,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return Cash + TotalUnrealisedProfit + TotalUnleveredAbsoluteHoldingsCost;
+                return CashBook.ValueInBaseCurrency + TotalUnrealisedProfit + TotalUnleveredAbsoluteHoldingsCost;
             }
         }
 
@@ -395,12 +403,32 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Set the cash this algorithm is to manage.
+        /// Set the base currrency cash this algorithm is to manage.
         /// </summary>
         /// <param name="cash">Decimal cash value of portfolio</param>
         public void SetCash(decimal cash) 
         {
-            _cash = cash;
+            _baseCurrencyCash.Quantity = cash;
+        }
+
+        /// <summary>
+        /// Set the cash for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The cash symbol to set</param>
+        /// <param name="cash">Decimal cash value of portfolio</param>
+        /// <param name="conversionRate">The current conversion rate for the</param>
+        public void SetCash(string symbol, decimal cash, decimal conversionRate)
+        {
+            Cash item;
+            if (CashBook.TryGetValue(symbol, out item))
+            {
+                item.Quantity = cash;
+                item.ConversionRate = conversionRate;
+            }
+            else
+            {
+                CashBook.Add(symbol, cash, conversionRate);
+            }
         }
 
         /// <summary>
@@ -416,7 +444,8 @@ namespace QuantConnect.Securities
             //Each asset has different leverage values, so affects our cash position in different ways.
             var holdings = Securities[symbol].Holdings;
 
-            if (direction == OrderDirection.Hold || !Invested) return Cash;
+            var cashValue = CashBook.ValueInBaseCurrency;
+            if (direction == OrderDirection.Hold || !Invested) return cashValue;
             //Log.Debug("SecurityPortfolioManager.GetFreeCash(): Direction: " + direction.ToString());
 
 
@@ -427,9 +456,9 @@ namespace QuantConnect.Securities
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        return Cash;
+                        return cashValue;
                     case OrderDirection.Sell:
-                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + Cash;
+                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + cashValue;
                 }
             }
             else if (Securities[symbol].Holdings.IsShort)
@@ -437,14 +466,14 @@ namespace QuantConnect.Securities
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + Cash;
+                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + cashValue;
                     case OrderDirection.Sell:
-                        return Cash;
+                        return cashValue;
                 }
             }
 
             //No holdings, return cash
-            return Cash;
+            return cashValue;
         }
 
 
@@ -479,7 +508,7 @@ namespace QuantConnect.Securities
                 //Get the Fee for this Order - Update the Portfolio Cash Balance: Remove Transacion Fees.
                 var feeThisOrder = Math.Abs(Securities[symbol].Model.GetOrderFee(fill.AbsoluteFillQuantity, fill.FillPrice));
                 vehicle.Holdings.AddNewFee(feeThisOrder);
-                _cash -= feeThisOrder;
+                _baseCurrencyCash.Quantity -= feeThisOrder;
 
                 
                 //Calculate & Update the Last Trade Profit
@@ -492,7 +521,7 @@ namespace QuantConnect.Securities
                         _lastTradeProfit = (fill.FillPrice - averageHoldingsPrice) * fill.AbsoluteFillQuantity;
                         
                         //New cash += profitLoss + costOfAsset/leverage.
-                        _cash += _lastTradeProfit + ((averageHoldingsPrice * fill.AbsoluteFillQuantity) / leverage);
+                        _baseCurrencyCash.Quantity += _lastTradeProfit + ((averageHoldingsPrice * fill.AbsoluteFillQuantity) / leverage);
                     } 
                     else 
                     {
@@ -500,7 +529,7 @@ namespace QuantConnect.Securities
                         _lastTradeProfit = (fill.FillPrice - averageHoldingsPrice) * quantityHoldings;
 
                         //New cash += profitLoss + costOfAsset/leverage.
-                        _cash += _lastTradeProfit + ((averageHoldingsPrice * quantityHoldings) / leverage);
+                        _baseCurrencyCash.Quantity += _lastTradeProfit + ((averageHoldingsPrice * quantityHoldings) / leverage);
                     }
                     closedPosition = true;
                 }
@@ -513,7 +542,7 @@ namespace QuantConnect.Securities
                         _lastTradeProfit = (averageHoldingsPrice - fill.FillPrice) * fill.AbsoluteFillQuantity;
 
                         //New cash += profitLoss + costOfAsset/leverage.
-                        _cash += _lastTradeProfit + ((averageHoldingsPrice * fill.AbsoluteFillQuantity) / leverage);
+                        _baseCurrencyCash.Quantity += _lastTradeProfit + ((averageHoldingsPrice * fill.AbsoluteFillQuantity) / leverage);
                     }
                     else 
                     {
@@ -521,7 +550,7 @@ namespace QuantConnect.Securities
                         _lastTradeProfit = (averageHoldingsPrice - fill.FillPrice) * absoluteHoldingsQuantity;
 
                         //New cash += profitLoss + costOfAsset/leverage.
-                        _cash += _lastTradeProfit + ((averageHoldingsPrice * absoluteHoldingsQuantity) / leverage);
+                        _baseCurrencyCash.Quantity += _lastTradeProfit + ((averageHoldingsPrice * absoluteHoldingsQuantity) / leverage);
                     }
                     closedPosition = true;
                 }
@@ -544,7 +573,7 @@ namespace QuantConnect.Securities
                     //First transaction just subtract order from cash and set our holdings:
                     averageHoldingsPrice = fill.FillPrice;
                     quantityHoldings = fill.FillQuantity;
-                    _cash -= (fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity)) / leverage;
+                    _baseCurrencyCash.Quantity -= (fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity)) / leverage;
                 }
                 else if (isLong) 
                 {
@@ -557,7 +586,7 @@ namespace QuantConnect.Securities
                             //Add the new quantity:
                             quantityHoldings += fill.FillQuantity;
                             //Subtract this order from cash:
-                            _cash -= (fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity)) / leverage;
+                            _baseCurrencyCash.Quantity -= (fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity)) / leverage;
                             break;
 
                         case OrderDirection.Sell:
@@ -566,7 +595,7 @@ namespace QuantConnect.Securities
                             {
                                 //If we've now passed through zero from selling stock: new avg price:
                                 averageHoldingsPrice = fill.FillPrice;
-                                _cash -= (fill.FillPrice * Math.Abs(quantityHoldings)) / leverage;
+                                _baseCurrencyCash.Quantity -= (fill.FillPrice * Math.Abs(quantityHoldings)) / leverage;
                             }
                             else if (quantityHoldings == 0) 
                             {
@@ -587,7 +616,7 @@ namespace QuantConnect.Securities
                             {
                                 //If we were short but passed through zero, new average price is what we paid. The short position was closed.
                                 averageHoldingsPrice = fill.FillPrice;
-                                _cash -= (fill.FillPrice * Math.Abs(quantityHoldings)) / leverage;
+                                _baseCurrencyCash.Quantity -= (fill.FillPrice * Math.Abs(quantityHoldings)) / leverage;
                             }
                             else if (quantityHoldings == 0) 
                             {
@@ -601,7 +630,7 @@ namespace QuantConnect.Securities
                             //      dAvg = (-500 + -1000) / -200 = 7.5
                             averageHoldingsPrice = ((averageHoldingsPrice * quantityHoldings) + (Convert.ToDecimal(fill.FillQuantity) * fill.FillPrice)) / (quantityHoldings + (decimal)fill.FillQuantity);
                             quantityHoldings += fill.FillQuantity;
-                            _cash -= (fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity)) / leverage;
+                            _baseCurrencyCash.Quantity -= (fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity)) / leverage;
                             break;
                     }
                 }
