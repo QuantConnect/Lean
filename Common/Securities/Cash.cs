@@ -25,9 +25,9 @@ namespace QuantConnect.Securities
     /// </summary>
     public class Cash
     {
-        private int _subscriptionIndex;
-        private bool _invertRealTimePrice;
         private bool _isBaseCurrency;
+        private bool _invertRealTimePrice;
+        private SubscriptionDataConfig _config;
 
         /// <summary>
         /// Gets the symbol used to represent this cash
@@ -79,7 +79,7 @@ namespace QuantConnect.Securities
             if (_isBaseCurrency) return;
 
             List<BaseData> realTimePrice;
-            if (!data.TryGetValue(_subscriptionIndex, out realTimePrice) || realTimePrice.Count == 0)
+            if (!data.TryGetValue(_config.SubscriptionIndex, out realTimePrice) || realTimePrice.Count == 0)
             {
                 // if we don't have data we can't do anything
                 return;
@@ -126,12 +126,12 @@ namespace QuantConnect.Securities
                 }
                 if (config.Symbol == normal)
                 {
-                    _subscriptionIndex = i;
+                    _config = config;
                     return;
                 }
                 if (config.Symbol == invert)
                 {
-                    _subscriptionIndex = i;
+                    _config = config;
                     _invertRealTimePrice = true;
                     return;
                 }
@@ -147,10 +147,9 @@ namespace QuantConnect.Securities
                 if (symbol == normal || symbol == invert)
                 {
                     _invertRealTimePrice = symbol == invert;
-                    _subscriptionIndex = subscriptions.Subscriptions.Count;
-                    var config = new SubscriptionDataConfig(objectType, SecurityType.Forex, symbol, minimumResolution, true, false, isTradeBar, isTradeBar, true);
-                    subscriptions.Subscriptions.Add(config);
-                    securities.Add(symbol, SecurityType.Forex, minimumResolution, true, 1m, false);
+                    // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
+                    _config = subscriptions.Add(objectType, SecurityType.Forex, symbol, minimumResolution, true, false, isTradeBar, isTradeBar, true);
+                    securities.Add(symbol, _config, 1m, false);
                     return;
                 }
             }

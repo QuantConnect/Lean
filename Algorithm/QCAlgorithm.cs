@@ -17,6 +17,7 @@
 **********************************************************/
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -694,11 +695,11 @@ namespace QuantConnect.Algorithm
                         }
                     }
 
-                    //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
-                    Securities.Add(symbol, securityType, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData: false);
-
                     //Add the symbol to Data Manager -- generate unified data streams for algorithm events
-                    SubscriptionManager.Add(securityType, symbol, resolution, fillDataForward, extendedMarketHours);
+                    var config = SubscriptionManager.Add(securityType, symbol, resolution, fillDataForward, extendedMarketHours);
+
+                    //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
+                    Securities.Add(symbol, config, leverage, isDynamicallyLoadedData: false);
                 }
                 else 
                 {
@@ -759,11 +760,13 @@ namespace QuantConnect.Algorithm
         {
             if (_locked) return;
 
+            symbol = symbol.ToUpper();
+
             //Add this to the data-feed subscriptions
-            SubscriptionManager.Add(typeof(T), SecurityType.Base, symbol, resolution, fillDataForward, extendedMarketHours: true, isTradeBar: isTradeBar, hasVolume: hasVolume);
+            var config = SubscriptionManager.Add(typeof(T), SecurityType.Base, symbol, resolution, fillDataForward, extendedMarketHours: true, isTradeBar: isTradeBar, hasVolume: hasVolume);
 
             //Add this new generic data as a tradeable security: 
-            Securities.Add(symbol, SecurityType.Base, resolution, fillDataForward, leverage, extendedMarketHours: true, isDynamicallyLoadedData: true);
+            Securities.Add(symbol, config, leverage, isDynamicallyLoadedData: true);
         }
 
         /// <summary>

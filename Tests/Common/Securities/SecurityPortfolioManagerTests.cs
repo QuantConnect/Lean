@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
@@ -52,9 +53,9 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(fills.Count + 1, equity.Count);
 
             // we're going to process fills and very our equity after each fill
-            var securities = new SecurityManager();
             var subscriptions = new SubscriptionManager();
-            securities.Add("CASH", SecurityType.Base, leverage: 10);
+            var securities = new SecurityManager();
+            securities.Add("CASH", subscriptions.Add(SecurityType.Base, "CASH"), leverage: 10);
             var transactions = new SecurityTransactionManager(securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.SetCash(equity[0]);
@@ -67,7 +68,9 @@ namespace QuantConnect.Tests.Common.Securities
 
                 // the value of 'CASH' increments for each fill, the original test algo did this monthly
                 // the time doesn't really matter though
-                securities.Update(time, new IndicatorDataPoint("CASH", time, i + 1));
+                Dictionary<int, List<BaseData>> updateData = new Dictionary<int, List<BaseData>>();
+                updateData.Add(0, new List<BaseData> {new IndicatorDataPoint("CASH", time, i + 1)});
+                securities.Update(time, updateData);
 
                 portfolio.ProcessFill(fill);
                 Assert.AreEqual(equity[i + 1], portfolio.TotalPortfolioValue);

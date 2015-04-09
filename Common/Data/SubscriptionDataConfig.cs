@@ -55,7 +55,9 @@ namespace QuantConnect.Data
         /// True if the data type has a Volume property, even if it is dynamic data
         public readonly bool HasVolume;
         /// True if this subscription was added for the sole purpose of providing currency conversion rates via <see cref="CashBook.EnsureCurrencyDataFeeds"/>
-        public readonly bool IsCurrencyConversionFeed;
+        public readonly bool IsInternalFeed;
+        /// The subscription index from the SubscriptionManager
+        public readonly int SubscriptionIndex;
 
         /// Price Scaling Factor:
         public decimal PriceScaleFactor;
@@ -67,6 +69,7 @@ namespace QuantConnect.Data
         /******************************************************** 
         * CLASS CONSTRUCTOR
         *********************************************************/
+
         /// <summary>
         /// Constructor for Data Subscriptions
         /// </summary>
@@ -76,7 +79,13 @@ namespace QuantConnect.Data
         /// <param name="resolution">Resolution of the asset we're requesting</param>
         /// <param name="fillForward">Fill in gaps with historical data</param>
         /// <param name="extendedHours">Equities only - send in data from 4am - 8pm</param>
-        public SubscriptionDataConfig(Type objectType, SecurityType securityType, string symbol, Resolution resolution, bool fillForward, bool extendedHours, bool isTradeBar, bool hasVolume, bool isCurrencyConversionFeed)
+        /// <param name="isTradeBar">Set to true if the objectType has Open, High, Low, and Close properties defines, does not need to directly derive from the TradeBar class
+        /// This is used for the DynamicDataConsolidator</param>
+        /// <param name="hasVolume">Set to true if the objectType has a Volume property defined. This is used for the DynamicDataConsolidator</param>
+        /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
+        /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
+        /// <param name="subscriptionIndex">The subscription index from the SubscriptionManager, this MUST equal the subscription's index or all hell will break loose!</param>
+        public SubscriptionDataConfig(Type objectType, SecurityType securityType, string symbol, Resolution resolution, bool fillForward, bool extendedHours, bool isTradeBar, bool hasVolume, bool isInternalFeed, int subscriptionIndex)
         {
             Type = objectType;
             Security = securityType;
@@ -88,7 +97,8 @@ namespace QuantConnect.Data
             HasVolume = hasVolume;
             PriceScaleFactor = 1;
             MappedSymbol = symbol;
-            IsCurrencyConversionFeed = isCurrencyConversionFeed;
+            IsInternalFeed = isInternalFeed;
+            SubscriptionIndex = subscriptionIndex;
             Consolidators = new List<IDataConsolidator>();
 
             switch (resolution)

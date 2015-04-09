@@ -79,99 +79,51 @@ namespace QuantConnect.Securities
         /// <param name="symbol">symbol for security we're trading</param>
         /// <param name="security">security object</param>
         /// <seealso cref="Add(string,Resolution,bool)"/>
-        public void Add(string symbol, Security security) 
+        public void Add(string symbol, Security security)
         {
+            CheckResolutionCounts(security.Resolution);
             _securityManager.Add(symbol, security);
         }
-
-
-        /// <summary>
-        /// Add a new security to the collection by symbol defaulting to SecurityType.Equity
-        /// </summary>
-        /// <param name="symbol">Symbol for the equity we're adding</param>
-        /// <param name="resolution">Resolution of the securty we're adding</param>
-        /// <param name="fillDataForward">Boolean flag indicating the security is fillforward</param>
-        public void Add(string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true) 
-        {
-            Add(symbol, SecurityType.Equity, resolution, fillDataForward);
-        }
-
 
         /// <summary>
         /// Add a new security by all of its properties.
         /// </summary>
         /// <param name="symbol">Symbol of the security</param>
-        /// <param name="type">Type of security: Equity, Forex or Future</param>
-        /// <param name="resolution">Resolution of data required: currently only tick, second and minute for QuantConnect sources.</param>
-        /// <param name="fillDataForward">Return previous bar's data when there is no trading in this bar</param>
+        /// <param name="config">The SubscriptionDataConfig for this symbol</param>
         /// <param name="leverage">Leverage for this security, default = 1</param>
-        /// <param name="extendedMarketHours">Request all the data available, including the extended market hours from 4am - 8pm.</param>
         /// <param name="isDynamicallyLoadedData">Use dynamic data</param>
-        public void Add(string symbol, SecurityType type = SecurityType.Equity, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 1, bool extendedMarketHours = false, bool isDynamicallyLoadedData = false) 
+        public void Add(string symbol, SubscriptionDataConfig config, decimal leverage = 1m, bool isDynamicallyLoadedData = false) 
         {
             //Upper case sybol:
             symbol = symbol.ToUpper();
-
-            //Maximum Data Usage: mainly RAM constraints but this has never been fully tested.
-            if (GetResolutionCount(Resolution.Tick) >= _tickLimit && resolution == Resolution.Tick) 
+            if (symbol != config.Symbol)
             {
-                throw new Exception("We currently only support " + _tickLimit + " tick assets at a time due to physical memory limitations.");
-            }
-            if (GetResolutionCount(Resolution.Second) >= _secondLimit && resolution == Resolution.Second) 
-            {
-                throw new Exception("We currently only support  " + _secondLimit + "  second resolution securities at a time due to physical memory limitations.");
-            }
-            if (GetResolutionCount(Resolution.Minute) >= _minuteLimit && resolution == Resolution.Minute) 
-            {
-                throw new Exception("We currently only support  " + _minuteLimit + "  minute assets at a time due to physical memory limitations.");
+                throw new ArgumentException("Expected SubscriptionDataConfig for " + symbol + " but received " + config.Symbol);
             }
 
-            //Current ram usage: this especially applies during live trading where micro servers have limited resources:
-            var currentEstimatedRam = GetRamEstimate(GetResolutionCount(Resolution.Minute), GetResolutionCount(Resolution.Second), GetResolutionCount(Resolution.Tick));
-            
-            if (currentEstimatedRam > _maxRamEstimate)
-            {
-                throw new Exception("We estimate you will run out of memory (" + currentEstimatedRam + "mb of " + _maxRamEstimate + "mb physically available). Please reduce the number of symbols you're analysing or if in live trading upgrade your server to allow more memory.");
-            }
+            CheckResolutionCounts(config.Resolution);
 
             //If we don't already have this asset, add it to the securities list.
-            if (!_securityManager.ContainsKey(symbol)) 
-            {
-                switch (type)
-                {
-                    case SecurityType.Equity:
-                        Add(symbol, new Equity.Equity(symbol, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData));
-                        break;
-                    case SecurityType.Forex:
-                        Add(symbol, new Forex.Forex(symbol, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData));
-                        break;
-                    case SecurityType.Base:
-                        Add(symbol, new Security(symbol, SecurityType.Base, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData));
-                        break;
-                    default:
-                        throw new Exception("We currently only support Equity and Forex Securities Types. Its still possible to trade futures but you must use generic data. Please see the QC University example 'Quandl Futures'.");
-                }
-            } 
-            else 
+            if (_securityManager.ContainsKey(symbol))
             {
                 //Otherwise, we already have it, just change its resolution:
                 Log.Trace("Algorithm.Securities.Add(): Changing security information will overwrite portfolio");
-                switch (type)
-                {
-                    case SecurityType.Equity:
-                        _securityManager[symbol] = new Equity.Equity(symbol, resolution, fillDataForward, leverage, extendedMarketHours);
-                        break;
-                    case SecurityType.Forex:
-                        _securityManager[symbol] = new Forex.Forex(symbol, resolution, fillDataForward, leverage, extendedMarketHours);
-                        break;
-                    case SecurityType.Base:
-                        _securityManager[symbol] = new Security(symbol, SecurityType.Base, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData);
-                        break;
-                }
+            }
+
+            switch (config.Security)
+            {
+                case SecurityType.Equity:
+                    _securityManager[symbol] = new Equity.Equity(symbol, config, leverage, isDynamicallyLoadedData);
+                    break;
+                case SecurityType.Forex:
+                    _securityManager[symbol] = new Forex.Forex(symbol, config, leverage, isDynamicallyLoadedData);
+                    break;
+                case SecurityType.Base:
+                    _securityManager[symbol] = new Security(symbol, config, leverage, isDynamicallyLoadedData);
+                    break;
             }
         }
-        
-        
+
         /// <summary>
         /// Add a symbol-security by its key value pair.
         /// </summary>
@@ -398,32 +350,21 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Estimated ram usage with this symbol combination:
-        /// </summary>
-        /// <param name="minute"></param>
-        /// <param name="second"></param>
-        /// <param name="tick"></param>
-        /// <returns>Decimal estimate of the number of MB ram the requested assets would consume</returns>
-        private decimal GetRamEstimate(int minute, int second, int tick)
-        {
-            return _minuteMemory * minute + _secondMemory * second + _tickMemory * tick;
-        }
-
-        /// <summary>
         /// Update the security properties/online functions with new data/price packets.
         /// </summary>
         /// <param name="time">Time Frontier</param>
         /// <param name="data">Data packets to update</param>
-        public void Update(DateTime time, BaseData data) 
+        public void Update(DateTime time, Dictionary<int, List<BaseData>> data) 
         {
             try 
             {
                 //If its market data, look for the matching security symbol and update it:
                 foreach (var security in _securityManager.Values)
                 {
-                    if (data.Symbol == security.Symbol)
+                    List<BaseData> dataPoints;
+                    if (data.TryGetValue(security.SubscriptionDataConfig.SubscriptionIndex, out dataPoints) && dataPoints.Count != 0)
                     {
-                        security.Update(time, data);
+                        security.Update(time, dataPoints[dataPoints.Count - 1]);
                     }
                     else
                     {
@@ -435,6 +376,49 @@ namespace QuantConnect.Securities
             {
                 Log.Error("Algorithm.Market.Update(): " + err.Message);
             }
+        }
+
+        /// <summary>
+        /// Verifies that we can add more securities
+        /// </summary>
+        /// <param name="resolution">The new resolution to be added</param>
+        private void CheckResolutionCounts(Resolution resolution)
+        {
+            //Maximum Data Usage: mainly RAM constraints but this has never been fully tested.
+            if (GetResolutionCount(Resolution.Tick) >= _tickLimit && resolution == Resolution.Tick)
+            {
+                throw new Exception("We currently only support " + _tickLimit + " tick assets at a time due to physical memory limitations.");
+            }
+            if (GetResolutionCount(Resolution.Second) >= _secondLimit && resolution == Resolution.Second)
+            {
+                throw new Exception("We currently only support  " + _secondLimit + "  second resolution securities at a time due to physical memory limitations.");
+            }
+            if (GetResolutionCount(Resolution.Minute) >= _minuteLimit && resolution == Resolution.Minute)
+            {
+                throw new Exception("We currently only support  " + _minuteLimit + "  minute assets at a time due to physical memory limitations.");
+            }
+
+            //Current ram usage: this especially applies during live trading where micro servers have limited resources:
+            var currentEstimatedRam = GetRamEstimate(GetResolutionCount(Resolution.Minute), GetResolutionCount(Resolution.Second),
+                GetResolutionCount(Resolution.Tick));
+
+            if (currentEstimatedRam > _maxRamEstimate)
+            {
+                throw new Exception("We estimate you will run out of memory (" + currentEstimatedRam + "mb of " + _maxRamEstimate
+                    + "mb physically available). Please reduce the number of symbols you're analysing or if in live trading upgrade your server to allow more memory.");
+            }
+        }
+
+        /// <summary>
+        /// Estimated ram usage with this symbol combination:
+        /// </summary>
+        /// <param name="minute"></param>
+        /// <param name="second"></param>
+        /// <param name="tick"></param>
+        /// <returns>Decimal estimate of the number of MB ram the requested assets would consume</returns>
+        private decimal GetRamEstimate(int minute, int second, int tick)
+        {
+            return _minuteMemory * minute + _secondMemory * second + _tickMemory * tick;
         }
 
     } // End Algorithm Security Manager Class

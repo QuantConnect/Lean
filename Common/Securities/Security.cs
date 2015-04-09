@@ -42,12 +42,9 @@ namespace QuantConnect.Securities
         /******************************************************** 
         * CLASS PRIVATE VARIABLES
         *********************************************************/
-        private string _symbol = "";
-        private SecurityType _type = SecurityType.Equity;
-        private Resolution _resolution = Resolution.Second;
-        private bool _isFillDataForward = false;
-        private bool _isExtendedMarketHours = false;
-        private bool _isDynamicallyLoadedData = false;
+        private readonly string _symbol;
+        private readonly bool _isDynamicallyLoadedData;
+        private readonly SubscriptionDataConfig _config;
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -73,7 +70,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return _type;
+                return _config.Security;
             }
         }
 
@@ -85,7 +82,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return _resolution;
+                return _config.Resolution;
             }
         }
 
@@ -96,7 +93,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return _isFillDataForward;
+                return _config.FillDataForward;
             }
         }
 
@@ -107,8 +104,16 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return _isExtendedMarketHours;
+                return _config.ExtendedMarketHours;
             }
+        }
+
+        /// <summary>
+        /// Gets the subscription configuration for this security
+        /// </summary>
+        public SubscriptionDataConfig SubscriptionDataConfig
+        {
+            get { return _config; }
         }
 
         /// <summary>
@@ -183,18 +188,15 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(string symbol, SecurityType type, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours, bool isDynamicallyLoadedData = false) 
+        public Security(string symbol, SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false) 
         {
             //Set Basics:
             _symbol = symbol;
-            _type = type;
-            _resolution = resolution;
-            _isFillDataForward = fillDataForward;
-            _isExtendedMarketHours = extendedMarketHours;
+            _config = config;
             _isDynamicallyLoadedData = isDynamicallyLoadedData;
 
             //Setup Transaction Model for this Asset
-            switch (type) 
+            switch (config.Security) 
             { 
                 case SecurityType.Equity:
                     Model = new EquityTransactionModel();
@@ -212,7 +214,7 @@ namespace QuantConnect.Securities
 
             //Holdings for new Vehicle:
             Cache = new SecurityCache();
-            Holdings = new SecurityHolding(symbol, type, leverage, Model);
+            Holdings = new SecurityHolding(symbol, _config.Security, leverage, Model);
             Exchange = new SecurityExchange();
         }
 

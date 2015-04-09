@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities.Forex 
@@ -43,8 +44,8 @@ namespace QuantConnect.Securities.Forex
         /// <summary>
         /// Constructor for the forex security
         /// </summary>
-        public Forex(string symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours, bool isDynamicallyLoadedData = false) :
-            base(symbol, SecurityType.Forex, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData)
+        public Forex(string symbol, SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false)
+            : base(symbol, config, leverage, isDynamicallyLoadedData)
         {
             //Holdings for new Vehicle:
             Cache = new ForexCache();

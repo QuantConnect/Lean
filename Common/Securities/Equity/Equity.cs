@@ -17,6 +17,7 @@
 * USING NAMESPACES
 **********************************************************/
 
+using QuantConnect.Data;
 using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities.Equity 
@@ -40,8 +41,8 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
-        public Equity(string symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours, bool isDynamicallyLoadedData = false) :
-            base(symbol, SecurityType.Equity, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData) 
+        public Equity(string symbol, SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false) 
+            : base(symbol, config, leverage, isDynamicallyLoadedData) 
         {
             //Holdings for new Vehicle:
             Cache = new EquityCache();
