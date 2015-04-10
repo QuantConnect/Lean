@@ -136,6 +136,8 @@ namespace QuantConnect.Lean.Engine
             var startingPortfolioValue = setup.StartingCapital;
             var backtestMode = (job.Type == PacketType.BacktestNode);
             var methodInvokers = new Dictionary<Type, MethodInvoker>();
+            var marginCallFrequency = TimeSpan.FromMinutes(5);
+            var nextMarginCallTime = DateTime.MinValue;
 
             //Initialize Properties:
             _frontier = setup.StartingDate;
@@ -245,6 +247,20 @@ namespace QuantConnect.Lean.Engine
 
                     //Update the securities properties: first before calling user code to avoid issues with data
                     algorithm.Securities.Update(time, newData[time]);
+
+                    // perform margin calls
+                    if (time >= nextMarginCallTime)
+                    {
+                        // determine if there are possible margin call orders to be executed
+                        var marginCallOrders = algorithm.Portfolio.ScanForMarginCall();
+                        if (marginCallOrders.Count != 0)
+                        {
+                            algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
+                        }
+
+                        nextMarginCallTime = time + marginCallFrequency;
+                    }
+                    
 
                     //Check if the user's signalled Quit: loop over data until day changes.
                     if (algorithm.GetQuit())

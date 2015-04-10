@@ -86,42 +86,12 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Add a new security by all of its properties.
+        /// Add a new security with this symbol to the collection.
         /// </summary>
-        /// <param name="symbol">Symbol of the security</param>
-        /// <param name="config">The SubscriptionDataConfig for this symbol</param>
-        /// <param name="leverage">Leverage for this security, default = 1</param>
-        /// <param name="isDynamicallyLoadedData">Use dynamic data</param>
-        public void Add(string symbol, SubscriptionDataConfig config, decimal leverage = 1m, bool isDynamicallyLoadedData = false) 
+        /// <param name="security">security object</param>
+        public void Add(Security security)
         {
-            //Upper case sybol:
-            symbol = symbol.ToUpper();
-            if (symbol != config.Symbol)
-            {
-                throw new ArgumentException("Expected SubscriptionDataConfig for " + symbol + " but received " + config.Symbol);
-            }
-
-            CheckResolutionCounts(config.Resolution);
-
-            //If we don't already have this asset, add it to the securities list.
-            if (_securityManager.ContainsKey(symbol))
-            {
-                //Otherwise, we already have it, just change its resolution:
-                Log.Trace("Algorithm.Securities.Add(): Changing security information will overwrite portfolio");
-            }
-
-            switch (config.Security)
-            {
-                case SecurityType.Equity:
-                    _securityManager[symbol] = new Equity.Equity(symbol, config, leverage, isDynamicallyLoadedData);
-                    break;
-                case SecurityType.Forex:
-                    _securityManager[symbol] = new Forex.Forex(symbol, config, leverage, isDynamicallyLoadedData);
-                    break;
-                case SecurityType.Base:
-                    _securityManager[symbol] = new Security(symbol, config, leverage, isDynamicallyLoadedData);
-                    break;
-            }
+            Add(security.Symbol, security);
         }
 
         /// <summary>
@@ -131,6 +101,7 @@ namespace QuantConnect.Securities
         /// <param name="pair"></param>
         public void Add(KeyValuePair<string, Security> pair)
         {
+            CheckResolutionCounts(pair.Value.Resolution);
             _securityManager.Add(pair.Key, pair.Value);
             _securityHoldings.Add(pair.Key, pair.Value.Holdings);
         }

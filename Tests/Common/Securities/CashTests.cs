@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Common.Securities
             const int quantity = 100;
             const decimal conversionRate = 1/100m;
             var cash = new Cash("JPY", quantity, conversionRate);
-            Assert.AreEqual(quantity*conversionRate, cash.ValueInBaseCurrency);
+            Assert.AreEqual(quantity*conversionRate, cash.ValueInAccountCurrency);
         }
 
         [Test]
@@ -78,8 +78,8 @@ namespace QuantConnect.Tests.Common.Securities
             var subscriptions = new SubscriptionManager();
             var abcConfig = subscriptions.Add(SecurityType.Equity, "ABC", Resolution.Minute);
             var securities = new SecurityManager();
-            securities.Add("ABC", abcConfig);
-            cash.EnsureCurrencyDataFeed(subscriptions, securities);
+            securities.Add("ABC", new Security(abcConfig, 1m));
+            cash.EnsureCurrencyDataFeed(securities, subscriptions);
             Assert.AreEqual(1, subscriptions.Subscriptions.Count(x => x.Symbol == "USDJPY"));
             Assert.AreEqual(1, securities.Values.Count(x => x.Symbol == "USDJPY"));
         }
@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var securities = new SecurityManager();
             var subscriptions = new SubscriptionManager();
-            cash.EnsureCurrencyDataFeed(subscriptions, securities);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions);
         }
 
         [Test]
@@ -107,10 +107,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             var subscriptions = new SubscriptionManager();
             var securities = new SecurityManager();
-            securities.Add("ABC", subscriptions.Add(SecurityType.Equity, "ABC", Resolution.Minute));
-            securities.Add("BCD", subscriptions.Add(SecurityType.Equity, "BCD", minimumResolution));
+            securities.Add("ABC", new Security(subscriptions.Add(SecurityType.Equity, "ABC", Resolution.Minute), 1m));
+            securities.Add("BCD", new Security(subscriptions.Add(SecurityType.Equity, "BCD", minimumResolution), 1m));
 
-            cash.EnsureCurrencyDataFeed(subscriptions, securities);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions);
             Assert.AreEqual(minimumResolution, subscriptions.Subscriptions.Single(x => x.Symbol == "USDJPY").Resolution);
         }
 
@@ -123,9 +123,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             var subscriptions = new SubscriptionManager();
             var securities = new SecurityManager();
-            securities.Add("ABC", subscriptions.Add(SecurityType.Forex, "ABC", Resolution.Minute));
+            securities.Add("ABC", new Security(subscriptions.Add(SecurityType.Forex, "ABC", Resolution.Minute), 1m));
 
-            cash.EnsureCurrencyDataFeed(subscriptions, securities);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions);
             var config = subscriptions.Subscriptions.Single(x => x.Symbol == "USDJPY");
             Assert.IsTrue(config.IsInternalFeed);
         }
@@ -139,9 +139,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             var subscriptions = new SubscriptionManager();
             var securities = new SecurityManager();
-            securities.Add("USDJPY", subscriptions.Add(SecurityType.Forex, "USDJPY", Resolution.Minute));
+            securities.Add("USDJPY", new Security(subscriptions.Add(SecurityType.Forex, "USDJPY", Resolution.Minute), 1m));
 
-            cash.EnsureCurrencyDataFeed(subscriptions, securities);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions);
             var config = subscriptions.Subscriptions.Single(x => x.Symbol == "USDJPY");
             Assert.IsFalse(config.IsInternalFeed);
         }
@@ -155,10 +155,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             var subscriptions = new SubscriptionManager();
             var securities = new SecurityManager();
-            securities.Add("USDJPY", subscriptions.Add(SecurityType.Forex, "USDJPY", Resolution.Minute));
+            securities.Add("USDJPY", new Security(subscriptions.Add(SecurityType.Forex, "USDJPY", Resolution.Minute), 1m));
 
             // we need to get subscription index
-            cash.EnsureCurrencyDataFeed(subscriptions, securities);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions);
 
             var last = 120m;
             var data = new Dictionary<int, List<BaseData>>();
@@ -182,10 +182,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             var subscriptions = new SubscriptionManager();
             var securities = new SecurityManager();
-            securities.Add("GBPUSD", subscriptions.Add(SecurityType.Forex, "GBPUSD", Resolution.Minute));
+            securities.Add("GBPUSD", new Security(subscriptions.Add(SecurityType.Forex, "GBPUSD", Resolution.Minute), 1m));
 
             // we need to get subscription index
-            cash.EnsureCurrencyDataFeed(subscriptions, securities);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions);
 
             var last = 1.5m;
             var data = new Dictionary<int, List<BaseData>>();

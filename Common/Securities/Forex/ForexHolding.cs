@@ -34,6 +34,8 @@ namespace QuantConnect.Securities.Forex
         * CLASS VARIABLES
         *********************************************************/
 
+        private readonly Forex _forex;
+
         /******************************************************** 
         * CONSTRUCTOR/DELEGATE DEFINITIONS
         *********************************************************/
@@ -41,20 +43,62 @@ namespace QuantConnect.Securities.Forex
         /// <summary>
         /// Forex Holding Class
         /// </summary>
-        public ForexHolding(string symbol, decimal leverage, ISecurityTransactionModel transactionModel)
-            : base(symbol, SecurityType.Forex, leverage, transactionModel)
+        /// <param name="security">The forex security being held</param>
+        /// <param name="transactionModel">The transaction model used for the security</param>
+        /// <param name="marginModel">The margin model used for the security</param>
+        public ForexHolding(Forex security, ISecurityTransactionModel transactionModel, ISecurityMarginModel marginModel)
+            : base(security, transactionModel, marginModel)
         {
-            //Nothing to do.
+            _forex = security;
         }
 
         /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
-            
+
+        /// <summary>
+        /// Acquisition cost of the security total holdings.
+        /// </summary>
+        public override decimal HoldingsCost
+        {
+            // we need to add a conversion since the data is in terms of the quote currency
+            get { return base.HoldingsCost*_forex.QuoteCurrency.ConversionRate; }
+        }
+
+        /// <summary>
+        /// Market value of our holdings.
+        /// </summary>
+        public override decimal HoldingsValue
+        {
+            // we need to add a conversion since the data is in terms of the quote currency
+            get { return base.HoldingsValue*_forex.QuoteCurrency.ConversionRate; }
+        }
 
         /******************************************************** 
         * CLASS METHODS 
         *********************************************************/
-            
-    } // End Forex Holdings:
-} //End Namespace
+
+        /// <summary>
+        /// Profit if we closed the holdings right now including the approximate fees.
+        /// </summary>
+        /// <remarks>Does not use the transaction model for market fills but should.</remarks>
+        public override decimal TotalCloseProfit()
+        {
+            if (AbsoluteQuantity == 0)
+            {
+                return 0;
+            }
+
+            decimal orderFee = 0;
+
+            if (AbsoluteQuantity > 0)
+            {
+                // this is in the account currency
+                orderFee = TransactionModel.GetOrderFee(AbsoluteQuantity, Price);
+            }
+
+            // we need to add a conversion since the data is in terms of the quote currency
+            return (Price - AveragePrice)*Quantity*_forex.QuoteCurrency.ConversionRate - orderFee;
+        }
+    }
+}

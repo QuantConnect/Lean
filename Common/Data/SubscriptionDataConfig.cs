@@ -90,7 +90,7 @@ namespace QuantConnect.Data
             Type = objectType;
             Security = securityType;
             Resolution = resolution;
-            Symbol = symbol;
+            Symbol = symbol.ToUpper();
             FillDataForward = fillForward;
             ExtendedMarketHours = extendedHours;
             IsTradeBar = isTradeBar;

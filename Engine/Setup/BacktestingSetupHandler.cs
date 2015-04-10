@@ -187,7 +187,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Initialise the algorithm, get the required data:
                     algorithm.Initialize();
                     //Add currency data feeds that weren't explicity added in Initialize
-                    algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.SubscriptionManager, algorithm.Securities);
+                    algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager);
                 }
                 catch (Exception err)
                 {

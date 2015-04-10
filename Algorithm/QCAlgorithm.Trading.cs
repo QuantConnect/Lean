@@ -495,7 +495,7 @@ namespace QuantConnect.Algorithm
             if (Math.Abs(deltaQuantity) > 0)
             {
                 //5. Calculate accurate quantity factoring in fees:
-                var projectedFees = security.Model.GetOrderFee(deltaQuantity, security.Price);
+                var projectedFees = security.TransactionModel.GetOrderFee(deltaQuantity, security.Price);
 
                 //5.1 Long Short Constant Multiplier:
                 var direction = (deltaQuantity > 0) ? 1 : -1;

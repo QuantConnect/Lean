@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 
@@ -187,7 +188,7 @@ namespace QuantConnect.Securities
         /// <returns>New unique, increasing orderid</returns>
         public virtual int AddOrder(Order order) 
         {
-            try 
+            try
             {
                 //Ensure its flagged as a new order for the transaction handler.
                 order.Id = _orderId++;
@@ -212,9 +213,9 @@ namespace QuantConnect.Securities
         ///     -5 if the order was already filled or cancelled
         ///     -6 if the order was not found in the cache
         /// </returns>
-        public int UpdateOrder(Order order) 
+        public int UpdateOrder(Order order)
         {
-            try 
+            try
             {
                 //Update the order from the behaviour
                 var id = order.Id;
@@ -295,6 +296,22 @@ namespace QuantConnect.Securities
             }
         }
 
+        /// <summary>
+        /// Wait for a specific order to be either Filled, Invalid or Canceled
+        /// </summary>
+        /// <param name="orderId">The id of the order to wait for</param>
+        public void WaitForOrder(int orderId)
+        {
+            //Wait for the market order to fill.
+            //This is processed in a parallel thread.
+            while (!Orders.ContainsKey(orderId) ||
+                   (Orders[orderId].Status != OrderStatus.Filled &&
+                    Orders[orderId].Status != OrderStatus.Invalid &&
+                    Orders[orderId].Status != OrderStatus.Canceled))
+            {
+                Thread.Sleep(1);
+            }
+        }
 
         /// <summary>
         /// Get a list of all open orders.
@@ -374,42 +391,22 @@ namespace QuantConnect.Securities
         public bool GetSufficientCapitalForOrder(SecurityPortfolioManager portfolio, Order order)
         {
             var increasingPosition = true;
-            var currentAbsoluteHoldings = _securities[order.Symbol].Holdings.AbsoluteQuantity;
-            var newAbsoluteHoldings = Math.Abs(order.Quantity + _securities[order.Symbol].Holdings.Quantity);
-            if (newAbsoluteHoldings < currentAbsoluteHoldings) increasingPosition = false;
-
-            if (increasingPosition && Math.Abs(GetOrderCashImpact(order)) > portfolio.GetFreeCash(order.Symbol, order.Direction))
+            var security = _securities[order.Symbol];
+            var currentAbsoluteHoldings = security.Holdings.AbsoluteQuantity;
+            var newAbsoluteHoldings = Math.Abs(order.Quantity + security.Holdings.Quantity);
+            if (newAbsoluteHoldings < currentAbsoluteHoldings)
             {
-                //Log.Debug("Symbol: " + order.Symbol + " Direction: " + order.Direction.ToString() + " Quantity: " + order.Quantity);
-                //Log.Debug("GetOrderRequiredBuyingPower(): " + Math.Abs(GetOrderRequiredBuyingPower(order)) + " PortfolioGetBuyingPower(): " + portfolio.GetBuyingPower(order.Symbol, order.Direction)); 
-                Log.Error(string.Format("Transactions.GetSufficientCapitalForOrder(): Id: {0}, Cash Impact: {1}, Free Cash: {2}", order.Id, GetOrderCashImpact(order), portfolio.GetFreeCash(order.Symbol, order.Direction)));
+                increasingPosition = false;
+            }
+
+            var freeMargin = security.MarginModel.GetMarginRemaining(portfolio, security, order.Direction);
+            var initialMarginRequiredForOrder = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
+            if (increasingPosition && Math.Abs(initialMarginRequiredForOrder) > freeMargin)
+            {
+                Log.Error(string.Format("Transactions.GetSufficientCapitalForOrder(): Id: {0}, Initial Margin: {1}, Free Margin: {2}", order.Id, initialMarginRequiredForOrder, freeMargin));
                 return false;
             }
             return true;
-        }
-
-        /// <summary>
-        /// Using leverage property of security find the required cash for this order.
-        /// </summary>
-        /// <param name="order">Order to check</param>
-        /// <returns>decimal cash required to purchase order</returns>
-        private decimal GetOrderCashImpact(Order order)
-        {
-            try
-            {
-                //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
-                //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
-                var orderFees = _securities[order.Symbol].Model.GetOrderFee(order.Quantity, order.Price);
-
-                //Return the total cash impact for the order, including fees:
-                return Math.Abs(order.Value) / _securities[order.Symbol].Leverage + orderFees; 
-            } 
-            catch(Exception err)
-            {
-                Log.Error("Security.TransactionManager.GetOrderCashImpact(): " + err.Message);
-            }
-            //Prevent all orders if leverage is 0.
-            return decimal.MaxValue;
         }
 
         /// <summary>
@@ -420,7 +417,5 @@ namespace QuantConnect.Securities
         {
             return _orderId++;
         }
-
     } // End Algorithm Transaction Filling Classes
-
 } // End QC Namespace

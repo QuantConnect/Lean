@@ -163,9 +163,41 @@ namespace QuantConnect.Securities
         /// <remarks>This is ignored in live trading and the real fill prices are used instead</remarks>
         /// <seealso cref="EquityTransactionModel"/>
         /// <seealso cref="ForexTransactionModel"/>
+        [Obsolete("Security.Model has been made obsolete, use Security.TransactionModel instead.")]
         public virtual ISecurityTransactionModel Model
         {
-            get; 
+            get { return TransactionModel; }
+            set { TransactionModel = value; }
+        }
+
+        /// <summary>
+        /// Transaction model class implements the fill models for the security. If the user does not define a model the default
+        /// model is used for this asset class.
+        /// </summary>
+        /// <remarks>This is ignored in live trading and the real fill prices are used instead</remarks>
+        /// <seealso cref="EquityTransactionModel"/>
+        /// <seealso cref="ForexTransactionModel"/>
+        public ISecurityTransactionModel TransactionModel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets the portfolio model used by this security
+        /// </summary>
+        public ISecurityPortfolioModel PortfolioModel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets the margin model used for this security
+        /// </summary>
+        public ISecurityMarginModel MarginModel
+        {
+            get;
             set;
         }
 
@@ -176,7 +208,7 @@ namespace QuantConnect.Securities
         /// <remarks>TradeBars (seconds and minute bars) are prefiltered to ensure the ticks which build the bars are realistically tradeable</remarks>
         /// <seealso cref="EquityDataFilter"/>
         /// <seealso cref="ForexDataFilter"/>
-        public virtual ISecurityDataFilter DataFilter
+        public ISecurityDataFilter DataFilter
         {
             get; 
             set;
@@ -188,37 +220,20 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(string symbol, SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false) 
+        public Security(SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false) 
         {
-            //Set Basics:
-            _symbol = symbol;
             _config = config;
+            _symbol = config.Symbol;
             _isDynamicallyLoadedData = isDynamicallyLoadedData;
 
-            //Setup Transaction Model for this Asset
-            switch (config.Security) 
-            { 
-                case SecurityType.Equity:
-                    Model = new EquityTransactionModel();
-                    DataFilter = new EquityDataFilter();
-                    break;
-                case SecurityType.Forex:
-                    Model = new ForexTransactionModel();
-                    DataFilter = new ForexDataFilter();
-                    break;
-                case SecurityType.Base:
-                    Model = new SecurityTransactionModel();
-                    DataFilter = new SecurityDataFilter();
-                    break;
-            }
-
-            //Holdings for new Vehicle:
             Cache = new SecurityCache();
-            Holdings = new SecurityHolding(symbol, _config.Security, leverage, Model);
             Exchange = new SecurityExchange();
+            DataFilter = new SecurityDataFilter();
+            PortfolioModel = new SecurityPortfolioModel();
+            TransactionModel = new SecurityTransactionModel();
+            MarginModel = new SecurityMarginModel(leverage);
+            Holdings = new SecurityHolding(this, TransactionModel, MarginModel);
         }
-
-
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -404,9 +419,8 @@ namespace QuantConnect.Securities
         /// <param name="leverage">Leverage for this asset</param>
         public void SetLeverage(decimal leverage)
         {
-            Holdings.SetLeverage(leverage);
+            MarginModel.SetLeverage(this, leverage);
         }
 
     } // End Security
-
 } // End QC Namespace
