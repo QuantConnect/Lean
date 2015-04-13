@@ -197,7 +197,8 @@ namespace QuantConnect
                 Symbol = bar.Symbol,
                 Time = bar.Time,
                 Value = 2 * bar.Value,
-                Volume = 2 * bar.Volume
+                Volume = 2 * bar.Volume,
+                Period = bar.Period
             };
         }
     }
