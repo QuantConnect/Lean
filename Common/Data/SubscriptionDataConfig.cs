@@ -37,19 +37,19 @@ namespace QuantConnect.Data
         * STRUCT PUBLIC VARIABLES
         *********************************************************/
         /// Type of data
-        public Type Type;
+        public readonly Type Type;
         /// Security type of this data subscription
-        public SecurityType Security;
+        public readonly SecurityType Security;
         /// Symbol of the asset we're requesting.
-        public string Symbol;
+        public readonly string Symbol;
         /// Resolution of the asset we're requesting, second minute or tick
-        public Resolution Resolution;
+        public readonly Resolution Resolution;
         /// Timespan increment between triggers of this data:
-        public TimeSpan Increment;
+        public readonly TimeSpan Increment;
         /// True if wish to send old data when time gaps in data feed.
-        public bool FillDataForward;
+        public readonly bool FillDataForward;
         /// Boolean Send Data from between 4am - 8am (Equities Setting Only)
-        public bool ExtendedMarketHours;
+        public readonly bool ExtendedMarketHours;
         /// True if the data type has OHLC properties, even if dynamic data
         public readonly bool IsTradeBar;
         /// True if the data type has a Volume property, even if it is dynamic data
@@ -64,7 +64,7 @@ namespace QuantConnect.Data
         ///Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
         public string MappedSymbol;
         ///Consolidators that are registred with this subscription
-        public List<IDataConsolidator> Consolidators; 
+        public readonly List<IDataConsolidator> Consolidators; 
 
         /******************************************************** 
         * CLASS CONSTRUCTOR
