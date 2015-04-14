@@ -31,15 +31,12 @@ namespace QuantConnect.Util
         /// <param name="element">The element to access</param>
         /// <param name="name">The attribute name to access on the element</param>
         /// <returns>The converted value</returns>
-        public static T Get<T>(this XElement element, string name)
+        public static T Get<T>(this XElement element, string name) 
+            where T : IConvertible
         {
             var xAttribute = element.Descendants(name).Single();
             string value = xAttribute.Value;
-            if (typeof (T).IsEnum)
-            {
-                return (T) Enum.Parse(typeof (T), value);
-            }
-            return (T) Convert.ChangeType(value, typeof (T));
+            return value.ConvertTo<T>();
         }
     }
 }
