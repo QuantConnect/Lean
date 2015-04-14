@@ -31,7 +31,7 @@ namespace QuantConnect.Data
     /// <summary>
     /// Subscription data required including the type of data.
     /// </summary>
-    public struct SubscriptionDataConfig
+    public class SubscriptionDataConfig
     {
         /******************************************************** 
         * STRUCT PUBLIC VARIABLES
