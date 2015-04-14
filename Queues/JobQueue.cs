@@ -84,21 +84,15 @@ namespace QuantConnect.Queues
             {
                 var liveJob = new LiveNodePacket
                 {
-                    ResultEndpoint = ResultHandlerEndpoint.LiveTrading,
-                    SetupEndpoint = SetupHandlerEndpoint.PaperTrading,
-                    DataEndpoint = DataFeedEndpoint.LiveTrading,
-                    TransactionEndpoint = TransactionHandlerEndpoint.Brokerage,
-                    RealTimeEndpoint = RealTimeEndpoint.LiveTrading,
                     Type = PacketType.LiveNode,
+                    DataEndpoint = DataFeedEndpoint.LiveTrading,
+                    RealTimeEndpoint = RealTimeEndpoint.LiveTrading,
+                    ResultEndpoint = ResultHandlerEndpoint.LiveTrading,
+                    SetupEndpoint = SetupHandlerEndpoint.Brokerage,
+                    TransactionEndpoint = TransactionHandlerEndpoint.Brokerage,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
                     Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
                 };
-
-                if (liveJob.Brokerage != PaperBrokerageTypeName)
-                {
-                    liveJob.SetupEndpoint = SetupHandlerEndpoint.Brokerage;
-                    liveJob.TransactionEndpoint = TransactionHandlerEndpoint.Brokerage;
-                }
                 
                 // import the brokerage data for the configured brokerage
                 liveJob.BrokerageData = Composer.Instance.GetExportWithMatchingMetadata<Dictionary<string, string>>("BrokerageData", liveJob.Brokerage);
@@ -109,12 +103,12 @@ namespace QuantConnect.Queues
             //Default run a backtesting job.
             var backtestJob = new BacktestNodePacket(0, 0, "", new byte[] {}, 10000, "local")
             {
-                ResultEndpoint = ResultHandlerEndpoint.Console,
-                SetupEndpoint = SetupHandlerEndpoint.Console,
-                DataEndpoint = DataFeedEndpoint.FileSystem,
-                TransactionEndpoint = TransactionHandlerEndpoint.Backtesting,
-                RealTimeEndpoint = RealTimeEndpoint.Backtesting,
                 Type = PacketType.BacktestNode,
+                DataEndpoint = DataFeedEndpoint.FileSystem,
+                SetupEndpoint = SetupHandlerEndpoint.Console,
+                ResultEndpoint = ResultHandlerEndpoint.Console,
+                RealTimeEndpoint = RealTimeEndpoint.Backtesting,
+                TransactionEndpoint = TransactionHandlerEndpoint.Backtesting,
                 Algorithm = File.ReadAllBytes(AlgorithmLocation)
             };
             return backtestJob;

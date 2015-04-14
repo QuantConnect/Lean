@@ -59,6 +59,13 @@ namespace QuantConnect.Brokerages.Paper
         /// <returns>A new brokerage instance</returns>
         public IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
+            //Try and use the live job packet cash if exists, otherwise resort to the user algo cash:
+            if (job.BrokerageData.ContainsKey("project-paper-equity"))
+            {
+                var consistentCash = Convert.ToDecimal(job.BrokerageData["project-paper-equity"]);
+                algorithm.SetCash(consistentCash);
+            }
+
             return new PaperBrokerage(algorithm);
         }
 

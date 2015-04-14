@@ -133,7 +133,6 @@
     <Compile Include="StreamStore.cs" />
     <Compile Include="Setup\ConsoleSetupHandler.cs" />
     <Compile Include="Setup\BacktestingSetupHandler.cs" />
-    <Compile Include="Setup\PaperTradingSetupHandler.cs" />
     <Compile Include="Setup\ISetupHandler.cs" />
     <Compile Include="SubscriptionDataReader.cs" />
     <None Include="config.json">

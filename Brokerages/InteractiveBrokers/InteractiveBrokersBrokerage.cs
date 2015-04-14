@@ -249,7 +249,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.RequestOpenOrders();
 
             // wait for our end signal
-            if (!manualResetEvent.WaitOne(1000))
+            if (!manualResetEvent.WaitOne(5000))
             {
                 throw new TimeoutException("InteractiveBrokersBrokerage.GetOpenOrders(): Operation took longer than 1 second.");
             }
@@ -321,7 +321,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // no need to be fancy with request id since that's all this client does is 1 request
                 client.RequestExecutions(requestID, filter);
 
-                if (!manualResetEvent.WaitOne(1000))
+                if (!manualResetEvent.WaitOne(5000))
                 {
                     throw new TimeoutException("InteractiveBrokersBrokerage.GetExecutions(): Operation took longer than 1 second.");
                 }
@@ -372,7 +372,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // pause for a moment to receive next valid ID message from gateway
-            if (!_waitForNextValidID.WaitOne(1000))
+            if (!_waitForNextValidID.WaitOne(5000))
             {
                 throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 1 second.");
             }

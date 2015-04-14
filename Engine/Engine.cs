@@ -622,10 +622,6 @@ namespace QuantConnect.Lean.Engine
                     sh = new BacktestingSetupHandler();
                     Log.Trace("Engine.GetSetupHandler(): Selected Backtesting Algorithm Setup Handler.");
                     break;
-                case SetupHandlerEndpoint.PaperTrading:
-                    sh = new PaperTradingSetupHandler();
-                    Log.Trace("Engine.GetSetupHandler(): Selected PaperTrading Algorithm Setup Handler.");
-                    break;
                 case SetupHandlerEndpoint.Brokerage:
                     sh = new BrokerageSetupHandler();
                     Log.Trace("Engine.GetSetupHandler(): Selected PaperTrading Algorithm Setup Handler.");
