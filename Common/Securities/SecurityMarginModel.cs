@@ -90,7 +90,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the total margin required to execute the specified order in units of the account currency
+        /// Gets the total margin required to execute the specified order in units of the account currency including fees
         /// </summary>
         /// <param name="security">The security to compute initial margin for</param>
         /// <param name="order">The order to be executed</param>

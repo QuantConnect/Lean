@@ -15,10 +15,10 @@
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -476,42 +476,55 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            //1. To set a fraction of whole, we need to know the whole: Cash * Leverage for remaining buying power:
             var security = Securities[symbol];
-            var total = Portfolio.TotalHoldingsValue + Portfolio.Cash * security.Leverage;
 
-            //2. Difference between our target % and our current holdings: (relative +- number).
-            var deltaValue = (total * percentage) - Portfolio[symbol].HoldingsValue;
+            // compute the remaining margin for this security
+            var direction = percentage > 0 ? OrderDirection.Buy : OrderDirection.Sell;
 
-            //3. Calculate the rough first pass of quantity: avoid Potential divide by zero error for zero prices assets.
-            var deltaQuantity = 0m;
-            if (Math.Abs(Securities[symbol].Price) > 0)
+            // compute an estimate of the buying power for this security incorporating the implied leverage
+            var marginRemaining = Math.Abs(percentage)*security.MarginModel.GetMarginRemaining(Portfolio, security, direction);
+
+            //
+            // Since we can't assume anything about the fee structure and the relative size of fees in
+            // relation to the order size we need to perform some root finding. In general we'll only need
+            // a two loops to compute a correct value. Some exotic fee structures may require more searching.
+            //
+
+            // compute the margin required for a single share
+            int quantity = 1;
+            var marketOrder = new MarketOrder(symbol, quantity, Time, type: security.Type) { Price = security.Price };
+            var marginRequiredForSingleShare = security.MarginModel.GetInitialMarginRequiredForOrder(security, marketOrder);
+            
+            // we want marginRequired to end up between this and marginRemaining
+            var marginRequiredLowerThreshold = marginRemaining - marginRequiredForSingleShare;
+
+            // iterate until we get a decent estimate, max out at 10 loops.
+            int loops = 0;
+            var marginRequired = marginRequiredForSingleShare;
+            while (marginRequired > marginRemaining || marginRequired < marginRequiredLowerThreshold)
             {
-                //3. Now rebalance the symbol requested:
-                deltaQuantity = Math.Round(deltaValue / Securities[symbol].Price);
+                var marginPerShare = marginRequired/quantity;
+                quantity = (int) Math.Truncate(marginRemaining/marginPerShare);
+                marketOrder.Quantity = quantity;
+                marginRequired = security.MarginModel.GetInitialMarginRequiredForOrder(security, marketOrder);
+
+                // no need to iterate longer than 10
+                if (++loops > 10) break;
             }
 
-            //4. Determine if we need to place an order:
-            if (Math.Abs(deltaQuantity) > 0)
+            // nothing to change
+            if (quantity == 0)
             {
-                //5. Calculate accurate quantity factoring in fees:
-                var projectedFees = security.TransactionModel.GetOrderFee(deltaQuantity, security.Price);
-
-                //5.1 Long Short Constant Multiplier:
-                var direction = (deltaQuantity > 0) ? 1 : -1;
-
-                //5.2 Multiply fees by leverage because each share's cash impact is only value/leverage. Changing quantity linearly won't work.
-                var feesCashImpact = (projectedFees * direction * security.Leverage);
-
-                //5.3 Adjust the target quantity down by percentage of fees: 
-                // e.g. Target Quantity = 1000, fees = 10, value = 1000
-                // newQuantity = 1000 * 99% == $990 max possible given projected fees.
-                // e.g. Target Quantity = -1000, fees = 10, value = -1000
-                // newQuantity = -1000 * 99% == -$990 max possible given projected fees.
-                deltaQuantity = Math.Floor((deltaValue - feesCashImpact) / security.Price);
-
-                MarketOrder(symbol, (int)deltaQuantity, false, tag);
+                return;
             }
+
+            // adjust for going short
+            if (direction == OrderDirection.Sell)
+            {
+                quantity *= -1;
+            }
+
+            MarketOrder(symbol, quantity, false, tag);
         }
 
         /// <summary>
