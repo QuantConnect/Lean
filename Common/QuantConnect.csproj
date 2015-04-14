@@ -122,7 +122,6 @@
     <Compile Include="Orders\OrderTypes.cs" />
     <Compile Include="Orders\OrderError.cs" />
     <Compile Include="Packets\HandledErrorPacket.cs" />
-    <Compile Include="Data\Test\FakeTradeBarCustom.cs" />
     <Compile Include="Securities\Cash.cs" />
     <Compile Include="Securities\CashBook.cs" />
     <Compile Include="Securities\Equity\EquityMarginModel.cs" />
