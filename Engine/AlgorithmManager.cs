@@ -259,7 +259,7 @@ namespace QuantConnect.Lean.Engine
                             var executedOrders = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
                             foreach (var order in executedOrders)
                             {
-                                algorithm.Error("Executed MarginCallOrder: " + order.Symbol + ": " + order.Quantity);
+                                algorithm.Error(string.Format("Executed MarginCallOrder: {0} - Quantity: {1} @ {2}", order.Symbol, order.Quantity, order.Price));
                             }
                         }
 

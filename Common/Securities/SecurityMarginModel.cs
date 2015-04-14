@@ -167,7 +167,10 @@ namespace QuantConnect.Securities
         /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
         public virtual Order GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin)
         {
-            if (totalMargin <= netLiquidationValue)
+            // leave a buffer in default implementation
+            const decimal marginBuffer = 0.10m;
+
+            if (totalMargin <= netLiquidationValue*(1 + marginBuffer))
             {
                 return null;
             }
