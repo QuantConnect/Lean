@@ -276,7 +276,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The current USD cash balance available for trading</returns>
         public override decimal GetCashBalance()
         {
-            return _accountProperties[AccountValueKeys.CashBalance].ToDecimal();
+            return decimal.Parse(_accountProperties[AccountValueKeys.CashBalance]);
         }
 
         /// <summary>

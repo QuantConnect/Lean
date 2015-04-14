@@ -15,10 +15,13 @@
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
+
+using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Queues
 {
@@ -30,18 +33,19 @@ namespace QuantConnect.Queues
     /// </summary>
     public class JobQueue : IJobQueueHandler
     {
+        // The type name of the QuantConnect.Brokerages.Paper.PaperBrokerage
+        private const string PaperBrokerageTypeName = "PaperBrokerage";
+        
         /******************************************************** 
         * CLASS METHODS
         *********************************************************/
+
         /// <summary>
         /// Configurations settings, lean runmode.
         /// </summary>
         private bool BacktestingMode
         {
-            get
-            {
-                return !Config.GetBool("live-mode");
-            }
+            get { return !Config.GetBool("live-mode"); }
         }
 
         /// <summary>
@@ -87,8 +91,18 @@ namespace QuantConnect.Queues
                     RealTimeEndpoint = RealTimeEndpoint.LiveTrading,
                     Type = PacketType.LiveNode,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
-                    Brokerage = Config.Get("live-mode-brokerage", "Paper Brokerage")
+                    Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
                 };
+
+                if (liveJob.Brokerage != PaperBrokerageTypeName)
+                {
+                    liveJob.SetupEndpoint = SetupHandlerEndpoint.Brokerage;
+                    liveJob.TransactionEndpoint = TransactionHandlerEndpoint.Brokerage;
+                }
+                
+                // import the brokerage data for the configured brokerage
+                liveJob.BrokerageData = Composer.Instance.GetExportWithMatchingMetadata<Dictionary<string, string>>("BrokerageData", liveJob.Brokerage);
+
                 return liveJob;
             }
 

@@ -14,6 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.Composition;
+using Krs.Ats.IBNet;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
@@ -24,6 +28,30 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// </summary>
     public class InteractiveBrokersBrokerageFactory : IBrokerageFactory
     {
+        /// <summary>
+        /// Gets the brokerage data required to run the IB brokerage from configuration
+        /// </summary>
+        /// <remarks>
+        /// The implementation of this property will create the brokerage data dictionary required for running
+        /// live jobs locally with the ConsoleSetupHandler. The implementation must specify the following
+        /// attributes:
+        ///    [Export(typeof(Dictionary&lt;string, string&gt;))]
+        ///    [ExportMetadata("BrokerageData", "{BrokerageTypeNameHere}")]
+        /// </remarks>
+        [Export(typeof(Dictionary<string, string>))]
+        [ExportMetadata("BrokerageData", "InteractiveBrokersBrokerage")]
+        public Dictionary<string, string> BrokerageData
+        {
+            get
+            {
+                var data = new Dictionary<string, string>();
+                data.Add("port", Config.Get("ib-port"));
+                data.Add("account-id", Config.Get("ib-account"));
+                data.Add("agent-description", Config.Get("ib-agent-description"));
+                return data;
+            }
+        }
+
         /// <summary>
         /// Gets the type of brokerage produced by this factory
         /// </summary>
@@ -43,7 +71,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // launch the IB gateway
             InteractiveBrokersGatewayRunner.Start(job.AccountId);
 
-            return new InteractiveBrokersBrokerage(algorithm.Transactions, job.AccountId);
+            var errors = new List<string>();
+
+            // read values from the brokerage datas
+            var port = Read<int>(job.BrokerageData, "port", errors);
+            var account = Read<string>(job.BrokerageData, "account-id", errors);
+            var agentDescription = Read<AgentDescription>(job.BrokerageData, "agent-description", errors);
+
+            if (errors.Count != 0)
+            {
+                // if we had errors then we can't create the instance
+                throw new Exception(string.Join(Environment.NewLine, errors));
+            }
+
+            return new InteractiveBrokersBrokerage(algorithm.Transactions, job.AccountId, "127.0.0.1", port, agentDescription);
         }
 
         /// <summary>
@@ -54,6 +95,30 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public void Dispose()
         {
             InteractiveBrokersGatewayRunner.Stop();
+        }
+
+        /// <summary>
+        /// Reads a value from the brokerage data, adding an error if the key is not found
+        /// </summary>
+        private static T Read<T>(IReadOnlyDictionary<string, string> brokerageData, string key, ICollection<string> errors) 
+            where T : IConvertible
+        {
+            string value;
+            if (!brokerageData.TryGetValue(key, out value))
+            {
+                errors.Add("Missing key: " + key);
+                return default(T);
+            }
+
+            try
+            {
+                return value.ConvertTo<T>();
+            }
+            catch (Exception err)
+            {
+                errors.Add(string.Format("Error converting {0} with value {1}. {2}", key, value, err.Message));
+                return default(T);
+            }
         }
     }
 }

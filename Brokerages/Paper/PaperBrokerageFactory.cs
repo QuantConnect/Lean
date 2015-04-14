@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -16,20 +16,23 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
-namespace QuantConnect.Interfaces
+namespace QuantConnect.Brokerages.Paper
 {
     /// <summary>
-    /// Defines factory types for brokerages. Every IBrokerage is expected to also implement an IBrokerageFactory.
+    /// The factory type for the <see cref="PaperBrokerage"/>
     /// </summary>
-    [InheritedExport(typeof(IBrokerageFactory))]
-    public interface IBrokerageFactory : IDisposable
+    public class PaperBrokerageFactory : IBrokerageFactory
     {
         /// <summary>
         /// Gets the type of brokerage produced by this factory
         /// </summary>
-        Type BrokerageType { get; }
+        public Type BrokerageType
+        {
+            get { return typeof(PaperBrokerage); }
+        }
 
         /// <summary>
         /// Gets the brokerage data required to run the IB brokerage from configuration
@@ -38,12 +41,15 @@ namespace QuantConnect.Interfaces
         /// The implementation of this property will create the brokerage data dictionary required for running
         /// live jobs locally with the ConsoleSetupHandler. The implementation must specify the following
         /// attributes:
-        /// <code>
         ///    [Export(typeof(Dictionary&lt;string, string&gt;))]
         ///    [ExportMetadata("BrokerageData", "{BrokerageTypeNameHere}")]
-        /// </code>
         /// </remarks>
-        Dictionary<string, string> BrokerageData { get; }
+        [Export(typeof(Dictionary<string, string>))]
+        [ExportMetadata("BrokerageData", "PaperBrokerage")]
+        public Dictionary<string, string> BrokerageData
+        {
+            get { return new Dictionary<string, string>(); }
+        }
 
         /// <summary>
         /// Creates a new IBrokerage instance
@@ -51,6 +57,18 @@ namespace QuantConnect.Interfaces
         /// <param name="job">The job packet to create the brokerage for</param>
         /// <param name="algorithm">The algorithm instance</param>
         /// <returns>A new brokerage instance</returns>
-        IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm);
+        public IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
+        {
+            return new PaperBrokerage(algorithm);
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            // NOP
+        }
     }
 }
