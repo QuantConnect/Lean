@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.Examples
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings("SPY", 1);
+                SetHoldings("SPY", .75); // leave some room lest we experience a margin call!
                 Debug("Purchased Stock");
             }
         }

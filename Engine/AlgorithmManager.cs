@@ -255,7 +255,12 @@ namespace QuantConnect.Lean.Engine
                         var marginCallOrders = algorithm.Portfolio.ScanForMarginCall();
                         if (marginCallOrders.Count != 0)
                         {
-                            algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
+                            // execute the margin call orders
+                            var executedOrders = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
+                            foreach (var order in executedOrders)
+                            {
+                                algorithm.Error("Executed MarginCallOrder: " + order.Symbol + ": " + order.Quantity);
+                            }
                         }
 
                         nextMarginCallTime = time + marginCallFrequency;

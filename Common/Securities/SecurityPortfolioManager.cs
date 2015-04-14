@@ -482,8 +482,8 @@ namespace QuantConnect.Securities
             decimal totalMarginUsed = TotalMarginUsed;
             decimal totalPortfolioValue = TotalPortfolioValue;
 
-            // using the total portfolio value because it will factor in unrealized pnl
-            if (totalPortfolioValue >= totalMarginUsed)
+            // if we still have margin remaining then there's no need for a margin call
+            if (MarginRemaining > 0)
             {
                 return new List<Order>();
             }
@@ -493,7 +493,7 @@ namespace QuantConnect.Securities
             foreach (var security in Securities.Values)
             {
                 var marginCallOrder = security.MarginModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed);
-                if (marginCallOrder != null)
+                if (marginCallOrder != null && marginCallOrder.Quantity != 0)
                 {
                     marginCallOrders.Add(marginCallOrder);
                 }
