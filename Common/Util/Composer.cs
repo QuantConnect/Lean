@@ -17,7 +17,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
-using System.IO;
 using System.Linq;
 
 namespace QuantConnect.Util
@@ -81,22 +80,6 @@ namespace QuantConnect.Util
             }
 
             return values.First(x => x.GetType() == matchingType);
-        }
-
-        /// <summary>
-        /// Gets the export matching the specified meta data
-        /// </summary>
-        /// <typeparam name="T">The type of export to get</typeparam>
-        /// <param name="name">The metadata key name to search for</param>
-        /// <param name="value">The metadata value to match on</param>
-        /// <returns>The only instance matching the specified conditions, or throws if multiple or none found</returns>
-        public T GetExportWithMatchingMetadata<T>(string name, string value)
-        {
-            var exports = _compositionContainer.GetExports<T, IDictionary<string, object>>();
-            return exports
-                .Where(x => x.Metadata.ContainsKey(name) && (string) x.Metadata[name] == value)
-                .Select(x => x.Value)
-                .Single();
         }
 
         /// <summary>

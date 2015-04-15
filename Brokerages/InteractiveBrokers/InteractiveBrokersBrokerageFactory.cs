@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using Krs.Ats.IBNet;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -24,7 +23,7 @@ using QuantConnect.Packets;
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
     /// <summary>
-    /// Factory type for the InteractiveBrokersBrokerage
+    /// Factory type for the <see cref="InteractiveBrokersBrokerage"/>
     /// </summary>
     public class InteractiveBrokersBrokerageFactory : IBrokerageFactory
     {
@@ -32,14 +31,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Gets the brokerage data required to run the IB brokerage from configuration
         /// </summary>
         /// <remarks>
-        /// The implementation of this property will create the brokerage data dictionary required for running
-        /// live jobs locally with the ConsoleSetupHandler. The implementation must specify the following
-        /// attributes:
-        ///    [Export(typeof(Dictionary&lt;string, string&gt;))]
-        ///    [ExportMetadata("BrokerageData", "{BrokerageTypeNameHere}")]
+        /// The implementation of this property will create the brokerage data dictionary required for
+        /// running live jobs. See <see cref="IJobQueueHandler.NextJob"/>
         /// </remarks>
-        [Export(typeof(Dictionary<string, string>))]
-        [ExportMetadata("BrokerageData", "InteractiveBrokersBrokerage")]
         public Dictionary<string, string> BrokerageData
         {
             get

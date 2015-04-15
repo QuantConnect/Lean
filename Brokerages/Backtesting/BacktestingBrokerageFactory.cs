@@ -15,13 +15,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Brokerages.Backtesting
 {
-    class BacktestingBrokerageFactory : IBrokerageFactory
+    /// <summary>
+    /// Factory type for the <see cref="BacktestingBrokerage"/>
+    /// </summary>
+    public class BacktestingBrokerageFactory : IBrokerageFactory
     {
         /// <summary>
         /// Gets the type of brokerage produced by this factory
@@ -35,14 +37,9 @@ namespace QuantConnect.Brokerages.Backtesting
         /// Gets the brokerage data required to run the IB brokerage from configuration
         /// </summary>
         /// <remarks>
-        /// The implementation of this property will create the brokerage data dictionary required for running
-        /// live jobs locally with the ConsoleSetupHandler. The implementation must specify the following
-        /// attributes:
-        ///    [Export(typeof(Dictionary&lt;string, string&gt;))]
-        ///    [ExportMetadata("BrokerageData", "{BrokerageTypeNameHere}")]
+        /// The implementation of this property will create the brokerage data dictionary required for
+        /// running live jobs. See <see cref="IJobQueueHandler.NextJob"/>
         /// </remarks>
-        [Export(typeof(Dictionary<string, string>))]
-        [ExportMetadata("BrokerageData", "BacktestingBrokerage")]
         public Dictionary<string, string> BrokerageData
         {
             get { return new Dictionary<string, string>(); }

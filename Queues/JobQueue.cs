@@ -16,10 +16,12 @@
 * USING NAMESPACES
 **********************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 
@@ -95,9 +97,17 @@ namespace QuantConnect.Queues
                     Channel = Config.Get("job-channel"),
                     UserId = Config.GetInt("job-user-id")
                 };
-                
-                // import the brokerage data for the configured brokerage
-                liveJob.BrokerageData = Composer.Instance.GetExportWithMatchingMetadata<Dictionary<string, string>>("BrokerageData", liveJob.Brokerage);
+
+                try
+                { 
+                    // import the brokerage data for the configured brokerage
+                    var brokerageFactory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
+                    liveJob.BrokerageData = brokerageFactory.BrokerageData;
+                }
+                catch (Exception err)
+                {
+                    Log.Error(string.Format("JobQueue.NextJob(): Error resoliving BrokerageData for live job for brokerage {0}. {1}", liveJob.Brokerage, err.Message));
+                }
 
                 return liveJob;
             }

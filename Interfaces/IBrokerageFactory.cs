@@ -35,13 +35,8 @@ namespace QuantConnect.Interfaces
         /// Gets the brokerage data required to run the IB brokerage from configuration
         /// </summary>
         /// <remarks>
-        /// The implementation of this property will create the brokerage data dictionary required for running
-        /// live jobs locally with the ConsoleSetupHandler. The implementation must specify the following
-        /// attributes:
-        /// <code>
-        ///    [Export(typeof(Dictionary&lt;string, string&gt;))]
-        ///    [ExportMetadata("BrokerageData", "{BrokerageTypeNameHere}")]
-        /// </code>
+        /// The implementation of this property will create the brokerage data dictionary required for
+        /// running live jobs. See <see cref="IJobQueueHandler.NextJob"/>
         /// </remarks>
         Dictionary<string, string> BrokerageData { get; }
 
