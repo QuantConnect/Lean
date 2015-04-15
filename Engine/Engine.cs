@@ -575,7 +575,6 @@ namespace QuantConnect.Lean.Engine
         private static IResultHandler GetResultHandler(AlgorithmNodePacket job)
         {
             var rh = default(IResultHandler);
-            if (IsLocal) return new ConsoleResultHandler(job);
 
             switch (job.ResultEndpoint)
             {
@@ -624,7 +623,7 @@ namespace QuantConnect.Lean.Engine
                     break;
                 case SetupHandlerEndpoint.Brokerage:
                     sh = new BrokerageSetupHandler();
-                    Log.Trace("Engine.GetSetupHandler(): Selected PaperTrading Algorithm Setup Handler.");
+                    Log.Trace("Engine.GetSetupHandler(): Selected Brokerage Algorithm Setup Handler.");
                     break;
             }
             return sh;

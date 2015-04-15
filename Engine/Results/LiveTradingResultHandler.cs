@@ -406,7 +406,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
             catch (Exception err)
             {
-                Log.Error("LiveTradingResultHandler().ProcessSeriesUpdate(): " + err.Message, true);
+                Log.Error("LiveTradingResultHandler().Update(): " + err.Message, true);
             }
         }
 

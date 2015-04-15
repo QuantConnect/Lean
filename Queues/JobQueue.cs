@@ -89,7 +89,7 @@ namespace QuantConnect.Queues
                     Type = PacketType.LiveNode,
                     DataEndpoint = DataFeedEndpoint.LiveTrading,
                     RealTimeEndpoint = RealTimeEndpoint.LiveTrading,
-                    ResultEndpoint = ResultHandlerEndpoint.LiveTrading,
+                    ResultEndpoint = ResultHandlerEndpoint.Console,
                     SetupEndpoint = SetupHandlerEndpoint.Brokerage,
                     TransactionEndpoint = TransactionHandlerEndpoint.Brokerage,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
