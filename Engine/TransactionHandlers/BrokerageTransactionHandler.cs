@@ -282,12 +282,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return;
             }
 
-            if (order.Status == OrderStatus.Filled)
-            {
-                // don't process duplicate fill events
-                return;
-            }
-
             // set the status of our order object based on the fill event
             order.Status = fill.Status;
 
