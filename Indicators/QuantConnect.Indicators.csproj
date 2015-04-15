@@ -67,6 +67,8 @@
     <Compile Include="MovingAverageConvergenceDivergence.cs" />
     <Compile Include="MovingAverageType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RateOfChange.cs" />
+    <Compile Include="RateOfChangePercent.cs" />
     <Compile Include="RelativeStrengthIndex.cs" />
     <Compile Include="Sum.cs" />
     <Compile Include="RollingWindow.cs" />
