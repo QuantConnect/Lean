@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -14,33 +14,34 @@
 */
 using NUnit.Framework;
 using QuantConnect.Indicators;
+using System;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class MomentumPercentTests
+    public class RateOfChangePercentTests
     {
         [Test]
         public void ComputesCorrectly()
         {
-            var momp = new MomentumPercent(50);
+            var rocp = new RateOfChangePercent(50); 
             double epsilon = 1e-3;
-            TestHelper.TestIndicator(momp, "spy_with_roc50.txt", "Rate of Change 50", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, epsilon));
+            TestHelper.TestIndicator(rocp, "spy_with_rocp50.txt", "Rate of Change % 50", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, epsilon));
         }
 
         [Test]
         public void ResetsProperly()
         {
-            var momp = new MomentumPercent(50);
+            var rocp = new RateOfChangePercent(50);
             foreach (var data in TestHelper.GetDataStream(51))
             {
-                momp.Update(data);
+                rocp.Update(data);
             }
-            Assert.IsTrue(momp.IsReady);
+            Assert.IsTrue(rocp.IsReady);
 
-            momp.Reset();
+            rocp.Reset();
 
-            TestHelper.AssertIndicatorIsInDefaultState(momp);
+            TestHelper.AssertIndicatorIsInDefaultState(rocp);
         }
     }
 }

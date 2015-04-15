@@ -325,6 +325,39 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new RateOfChange indicator. This will compute the n-period rate of change in the security.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose rateofchange we want</param>
+        /// <param name="period">The period over which to compute the rateofchange</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The rateofchange indicator for the requested symbol over the specified period</returns>
+        public RateOfChange ROC(string symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        {
+            string name = CreateIndicatorName(symbol, "ROC" + period, resolution);
+            var rateofchange = new RateOfChange(name, period);
+            RegisterIndicator(symbol, rateofchange, resolution, selector);
+            return rateofchange;
+        }
+
+        /// <summary>
+        /// Creates a new RateOfChangePercent indicator. This will compute the n-period percentage rate of change in the security.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose rateofchange we want</param>
+        /// <param name="period">The period over which to compute the rateofchangepercent</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The rateofchangepercent indicator for the requested symbol over the specified period</returns>
+        public RateOfChangePercent ROCP(string symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        {
+            string name = CreateIndicatorName(symbol, "ROCP" + period, resolution);
+            var rateofchangepercent = new RateOfChangePercent(name, period);
+            RegisterIndicator(symbol, rateofchangepercent, resolution, selector);
+            return rateofchangepercent;
+        }
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
