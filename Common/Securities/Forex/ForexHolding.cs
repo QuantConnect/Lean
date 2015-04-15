@@ -17,6 +17,7 @@
 * USING NAMESPACES
 **********************************************************/
 
+using QuantConnect.Orders;
 using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities.Forex 
@@ -94,7 +95,8 @@ namespace QuantConnect.Securities.Forex
             if (AbsoluteQuantity > 0)
             {
                 // this is in the account currency
-                orderFee = TransactionModel.GetOrderFee(AbsoluteQuantity, Price);
+                var marketOrder = new MarketOrder(_forex.Symbol, -Quantity, _forex.Time, type:_forex.Type){Price = Price};
+                orderFee = TransactionModel.GetOrderFee(_forex, marketOrder);
             }
 
             // we need to add a conversion since the data is in terms of the quote currency

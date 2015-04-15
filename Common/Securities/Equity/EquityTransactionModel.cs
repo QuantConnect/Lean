@@ -233,9 +233,6 @@ namespace QuantConnect.Securities.Equity
             return fill;
         }
 
-        
-
-
         /// <summary>
         /// Get the slippage approximation for this order as a decimal value
         /// </summary>
@@ -249,37 +246,32 @@ namespace QuantConnect.Securities.Equity
 
 
         /// <summary>
-        /// Get the fees from one order
+        /// Uses the Interactive Brokers equities fixes fee schedule.
         /// </summary>
-        /// <param name="quantity">Quantity of shares processed</param>
-        /// <param name="price">Price of the orders filled</param>
-        /// <remarks>Default implementation uses the Interactive Brokers fee model of 1c per share with a maximum of 0.5% per order.</remarks>
-        /// <returns>Decimal value of the order fee given this quantity and order price</returns>
-        public override decimal GetOrderFee(decimal quantity, decimal price)
+        /// <remarks>
+        /// Default implementation uses the Interactive Brokers fee model of 0.5c per share with a maximum of 0.5% per order
+        /// and minimum of $1.00.
+        /// </remarks>
+        /// <param name="security">The security matching the order</param>
+        /// <param name="order">The order to compute fees for</param>
+        /// <returns>The cost of the order in units of the account currency</returns>
+        public override decimal GetOrderFee(Security security, Order order)
         {
-            decimal tradeFee;
-            quantity = Math.Abs(quantity);
-            var tradeValue = (price * quantity);
+            var tradeValue = Math.Abs(order.Value);
 
             //Per share fees
-            if (quantity < 500)
-            {
-                tradeFee = quantity * 0.013m;
-            }
-            else
-            {
-                tradeFee = quantity * 0.008m;
-            }
+            var tradeFee = 0.005m*order.AbsoluteQuantity;
 
             //Maximum Per Order: 0.5%
             //Minimum per order. $1.0
+            var maximumPerOrder = 0.005m*tradeValue;
             if (tradeFee < 1)
             {
                 tradeFee = 1;
             }
-            else if (tradeFee > (0.005m * tradeValue))
+            else if (tradeFee > maximumPerOrder)
             {
-                tradeFee = 0.005m * tradeValue;
+                tradeFee = maximumPerOrder;
             }
 
             //Always return a positive fee.

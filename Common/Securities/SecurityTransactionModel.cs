@@ -31,7 +31,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Default security transaction model for user defined securities.
     /// </summary>
-    public class SecurityTransactionModel : ISecurityTransactionModel 
+    public class SecurityTransactionModel : ISecurityTransactionModel
     {
         /******************************************************** 
         * CLASS PRIVATE VARIABLES
@@ -313,6 +313,17 @@ namespace QuantConnect.Securities
         public virtual decimal GetOrderFee(decimal quantity, decimal price)
         {
             return 0;
+        }
+
+        /// <summary>
+        /// Default implementation returns 0 for fees.
+        /// </summary>
+        /// <param name="security">The security matching the order</param>
+        /// <param name="order">The order to compute fees for</param>
+        /// <returns>The cost of the order in units of the account currency</returns>
+        public virtual decimal GetOrderFee(Security security, Order order)
+        {
+            return GetOrderFee(order.Quantity, order.Value/order.Quantity);
         }
 
 
