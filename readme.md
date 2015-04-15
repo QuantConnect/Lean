@@ -2,6 +2,8 @@
 Lean C# Algorithmic Trading Engine
 =========
 
+[![Join the chat at https://gitter.im/QuantConnect/Lean](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/QuantConnect/Lean?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [Lean Home - lean.quantconnect.com][1] | [Documentation][2] | [Download Zip][3]
 
 ----------
