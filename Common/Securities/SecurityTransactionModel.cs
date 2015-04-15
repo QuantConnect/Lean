@@ -323,6 +323,11 @@ namespace QuantConnect.Securities
         /// <returns>The cost of the order in units of the account currency</returns>
         public virtual decimal GetOrderFee(Security security, Order order)
         {
+            if (order.Quantity == 0)
+            {
+                return 0m;
+            }
+
             return GetOrderFee(order.Quantity, order.Value/order.Quantity);
         }
 

@@ -121,5 +121,19 @@ namespace QuantConnect.Securities.Forex
             "AUDJPY", "AUDUSD", "EURCHF", "EURGBP", "EURJPY", "EURUSD", "GBPAUD", "GBPJPY", "GBPUSD", "NZDUSD", "USDCAD", "USDCHF", "USDJPY"
         };
 
+        /// <summary>
+        /// A mapping of currency codes to their display symbols
+        /// </summary>
+        public static readonly IReadOnlyDictionary<string, string> CurrencySymbols = new Dictionary<string, string>
+        {
+            {"USD", "$"},
+            {"GBP", "₤"},
+            {"JPY", "¥"},
+            {"EUR", "€"},
+            {"NZD", "$"},
+            {"AUD", "$"},
+            {"CAD", "$"},
+            {"CHF", "Fr"}
+        };
     }
 }

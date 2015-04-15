@@ -84,6 +84,11 @@ namespace QuantConnect.Securities
         /// <param name="leverage">The new leverage</param>
         public virtual void SetLeverage(Security security, decimal leverage)
         {
+            if (leverage < 1)
+            {
+                throw new ArgumentException("Leverage must be greater than or equal to 1.");
+            }
+
             decimal margin = 1/leverage;
             InitialMarginRequirement = margin;
             MaintenanceMarginRequirement = margin;
@@ -99,7 +104,7 @@ namespace QuantConnect.Securities
         {
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
-            var orderFees = security.TransactionModel.GetOrderFee(order.Quantity, order.Price);
+            var orderFees = security.TransactionModel.GetOrderFee(security, order);
 
             return order.Price*order.AbsoluteQuantity*InitialMarginRequirement + orderFees;
         }

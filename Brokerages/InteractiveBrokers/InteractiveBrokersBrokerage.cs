@@ -578,7 +578,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandlePortfolioUpdates(object sender, IB.UpdatePortfolioEventArgs e)
         {
-            Log.Trace("InteractiveBrokersBrokerage.HandlePortfolioUpdates(): Resetting account holdings reset event.");
             _accountHoldingsResetEvent.Reset();
             var holding = CreateHolding(e);
             _accountHoldings[holding.Symbol] = holding;
