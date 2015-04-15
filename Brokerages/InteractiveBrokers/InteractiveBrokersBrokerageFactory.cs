@@ -65,9 +65,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>A new brokerage instance</returns>
         public IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
-            // launch the IB gateway
-            InteractiveBrokersGatewayRunner.Start(job.AccountId);
-
             var errors = new List<string>();
 
             // read values from the brokerage datas
@@ -81,6 +78,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // if we had errors then we can't create the instance
                 throw new Exception(string.Join(Environment.NewLine, errors));
             }
+            
+            // launch the IB gateway
+            InteractiveBrokersGatewayRunner.Start(account);
 
             return new InteractiveBrokersBrokerage(algorithm.Transactions, account, host, port, agentDescription);
         }
