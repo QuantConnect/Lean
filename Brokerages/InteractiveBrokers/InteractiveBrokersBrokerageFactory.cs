@@ -41,9 +41,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
             // launch the IB gateway
-            InteractiveBrokersGatewayRunner.Start(job.AccountId);
+            InteractiveBrokersGatewayRunner.Start("");
 
-            return new InteractiveBrokersBrokerage(algorithm.Transactions, job.AccountId);
+            return new InteractiveBrokersBrokerage(algorithm.Transactions, "");
         }
 
         /// <summary>
