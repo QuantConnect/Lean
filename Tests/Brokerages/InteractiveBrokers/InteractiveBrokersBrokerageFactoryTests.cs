@@ -14,6 +14,7 @@
 */
 
 using NUnit.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
@@ -25,23 +26,28 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
     [Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
     public class InteractiveBrokersBrokerageFactoryTests
     {
+        public static readonly IAlgorithm AlgorithmDependency = new InteractiveBrokersBrokerageFactoryAlgorithmDependency();
+
         [Test]
         public void InitializesInstanceFromComposer()
         {
             var composer = Composer.Instance;
-            var factory = composer.Single<IBrokerageFactory>(instance => instance.BrokerageType == typeof(InteractiveBrokersBrokerage));
-            Assert.IsNotNull(factory);
+            using (var factory = composer.Single<IBrokerageFactory>(instance => instance.BrokerageType == typeof (InteractiveBrokersBrokerage)))
+            {
+                Assert.IsNotNull(factory);
 
-            var job = new LiveNodePacket { Brokerage = "Interactive Brokers"};
-            var brokerage = factory.CreateBrokerage(job, null); // IB factory doesn't use IAlgorithm instance
-            Assert.IsNotNull(brokerage);
-            Assert.IsInstanceOf<InteractiveBrokersBrokerage>(brokerage);
+                var job = new LiveNodePacket {BrokerageData = factory.BrokerageData};
+                var brokerage = factory.CreateBrokerage(job, AlgorithmDependency);
+                Assert.IsNotNull(brokerage);
+                Assert.IsInstanceOf<InteractiveBrokersBrokerage>(brokerage);
 
-            brokerage.Connect();
-            Assert.IsTrue(brokerage.IsConnected);
+                brokerage.Connect();
+                Assert.IsTrue(brokerage.IsConnected);
+            }
+        }
 
-            // this was launched by the factory
-            InteractiveBrokersGatewayRunner.Stop();
+        class InteractiveBrokersBrokerageFactoryAlgorithmDependency : QCAlgorithm
+        {
         }
     }
 }

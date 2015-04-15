@@ -118,6 +118,10 @@
     <Folder Include="Tasks\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
+      <Project>{3240ACA4-BDD4-4D24-AC36-BBB651C39212}</Project>
+      <Name>QuantConnect.Algorithm</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Brokerages\QuantConnect.Brokerages.csproj">
       <Project>{2D3E13CF-2D14-4180-A42D-F0A13AF0ADE2}</Project>
       <Name>QuantConnect.Brokerages</Name>

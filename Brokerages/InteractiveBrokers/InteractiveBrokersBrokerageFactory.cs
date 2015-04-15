@@ -39,8 +39,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             get
             {
                 var data = new Dictionary<string, string>();
-                data.Add("ib-port", Config.Get("ib-port"));
-                data.Add("ib-host", Config.Get("ib-host"));
                 data.Add("ib-account", Config.Get("ib-account"));
                 data.Add("ib-user-name", Config.Get("ib-user-name"));
                 data.Add("ib-password", Config.Get("ib-password"));
@@ -68,9 +66,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var errors = new List<string>();
 
             // read values from the brokerage datas
-            var port = Read<int>(job.BrokerageData, "ib-port", errors);
-            var host = Read<string>(job.BrokerageData, "ib-host", errors);
+            var useTws = Config.GetBool("ib-use-tws");
+            var port = Config.GetInt("ib-port", 4001);
+            var host = Config.Get("ib-host", "127.0.0.1");
+            var twsDirectory = Config.Get("ib-tws-dir", "C:\\Jts");
+            var ibControllerDirectory = Config.Get("ib-controller-dir", "C:\\IBController");
+
             var account = Read<string>(job.BrokerageData, "ib-account", errors);
+            var userID = Read<string>(job.BrokerageData, "ib-user-name", errors);
+            var password = Read<string>(job.BrokerageData, "ib-password", errors);
             var agentDescription = Read<AgentDescription>(job.BrokerageData, "ib-agent-description", errors);
 
             if (errors.Count != 0)
@@ -80,7 +84,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             
             // launch the IB gateway
-            InteractiveBrokersGatewayRunner.Start(account);
+            InteractiveBrokersGatewayRunner.Start(ibControllerDirectory, twsDirectory, userID, password, useTws);
 
             return new InteractiveBrokersBrokerage(algorithm.Transactions, account, host, port, agentDescription);
         }
@@ -104,7 +108,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             string value;
             if (!brokerageData.TryGetValue(key, out value))
             {
-                errors.Add("Missing key: " + key);
+                errors.Add("InterativeBrokersBrokerageFactory.CreateBrokerage(): Missing key: " + key);
                 return default(T);
             }
 
@@ -114,7 +118,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch (Exception err)
             {
-                errors.Add(string.Format("Error converting {0} with value {1}. {2}", key, value, err.Message));
+                errors.Add(string.Format("InterativeBrokersBrokerageFactory.CreateBrokerage(): Error converting key '{0}' with value '{1}'. {2}", key, value, err.Message));
                 return default(T);
             }
         }
