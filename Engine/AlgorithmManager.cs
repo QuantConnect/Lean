@@ -136,6 +136,8 @@ namespace QuantConnect.Lean.Engine
             var startingPortfolioValue = setup.StartingCapital;
             var backtestMode = (job.Type == PacketType.BacktestNode);
             var methodInvokers = new Dictionary<Type, MethodInvoker>();
+            var marginCallFrequency = TimeSpan.FromMinutes(5);
+            var nextMarginCallTime = DateTime.MinValue;
 
             //Initialize Properties:
             _frontier = setup.StartingDate;
@@ -204,16 +206,15 @@ namespace QuantConnect.Lean.Engine
                     //Set the time frontier:
                     _frontier = time;
 
-                    //On each time step push the real time prices to the cashbook so we can have updated conversion rates
-                    algorithm.Portfolio.CashBook.Update(newData[time]);
-
                     //Execute with TimeLimit Monitor:
                     if (Isolator.IsCancellationRequested)
                     {
                         return;
                     }
 
-                    //Fire EOD if the time packet we just processed is greater 
+                    //If we're in backtest mode we need to capture the daily performance. We do this here directly
+                    //before updating the algorithm state with the new data from this time step, otherwise we'll
+                    //produce incorrect samples (they'll take into account this time step's new price values)
                     if (backtestMode)
                     {
                         //Refresh the realtime event monitor: 
@@ -238,6 +239,33 @@ namespace QuantConnect.Lean.Engine
                             startingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
                         }
                     }
+
+                    //Update algorithm state after capturing performance from previous day
+
+                    //On each time step push the real time prices to the cashbook so we can have updated conversion rates
+                    algorithm.Portfolio.CashBook.Update(newData[time]);
+
+                    //Update the securities properties: first before calling user code to avoid issues with data
+                    algorithm.Securities.Update(time, newData[time]);
+
+                    // perform margin calls
+                    if (time >= nextMarginCallTime)
+                    {
+                        // determine if there are possible margin call orders to be executed
+                        var marginCallOrders = algorithm.Portfolio.ScanForMarginCall();
+                        if (marginCallOrders.Count != 0)
+                        {
+                            // execute the margin call orders
+                            var executedOrders = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
+                            foreach (var order in executedOrders)
+                            {
+                                algorithm.Error(string.Format("Executed MarginCallOrder: {0} - Quantity: {1} @ {2}", order.Symbol, order.Quantity, order.Price));
+                            }
+                        }
+
+                        nextMarginCallTime = time + marginCallFrequency;
+                    }
+                    
 
                     //Check if the user's signalled Quit: loop over data until day changes.
                     if (algorithm.GetQuit())
@@ -267,7 +295,7 @@ namespace QuantConnect.Lean.Engine
                         _dataPointCount += dataPoints.Count;
 
                         //We don't want to pump data that we added just for currency conversions
-                        if (config.IsCurrencyConversionFeed)
+                        if (config.IsInternalFeed)
                         {
                             continue;
                         }
@@ -275,9 +303,6 @@ namespace QuantConnect.Lean.Engine
                         //Create TradeBars Unified Data --> OR --> invoke generic data event. One loop.
                         foreach (var dataPoint in dataPoints) 
                         {
-                            //Update the securities properties: first before calling user code to avoid issues with data
-                            algorithm.Securities.Update(time, dataPoint);
-
                             //Update registered consolidators for this symbol index
                             try
                             {

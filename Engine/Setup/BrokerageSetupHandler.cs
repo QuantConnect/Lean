@@ -203,7 +203,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
 
                 // call this after we've initialized everything from the brokerage since we may have added some holdings/currencies
-                algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.SubscriptionManager, algorithm.Securities);
+                algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager);
             }
             catch (Exception err)
             {

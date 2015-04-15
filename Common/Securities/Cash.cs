@@ -25,9 +25,9 @@ namespace QuantConnect.Securities
     /// </summary>
     public class Cash
     {
-        private int _subscriptionIndex;
-        private bool _invertRealTimePrice;
         private bool _isBaseCurrency;
+        private bool _invertRealTimePrice;
+        private SubscriptionDataConfig _config;
 
         /// <summary>
         /// Gets the symbol used to represent this cash
@@ -40,14 +40,14 @@ namespace QuantConnect.Securities
         public decimal Quantity { get; set; }
 
         /// <summary>
-        /// Gets the conversion rate into base currency
+        /// Gets the conversion rate into account currency
         /// </summary>
         public decimal ConversionRate { get; internal set; }
 
         /// <summary>
-        /// Gets the value of this cash in the base currency
+        /// Gets the value of this cash in the accout currency
         /// </summary>
-        public decimal ValueInBaseCurrency
+        public decimal ValueInAccountCurrency
         {
             get { return Quantity*ConversionRate; }
         }
@@ -57,7 +57,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="symbol">The symbol used to represent this cash</param>
         /// <param name="quantity">The quantity of this currency held</param>
-        /// <param name="conversionRate">The initial conversion rate of this currency into the <see cref="CashBook.BaseCurrency"/></param>
+        /// <param name="conversionRate">The initial conversion rate of this currency into the <see cref="CashBook.AccountCurrency"/></param>
         public Cash(string symbol, decimal quantity, decimal conversionRate)
         {
             if (symbol == null || symbol.Length != 3)
@@ -79,7 +79,7 @@ namespace QuantConnect.Securities
             if (_isBaseCurrency) return;
 
             List<BaseData> realTimePrice;
-            if (!data.TryGetValue(_subscriptionIndex, out realTimePrice) || realTimePrice.Count == 0)
+            if (!data.TryGetValue(_config.SubscriptionIndex, out realTimePrice) || realTimePrice.Count == 0)
             {
                 // if we don't have data we can't do anything
                 return;
@@ -98,11 +98,11 @@ namespace QuantConnect.Securities
         /// Ensures that we have a data feed to conver this currency into the base currency.
         /// This will add a subscription at the lowest resolution if one is not found.
         /// </summary>
+        /// <param name="securities">The security manager</param>
         /// <param name="subscriptions">The subscription manager used for searching and adding subscriptions</param>
-        /// <param name="securities"></param>
-        public void EnsureCurrencyDataFeed(SubscriptionManager subscriptions, SecurityManager securities)
+        public void EnsureCurrencyDataFeed(SecurityManager securities, SubscriptionManager subscriptions)
         {
-            if (Symbol == CashBook.BaseCurrency)
+            if (Symbol == CashBook.AccountCurrency)
             {
                 _isBaseCurrency = true;
                 ConversionRate = 1.0m;
@@ -115,8 +115,8 @@ namespace QuantConnect.Securities
             }
 
             // we require a subscription that converts this into the base currency
-            string normal = Symbol + CashBook.BaseCurrency;
-            string invert = CashBook.BaseCurrency + Symbol;
+            string normal = Symbol + CashBook.AccountCurrency;
+            string invert = CashBook.AccountCurrency + Symbol;
             for (int i = 0; i < subscriptions.Subscriptions.Count; i++)
             {
                 var config = subscriptions.Subscriptions[i];
@@ -126,12 +126,12 @@ namespace QuantConnect.Securities
                 }
                 if (config.Symbol == normal)
                 {
-                    _subscriptionIndex = i;
+                    _config = config;
                     return;
                 }
                 if (config.Symbol == invert)
                 {
-                    _subscriptionIndex = i;
+                    _config = config;
                     _invertRealTimePrice = true;
                     return;
                 }
@@ -147,16 +147,21 @@ namespace QuantConnect.Securities
                 if (symbol == normal || symbol == invert)
                 {
                     _invertRealTimePrice = symbol == invert;
-                    _subscriptionIndex = subscriptions.Subscriptions.Count;
-                    var config = new SubscriptionDataConfig(objectType, SecurityType.Forex, symbol, minimumResolution, true, false, isTradeBar, isTradeBar, true);
-                    subscriptions.Subscriptions.Add(config);
-                    securities.Add(symbol, SecurityType.Forex, minimumResolution, true, 1m, false);
+                    // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
+                    _config = subscriptions.Add(objectType, SecurityType.Forex, symbol, minimumResolution, true, false, isTradeBar, isTradeBar, true);
+                    var security = new Forex.Forex(this, _config, 1m, false);
+                    securities.Add(symbol, security);
                     return;
                 }
             }
 
             // if this still hasn't been set then it's an error condition
-            throw new ArgumentException(string.Format("In order to maintain cash in {0} you are required to add a subscription for Forex pair {0}{1} or {1}{0}", Symbol, CashBook.BaseCurrency));
+            throw new ArgumentException(string.Format("In order to maintain cash in {0} you are required to add a subscription for Forex pair {0}{1} or {1}{0}", Symbol, CashBook.AccountCurrency));
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}: {1} @ {2} ({3})", Symbol, Quantity, ConversionRate.ToString("C"), ValueInAccountCurrency);
         }
     }
 }

@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Common.Securities
             const int quantity = 100;
             const decimal conversionRate = 1/100m;
             var cash = new Cash("JPY", quantity, conversionRate);
-            Assert.AreEqual(quantity*conversionRate, cash.ValueInBaseCurrency);
+            Assert.AreEqual(quantity*conversionRate, cash.ValueInAccountCurrency);
         }
 
         [Test]
@@ -75,11 +75,11 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal conversionRate = 1 / 100m;
             var cash = new Cash("JPY", quantity, conversionRate);
 
-            var securities = new SecurityManager();
-            securities.Add("ABC", Resolution.Minute);
             var subscriptions = new SubscriptionManager();
-            subscriptions.Add(SecurityType.Equity, "ABC", Resolution.Minute);
-            cash.EnsureCurrencyDataFeed(subscriptions, securities);
+            var abcConfig = subscriptions.Add(SecurityType.Equity, "ABC", Resolution.Minute);
+            var securities = new SecurityManager();
+            securities.Add("ABC", new Security(abcConfig, 1m));
+            cash.EnsureCurrencyDataFeed(securities, subscriptions);
             Assert.AreEqual(1, subscriptions.Subscriptions.Count(x => x.Symbol == "USDJPY"));
             Assert.AreEqual(1, securities.Values.Count(x => x.Symbol == "USDJPY"));
         }
@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var securities = new SecurityManager();
             var subscriptions = new SubscriptionManager();
-            cash.EnsureCurrencyDataFeed(subscriptions, securities);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions);
         }
 
         [Test]
@@ -106,14 +106,11 @@ namespace QuantConnect.Tests.Common.Securities
             var cash = new Cash("JPY", quantity, conversionRate);
 
             var subscriptions = new SubscriptionManager();
-            subscriptions.Add(SecurityType.Equity, "ABC", Resolution.Minute);
-            subscriptions.Add(SecurityType.Equity, "BCD", minimumResolution);
-
             var securities = new SecurityManager();
-            securities.Add("ABC", Resolution.Minute);
-            securities.Add("BCD", minimumResolution);
+            securities.Add("ABC", new Security(subscriptions.Add(SecurityType.Equity, "ABC", Resolution.Minute), 1m));
+            securities.Add("BCD", new Security(subscriptions.Add(SecurityType.Equity, "BCD", minimumResolution), 1m));
 
-            cash.EnsureCurrencyDataFeed(subscriptions, securities);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions);
             Assert.AreEqual(minimumResolution, subscriptions.Subscriptions.Single(x => x.Symbol == "USDJPY").Resolution);
         }
 
@@ -125,14 +122,12 @@ namespace QuantConnect.Tests.Common.Securities
             var cash = new Cash("JPY", quantity, conversionRate);
 
             var subscriptions = new SubscriptionManager();
-            subscriptions.Add(SecurityType.Forex, "ABC", Resolution.Minute);
-
             var securities = new SecurityManager();
-            securities.Add("ABC", Resolution.Minute);
+            securities.Add("ABC", new Security(subscriptions.Add(SecurityType.Forex, "ABC", Resolution.Minute), 1m));
 
-            cash.EnsureCurrencyDataFeed(subscriptions, securities);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions);
             var config = subscriptions.Subscriptions.Single(x => x.Symbol == "USDJPY");
-            Assert.IsTrue(config.IsCurrencyConversionFeed);
+            Assert.IsTrue(config.IsInternalFeed);
         }
 
         [Test]
@@ -143,14 +138,12 @@ namespace QuantConnect.Tests.Common.Securities
             var cash = new Cash("JPY", quantity, conversionRate);
 
             var subscriptions = new SubscriptionManager();
-            subscriptions.Add(SecurityType.Forex, "USDJPY", Resolution.Minute);
-
             var securities = new SecurityManager();
-            securities.Add("USDJPY", Resolution.Minute);
+            securities.Add("USDJPY", new Security(subscriptions.Add(SecurityType.Forex, "USDJPY", Resolution.Minute), 1m));
 
-            cash.EnsureCurrencyDataFeed(subscriptions, securities);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions);
             var config = subscriptions.Subscriptions.Single(x => x.Symbol == "USDJPY");
-            Assert.IsFalse(config.IsCurrencyConversionFeed);
+            Assert.IsFalse(config.IsInternalFeed);
         }
 
         [Test]
@@ -160,14 +153,12 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal conversionRate = 1 / 100m;
             var cash = new Cash("JPY", quantity, conversionRate);
 
-            var securities = new SecurityManager();
-            securities.Add("USDJPY", Resolution.Minute);
-
             var subscriptions = new SubscriptionManager();
-            subscriptions.Add(SecurityType.Forex, "USDJPY", Resolution.Minute);
+            var securities = new SecurityManager();
+            securities.Add("USDJPY", new Security(subscriptions.Add(SecurityType.Forex, "USDJPY", Resolution.Minute), 1m));
 
             // we need to get subscription index
-            cash.EnsureCurrencyDataFeed(subscriptions, securities);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions);
 
             var last = 120m;
             var data = new Dictionary<int, List<BaseData>>();
@@ -189,14 +180,12 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal conversionRate = 1 / 100m;
             var cash = new Cash("GBP", quantity, conversionRate);
 
-            var securities = new SecurityManager();
-            securities.Add("GBPUSD", Resolution.Minute);
-
             var subscriptions = new SubscriptionManager();
-            subscriptions.Add(SecurityType.Forex, "GBPUSD", Resolution.Minute);
+            var securities = new SecurityManager();
+            securities.Add("GBPUSD", new Security(subscriptions.Add(SecurityType.Forex, "GBPUSD", Resolution.Minute), 1m));
 
             // we need to get subscription index
-            cash.EnsureCurrencyDataFeed(subscriptions, securities);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions);
 
             var last = 1.5m;
             var data = new Dictionary<int, List<BaseData>>();

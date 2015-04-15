@@ -74,8 +74,8 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Examples\BenchmarkAlgorithm.cs" />
     <Compile Include="Examples\BubbleAlgorithm.cs" />
-    <Compile Include="Examples\CustomDataWithFillForwardAlgorithm.cs" />
     <Compile Include="Examples\IndicatorSuiteAlgorithm.cs" />
     <Compile Include="Examples\MultipleSymbolConsolidationAlgorithm.cs" />
     <Compile Include="Examples\QuandlImporterAlgorithm.cs" />

@@ -193,6 +193,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // tell algorithm to wait during scynchronous backtests
             if (_orders.TryAdd(order.Id, order))
             {
+                if (!GetSufficientCapitalForOrder(order))
+                {
+                    return;
+                }
+
                 // set the order status based on whether or not we successfully submitted the order to the market
                 if (_brokerage.PlaceOrder(order))
                 {
@@ -229,6 +234,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 Log.Error("BrokerageTransactionHandler.HandleUpdatedOrder(): Unable to update order with ID " + order.Id + ".");
             }
+        }
+
+        private bool GetSufficientCapitalForOrder(Order order)
+        {
+            // check to see if we have enough money to place the order
+            if (!_algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order))
+            {
+                //Flag order as invalid and push off queue:
+                order.Status = OrderStatus.Invalid;
+                _algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
+                return false;
+            }
+            return true;
         }
 
         /// <summary>

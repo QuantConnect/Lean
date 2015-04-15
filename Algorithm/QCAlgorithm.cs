@@ -17,12 +17,15 @@
 **********************************************************/
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Equity;
+using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Algorithm
 {
@@ -655,55 +658,62 @@ namespace QuantConnect.Algorithm
         {
             try
             {
-                if (!_locked) 
-                {
-                    symbol = symbol.ToUpper();
-                    //If it hasn't been set, use some defaults based on the portfolio type:
-                    if (leverage <= 0) 
-                    {
-                        switch (securityType) 
-                        {
-                            case SecurityType.Equity:
-                                leverage = 2;   //Cash Ac. = 1, RegT Std = 2 or PDT = 4.
-                                break;
-                            case SecurityType.Forex:
-                                leverage = 50;
-                                break;
-                        }
-                    }
-                    
-                    // add currencies for forex types
-                    if (securityType == SecurityType.Forex)
-                    {
-                        if (symbol.Length != 6)
-                        {
-                            throw new ArgumentException("Unexpected currency pair format: " + symbol + ". Expected symbol of length 6, 3 characters per currency.");
-                        }
-                        // decompose the symbol into each currency pair
-                        string left = symbol.Substring(0, 3);
-                        string right = symbol.Substring(3);
-                        if (!Portfolio.CashBook.ContainsKey(left))
-                        {
-                            // since we have none it's safe to say the conversion is zero
-                            Portfolio.CashBook.Add(left, 0, 0);
-                        }
-                        if (!Portfolio.CashBook.ContainsKey(right))
-                        {
-                            // since we have none it's safe to say the conversion is zero
-                            Portfolio.CashBook.Add(right, 0, 0);
-                        }
-                    }
-
-                    //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
-                    Securities.Add(symbol, securityType, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData: false);
-
-                    //Add the symbol to Data Manager -- generate unified data streams for algorithm events
-                    SubscriptionManager.Add(securityType, symbol, resolution, fillDataForward, extendedMarketHours);
-                }
-                else 
+                if (_locked)
                 {
                     throw new Exception("Algorithm.AddSecurity(): Cannot add another security after algorithm running.");
                 }
+                
+                symbol = symbol.ToUpper();
+                //If it hasn't been set, use some defaults based on the portfolio type:
+                if (leverage <= 0)
+                {
+                    switch (securityType)
+                    {
+                        case SecurityType.Equity:
+                            leverage = 2; //Cash Ac. = 1, RegT Std = 2 or PDT = 4.
+                            break;
+                        case SecurityType.Forex:
+                            leverage = 50;
+                            break;
+                    }
+                }
+
+                //Add the symbol to Data Manager -- generate unified data streams for algorithm events
+                var config = SubscriptionManager.Add(securityType, symbol, resolution, fillDataForward, extendedMarketHours);
+
+                Security security;
+                switch (config.Security)
+                {
+                    case SecurityType.Equity:
+                        security = new Equity(config, leverage, false);
+                        break;
+
+                    case SecurityType.Forex:
+                        // decompose the symbol into each currency pair
+                        string baseCurrency, quoteCurrency;
+                        QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out baseCurrency, out quoteCurrency);
+
+                        if (!Portfolio.CashBook.ContainsKey(baseCurrency))
+                        {
+                            // since we have none it's safe to say the conversion is zero
+                            Portfolio.CashBook.Add(baseCurrency, 0, 0);
+                        }
+                        if (!Portfolio.CashBook.ContainsKey(quoteCurrency))
+                        {
+                            // since we have none it's safe to say the conversion is zero
+                            Portfolio.CashBook.Add(quoteCurrency, 0, 0);
+                        }
+                        security = new Forex(Portfolio.CashBook[quoteCurrency], config, leverage, false);
+                        break;
+
+                    default:
+                    case SecurityType.Base:
+                        security = new Security(config, leverage, false);
+                        break;
+                }
+
+                //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
+                Securities.Add(config.Symbol, security);
             }
             catch (Exception err) 
             {
@@ -759,11 +769,14 @@ namespace QuantConnect.Algorithm
         {
             if (_locked) return;
 
+            symbol = symbol.ToUpper();
+
             //Add this to the data-feed subscriptions
-            SubscriptionManager.Add(typeof(T), SecurityType.Base, symbol, resolution, fillDataForward, extendedMarketHours: true, isTradeBar: isTradeBar, hasVolume: hasVolume);
+            var config = SubscriptionManager.Add(typeof(T), SecurityType.Base, symbol, resolution, fillDataForward, extendedMarketHours: true, isTradeBar: isTradeBar, hasVolume: hasVolume);
 
             //Add this new generic data as a tradeable security: 
-            Securities.Add(symbol, SecurityType.Base, resolution, fillDataForward, leverage, extendedMarketHours: true, isDynamicallyLoadedData: true);
+            var security = new Security(config, leverage,  true);
+            Securities.Add(symbol, security);
         }
 
         /// <summary>

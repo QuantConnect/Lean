@@ -17,19 +17,17 @@
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Reflection;
-using Fasterflect;
-using QuantConnect.Securities;
-using QuantConnect.Logging;
-using QuantConnect.AlgorithmFactory;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
+using QuantConnect.Logging;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine
@@ -92,12 +90,6 @@ namespace QuantConnect.Lean.Engine
 
         ///Create a single instance to invoke all Type Methods:
         private readonly BaseData _dataFactory;
-
-        ///FastReflect Method Invoker
-        private readonly MethodInvoker _readerMethodInvoker;
-
-        /// Access to Get Source Method:
-        private readonly MethodInfo _getSourceMethod;
 
         /// Remember edge conditions as market enters/leaves open-closed.
         private BaseData _lastBarOfStream = null;
@@ -199,15 +191,6 @@ namespace QuantConnect.Lean.Engine
             var userObj = _objectActivator.Invoke(new object[] { });
             _dataFactory = userObj as BaseData;
 
-            //Save Access to the "Reader" Method:
-            var readerMethod = _dataFactory.GetType().GetMethod("Reader", new[] { typeof(SubscriptionDataConfig), typeof(string), typeof(DateTime), typeof(DataFeedEndpoint) });
-
-            //Create a Delagate Accessor.
-            _readerMethodInvoker = readerMethod.DelegateForCallMethod();
-
-            //Save access to the "GetSource" Method:
-            _getSourceMethod = _dataFactory.GetType().GetMethod("GetSource", new[] { typeof(SubscriptionDataConfig), typeof(DateTime), typeof(DataFeedEndpoint) });
-
             //If its quandl set the access token in data factory:
             var quandl = _dataFactory as Quandl;
             if (quandl != null)
@@ -274,7 +257,7 @@ namespace QuantConnect.Lean.Engine
                     try
                     {
                         //Using Fasterflex method invokers.
-                        instance = _readerMethodInvoker(_dataFactory, _config, line, _date, _feedEndpoint) as BaseData;
+                        instance = _dataFactory.Reader(_config, line, _date, _feedEndpoint);
                     }
                     catch (Exception err)
                     {
@@ -666,7 +649,7 @@ namespace QuantConnect.Lean.Engine
             {
                 try
                 {
-                    newSource = _getSourceMethod.Invoke(_dataFactory, new object[] { _config, date, _feedEndpoint }) as String;
+                    newSource = _dataFactory.GetSource(_config, date, _feedEndpoint);
                 }
                 catch (Exception err) 
                 {

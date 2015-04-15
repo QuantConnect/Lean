@@ -42,12 +42,9 @@ namespace QuantConnect.Securities
         /******************************************************** 
         * CLASS PRIVATE VARIABLES
         *********************************************************/
-        private string _symbol = "";
-        private SecurityType _type = SecurityType.Equity;
-        private Resolution _resolution = Resolution.Second;
-        private bool _isFillDataForward = false;
-        private bool _isExtendedMarketHours = false;
-        private bool _isDynamicallyLoadedData = false;
+        private readonly string _symbol;
+        private readonly bool _isDynamicallyLoadedData;
+        private readonly SubscriptionDataConfig _config;
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -73,7 +70,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return _type;
+                return _config.Security;
             }
         }
 
@@ -85,7 +82,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return _resolution;
+                return _config.Resolution;
             }
         }
 
@@ -96,7 +93,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return _isFillDataForward;
+                return _config.FillDataForward;
             }
         }
 
@@ -107,8 +104,16 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return _isExtendedMarketHours;
+                return _config.ExtendedMarketHours;
             }
+        }
+
+        /// <summary>
+        /// Gets the subscription configuration for this security
+        /// </summary>
+        public SubscriptionDataConfig SubscriptionDataConfig
+        {
+            get { return _config; }
         }
 
         /// <summary>
@@ -158,9 +163,41 @@ namespace QuantConnect.Securities
         /// <remarks>This is ignored in live trading and the real fill prices are used instead</remarks>
         /// <seealso cref="EquityTransactionModel"/>
         /// <seealso cref="ForexTransactionModel"/>
+        [Obsolete("Security.Model has been made obsolete, use Security.TransactionModel instead.")]
         public virtual ISecurityTransactionModel Model
         {
-            get; 
+            get { return TransactionModel; }
+            set { TransactionModel = value; }
+        }
+
+        /// <summary>
+        /// Transaction model class implements the fill models for the security. If the user does not define a model the default
+        /// model is used for this asset class.
+        /// </summary>
+        /// <remarks>This is ignored in live trading and the real fill prices are used instead</remarks>
+        /// <seealso cref="EquityTransactionModel"/>
+        /// <seealso cref="ForexTransactionModel"/>
+        public ISecurityTransactionModel TransactionModel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets the portfolio model used by this security
+        /// </summary>
+        public ISecurityPortfolioModel PortfolioModel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets the margin model used for this security
+        /// </summary>
+        public ISecurityMarginModel MarginModel
+        {
+            get;
             set;
         }
 
@@ -171,7 +208,7 @@ namespace QuantConnect.Securities
         /// <remarks>TradeBars (seconds and minute bars) are prefiltered to ensure the ticks which build the bars are realistically tradeable</remarks>
         /// <seealso cref="EquityDataFilter"/>
         /// <seealso cref="ForexDataFilter"/>
-        public virtual ISecurityDataFilter DataFilter
+        public ISecurityDataFilter DataFilter
         {
             get; 
             set;
@@ -183,40 +220,20 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(string symbol, SecurityType type, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours, bool isDynamicallyLoadedData = false) 
+        public Security(SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false) 
         {
-            //Set Basics:
-            _symbol = symbol;
-            _type = type;
-            _resolution = resolution;
-            _isFillDataForward = fillDataForward;
-            _isExtendedMarketHours = extendedMarketHours;
+            _config = config;
+            _symbol = config.Symbol;
             _isDynamicallyLoadedData = isDynamicallyLoadedData;
 
-            //Setup Transaction Model for this Asset
-            switch (type) 
-            { 
-                case SecurityType.Equity:
-                    Model = new EquityTransactionModel();
-                    DataFilter = new EquityDataFilter();
-                    break;
-                case SecurityType.Forex:
-                    Model = new ForexTransactionModel();
-                    DataFilter = new ForexDataFilter();
-                    break;
-                case SecurityType.Base:
-                    Model = new SecurityTransactionModel();
-                    DataFilter = new SecurityDataFilter();
-                    break;
-            }
-
-            //Holdings for new Vehicle:
             Cache = new SecurityCache();
-            Holdings = new SecurityHolding(symbol, type, leverage, Model);
             Exchange = new SecurityExchange();
+            DataFilter = new SecurityDataFilter();
+            PortfolioModel = new SecurityPortfolioModel();
+            TransactionModel = new SecurityTransactionModel();
+            MarginModel = new SecurityMarginModel(leverage);
+            Holdings = new SecurityHolding(this, TransactionModel, MarginModel);
         }
-
-
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -402,9 +419,8 @@ namespace QuantConnect.Securities
         /// <param name="leverage">Leverage for this asset</param>
         public void SetLeverage(decimal leverage)
         {
-            Holdings.SetLeverage(leverage);
+            MarginModel.SetLeverage(this, leverage);
         }
 
     } // End Security
-
 } // End QC Namespace

@@ -80,7 +80,7 @@ namespace QuantConnect.Data
         /// <param name="resolution">Resolution of Asset Required</param>
         /// <param name="fillDataForward">when there is no data pass the last tradebar forward</param>
         /// <param name="extendedMarketHours">Request premarket data as well when true </param>
-        public void Add(SecurityType security, string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false)
+        public SubscriptionDataConfig Add(SecurityType security, string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false)
         {
             //Set the type: market data only comes in two forms -- ticks(trade by trade) or tradebar(time summaries)
             var dataType = typeof(TradeBar);
@@ -88,7 +88,7 @@ namespace QuantConnect.Data
             {
                 dataType = typeof(Tick);
             }
-            Add(dataType, security, symbol, resolution, fillDataForward, extendedMarketHours, true, true);
+            return Add(dataType, security, symbol, resolution, fillDataForward, extendedMarketHours, true, true);
         }
 
 
@@ -103,14 +103,17 @@ namespace QuantConnect.Data
         /// <param name="extendedMarketHours">Request premarket data as well when true </param>
         /// <param name="isTradeBar">Set to true if this data has Open, High, Low, and Close properties</param>
         /// <param name="hasVolume">Set to true if this data has a Volume property</param>
-        public void Add(Type dataType, SecurityType security, string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false, bool isTradeBar = false, bool hasVolume = false) 
+        /// <param name="isInternalFeed">Set to true to prevent data from this subscription from being sent into the algorithm's OnData events</param>
+        public SubscriptionDataConfig Add(Type dataType, SecurityType security, string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false, bool isTradeBar = false, bool hasVolume = false, bool isInternalFeed = false) 
         {
             //Clean:
             symbol = symbol.ToUpper();
             //Create:
-            var newConfig = new SubscriptionDataConfig(dataType, security, symbol, resolution, fillDataForward, extendedMarketHours, isTradeBar, hasVolume, false);
+            var newConfig = new SubscriptionDataConfig(dataType, security, symbol, resolution, fillDataForward, extendedMarketHours, isTradeBar, hasVolume, isInternalFeed, Subscriptions.Count);
             //Add to subscription list: make sure we don't have his symbol:
             Subscriptions.Add(newConfig);
+
+            return newConfig;
         }
 
         /// <summary>

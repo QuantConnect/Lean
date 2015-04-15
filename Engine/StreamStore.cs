@@ -44,13 +44,13 @@ namespace QuantConnect.Lean.Engine
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         //Internal lock object
-        private BaseData _data = null;
-        private BaseData _previousData = null;
-        private Type _type;
-        private SubscriptionDataConfig _config = new SubscriptionDataConfig();
+        private BaseData _data;
+        private BaseData _previousData;
+        private readonly Type _type;
+        private readonly SubscriptionDataConfig _config;
         private readonly TimeSpan _increment;
-        private object _lock = new Object();
-        private ConcurrentQueue<BaseData> _queue = new ConcurrentQueue<BaseData>();
+        private readonly object _lock = new object();
+        private readonly ConcurrentQueue<BaseData> _queue;
 
         /******************************************************** 
         * CLASS PUBLIC PROPERTIES:
@@ -86,10 +86,6 @@ namespace QuantConnect.Lean.Engine
             {
                 return _queue;
             }
-            set
-            {
-                _queue = value;
-            }
         }
 
         /// <summary>
@@ -114,7 +110,6 @@ namespace QuantConnect.Lean.Engine
         {
             _type = config.Type;
             _data = null;
-            _lock = new object();
             _config = config;
             _increment = config.Increment;
             _queue = new ConcurrentQueue<BaseData>();

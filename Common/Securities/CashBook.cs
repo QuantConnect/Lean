@@ -27,19 +27,20 @@ namespace QuantConnect.Securities
     /// </summary>
     public class CashBook : IDictionary<string, Cash>
     {
+
         /// <summary>
         /// Gets the base currency used
         /// </summary>
-        public const string BaseCurrency = "USD";
+        public const string AccountCurrency = "USD";
 
         private readonly Dictionary<string, Cash> _currencies;
 
         /// <summary>
         /// Gets the total value of the cash book in units of the base currency
         /// </summary>
-        public decimal ValueInBaseCurrency
+        public decimal TotalValueInAccountCurrency
         {
-            get { return _currencies.Values.Sum(x => x.ValueInBaseCurrency); }
+            get { return _currencies.Values.Sum(x => x.ValueInAccountCurrency); }
         }
 
         /// <summary>
@@ -48,7 +49,7 @@ namespace QuantConnect.Securities
         public CashBook()
         {
             _currencies = new Dictionary<string, Cash>();
-            _currencies.Add(BaseCurrency, new Cash(BaseCurrency, 0, 1.0m));
+            _currencies.Add(AccountCurrency, new Cash(AccountCurrency, 0, 1.0m));
         }
 
         /// <summary>
@@ -79,14 +80,40 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Checks the current subscriptions and adds necessary currency pair feeds to provide real time conversion data
         /// </summary>
-        /// <param name="subscriptions"></param>
-        /// <param name="securities"></param>
-        public void EnsureCurrencyDataFeeds(SubscriptionManager subscriptions, SecurityManager securities)
+        /// <param name="securities">The SecurityManager for the algorithm</param>
+        /// <param name="subscriptions">The SubscriptionManager for the algorithm</param>
+        public void EnsureCurrencyDataFeeds(SecurityManager securities, SubscriptionManager subscriptions)
         {
             foreach (var cash in _currencies.Values)
             {
-                cash.EnsureCurrencyDataFeed(subscriptions, securities);
+                cash.EnsureCurrencyDataFeed(securities, subscriptions);
             }
+        }
+
+        /// <summary>
+        /// Converts a quantity of source currency units into the specified destination currency
+        /// </summary>
+        /// <param name="sourceQuantity">The quantity of source currency to be converted</param>
+        /// <param name="sourceCurrency">The source currency symbol</param>
+        /// <param name="destinationCurrency">The destination currency symbol</param>
+        /// <returns>The converted value</returns>
+        public decimal Convert(decimal sourceQuantity, string sourceCurrency, string destinationCurrency)
+        {
+            var source = this[sourceCurrency];
+            var destination = this[destinationCurrency];
+            var conversionRate = source.ConversionRate*destination.ConversionRate;
+            return sourceQuantity*conversionRate;
+        }
+
+        /// <summary>
+        /// Converts a quantity of source currency units into the account currency
+        /// </summary>
+        /// <param name="sourceQuantity">The quantity of source currency to be converted</param>
+        /// <param name="sourceCurrency">The source currency symbol</param>
+        /// <returns>The converted value</returns>
+        public decimal ConvertToAccountCurrency(decimal sourceQuantity, string sourceCurrency)
+        {
+            return Convert(sourceQuantity, sourceCurrency, AccountCurrency);
         }
 
         #region IDictionary Implementation

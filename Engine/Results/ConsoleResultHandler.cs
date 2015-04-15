@@ -183,6 +183,11 @@ namespace QuantConnect.Lean.Engine.Results
                             var debug = packet as DebugPacket;
                             Log.Trace("Debug Message >> " + debug.Message);
                             break;
+                        case PacketType.HandledError:
+                            var error = packet as HandledErrorPacket;
+                            Log.Error("Error Message >> " + error.Message);
+                            break;
+
                     }
                 }
                 Thread.Sleep(100);

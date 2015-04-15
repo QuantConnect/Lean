@@ -31,42 +31,45 @@ namespace QuantConnect.Data
     /// <summary>
     /// Subscription data required including the type of data.
     /// </summary>
-    public struct SubscriptionDataConfig
+    public class SubscriptionDataConfig
     {
         /******************************************************** 
         * STRUCT PUBLIC VARIABLES
         *********************************************************/
         /// Type of data
-        public Type Type;
+        public readonly Type Type;
         /// Security type of this data subscription
-        public SecurityType Security;
+        public readonly SecurityType Security;
         /// Symbol of the asset we're requesting.
-        public string Symbol;
+        public readonly string Symbol;
         /// Resolution of the asset we're requesting, second minute or tick
-        public Resolution Resolution;
+        public readonly Resolution Resolution;
         /// Timespan increment between triggers of this data:
-        public TimeSpan Increment;
+        public readonly TimeSpan Increment;
         /// True if wish to send old data when time gaps in data feed.
-        public bool FillDataForward;
+        public readonly bool FillDataForward;
         /// Boolean Send Data from between 4am - 8am (Equities Setting Only)
-        public bool ExtendedMarketHours;
+        public readonly bool ExtendedMarketHours;
         /// True if the data type has OHLC properties, even if dynamic data
         public readonly bool IsTradeBar;
         /// True if the data type has a Volume property, even if it is dynamic data
         public readonly bool HasVolume;
         /// True if this subscription was added for the sole purpose of providing currency conversion rates via <see cref="CashBook.EnsureCurrencyDataFeeds"/>
-        public readonly bool IsCurrencyConversionFeed;
+        public readonly bool IsInternalFeed;
+        /// The subscription index from the SubscriptionManager
+        public readonly int SubscriptionIndex;
 
         /// Price Scaling Factor:
         public decimal PriceScaleFactor;
         ///Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
         public string MappedSymbol;
         ///Consolidators that are registred with this subscription
-        public List<IDataConsolidator> Consolidators; 
+        public readonly List<IDataConsolidator> Consolidators; 
 
         /******************************************************** 
         * CLASS CONSTRUCTOR
         *********************************************************/
+
         /// <summary>
         /// Constructor for Data Subscriptions
         /// </summary>
@@ -76,19 +79,26 @@ namespace QuantConnect.Data
         /// <param name="resolution">Resolution of the asset we're requesting</param>
         /// <param name="fillForward">Fill in gaps with historical data</param>
         /// <param name="extendedHours">Equities only - send in data from 4am - 8pm</param>
-        public SubscriptionDataConfig(Type objectType, SecurityType securityType, string symbol, Resolution resolution, bool fillForward, bool extendedHours, bool isTradeBar, bool hasVolume, bool isCurrencyConversionFeed)
+        /// <param name="isTradeBar">Set to true if the objectType has Open, High, Low, and Close properties defines, does not need to directly derive from the TradeBar class
+        /// This is used for the DynamicDataConsolidator</param>
+        /// <param name="hasVolume">Set to true if the objectType has a Volume property defined. This is used for the DynamicDataConsolidator</param>
+        /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
+        /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
+        /// <param name="subscriptionIndex">The subscription index from the SubscriptionManager, this MUST equal the subscription's index or all hell will break loose!</param>
+        public SubscriptionDataConfig(Type objectType, SecurityType securityType, string symbol, Resolution resolution, bool fillForward, bool extendedHours, bool isTradeBar, bool hasVolume, bool isInternalFeed, int subscriptionIndex)
         {
             Type = objectType;
             Security = securityType;
             Resolution = resolution;
-            Symbol = symbol;
+            Symbol = symbol.ToUpper();
             FillDataForward = fillForward;
             ExtendedMarketHours = extendedHours;
             IsTradeBar = isTradeBar;
             HasVolume = hasVolume;
             PriceScaleFactor = 1;
             MappedSymbol = symbol;
-            IsCurrencyConversionFeed = isCurrencyConversionFeed;
+            IsInternalFeed = isInternalFeed;
+            SubscriptionIndex = subscriptionIndex;
             Consolidators = new List<IDataConsolidator>();
 
             switch (resolution)

@@ -51,8 +51,6 @@ namespace QuantConnect.Securities
         
         //Record keeping variables
         private readonly Cash _baseCurrencyCash;
-        private decimal _lastTradeProfit = 0;
-        private decimal _profit = 0;
 
         /******************************************************** 
         * CLASS CONSTRUCTOR
@@ -64,9 +62,13 @@ namespace QuantConnect.Securities
         {
             Securities = securityManager;
             Transactions = transactions;
+            MarginCallModel = new MarginCallModel(this);
+
             CashBook = new CashBook();
-            _baseCurrencyCash = CashBook[CashBook.BaseCurrency];
+            _baseCurrencyCash = CashBook[CashBook.AccountCurrency];
         }
+
+        #region IDictionary Implementation
 
         /******************************************************** 
         * DICTIONARY IMPLEMENTATION
@@ -236,29 +238,31 @@ namespace QuantConnect.Securities
             return Securities.GetInternalPortfolioCollection().GetEnumerator();
         }
 
+        #endregion
+
         /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
+
         /// <summary>
-        /// Cash allocated to this company, from which we can find the buying power available.
-        /// When Equity turns profit available cash increases, generating a positive feed back 
-        /// for successful Security.
+        /// Sum of all currencies in account in US dollars
         /// </summary>
-        public decimal Cash 
+        /// <remarks>
+        /// This should not be mistaken for margin available because Forex uses margin
+        /// even though the total cash value is not impact
+        /// </remarks>
+        public decimal Cash
         {
-            get
-            {
-                return CashBook.ValueInBaseCurrency;
-            }
+            get { return CashBook.TotalValueInAccountCurrency; }
         }
 
         /// <summary>
         /// Absolute value of cash discounted from our total cash by the holdings we own.
         /// </summary>
         /// <remarks>When account has leverage the actual cash removed is a fraction of the purchase price according to the leverage</remarks>
-        public decimal TotalUnleveredAbsoluteHoldingsCost 
+        public decimal TotalUnleveredAbsoluteHoldingsCost
         {
-            get 
+            get
             {
                 //Sum of unlevered cost of holdings
                 return (from position in Securities.Values
@@ -285,12 +289,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>Assumes no asset can have $0 price and uses the sum of total holdings value</remarks>
         /// <seealso cref="Invested"/>
-        public bool HoldStock 
+        public bool HoldStock
         {
-            get 
-            {
-                return TotalHoldingsValue > 0;
-            }
+            get { return TotalHoldingsValue > 0; }
         }
 
 
@@ -298,12 +299,9 @@ namespace QuantConnect.Securities
         /// Alias for HoldStock. Check if we have and holdings.
         /// </summary>
         /// <seealso cref="HoldStock"/>
-        public bool Invested 
+        public bool Invested
         {
-            get 
-            {
-                return HoldStock;
-            }
+            get { return HoldStock; }
         }
 
         /// <summary>
@@ -311,10 +309,10 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal TotalUnrealisedProfit 
         {
-            get 
+            get
             {
                 return (from position in Securities.Values
-                               select position.Holdings.UnrealizedProfit).Sum();
+                        select position.Holdings.UnrealizedProfit).Sum();
             }
         }
 
@@ -323,12 +321,9 @@ namespace QuantConnect.Securities
         /// Get the total unrealised profit in our portfolio from the individual security unrealized profits.
         /// </summary>
         /// <remarks>Added alias for American spelling</remarks>
-        public decimal TotalUnrealizedProfit 
+        public decimal TotalUnrealizedProfit
         {
-            get 
-            {
-                return TotalUnrealisedProfit;
-            }
+            get { return TotalUnrealisedProfit; }
         }
 
         /// <summary>
@@ -338,11 +333,21 @@ namespace QuantConnect.Securities
         /// <seealso cref="Cash"/>
         /// <seealso cref="TotalUnrealizedProfit"/>
         /// <seealso cref="TotalUnleveredAbsoluteHoldingsCost"/>
-        public decimal TotalPortfolioValue 
+        public decimal TotalPortfolioValue
         {
-            get 
+            get
             {
-                return CashBook.ValueInBaseCurrency + TotalUnrealisedProfit + TotalUnleveredAbsoluteHoldingsCost;
+                // we can't include forex in this calculation since we would be double account with respect to the cash book
+                var totalUnrealizedProfitWithoutForex = (from position in Securities.Values
+                                                         where position.Type != SecurityType.Forex
+                                                         select position.Holdings.UnrealizedProfit).Sum();
+
+                // we can't include forex in this calculation since we would be double account with respect to the cash book
+                var totalHoldingsCostWithoutForex = (from position in Securities.Values
+                                                     where position.Type != SecurityType.Forex
+                                                     select position.Holdings.AbsoluteHoldingsCost).Sum();
+
+                return CashBook.TotalValueInAccountCurrency + totalUnrealizedProfitWithoutForex + totalHoldingsCostWithoutForex;
             }
         }
 
@@ -382,24 +387,45 @@ namespace QuantConnect.Securities
             }
         }
 
+        /// <summary>
+        /// Gets the total margin used across all securities in the account's currency
+        /// </summary>
+        public decimal TotalMarginUsed
+        {
+            get
+            {
+                return (from security in Securities.Values
+                        select security.MarginModel.GetMaintenanceMargin(security)).Sum();
+            }
+        }
+
+        /// <summary>
+        /// Gets the remaining margin on the account in the account's currency
+        /// </summary>
+        public decimal MarginRemaining
+        {
+            get { return TotalPortfolioValue - TotalMarginUsed; }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="MarginCallModel"/> for the portfolio. This
+        /// is used to executed margin call orders.
+        /// </summary>
+        public MarginCallModel MarginCallModel { get; set; }
+
         /******************************************************** 
         * CLASS METHODS
         *********************************************************/
+
         /// <summary>
         /// Indexer for the PortfolioManager class to access the underlying security holdings objects.
         /// </summary>
         /// <param name="symbol">Search string symbol as indexer</param>
         /// <returns>SecurityHolding class from the algorithm securities</returns>
-        public SecurityHolding this [string symbol] 
+        public SecurityHolding this[string symbol]
         {
-            get 
-            {
-                return Securities[symbol].Holdings;
-            }
-            set 
-            {
-                Securities[symbol].Holdings = value;
-            }
+            get { return Securities[symbol].Holdings; }
+            set { Securities[symbol].Holdings = value; }
         }
 
         /// <summary>
@@ -432,53 +458,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// The total buying power remaining after factoring in leverage.
-        /// </summary>
-        /// <remarks>
-        ///     Because each security has its own leverage the buying power is a function of security.
-        ///     Similarly the desired trade direction can impact the buying power available
-        /// </remarks>
-        /// <returns>Decimal total buying power for this symbol</returns>
-        public virtual decimal GetFreeCash(string symbol, OrderDirection direction = OrderDirection.Hold) 
-        {
-            //Each asset has different leverage values, so affects our cash position in different ways.
-            var holdings = Securities[symbol].Holdings;
-
-            var cashValue = CashBook.ValueInBaseCurrency;
-            if (direction == OrderDirection.Hold || !Invested) return cashValue;
-            //Log.Debug("SecurityPortfolioManager.GetFreeCash(): Direction: " + direction.ToString());
-
-
-            //If the order is in the same direction as holdings, our remaining cash is our cash
-            //In the opposite direction, our remaining cash is 2 x current value of assets + our cash
-            if (Securities[symbol].Holdings.IsLong)
-            {
-                switch (direction)
-                {
-                    case OrderDirection.Buy:
-                        return cashValue;
-                    case OrderDirection.Sell:
-                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + cashValue;
-                }
-            }
-            else if (Securities[symbol].Holdings.IsShort)
-            {
-                switch (direction)
-                {
-                    case OrderDirection.Buy:
-                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + cashValue;
-                    case OrderDirection.Sell:
-                        return cashValue;
-                }
-            }
-
-            //No holdings, return cash
-            return cashValue;
-        }
-
-
-
-        /// <summary>
         /// Calculate the new average price after processing a partial/complete order fill event. 
         /// </summary>
         /// <remarks>
@@ -486,163 +465,11 @@ namespace QuantConnect.Securities
         ///     When simply partially reducing holdings the average price remains the same.
         ///     When crossing zero holdings the average price becomes the trade price in the new side of zero.
         /// </remarks>
-        public virtual void ProcessFill(OrderEvent fill) 
+        public virtual void ProcessFill(OrderEvent fill)
         {
-            //Get the required information from the vehicle this order will affect
-            var symbol = fill.Symbol;
-            var vehicle = Securities[symbol];
-            var isLong = vehicle.Holdings.IsLong;
-            var isShort = vehicle.Holdings.IsShort;
-            var closedPosition = false;
-            //Make local decimals to avoid any rounding errors from int multiplication
-            var quantityHoldings = (decimal)vehicle.Holdings.Quantity;
-            var absoluteHoldingsQuantity = vehicle.Holdings.AbsoluteQuantity;
-            var averageHoldingsPrice = vehicle.Holdings.AveragePrice;
-            var leverage = vehicle.Leverage;
-
-            try
-            {
-                //Update the Vehicle approximate total sales volume.
-                vehicle.Holdings.AddNewSale(fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity));
-
-                //Get the Fee for this Order - Update the Portfolio Cash Balance: Remove Transacion Fees.
-                var feeThisOrder = Math.Abs(Securities[symbol].Model.GetOrderFee(fill.AbsoluteFillQuantity, fill.FillPrice));
-                vehicle.Holdings.AddNewFee(feeThisOrder);
-                _baseCurrencyCash.Quantity -= feeThisOrder;
-
-                
-                //Calculate & Update the Last Trade Profit
-                if (isLong && fill.Direction == OrderDirection.Sell) 
-                {
-                    //Closing up a long position
-                    if (quantityHoldings >= fill.AbsoluteFillQuantity) 
-                    {
-                        //Closing up towards Zero.
-                        _lastTradeProfit = (fill.FillPrice - averageHoldingsPrice) * fill.AbsoluteFillQuantity;
-                        
-                        //New cash += profitLoss + costOfAsset/leverage.
-                        _baseCurrencyCash.Quantity += _lastTradeProfit + ((averageHoldingsPrice * fill.AbsoluteFillQuantity) / leverage);
-                    } 
-                    else 
-                    {
-                        //Closing up to Neg/Short Position (selling more than we have) - Only calc profit on the stock we have to sell.
-                        _lastTradeProfit = (fill.FillPrice - averageHoldingsPrice) * quantityHoldings;
-
-                        //New cash += profitLoss + costOfAsset/leverage.
-                        _baseCurrencyCash.Quantity += _lastTradeProfit + ((averageHoldingsPrice * quantityHoldings) / leverage);
-                    }
-                    closedPosition = true;
-                }
-                else if (isShort && fill.Direction == OrderDirection.Buy)
-                {
-                    //Closing up a short position.
-                    if (absoluteHoldingsQuantity >= fill.FillQuantity) 
-                    {
-                        //Reducing the stock we have, and enough stock on hand to process order.
-                        _lastTradeProfit = (averageHoldingsPrice - fill.FillPrice) * fill.AbsoluteFillQuantity;
-
-                        //New cash += profitLoss + costOfAsset/leverage.
-                        _baseCurrencyCash.Quantity += _lastTradeProfit + ((averageHoldingsPrice * fill.AbsoluteFillQuantity) / leverage);
-                    }
-                    else 
-                    {
-                        //Increasing stock holdings, short to positive through zero, but only calc profit on stock we Buy.
-                        _lastTradeProfit = (averageHoldingsPrice - fill.FillPrice) * absoluteHoldingsQuantity;
-
-                        //New cash += profitLoss + costOfAsset/leverage.
-                        _baseCurrencyCash.Quantity += _lastTradeProfit + ((averageHoldingsPrice * absoluteHoldingsQuantity) / leverage);
-                    }
-                    closedPosition = true;
-                }
-
-
-                if (closedPosition)
-                {
-                    //Update Vehicle Profit Tracking:
-                    _profit += _lastTradeProfit;
-                    vehicle.Holdings.AddNewProfit(_lastTradeProfit);
-                    vehicle.Holdings.SetLastTradeProfit(_lastTradeProfit);
-                    AddTransactionRecord(vehicle.Time, _lastTradeProfit - 2 * feeThisOrder);
-                }
-
-
-                //UPDATE HOLDINGS QUANTITY, AVG PRICE:
-                //Currently NO holdings. The order is ALL our holdings.
-                if (quantityHoldings == 0) 
-                {
-                    //First transaction just subtract order from cash and set our holdings:
-                    averageHoldingsPrice = fill.FillPrice;
-                    quantityHoldings = fill.FillQuantity;
-                    _baseCurrencyCash.Quantity -= (fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity)) / leverage;
-                }
-                else if (isLong) 
-                {
-                    //If we're currently LONG on the stock.
-                    switch (fill.Direction) 
-                    {
-                        case OrderDirection.Buy:
-                            //Update the Holding Average Price: Total Value / Total Quantity:
-                            averageHoldingsPrice = ((averageHoldingsPrice * quantityHoldings) + (fill.FillQuantity * fill.FillPrice)) / (quantityHoldings + (decimal)fill.FillQuantity);
-                            //Add the new quantity:
-                            quantityHoldings += fill.FillQuantity;
-                            //Subtract this order from cash:
-                            _baseCurrencyCash.Quantity -= (fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity)) / leverage;
-                            break;
-
-                        case OrderDirection.Sell:
-                            quantityHoldings += fill.FillQuantity; //+ a short = a subtraction
-                            if (quantityHoldings < 0) 
-                            {
-                                //If we've now passed through zero from selling stock: new avg price:
-                                averageHoldingsPrice = fill.FillPrice;
-                                _baseCurrencyCash.Quantity -= (fill.FillPrice * Math.Abs(quantityHoldings)) / leverage;
-                            }
-                            else if (quantityHoldings == 0) 
-                            {
-                                averageHoldingsPrice = 0;
-                            }
-                            break;
-                    }
-                } 
-                else if (isShort) 
-                {
-                    //We're currently SHORTING the stock: What is the new position now?
-                    switch (fill.Direction) 
-                    {
-                        case OrderDirection.Buy:
-                            //Buying when we're shorting moves to close position:
-                            quantityHoldings += fill.FillQuantity;
-                            if (quantityHoldings > 0) 
-                            {
-                                //If we were short but passed through zero, new average price is what we paid. The short position was closed.
-                                averageHoldingsPrice = fill.FillPrice;
-                                _baseCurrencyCash.Quantity -= (fill.FillPrice * Math.Abs(quantityHoldings)) / leverage;
-                            }
-                            else if (quantityHoldings == 0) 
-                            {
-                                averageHoldingsPrice = 0;
-                            }
-                            break;
-
-                        case OrderDirection.Sell:
-                            //We are increasing a Short position:
-                            //E.g.  -100 @ $5, adding -100 @ $10: Avg: $7.5
-                            //      dAvg = (-500 + -1000) / -200 = 7.5
-                            averageHoldingsPrice = ((averageHoldingsPrice * quantityHoldings) + (Convert.ToDecimal(fill.FillQuantity) * fill.FillPrice)) / (quantityHoldings + (decimal)fill.FillQuantity);
-                            quantityHoldings += fill.FillQuantity;
-                            _baseCurrencyCash.Quantity -= (fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity)) / leverage;
-                            break;
-                    }
-                }
-            } 
-            catch( Exception err )
-            {
-                Log.Error("SecurityPortfolioManager.ProcessFill(orderEvent): " + err.Message);
-            }
-            
-            //Set the results back to the vehicle.
-            vehicle.Holdings.SetHoldings(averageHoldingsPrice, Convert.ToInt32(quantityHoldings));
-        } // End Process Fill
+            var security = Securities[fill.Symbol];
+            security.PortfolioModel.ProcessFill(this, security, fill);
+        }
 
 
         /// <summary>
@@ -650,10 +477,29 @@ namespace QuantConnect.Securities
         /// If there is a margin call, liquidate the portfolio immediately before the portfolio gets sub zero.
         /// </summary>
         /// <returns>True for a margin call on the holdings.</returns>
-        public bool ScanForMarginCall()
+        public List<Order> ScanForMarginCall()
         {
-            // TODO.
-            return false;
+            decimal totalMarginUsed = TotalMarginUsed;
+            decimal totalPortfolioValue = TotalPortfolioValue;
+
+            // if we still have margin remaining then there's no need for a margin call
+            if (MarginRemaining > 0)
+            {
+                return new List<Order>();
+            }
+
+            // generate a listing of margin call orders
+            var marginCallOrders = new List<Order>();
+            foreach (var security in Securities.Values)
+            {
+                var marginCallOrder = security.MarginModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed);
+                if (marginCallOrder != null && marginCallOrder.Quantity != 0)
+                {
+                    marginCallOrders.Add(marginCallOrder);
+                }
+            }
+
+            return marginCallOrders;
         }
 
 
@@ -675,6 +521,7 @@ namespace QuantConnect.Securities
             }
             Transactions.TransactionRecord.Add(clone, transactionProfitLoss);
         }
+    }
 
-    } //End Algorithm Portfolio Class
+//End Algorithm Portfolio Class
 } // End QC Namespace
