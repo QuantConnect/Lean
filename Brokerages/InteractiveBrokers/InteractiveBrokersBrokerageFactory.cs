@@ -45,9 +45,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             get
             {
                 var data = new Dictionary<string, string>();
-                data.Add("port", Config.Get("ib-port"));
-                data.Add("account-id", Config.Get("ib-account"));
-                data.Add("agent-description", Config.Get("ib-agent-description"));
+                data.Add("ib-port", Config.Get("ib-port"));
+                data.Add("ib-host", Config.Get("ib-host"));
+                data.Add("ib-account", Config.Get("ib-account"));
+                data.Add("ib-user-name", Config.Get("ib-user-name"));
+                data.Add("ib-password", Config.Get("ib-password"));
+                data.Add("ib-agent-description", Config.Get("ib-agent-description"));
                 return data;
             }
         }
@@ -74,9 +77,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var errors = new List<string>();
 
             // read values from the brokerage datas
-            var port = Read<int>(job.BrokerageData, "port", errors);
-            var account = Read<string>(job.BrokerageData, "account-id", errors);
-            var agentDescription = Read<AgentDescription>(job.BrokerageData, "agent-description", errors);
+            var port = Read<int>(job.BrokerageData, "ib-port", errors);
+            var host = Read<string>(job.BrokerageData, "ib-host", errors);
+            var account = Read<string>(job.BrokerageData, "ib-account", errors);
+            var agentDescription = Read<AgentDescription>(job.BrokerageData, "ib-agent-description", errors);
 
             if (errors.Count != 0)
             {
@@ -84,7 +88,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new Exception(string.Join(Environment.NewLine, errors));
             }
 
-            return new InteractiveBrokersBrokerage(algorithm.Transactions, job.AccountId, "127.0.0.1", port, agentDescription);
+            return new InteractiveBrokersBrokerage(algorithm.Transactions, account, host, port, agentDescription);
         }
 
         /// <summary>

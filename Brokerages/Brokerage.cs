@@ -187,9 +187,9 @@ namespace QuantConnect.Brokerages
         public abstract List<Holding> GetAccountHoldings();
 
         /// <summary>
-        /// Gets the current USD cash balance in the brokerage account
+        /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
-        /// <returns>The current USD cash balance available for trading</returns>
-        public abstract decimal GetCashBalance();
+        /// <returns>The current cash balance for each currency available for trading</returns>
+        public abstract Dictionary<string, decimal> GetCashBalance();
     }
 }

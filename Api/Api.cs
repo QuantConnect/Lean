@@ -119,7 +119,34 @@ namespace QuantConnect.Api
         /// </summary>
         public MarketToday MarketToday(SecurityType type)
         {
-            return new MarketToday();
+            switch (type)
+            {
+                case SecurityType.Base:
+                case SecurityType.Equity:
+                case SecurityType.Option:
+                case SecurityType.Commodity:
+                    return new MarketToday
+                    {
+                        PreMarket = new MarketHours(4, 9.5),
+                        Open = new MarketHours(9.5, 16),
+                        PostMarket = new MarketHours(16, 20),
+                        Status = (DateTime.Now.TimeOfDay <= TimeSpan.FromHours(16) 
+                               || DateTime.Now.TimeOfDay >= TimeSpan.FromHours(9.5))
+                            ? "open"
+                            : "closed"
+                    };
+                case SecurityType.Forex:
+                case SecurityType.Future:
+                    return new MarketToday
+                    {
+                        PreMarket = new MarketHours(0, 0),
+                        Open = new MarketHours(0, 24 - double.Epsilon),
+                        PostMarket = new MarketHours(24, 24),
+                        Status = "open"
+                    };
+                default:
+                    throw new ArgumentOutOfRangeException("type");
+            }
         }
 
         /// <summary>

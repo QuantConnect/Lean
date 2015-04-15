@@ -21,17 +21,24 @@ namespace QuantConnect.Securities
     public class AccountEvent
     {
         /// <summary>
-        /// The total cash balance of the account
+        /// Gets the total cash balance of the account in units of <see cref="CurrencySymbol"/>
         /// </summary>
         public decimal CashBalance { get; private set; }
 
         /// <summary>
+        /// Gets the currency symbol
+        /// </summary>
+        public string CurrencySymbol { get; private set; }
+
+        /// <summary>
         /// Creates an AccountEvent
         /// </summary>
+        /// <param name="currencySymbol">The currency's symbol</param>
         /// <param name="cashBalance">The total cash balance of the account</param>
-        public AccountEvent(decimal cashBalance)
+        public AccountEvent(string currencySymbol, decimal cashBalance)
         {
             CashBalance = cashBalance;
+            CurrencySymbol = currencySymbol;
         }
 
         /// <summary>
@@ -43,7 +50,7 @@ namespace QuantConnect.Securities
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return "Account Cash Balance: " + CashBalance.ToString("C");
+            return string.Format("Account {0} Balance: {1}", CurrencySymbol, CashBalance.ToString("0.00"));
         }
     }
 }

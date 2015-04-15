@@ -92,6 +92,8 @@ namespace QuantConnect.Queues
                     TransactionEndpoint = TransactionHandlerEndpoint.Brokerage,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
                     Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
+                    Channel = Config.Get("job-channel"),
+                    UserId = Config.GetInt("job-user-id")
                 };
                 
                 // import the brokerage data for the configured brokerage

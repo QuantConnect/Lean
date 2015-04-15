@@ -51,6 +51,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ManualResetEvent _waitForNextValidID = new ManualResetEvent(false);
         private readonly ManualResetEvent _accountHoldingsResetEvent = new ManualResetEvent(false);
 
+        private readonly ConcurrentDictionary<string, decimal> _cashBalances = new ConcurrentDictionary<string, decimal>(); 
         private readonly ConcurrentDictionary<string, string> _accountProperties = new ConcurrentDictionary<string, string>();
         // number of shares per symbol
         private readonly ConcurrentDictionary<string, Holding> _accountHoldings = new ConcurrentDictionary<string, Holding>();
@@ -271,12 +272,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Gets the current USD cash balance in the brokerage account
+        /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
-        /// <returns>The current USD cash balance available for trading</returns>
-        public override decimal GetCashBalance()
+        /// <returns>The current cash balance for each currency available for trading</returns>
+        public override Dictionary<string, decimal> GetCashBalance()
         {
-            return decimal.Parse(_accountProperties[AccountValueKeys.CashBalance]);
+            return new Dictionary<string, decimal>(_cashBalances);
         }
 
         /// <summary>
@@ -487,19 +488,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             try
             {
-                if (e.Key == AccountValueKeys.CashBalance && e.Currency != "USD")
-                {
-                    // we don't care about cash except USD for now
-                    return;
-                }
-
                 _accountProperties[e.Key] = e.Value;
 
                 // we want to capture if the user's cash changes so we can reflect it in the algorithm
-                if (e.Key == AccountValueKeys.CashBalance && e.Currency == "USD")
+                if (e.Key == AccountValueKeys.CashBalance && e.Currency != "BASE")
                 {
-                    var cashBalance = e.Value.ToDecimal();
-                    OnAccountChanged(new AccountEvent(cashBalance));
+                    var cashBalance = decimal.Parse(e.Value);
+                    _cashBalances.AddOrUpdate(e.Currency, cashBalance);
+                    OnAccountChanged(new AccountEvent(e.Currency, cashBalance));
                 }
             }
             catch (Exception err)
@@ -515,6 +511,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             try
             {
+                if (update.Status == IB.OrderStatus.PreSubmitted
+                 || update.Status == IB.OrderStatus.PendingSubmit)
+                {
+                    return;
+                }
+
                 var status = ConvertOrderStatus(update.Status);
                 if (status != OrderStatus.PartiallyFilled &&
                     status != OrderStatus.Filled &&
