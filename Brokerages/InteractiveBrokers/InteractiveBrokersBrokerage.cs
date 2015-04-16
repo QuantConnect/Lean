@@ -20,7 +20,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Configuration;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -51,6 +50,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ManualResetEvent _waitForNextValidID = new ManualResetEvent(false);
         private readonly ManualResetEvent _accountHoldingsResetEvent = new ManualResetEvent(false);
 
+        // IB likes to duplicate/triplicate some events, keep track of them and swallow the dupes
+        // we're keeping track of the .ToString() of the order event here
+        private readonly FixedHashQueue<string> _recentOrderEvents = new FixedHashQueue<string>(50); 
+
+        private readonly ConcurrentDictionary<string, decimal> _cashBalances = new ConcurrentDictionary<string, decimal>(); 
         private readonly ConcurrentDictionary<string, string> _accountProperties = new ConcurrentDictionary<string, string>();
         // number of shares per symbol
         private readonly ConcurrentDictionary<string, Holding> _accountHoldings = new ConcurrentDictionary<string, Holding>();
@@ -249,7 +253,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.RequestOpenOrders();
 
             // wait for our end signal
-            if (!manualResetEvent.WaitOne(1000))
+            if (!manualResetEvent.WaitOne(5000))
             {
                 throw new TimeoutException("InteractiveBrokersBrokerage.GetOpenOrders(): Operation took longer than 1 second.");
             }
@@ -271,12 +275,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Gets the current USD cash balance in the brokerage account
+        /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
-        /// <returns>The current USD cash balance available for trading</returns>
-        public override decimal GetCashBalance()
+        /// <returns>The current cash balance for each currency available for trading</returns>
+        public override Dictionary<string, decimal> GetCashBalance()
         {
-            return _accountProperties[AccountValueKeys.CashBalance].ToDecimal();
+            return new Dictionary<string, decimal>(_cashBalances);
         }
 
         /// <summary>
@@ -321,7 +325,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // no need to be fancy with request id since that's all this client does is 1 request
                 client.RequestExecutions(requestID, filter);
 
-                if (!manualResetEvent.WaitOne(1000))
+                if (!manualResetEvent.WaitOne(5000))
                 {
                     throw new TimeoutException("InteractiveBrokersBrokerage.GetExecutions(): Operation took longer than 1 second.");
                 }
@@ -372,7 +376,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // pause for a moment to receive next valid ID message from gateway
-            if (!_waitForNextValidID.WaitOne(1000))
+            if (!_waitForNextValidID.WaitOne(5000))
             {
                 throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 1 second.");
             }
@@ -487,19 +491,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             try
             {
-                if (e.Key == AccountValueKeys.CashBalance && e.Currency != "USD")
-                {
-                    // we don't care about cash except USD for now
-                    return;
-                }
-
                 _accountProperties[e.Key] = e.Value;
 
                 // we want to capture if the user's cash changes so we can reflect it in the algorithm
-                if (e.Key == AccountValueKeys.CashBalance && e.Currency == "USD")
+                if (e.Key == AccountValueKeys.CashBalance && e.Currency != "BASE")
                 {
-                    var cashBalance = e.Value.ToDecimal();
-                    OnAccountChanged(new AccountEvent(cashBalance));
+                    var cashBalance = decimal.Parse(e.Value);
+                    _cashBalances.AddOrUpdate(e.Currency, cashBalance);
+                    OnAccountChanged(new AccountEvent(e.Currency, cashBalance));
                 }
             }
             catch (Exception err)
@@ -515,6 +514,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             try
             {
+                if (update.Status == IB.OrderStatus.PreSubmitted
+                 || update.Status == IB.OrderStatus.PendingSubmit)
+                {
+                    return;
+                }
+
                 var status = ConvertOrderStatus(update.Status);
                 if (status != OrderStatus.PartiallyFilled &&
                     status != OrderStatus.Filled &&
@@ -546,7 +551,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     FillPrice = update.AverageFillPrice,
                     FillQuantity = fillQuantity
                 };
-                OnOrderEvent(orderEvent);
+                if (update.Remaining != 0)
+                {
+                    orderEvent.Message += " - " + update.Remaining + " remaining";
+                }
+
+                // if we're able to add to our fixed length, unique queue then send the event
+                // otherwise it is a duplicate, so skip it
+                if (_recentOrderEvents.Add(orderEvent.ToString()))
+                {
+                    OnOrderEvent(orderEvent);
+                }
             }
             catch(InvalidOperationException err)
             {
@@ -563,7 +578,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandlePortfolioUpdates(object sender, IB.UpdatePortfolioEventArgs e)
         {
-            Log.Trace("InteractiveBrokersBrokerage.HandlePortfolioUpdates(): Resetting account holdings reset event.");
             _accountHoldingsResetEvent.Reset();
             var holding = CreateHolding(e);
             _accountHoldings[holding.Symbol] = holding;
@@ -901,5 +915,39 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             104, 105, 106, 107, 109, 110, 111, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 129, 131, 132, 133, 134, 135, 136, 137, 140, 141, 146, 147, 148, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 163, 167, 168, 201, 202,313,314,315,325,328,329,334,335,336,337,338,339340,341,342,343,345,347,348,349,350,352,353,355,356,358,359,360,361,362,363,364,367,368,369,370,371,372,373,374,375,376,377,378,379,380,382,383,387,388,389,390,391,392,393,394,395,396,397,398,400,401,402,403,404,405,406,407,408,409,410,411,412,413,417,418,419,421,423,424,427,428,429,433,434,435,436,437,439,440,441,442,443,444,445,446,447,448,449,10002,10006,10007,10008,10009,10010,10011,10012,10014,10020,2102
         };
+
+        /// <summary>
+        /// Provides an implementation of an add-only fixed length, unique queue system
+        /// </summary>
+        class FixedHashQueue<T>
+        {
+            private readonly int _size;
+            private readonly Queue<T> _queue; 
+            private readonly HashSet<T> _hash; 
+
+            public FixedHashQueue(int size)
+            {
+                _size = size;
+                _queue = new Queue<T>(size);
+                _hash = new HashSet<T>();
+            }
+
+            /// <summary>
+            /// Returns true if the item was added and didn't already exists
+            /// </summary>
+            public bool Add(T item)
+            {
+                if (_hash.Add(item))
+                {
+                    _queue.Enqueue(item);
+                    if (_queue.Count > _size)
+                    {
+                        _queue.Dequeue();
+                    }
+                    return true;
+                }
+                return false;
+            }
+        }
     }
 }

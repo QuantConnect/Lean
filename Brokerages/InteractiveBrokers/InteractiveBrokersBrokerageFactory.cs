@@ -14,16 +14,39 @@
 */
 
 using System;
+using System.Collections.Generic;
+using Krs.Ats.IBNet;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
     /// <summary>
-    /// Factory type for the InteractiveBrokersBrokerage
+    /// Factory type for the <see cref="InteractiveBrokersBrokerage"/>
     /// </summary>
     public class InteractiveBrokersBrokerageFactory : IBrokerageFactory
     {
+        /// <summary>
+        /// Gets the brokerage data required to run the IB brokerage from configuration
+        /// </summary>
+        /// <remarks>
+        /// The implementation of this property will create the brokerage data dictionary required for
+        /// running live jobs. See <see cref="IJobQueueHandler.NextJob"/>
+        /// </remarks>
+        public Dictionary<string, string> BrokerageData
+        {
+            get
+            {
+                var data = new Dictionary<string, string>();
+                data.Add("ib-account", Config.Get("ib-account"));
+                data.Add("ib-user-name", Config.Get("ib-user-name"));
+                data.Add("ib-password", Config.Get("ib-password"));
+                data.Add("ib-agent-description", Config.Get("ib-agent-description"));
+                return data;
+            }
+        }
+
         /// <summary>
         /// Gets the type of brokerage produced by this factory
         /// </summary>
@@ -40,10 +63,30 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>A new brokerage instance</returns>
         public IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
-            // launch the IB gateway
-            InteractiveBrokersGatewayRunner.Start(job.AccountId);
+            var errors = new List<string>();
 
-            return new InteractiveBrokersBrokerage(algorithm.Transactions, job.AccountId);
+            // read values from the brokerage datas
+            var useTws = Config.GetBool("ib-use-tws");
+            var port = Config.GetInt("ib-port", 4001);
+            var host = Config.Get("ib-host", "127.0.0.1");
+            var twsDirectory = Config.Get("ib-tws-dir", "C:\\Jts");
+            var ibControllerDirectory = Config.Get("ib-controller-dir", "C:\\IBController");
+
+            var account = Read<string>(job.BrokerageData, "ib-account", errors);
+            var userID = Read<string>(job.BrokerageData, "ib-user-name", errors);
+            var password = Read<string>(job.BrokerageData, "ib-password", errors);
+            var agentDescription = Read<AgentDescription>(job.BrokerageData, "ib-agent-description", errors);
+
+            if (errors.Count != 0)
+            {
+                // if we had errors then we can't create the instance
+                throw new Exception(string.Join(Environment.NewLine, errors));
+            }
+            
+            // launch the IB gateway
+            InteractiveBrokersGatewayRunner.Start(ibControllerDirectory, twsDirectory, userID, password, useTws);
+
+            return new InteractiveBrokersBrokerage(algorithm.Transactions, account, host, port, agentDescription);
         }
 
         /// <summary>
@@ -54,6 +97,30 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public void Dispose()
         {
             InteractiveBrokersGatewayRunner.Stop();
+        }
+
+        /// <summary>
+        /// Reads a value from the brokerage data, adding an error if the key is not found
+        /// </summary>
+        private static T Read<T>(IReadOnlyDictionary<string, string> brokerageData, string key, ICollection<string> errors) 
+            where T : IConvertible
+        {
+            string value;
+            if (!brokerageData.TryGetValue(key, out value))
+            {
+                errors.Add("InterativeBrokersBrokerageFactory.CreateBrokerage(): Missing key: " + key);
+                return default(T);
+            }
+
+            try
+            {
+                return value.ConvertTo<T>();
+            }
+            catch (Exception err)
+            {
+                errors.Add(string.Format("InterativeBrokersBrokerageFactory.CreateBrokerage(): Error converting key '{0}' with value '{1}'. {2}", key, value, err.Message));
+                return default(T);
+            }
         }
     }
 }

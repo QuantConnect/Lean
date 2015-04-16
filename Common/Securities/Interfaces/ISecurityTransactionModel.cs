@@ -77,11 +77,22 @@ namespace QuantConnect.Securities.Interfaces
 
 
         /// <summary>
+        /// Gets the order fee associated with the specified order. This returns the cost
+        /// of the transaction in the account currency
+        /// </summary>
+        /// <param name="security">The security matching the order</param>
+        /// <param name="order">The order to compute fees for</param>
+        /// <returns>The cost of the order in units of the account currency</returns>
+        decimal GetOrderFee(Security security, Order order);
+
+
+        /// <summary>
         /// Fee Model. Return the decimal fees from one order. Currently defaults to interactive
         /// </summary>
         /// <param name="quantity">Quantity for this Order</param>
         /// <param name="price">Average Price for this Order</param>
         /// <returns>Decimal value of the Order Fee</returns>
+        [Obsolete("GetOrderFee(quantity, price) method has been made obsolete, use GetOrderFee(Security, Order) instead.")]
         decimal GetOrderFee(decimal quantity, decimal price);
 
 
@@ -121,5 +132,4 @@ namespace QuantConnect.Securities.Interfaces
         OrderEvent LimitFill(Security asset, Order order);
 
     } // End Algorithm Transaction Model Interface
-
 } // End QC Namespace

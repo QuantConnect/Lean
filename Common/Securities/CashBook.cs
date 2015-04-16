@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using QuantConnect.Data;
 
 namespace QuantConnect.Securities
@@ -114,6 +115,25 @@ namespace QuantConnect.Securities
         public decimal ConvertToAccountCurrency(decimal sourceQuantity, string sourceCurrency)
         {
             return Convert(sourceQuantity, sourceCurrency, AccountCurrency);
+        }
+
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            foreach (var value in Values)
+            {
+                sb.AppendLine(value.ToString());
+            }
+            sb.AppendLine("-----------------------------------------");
+            sb.AppendLine("CashBook Total Value: " + TotalValueInAccountCurrency.ToString("C"));
+            return sb.ToString();
         }
 
         #region IDictionary Implementation

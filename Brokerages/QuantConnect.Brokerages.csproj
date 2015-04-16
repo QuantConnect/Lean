@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Backtesting\BacktestingBrokerage.cs" />
+    <Compile Include="Backtesting\BacktestingBrokerageFactory.cs" />
     <Compile Include="Brokerage.cs" />
     <Compile Include="BrokerageAuthentication.cs" />
     <Compile Include="BrokerageException.cs" />
@@ -70,9 +71,16 @@
     <Compile Include="OandaBrokerage\OandaBrokerage.cs" />
     <Compile Include="OandaBrokerage\OandaBrokerageAuthentication.cs" />
     <Compile Include="Paper\PaperBrokerage.cs" />
+    <Compile Include="Paper\PaperBrokerageFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="InteractiveBrokers\run-ib-controller.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="InteractiveBrokers\run-ib-controller.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

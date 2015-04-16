@@ -315,7 +315,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                     foreach (var holding in _algorithm.Portfolio.Values.Where(x => x.AbsoluteQuantity > 0).OrderBy(x => x.Symbol))
                     {
-                        holdings.Add(holding.Symbol, new Holding(holding, _algorithm.Securities[holding.Symbol].Type));
+                        holdings.Add(holding.Symbol, new Holding(holding));
                     }
 
                     //Add the algorithm statistics first.
@@ -406,7 +406,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
             catch (Exception err)
             {
-                Log.Error("LiveTradingResultHandler().ProcessSeriesUpdate(): " + err.Message, true);
+                Log.Error("LiveTradingResultHandler().Update(): " + err.Message, true);
             }
         }
 

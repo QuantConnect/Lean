@@ -147,11 +147,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     
                     //Live Job Parameters:
                     liveJob.DeployId = "LOCALHOST";
-                    liveJob.IssuedAt = DateTime.Now.Subtract(TimeSpan.FromSeconds(86399 - 60));     //For testing, first access token expires in 60 sec. refresh.
-                    liveJob.LifeTime = TimeSpan.FromSeconds(86399);
-                    liveJob.AccessToken = "123456";
-                    liveJob.AccountId = "123456";
-                    liveJob.RefreshToken = "";
                     liveJob.Type = PacketType.LiveNode;
 
                     //Endpoints:
@@ -162,7 +157,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     liveJob.SetupEndpoint = SetupHandlerEndpoint.Console;
 
                     //Call in the paper trading setup:
-                    var setup = new PaperTradingSetupHandler();
+                    var setup = new BrokerageSetupHandler();
                     setup.Setup(algorithm, out brokerage, baseJob);
 
                     //Live Specific Parameters:

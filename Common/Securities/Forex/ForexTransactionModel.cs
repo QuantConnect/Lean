@@ -23,44 +23,53 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Interfaces;
 
-namespace QuantConnect.Securities.Forex 
+namespace QuantConnect.Securities.Forex
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Forex Transaction Model Class: Specific transaction fill models for FOREX orders
     /// </summary>
     /// <seealso cref="SecurityTransactionModel"/>
     /// <seealso cref="ISecurityTransactionModel"/>
-    public class ForexTransactionModel : SecurityTransactionModel, ISecurityTransactionModel {
+    public class ForexTransactionModel : SecurityTransactionModel
+    {
+        private readonly decimal _commissionRate;
+        private readonly decimal _minimumOrderFee;
 
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS PUBLIC VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Initialise the transaction model class
         /// </summary>
-        public ForexTransactionModel() {
-
+        public ForexTransactionModel(decimal monthlyTradeAmountInUSDollars = 0)
+        {
+/*            Interactive Brokers Forex Commisions as of 2015.04.15
+Example
+Monthly Trade Amount	            Commissions	                        Minimum per Order
+<=USD 1,000,000,000	                0.20basis point * Trade Value	    USD 2.00
+USD 1,000,000,001 - 2,000,000,000	0.15basis point * Trade Value	    USD 1.50
+USD 2,000,000,001 - 5,000,000,000	0.10basis point * Trade Value    	USD 1.25
+>USD 5,000,000,000	                0.08basis point * Trade Value    	USD 1.00
+*/
+            const decimal bp = 0.0001m;
+            if (monthlyTradeAmountInUSDollars <= 1000000000) // 1 billion
+            {
+                _commissionRate = 0.20m*bp;
+                _minimumOrderFee = 2.00m;
+            }
+            else if (monthlyTradeAmountInUSDollars <= 2000000000) // 2 billion
+            {
+                _commissionRate = 0.15m*bp;
+                _minimumOrderFee = 1.50m;
+            }
+            else if (monthlyTradeAmountInUSDollars <= 5000000000) // 5 billion
+            {
+                _commissionRate = 0.20m*bp;
+                _minimumOrderFee = 1.25m;
+            }
+            else
+            {
+                _commissionRate = 0.20m*bp;
+                _minimumOrderFee = 1.00m;
+            }
         }
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
 
         /// <summary>
         /// Model the slippage on a market order: fixed percentage of order price
@@ -108,7 +117,6 @@ namespace QuantConnect.Securities.Forex
             return fill;
         }
 
-
         /// <summary>
         /// Check if the model has stopped out our position yet: (Stop Market Order Type)
         /// </summary>
@@ -133,7 +141,7 @@ namespace QuantConnect.Securities.Forex
                     {
                         //Set the order and slippage on the order, update the fill price:
                         order.Status = OrderStatus.Filled;
-                        order.Price = asset.Price;   //Fill at the security price, sometimes gap down skip past stop.
+                        order.Price = asset.Price; //Fill at the security price, sometimes gap down skip past stop.
                     }
                 }
                 else if (order.Direction == OrderDirection.Buy)
@@ -142,7 +150,7 @@ namespace QuantConnect.Securities.Forex
                     if (asset.Price > order.StopPrice)
                     {
                         order.Status = OrderStatus.Filled;
-                        order.Price = asset.Price;   //Fill at the security price, sometimes gap down skip past stop.
+                        order.Price = asset.Price; //Fill at the security price, sometimes gap down skip past stop.
                     }
                 }
 
@@ -160,7 +168,6 @@ namespace QuantConnect.Securities.Forex
             }
             return fill;
         }
-
 
         /// <summary>
         /// Analyse the market price of the security provided to see if the limit order has been filled.
@@ -186,8 +193,8 @@ namespace QuantConnect.Securities.Forex
                 decimal marketDataMaxPrice;
                 if (marketData.DataType == MarketDataType.TradeBar)
                 {
-                    marketDataMinPrice = ((TradeBar)marketData).Low;
-                    marketDataMaxPrice = ((TradeBar)marketData).High;
+                    marketDataMinPrice = ((TradeBar) marketData).Low;
+                    marketDataMaxPrice = ((TradeBar) marketData).High;
                 }
                 else
                 {
@@ -228,7 +235,6 @@ namespace QuantConnect.Securities.Forex
             return fill;
         }
 
-
         /// <summary>
         /// Get the slippage approximation for this order
         /// </summary>
@@ -268,7 +274,6 @@ namespace QuantConnect.Securities.Forex
             return slippage;
         }
 
-
         /// <summary>
         /// Get the fees from this order
         /// </summary>
@@ -281,8 +286,25 @@ namespace QuantConnect.Securities.Forex
         /// <returns>Decimal value of the order fee</returns>
         public override decimal GetOrderFee(decimal quantity, decimal price)
         {
-            //Modelled order fee to 0; Assume spread is the fee for most FX brokerages.
-            return 0;
+            var fee = _commissionRate*quantity*price;
+            return Math.Min(_minimumOrderFee, fee);
+        }
+
+        /// <summary>
+        /// Default implementation returns 0 for fees.
+        /// </summary>
+        /// <param name="security">The security matching the order</param>
+        /// <param name="order">The order to compute fees for</param>
+        /// <returns>The cost of the order in units of the account currency</returns>
+        public override decimal GetOrderFee(Security security, Order order)
+        {
+            var forex = (Forex) security;
+            // this is in units of the quote currency
+            var fee = _commissionRate * order.Value;
+            fee = Math.Min(_minimumOrderFee, fee);
+
+            // convert into units of the account currency
+            return forex.QuoteCurrency.ConversionRate*fee;
         }
 
         /// <summary>
@@ -299,7 +321,6 @@ namespace QuantConnect.Securities.Forex
             return new OrderEvent(order);
         }
 
-
         /// <summary>
         /// Model the slippage on a market order: fixed percentage of order price
         /// </summary>
@@ -313,7 +334,6 @@ namespace QuantConnect.Securities.Forex
         {
             return MarketFill(security, order as MarketOrder);
         }
-
 
         /// <summary>
         /// Check if the model has stopped out our position yet: (Stop Market Order Type)
@@ -329,7 +349,6 @@ namespace QuantConnect.Securities.Forex
             return StopMarketFill(asset, order as StopMarketOrder);
         }
 
-
         /// <summary>
         /// Analyse the market price of the security provided to see if the limit order has been filled.
         /// </summary>
@@ -343,7 +362,5 @@ namespace QuantConnect.Securities.Forex
         {
             return LimitFill(security, order as LimitOrder);
         }
-
-    } // End Algorithm Transaction Filling Classes
-
-} // End QC Namespace
+    }
+}

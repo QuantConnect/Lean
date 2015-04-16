@@ -55,10 +55,10 @@ namespace QuantConnect.Interfaces
         List<Holding> GetAccountHoldings(); 
 
         /// <summary>
-        /// Gets the current USD cash balance in the brokerage account
+        /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
-        /// <returns>The current USD cash balance available for trading</returns>
-        decimal GetCashBalance();
+        /// <returns>The current cash balance for each currency available for trading</returns>
+        Dictionary<string, decimal> GetCashBalance();
 
         /// <summary>
         /// Places a new order and assigns a new broker ID to the order

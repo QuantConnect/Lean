@@ -20,6 +20,7 @@ using System.Threading;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
@@ -67,6 +68,7 @@ namespace QuantConnect.Lean.Engine.Setup
         {
             Errors = new List<string>();
             MaximumRuntime = TimeSpan.FromDays(10*365);
+            MaxOrders = int.MaxValue;
         }
 
         /// <summary>
@@ -176,9 +178,12 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 brokerage.Connect();
 
-                // set the algorithm's cash balance
+                // set the algorithm's cash balance for each currency
                 var cashBalance = brokerage.GetCashBalance();
-                algorithm.SetCash(cashBalance);
+                foreach (var item in cashBalance)
+                {
+                    algorithm.SetCash(item.Key, item.Value, 0);
+                }
 
                 // populate the algorithm with the account's outstanding orders
                 var openOrders = brokerage.GetOpenOrders();
@@ -200,10 +205,25 @@ namespace QuantConnect.Lean.Engine.Setup
                         algorithm.AddSecurity(holding.Type, holding.Symbol, minResolution.Value, true, 1.0m, false);
                     }
                     algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int)holding.Quantity);
+                    algorithm.Securities[holding.Symbol].Update(DateTime.Now, new TradeBar
+                    {
+                        Time = DateTime.Now,
+                        Open = holding.AveragePrice,
+                        High = holding.AveragePrice,
+                        Low = holding.AveragePrice,
+                        Close = holding.AveragePrice,
+                        Volume = 0,
+                        Symbol = holding.Symbol,
+                        DataType = MarketDataType.TradeBar
+                    });
                 }
 
                 // call this after we've initialized everything from the brokerage since we may have added some holdings/currencies
                 algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager);
+
+                //Set the starting capital for the strategy to calculate performance:
+                StartingCapital = algorithm.Portfolio.Cash;
+                StartingDate = DateTime.Now;
             }
             catch (Exception err)
             {

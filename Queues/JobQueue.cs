@@ -15,10 +15,15 @@
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
+
+using System;
+using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Queues
 {
@@ -30,18 +35,19 @@ namespace QuantConnect.Queues
     /// </summary>
     public class JobQueue : IJobQueueHandler
     {
+        // The type name of the QuantConnect.Brokerages.Paper.PaperBrokerage
+        private const string PaperBrokerageTypeName = "PaperBrokerage";
+        
         /******************************************************** 
         * CLASS METHODS
         *********************************************************/
+
         /// <summary>
         /// Configurations settings, lean runmode.
         /// </summary>
         private bool BacktestingMode
         {
-            get
-            {
-                return !Config.GetBool("live-mode");
-            }
+            get { return !Config.GetBool("live-mode"); }
         }
 
         /// <summary>
@@ -80,27 +86,41 @@ namespace QuantConnect.Queues
             {
                 var liveJob = new LiveNodePacket
                 {
-                    ResultEndpoint = ResultHandlerEndpoint.LiveTrading,
-                    SetupEndpoint = SetupHandlerEndpoint.PaperTrading,
-                    DataEndpoint = DataFeedEndpoint.LiveTrading,
-                    TransactionEndpoint = TransactionHandlerEndpoint.Brokerage,
-                    RealTimeEndpoint = RealTimeEndpoint.LiveTrading,
                     Type = PacketType.LiveNode,
+                    DataEndpoint = DataFeedEndpoint.LiveTrading,
+                    RealTimeEndpoint = RealTimeEndpoint.LiveTrading,
+                    ResultEndpoint = ResultHandlerEndpoint.Console,
+                    SetupEndpoint = SetupHandlerEndpoint.Brokerage,
+                    TransactionEndpoint = TransactionHandlerEndpoint.Brokerage,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
-                    Brokerage = Config.Get("live-mode-brokerage", "Paper Brokerage")
+                    Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
+                    Channel = Config.Get("job-channel"),
+                    UserId = Config.GetInt("job-user-id")
                 };
+
+                try
+                { 
+                    // import the brokerage data for the configured brokerage
+                    var brokerageFactory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
+                    liveJob.BrokerageData = brokerageFactory.BrokerageData;
+                }
+                catch (Exception err)
+                {
+                    Log.Error(string.Format("JobQueue.NextJob(): Error resoliving BrokerageData for live job for brokerage {0}. {1}", liveJob.Brokerage, err.Message));
+                }
+
                 return liveJob;
             }
 
             //Default run a backtesting job.
             var backtestJob = new BacktestNodePacket(0, 0, "", new byte[] {}, 10000, "local")
             {
-                ResultEndpoint = ResultHandlerEndpoint.Console,
-                SetupEndpoint = SetupHandlerEndpoint.Console,
-                DataEndpoint = DataFeedEndpoint.FileSystem,
-                TransactionEndpoint = TransactionHandlerEndpoint.Backtesting,
-                RealTimeEndpoint = RealTimeEndpoint.Backtesting,
                 Type = PacketType.BacktestNode,
+                DataEndpoint = DataFeedEndpoint.FileSystem,
+                SetupEndpoint = SetupHandlerEndpoint.Console,
+                ResultEndpoint = ResultHandlerEndpoint.Console,
+                RealTimeEndpoint = RealTimeEndpoint.Backtesting,
+                TransactionEndpoint = TransactionHandlerEndpoint.Backtesting,
                 Algorithm = File.ReadAllBytes(AlgorithmLocation)
             };
             return backtestJob;

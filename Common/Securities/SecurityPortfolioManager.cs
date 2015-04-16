@@ -479,9 +479,6 @@ namespace QuantConnect.Securities
         /// <returns>True for a margin call on the holdings.</returns>
         public List<Order> ScanForMarginCall()
         {
-            decimal totalMarginUsed = TotalMarginUsed;
-            decimal totalPortfolioValue = TotalPortfolioValue;
-
             // if we still have margin remaining then there's no need for a margin call
             if (MarginRemaining > 0)
             {
@@ -492,7 +489,10 @@ namespace QuantConnect.Securities
             var marginCallOrders = new List<Order>();
             foreach (var security in Securities.Values)
             {
-                var marginCallOrder = security.MarginModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed);
+                // if the price is zero don't bother, we just don't have data for it
+                if (security.Price == 0) continue;
+                
+                var marginCallOrder = security.MarginModel.GenerateMarginCallOrder(security, TotalPortfolioValue, TotalMarginUsed);
                 if (marginCallOrder != null && marginCallOrder.Quantity != 0)
                 {
                     marginCallOrders.Add(marginCallOrder);

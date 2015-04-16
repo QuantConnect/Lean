@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Logging;
+using QuantConnect.Securities.Forex;
 
 namespace QuantConnect
 {
@@ -63,14 +64,20 @@ namespace QuantConnect
         /// Type of the security
         public SecurityType Type;
 
-        /// Average Price of our Holding
+        /// The currency symbol of the holding
+        public string CurrencySymbol;
+
+        /// Average Price of our Holding in the currency the symbol is traded in
         public decimal AveragePrice;
 
         /// Quantity of Symbol We Hold.
         public decimal Quantity;
 
-        /// Current Market Price of the Asset
+        /// Current Market Price of the Asset in the currency the symbol is traded in
         public decimal MarketPrice;
+
+        /// Current market conversion rate into the account currency
+        public decimal ConversionRate;
 
         /// Create a new default holding:
         public Holding()
@@ -80,15 +87,23 @@ namespace QuantConnect
         /// Create a simple JSON holdings from a Security holding class.
         /// </summary>
         /// <param name="holding">Holdings object we'll use to initialize the transport</param>
-        /// <param name="type">Type of the asset holding</param>
-        public Holding(Securities.SecurityHolding holding, SecurityType type)
+        public Holding(Securities.SecurityHolding holding)
         {
             Symbol = holding.Symbol;
             Type = holding.Type;
             Quantity = holding.Quantity;
+            CurrencySymbol = "$";
+            ConversionRate = 1m;
 
             var rounding = 2;
-            if (type == SecurityType.Forex) rounding = 4;
+            if (holding.Type == SecurityType.Forex)
+            {
+                rounding = 4;
+                string basec, quotec;
+                Forex.DecomposeCurrencyPair(holding.Symbol, out basec, out quotec);
+                CurrencySymbol = Forex.CurrencySymbols[quotec];
+                ConversionRate = ((ForexHolding) holding).ConversionRate;
+            }
 
             AveragePrice = Math.Round(holding.AveragePrice, rounding);
             MarketPrice = Math.Round(holding.Price, rounding);
@@ -285,8 +300,6 @@ namespace QuantConnect
         Backtesting,
         /// Configure algorithm+job for the console:
         Console,
-        /// Paper trading algorithm+job internal state configuration
-        PaperTrading,
         /// Live trading against a user's brokerage
         Brokerage
     }

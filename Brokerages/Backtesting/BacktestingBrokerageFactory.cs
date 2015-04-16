@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -15,21 +15,23 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
+using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
-namespace QuantConnect.Interfaces
+namespace QuantConnect.Brokerages.Backtesting
 {
     /// <summary>
-    /// Defines factory types for brokerages. Every IBrokerage is expected to also implement an IBrokerageFactory.
+    /// Factory type for the <see cref="BacktestingBrokerage"/>
     /// </summary>
-    [InheritedExport(typeof(IBrokerageFactory))]
-    public interface IBrokerageFactory : IDisposable
+    public class BacktestingBrokerageFactory : IBrokerageFactory
     {
         /// <summary>
         /// Gets the type of brokerage produced by this factory
         /// </summary>
-        Type BrokerageType { get; }
+        public Type BrokerageType
+        {
+            get { return typeof(BacktestingBrokerage); }
+        }
 
         /// <summary>
         /// Gets the brokerage data required to run the IB brokerage from configuration
@@ -38,7 +40,10 @@ namespace QuantConnect.Interfaces
         /// The implementation of this property will create the brokerage data dictionary required for
         /// running live jobs. See <see cref="IJobQueueHandler.NextJob"/>
         /// </remarks>
-        Dictionary<string, string> BrokerageData { get; }
+        public Dictionary<string, string> BrokerageData
+        {
+            get { return new Dictionary<string, string>(); }
+        }
 
         /// <summary>
         /// Creates a new IBrokerage instance
@@ -46,6 +51,18 @@ namespace QuantConnect.Interfaces
         /// <param name="job">The job packet to create the brokerage for</param>
         /// <param name="algorithm">The algorithm instance</param>
         /// <returns>A new brokerage instance</returns>
-        IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm);
+        public IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
+        {
+            return new BacktestingBrokerage(algorithm);
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            // NOP
+        }
     }
 }

@@ -47,40 +47,10 @@ namespace QuantConnect.Packets
         public string Brokerage = "";
 
         /// <summary>
-        /// Access token for the broker login (oAuth 2.0)
-        /// </summary>
-        [JsonProperty(PropertyName = "sAccessToken")]
-        public string AccessToken = "";
-
-        /// <summary>
-        /// Refresh token for brokerage login (oAuth 2.0)
-        /// </summary>
-        [JsonProperty(PropertyName = "sRefreshToken")]
-        public string RefreshToken = "";
-
-        /// <summary>
-        /// DateTime the RefreshToken was issued (oAuth 2.0)
-        /// </summary>
-        [JsonProperty(PropertyName = "dtIssuedAt")]
-        public DateTime IssuedAt = new DateTime();
-
-        /// <summary>
-        /// Life span of the issued access token (oAuth 2.0)
-        /// </summary>
-        [JsonProperty(PropertyName = "iLifeTime")]
-        public TimeSpan LifeTime = TimeSpan.FromSeconds(0);
-
-        /// <summary>
         /// String-String Dictionary of Brokerage Data for this Live Job
         /// </summary>
         [JsonProperty(PropertyName = "aBrokerageData")]
         public Dictionary<string, string> BrokerageData = new Dictionary<string, string>();
-
-        /// <summary>
-        /// Account Id for specified brokerage
-        /// </summary>
-        [JsonProperty(PropertyName = "sAccountID")]
-        public string AccountId = "";
 
         /******************************************************** 
         * CLASS CONSTRUCTOR

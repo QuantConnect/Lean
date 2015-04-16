@@ -17,6 +17,7 @@
 * USING NAMESPACES
 **********************************************************/
 using System;
+using QuantConnect.Orders;
 using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities 
@@ -389,7 +390,8 @@ namespace QuantConnect.Securities
             }
 
             // this is in the account currency
-            var orderFee = TransactionModel.GetOrderFee(AbsoluteQuantity, Price);
+            var marketOrder = new MarketOrder(_security.Symbol, -Quantity, _security.Time, type: _security.Type) {Price = Price};
+            var orderFee = TransactionModel.GetOrderFee(_security, marketOrder);
 
             return (Price - AveragePrice) * Quantity - orderFee;
         }

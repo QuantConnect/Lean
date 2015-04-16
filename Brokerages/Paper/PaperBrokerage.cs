@@ -14,18 +14,11 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Brokerages.Paper
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Paper Trading Brokerage
     /// </summary>
@@ -39,6 +32,5 @@ namespace QuantConnect.Brokerages.Paper
             : base(algorithm, "Paper Brokerage")
         {
         }
-    } // End of Paper Brokerage:
-
+    }
 }

@@ -57,7 +57,7 @@ namespace QuantConnect.Securities
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return string.Format("Symbol: {0} Quantity: {1}", Symbol, Quantity);
+            return string.Format("Symbol: {0} Quantity: {1} Price: {2}", Symbol, Quantity, AveragePrice);
         }
     }
 }

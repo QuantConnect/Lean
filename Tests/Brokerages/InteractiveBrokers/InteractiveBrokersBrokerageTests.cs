@@ -24,6 +24,7 @@ using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 using Order = QuantConnect.Orders.Order;
 using OrderStatus = QuantConnect.Orders.OrderStatus;
@@ -37,6 +38,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
     {
         private readonly List<Order> _orders = new List<Order>(); 
         private InteractiveBrokersBrokerage _interactiveBrokersBrokerage;
+        private InteractiveBrokersBrokerageFactory _factory;
         private const int buyQuantity = 100;
         private const string Symbol = "USDJPY";
         private const SecurityType Type = SecurityType.Forex;
@@ -44,10 +46,11 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [SetUp]
         public void InitializeBrokerage()
         {
-            InteractiveBrokersGatewayRunner.Start(Config.Get("ib-account"));
+            _factory = new InteractiveBrokersBrokerageFactory();
 
             // grabs account info from configuration
-            _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(new OrderMapping(_orders));
+            var job = new LiveNodePacket() {BrokerageData = _factory.BrokerageData};
+            _interactiveBrokersBrokerage = (InteractiveBrokersBrokerage) _factory.CreateBrokerage(job, InteractiveBrokersBrokerageFactoryTests.AlgorithmDependency);
             _interactiveBrokersBrokerage.Connect();
         }
 
@@ -111,7 +114,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             }
             finally
             {
-                InteractiveBrokersGatewayRunner.Stop();
+                _factory.Dispose();
             }
         }
 
@@ -489,7 +492,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             var ib = _interactiveBrokersBrokerage;
 
-            decimal balance = ib.GetCashBalance();
+            decimal balance = ib.GetCashBalance()["USD"];
 
             // wait for our order to fill
             var manualResetEvent = new ManualResetEvent(false);
@@ -501,7 +504,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             manualResetEvent.WaitOneAssertFail(1500, "Didn't receive account changed event");
 
-            decimal balanceAfterTrade = ib.GetCashBalance();
+            decimal balanceAfterTrade = ib.GetCashBalance()["USD"];
 
             Assert.AreNotEqual(balance, balanceAfterTrade);
         }

@@ -249,7 +249,7 @@ namespace QuantConnect
             }
 
             return new TimeSpan(
-                Convert.ToInt64(System.Math.Round(
+                Convert.ToInt64(Math.Round(
                     time.Ticks / (decimal)roundingInterval.Ticks,
                     roundingType
                 )) * roundingInterval.Ticks
@@ -400,6 +400,22 @@ namespace QuantConnect
                 default:
                     throw new ArgumentOutOfRangeException("resolution");
             }
+        }
+
+        /// <summary>
+        /// Converts the specified string value into the specified type
+        /// </summary>
+        /// <typeparam name="T">The output type</typeparam>
+        /// <param name="value">The string value to be converted</param>
+        /// <returns>The converted value</returns>
+        public static T ConvertTo<T>(this string value)
+            where T : IConvertible
+        {
+            if (typeof (T).IsEnum)
+            {
+                return (T) Enum.Parse(typeof (T), value);
+            }
+            return (T) Convert.ChangeType(value, typeof (T));
         }
     }
 }
