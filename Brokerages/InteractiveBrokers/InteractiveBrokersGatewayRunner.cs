@@ -59,7 +59,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var processStartInfo = OS.IsWindows ? new ProcessStartInfo("cmd.exe", "/C " + arguments) : new ProcessStartInfo("bash", arguments);
 
                 processStartInfo.UseShellExecute = false;
-                processStartInfo.RedirectStandardOutput = true;
+                processStartInfo.RedirectStandardOutput = false;
                 var process = Process.Start(processStartInfo);
                 ScriptProcessID = process.Id;
 
