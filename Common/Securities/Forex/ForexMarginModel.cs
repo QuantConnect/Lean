@@ -58,7 +58,7 @@ namespace QuantConnect.Securities.Forex
 
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
-            var orderFees = security.TransactionModel.GetOrderFee(order.Quantity, order.Price);
+            var orderFees = security.TransactionModel.GetOrderFee(security, order);
 
             var orderCostInAccountCurrency = order.Price*order.AbsoluteQuantity*forex.QuoteCurrency.ConversionRate;
             return orderCostInAccountCurrency*InitialMarginRequirement + orderFees;
@@ -79,6 +79,12 @@ namespace QuantConnect.Securities.Forex
                 return null;
             }
             var forex = (Forex)security;
+
+            // we haven't begun receiving data for this yet
+            if (forex.Price == 0m || forex.QuoteCurrency.ConversionRate == 0m)
+            {
+                return null;
+            }
 
             // compute the amount of quote currency we need to liquidate in order to get within margin requirements
             decimal delta = (totalMargin - netLiquidationValue)/forex.QuoteCurrency.ConversionRate;

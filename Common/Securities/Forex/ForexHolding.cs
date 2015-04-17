@@ -58,6 +58,14 @@ namespace QuantConnect.Securities.Forex
         *********************************************************/
 
         /// <summary>
+        /// Gets the conversion rate from the quote currency into the account currency
+        /// </summary>
+        public decimal ConversionRate
+        {
+            get { return _forex.QuoteCurrency.ConversionRate; }
+        }
+
+        /// <summary>
         /// Acquisition cost of the security total holdings.
         /// </summary>
         public override decimal HoldingsCost

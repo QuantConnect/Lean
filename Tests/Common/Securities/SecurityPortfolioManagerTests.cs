@@ -167,7 +167,7 @@ namespace QuantConnect.Tests.Common.Securities
                 //}
                 //Console.WriteLine("CashValue: " + portfolio.CashBook.TotalValueInAccountCurrency);
 
-                Assert.AreEqual((double) equity[i + 1], (double)portfolio.TotalPortfolioValue, 1e-2);
+                Assert.AreEqual((double) equity[i + 1], (double)portfolio.TotalPortfolioValue, 2e-2);
                 Assert.AreEqual((double) mchQuantity[i + 1], (double)portfolio.CashBook["MCH"].Quantity);
                 Assert.AreEqual((double) jwbQuantity[i + 1], (double)portfolio.CashBook["JWB"].Quantity);
 
