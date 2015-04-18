@@ -35,22 +35,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         }
 
         /// <summary>
-        /// Open the data queue when coming out of hibernate.
-        /// </summary>
-        public void OpenDataQueue()
-        {
-            //NOP
-        }
-
-        /// <summary>
-        /// Stop pulling data from the queue temporarily.
-        /// </summary>
-        public void CloseDataQueue()
-        {
-            //NOP
-        }
-
-        /// <summary>
         /// Desktop/Local doesn't support live data from this handler
         /// </summary>
         public virtual void Subscribe(LiveNodePacket job, IDictionary<SecurityType, List<string>> symbols)
@@ -65,6 +49,5 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         {
             throw new NotImplementedException("QuantConnect.Queues.LiveDataQueue has not implemented live data.");
         }
-
     }
 }
