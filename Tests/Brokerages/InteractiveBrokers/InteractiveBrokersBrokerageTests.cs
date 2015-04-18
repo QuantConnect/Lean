@@ -560,6 +560,41 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.AreNotEqual(0, openOrders.Count);
         }
 
+        [Test, Ignore("This test requires disconnecting the internet to test for connection resiliency")]
+        public void ClientReconnectsAfterInternetDisconnect()
+        {
+            var ib = _interactiveBrokersBrokerage;
+            Assert.IsTrue(ib.IsConnected);
+
+            var tenMinutes = TimeSpan.FromMinutes(10);
+            
+            Console.WriteLine("------");
+            Console.WriteLine("Waiting for internet disconnection ");
+            Console.WriteLine("------");
+
+            // spin while we manually disconnect the internet
+            while (ib.IsConnected)
+            {
+                Thread.Sleep(2500);
+                Console.Write(".");
+            }
+            
+            var stopwatch = Stopwatch.StartNew();
+
+            Console.WriteLine("------");
+            Console.WriteLine("Trying to reconnect ");
+            Console.WriteLine("------");
+
+            // spin until we're reconnected
+            while (!ib.IsConnected && stopwatch.Elapsed < tenMinutes)
+            {
+                Thread.Sleep(2500);
+                Console.Write(".");
+            }
+
+            Assert.IsTrue(ib.IsConnected);
+        }
+
         private static Order AssertOrderOpened(bool orderFilled, InteractiveBrokersBrokerage ib, Order order)
         {
             // if the order didn't fill check for it as an open order
