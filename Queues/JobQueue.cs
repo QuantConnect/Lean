@@ -37,19 +37,11 @@ namespace QuantConnect.Queues
     {
         // The type name of the QuantConnect.Brokerages.Paper.PaperBrokerage
         private const string PaperBrokerageTypeName = "PaperBrokerage";
+        private bool _liveMode = Config.GetBool("live-mode"); 
         
         /******************************************************** 
         * CLASS METHODS
         *********************************************************/
-
-        /// <summary>
-        /// Configurations settings, lean runmode.
-        /// </summary>
-        private bool BacktestingMode
-        {
-            get { return !Config.GetBool("live-mode"); }
-        }
-
         /// <summary>
         /// Physical location of Algorithm DLL.
         /// </summary>
@@ -82,7 +74,7 @@ namespace QuantConnect.Queues
             location = AlgorithmLocation;
 
             //If this isn't a backtesting mode/request, attempt a live job.
-            if (!BacktestingMode)
+            if (_liveMode)
             {
                 var liveJob = new LiveNodePacket
                 {
