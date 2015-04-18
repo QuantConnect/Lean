@@ -163,10 +163,9 @@ namespace QuantConnect.Lean.Engine
                 
                 if (ram < allocation)
                 {
-                    allocation = ram - 200;
+                    //If memory on machine less 100 allocation for OS: 
+                    allocation = ram - 100;
                 }
-
-                if (_liveMode) allocation -= 50;
 
                 Log.Trace("Engine.MaximumRamAllocation(): Allocated: " + allocation);
 
