@@ -63,13 +63,12 @@
     <Compile Include="Backtesting\BacktestingBrokerage.cs" />
     <Compile Include="Backtesting\BacktestingBrokerageFactory.cs" />
     <Compile Include="Brokerage.cs" />
-    <Compile Include="BrokerageAuthentication.cs" />
     <Compile Include="BrokerageException.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerageFactory.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersGatewayRunner.cs" />
     <Compile Include="OandaBrokerage\OandaBrokerage.cs" />
-    <Compile Include="OandaBrokerage\OandaBrokerageAuthentication.cs" />
+    <Compile Include="OandaBrokerage\OandaBrokerageFactory.cs" />
     <Compile Include="Paper\PaperBrokerage.cs" />
     <Compile Include="Paper\PaperBrokerageFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

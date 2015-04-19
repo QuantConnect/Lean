@@ -16,9 +16,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using OANDARestLibrary;
-using OANDARestLibrary.TradeLibrary;
-using OANDARestLibrary.TradeLibrary.DataTypes;
+using OANDA;
+using OANDA.TradeLibrary;
+using OANDA.TradeLibrary.DataTypes;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -26,11 +26,12 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages
 {
-    class OandaBrokerage : Brokerage
+    public sealed class OandaBrokerage : Brokerage
     {
-        private static OandaBrokerageAuthentication _brokerageAuthentication;
-
-        private readonly Dictionary<string, string> _accountProperties = new Dictionary<string, string>(); 
+        // Oanda API Connection
+        EEnvironment _environment;  // apiServer
+        int          _accountId;
+        string       _accessToken;
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
@@ -43,15 +44,12 @@ namespace QuantConnect.Brokerages
             }
         }
 
-        public OandaBrokerage(OandaBrokerageAuthentication brokerageAuthentication)
+        public OandaBrokerage(IOrderIDMapping orderMapping, string apiServer, int accountId, string accessToken)
             : base("Oanda Brokerage")
         {
-            if (!brokerageAuthentication.IsValid())
-            {
-                throw new ArgumentException();
-            }
-
-            _brokerageAuthentication = brokerageAuthentication;
+            _environment = GetEnvironment(apiServer);
+            _accountId   = accountId;
+            _accessToken = accessToken;
 
             throw new NotImplementedException();
         }
@@ -81,25 +79,44 @@ namespace QuantConnect.Brokerages
             throw new NotImplementedException();
         }
 
-        protected override void OnOrderEvent(OrderEvent e)
-        {
-            base.OnOrderEvent(e);
-        }
-
-        protected override void OnPortfolioChanged(PortfolioEvent e)
-        {
-            base.OnPortfolioChanged(e);
-        }
-
         protected override void OnAccountChanged(AccountEvent e)
         {
             base.OnAccountChanged(e);
         }
 
-        protected override void OnError(Exception e)
+        /// <summary>
+        /// Gets the current cash balance for each currency held in the brokerage account
+        /// </summary>
+        /// <returns>The current cash balance for each currency available for trading</returns>
+        public override Dictionary<string, decimal> GetCashBalance()
         {
-            base.OnError(e);
+            //return new Dictionary<string, decimal>(_cashBalances);
+            throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Gets all holdings for the account
+        /// </summary>
+        /// <returns>The current holdings from the account</returns>
+        public override List<Holding> GetAccountHoldings()
+        {
+            //return _accountHoldings.Select(x => x.Value.Clone()).ToList();
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Gets all open orders on the account
+        /// </summary>
+        /// <returns>The open orders returned from IB</returns>
+        public override List<QuantConnect.Orders.Order> GetOpenOrders()
+        {
+            throw new NotImplementedException();
+        }
+
+        //protected override void OnError(Exception e)
+        //{
+        //    base.OnError(e);
+        //}
 
         #region Account Management
         /// <summary>

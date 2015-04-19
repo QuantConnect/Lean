@@ -77,7 +77,7 @@
     <Compile Include="IAlgorithm.cs" />
     <Compile Include="IApi.cs" />
     <Compile Include="IBrokerage.cs" />
-    <Compile Include="IBrokerageAuthentication.cs" />
+    <Compile Include="IBrokerageFactory.cs" />
     <Compile Include="IMessagingHandler.cs" />
     <Compile Include="IDataQueueHandler.cs" />
     <Compile Include="IJobQueueHandler.cs" />
