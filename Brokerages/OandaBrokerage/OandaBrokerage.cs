@@ -16,9 +16,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using OANDA;
-using OANDA.TradeLibrary;
-using OANDA.TradeLibrary.DataTypes;
+using QuantConnect.OANDA;
+using QuantConnect.OANDA.TradeLibrary;
+using QuantConnect.OANDA.TradeLibrary.DataTypes;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -50,6 +50,8 @@ namespace QuantConnect.Brokerages
             _environment = GetEnvironment(apiServer);
             _accountId   = accountId;
             _accessToken = accessToken;
+
+            
 
             throw new NotImplementedException();
         }
