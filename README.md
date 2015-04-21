@@ -1,0 +1,22 @@
+![alt tag](Documentation/logo.white.small.png)
+Lean C# Algorithmic Trading Engine :: ToolBox
+=========
+[![Join the chat at https://gitter.im/QuantConnect/Lean](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/QuantConnect/Lean?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) &nbsp;&nbsp;&nbsp;&nbsp; <img src="https://travis-ci.org/QuantConnect/Lean.svg?branch=master">
+
+[Lean Home - lean.quantconnect.com][1] | [Documentation][2] | [Download Zip][3]
+----------
+
+## Introduction ##
+
+Lean Engine is an open-source fully managed C# algorithmic trading engine built for desktop and cloud usage. It was designed in Mono and operates in Windows and Linux.
+
+The following is a collection of helper projects for data download and storage to Lean.
+
+
+## QuantQuote Converter ##
+
+The QuantQuote converter ports an extracted QuantQuote order to QuantConnect data format and saves it to your LEAN directory. The user must enter three key parts of information:
+
+1> Directory where your QuantQuote order is extracted.
+2> Directory where Lean Data is located "Lean/Data".
+3> Resolution of the QuantQuote data.
