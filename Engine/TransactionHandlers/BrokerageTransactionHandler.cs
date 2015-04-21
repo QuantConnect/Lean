@@ -192,11 +192,20 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <param name="order">The new order</param>
         private void HandleNewOrder(Order order)
         {
-            // tell algorithm to wait during scynchronous backtests
             if (_orders.TryAdd(order.Id, order))
             {
+                // verify that we have enough capital to execute the order
                 if (!GetSufficientCapitalForOrder(order))
                 {
+                    order.Status = OrderStatus.Invalid;
+                    return;
+                }
+
+                // verify that our current brokerage can actually take the order
+                if (!_brokerage.CanProcessOrder(order))
+                {
+                    // if we couldn't actually process the order, mark it as invalid and bail
+                    order.Status = OrderStatus.Invalid;
                     return;
                 }
 

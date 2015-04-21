@@ -159,6 +159,14 @@ namespace QuantConnect.Brokerages.Backtesting
         }
 
         /// <summary>
+        /// In backtesting we can process all orders, so this implementation always returns true.
+        /// </summary>
+        public override bool CanProcessOrder(Order order)
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Scans all the outstanding orders and applies the algorithm model fills to generate the order events
         /// </summary>
         public void Scan()
