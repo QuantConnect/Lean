@@ -146,7 +146,8 @@ namespace QuantConnect.QuantQuote
         private static DateTime GetDate(string date)
         {
             var splits = date.Split('/', '\\');
-            return DateTime.ParseExact(splits[splits.Length - 1], "yyyyMMdd", CultureInfo.InvariantCulture);
+            var dateString = splits[splits.Length - 1].Replace("allstocks_", "");
+            return DateTime.ParseExact(dateString, "yyyyMMdd", CultureInfo.InvariantCulture);
         }
 
 
@@ -158,6 +159,7 @@ namespace QuantConnect.QuantQuote
             var splits = filePath.Split('/', '\\');
             var file = splits[splits.Length - 1];
             file = file.Trim( '.', '/', '\\');
+            file = file.Replace("table_", "");
             return file.Replace(".csv", "");
         }
 
