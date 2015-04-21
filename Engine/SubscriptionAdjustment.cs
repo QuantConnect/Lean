@@ -14,15 +14,11 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -32,20 +28,18 @@ namespace QuantConnect.Lean.Engine
     /// <summary>
     /// Subscription price adjustment class adjusts the prices of equities backwards to factor in dividends and splits.
     /// </summary>
-    public class SubscriptionAdjustment
+    public static class SubscriptionAdjustment
     {
         /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
+
         /// <summary>
         /// Base Local Data Folder
         /// </summary>
         public static string DataFolder
         {
-            get
-            {
-                return "../../../Data/";
-            }
+            get { return "../../../Data/"; }
         }
 
         /******************************************************** 
@@ -85,7 +79,6 @@ namespace QuantConnect.Lean.Engine
             return factor;
         }
 
-
         /// <summary>
         /// Get the factor-table in memory.
         /// </summary>
@@ -110,8 +103,6 @@ namespace QuantConnect.Lean.Engine
             }
             return factorTable;
         }
-
-
 
         /// <summary>
         /// Get a map table for the symbol requested into memory.
@@ -139,36 +130,6 @@ namespace QuantConnect.Lean.Engine
             return symbolMapTable;
         }
 
-
-        /// <summary>
-        /// Get a historical mapped symbol for this requested symbol at this date in time.
-        /// </summary>
-        /// <param name="baseFolder">Location of the map files</param>
-        /// <param name="symbol">Symbol used today</param>
-        /// <param name="searchDate">Date we want in the past</param>
-        /// <returns>Mapped symbol, potentially different.</returns>
-        public static string GetMappedSymbol(string baseFolder, string symbol, DateTime searchDate)
-        {
-            var mappedSymbol = symbol;
-            try
-            {
-                //Read each line, convert to meaningful values:
-                var symbolMapTable = GetMapTable(symbol);
-                //Iterate backwards to find the most recent factor:
-                foreach (var splitDate in symbolMapTable.Keys)
-                {
-                    if (splitDate < searchDate) continue;
-                    mappedSymbol = symbolMapTable[splitDate];
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error("GetMappedTick(): " + err.Message);
-            }
-            return mappedSymbol;
-        }
-
-
         /// <summary>
         /// Memory overload search method for finding the mapped symbol for this date.
         /// </summary>
@@ -187,7 +148,5 @@ namespace QuantConnect.Lean.Engine
             }
             return mappedSymbol;
         }
-
-    } // End Subscription Class
-
-} // End QC Namespace
+    }
+}

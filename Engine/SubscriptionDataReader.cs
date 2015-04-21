@@ -22,6 +22,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -98,6 +99,10 @@ namespace QuantConnect.Lean.Engine
         //Start finish times of the backtest:
         private readonly DateTime _periodStart;
         private readonly DateTime _periodFinish;
+
+        //Bounds of the data on disk derived from the map files
+        private readonly DateTime _dataStart;
+        private readonly DateTime _dataStop;
 
         /******************************************************** 
         * CLASS PUBLIC VARIABLES
@@ -205,6 +210,14 @@ namespace QuantConnect.Lean.Engine
                 {
                     _priceFactors = SubscriptionAdjustment.GetFactorTable(config.Symbol);
                     _symbolMap = SubscriptionAdjustment.GetMapTable(config.Symbol);
+                    _dataStart = _symbolMap.Keys.First();
+                    _dataStop = _symbolMap.Keys.Last();
+                }
+                else
+                {
+                    // since custom data doesn't have map tables we'll not perform this more intelligent checking
+                    _dataStart = DateTime.MinValue;
+                    _dataStop = DateTime.MaxValue;
                 }
             } 
             catch (Exception err) 
@@ -256,7 +269,6 @@ namespace QuantConnect.Lean.Engine
                     var line = _reader.ReadLine();
                     try
                     {
-                        //Using Fasterflex method invokers.
                         instance = _dataFactory.Reader(_config, line, _date, _feedEndpoint);
                     }
                     catch (Exception err)
@@ -288,6 +300,7 @@ namespace QuantConnect.Lean.Engine
 
                         if (instance == null)
                         {
+                            // REVIEW -- Is this condition heuristically possible?
                             Log.Trace("SubscriptionDataReader.MoveNext(): Instance null, continuing...");
                             continue;
                         }
@@ -424,6 +437,13 @@ namespace QuantConnect.Lean.Engine
         {
             //Update the source from the getSource method:
             _date = date;
+
+            if (date < _dataStart || date > _dataStop)
+            {
+                // don't even bother checking the disk if the map files state we don't have ze dataz
+                return false;
+            }
+
             var newSource = "";
 
             //If we can find scale factor files on disk, use them. LiveTrading will aways use 1 by definition

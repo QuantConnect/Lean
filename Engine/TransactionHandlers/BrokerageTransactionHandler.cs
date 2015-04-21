@@ -194,10 +194,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             if (_orders.TryAdd(order.Id, order))
             {
-                // verify that we have enough capital to execute the order
-                if (!GetSufficientCapitalForOrder(order))
+                // check to see if we have enough money to place the order
+                if (!_algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order))
                 {
                     order.Status = OrderStatus.Invalid;
+                    _algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
                     return;
                 }
 
@@ -206,6 +207,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     // if we couldn't actually process the order, mark it as invalid and bail
                     order.Status = OrderStatus.Invalid;
+                    _algorithm.Error(string.Format("Order Error: id: {0}, Brokerage {1} is unable to process order for {2} - {3}.", order.Id, _brokerage.Name, order.SecurityType, order.Symbol));
                     return;
                 }
 
@@ -245,19 +247,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 Log.Error("BrokerageTransactionHandler.HandleUpdatedOrder(): Unable to update order with ID " + order.Id + ".");
             }
-        }
-
-        private bool GetSufficientCapitalForOrder(Order order)
-        {
-            // check to see if we have enough money to place the order
-            if (!_algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order))
-            {
-                //Flag order as invalid and push off queue:
-                order.Status = OrderStatus.Invalid;
-                _algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
-                return false;
-            }
-            return true;
         }
 
         /// <summary>
