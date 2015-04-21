@@ -1,0 +1,7 @@
+C:\Server\www\ToolBox\ToolBox\bin\Debug\QuantConnect.ToolBox.dll
+C:\Server\www\ToolBox\ToolBox\bin\Debug\QuantConnect.ToolBox.pdb
+C:\Server\www\ToolBox\ToolBox\bin\Debug\Ionic.Zip.dll
+C:\Server\www\ToolBox\ToolBox\bin\Debug\Ionic.Zip.xml
+C:\Server\www\ToolBox\ToolBox\obj\Debug\ToolBox.csprojResolveAssemblyReference.cache
+C:\Server\www\ToolBox\ToolBox\obj\Debug\QuantConnect.ToolBox.dll
+C:\Server\www\ToolBox\ToolBox\obj\Debug\QuantConnect.ToolBox.pdb
