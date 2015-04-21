@@ -207,7 +207,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             try
             {
-                Log.Trace("InteractiveBrokersBrokerage.UpdateOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity);
+                Log.Trace("InteractiveBrokersBrokerage.CancelOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity);
 
                 // this could be better
                 foreach (var id in order.BrokerId)
@@ -296,7 +296,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Exchange = exchange,
                 SecurityType = type ?? IB.SecurityType.Undefined,
                 Symbol = symbol,
-                Time = DateTime.MinValue,
+                Time = timeSince ?? DateTime.MinValue,
                 Side = side ?? IB.ActionSide.Undefined
             };
 
