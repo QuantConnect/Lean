@@ -1,0 +1,7 @@
+language: csharp
+solution: QuantConnect.ToolBox.sln
+install:
+  - nuget restore QuantConnect.ToolBox.sln
+  - nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner
+script:
+  - xbuild /p:Configuration=Release QuantConnect.Lean.sln
