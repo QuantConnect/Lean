@@ -6,6 +6,7 @@
 
 # Visual Studio Project Items:
 *.suo
+*.cache
 
 # Precompiled Headers
 *.gch
