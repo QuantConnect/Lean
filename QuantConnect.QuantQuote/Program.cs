@@ -34,7 +34,9 @@ namespace QuantConnect.QuantQuote
             Console.WriteLine("The QuantQuote converter transforms QuantQuote orders into the LEAN Algorithmic Trading Engine Data Format.");
             Console.WriteLine("Two parameters are required: ");
             Console.WriteLine("   1> Source Directory of Unzipped QuantQuote Data.");
-            Console.WriteLine("   1> Destination Directory of LEAN Data Folder. (Typically located under Lean/Data)");
+            Console.WriteLine("   2> Destination Directory of LEAN Data Folder. (Typically located under Lean/Data)");
+            Console.WriteLine("   3> Resolution of your QuantQuote data. (either minute, second or tick)");
+            Console.WriteLine(" ");
             Console.WriteLine("NOTE: THIS WILL OVERWRITE ANY EXISTING FILES.");
             if (args.Length == 0)
             {
