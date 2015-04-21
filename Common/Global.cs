@@ -500,7 +500,7 @@ namespace QuantConnect
         /// <summary>
         /// Public Holidays
         /// </summary>
-        public static List<DateTime> Dates = new List<DateTime>()
+        public static readonly HashSet<DateTime> Dates = new HashSet<DateTime>
         {
             /* New Years Day*/
             new DateTime(1998, 01, 01),
@@ -643,7 +643,7 @@ namespace QuantConnect
             new DateTime(2015, 07, 03),
             new DateTime(2016, 07, 04),
 
-            /* Labour Day */
+            /* Labor Day */
             new DateTime(1998, 09, 07),
             new DateTime(1999, 09, 06),
             new DateTime(2000, 09, 04),
@@ -685,7 +685,7 @@ namespace QuantConnect
             new DateTime(2015, 11, 26),
             new DateTime(2016, 11, 24),
 
-            /* Christmas 1998-2014 */
+            /* Christmas */
             new DateTime(1998, 12, 25),
             new DateTime(1999, 12, 24),
             new DateTime(2000, 12, 25),
@@ -707,4 +707,4 @@ namespace QuantConnect
             new DateTime(2016, 12, 25)
         };
     }
-} // End QC Namespace:
+}

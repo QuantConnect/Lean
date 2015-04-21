@@ -115,35 +115,25 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Get the calendar open hours for the today.
+        /// Get the calendar open hours for the date.
         /// </summary>
-        public MarketToday MarketToday(SecurityType type)
+        public MarketToday MarketToday(DateTime time, SecurityType type)
         {
             switch (type)
             {
+                // since we don't directly support these types, we'll just mark them as always open
                 case SecurityType.Base:
-                case SecurityType.Equity:
+                case SecurityType.Future:
                 case SecurityType.Option:
                 case SecurityType.Commodity:
-                    return new MarketToday
-                    {
-                        PreMarket = new MarketHours(4, 9.5),
-                        Open = new MarketHours(9.5, 16),
-                        PostMarket = new MarketHours(16, 20),
-                        Status = (DateTime.Now.TimeOfDay <= TimeSpan.FromHours(16) 
-                               || DateTime.Now.TimeOfDay >= TimeSpan.FromHours(9.5))
-                            ? "open"
-                            : "closed"
-                    };
+                    return Packets.MarketToday.OpenAllDay(time);
+
+                case SecurityType.Equity:
+                    return Packets.MarketToday.Equity(time);
+
                 case SecurityType.Forex:
-                case SecurityType.Future:
-                    return new MarketToday
-                    {
-                        PreMarket = new MarketHours(0, 0),
-                        Open = new MarketHours(0, 24 - double.Epsilon),
-                        PostMarket = new MarketHours(24, 24),
-                        Status = "open"
-                    };
+                    return Packets.MarketToday.Forex(time);
+
                 default:
                     throw new ArgumentOutOfRangeException("type");
             }
@@ -157,6 +147,5 @@ namespace QuantConnect.Api
             //
         }
 
-    } // End usage controls class
-
-} // End QC Namespace
+    }
+}

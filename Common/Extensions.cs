@@ -409,13 +409,22 @@ namespace QuantConnect
         /// <param name="value">The string value to be converted</param>
         /// <returns>The converted value</returns>
         public static T ConvertTo<T>(this string value)
-            where T : IConvertible
         {
-            if (typeof (T).IsEnum)
+            var conversionType = typeof (T);
+            if (conversionType.IsEnum)
             {
-                return (T) Enum.Parse(typeof (T), value);
+                return (T) Enum.Parse(conversionType, value);
             }
-            return (T) Convert.ChangeType(value, typeof (T));
+            if (typeof (IConvertible).IsAssignableFrom(conversionType))
+            {
+                return (T) Convert.ChangeType(value, conversionType);
+            }
+            if (typeof (TimeSpan) == conversionType)
+            {
+                return (T) (object) TimeSpan.Parse(value);
+            }
+
+            throw new ArgumentException("Extensions.ConvertTo is unable to convert to type: " + typeof (T).Name);
         }
     }
 }

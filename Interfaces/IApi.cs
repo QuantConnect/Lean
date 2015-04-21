@@ -17,6 +17,7 @@
 * USING NAMESPACES
 **********************************************************/
 
+using System;
 using System.ComponentModel.Composition;
 using QuantConnect.Packets;
 
@@ -76,9 +77,10 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Market Status Today: REST call.
         /// </summary>
+        /// <param name="time">The date we need market hours for</param>
         /// <param name="type">Security asset</param>
         /// <returns>Market open hours.</returns>
-        MarketToday MarketToday(SecurityType type);
+        MarketToday MarketToday(DateTime time, SecurityType type);
 
         /// <summary>
         /// Store the algorithm logs.

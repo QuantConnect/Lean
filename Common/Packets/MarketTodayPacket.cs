@@ -17,7 +17,6 @@
 **********************************************************/
 
 using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
@@ -25,15 +24,6 @@ namespace QuantConnect.Packets
     /******************************************************** 
     * CLASS DEFINITIONS
     *********************************************************/
-    /// <summary>
-    /// Wrapper Containers for Deserializing Calendar Information from API.
-    /// </summary>
-    public class MarketTodayContainer
-    {
-        /// Todays Data: aMarkets
-        [JsonProperty(PropertyName = "aSecurityTypes")]
-        public Dictionary<SecurityType, MarketToday> Markets;
-    }
 
     /// <summary>
     /// Market today information class
@@ -41,49 +31,128 @@ namespace QuantConnect.Packets
     public class MarketToday
     {
         /// <summary>
-        /// Time this packet was generated.
-        /// </summary>
-        [JsonProperty(PropertyName = "dtNow")]
-        public readonly DateTime Now = new DateTime();
-
-        /// <summary>
         /// Date this packet was generated.
         /// </summary>
-        public DateTime Date
-        {
-            get 
-            {
-                return Now.Date;
-            }
-        }
+        [JsonProperty(PropertyName = "date")]
+        public DateTime Date { get; set; }
 
         /// <summary>
         /// Given the dates and times above, what is the current market status - open or closed.
         /// </summary>
-        [JsonProperty(PropertyName = "sStatus")]
+        [JsonProperty(PropertyName = "status")]
         public string Status = "";
         
         /// <summary>
         /// Premarket hours for today
         /// </summary>
-        [JsonProperty(PropertyName = "aPremarket")]
-        public MarketHours PreMarket = new MarketHours(4, 9.5);
+        [JsonProperty(PropertyName = "premarket")]
+        public MarketHours PreMarket = new MarketHours(DateTime.Now, 4, 9.5);
         
         /// <summary>
         /// Normal trading market hours for today
         /// </summary>
-        [JsonProperty(PropertyName = "aOpen")]
-        public MarketHours Open = new MarketHours(9.5, 16);
+        [JsonProperty(PropertyName = "open")]
+        public MarketHours Open = new MarketHours(DateTime.Now, 9.5, 16);
         
         /// <summary>
         /// Post market hours for today
         /// </summary>
-        [JsonProperty(PropertyName = "aPostmarket")]
-        public MarketHours PostMarket = new MarketHours(16, 20);
-        
+        [JsonProperty(PropertyName = "postmarket")]
+        public MarketHours PostMarket = new MarketHours(DateTime.Now, 16, 20);
+
         /// Default Constructor:
         public MarketToday()
         { }
+
+        /// <summary>
+        /// Gets a MarketToday instance that represents an always open market
+        /// </summary>
+        public static MarketToday OpenAllDay(DateTime date)
+        {
+            return new MarketToday
+            {
+                Date = date.Date,
+                Open = new MarketHours(date, 0, 24),
+                PostMarket = new MarketHours(date, 24, 24),
+                PreMarket = new MarketHours(date, 0, 0),
+                Status = "open"
+            };
+        }
+
+        /// <summary>
+        /// Gets a MarketToday instance that represents a closed market
+        /// </summary>
+        public static MarketToday ClosedAllDay(DateTime date)
+        {
+            return new MarketToday
+            {
+                Date = date.Date,
+                Open = new MarketHours(date, 0, 0),
+                PostMarket = new MarketHours(date, 0, 0),
+                PreMarket = new MarketHours(date, 0, 0),
+                Status = "closed"
+            };
+        }
+
+        /// <summary>
+        /// Gets a MarketToday instance that represents the forex markets on the
+        /// specified date. For simplicity, we assume forex is always opens from 
+        /// 5pm sunday EST to 5pm friday EST
+        /// </summary>
+        public static MarketToday Forex(DateTime date)
+        {
+            // closed all day onf saturdays
+            if (date.DayOfWeek == DayOfWeek.Saturday)
+            {
+                return ClosedAllDay(date);
+            }
+
+            // most days are always open
+            var marketToday = OpenAllDay(date);
+            if (date.DayOfWeek == DayOfWeek.Sunday)
+            {
+                // open at 5 on sundays
+                marketToday.Open = new MarketHours(date, 17, 24);
+                marketToday.PreMarket = new MarketHours(date, 17, 17);
+            }
+            else if (date.DayOfWeek == DayOfWeek.Friday)
+            {
+                // closes at 5 on fridays
+                marketToday.Open = new MarketHours(date, 0, 17);
+                marketToday.PostMarket = new MarketHours(date, 17, 17);
+            }
+            return marketToday;
+        }
+
+        /// <summary>
+        /// Gets a MarketToday instance that represents equity markets in the united states.
+        /// Closed all day on Saturday and Sunday as well as for USHolidays, otherwise open
+        /// between 9:30 and 4:00pm EST
+        /// </summary>
+        public static MarketToday Equity(DateTime date)
+        {
+            if (date.DayOfWeek == DayOfWeek.Saturday
+             || date.DayOfWeek == DayOfWeek.Sunday
+             || USHoliday.Dates.Contains(date.Date))
+            {
+                return ClosedAllDay(date);
+            }
+
+            // determine if we're not within normal market hours
+            var status = "open";
+            if (date.TimeOfDay > TimeSpan.FromHours(16) || date.TimeOfDay < TimeSpan.FromHours(9.5))
+            {
+                status = "closed";
+            }
+
+            return new MarketToday
+            {
+                PreMarket = new MarketHours(date, 4, 9.5),
+                Open = new MarketHours(date, 9.5, 16),
+                PostMarket = new MarketHours(date, 16, 20),
+                Status = status
+            };
+        }
     }
 
     /// <summary>
@@ -94,25 +163,25 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Start time for this market hour category
         /// </summary>
-        [JsonProperty(PropertyName = "tsStart")]
+        [JsonProperty(PropertyName = "start")]
         public DateTime Start;
 
         /// <summary>
         /// End time for this market hour category
         /// </summary>
-        [JsonProperty(PropertyName = "tsEnd")]
+        [JsonProperty(PropertyName = "end")]
         public DateTime End;
-        
+
         /// <summary>
         /// Market hours initializer given an hours since midnight measure for the market hours today
         /// </summary>
+        /// <param name="referenceDate">Reference date used for as base date from the specified hour offsets</param>
         /// <param name="defaultStart">Time in hours since midnight to start this open period.</param>
         /// <param name="defaultEnd">Time in hours since midnight to end this open period.</param>
-        public MarketHours(double defaultStart, double defaultEnd)
+        public MarketHours(DateTime referenceDate, double defaultStart, double defaultEnd)
         {
-            Start = DateTime.Now.Date.AddHours(defaultStart);
-            End = DateTime.Now.Date.AddHours(defaultEnd);
+            Start = referenceDate.Date.AddHours(defaultStart);
+            End = referenceDate.Date.AddHours(defaultEnd);
         }
     }
-
-} // End QC Namespace
+}
