@@ -29,6 +29,7 @@ using QuantConnect.Packets;
 using MySql.Data;
 using MySql.Data.MySqlClient;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -49,6 +50,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private int _bridgeMax = 500000;
         private bool _exitTriggered = false;
         private MySqlConnection _connection;
+        private string _table = Config.Get("database-table");
+
+        private DateTime[] _mySQLBridgeTime;
+        private DateTime _endTime;
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -145,7 +150,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         * CLASS CONSTRUCTOR
         *********************************************************/
         /// <summary>
-        /// Prepare and create the new OBDC Database connection datafeed.
+        /// Prepare and create the new MySQL Database connection datafeed.
         /// </summary>
         /// <param name="algorithm"></param>
         /// <param name="job"></param>
@@ -162,24 +167,39 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             EndOfBridge = new bool[_subscriptions];
             SubscriptionReaderManagers = new SubscriptionDataReader[_subscriptions];
             RealtimePrices = new List<decimal>(_subscriptions);
+            _mySQLBridgeTime = new DateTime[_subscriptions];
 
             //Class Privates:
             _job = job;
             _algorithm = algorithm;
             _endOfStreams = false;
             _bridgeMax = _bridgeMax / _subscriptions; //Set the bridge maximum count:
+            _endTime = job.PeriodFinish;
+
+            //Initialize arrays:
+            for (var i = 0; i < _subscriptions; i++)
+            {
+                _mySQLBridgeTime[i] = job.PeriodStart;
+                EndOfBridge[i] = false;
+                Bridge[i] = new ConcurrentQueue<List<BaseData>>();
+                SubscriptionReaderManagers[i] = new SubscriptionDataReader(Subscriptions[i], algorithm.Securities[Subscriptions[i].Symbol], DataFeedEndpoint.Database, job.PeriodStart, job.PeriodFinish);
+            }
         }
 
         /// <summary>
-        /// Connect and pull required data from MYSQL
+        /// Crude implementation to connect and pull required data from MYSQL. 
+        /// This is not efficient at all but just seeks to provide 0.1 draft for others to build from.
         /// </summary>
+        /// <remarks>
+        ///     Currently the MYSQL datafeed doesn't support fillforward but will just feed the data from dBase into algorithm.
+        /// </remarks>
         public void Run()
         {
             //Initialize MYSQL Connection:
             Connect();
             IsActive = true;
             
-            while (!_exitTriggered && IsActive)
+            while (!_exitTriggered && IsActive && !EndOfBridges)
             {
                 for (var i = 0; i < Subscriptions.Count; i++)
                 {
@@ -188,12 +208,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     if (Bridge[i].Count < 10000 && !EndOfBridge[i])
                     {
-                        //Fetch our data from mysql
-                        List<BaseData> data = Query("SELECT * FROM my_data WHERE symbol = ? AND time > ? ORDER BY time ASC LIMIT 100", subscription.Symbol, time);
-                        //Insert data into bridge, each list is time-grouped. Assume all different time-groups.
-                        data.ForEach(bar => Bridge[i].Enqueue(new List<BaseData>() { bar }));
-                        //Record the furthest moment in time.
-                        _mySQLBridgeTime[i] = data.Max(bar => bar.Time);
+                        ////Fetch our data from mysql
+                        var data = Query("SELECT * FROM equity_" + subscription.Symbol + " WHERE time > '" + _mySQLBridgeTime[i].ToString("u") + "' AND time < '" + _endTime.ToString("u") + "' ORDER BY time ASC LIMIT 100");
+
+                        //Comment out for live databases, where we should continue asking even if no data.
+                        if (data.Count == 0)
+                        {
+                            EndOfBridge[i] = true;
+                            _endOfStreams = true; // No more data, stop
+                            continue;
+                        } 
+
+                        var bars = GenerateBars(subscription.Symbol, data);
+
+                        ////Insert data into bridge, each list is time-grouped. Assume all different time-groups.
+                        foreach (var bar in bars)
+                        {
+                            Bridge[i].Enqueue(new List<BaseData>() { bar });
+                        }
+                        
+                        ////Record the furthest moment in time.
+                        _mySQLBridgeTime[i] = bars.Max(bar => bar.Time);
                     }
                 }
                 //Set the most backward moment in time we've loaded
@@ -202,6 +237,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _connection.Close();
             IsActive = false;
+        }
+
+        /// <summary>
+        /// Generate a list of TradeBars from the database query result.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        private IEnumerable<TradeBar> GenerateBars(string symbol, IEnumerable<Dictionary<string, string>> data)
+        {
+            var bars = new List<TradeBar>();
+            foreach (var dictionary in data)
+            {
+                var bar = new TradeBar()
+                {
+                    Time = DateTime.Parse(dictionary["time"]).AddHours(15.9), //Closing time roughly 4pm
+                    DataType = MarketDataType.TradeBar,
+                    Open = decimal.Parse(dictionary["open"]),
+                    High = decimal.Parse(dictionary["high"]),
+                    Low = decimal.Parse(dictionary["low"]),
+                    Close = decimal.Parse(dictionary["close"]),
+                    Symbol = symbol,
+                    Value = decimal.Parse(dictionary["close"]),
+                    Volume = 0
+                };
+                bars.Add(bar);
+            }
+            return bars;
         }
 
         /// <summary>
@@ -253,7 +315,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             catch (Exception err)
             {
-                Log.Error("QC.Database.Connect(): " + connectionString + " | " + err.Message);
+                Log.Error("DatabaseDataFeed.Connect(): " + connectionString + " | " + err.Message);
             }
         }
 
@@ -324,7 +386,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             catch (Exception err)
             {
-                Log.Error("DB.Command(): " + err.Message + " SQL Length:" + sql.Length + " SQL: " + sql.Substring(0, 100));
+                Log.Error("DatabaseDataFeed.Query(): " + err.Message + " SQL Length:" + sql.Length + " SQL: " + sql.Substring(0, 100));
             }
             return results;
         }

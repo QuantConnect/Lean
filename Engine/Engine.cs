@@ -499,6 +499,11 @@ namespace QuantConnect.Lean.Engine
                     Log.Trace("Engine.GetDataFeedHandler(): Selected Backtesting Datafeed");
                     break;
 
+                case DataFeedEndpoint.Database:
+                    df = new DatabaseDataFeed(algorithm, (BacktestNodePacket)job);
+                    Log.Trace("Engine.GetDataFeedHandler(): Selected Database Datafeed");
+                    break;
+
                 //Operation from local files:
                 case DataFeedEndpoint.FileSystem:
                     df = new FileSystemDataFeed(algorithm, (BacktestNodePacket)job);

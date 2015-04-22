@@ -20,5 +20,11 @@
     "ib-agent-description": "Individual",
     "ib-use-tws": "true",
     "ib-tws-dir": "C:\\Jts",
-    "ib-controller-dir": "C:\\IBController"
+    "ib-controller-dir": "C:\\IBController",
+
+	//Database Datafeed Connection:
+	"database-address": "localhost",
+	"database-user": "root",
+	"database-password":"",
+	"database-name":"lean"
 }
