@@ -133,7 +133,7 @@
     <Compile Include="RealTime\IRealTimeHandler.cs" />
     <Compile Include="Setup\BrokerageSetupHandler.cs" />
     <Compile Include="StateCheck.cs" />
-    <Compile Include="SubscriptionScaling.cs" />
+    <Compile Include="SubscriptionAdjustment.cs" />
     <Compile Include="SubscriptionStreamReader.cs" />
     <Compile Include="StreamStore.cs" />
     <Compile Include="Setup\ConsoleSetupHandler.cs" />

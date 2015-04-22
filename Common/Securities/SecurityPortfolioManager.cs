@@ -66,6 +66,9 @@ namespace QuantConnect.Securities
 
             CashBook = new CashBook();
             _baseCurrencyCash = CashBook[CashBook.AccountCurrency];
+
+            // default to $100,000.00
+            _baseCurrencyCash.Quantity = 100000;
         }
 
         #region IDictionary Implementation
