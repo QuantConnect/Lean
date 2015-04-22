@@ -105,11 +105,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Constants.cs" />
     <Compile Include="Data\Consolidators\BaseDataConsolidator.cs" />
     <Compile Include="Data\Consolidators\DynamicDataConsolidator.cs" />
     <Compile Include="Data\Consolidators\RenkoConsolidator.cs" />
     <Compile Include="Data\Consolidators\TickConsolidator.cs" />
     <Compile Include="Data\Consolidators\TradeBarConsolidatorBase.cs" />
+    <Compile Include="Data\Market\Dividend.cs" />
     <Compile Include="Data\Market\RenkoBar.cs" />
     <Compile Include="Brokerages\BrokerageMessageEvent.cs" />
     <Compile Include="Brokerages\BrokerageMessageType.cs" />

@@ -682,7 +682,7 @@ namespace QuantConnect.Algorithm
                 var config = SubscriptionManager.Add(securityType, symbol, resolution, fillDataForward, extendedMarketHours);
 
                 Security security;
-                switch (config.Security)
+                switch (config.SecurityType)
                 {
                     case SecurityType.Equity:
                         security = new Equity(config, leverage, false);

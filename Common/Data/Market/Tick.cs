@@ -195,7 +195,7 @@ namespace QuantConnect.Data.Market
                 var csv = line.Split(',');
 
                 // Which security type is this data feed:
-                switch (config.Security)
+                switch (config.SecurityType)
                 { 
                     case SecurityType.Equity:
                         Symbol = config.Symbol;
@@ -278,13 +278,13 @@ namespace QuantConnect.Data.Market
                 case DataFeedEndpoint.FileSystem:
 
                     var dateFormat = "yyyyMMdd";
-                    if (config.Security == SecurityType.Forex)
+                    if (config.SecurityType == SecurityType.Forex)
                     {
                         dataType = TickType.Quote;
                         dateFormat = "yyMMdd";
                     }
                     var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol; 
-                    source = @"../../../Data/" + config.Security.ToString().ToLower();
+                    source = @"../../../Data/" + config.SecurityType.ToString().ToLower();
                     source += @"/" + config.Resolution.ToString().ToLower() + @"/" + symbol.ToLower() + @"/";
                     source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
                     break;

@@ -70,7 +70,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return _config.Security;
+                return _config.SecurityType;
             }
         }
 

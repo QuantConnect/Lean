@@ -39,7 +39,7 @@ namespace QuantConnect.Data
         /// Type of data
         public readonly Type Type;
         /// Security type of this data subscription
-        public readonly SecurityType Security;
+        public readonly SecurityType SecurityType;
         /// Symbol of the asset we're requesting.
         public readonly string Symbol;
         /// Resolution of the asset we're requesting, second minute or tick
@@ -88,7 +88,7 @@ namespace QuantConnect.Data
         public SubscriptionDataConfig(Type objectType, SecurityType securityType, string symbol, Resolution resolution, bool fillForward, bool extendedHours, bool isTradeBar, bool hasVolume, bool isInternalFeed, int subscriptionIndex)
         {
             Type = objectType;
-            Security = securityType;
+            SecurityType = securityType;
             Resolution = resolution;
             Symbol = symbol.ToUpper();
             FillDataForward = fillForward;

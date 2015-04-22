@@ -531,7 +531,7 @@ namespace QuantConnect.Lean.Engine
         /// <param name="source">Source URL for the data:</param>
         /// <returns>StreamReader for the data source</returns>
         private IStreamReader GetReader(string source)
-        { 
+        {
             //Prepare local folders:
             const string cache = "./cache/data";
             IStreamReader reader = null;

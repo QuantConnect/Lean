@@ -122,7 +122,7 @@ namespace QuantConnect.Data.Market
                 const decimal scaleFactor = 10000m;
                 Symbol = config.Symbol;
 
-                switch (config.Security)
+                switch (config.SecurityType)
                 {
                     //Equity File Data Format:
                     case SecurityType.Equity:
@@ -147,7 +147,7 @@ namespace QuantConnect.Data.Market
             }
             catch (Exception err)
             {
-                Log.Error("DataModels: TradeBar(): Error Initializing - " + config.Security + " - " + err.Message + " - " + line);
+                Log.Error("DataModels: TradeBar(): Error Initializing - " + config.SecurityType + " - " + err.Message + " - " + line);
             }
         }
 
@@ -272,14 +272,14 @@ namespace QuantConnect.Data.Market
                 case DataFeedEndpoint.FileSystem:
 
                     var dateFormat = "yyyyMMdd";
-                    if (config.Security == SecurityType.Forex)
+                    if (config.SecurityType == SecurityType.Forex)
                     {
                         dataType = TickType.Quote;
                         dateFormat = "yyMMdd";
                     }
 
                     var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol; 
-                    source = @"../../../Data/" + config.Security.ToString().ToLower();
+                    source = @"../../../Data/" + config.SecurityType.ToString().ToLower();
                     source += @"/" + config.Resolution.ToString().ToLower() + @"/" + symbol.ToLower() + @"/";
                     source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
                     break;
