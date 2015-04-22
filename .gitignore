@@ -238,3 +238,6 @@ FakesAssemblies/
 
 # Test Runner
 testrunner/
+
+# Meld original diff files
+*.orig
