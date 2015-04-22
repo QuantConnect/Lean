@@ -417,6 +417,21 @@ namespace QuantConnect
         Invalid
     }
 
+    /// <summary>
+    /// Specifies where a subscription's data comes from
+    /// </summary>
+    public enum SubscriptionTransportMedium
+    {
+        /// <summary>
+        /// The subscription's data comes from disk
+        /// </summary>
+        File,
+
+        /// <summary>
+        /// The subscription's data comes from a rest call
+        /// </summary>
+        Rest
+    }
 
     /// <summary>
     /// enum Period - Enum of all the analysis periods, AS integers. Reference "Period" Array to access the values

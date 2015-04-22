@@ -58,7 +58,7 @@ namespace QuantConnect.Lean.Engine
         private bool _endOfStream = false;
 
         /// Internal stream reader for processing data line by line:
-        private SubscriptionStreamReader _reader = null;
+        private IStreamReader _reader = null;
 
         /// All streams done async via web protocols:
         private WebClient _web = new WebClient();
@@ -530,11 +530,11 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         /// <param name="source">Source URL for the data:</param>
         /// <returns>StreamReader for the data source</returns>
-        private SubscriptionStreamReader GetReader(string source)
+        private IStreamReader GetReader(string source)
         { 
             //Prepare local folders:
             const string cache = "./cache/data";
-            SubscriptionStreamReader reader = null;
+            IStreamReader reader = null;
             if (!Directory.Exists(cache)) Directory.CreateDirectory(cache);
             foreach (var file in Directory.EnumerateFiles(cache))
             {
@@ -579,18 +579,8 @@ namespace QuantConnect.Lean.Engine
                     //2. File downloaded. Open Stream:
                     if (File.Exists(source))
                     {
-                        if (source.GetExtension() == ".zip")
-                        {
-                            //Extracting zip returns stream reader:
-                            var sr = Compression.Unzip(source);
-                            if (sr == null) return null;
-                            reader = new SubscriptionStreamReader(sr, _feedEndpoint);
-                        }
-                        else
-                        {
-                            //Custom file stream: open from disk
-                            reader = new SubscriptionStreamReader(source, _feedEndpoint);
-                        }
+                        // handles zip or text files
+                        reader = new FileSubscriptionStreamReader(source);
                     }
                     else
                     {
@@ -602,8 +592,13 @@ namespace QuantConnect.Lean.Engine
 
                 //Directly open for REST Requests:
                 case DataFeedEndpoint.LiveTrading:
-                    reader = new SubscriptionStreamReader(source, _feedEndpoint);
+                    reader = new RestSubscriptionStreamReader(source);
                     break;
+            }
+
+            if (reader != null && reader.EndOfStream)
+            {
+                reader = null;
             }
 
             return reader;
