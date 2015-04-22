@@ -26,31 +26,9 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ComparesWithExternalData()
         {
-            // this test currently fails 57 points
-            const int maxFailures = 57;
-            int totalFailures = 0;
             var aroon = new AroonOscillator(14, 14);
-            TestHelper.TestIndicator(aroon, "spy_aroon_oscillator.txt", "Aroon Oscillator 14", (i, expected) =>
-            {
-                try
-                {
-                    Assert.AreEqual(expected, (double) aroon.Current.Value, 1e-3);
-                }
-                catch
-                {
-                    totalFailures++;
-                }
-            });
-
-            if (totalFailures > maxFailures)
-            {
-                Assert.Fail("Aroon did worse than previously expected. Failed: {0} Expected: {1}", totalFailures, maxFailures);
-            }
-            else
-            {
-                Console.WriteLine("Aroon failed {0} data points against an expected of {1}", totalFailures, maxFailures);
-            }
-            
+            TestHelper.TestIndicator(aroon, "spy_aroon_oscillator.txt", "Aroon Oscillator 14",
+                (i, expected) => Assert.AreEqual(expected, (double)aroon.Current.Value, 1e-3));
         }
 
         [Test]
@@ -77,11 +55,21 @@ namespace QuantConnect.Tests.Indicators
                 Close = 5m,
                 Volume = 10
             });
-            Assert.IsFalse(aroon.IsReady);
             aroon.Update(new TradeBar
             {
                 Symbol = "SPY",
                 Time = DateTime.Today.AddSeconds(2),
+                Open = 3m,
+                High = 7m,
+                Low = 2m,
+                Close = 5m,
+                Volume = 10
+            });
+            Assert.IsFalse(aroon.IsReady);
+            aroon.Update(new TradeBar
+            {
+                Symbol = "SPY",
+                Time = DateTime.Today.AddSeconds(3),
                 Open = 3m,
                 High = 7m,
                 Low = 2m,
