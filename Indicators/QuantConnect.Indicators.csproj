@@ -45,6 +45,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="StochasticOscillator.cs" />
+    <Compile Include="WilliamsPercentR.cs" />
     <Compile Include="AroonOscillator.cs" />
     <Compile Include="AverageTrueRange.cs" />
     <Compile Include="CommodityChannelIndex.cs" />

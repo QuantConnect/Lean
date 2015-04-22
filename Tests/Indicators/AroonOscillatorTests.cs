@@ -46,11 +46,11 @@ namespace QuantConnect.Tests.Indicators
             {
                 Assert.Fail("Aroon did worse than previously expected. Failed: {0} Expected: {1}", totalFailures, maxFailures);
             }
-            else
+            else if (totalFailures > 0)
             {
                 Console.WriteLine("Aroon failed {0} data points against an expected of {1}", totalFailures, maxFailures);
             }
-            
+
         }
 
         [Test]
@@ -77,11 +77,21 @@ namespace QuantConnect.Tests.Indicators
                 Close = 5m,
                 Volume = 10
             });
-            Assert.IsFalse(aroon.IsReady);
             aroon.Update(new TradeBar
             {
                 Symbol = "SPY",
                 Time = DateTime.Today.AddSeconds(2),
+                Open = 3m,
+                High = 7m,
+                Low = 2m,
+                Close = 5m,
+                Volume = 10
+            });
+            Assert.IsFalse(aroon.IsReady);
+            aroon.Update(new TradeBar
+            {
+                Symbol = "SPY",
+                Time = DateTime.Today.AddSeconds(3),
                 Open = 3m,
                 High = 7m,
                 Low = 2m,

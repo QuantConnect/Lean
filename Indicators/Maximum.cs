@@ -65,7 +65,7 @@ namespace QuantConnect.Indicators
                 return input.Value;
             }
 
-            if (PeriodsSinceMaximum >= Period)
+            if (PeriodsSinceMaximum >= Period - 1)
             {
                 // at this point we need to find a new maximum
                 // the window enumerates from most recent to oldest

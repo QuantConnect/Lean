@@ -50,8 +50,8 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(2, min.PeriodsSinceMinimum);
 
             min.Update(reference.AddDays(5), 3m);
-            Assert.AreEqual(-1m, min.Current.Value);
-            Assert.AreEqual(3, min.PeriodsSinceMinimum);
+            Assert.AreEqual(0m, min.Current.Value);
+            Assert.AreEqual(1, min.PeriodsSinceMinimum);
 
             min.Update(reference.AddDays(6), 2m);
             Assert.AreEqual(0m, min.Current.Value);
