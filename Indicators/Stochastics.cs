@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
@@ -42,13 +41,14 @@ namespace QuantConnect.Indicators
         public IndicatorBase<TradeBar> StochD { get; private set; }
 
         /// <summary>
+        /// Gets or sets the maximum of given period.
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> Maximum { get; set; }
+        private IndicatorBase<IndicatorDataPoint> Maximum { get; set; }
 
         /// <summary>
         /// Gets or sets the mininum of given period.
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> Mininum { get; set; }
+        private IndicatorBase<IndicatorDataPoint> Mininum { get; set; }
 
         /// <summary>
         /// Placeholder to calculate the sum of Fast %K.
@@ -59,11 +59,6 @@ namespace QuantConnect.Indicators
         /// Placeholder to calculate the sum of Slow %K.
         /// </summary>
         public IndicatorBase<IndicatorDataPoint> SumSlowK { get; private set; }
-
-        /// <summary>
-        /// The rounding off
-        /// </summary>
-        private const int RoundingOff = 5;
 
         /// <summary>
         /// Creates a new Stochastics Indicator from the specified periods.
@@ -117,7 +112,7 @@ namespace QuantConnect.Indicators
             FastStoch.Update(input);
             StochK.Update(input);
             StochD.Update(input);
-            return Math.Round(StochK, 5) * 100;
+            return StochK * 100;
         }
 
         /// <summary>
@@ -125,6 +120,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period.</param>
         /// <param name="input">The input.</param>
+        /// <returns>The Fast Stochastics %K value.</returns>
         private decimal ComputeFastStoch(int period, TradeBar input)
         {
             var fastStoch = Maximum.Samples >= period ? (input.Close - Mininum) / (Maximum - Mininum) : new decimal(0.0);
@@ -138,11 +134,12 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period.</param>
         /// <param name="constantK">The constant k.</param>
         /// <param name="input">The input.</param>
+        /// <returns>The Slow Stochastics %K value.</returns>
         private decimal ComputeStochK(int period, int constantK, TradeBar input)
         {
             var stochK = Maximum.Samples >= (period + constantK - 1) ? SumFastK / constantK : new decimal(0.0);
             SumSlowK.Update(input.Time, stochK);
-            return Math.Round(stochK, RoundingOff) * 100;
+            return stochK * 100;
         }
 
         /// <summary>
@@ -151,10 +148,11 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period.</param>
         /// <param name="constantK">The constant k.</param>
         /// <param name="constantD">The constant d.</param>
+        /// <returns>The Slow Stochastics %D value.</returns>
         private decimal ComputeStochD(int period, int constantK, int constantD)
         {
             var stochD = Maximum.Samples >= (period + constantK + constantD - 2) ? SumSlowK / constantD : new decimal(0.0);
-            return Math.Round(stochD, RoundingOff) * 100;
+            return stochD * 100;
         }
         /// <summary>
         /// Resets this indicator to its initial state
