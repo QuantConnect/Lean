@@ -26,21 +26,21 @@ namespace QuantConnect.Indicators
     public class WilliamsPercentR : TradeBarIndicator
     {
         /// <summary>
-        /// Gets the Max indicator
+        /// Gets the Maximum indicator
         /// </summary>
-        public Maximum Max { get; private set; }
+        public Maximum Maximum { get; private set; }
 
         /// <summary>
-        /// Gets the Min indicator
+        /// Gets the Minimum indicator
         /// </summary>
-        public Minimum Min { get; private set; }
+        public Minimum Minimum { get; private set; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady
         {
-            get { return Max.IsReady && Min.IsReady; }
+            get { return Maximum.IsReady && Minimum.IsReady; }
         }
 
         /// <summary>
@@ -60,8 +60,8 @@ namespace QuantConnect.Indicators
         public WilliamsPercentR(string name, int period)
             : base(name)
         {
-            Max = new Maximum(name + "_Max", period);
-            Min = new Minimum(name + "_Min", period);
+            Maximum = new Maximum(name + "_Max", period);
+            Minimum = new Minimum(name + "_Min", period);
         }
 
         /// <summary>
@@ -69,8 +69,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            Max.Reset();
-            Min.Reset();
+            Maximum.Reset();
+            Minimum.Reset();
             base.Reset();
         }
 
@@ -81,14 +81,14 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            Min.Update(input.Time, input.Low);
-            Max.Update(input.Time, input.High);
+            Minimum.Update(input.Time, input.Low);
+            Maximum.Update(input.Time, input.High);
 
             if (!this.IsReady) return 0;
            
-            var range = (Max.Current.Value - Min.Current.Value);
+            var range = (Maximum.Current.Value - Minimum.Current.Value);
 
-            return range == 0 ? 0 : -100m*(Max.Current.Value - input.Close)/range;
+            return range == 0 ? 0 : -100m*(Maximum.Current.Value - input.Close)/range;
         }
     }
 }
