@@ -65,7 +65,7 @@ namespace QuantConnect.Indicators
                 return input.Value;
             }
 
-            if (PeriodsSinceMinimum >= Period)
+            if (PeriodsSinceMinimum >= Period - 1)
             {
                 // at this point we need to find a new minimum
                 // the window enumerates from most recent to oldest

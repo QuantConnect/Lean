@@ -70,6 +70,7 @@
     <Compile Include="RateOfChange.cs" />
     <Compile Include="RateOfChangePercent.cs" />
     <Compile Include="RelativeStrengthIndex.cs" />
+    <Compile Include="Stochastics.cs" />
     <Compile Include="Sum.cs" />
     <Compile Include="RollingWindow.cs" />
     <Compile Include="SimpleMovingAverage.cs" />
