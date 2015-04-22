@@ -21,6 +21,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -76,11 +77,9 @@ namespace QuantConnect.Lean.Engine
         private bool _isDynamicallyLoadedData = false;
 
         //Price Factor Mapping:
-        private SortedDictionary<DateTime, decimal> _priceFactors;
         private decimal _priceFactor = 0;
 
         //Symbol Mapping:
-        private SortedDictionary<DateTime, string> _symbolMap;
         private string _mappedSymbol = "";
 
         /// Location of the datafeed - the type of this data.
@@ -100,9 +99,10 @@ namespace QuantConnect.Lean.Engine
         private readonly DateTime _periodStart;
         private readonly DateTime _periodFinish;
 
-        //Bounds of the data on disk derived from the map files
-        private readonly DateTime _dataStart;
-        private readonly DateTime _dataStop;
+        private DataNormalizationMode _dataNormalizationMode;
+        
+        private readonly FactorFile _factorFile;
+        private readonly MapFile _mapFile;
 
         /******************************************************** 
         * CLASS PUBLIC VARIABLES
@@ -177,7 +177,7 @@ namespace QuantConnect.Lean.Engine
             _isDynamicallyLoadedData = security.IsDynamicallyLoadedData;
 
             // do we have factor tables?
-            _hasScaleFactors = SubscriptionAdjustment.HasScalingFactors(config.Symbol);
+            _hasScaleFactors = FactorFile.HasScalingFactors(Engine.DataFolder, config.Symbol);
 
             //Save the type of data we'll be getting from the source.
             _feedEndpoint = feed;
@@ -203,28 +203,20 @@ namespace QuantConnect.Lean.Engine
                 quandl.SetAuthCode(Config.Get("quandl-auth-token"));   
             }
 
-            //Load the entire factor and symbol mapping tables into memory
+            //Load the entire factor and symbol mapping tables into memory, we'll start with some defaults
+            _factorFile = new FactorFile(config.Symbol, new List<FactorFileRow>());
+            _mapFile = new MapFile(config.Symbol, new List<MapFileRow>());
             try 
             {
                 if (_hasScaleFactors)
                 {
-                    _priceFactors = SubscriptionAdjustment.GetFactorTable(config.Symbol);
-                    _symbolMap = SubscriptionAdjustment.GetMapTable(config.Symbol);
-                    _dataStart = _symbolMap.Keys.First();
-                    _dataStop = _symbolMap.Keys.Last();
-                }
-                else
-                {
-                    // since custom data doesn't have map tables we'll not perform this more intelligent checking
-                    _dataStart = DateTime.MinValue;
-                    _dataStop = DateTime.MaxValue;
+                    _factorFile = FactorFile.Read(config.Symbol);
+                    _mapFile = MapFile.Read(config.Symbol);
                 }
             } 
             catch (Exception err) 
             {
                 Log.Error("SubscriptionDataReader(): Fetching Price/Map Factors: " + err.Message);
-                _priceFactors = new SortedDictionary<DateTime, decimal>();
-                _symbolMap = new SortedDictionary<DateTime, string>();
             }
         }
 
@@ -384,15 +376,31 @@ namespace QuantConnect.Lean.Engine
         /// This backwards adjusted price is used by default and fed as the current price.
         /// </summary>
         /// <param name="date">Current date of the backtest.</param>
-        private void UpdateScaleFactors(DateTime date) {
+        private void UpdateScaleFactors(DateTime date)
+        {
             try
             {
-                _mappedSymbol = SubscriptionAdjustment.GetMappedSymbol(_symbolMap, date);
-                _priceFactor = SubscriptionAdjustment.GetTimePriceFactor(_priceFactors, date);
+                _mappedSymbol = _mapFile.GetMappedSymbol(date);
+                _priceFactor = _factorFile.GetTimePriceFactor(date);
             } 
             catch (Exception err) 
             {
                 Log.Error("SubscriptionDataReader.UpdateScaleFactors(): " + err.Message);
+            }
+
+            // did we have a split or dividend event??
+
+            switch (_dataNormalizationMode)
+            {
+                case DataNormalizationMode.Raw:
+                    //_priceFactor = 1;
+                    break;
+                case DataNormalizationMode.Adjusted:
+                    break;
+                case DataNormalizationMode.TotalReturn:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
             _config.SetPriceScaleFactor(_priceFactor);
             _config.SetMappedSymbol(_mappedSymbol);
@@ -438,7 +446,8 @@ namespace QuantConnect.Lean.Engine
             //Update the source from the getSource method:
             _date = date;
 
-            if (date < _dataStart || date > _dataStop)
+            // if the map file is an empty instance this will always return true
+            if (!_mapFile.HasData(date))
             {
                 // don't even bother checking the disk if the map files state we don't have ze dataz
                 return false;
@@ -680,6 +689,16 @@ namespace QuantConnect.Lean.Engine
             //Return the freshly calculated source URL.
             return newSource;
         }
+
+        /// <summary>
+        /// Sets the data normalization mode that was selected by an algorithm
+        /// </summary>
+        internal void SetDataNormalizationMode(DataNormalizationMode mode)
+        {
+            _dataNormalizationMode = mode;
+        }
+
+
     } // End Base Data Class
 
 } // End QC Namespace

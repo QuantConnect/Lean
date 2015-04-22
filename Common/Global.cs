@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using QuantConnect.Logging;
 using QuantConnect.Securities.Forex;
 
 namespace QuantConnect
@@ -451,6 +450,25 @@ namespace QuantConnect
         FourHours = 14400,
         /// Period Short Codes - 21600 Second
         SixHours = 21600
+    }
+
+    /// <summary>
+    /// Specifies how data is normalized before being sent into an algorithm
+    /// </summary>
+    public enum DataNormalizationMode
+    {
+        /// <summary>
+        /// The raw price with dividends added to cash book
+        /// </summary>
+        Raw,
+        /// <summary>
+        /// The adjusted prices with dividendends factored in
+        /// </summary>
+        Adjusted,
+        /// <summary>
+        /// The raw price plus dividends
+        /// </summary>
+        TotalReturn
     }
 
 
