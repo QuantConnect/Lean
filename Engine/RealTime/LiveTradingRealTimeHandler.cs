@@ -128,7 +128,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             _time = DateTime.Now;
 
             //Set up the realtime events:
-            SetupEvents(DateTime.Now.Date);
+            SetupEvents(DateTime.Now);
 
             //Continue looping until exit triggered:
             while (!_exitTriggered)
@@ -167,7 +167,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 ClearEvents();
                 
                 //Refresh the market hours store:
-                RefreshMarketHoursToday();
+                RefreshMarketHoursToday(date);
 
                 // END OF DAY REAL TIME EVENT:
                 SetupEndOfDayEvent();
@@ -232,7 +232,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Refresh the Today variable holding the market hours information
         /// </summary>
-        private void RefreshMarketHoursToday()
+        private void RefreshMarketHoursToday(DateTime date)
         {
             _today.Clear();
 
@@ -247,7 +247,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                     //Setup storage
                     _today.Add(security.Type, new MarketToday());
                     //Refresh the market information
-                    _today[security.Type] = Engine.Api.MarketToday(security.Type);
+                    _today[security.Type] = Engine.Api.MarketToday(date, security.Type);
                     Log.Trace(
                         string.Format(
                             "LiveTradingRealTimeHandler.SetupEvents(): Daily Market Hours Setup for Security Type: {0} Start: {1} Stop: {2}",

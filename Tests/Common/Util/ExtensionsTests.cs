@@ -49,6 +49,14 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(date, rounded);
         }
 
+        [Test]
+        public void ConvertsTimeSpanFromString()
+        {
+            const string input = "16:00";
+            var timespan = input.ConvertTo<TimeSpan>();
+            Assert.AreEqual(TimeSpan.FromHours(16), timespan);
+        }
+
         private class Super<T>
         {
         }

@@ -27,7 +27,6 @@ using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Packets;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -159,8 +158,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// This creates a new data feed with a DataFeedEndpoint of LiveTrading.
         /// </summary>
         /// <param name="algorithm">Algorithm requesting data</param>
-        /// <param name="_dataSource">Source of the live stream</param>
-        protected LiveTradingDataFeed(IAlgorithm algorithm, IDataQueueHandler _dataSource)
+        /// <param name="dataSource">Source of the live stream</param>
+        protected LiveTradingDataFeed(IAlgorithm algorithm, IDataQueueHandler dataSource)
         {
             //Subscription Count:
             _subscriptions = algorithm.SubscriptionManager.Subscriptions;
@@ -174,7 +173,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _realtimePrices = new List<decimal>();
 
             //Set the source of the live data:
-            _dataQueue = _dataSource;
+            _dataQueue = dataSource;
 
             //Class Privates:
             _algorithm = algorithm;

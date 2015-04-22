@@ -207,7 +207,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             try
             {
-                Log.Trace("InteractiveBrokersBrokerage.UpdateOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity);
+                Log.Trace("InteractiveBrokersBrokerage.CancelOrder(): Symbol: " + order.Symbol + " Quantity: " + order.Quantity);
 
                 // this could be better
                 foreach (var id in order.BrokerId)
@@ -223,6 +223,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Determines whether or not this brokerage can process the specified order.
+        /// </summary>
+        /// <param name="order">The order to check</param>
+        /// <returns>True if this brokerage implementation can process the specified order, false otherwise</returns>
+        public override bool CanProcessOrder(Order order)
+        {
+            // we can't process custom data
+            return order.SecurityType != SecurityType.Base;
         }
 
         /// <summary>
@@ -296,7 +307,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Exchange = exchange,
                 SecurityType = type ?? IB.SecurityType.Undefined,
                 Symbol = symbol,
-                Time = DateTime.MinValue,
+                Time = timeSince ?? DateTime.MinValue,
                 Side = side ?? IB.ActionSide.Undefined
             };
 

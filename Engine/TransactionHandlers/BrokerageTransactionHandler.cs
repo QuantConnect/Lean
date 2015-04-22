@@ -20,6 +20,7 @@ using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
@@ -70,14 +71,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 HandleOrderEvent(fill);
             };
 
+            _brokerage.SecurityHoldingUpdated += (sender, holding) =>
+            {
+                HandleSecurityHoldingUpdated(holding);
+            };
+
             // maintain proper portfolio cash balance
             _brokerage.AccountChanged += (sender, account) =>
             {
-                //_algorithm.Portfolio.SetCash(account.CashBalance);
-
-                // how close are we?
-                decimal delta = _algorithm.Portfolio.Cash - account.CashBalance;
-                Log.Trace(string.Format("BrokerageTransactionHandler.AccountChanged(): Algo Cash: {0} Brokerage Cash: {1} Delta: {2}", algorithm.Portfolio.Cash, account.CashBalance, delta));
+                HandleAccountChanged(account);
             };
 
             IsActive = true;
@@ -190,11 +192,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <param name="order">The new order</param>
         private void HandleNewOrder(Order order)
         {
-            // tell algorithm to wait during scynchronous backtests
             if (_orders.TryAdd(order.Id, order))
             {
-                if (!GetSufficientCapitalForOrder(order))
+                // check to see if we have enough money to place the order
+                if (!_algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order))
                 {
+                    order.Status = OrderStatus.Invalid;
+                    _algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
+                    return;
+                }
+
+                // verify that our current brokerage can actually take the order
+                if (!_brokerage.CanProcessOrder(order))
+                {
+                    // if we couldn't actually process the order, mark it as invalid and bail
+                    order.Status = OrderStatus.Invalid;
+                    _algorithm.Error(string.Format("Order Error: id: {0}, Brokerage {1} is unable to process order for {2} - {3}.", order.Id, _brokerage.Name, order.SecurityType, order.Symbol));
                     return;
                 }
 
@@ -234,19 +247,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 Log.Error("BrokerageTransactionHandler.HandleUpdatedOrder(): Unable to update order with ID " + order.Id + ".");
             }
-        }
-
-        private bool GetSufficientCapitalForOrder(Order order)
-        {
-            // check to see if we have enough money to place the order
-            if (!_algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order))
-            {
-                //Flag order as invalid and push off queue:
-                order.Status = OrderStatus.Invalid;
-                _algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
-                return false;
-            }
-            return true;
         }
 
         /// <summary>
@@ -311,6 +311,42 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     _algorithm.Error("Order Event Handler Error: " + err.Message);
                 }
             }
+        }
+
+        /// <summary>
+        /// Brokerages can send account updates, this include cash balance updates. Since it is of
+        /// utmost important to always have an accurate picture of reality, we'll trust this information
+        /// as truth
+        /// </summary>
+        private void HandleAccountChanged(AccountEvent account)
+        {
+            // how close are we?
+            var delta = _algorithm.Portfolio.CashBook[account.CurrencySymbol].Quantity - account.CashBalance;
+            if (delta != 0)
+            {
+                Log.Trace(string.Format("BrokerageTransactionHandler.HandleAccountChanged(): {0} Cash Delta: {1}", account.CurrencySymbol, delta));
+            }
+
+            // override the current cash value to we're always gauranted to be in sync with the brokerage's push updates
+            _algorithm.Portfolio.CashBook[account.CurrencySymbol].Quantity = account.CashBalance;
+        }
+
+        /// <summary>
+        /// Brokerages can send portfolio updates which should include average price of holdings and the
+        /// quantity of holdings, we'll trust this information as truth and just set the portfolio with it
+        /// </summary>
+        private void HandleSecurityHoldingUpdated(SecurityEvent holding)
+        {
+            // how close are we?
+            var securityHolding = _algorithm.Portfolio[holding.Symbol];
+            var deltaQuantity = securityHolding.Quantity - holding.Quantity;
+            var deltaAvgPrice = securityHolding.AveragePrice - holding.AveragePrice;
+            if (deltaQuantity != 0 || deltaAvgPrice != 0)
+            {
+                Log.Trace(string.Format("BrokerageTransactionHandler.HandleSecurityHoldingUpdated(): {0} DeltaQuantity: {1} DeltaAvgPrice: {2}", holding.Symbol, deltaQuantity, deltaAvgPrice));
+            }
+
+            securityHolding.SetHoldings(holding.AveragePrice, holding.Quantity);
         }
     }
 }

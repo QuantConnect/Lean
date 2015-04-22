@@ -177,7 +177,7 @@ namespace QuantConnect.Securities.Forex
             }
             catch (Exception err)
             {
-                Log.Error("SecurityPortfolioManager.ProcessFill(orderEvent): " + err.Message);
+                Log.Error("ForexPortfolioManager.ProcessFill(orderEvent): " + err.Message);
             }
 
             //Set the results back to the vehicle.
