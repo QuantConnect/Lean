@@ -25,25 +25,8 @@ namespace QuantConnect.Tests.Indicators
         public void ComputesCorrectly()
         {
             var wilr = new WilliamsPercentR(14);
-            int sum = 0;
-            int totalFailures = 0;
-            double epsilon = 1e-3;
-            TestHelper.TestIndicator(wilr, "spy_with_williamsR14.txt", "Williams %R 14", (ind, expected) =>
-            {
-                sum++;
-                try
-                {
-                    Assert.AreEqual(expected, (double) ind.Current.Value, epsilon);
-                }
-                catch
-                {
-                    totalFailures++;
-                }
-            });
-            
-            Console.WriteLine("Willians%R failed {0} data points against {1} tests", totalFailures, sum);
-
-    }
+            TestHelper.TestIndicator(wilr, "spy_with_williamsR14.txt", "Williams %R 14", (ind, expected) => Assert.AreEqual(expected, (double) ind.Current.Value, 1e-3));
+        }
 
         [Test]
         public void ResetsProperly()
