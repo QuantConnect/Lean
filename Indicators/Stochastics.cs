@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
@@ -11,7 +26,6 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class Stochastic : TradeBarIndicator
     {
-
         /// <summary>
         /// Gets the value of the Fast Stochastics %K given Period.
         /// </summary>
@@ -28,12 +42,11 @@ namespace QuantConnect.Indicators
         public IndicatorBase<TradeBar> StochD { get; private set; }
 
         /// <summary>
-        /// Highest High of given the period.
         /// </summary>
         public IndicatorBase<IndicatorDataPoint> Maximum { get; set; }
 
         /// <summary>
-        /// Lowest Low of given the period.
+        /// Gets or sets the mininum of given period.
         /// </summary>
         public IndicatorBase<IndicatorDataPoint> Mininum { get; set; }
 
@@ -43,10 +56,13 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> SumFastK { get; private set; }
 
         /// <summary>
-        /// Placeholder to calculate the sum of Slow %K
+        /// Placeholder to calculate the sum of Slow %K.
         /// </summary>
         public IndicatorBase<IndicatorDataPoint> SumSlowK { get; private set; }
 
+        /// <summary>
+        /// The rounding off
+        /// </summary>
         private const int RoundingOff = 5;
 
         /// <summary>
@@ -83,11 +99,17 @@ namespace QuantConnect.Indicators
                 );
         }
 
+        /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
         public override bool IsReady
         {
             get { return FastStoch.IsReady && StochK.IsReady && StochD.IsReady; }
         }
-
+        /// <summary>
+        /// Computes the next value of this indicator from the given state
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
         protected override decimal ComputeNextValue(TradeBar input)
         {
             Maximum.Update(input.Time, input.High);
@@ -98,6 +120,11 @@ namespace QuantConnect.Indicators
             return Math.Round(StochK, 5) * 100;
         }
 
+        /// <summary>
+        /// Computes the Fast Stochastic %K.
+        /// </summary>
+        /// <param name="period">The period.</param>
+        /// <param name="input">The input.</param>
         private decimal ComputeFastStoch(int period, TradeBar input)
         {
             var fastStoch = Maximum.Samples >= period ? (input.Close - Mininum) / (Maximum - Mininum) : new decimal(0.0);
@@ -105,6 +132,12 @@ namespace QuantConnect.Indicators
             return fastStoch;
         }
 
+        /// <summary>
+        /// Computes the Slow Stochastic %K.
+        /// </summary>
+        /// <param name="period">The period.</param>
+        /// <param name="constantK">The constant k.</param>
+        /// <param name="input">The input.</param>
         private decimal ComputeStochK(int period, int constantK, TradeBar input)
         {
             var stochK = Maximum.Samples >= (period + constantK - 1) ? SumFastK / constantK : new decimal(0.0);
@@ -112,19 +145,28 @@ namespace QuantConnect.Indicators
             return Math.Round(stochK, RoundingOff) * 100;
         }
 
+        /// <summary>
+        /// Computes the Slow Stochastic %D.
+        /// </summary>
+        /// <param name="period">The period.</param>
+        /// <param name="constantK">The constant k.</param>
+        /// <param name="constantD">The constant d.</param>
         private decimal ComputeStochD(int period, int constantK, int constantD)
         {
             var stochD = Maximum.Samples >= (period + constantK + constantD - 2) ? SumSlowK / constantD : new decimal(0.0);
             return Math.Round(stochD, RoundingOff) * 100;
         }
-
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
         public override void Reset()
         {
             FastStoch.Reset();
             StochK.Reset();
             StochD.Reset();
+            SumFastK.Reset();
+            SumSlowK.Reset();
             base.Reset();
         }
-
     }
 }
