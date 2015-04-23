@@ -357,6 +357,24 @@ namespace QuantConnect.Algorithm
             RegisterIndicator(symbol, rateofchangepercent, resolution, selector);
             return rateofchangepercent;
         }
+
+        /// <summary>
+        /// Creates a new Williams %R indicator. This will compute the percentage change of
+        /// the current closing price in relation to the high and low of the past N periods.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Williams %R we want</param>
+        /// <param name="period">The period over which to compute the Williams %R</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The rateofchangepercent indicator for the requested symbol over the specified period</returns>
+        public WilliamsPercentR WILR(string symbol, int period, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            string name = CreateIndicatorName(symbol, "WILR" + period, resolution);
+            var williamspercentr = new WilliamsPercentR(name, period);
+            RegisterIndicator(symbol, williamspercentr, resolution, selector);
+            return williamspercentr;
+        }
         /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
