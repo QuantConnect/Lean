@@ -13,10 +13,6 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -25,50 +21,68 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Data
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Subscription data required including the type of data.
     /// </summary>
     public class SubscriptionDataConfig
     {
-        /******************************************************** 
-        * STRUCT PUBLIC VARIABLES
-        *********************************************************/
+        /// <summary>
         /// Type of data
+        /// </summary>
         public readonly Type Type;
+        /// <summary>
         /// Security type of this data subscription
+        /// </summary>
         public readonly SecurityType SecurityType;
+        /// <summary>
         /// Symbol of the asset we're requesting.
+        /// </summary>
         public readonly string Symbol;
+        /// <summary>
         /// Resolution of the asset we're requesting, second minute or tick
+        /// </summary>
         public readonly Resolution Resolution;
+        /// <summary>
         /// Timespan increment between triggers of this data:
+        /// </summary>
         public readonly TimeSpan Increment;
+        /// <summary>
         /// True if wish to send old data when time gaps in data feed.
+        /// </summary>
         public readonly bool FillDataForward;
+        /// <summary>
         /// Boolean Send Data from between 4am - 8am (Equities Setting Only)
+        /// </summary>
         public readonly bool ExtendedMarketHours;
+        /// <summary>
         /// True if the data type has OHLC properties, even if dynamic data
+        /// </summary>
         public readonly bool IsTradeBar;
+        /// <summary>
         /// True if the data type has a Volume property, even if it is dynamic data
+        /// </summary>
         public readonly bool HasVolume;
+        /// <summary>
         /// True if this subscription was added for the sole purpose of providing currency conversion rates via <see cref="CashBook.EnsureCurrencyDataFeeds"/>
+        /// </summary>
         public readonly bool IsInternalFeed;
+        /// <summary>
         /// The subscription index from the SubscriptionManager
+        /// </summary>
         public readonly int SubscriptionIndex;
 
+        /// <summary>
         /// Price Scaling Factor:
+        /// </summary>
         public decimal PriceScaleFactor;
-        ///Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
+        /// <summary>
+        /// Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
+        /// </summary>
         public string MappedSymbol;
-        ///Consolidators that are registred with this subscription
+        /// <summary>
+        /// Consolidators that are registred with this subscription
+        /// </summary>
         public readonly List<IDataConsolidator> Consolidators; 
-
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
 
         /// <summary>
         /// Constructor for Data Subscriptions
@@ -85,7 +99,16 @@ namespace QuantConnect.Data
         /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
         /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
         /// <param name="subscriptionIndex">The subscription index from the SubscriptionManager, this MUST equal the subscription's index or all hell will break loose!</param>
-        public SubscriptionDataConfig(Type objectType, SecurityType securityType, string symbol, Resolution resolution, bool fillForward, bool extendedHours, bool isTradeBar, bool hasVolume, bool isInternalFeed, int subscriptionIndex)
+        public SubscriptionDataConfig(Type objectType, 
+            SecurityType securityType, 
+            string symbol, 
+            Resolution resolution, 
+            bool fillForward, 
+            bool extendedHours, 
+            bool isTradeBar, 
+            bool hasVolume, 
+            bool isInternalFeed, 
+            int subscriptionIndex)
         {
             Type = objectType;
             SecurityType = securityType;
@@ -142,7 +165,5 @@ namespace QuantConnect.Data
         {
             MappedSymbol = newSymbol;
         }
-
-    } // End Base Data Class
-
-} // End QC Namespace
+    }
+}
