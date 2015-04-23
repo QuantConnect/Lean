@@ -532,70 +532,59 @@ namespace QuantConnect.Lean.Engine
         /// <returns>StreamReader for the data source</returns>
         private IStreamReader GetReader(string source)
         {
-            //Prepare local folders:
-            const string cache = "./cache/data";
             IStreamReader reader = null;
-            if (!Directory.Exists(cache)) Directory.CreateDirectory(cache);
-            foreach (var file in Directory.EnumerateFiles(cache))
+
+            if (_feedEndpoint == DataFeedEndpoint.LiveTrading)
             {
-                if (File.GetCreationTime(file) < DateTime.Now.AddHours(-24)) File.Delete(file); 
+                // live trading currently always gets a rest endpoint
+                return new RestSubscriptionStreamReader(source);
             }
 
-            //1. Download this source file as fast as possible:
-            //1.1 Create filename from source:
-            var filename = source.ToMD5() + source.GetExtension();
-            var location = cache + @"/" + filename;
+            // determine if we're hitting the file system/backtest
+            if (_feedEndpoint == DataFeedEndpoint.FileSystem || _feedEndpoint == DataFeedEndpoint.Backtesting)
+            {
+                // construct a uri to determine if we have a local or remote file
+                var uri = new Uri(source, UriKind.RelativeOrAbsolute);
 
-            //1.2 Based on Endpoint, Download File (Backtest) or directly open SR of source:
-            switch (_feedEndpoint)
-            { 
-                case DataFeedEndpoint.FileSystem:
-                case DataFeedEndpoint.Backtesting:
-
-                    var uri = new Uri(source, UriKind.RelativeOrAbsolute);
-
-                    // check if this is not a local uri then download it to the local cache
-                    if (uri.IsAbsoluteUri && !uri.IsLoopback)
+                // if file is remote, download it and open a local reader
+                if (uri.IsAbsoluteUri && !uri.IsLoopback)
+                {
+                    // clean old files out of the cache
+                    const string cache = "./cache/data";
+                    if (!Directory.Exists(cache)) Directory.CreateDirectory(cache);
+                    foreach (var file in Directory.EnumerateFiles(cache))
                     {
-                        try
-                        {
-                            using (var client = new WebClient())
-                            {
-                                client.Proxy = WebRequest.GetSystemWebProxy();
-                                client.DownloadFile(source, location);
-
-                                // reassign source since it's now on local disk
-                                source = location;
-                            }
-                        }
-                        catch (Exception err)
-                        {
-                            Engine.ResultHandler.ErrorMessage("Error downloading custom data source file, skipped: " + source + " Err: " + err.Message, err.StackTrace);
-                            Engine.ResultHandler.SamplePerformance(_date.Date, 0);
-                            return null;
-                        }
+                        if (File.GetCreationTime(file) < DateTime.Now.AddHours(-24)) File.Delete(file);
                     }
 
-                    //2. File downloaded. Open Stream:
-                    if (File.Exists(source))
+                    try
                     {
-                        // handles zip or text files
-                        reader = new LocalFileSubscriptionStreamReader(source);
+                        // this will fire up a web client in order to download the 'source' file to the cache
+                        reader = new RemoteFileSubscriptionStreamReader(source, cache);
                     }
-                    else
+                    catch (Exception err)
                     {
-                        Log.Trace("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: " + source);
+                        Engine.ResultHandler.ErrorMessage("Error downloading custom data source file, skipped: " + source + " Err: " + err.Message, err.StackTrace);
                         Engine.ResultHandler.SamplePerformance(_date.Date, 0);
                         return null;
                     }
-                    break;
-
-                //Directly open for REST Requests:
-                case DataFeedEndpoint.LiveTrading:
-                    reader = new RestSubscriptionStreamReader(source);
-                    break;
+                }
+                // this is a local file uri, see if it exists
+                else if (File.Exists(source))
+                {
+                    // handles zip or text files
+                    reader = new LocalFileSubscriptionStreamReader(source);
+                }
+                // the local uri doesn't exist, write an error and return null so we we don't try to get data for today
+                else
+                {
+                    Log.Trace("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: " + source);
+                    Engine.ResultHandler.SamplePerformance(_date.Date, 0);
+                    return null;
+                }
             }
 
+            // if the reader is already at end of stream, just set to null so we don't try to get data for today
             if (reader != null && reader.EndOfStream)
             {
                 reader = null;

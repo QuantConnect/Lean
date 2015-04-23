@@ -15,34 +15,45 @@
 */
 
 using System.IO;
+using System.Net;
 
 namespace QuantConnect.Lean.Engine
 {
     /// <summary>
-    /// Represents a stream reader capable of reading lines from disk
+    /// Represents a stream reader capabable of downloading a remote file and then
+    /// reading it from disk
     /// </summary>
-    public class LocalFileSubscriptionStreamReader : IStreamReader
+    public class RemoteFileSubscriptionStreamReader : IStreamReader
     {
-        private readonly StreamReader _streamReader;
+        private readonly IStreamReader _streamReader;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.
+        /// Initializes a new insance of the <see cref="RemoteFileSubscriptionStreamReader"/> class.
         /// </summary>
-        /// <param name="source">The local file to be read</param>
-        public LocalFileSubscriptionStreamReader(string source)
+        /// <param name="source">The remote url to be downloaded via web client</param>
+        /// <param name="downloadDirectory">The local directory and destination of the download</param>
+        public RemoteFileSubscriptionStreamReader(string source, string downloadDirectory)
         {
-            // unzip if necessary
-            _streamReader = source.GetExtension() == ".zip"
-                ? Compression.Unzip(source)
-                : new StreamReader(source);
+            // create a hash for a new filename
+            var filename = source.ToMD5() + source.GetExtension();
+            var destination = Path.Combine(downloadDirectory, filename);
+
+            using (var client = new WebClient())
+            {
+                client.Proxy = WebRequest.GetSystemWebProxy();
+                client.DownloadFile(source, destination);
+            }
+
+            // now we can just use the local file reader
+            _streamReader = new LocalFileSubscriptionStreamReader(destination);
         }
 
         /// <summary>
-        /// Gets <see cref="SubscriptionTransportMedium.LocalFile"/>
+        /// Gets <see cref="SubscriptionTransportMedium.RemoteFile"/>
         /// </summary>
         public SubscriptionTransportMedium TransportMedium
         {
-            get { return SubscriptionTransportMedium.LocalFile; }
+            get { return SubscriptionTransportMedium.RemoteFile; }
         }
 
         /// <summary>
@@ -50,7 +61,7 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public bool EndOfStream
         {
-            get { return _streamReader == null || _streamReader.EndOfStream; }
+            get { return _streamReader.EndOfStream; }
         }
 
         /// <summary>
@@ -66,10 +77,7 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public void Close()
         {
-            if (_streamReader != null)
-            {
-                _streamReader.Close();
-            }
+            _streamReader.Close();
         }
 
         /// <summary>
@@ -77,10 +85,7 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public void Dispose()
         {
-            if (_streamReader != null)
-            {
-                _streamReader.Dispose();
-            }
+            _streamReader.Dispose();
         }
     }
 }
