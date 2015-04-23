@@ -127,6 +127,7 @@
     <Compile Include="DataFeeds\PaperTradingDataFeed.cs" />
     <Compile Include="DataFeeds\Queues\DataQueue.cs" />
     <Compile Include="DataStream.cs" />
+    <Compile Include="EnumerableStreamReader.cs" />
     <Compile Include="LocalFileSubscriptionStreamReader.cs" />
     <Compile Include="RealTime\RealTimeEvent.cs" />
     <Compile Include="RealTime\LiveTradingRealTimeHandler.cs" />
