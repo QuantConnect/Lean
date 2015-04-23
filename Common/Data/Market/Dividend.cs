@@ -30,7 +30,7 @@ namespace QuantConnect.Data.Market
         public decimal Distribution
         {
             get { return Value; } 
-            set { Value = value; }
+            set { Value = Math.Round(value, 2); }
         }
 
         /// <summary>

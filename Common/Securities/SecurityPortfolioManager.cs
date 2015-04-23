@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 
@@ -505,6 +506,27 @@ namespace QuantConnect.Securities
             return marginCallOrders;
         }
 
+        /// <summary>
+        /// Applies a dividend to the portfolio
+        /// </summary>
+        /// <param name="dividend">The dividend to be applied</param>
+        public void ApplyDividend(Dividend dividend)
+        {
+            var security = Securities[dividend.Symbol];
+
+            // longs get benefits, shorts get clubbed on dividends
+            var total = security.Holdings.Quantity*dividend.Distribution;
+
+            // assuming USD, we still need to add Currency to the security object
+            _baseCurrencyCash.Quantity += total;
+
+
+            var newAvgPrice = security.Holdings.IsLong 
+                ? security.Holdings.AveragePrice - dividend.Distribution 
+                : security.Holdings.AveragePrice + dividend.Distribution;
+
+            security.Holdings.SetHoldings(newAvgPrice, security.Holdings.Quantity);
+        }
 
         /// <summary>
         /// Record the transaction value and time in a list to later be processed for statistics creation.

@@ -125,6 +125,15 @@ namespace QuantConnect.Lean.Engine
             get { return Current; }
         }
 
+        /// <summary>
+        /// Provides a means of exposing extra data related to this subscription.
+        /// For now we expose dividend data for equities through here
+        /// </summary>
+        /// <remarks>
+        /// It is currently assumed that whomever is pumping data into here is handling the
+        /// time syncing issues. Dividends do this through the RefreshSource method
+        /// </remarks>
+        public Queue<BaseData> SecondaryData { get; private set; }
 
         /// <summary>
         /// Save an instance of the previous basedata we generated
@@ -165,6 +174,8 @@ namespace QuantConnect.Lean.Engine
         {
             //Save configuration of data-subscription:
             _config = config;
+
+            SecondaryData = new Queue<BaseData>();
 
             //Save access to fill foward flag:
             _isFillForward = config.FillDataForward;
@@ -230,6 +241,14 @@ namespace QuantConnect.Lean.Engine
         /// <remarks>This is a highly called method and should be kept lean as possible.</remarks>
         /// <returns>Boolean true on successful move next. Set Current public property.</returns>
         public bool MoveNext() {
+
+            // yield the secondary data first
+            if (SecondaryData.Count != 0)
+            {
+                Previous = Current;
+                Current = SecondaryData.Dequeue();
+                return true;
+            }
 
             BaseData instance = null;
             var instanceMarketOpen = false;
@@ -382,14 +401,20 @@ namespace QuantConnect.Lean.Engine
             try
             {
                 _mappedSymbol = _mapFile.GetMappedSymbol(date);
+                _config.SetMappedSymbol(_mappedSymbol);
+
+                if (_config.NormalizationMode == DataNormalizationMode.Raw)
+                {
+                    return;
+                }
                 _priceFactor = _factorFile.GetTimePriceFactor(date);
             } 
             catch (Exception err) 
             {
                 Log.Error("SubscriptionDataReader.UpdateScaleFactors(): " + err.Message);
             }
+
             _config.SetPriceScaleFactor(_priceFactor);
-            _config.SetMappedSymbol(_mappedSymbol);
         }
 
         /// <summary>
@@ -437,6 +462,20 @@ namespace QuantConnect.Lean.Engine
             {
                 // don't even bother checking the disk if the map files state we don't have ze dataz
                 return false;
+            }
+
+            // check the factor file to see if we have a dividend event tomorrow
+            decimal priceFactorRatio;
+            if (_factorFile.HasDividendEventOnNextTradingDay(date, out priceFactorRatio))
+            {
+                var dividend = new Dividend
+                {
+                    Symbol = _config.Symbol,
+                    DataType = MarketDataType.Base,
+                    Time = date, // this is actually a day early, but since we lack time sync it will do for now
+                    Distribution = Previous.Value - (Previous.Value*priceFactorRatio)
+                };
+                SecondaryData.Enqueue(dividend);
             }
 
             var newSource = "";

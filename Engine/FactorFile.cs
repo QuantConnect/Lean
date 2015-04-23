@@ -109,8 +109,12 @@ namespace QuantConnect.Lean.Engine
         /// MSFT has a 31 cent dividend on 2015.02.17, but in the factor file the factor is applied
         /// to 2015.02.13, which is the first trading day BEFORE the actual effective date.
         /// </remarks>
-        public bool HasDividendEventOnNextTradingDay(DateTime date)
+        /// <param name="date">The date to check the factor file for a dividend event</param>
+        /// <param name="priceFactorRatio">When this function returns true, this value will be populated
+        /// with the price factor ratio required to scale the closing value (pf_i/pf_i+1)</param>
+        public bool HasDividendEventOnNextTradingDay(DateTime date, out decimal priceFactorRatio)
         {
+            priceFactorRatio = 0;
             var index = _data.IndexOfKey(date);
             if (index > -1 && index < _data.Count)
             {
@@ -119,7 +123,11 @@ namespace QuantConnect.Lean.Engine
                 var nextRow = _data.Values[index + 1];
 
                 // if the price factors have changed then it's a dividend event
-                return thisRow.PriceFactor != nextRow.PriceFactor;
+                if (thisRow.PriceFactor != nextRow.PriceFactor)
+                {
+                    priceFactorRatio = thisRow.PriceFactor/nextRow.PriceFactor;
+                    return true;
+                }
             }
             return false;
         }

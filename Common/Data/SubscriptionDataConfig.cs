@@ -70,7 +70,10 @@ namespace QuantConnect.Data
         /// The subscription index from the SubscriptionManager
         /// </summary>
         public readonly int SubscriptionIndex;
-
+        /// <summary>
+        /// Gets the normalization mode used for this subscription
+        /// </summary>
+        public readonly DataNormalizationMode NormalizationMode = DataNormalizationMode.Adjusted;
         /// <summary>
         /// Price Scaling Factor:
         /// </summary>
