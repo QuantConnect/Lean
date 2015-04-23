@@ -129,14 +129,6 @@ namespace QuantConnect.Lean.Engine
         *********************************************************/
 
         /// <summary>
-        /// Base Local Data Folder
-        /// </summary>
-        public static string DataFolder
-        {
-            get { return "../../../Data/"; }
-        }
-
-        /// <summary>
         /// Are we operating this as a local independent node, independent of the cloud.
         /// Running on a local algorithm, and local datasources.
         /// </summary>

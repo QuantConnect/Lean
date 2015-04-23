@@ -178,7 +178,7 @@ namespace QuantConnect.Lean.Engine
             _isDynamicallyLoadedData = security.IsDynamicallyLoadedData;
 
             // do we have factor tables?
-            _hasScaleFactors = FactorFile.HasScalingFactors(Engine.DataFolder, config.Symbol);
+            _hasScaleFactors = FactorFile.HasScalingFactors(Constants.DataFolder, config.Symbol);
 
             //Save the type of data we'll be getting from the source.
             _feedEndpoint = feed;
@@ -538,11 +538,6 @@ namespace QuantConnect.Lean.Engine
             // determine if we're hitting the file system/backtest
             if (_feedEndpoint == DataFeedEndpoint.FileSystem || _feedEndpoint == DataFeedEndpoint.Backtesting)
             {
-                if (_config.Type == typeof (Dividend))
-                {
-                    reader = HandleDividend(source);
-                }
-
                 // construct a uri to determine if we have a local or remote file
                 var uri = new Uri(source, UriKind.RelativeOrAbsolute);
 
@@ -563,16 +558,6 @@ namespace QuantConnect.Lean.Engine
             }
 
             return reader;
-        }
-
-        private IStreamReader HandleDividend(string source)
-        {
-            if (!File.Exists(source))
-            {
-                return null;
-            }
-
-            return null;
         }
 
 

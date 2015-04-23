@@ -67,7 +67,7 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public static MapFile Read(string symbol)
         {
-            return new MapFile(symbol, MapFileRow.Read(Engine.DataFolder, symbol));
+            return new MapFile(symbol, MapFileRow.Read(Constants.DataFolder, symbol));
         }
     }
 }
