@@ -546,41 +546,13 @@ namespace QuantConnect.Lean.Engine
                 // construct a uri to determine if we have a local or remote file
                 var uri = new Uri(source, UriKind.RelativeOrAbsolute);
 
-                // if file is remote, download it and open a local reader
                 if (uri.IsAbsoluteUri && !uri.IsLoopback)
                 {
-                    // clean old files out of the cache
-                    const string cache = "./cache/data";
-                    if (!Directory.Exists(cache)) Directory.CreateDirectory(cache);
-                    foreach (var file in Directory.EnumerateFiles(cache))
-                    {
-                        if (File.GetCreationTime(file) < DateTime.Now.AddHours(-24)) File.Delete(file);
-                    }
-
-                    try
-                    {
-                        // this will fire up a web client in order to download the 'source' file to the cache
-                        reader = new RemoteFileSubscriptionStreamReader(source, cache);
-                    }
-                    catch (Exception err)
-                    {
-                        Engine.ResultHandler.ErrorMessage("Error downloading custom data source file, skipped: " + source + " Err: " + err.Message, err.StackTrace);
-                        Engine.ResultHandler.SamplePerformance(_date.Date, 0);
-                        return null;
-                    }
+                    reader = HandleRemoteSourceFile(source);
                 }
-                // this is a local file uri, see if it exists
-                else if (File.Exists(source))
-                {
-                    // handles zip or text files
-                    reader = new LocalFileSubscriptionStreamReader(source);
-                }
-                // the local uri doesn't exist, write an error and return null so we we don't try to get data for today
                 else
                 {
-                    Log.Trace("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: " + source);
-                    Engine.ResultHandler.SamplePerformance(_date.Date, 0);
-                    return null;
+                    reader = HandleLocalFileSource(source);
                 }
             }
 
@@ -663,6 +635,49 @@ namespace QuantConnect.Lean.Engine
             }
             //Return the freshly calculated source URL.
             return newSource;
+        }
+
+        /// <summary>
+        /// Opens up an IStreamReader for a local file source
+        /// </summary>
+        private IStreamReader HandleLocalFileSource(string source)
+        {
+            if (!File.Exists(source))
+            {
+                // the local uri doesn't exist, write an error and return null so we we don't try to get data for today
+                Log.Trace("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: " + source);
+                Engine.ResultHandler.SamplePerformance(_date.Date, 0);
+                return null;
+            }
+
+            // handles zip or text files
+            return new LocalFileSubscriptionStreamReader(source);
+        }
+
+        /// <summary>
+        /// Opens up an IStreamReader for a remote file source
+        /// </summary>
+        private IStreamReader HandleRemoteSourceFile(string source)
+        {
+            // clean old files out of the cache
+            const string cache = "./cache/data";
+            if (!Directory.Exists(cache)) Directory.CreateDirectory(cache);
+            foreach (var file in Directory.EnumerateFiles(cache))
+            {
+                if (File.GetCreationTime(file) < DateTime.Now.AddHours(-24)) File.Delete(file);
+            }
+
+            try
+            {
+                // this will fire up a web client in order to download the 'source' file to the cache
+                return new RemoteFileSubscriptionStreamReader(source, cache);
+            }
+            catch (Exception err)
+            {
+                Engine.ResultHandler.ErrorMessage("Error downloading custom data source file, skipped: " + source + " Err: " + err.Message, err.StackTrace);
+                Engine.ResultHandler.SamplePerformance(_date.Date, 0);
+                return null;
+            }
         }
     } // End Base Data Class
 
