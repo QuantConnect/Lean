@@ -580,7 +580,7 @@ namespace QuantConnect.Lean.Engine
                     if (File.Exists(source))
                     {
                         // handles zip or text files
-                        reader = new FileSubscriptionStreamReader(source);
+                        reader = new LocalFileSubscriptionStreamReader(source);
                     }
                     else
                     {

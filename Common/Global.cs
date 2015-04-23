@@ -425,7 +425,12 @@ namespace QuantConnect
         /// <summary>
         /// The subscription's data comes from disk
         /// </summary>
-        File,
+        LocalFile,
+
+        /// <summary>
+        /// The subscription's data is downloaded from a remote source
+        /// </summary>
+        RemoteFile,
 
         /// <summary>
         /// The subscription's data comes from a rest call
