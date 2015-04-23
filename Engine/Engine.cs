@@ -63,6 +63,7 @@ namespace QuantConnect.Lean.Engine
         /******************************************************** 
         * CLASS PUBLIC VARIABLES
         *********************************************************/
+
         /// <summary>
         /// Datafeed handler creates local, live, historical data feed management all through specific dedicated DLL's.
         /// </summary>
@@ -126,6 +127,15 @@ namespace QuantConnect.Lean.Engine
         /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
+
+        /// <summary>
+        /// Base Local Data Folder
+        /// </summary>
+        public static string DataFolder
+        {
+            get { return "../../../Data/"; }
+        }
+
         /// <summary>
         /// Are we operating this as a local independent node, independent of the cloud.
         /// Running on a local algorithm, and local datasources.
