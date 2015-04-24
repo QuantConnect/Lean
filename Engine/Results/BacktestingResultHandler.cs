@@ -274,7 +274,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //2. Update the packet scanner:
-                ProcessSeriesUpdate();
+                Update();
 
             } // While !End.
 
@@ -287,7 +287,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Send a backtest update to the browser taking a latest snapshot of the charting data.
         /// </summary>
-        public void ProcessSeriesUpdate() 
+        public void Update() 
         {
             try
             {
@@ -298,9 +298,6 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 if (DateTime.Now <= _nextUpdate || !(_daysProcessed > (_lastDaysProcessed + 1))) return;
-
-                //Debugging..
-                //Logging.Log.Debug("BacktestingResultHandler.ProcessSeriesUpdate(): Sending Update (" + _lastDaysProcessed + ") : " + DateTime.Now.ToLongTimeString());
 
                 //Extract the orders since last update
                 var deltaOrders = new Dictionary<int, Order>();
@@ -313,7 +310,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
                 catch (Exception err) 
                 {
-                    Log.Error("BacktestingResultHandler().ProcessSeriesUpdate(): Transactions: " + err.Message);
+                    Log.Error("BacktestingResultHandler().Update(): Transactions: " + err.Message);
                 }
 
                 //Limit length of orders we pass back dynamically to avoid flooding.
@@ -328,7 +325,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
                 catch (Exception err) 
                 {
-                    Log.Error("BacktestingResultHandler.ProcessSeriesUpdate(): Can't update variables: " + err.Message);
+                    Log.Error("BacktestingResultHandler.Update(): Can't update variables: " + err.Message);
                 }
 
                 var deltaCharts = new Dictionary<string, Chart>();
@@ -342,8 +339,6 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //Profit Loss Changes:
-                var deltaProfitLoss = new Dictionary<DateTime, decimal>();
-                var deltaStatistics = new Dictionary<string, string>();
                 var progress = Convert.ToDecimal(_daysProcessed / _jobDays);
                 if (progress > 0.999m) progress = 0.999m;
 
@@ -358,16 +353,44 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //2. Backtest Update -> Send the truncated packet to the backtester:
-                var packet = new BacktestResultPacket(_job, new BacktestResult(deltaCharts, deltaOrders, deltaProfitLoss, deltaStatistics), progress);
-                packet.DateRequested = _timeRequested;
-                Engine.Notify.BacktestResult(packet);
-                
+                var splitPackets = SplitPackets(deltaCharts, deltaOrders, progress);
+
+                foreach (var backtestingPacket in splitPackets)
+                {
+                    Engine.Notify.Send(backtestingPacket);
+                }
             }
             catch (Exception err) 
             {
-                Log.Error("BacktestingResultHandler().ProcessSeriesUpdate(): " + err.Message + " >> " + err.StackTrace );
+                Log.Error("BacktestingResultHandler().Update(): " + err.Message + " >> " + err.StackTrace );
             }
         }
+
+
+        /// <summary>
+        /// Run over all the data and break it into smaller packets to ensure they all arrive at the terminal
+        /// </summary>
+        public IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts, Dictionary<int, Order> deltaOrders, decimal progress)
+        {
+            // break the charts into groups
+            var splitPackets = new List<BacktestResultPacket>();
+            foreach (var chart in deltaCharts.Values)
+            {
+                //Don't add packet if the series is empty:
+                if (chart.Series.Values.Sum(x => x.Values.Count) == 0) continue;
+
+                splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { Charts = new Dictionary<string, Chart>()
+                {
+                    {chart.Name,chart}
+                }  }, progress));
+            }
+
+            // Add the orders into the charting packet:
+            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { Orders = deltaOrders }, progress));
+
+            return splitPackets;
+        }
+
 
         /// <summary>
         /// Save the snapshot of the total results to storage.
