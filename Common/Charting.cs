@@ -202,17 +202,25 @@ namespace QuantConnect
         public ChartPoint(DateTime time, decimal value) 
         {
             x = Convert.ToInt64(Time.DateTimeToUnixTimeStamp(time.ToUniversalTime()));
-            y = value;
+            y = Round(value);
         }
 
         ///Cloner Constructor:
         public ChartPoint(ChartPoint point) 
         {
             x = point.x;
-            y = point.y;
+            y = Round(point.y);
+        }
+
+        /// <summary>
+        /// Convert the chart points to 5sf.
+        /// </summary>
+        private static decimal Round(decimal input)
+        {
+            var d = (double) input;
+            return (decimal) d.RoundToSignificantDigits(5);
         }
     }
-
 
     /// <summary>
     /// Available types of charts
