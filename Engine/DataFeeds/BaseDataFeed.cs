@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -207,7 +206,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _exitTriggered = true;
             PurgeData();
         }
-
 
         /// <summary>
         /// Loop over all the queues and clear them to fast-quit this thread and return to main.
