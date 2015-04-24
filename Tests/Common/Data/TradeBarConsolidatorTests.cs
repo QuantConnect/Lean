@@ -297,7 +297,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
-                Console.WriteLine(bar.Time);
+                //Console.WriteLine(bar.Time);
             };
 
             // from 1/1 9:30 to 1/2 12:00 by minute
@@ -309,11 +309,13 @@ namespace QuantConnect.Tests.Common.Data
             }
         }
 
-        [Test]
+        /// <summary>
         /// Testing the behavious where, the bar range is closed on the left and open on 
         /// the right in time span mode: [T, T+TimeSpan).
         /// For example, if time span is 1 minute, we have [10:00, 10:01): so data at 
         /// 10:01 is not included in the bar starting at 10:00.
+        /// </summary>
+        [Test]
         public void ClosedLeftOpenRightInTimeSpanModeTest()
         {
             // define a three minute consolidator 
