@@ -484,9 +484,13 @@ namespace QuantConnect
         /// </summary>
         Raw,
         /// <summary>
-        /// The adjusted prices with dividendends factored in
+        /// The adjusted prices with splits and dividendends factored in
         /// </summary>
         Adjusted,
+        /// <summary>
+        /// The adjusted prices with only splits factored in, dividends paid out to the cash book
+        /// </summary>
+        SplitAdjusted,
         /// <summary>
         /// The raw price plus dividends
         /// </summary>

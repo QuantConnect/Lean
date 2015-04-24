@@ -78,7 +78,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the normalization mode used for this subscription
         /// </summary>
-        public DataNormalizationMode DataNormalizationMode = DataNormalizationMode.Raw;
+        public DataNormalizationMode DataNormalizationMode = DataNormalizationMode.SplitAdjusted;
         /// <summary>
         /// Price Scaling Factor:
         /// </summary>
@@ -166,10 +166,15 @@ namespace QuantConnect.Data
             {
                 case DataNormalizationMode.Raw:
                     return price;
+                
+                // the price scale factor will be set accordingly based on the mode in update scale factors
                 case DataNormalizationMode.Adjusted:
+                case DataNormalizationMode.SplitAdjusted:
                     return price*PriceScaleFactor;
+                
                 case DataNormalizationMode.TotalReturn:
                     return price + SumOfDividends;
+                
                 default:
                     throw new ArgumentOutOfRangeException();
             }
