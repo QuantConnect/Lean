@@ -260,39 +260,39 @@ namespace QuantConnect.Tests.Common.Securities
             securities.Add(new Security(config1, 2, false));
             securities["AAPL"].Holdings.SetHoldings(100, 100);
             securities["AAPL"].Update(time, new TradeBar{Time = time, Value = 100});
-            Console.WriteLine("AAPL TMU: " + securities["AAPL"].MarginModel.GetMaintenanceMargin(securities["AAPL"]));
-            Console.WriteLine("AAPL Value: " + securities["AAPL"].Holdings.HoldingsValue);
+            //Console.WriteLine("AAPL TMU: " + securities["AAPL"].MarginModel.GetMaintenanceMargin(securities["AAPL"]));
+            //Console.WriteLine("AAPL Value: " + securities["AAPL"].Holdings.HoldingsValue);
 
-            Console.WriteLine();
+            //Console.WriteLine();
 
             var config2 = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Forex, "EURUSD", Resolution.Minute, true, true, true, true, true, 1);
             securities.Add(new QuantConnect.Securities.Forex.Forex(usdCash, config2, 100, false));
             securities["EURUSD"].Holdings.SetHoldings(1.1m, 1000);
             securities["EURUSD"].Update(time, new TradeBar { Time = time, Value = 1.1m });
-            Console.WriteLine("EURUSD TMU: " + securities["EURUSD"].MarginModel.GetMaintenanceMargin(securities["EURUSD"]));
-            Console.WriteLine("EURUSD Value: " + securities["EURUSD"].Holdings.HoldingsValue);
+            //Console.WriteLine("EURUSD TMU: " + securities["EURUSD"].MarginModel.GetMaintenanceMargin(securities["EURUSD"]));
+            //Console.WriteLine("EURUSD Value: " + securities["EURUSD"].Holdings.HoldingsValue);
 
-            Console.WriteLine();
+            //Console.WriteLine();
 
             var config3 = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Forex, "EURGBP", Resolution.Minute, true, true, true, true, true, 2);
             securities.Add(new QuantConnect.Securities.Forex.Forex(gbpCash, config3, 100, false));
             securities["EURGBP"].Holdings.SetHoldings(1m, 1000);
             securities["EURGBP"].Update(time, new TradeBar { Time = time, Value = 1m });
-            Console.WriteLine("EURGBP TMU: " + securities["EURGBP"].MarginModel.GetMaintenanceMargin(securities["EURGBP"]));
-            Console.WriteLine("EURGBP Value: " + securities["EURGBP"].Holdings.HoldingsValue);
+            //Console.WriteLine("EURGBP TMU: " + securities["EURGBP"].MarginModel.GetMaintenanceMargin(securities["EURGBP"]));
+            //Console.WriteLine("EURGBP Value: " + securities["EURGBP"].Holdings.HoldingsValue);
 
-            Console.WriteLine();
+            //Console.WriteLine();
 
-            Console.WriteLine(portfolio.CashBook["USD"]);
-            Console.WriteLine(portfolio.CashBook["EUR"]);
-            Console.WriteLine(portfolio.CashBook["GBP"]);
-            Console.WriteLine("CashBook: " + portfolio.CashBook.TotalValueInAccountCurrency);
+            //Console.WriteLine(portfolio.CashBook["USD"]);
+            //Console.WriteLine(portfolio.CashBook["EUR"]);
+            //Console.WriteLine(portfolio.CashBook["GBP"]);
+            //Console.WriteLine("CashBook: " + portfolio.CashBook.TotalValueInAccountCurrency);
 
-            Console.WriteLine();
+            //Console.WriteLine();
 
-            Console.WriteLine("Total Margin Used: " + portfolio.TotalMarginUsed);
-            Console.WriteLine("Total Free Margin: " + portfolio.MarginRemaining);
-            Console.WriteLine("Total Portfolio Value: " + portfolio.TotalPortfolioValue);
+            //Console.WriteLine("Total Margin Used: " + portfolio.TotalMarginUsed);
+            //Console.WriteLine("Total Free Margin: " + portfolio.MarginRemaining);
+            //Console.WriteLine("Total Portfolio Value: " + portfolio.TotalPortfolioValue);
 
 
             var acceptedOrder = new MarketOrder("AAPL", 101, DateTime.Now) {Price = 100};
