@@ -17,15 +17,15 @@
 /**********************************************************
 * USING NAMESPACES
 **********************************************************/
-using System;
 
-using System.Threading;
+using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 
-namespace QuantConnect.Lean.Engine
+namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /******************************************************** 
     * CLASS DEFINITIONS

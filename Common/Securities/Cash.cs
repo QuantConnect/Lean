@@ -120,7 +120,7 @@ namespace QuantConnect.Securities
             for (int i = 0; i < subscriptions.Subscriptions.Count; i++)
             {
                 var config = subscriptions.Subscriptions[i];
-                if (config.Security != SecurityType.Forex)
+                if (config.SecurityType != SecurityType.Forex)
                 {
                     continue;
                 }

@@ -70,7 +70,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return _config.Security;
+                return _config.SecurityType;
             }
         }
 
@@ -368,7 +368,6 @@ namespace QuantConnect.Securities
             }
         }
 
-
         /// <summary>
         /// Access to the volume of the equity today
         /// </summary>
@@ -420,6 +419,14 @@ namespace QuantConnect.Securities
         public void SetLeverage(decimal leverage)
         {
             MarginModel.SetLeverage(this, leverage);
+        }
+
+        /// <summary>
+        /// Sets the data normalization mode to be used by this security
+        /// </summary>
+        public void SetDataNormalizationMode(DataNormalizationMode mode)
+        {
+            _config.DataNormalizationMode = mode;
         }
 
     } // End Security

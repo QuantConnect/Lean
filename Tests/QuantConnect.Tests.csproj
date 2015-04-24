@@ -53,6 +53,7 @@
     <Compile Include="Common\Securities\CashBookTests.cs" />
     <Compile Include="Common\Securities\CashTests.cs" />
     <Compile Include="Common\Securities\Forex\ForexTests.cs" />
+    <Compile Include="Engine\FactorFileTests.cs" />
     <Compile Include="Indicators\WilliamsPercentRTests.cs" />
     <Compile Include="Indicators\RateOfChangePercentTests.cs" />
     <Compile Include="Indicators\RateOfChangeTests.cs" />
@@ -117,7 +118,6 @@
     <Folder Include="Adapters\" />
     <Folder Include="API\" />
     <Folder Include="Config\" />
-    <Folder Include="Engine\" />
     <Folder Include="Messaging\" />
     <Folder Include="Tasks\" />
   </ItemGroup>
@@ -137,6 +137,10 @@
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
       <Project>{0AEB4EA3-28C8-476E-89FD-926F06590B4C}</Project>
       <Name>QuantConnect.Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Engine\QuantConnect.Lean.Engine.csproj">
+      <Project>{12156f46-d07e-4e3d-ad2b-7409e82ab62f}</Project>
+      <Name>QuantConnect.Lean.Engine</Name>
     </ProjectReference>
     <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
       <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>

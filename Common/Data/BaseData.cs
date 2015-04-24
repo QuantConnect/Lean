@@ -205,6 +205,11 @@ namespace QuantConnect.Data
         {
             return ObjectActivator.Clone(this) as BaseData;
         }
+
+        public override string ToString()
+        {
+            return string.Format("{0}: {1}", Symbol, Value.ToString("C"));
+        }
     } // End Base Data Class
 
 } // End QC Namespace

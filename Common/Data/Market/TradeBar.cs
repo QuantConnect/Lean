@@ -122,15 +122,15 @@ namespace QuantConnect.Data.Market
                 const decimal scaleFactor = 10000m;
                 Symbol = config.Symbol;
 
-                switch (config.Security)
+                switch (config.SecurityType)
                 {
                     //Equity File Data Format:
                     case SecurityType.Equity:
                         Time = baseDate.Date.AddMilliseconds(Convert.ToInt32(csv[0]));
-                        Open = (csv[1].ToDecimal() / scaleFactor) * config.PriceScaleFactor;  //  Convert.ToDecimal(csv[1]) / scaleFactor;
-                        High = (csv[2].ToDecimal() / scaleFactor) * config.PriceScaleFactor;  // Using custom "ToDecimal" conversion for speed.
-                        Low = (csv[3].ToDecimal() / scaleFactor) * config.PriceScaleFactor;
-                        Close = (csv[4].ToDecimal() / scaleFactor) * config.PriceScaleFactor;
+                        Open = config.GetNormalizedPrice(csv[1].ToDecimal() / scaleFactor);  //  Convert.ToDecimal(csv[1]) / scaleFactor;
+                        High = config.GetNormalizedPrice(csv[2].ToDecimal() / scaleFactor);  // Using custom "ToDecimal" conversion for speed.
+                        Low = config.GetNormalizedPrice(csv[3].ToDecimal() / scaleFactor);
+                        Close = config.GetNormalizedPrice(csv[4].ToDecimal() / scaleFactor);
                         Volume = Convert.ToInt64(csv[5]);
                         break;
 
@@ -147,7 +147,7 @@ namespace QuantConnect.Data.Market
             }
             catch (Exception err)
             {
-                Log.Error("DataModels: TradeBar(): Error Initializing - " + config.Security + " - " + err.Message + " - " + line);
+                Log.Error("DataModels: TradeBar(): Error Initializing - " + config.SecurityType + " - " + err.Message + " - " + line);
             }
         }
 
@@ -163,9 +163,9 @@ namespace QuantConnect.Data.Market
         /// <param name="volume">Volume sum over day</param>
         public TradeBar(DateTime time, string symbol, decimal open, decimal high, decimal low, decimal close, long volume)
         {
-            base.Time = time;
-            base.Symbol = symbol;
-            base.Value = close;
+            Time = time;
+            Symbol = symbol;
+            Value = close;
             Open = open;
             High = high;
             Low = low;
@@ -272,14 +272,14 @@ namespace QuantConnect.Data.Market
                 case DataFeedEndpoint.FileSystem:
 
                     var dateFormat = "yyyyMMdd";
-                    if (config.Security == SecurityType.Forex)
+                    if (config.SecurityType == SecurityType.Forex)
                     {
                         dataType = TickType.Quote;
                         dateFormat = "yyMMdd";
                     }
 
-                    var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol; 
-                    source = @"../../../Data/" + config.Security.ToString().ToLower();
+                    var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol;
+                    source = Constants.DataFolder + config.SecurityType.ToString().ToLower();
                     source += @"/" + config.Resolution.ToString().ToLower() + @"/" + symbol.ToLower() + @"/";
                     source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
                     break;

@@ -22,16 +22,18 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
+using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds.Auxiliary;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
-namespace QuantConnect.Lean.Engine
+namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /******************************************************** 
     * CLASS DEFINITIONS
@@ -58,7 +60,7 @@ namespace QuantConnect.Lean.Engine
         private bool _endOfStream = false;
 
         /// Internal stream reader for processing data line by line:
-        private SubscriptionStreamReader _reader = null;
+        private IStreamReader _reader = null;
 
         /// All streams done async via web protocols:
         private WebClient _web = new WebClient();
@@ -75,12 +77,7 @@ namespace QuantConnect.Lean.Engine
         // Subscription is for a QC type:
         private bool _isDynamicallyLoadedData = false;
 
-        //Price Factor Mapping:
-        private SortedDictionary<DateTime, decimal> _priceFactors;
-        private decimal _priceFactor = 0;
-
         //Symbol Mapping:
-        private SortedDictionary<DateTime, string> _symbolMap;
         private string _mappedSymbol = "";
 
         /// Location of the datafeed - the type of this data.
@@ -100,9 +97,16 @@ namespace QuantConnect.Lean.Engine
         private readonly DateTime _periodStart;
         private readonly DateTime _periodFinish;
 
-        //Bounds of the data on disk derived from the map files
-        private readonly DateTime _dataStart;
-        private readonly DateTime _dataStop;
+        private readonly FactorFile _factorFile;
+        private readonly MapFile _mapFile;
+
+        // we set the price factor ratio when we encounter a dividend in the factor file
+        // and on the next trading day we use this data to produce the dividend instance
+        private decimal? _priceFactorRatio;
+
+        // we set the split factor when we encounter a split in the factor file
+        // and on the next trading day we use this data to produce the split instance
+        private decimal? _splitFactor;
 
         /******************************************************** 
         * CLASS PUBLIC VARIABLES
@@ -124,6 +128,15 @@ namespace QuantConnect.Lean.Engine
             get { return Current; }
         }
 
+        /// <summary>
+        /// Provides a means of exposing extra data related to this subscription.
+        /// For now we expose dividend data for equities through here
+        /// </summary>
+        /// <remarks>
+        /// It is currently assumed that whomever is pumping data into here is handling the
+        /// time syncing issues. Dividends do this through the RefreshSource method
+        /// </remarks>
+        public Queue<BaseData> AuxiliaryData { get; private set; }
 
         /// <summary>
         /// Save an instance of the previous basedata we generated
@@ -165,6 +178,8 @@ namespace QuantConnect.Lean.Engine
             //Save configuration of data-subscription:
             _config = config;
 
+            AuxiliaryData = new Queue<BaseData>();
+
             //Save access to fill foward flag:
             _isFillForward = config.FillDataForward;
 
@@ -177,7 +192,7 @@ namespace QuantConnect.Lean.Engine
             _isDynamicallyLoadedData = security.IsDynamicallyLoadedData;
 
             // do we have factor tables?
-            _hasScaleFactors = SubscriptionAdjustment.HasScalingFactors(config.Symbol);
+            _hasScaleFactors = FactorFile.HasScalingFactors(config.Symbol);
 
             //Save the type of data we'll be getting from the source.
             _feedEndpoint = feed;
@@ -203,29 +218,21 @@ namespace QuantConnect.Lean.Engine
                 quandl.SetAuthCode(Config.Get("quandl-auth-token"));   
             }
 
-            //Load the entire factor and symbol mapping tables into memory
+            //Load the entire factor and symbol mapping tables into memory, we'll start with some defaults
+            _factorFile = new FactorFile(config.Symbol, new List<FactorFileRow>());
+            _mapFile = new MapFile(config.Symbol, new List<MapFileRow>());
             try 
             {
                 if (_hasScaleFactors)
                 {
-                    _priceFactors = SubscriptionAdjustment.GetFactorTable(config.Symbol);
-                    _symbolMap = SubscriptionAdjustment.GetMapTable(config.Symbol);
-                    _dataStart = _symbolMap.Keys.First();
-                    _dataStop = _symbolMap.Keys.Last();
-                }
-                else
-                {
-                    // since custom data doesn't have map tables we'll not perform this more intelligent checking
-                    _dataStart = DateTime.MinValue;
-                    _dataStop = DateTime.MaxValue;
+                    _factorFile = FactorFile.Read(config.Symbol);
+                    _mapFile = MapFile.Read(config.Symbol);
                 }
             } 
             catch (Exception err) 
             {
                 Log.Error("SubscriptionDataReader(): Fetching Price/Map Factors: " + err.Message);
-                _priceFactors = new SortedDictionary<DateTime, decimal>();
-                _symbolMap = new SortedDictionary<DateTime, string>();
-            }
+           }
         }
 
         /******************************************************** 
@@ -237,6 +244,14 @@ namespace QuantConnect.Lean.Engine
         /// <remarks>This is a highly called method and should be kept lean as possible.</remarks>
         /// <returns>Boolean true on successful move next. Set Current public property.</returns>
         public bool MoveNext() {
+
+            // yield the aux data first
+            if (AuxiliaryData.Count != 0)
+            {
+                Previous = Current;
+                Current = AuxiliaryData.Dequeue();
+                return true;
+            }
 
             BaseData instance = null;
             var instanceMarketOpen = false;
@@ -384,18 +399,21 @@ namespace QuantConnect.Lean.Engine
         /// This backwards adjusted price is used by default and fed as the current price.
         /// </summary>
         /// <param name="date">Current date of the backtest.</param>
-        private void UpdateScaleFactors(DateTime date) {
-            try
+        private void UpdateScaleFactors(DateTime date)
+        {
+            switch (_config.DataNormalizationMode)
             {
-                _mappedSymbol = SubscriptionAdjustment.GetMappedSymbol(_symbolMap, date);
-                _priceFactor = SubscriptionAdjustment.GetTimePriceFactor(_priceFactors, date);
-            } 
-            catch (Exception err) 
-            {
-                Log.Error("SubscriptionDataReader.UpdateScaleFactors(): " + err.Message);
+                case DataNormalizationMode.Raw:
+                case DataNormalizationMode.TotalReturn:
+                    return;
+                
+                case DataNormalizationMode.Adjusted:
+                    _config.PriceScaleFactor = _factorFile.GetPriceScaleFactor(date);
+                    break;
+                
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-            _config.SetPriceScaleFactor(_priceFactor);
-            _config.SetMappedSymbol(_mappedSymbol);
         }
 
         /// <summary>
@@ -427,7 +445,8 @@ namespace QuantConnect.Lean.Engine
         {
             throw new NotImplementedException("Reset method not implemented. Assumes loop will only be used once.");
         }
-        
+
+
         /// <summary>
         /// Fetch and set the location of the data from the user's BaseData factory:
         /// </summary>
@@ -438,17 +457,27 @@ namespace QuantConnect.Lean.Engine
             //Update the source from the getSource method:
             _date = date;
 
-            if (date < _dataStart || date > _dataStop)
+            // if the map file is an empty instance this will always return true
+            if (!_mapFile.HasData(date))
             {
                 // don't even bother checking the disk if the map files state we don't have ze dataz
                 return false;
             }
 
+            // check for dividends and split for this security
+            CheckForDividend(date);
+            CheckForSplit(date);
+
             var newSource = "";
 
             //If we can find scale factor files on disk, use them. LiveTrading will aways use 1 by definition
-            if (_hasScaleFactors) 
+            if (_hasScaleFactors)
             {
+                // check to see if the symbol was remapped
+                _mappedSymbol = _mapFile.GetMappedSymbol(date);
+                _config.MappedSymbol = _mappedSymbol;
+
+                // update our price scaling factors in light of the normalization mode
                 UpdateScaleFactors(date);
             }
 
@@ -524,120 +553,109 @@ namespace QuantConnect.Lean.Engine
             return true;
         }
 
+        /// <summary>
+        /// Check for dividends and emit them into the aux data queue
+        /// </summary>
+        private void CheckForSplit(DateTime date)
+        {
+            if (_splitFactor != null)
+            {
+                var close = GetRawClose();
+                var split = new Split(_config.Symbol, date, close, _splitFactor.Value);
+                AuxiliaryData.Enqueue(split);
+                _splitFactor = null;
+            }
+
+            decimal splitFactor;
+            if (_factorFile.HasSplitEventOnNextTradingDay(date, out splitFactor))
+            {
+                _splitFactor = splitFactor;
+            }
+        }
+
+        /// <summary>
+        /// Check for dividends and emit them into the aux data queue
+        /// </summary>
+        private void CheckForDividend(DateTime date)
+        {
+            if (_priceFactorRatio != null)
+            {
+                var close = GetRawClose();
+                var dividend = new Dividend(_config.Symbol, date, close, _priceFactorRatio.Value);
+                // let the config know about it for normalization
+                _config.SumOfDividends += dividend.Distribution;
+                AuxiliaryData.Enqueue(dividend);
+                _priceFactorRatio = null;
+            }
+
+            // check the factor file to see if we have a dividend event tomorrow
+            decimal priceFactorRatio;
+            if (_factorFile.HasDividendEventOnNextTradingDay(date, out priceFactorRatio))
+            {
+                _priceFactorRatio = priceFactorRatio;
+            }
+        }
+
+        /// <summary>
+        /// Un-normalizes the Previous.Value
+        /// </summary>
+        private decimal GetRawClose()
+        {
+            var close = Previous.Value;
+            if (_config.DataNormalizationMode == DataNormalizationMode.Adjusted)
+            {
+                // we need to 'unscale' the close to compute dividends
+                close = close / _config.PriceScaleFactor;
+            }
+            if (_config.DataNormalizationMode == DataNormalizationMode.TotalReturn)
+            {
+                // we need to remove the dividends since we've been accumulating them in the price
+                close -= _config.SumOfDividends;
+            }
+            return close;
+        }
+
 
         /// <summary>
         /// Using this source URL, download it to our cache and open a local reader.
         /// </summary>
         /// <param name="source">Source URL for the data:</param>
         /// <returns>StreamReader for the data source</returns>
-        private SubscriptionStreamReader GetReader(string source)
-        { 
-            //Prepare local folders:
-            const string cache = "./cache/data";
-            SubscriptionStreamReader reader = null;
-            if (!Directory.Exists(cache)) Directory.CreateDirectory(cache);
-            foreach (var file in Directory.EnumerateFiles(cache))
+        private IStreamReader GetReader(string source)
+        {
+            IStreamReader reader = null;
+
+            if (_feedEndpoint == DataFeedEndpoint.LiveTrading)
             {
-                if (File.GetCreationTime(file) < DateTime.Now.AddHours(-24)) File.Delete(file); 
+                // live trading currently always gets a rest endpoint
+                return new RestSubscriptionStreamReader(source);
             }
 
-            //1. Download this source file as fast as possible:
-            //1.1 Create filename from source:
-            var filename = source.ToMD5() + source.GetExtension();
-            var location = cache + @"/" + filename;
-
-            //1.2 Based on Endpoint, Download File (Backtest) or directly open SR of source:
-            switch (_feedEndpoint)
-            { 
-                case DataFeedEndpoint.FileSystem:
-                case DataFeedEndpoint.Backtesting:
-
-                    var uri = new Uri(source, UriKind.RelativeOrAbsolute);
-
-                    // check if this is not a local uri then download it to the local cache
-                    if (uri.IsAbsoluteUri && !uri.IsLoopback)
-                    {
-                        try
-                        {
-                            using (var client = new WebClient())
-                            {
-                                client.Proxy = WebRequest.GetSystemWebProxy();
-                                client.DownloadFile(source, location);
-
-                                // reassign source since it's now on local disk
-                                source = location;
-                            }
-                        }
-                        catch (Exception err)
-                        {
-                            Engine.ResultHandler.ErrorMessage("Error downloading custom data source file, skipped: " + source + " Err: " + err.Message, err.StackTrace);
-                            Engine.ResultHandler.SamplePerformance(_date.Date, 0);
-                            return null;
-                        }
-                    }
-
-                    //2. File downloaded. Open Stream:
-                    if (File.Exists(source))
-                    {
-                        if (source.GetExtension() == ".zip")
-                        {
-                            //Extracting zip returns stream reader:
-                            var sr = Compression.Unzip(source);
-                            if (sr == null) return null;
-                            reader = new SubscriptionStreamReader(sr, _feedEndpoint);
-                        }
-                        else
-                        {
-                            //Custom file stream: open from disk
-                            reader = new SubscriptionStreamReader(source, _feedEndpoint);
-                        }
-                    }
-                    else
-                    {
-                        Log.Trace("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: " + source);
-                        Engine.ResultHandler.SamplePerformance(_date.Date, 0);
-                        return null;
-                    }
-                    break;
-
-                //Directly open for REST Requests:
-                case DataFeedEndpoint.LiveTrading:
-                    reader = new SubscriptionStreamReader(source, _feedEndpoint);
-                    break;
-            }
-
-            return reader;
-        }
-
-
-        /// <summary>
-        /// Stream the file over the net directly from its source. 
-        /// </summary>
-        /// <param name="source">Source URL for the file</param>
-        /// <remarks>Left here for potential future reference instead of downloading files we stream then from external source.</remarks>
-        /// <returns>StreamReader Interface for the data source.</returns>
-        private StreamReader WebReader(string source) 
-        {    
-            //Initialize Required Variables for Web Reader:
-            StreamReader reader;
-
-            //Reopen the source with the new URL.
-            _web = new WebClient();
-            _web.Proxy = WebRequest.GetSystemWebProxy();
-            using (var stream = _web.OpenRead(source)) 
+            // determine if we're hitting the file system/backtest
+            if (_feedEndpoint == DataFeedEndpoint.FileSystem || _feedEndpoint == DataFeedEndpoint.Backtesting)
             {
-                //If its a zip, unzip it:
-                if (source.GetExtension() == ".zip")
+                // construct a uri to determine if we have a local or remote file
+                var uri = new Uri(source, UriKind.RelativeOrAbsolute);
+
+                if (uri.IsAbsoluteUri && !uri.IsLoopback)
                 {
-                    reader = Compression.UnzipStream(stream);
+                    reader = HandleRemoteSourceFile(source);
                 }
                 else
                 {
-                    reader = new StreamReader(stream);
+                    reader = HandleLocalFileSource(source);
                 }
             }
+
+            // if the reader is already at end of stream, just set to null so we don't try to get data for today
+            if (reader != null && reader.EndOfStream)
+            {
+                reader = null;
+            }
+
             return reader;
         }
+
 
         /// <summary>
         /// Dispose of the Stream Reader and close out the source stream and file connections.
@@ -680,6 +698,47 @@ namespace QuantConnect.Lean.Engine
             //Return the freshly calculated source URL.
             return newSource;
         }
-    } // End Base Data Class
 
-} // End QC Namespace
+        /// <summary>
+        /// Opens up an IStreamReader for a local file source
+        /// </summary>
+        private IStreamReader HandleLocalFileSource(string source)
+        {
+            if (!File.Exists(source))
+            {
+                // the local uri doesn't exist, write an error and return null so we we don't try to get data for today
+                Log.Trace("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: " + source);
+                Engine.ResultHandler.SamplePerformance(_date.Date, 0);
+                return null;
+            }
+
+            // handles zip or text files
+            return new LocalFileSubscriptionStreamReader(source);
+        }
+
+        /// <summary>
+        /// Opens up an IStreamReader for a remote file source
+        /// </summary>
+        private IStreamReader HandleRemoteSourceFile(string source)
+        {
+            // clean old files out of the cache
+            if (!Directory.Exists(Constants.Cache)) Directory.CreateDirectory(Constants.Cache);
+            foreach (var file in Directory.EnumerateFiles(Constants.Cache))
+            {
+                if (File.GetCreationTime(file) < DateTime.Now.AddHours(-24)) File.Delete(file);
+            }
+
+            try
+            {
+                // this will fire up a web client in order to download the 'source' file to the cache
+                return new RemoteFileSubscriptionStreamReader(source, Constants.Cache);
+            }
+            catch (Exception err)
+            {
+                Engine.ResultHandler.ErrorMessage("Error downloading custom data source file, skipped: " + source + " Err: " + err.Message, err.StackTrace);
+                Engine.ResultHandler.SamplePerformance(_date.Date, 0);
+                return null;
+            }
+        }
+    }
+}

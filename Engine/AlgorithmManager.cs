@@ -30,6 +30,7 @@ using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -156,6 +157,8 @@ namespace QuantConnect.Lean.Engine
             //New hidden access to tradebars with custom type.
             var newTradeBarsMethodInfo = (algorithm.GetType()).GetMethod("OnData", new[] { tradebarsType });
             var newTicksMethodInfo = (algorithm.GetType()).GetMethod("OnData", new[] { ticksType });
+            var newDividendMethodInfo = algorithm.GetType().GetMethod("OnData", new[] {typeof (Dividend)});
+            var newSplitMethodInfo = algorithm.GetType().GetMethod("OnData", new[] {typeof (Split)});
 
             if (newTradeBarsMethodInfo == null && newTicksMethodInfo == null)
             {
@@ -303,6 +306,27 @@ namespace QuantConnect.Lean.Engine
                         //Create TradeBars Unified Data --> OR --> invoke generic data event. One loop.
                         foreach (var dataPoint in dataPoints) 
                         {
+                            // fire dividend events if the method exists
+                            if (newDividendMethodInfo != null)
+                            {
+                                var dividend = dataPoint as Dividend;
+                                if (dividend != null)
+                                {
+                                    algorithm.Portfolio.ApplyDividend(dividend);
+                                    newDividendMethodInfo.Invoke(algorithm, new object[] {dividend});
+                                    continue;
+                                }
+                            }
+                            if (newSplitMethodInfo != null)
+                            {
+                                var split = dataPoint as Split;
+                                if (split != null)
+                                {
+                                    algorithm.Portfolio.ApplySplit(split);
+                                    newSplitMethodInfo.Invoke(algorithm, new object[] {split});
+                                }
+                            }
+
                             //Update registered consolidators for this symbol index
                             try
                             {

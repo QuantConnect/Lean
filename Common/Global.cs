@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using QuantConnect.Logging;
 using QuantConnect.Securities.Forex;
 
 namespace QuantConnect
@@ -251,7 +250,9 @@ namespace QuantConnect
         /// TradeBar market data type (OHLC summary bar)
         TradeBar,
         /// Tick market data type (price-time pair)
-        Tick
+        Tick,
+        /// Data associated with an instrument
+        Auxiliary
     }
 
     /// <summary>
@@ -417,6 +418,26 @@ namespace QuantConnect
         Invalid
     }
 
+    /// <summary>
+    /// Specifies where a subscription's data comes from
+    /// </summary>
+    public enum SubscriptionTransportMedium
+    {
+        /// <summary>
+        /// The subscription's data comes from disk
+        /// </summary>
+        LocalFile,
+
+        /// <summary>
+        /// The subscription's data is downloaded from a remote source
+        /// </summary>
+        RemoteFile,
+
+        /// <summary>
+        /// The subscription's data comes from a rest call
+        /// </summary>
+        Rest
+    }
 
     /// <summary>
     /// enum Period - Enum of all the analysis periods, AS integers. Reference "Period" Array to access the values
@@ -451,6 +472,25 @@ namespace QuantConnect
         FourHours = 14400,
         /// Period Short Codes - 21600 Second
         SixHours = 21600
+    }
+
+    /// <summary>
+    /// Specifies how data is normalized before being sent into an algorithm
+    /// </summary>
+    public enum DataNormalizationMode
+    {
+        /// <summary>
+        /// The raw price with dividends added to cash book
+        /// </summary>
+        Raw,
+        /// <summary>
+        /// The adjusted prices with dividendends factored in
+        /// </summary>
+        Adjusted,
+        /// <summary>
+        /// The raw price plus dividends
+        /// </summary>
+        TotalReturn
     }
 
 
