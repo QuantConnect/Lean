@@ -11,6 +11,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
 using System;
@@ -18,22 +19,22 @@ using System;
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// Collection of TradeBars to create a data type for generic data handler:
+    /// Collection of dividends keyed by string symbol
     /// </summary>
-    public class TradeBars : DataDictionary<TradeBar>
+    public class Splits : DataDictionary<Split>
     {
         /// <summary>
-        /// Creates a new instance of the <see cref="TradeBars"/> dictionary
+        /// Initializes a new instance of the <see cref="Splits"/> dictionary
         /// </summary>
-        public TradeBars()
+        public Splits()
         {
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="TradeBars"/> dictionary
+        /// Initializes a new instance of the <see cref="Splits"/> dictionary
         /// </summary>
         /// <param name="frontier">The time associated with the data in this dictionary</param>
-        public TradeBars(DateTime frontier)
+        public Splits(DateTime frontier)
             : base(frontier)
         {
         }
