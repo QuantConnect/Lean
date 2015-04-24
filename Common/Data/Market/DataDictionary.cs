@@ -122,4 +122,19 @@ namespace QuantConnect.Data.Market
             get { return _data.Values; }
         }
     }
+
+    /// <summary>
+    /// Provides extension methods for the DataDictionary class
+    /// </summary>
+    public static class DataDictionaryExtensions
+    {
+        /// <summary>
+        /// Provides a convenience method for adding a base data instance to our data dictionary
+        /// </summary>
+        public static void Add<T>(this DataDictionary<T> dictionary, T data)
+            where T : BaseData
+        {
+            dictionary.Add(data.Symbol, data);
+        }
+    }
 }

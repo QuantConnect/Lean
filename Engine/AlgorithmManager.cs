@@ -157,8 +157,6 @@ namespace QuantConnect.Lean.Engine
             //New hidden access to tradebars with custom type.
             var newTradeBarsMethodInfo = (algorithm.GetType()).GetMethod("OnData", new[] { tradebarsType });
             var newTicksMethodInfo = (algorithm.GetType()).GetMethod("OnData", new[] { ticksType });
-            var newDividendMethodInfo = algorithm.GetType().GetMethod("OnData", new[] {typeof (Dividend)});
-            var newSplitMethodInfo = algorithm.GetType().GetMethod("OnData", new[] {typeof (Split)});
 
             if (newTradeBarsMethodInfo == null && newTicksMethodInfo == null)
             {
@@ -171,6 +169,18 @@ namespace QuantConnect.Lean.Engine
                 backwardsCompatibilityMode = false;
                 if (newTradeBarsMethodInfo != null) methodInvokers.Add(tradebarsType, newTradeBarsMethodInfo.DelegateForCallMethod());
                 if (newTicksMethodInfo != null) methodInvokers.Add(ticksType, newTicksMethodInfo.DelegateForCallMethod());
+            }
+
+            // dividend and split events
+            var newDividendMethodInfo = algorithm.GetType().GetMethod("OnData", new[] { typeof(Dividends) });
+            var newSplitMethodInfo = algorithm.GetType().GetMethod("OnData", new[] { typeof(Splits) });
+            if (newDividendMethodInfo != null)
+            {
+                methodInvokers.Add(typeof(Dividends), newDividendMethodInfo.DelegateForCallMethod());
+            }
+            if (newSplitMethodInfo != null)
+            {
+                methodInvokers.Add(typeof (Splits), newSplitMethodInfo.DelegateForCallMethod());
             }
 
             //Go through the subscription types and create invokers to trigger the event handlers for each custom type:
@@ -285,6 +295,8 @@ namespace QuantConnect.Lean.Engine
                     var oldTicks = new Dictionary<string, List<Tick>>();
                     var newBars = new TradeBars(time);
                     var newTicks = new Ticks(time);
+                    var newDividends = new Dividends(time);
+                    var newSplits = new Splits(time);
 
                     //Invoke all non-tradebars, non-ticks methods and build up the TradeBars and Ticks dictionaries
                     // --> i == Subscription Configuration Index, so we don't need to compare types.
@@ -313,7 +325,7 @@ namespace QuantConnect.Lean.Engine
                                 if (dividend != null)
                                 {
                                     algorithm.Portfolio.ApplyDividend(dividend);
-                                    newDividendMethodInfo.Invoke(algorithm, new object[] {dividend});
+                                    newDividends.Add(dividend);
                                     continue;
                                 }
                             }
@@ -323,7 +335,7 @@ namespace QuantConnect.Lean.Engine
                                 if (split != null)
                                 {
                                     algorithm.Portfolio.ApplySplit(split);
-                                    newSplitMethodInfo.Invoke(algorithm, new object[] {split});
+                                    newSplits.Add(split);
                                 }
                             }
 
@@ -400,6 +412,16 @@ namespace QuantConnect.Lean.Engine
                                     break;
                             }
                         }
+                    }
+
+                    // fire off the dividend and split events before pricing events
+                    if (newDividendMethodInfo != null && newDividends.Count != 0)
+                    {
+                        methodInvokers[typeof (Dividends)](algorithm, newDividends);
+                    }
+                    if (newSplitMethodInfo != null && newSplits.Count != 0)
+                    {
+                        methodInvokers[typeof (Splits)](algorithm, newSplits);
                     }
 
                     //After we've fired all other events in this second, fire the pricing events:
