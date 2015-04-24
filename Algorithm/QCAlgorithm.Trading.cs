@@ -494,7 +494,10 @@ namespace QuantConnect.Algorithm
             int quantity = 1;
             var marketOrder = new MarketOrder(symbol, quantity, Time, type: security.Type) { Price = security.Price };
             var marginRequiredForSingleShare = security.MarginModel.GetInitialMarginRequiredForOrder(security, marketOrder);
-            
+
+            // we can't do anything if we don't have data yet
+            if (security.Price == 0) return;
+
             // we want marginRequired to end up between this and marginRemaining
             var marginRequiredLowerThreshold = marginRemaining - marginRequiredForSingleShare;
 

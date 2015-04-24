@@ -18,6 +18,7 @@
 **********************************************************/
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using Fasterflect;
 using QuantConnect.Algorithm;
@@ -131,9 +132,6 @@ namespace QuantConnect.Lean.Engine
         {
             //Initialize:
             _dataPointCount = 0;
-            var backwardsCompatibilityMode = false;
-            var tradebarsType = typeof (TradeBars);
-            var ticksType = typeof(Ticks);
             var startingPortfolioValue = setup.StartingCapital;
             var backtestMode = (job.Type == PacketType.BacktestNode);
             var methodInvokers = new Dictionary<Type, MethodInvoker>();
@@ -148,40 +146,20 @@ namespace QuantConnect.Lean.Engine
 
             //Create the method accessors to push generic types into algorithm: Find all OnData events:
 
-            //Algorithm 1.0 Data Accessors.
-            //If the users defined these methods, add them in manually. This allows keeping backwards compatibility to algorithm 1.0.
-            var oldTradeBarsMethodInfo = (algorithm.GetType()).GetMethod("OnTradeBar",   new[] { typeof(Dictionary<string, TradeBar>) });
-            var oldTicksMethodInfo = (algorithm.GetType()).GetMethod("OnTick", new[] { typeof(Dictionary<string, List<Tick>>) });
+            // Algorithm 1.0 data accessors
+            var hasOnTradeBar = AddMethodInvoker<Dictionary<string, TradeBar>>(algorithm, methodInvokers, "OnTradeBar");
+            var hasOnTick = AddMethodInvoker<Dictionary<string, List<Tick>>>(algorithm, methodInvokers, "OnTick");
 
-            //Algorithm 2.0 Data Generics Accessors.
-            //New hidden access to tradebars with custom type.
-            var newTradeBarsMethodInfo = (algorithm.GetType()).GetMethod("OnData", new[] { tradebarsType });
-            var newTicksMethodInfo = (algorithm.GetType()).GetMethod("OnData", new[] { ticksType });
+            // Algorithm 2.0 data accessors
+            var hasOnDataTradeBars = AddMethodInvoker<TradeBars>(algorithm, methodInvokers);
+            var hasOnDataTicks = AddMethodInvoker<Ticks>(algorithm, methodInvokers);
 
-            if (newTradeBarsMethodInfo == null && newTicksMethodInfo == null)
-            {
-                backwardsCompatibilityMode = true;
-                if (oldTradeBarsMethodInfo != null) methodInvokers.Add(tradebarsType, oldTradeBarsMethodInfo.DelegateForCallMethod());
-                if (oldTradeBarsMethodInfo != null) methodInvokers.Add(ticksType, oldTicksMethodInfo.DelegateForCallMethod());
-            }
-            else 
-            { 
-                backwardsCompatibilityMode = false;
-                if (newTradeBarsMethodInfo != null) methodInvokers.Add(tradebarsType, newTradeBarsMethodInfo.DelegateForCallMethod());
-                if (newTicksMethodInfo != null) methodInvokers.Add(ticksType, newTicksMethodInfo.DelegateForCallMethod());
-            }
+            // determine what mode we're in
+            var backwardsCompatibilityMode = !hasOnDataTradeBars && !hasOnDataTicks;
 
             // dividend and split events
-            var newDividendMethodInfo = algorithm.GetType().GetMethod("OnData", new[] { typeof(Dividends) });
-            var newSplitMethodInfo = algorithm.GetType().GetMethod("OnData", new[] { typeof(Splits) });
-            if (newDividendMethodInfo != null)
-            {
-                methodInvokers.Add(typeof(Dividends), newDividendMethodInfo.DelegateForCallMethod());
-            }
-            if (newSplitMethodInfo != null)
-            {
-                methodInvokers.Add(typeof (Splits), newSplitMethodInfo.DelegateForCallMethod());
-            }
+            var hasOnDataDividends = AddMethodInvoker<Dividends>(algorithm, methodInvokers);
+            var hasOnDataSplits = AddMethodInvoker<Splits>(algorithm, methodInvokers);
 
             //Go through the subscription types and create invokers to trigger the event handlers for each custom type:
             foreach (var config in feed.Subscriptions) 
@@ -316,27 +294,33 @@ namespace QuantConnect.Lean.Engine
                         }
 
                         //Create TradeBars Unified Data --> OR --> invoke generic data event. One loop.
+                        //  Aggregate Dividends and Splits -- invoke portfolio application methods
                         foreach (var dataPoint in dataPoints) 
                         {
-                            // fire dividend events if the method exists
-                            if (newDividendMethodInfo != null)
+                            var dividend = dataPoint as Dividend;
+                            if (dividend != null)
                             {
-                                var dividend = dataPoint as Dividend;
-                                if (dividend != null)
+                                // if this is a dividend apply to portfolio
+                                algorithm.Portfolio.ApplyDividend(dividend);
+                                if (hasOnDataDividends)
                                 {
-                                    algorithm.Portfolio.ApplyDividend(dividend);
+                                    // and add to our data dictionary to pump into OnData(Dividends data)
                                     newDividends.Add(dividend);
-                                    continue;
                                 }
+                                continue;
                             }
-                            if (newSplitMethodInfo != null)
+
+                            var split = dataPoint as Split;
+                            if (split != null)
                             {
-                                var split = dataPoint as Split;
-                                if (split != null)
+                                // if this is a split apply to portfolio
+                                algorithm.Portfolio.ApplySplit(split);
+                                if (hasOnDataSplits)
                                 {
-                                    algorithm.Portfolio.ApplySplit(split);
+                                    // and add to our data dictionary to pump into OnData(Splits data)
                                     newSplits.Add(split);
                                 }
+                                continue;
                             }
 
                             //Update registered consolidators for this symbol index
@@ -355,73 +339,91 @@ namespace QuantConnect.Lean.Engine
                                 return;
                             }
 
-                            switch (config.Type.Name)
+                            // TRADEBAR -- add to our dictionary
+                            var bar = dataPoint as TradeBar;
+                            if (bar != null)
                             {
-                                case "TradeBar":
-                                    var bar = dataPoint as TradeBar;
-                                    try 
+                                try
+                                {
+                                    if (backwardsCompatibilityMode)
                                     {
-                                        if (bar != null) 
-                                        {
-                                            if (backwardsCompatibilityMode) 
-                                            {
-                                                if (!oldBars.ContainsKey(bar.Symbol)) oldBars.Add(bar.Symbol, bar);
-                                            }
-                                            else
-                                            {
-                                                if (!newBars.ContainsKey(bar.Symbol)) newBars.Add(bar.Symbol, bar);
-                                            }
-                                        }
-                                    } 
-                                    catch (Exception err) 
-                                    {
-                                        Log.Error(time.ToLongTimeString() + " >> " + bar.Time.ToLongTimeString() + " >> " + bar.Symbol + " >> " + bar.Value.ToString("C"));
-                                        Log.Error("AlgorithmManager.Run(): Failed to add TradeBar (" + bar.Symbol + ") Time: (" + time.ToLongTimeString() + ") Count:(" + newBars.Count + ") " + err.Message);
+                                        oldBars[bar.Symbol] = bar;
                                     }
-                                    break;
-
-                                case "Tick":
-                                    var tick = dataPoint as Tick;
-                                    if (tick != null) 
+                                    else
                                     {
-                                         if (backwardsCompatibilityMode) {
-                                             if (!oldTicks.ContainsKey(tick.Symbol)) { oldTicks.Add(tick.Symbol, new List<Tick>()); }
-                                             oldTicks[tick.Symbol].Add(tick);
-                                         } 
-                                         else 
-                                         {
-                                             if (!newTicks.ContainsKey(tick.Symbol)) { newTicks.Add(tick.Symbol, new List<Tick>()); }
-                                             newTicks[tick.Symbol].Add(tick);
-                                         }
+                                        newBars[bar.Symbol] = bar;
                                     }
-                                    break;
-
-                                default:
-                                    //Send data into the generic algorithm event handlers
-                                    try 
+                                }
+                                catch (Exception err)
+                                {
+                                    Log.Error(time.ToLongTimeString() + " >> " + bar.Time.ToLongTimeString() + " >> " + bar.Symbol + " >> " + bar.Value.ToString("C"));
+                                    Log.Error("AlgorithmManager.Run(): Failed to add TradeBar (" + bar.Symbol + ") Time: (" + time.ToLongTimeString() + ") Count:(" + newBars.Count + ") " + err.Message);
+                                }
+                                continue;
+                            }
+                            // TICK -- add to our dictionary
+                            var tick = dataPoint as Tick;
+                            if (tick != null)
+                            {
+                                if (backwardsCompatibilityMode)
+                                {
+                                    List<Tick> ticks;
+                                    if (!oldTicks.TryGetValue(tick.Symbol, out ticks))
                                     {
-                                        methodInvokers[config.Type](algorithm, dataPoint);
-                                    } 
-                                    catch (Exception err) 
-                                    {
-                                        algorithm.RunTimeError = err;
-                                        _algorithmState = AlgorithmStatus.RuntimeError;
-                                        Log.Debug("AlgorithmManager.Run(): RuntimeError: Custom Data: " + err.Message + " STACK >>> " + err.StackTrace);
-                                        return;
+                                        ticks = new List<Tick>(3);
+                                        oldTicks.Add(tick.Symbol, ticks);
                                     }
-                                    break;
+                                    ticks.Add(tick);
+                                }
+                                else
+                                {
+                                    List<Tick> ticks;
+                                    if (!newTicks.TryGetValue(tick.Symbol, out ticks))
+                                    {
+                                        ticks = new List<Tick>(3);
+                                        newTicks.Add(tick.Symbol, ticks);
+                                    }
+                                    ticks.Add(tick);
+                                }
+                                continue;
+                            }
+                            
+                            // if it was nothing else then it must be custom data
+                            
+                            // CUSTOM DATA -- invoke on data method
+                            //Send data into the generic algorithm event handlers
+                            try
+                            {
+                                methodInvokers[config.Type](algorithm, dataPoint);
+                            }
+                            catch (Exception err)
+                            {
+                                algorithm.RunTimeError = err;
+                                _algorithmState = AlgorithmStatus.RuntimeError;
+                                Log.Debug("AlgorithmManager.Run(): RuntimeError: Custom Data: " + err.Message + " STACK >>> " + err.StackTrace);
+                                return;
                             }
                         }
                     }
 
-                    // fire off the dividend and split events before pricing events
-                    if (newDividendMethodInfo != null && newDividends.Count != 0)
-                    {
-                        methodInvokers[typeof (Dividends)](algorithm, newDividends);
+                    try
+                    { 
+                        // fire off the dividend and split events before pricing events
+                        if (hasOnDataDividends && newDividends.Count != 0)
+                        {
+                            methodInvokers[typeof (Dividends)](algorithm, newDividends);
+                        }
+                        if (hasOnDataSplits && newSplits.Count != 0)
+                        {
+                            methodInvokers[typeof (Splits)](algorithm, newSplits);
+                        }
                     }
-                    if (newSplitMethodInfo != null && newSplits.Count != 0)
+                    catch (Exception err)
                     {
-                        methodInvokers[typeof (Splits)](algorithm, newSplits);
+                        algorithm.RunTimeError = err;
+                        _algorithmState = AlgorithmStatus.RuntimeError;
+                        Log.Debug("AlgorithmManager.Run(): RuntimeError: Dividends/Splits: " + err.Message + " STACK >>> " + err.StackTrace);
+                        return;
                     }
 
                     //After we've fired all other events in this second, fire the pricing events:
@@ -430,8 +432,8 @@ namespace QuantConnect.Lean.Engine
                         //Log.Debug("AlgorithmManager.Run(): Invoking v1.0 Event Handlers...");
                         try
                         {
-                            if (oldTradeBarsMethodInfo != null && oldBars.Count > 0) methodInvokers[tradebarsType](algorithm, oldBars);
-                            if (oldTicksMethodInfo != null && oldTicks.Count > 0) methodInvokers[ticksType](algorithm, oldTicks);
+                            if (hasOnTradeBar && oldBars.Count > 0) methodInvokers[typeof (TradeBars)](algorithm, oldBars);
+                            if (hasOnTick && oldTicks.Count > 0) methodInvokers[typeof(Ticks)](algorithm, oldTicks);
                         }
                         catch (Exception err) 
                         {
@@ -446,9 +448,9 @@ namespace QuantConnect.Lean.Engine
                         //Log.Debug("AlgorithmManager.Run(): Invoking v2.0 Event Handlers...");
                         try
                         {
-                            if (newTradeBarsMethodInfo != null && newBars.Count > 0) methodInvokers[tradebarsType](algorithm, newBars);
-                            if (newTicksMethodInfo != null && newTicks.Count > 0) methodInvokers[ticksType](algorithm, newTicks);
-                        } 
+                            if (hasOnDataTradeBars && newBars.Count > 0) methodInvokers[typeof (TradeBars)](algorithm, newBars);
+                            if (hasOnDataTicks && newTicks.Count > 0) methodInvokers[typeof(Ticks)](algorithm, newTicks);
+                        }
                         catch (Exception err)
                         {
                             algorithm.RunTimeError = err;
@@ -546,6 +548,24 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
+        /// <summary>
+        /// Adds a method invoker if the method exists to the method invokers dictionary
+        /// </summary>
+        /// <typeparam name="T">The data type to check for 'OnData(T data)</typeparam>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="methodInvokers">The dictionary of method invokers</param>
+        /// <param name="methodName">The name of the method to search for</param>
+        /// <returns>True if the method existed and was added to the collection</returns>
+        private static bool AddMethodInvoker<T>(IAlgorithm algorithm, Dictionary<Type, MethodInvoker> methodInvokers, string methodName = "OnData")
+        {
+            var newSplitMethodInfo = algorithm.GetType().GetMethod(methodName, new[] {typeof (T)});
+            if (newSplitMethodInfo != null)
+            {
+                methodInvokers.Add(typeof(T), newSplitMethodInfo.DelegateForCallMethod());
+                return true;
+            }
+            return false;
+        }
     } // End of AlgorithmManager
 
 } // End of Namespace.
