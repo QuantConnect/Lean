@@ -187,7 +187,7 @@ namespace QuantConnect.Lean.Engine
             AlgorithmNodePacket job = null;
             var timer = Stopwatch.StartNew();
             var algorithm = default(IAlgorithm);
-            Log.LogHandler = new CompositeLogHandler();
+            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
             _version = DateTime.ParseExact(Config.Get("version", DateTime.Now.ToString(DateFormat.UI)), DateFormat.UI, CultureInfo.InvariantCulture);
        
             #if DEBUG 
