@@ -122,6 +122,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlgorithmManager.cs" />
+    <Compile Include="DataFeeds\BaseDataFeed.cs" />
+    <Compile Include="DataFeeds\IQFeedDataFeed.cs" />
     <Compile Include="DataFeeds\LiveTradingDataFeed.cs" />
     <Compile Include="DataFeeds\DatabaseDataFeed.cs" />
     <Compile Include="DataFeeds\PaperTradingDataFeed.cs" />

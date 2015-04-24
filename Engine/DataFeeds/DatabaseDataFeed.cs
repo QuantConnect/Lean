@@ -26,7 +26,6 @@ using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
-using MySql.Data;
 using MySql.Data.MySqlClient;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
@@ -161,8 +160,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _subscriptions = Subscriptions.Count;
 
             //Public Properties:
-            DataFeed = DataFeedEndpoint.FileSystem;
             IsActive = true;
+            DataFeed = DataFeedEndpoint.FileSystem;
             Bridge = new ConcurrentQueue<List<BaseData>>[_subscriptions];
             EndOfBridge = new bool[_subscriptions];
             SubscriptionReaderManagers = new SubscriptionDataReader[_subscriptions];
@@ -197,7 +196,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             //Initialize MYSQL Connection:
             Connect();
-            IsActive = true;
             
             while (!_exitTriggered && IsActive && !EndOfBridges)
             {
