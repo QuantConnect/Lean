@@ -111,11 +111,14 @@
     <Compile Include="Data\Consolidators\RenkoConsolidator.cs" />
     <Compile Include="Data\Consolidators\TickConsolidator.cs" />
     <Compile Include="Data\Consolidators\TradeBarConsolidatorBase.cs" />
+    <Compile Include="Data\Market\DataDictionary.cs" />
     <Compile Include="Data\Market\Dividend.cs" />
+    <Compile Include="Data\Market\Dividends.cs" />
     <Compile Include="Data\Market\RenkoBar.cs" />
     <Compile Include="Brokerages\BrokerageMessageEvent.cs" />
     <Compile Include="Brokerages\BrokerageMessageType.cs" />
     <Compile Include="Data\Market\Split.cs" />
+    <Compile Include="Data\Market\Splits.cs" />
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />

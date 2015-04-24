@@ -402,6 +402,22 @@ namespace QuantConnect.Lean.Engine.Results
                     // The processing can takes time depending on how large the packets are.
                     _nextUpdate = DateTime.Now.AddSeconds(2);
 
+
+                    lock (_chartLock)
+                    {
+                        foreach (var chart in Charts)
+                        {
+                            foreach (var series in chart.Value.Series)
+                            {
+                                // trim data that's older than 2 days
+                                series.Value.Values =
+                                    (from v in series.Value.Values
+                                     where v.x < Time.DateTimeToUnixTimeStamp(DateTime.Now.AddDays(-2))
+                                     select v).ToList();
+                            }
+                        }
+                    }
+
                 } // End Update Charts:
             }
             catch (Exception err)
@@ -980,7 +996,7 @@ namespace QuantConnect.Lean.Engine.Results
                 SampleEquity(time, Math.Round(_algorithm.Portfolio.TotalPortfolioValue, 4));
 
                 //Also add the user samples / plots to the result handler tracking:
-                SampleRange(_algorithm.GetChartUpdates());
+                SampleRange(_algorithm.GetChartUpdates(true));
             }
 
             //Send out the debug messages:

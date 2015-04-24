@@ -137,7 +137,6 @@ namespace QuantConnect.Lean.Engine.RealTime
                 {
                     try
                     {
-                        _algorithm.OnEndOfDay();
                         _algorithm.OnEndOfDay(symbol);
                     }
                     catch (Exception err)
@@ -147,6 +146,21 @@ namespace QuantConnect.Lean.Engine.RealTime
                     }
                 }));
             }
+
+            // fire just before the day rolls over, 11:58pm
+            AddEvent(new RealTimeEvent(date.AddHours(23.967), () =>
+            {
+                try
+                {
+                    _algorithm.OnEndOfDay();
+                    Log.Trace(string.Format("LiveTradingRealTimeHandler: Fired On End of Day Event() for Day({0})", _time.ToShortDateString()));
+                }
+                catch (Exception err)
+                {
+                    Engine.ResultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
+                    Log.Error("LiveTradingRealTimeHandler.SetupEvents.Trigger OnEndOfDay(): " + err.Message);
+                }
+            }, true));
         }
         
         /// <summary>

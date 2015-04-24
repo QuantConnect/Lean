@@ -514,8 +514,9 @@ namespace QuantConnect.Securities
         {
             var security = Securities[dividend.Symbol];
 
-            // only apply dividends when we're in raw mode
-            if (security.SubscriptionDataConfig.DataNormalizationMode != DataNormalizationMode.Raw)
+            // only apply dividends when we're in raw mode or split adjusted mode
+            var mode = security.SubscriptionDataConfig.DataNormalizationMode;
+            if (mode != DataNormalizationMode.Raw || mode != DataNormalizationMode.SplitAdjusted)
             {
                 return;
             }
@@ -535,8 +536,9 @@ namespace QuantConnect.Securities
         {
             var security = Securities[split.Symbol];
 
-            // don't apply splits in adjusted mode
-            if (security.SubscriptionDataConfig.DataNormalizationMode == DataNormalizationMode.Adjusted)
+            // don't apply splits in adjusted modes
+            var mode = security.SubscriptionDataConfig.DataNormalizationMode;
+            if (mode == DataNormalizationMode.Adjusted || mode == DataNormalizationMode.SplitAdjusted)
             {
                 return;
             }

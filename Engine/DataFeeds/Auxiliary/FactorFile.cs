@@ -51,7 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         }
 
         /// <summary>
-        /// Gets the time price factor for the specified search date
+        /// Gets the price scale factor that includes dividend and split adjustments for the specified search date
         /// </summary>
         public decimal GetPriceScaleFactor(DateTime searchDate)
         {
@@ -61,6 +61,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
             {
                 if (splitDate.Date < searchDate.Date) break;
                 factor = _data[splitDate].PriceScaleFactor;
+            }
+            return factor;
+        }
+
+        /// <summary>
+        /// Gets the split factor to be applied at the specified date
+        /// </summary>
+        public decimal GetSplitFactor(DateTime searchDate)
+        {
+            decimal factor = 1;
+            //Iterate backwards to find the most recent factor:
+            foreach (var splitDate in _data.Keys.Reverse())
+            {
+                if (splitDate.Date < searchDate.Date) break;
+                factor = _data[splitDate].SplitFactor;
             }
             return factor;
         }

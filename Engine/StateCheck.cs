@@ -65,8 +65,7 @@ namespace QuantConnect.Lean.Engine
                         {
                             //Get the state from the central server:
                             var state = Engine.Api.GetAlgorithmStatus(AlgorithmManager.AlgorithmId);
-                            Log.Debug("StateCheck.Ping.Run(): Algorithm Status: " + state.Status + " Subscription: " + state.ChartSubscription);
-
+                            
                             //Set state via get/set method:
                             AlgorithmManager.SetStatus(state.Status);
 
