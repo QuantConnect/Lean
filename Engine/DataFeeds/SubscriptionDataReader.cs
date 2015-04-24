@@ -21,19 +21,19 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Net;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds.Auxiliary;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
-namespace QuantConnect.Lean.Engine
+namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /******************************************************** 
     * CLASS DEFINITIONS
@@ -77,9 +77,6 @@ namespace QuantConnect.Lean.Engine
         // Subscription is for a QC type:
         private bool _isDynamicallyLoadedData = false;
 
-        //Price Factor Mapping:
-        private decimal _priceFactor = 0;
-
         //Symbol Mapping:
         private string _mappedSymbol = "";
 
@@ -100,10 +97,16 @@ namespace QuantConnect.Lean.Engine
         private readonly DateTime _periodStart;
         private readonly DateTime _periodFinish;
 
-        private DataNormalizationMode _dataNormalizationMode;
-        
         private readonly FactorFile _factorFile;
         private readonly MapFile _mapFile;
+
+        // we set the price factor ratio when we encounter a dividend in the factor file
+        // and on the next trading day we use this data to produce the dividend instance
+        private decimal? _priceFactorRatio;
+
+        // we set the split factor when we encounter a split in the factor file
+        // and on the next trading day we use this data to produce the split instance
+        private decimal? _splitFactor;
 
         /******************************************************** 
         * CLASS PUBLIC VARIABLES
@@ -133,7 +136,7 @@ namespace QuantConnect.Lean.Engine
         /// It is currently assumed that whomever is pumping data into here is handling the
         /// time syncing issues. Dividends do this through the RefreshSource method
         /// </remarks>
-        public Queue<BaseData> SecondaryData { get; private set; }
+        public Queue<BaseData> AuxiliaryData { get; private set; }
 
         /// <summary>
         /// Save an instance of the previous basedata we generated
@@ -175,7 +178,7 @@ namespace QuantConnect.Lean.Engine
             //Save configuration of data-subscription:
             _config = config;
 
-            SecondaryData = new Queue<BaseData>();
+            AuxiliaryData = new Queue<BaseData>();
 
             //Save access to fill foward flag:
             _isFillForward = config.FillDataForward;
@@ -189,7 +192,7 @@ namespace QuantConnect.Lean.Engine
             _isDynamicallyLoadedData = security.IsDynamicallyLoadedData;
 
             // do we have factor tables?
-            _hasScaleFactors = FactorFile.HasScalingFactors(Constants.DataFolder, config.Symbol);
+            _hasScaleFactors = FactorFile.HasScalingFactors(config.Symbol);
 
             //Save the type of data we'll be getting from the source.
             _feedEndpoint = feed;
@@ -242,11 +245,11 @@ namespace QuantConnect.Lean.Engine
         /// <returns>Boolean true on successful move next. Set Current public property.</returns>
         public bool MoveNext() {
 
-            // yield the secondary data first
-            if (SecondaryData.Count != 0)
+            // yield the aux data first
+            if (AuxiliaryData.Count != 0)
             {
                 Previous = Current;
-                Current = SecondaryData.Dequeue();
+                Current = AuxiliaryData.Dequeue();
                 return true;
             }
 
@@ -398,23 +401,19 @@ namespace QuantConnect.Lean.Engine
         /// <param name="date">Current date of the backtest.</param>
         private void UpdateScaleFactors(DateTime date)
         {
-            try
+            switch (_config.DataNormalizationMode)
             {
-                _mappedSymbol = _mapFile.GetMappedSymbol(date);
-                _config.SetMappedSymbol(_mappedSymbol);
-
-                if (_config.NormalizationMode == DataNormalizationMode.Raw)
-                {
+                case DataNormalizationMode.Raw:
+                case DataNormalizationMode.TotalReturn:
                     return;
-                }
-                _priceFactor = _factorFile.GetTimePriceFactor(date);
-            } 
-            catch (Exception err) 
-            {
-                Log.Error("SubscriptionDataReader.UpdateScaleFactors(): " + err.Message);
+                
+                case DataNormalizationMode.Adjusted:
+                    _config.PriceScaleFactor = _factorFile.GetPriceScaleFactor(date);
+                    break;
+                
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-
-            _config.SetPriceScaleFactor(_priceFactor);
         }
 
         /// <summary>
@@ -446,7 +445,8 @@ namespace QuantConnect.Lean.Engine
         {
             throw new NotImplementedException("Reset method not implemented. Assumes loop will only be used once.");
         }
-        
+
+
         /// <summary>
         /// Fetch and set the location of the data from the user's BaseData factory:
         /// </summary>
@@ -464,25 +464,20 @@ namespace QuantConnect.Lean.Engine
                 return false;
             }
 
-            // check the factor file to see if we have a dividend event tomorrow
-            decimal priceFactorRatio;
-            if (_factorFile.HasDividendEventOnNextTradingDay(date, out priceFactorRatio))
-            {
-                var dividend = new Dividend
-                {
-                    Symbol = _config.Symbol,
-                    DataType = MarketDataType.Base,
-                    Time = date, // this is actually a day early, but since we lack time sync it will do for now
-                    Distribution = Previous.Value - (Previous.Value*priceFactorRatio)
-                };
-                SecondaryData.Enqueue(dividend);
-            }
+            // check for dividends and split for this security
+            CheckForDividend(date);
+            CheckForSplit(date);
 
             var newSource = "";
 
             //If we can find scale factor files on disk, use them. LiveTrading will aways use 1 by definition
-            if (_hasScaleFactors) 
+            if (_hasScaleFactors)
             {
+                // check to see if the symbol was remapped
+                _mappedSymbol = _mapFile.GetMappedSymbol(date);
+                _config.MappedSymbol = _mappedSymbol;
+
+                // update our price scaling factors in light of the normalization mode
                 UpdateScaleFactors(date);
             }
 
@@ -558,6 +553,68 @@ namespace QuantConnect.Lean.Engine
             return true;
         }
 
+        /// <summary>
+        /// Check for dividends and emit them into the aux data queue
+        /// </summary>
+        private void CheckForSplit(DateTime date)
+        {
+            if (_splitFactor != null)
+            {
+                var close = GetRawClose();
+                var split = new Split(_config.Symbol, date, close, _splitFactor.Value);
+                AuxiliaryData.Enqueue(split);
+                _splitFactor = null;
+            }
+
+            decimal splitFactor;
+            if (_factorFile.HasSplitEventOnNextTradingDay(date, out splitFactor))
+            {
+                _splitFactor = splitFactor;
+            }
+        }
+
+        /// <summary>
+        /// Check for dividends and emit them into the aux data queue
+        /// </summary>
+        private void CheckForDividend(DateTime date)
+        {
+            if (_priceFactorRatio != null)
+            {
+                var close = GetRawClose();
+                var dividend = new Dividend(_config.Symbol, date, close, _priceFactorRatio.Value);
+                // let the config know about it for normalization
+                _config.SumOfDividends += dividend.Distribution;
+                AuxiliaryData.Enqueue(dividend);
+                _priceFactorRatio = null;
+            }
+
+            // check the factor file to see if we have a dividend event tomorrow
+            decimal priceFactorRatio;
+            if (_factorFile.HasDividendEventOnNextTradingDay(date, out priceFactorRatio))
+            {
+                _priceFactorRatio = priceFactorRatio;
+            }
+        }
+
+        /// <summary>
+        /// Un-normalizes the Previous.Value
+        /// </summary>
+        private decimal GetRawClose()
+        {
+            var close = Previous.Value;
+            if (_config.DataNormalizationMode == DataNormalizationMode.Adjusted)
+            {
+                // we need to 'unscale' the close to compute dividends
+                close = close / _config.PriceScaleFactor;
+            }
+            if (_config.DataNormalizationMode == DataNormalizationMode.TotalReturn)
+            {
+                // we need to remove the dividends since we've been accumulating them in the price
+                close -= _config.SumOfDividends;
+            }
+            return close;
+        }
+
 
         /// <summary>
         /// Using this source URL, download it to our cache and open a local reader.
@@ -599,35 +656,6 @@ namespace QuantConnect.Lean.Engine
             return reader;
         }
 
-
-        /// <summary>
-        /// Stream the file over the net directly from its source. 
-        /// </summary>
-        /// <param name="source">Source URL for the file</param>
-        /// <remarks>Left here for potential future reference instead of downloading files we stream then from external source.</remarks>
-        /// <returns>StreamReader Interface for the data source.</returns>
-        private StreamReader WebReader(string source) 
-        {    
-            //Initialize Required Variables for Web Reader:
-            StreamReader reader;
-
-            //Reopen the source with the new URL.
-            _web = new WebClient();
-            _web.Proxy = WebRequest.GetSystemWebProxy();
-            using (var stream = _web.OpenRead(source)) 
-            {
-                //If its a zip, unzip it:
-                if (source.GetExtension() == ".zip")
-                {
-                    reader = Compression.UnzipStream(stream);
-                }
-                else
-                {
-                    reader = new StreamReader(stream);
-                }
-            }
-            return reader;
-        }
 
         /// <summary>
         /// Dispose of the Stream Reader and close out the source stream and file connections.
@@ -694,9 +722,8 @@ namespace QuantConnect.Lean.Engine
         private IStreamReader HandleRemoteSourceFile(string source)
         {
             // clean old files out of the cache
-            const string cache = "./cache/data";
-            if (!Directory.Exists(cache)) Directory.CreateDirectory(cache);
-            foreach (var file in Directory.EnumerateFiles(cache))
+            if (!Directory.Exists(Constants.Cache)) Directory.CreateDirectory(Constants.Cache);
+            foreach (var file in Directory.EnumerateFiles(Constants.Cache))
             {
                 if (File.GetCreationTime(file) < DateTime.Now.AddHours(-24)) File.Delete(file);
             }
@@ -704,7 +731,7 @@ namespace QuantConnect.Lean.Engine
             try
             {
                 // this will fire up a web client in order to download the 'source' file to the cache
-                return new RemoteFileSubscriptionStreamReader(source, cache);
+                return new RemoteFileSubscriptionStreamReader(source, Constants.Cache);
             }
             catch (Exception err)
             {
@@ -713,6 +740,5 @@ namespace QuantConnect.Lean.Engine
                 return null;
             }
         }
-    } // End Base Data Class
-
-} // End QC Namespace
+    }
+}

@@ -18,7 +18,7 @@ using System;
 using QuantConnect.Logging;
 using RestSharp;
 
-namespace QuantConnect.Lean.Engine
+namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
     /// <summary>
     /// Represents a stream reader capable of polling a rest client

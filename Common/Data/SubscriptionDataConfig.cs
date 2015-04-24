@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Securities;
 
@@ -71,9 +72,13 @@ namespace QuantConnect.Data
         /// </summary>
         public readonly int SubscriptionIndex;
         /// <summary>
+        /// The sum of dividends accrued in this subscription, used for scaling total return prices
+        /// </summary>
+        public decimal SumOfDividends;
+        /// <summary>
         /// Gets the normalization mode used for this subscription
         /// </summary>
-        public readonly DataNormalizationMode NormalizationMode = DataNormalizationMode.Adjusted;
+        public DataNormalizationMode DataNormalizationMode = DataNormalizationMode.Raw;
         /// <summary>
         /// Price Scaling Factor:
         /// </summary>
@@ -85,7 +90,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Consolidators that are registred with this subscription
         /// </summary>
-        public readonly List<IDataConsolidator> Consolidators; 
+        public readonly List<IDataConsolidator> Consolidators;
 
         /// <summary>
         /// Constructor for Data Subscriptions
@@ -152,21 +157,23 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Update the price scaling factor for this subscription:
-        /// -> Used for backwards scaling _equity_ prices to adjust for splits and dividends. Unused
+        /// Normalizes the specified price based on the DataNormalizationMode
         /// </summary>
-        public void SetPriceScaleFactor(decimal newFactor) 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public decimal GetNormalizedPrice(decimal price)
         {
-            PriceScaleFactor = newFactor;
+            switch (DataNormalizationMode)
+            {
+                case DataNormalizationMode.Raw:
+                    return price;
+                case DataNormalizationMode.Adjusted:
+                    return price*PriceScaleFactor;
+                case DataNormalizationMode.TotalReturn:
+                    return price + SumOfDividends;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
-        /// <summary>
-        /// Update the mapped symbol stored here: 
-        /// </summary>
-        /// <param name="newSymbol"></param>
-        public void SetMappedSymbol(string newSymbol) 
-        {
-            MappedSymbol = newSymbol;
-        }
     }
 }

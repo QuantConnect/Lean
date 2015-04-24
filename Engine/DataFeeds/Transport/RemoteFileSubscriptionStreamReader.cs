@@ -17,7 +17,7 @@
 using System.IO;
 using System.Net;
 
-namespace QuantConnect.Lean.Engine
+namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
     /// <summary>
     /// Represents a stream reader capabable of downloading a remote file and then

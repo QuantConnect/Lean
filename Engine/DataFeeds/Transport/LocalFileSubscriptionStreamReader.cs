@@ -16,7 +16,7 @@
 
 using System.IO;
 
-namespace QuantConnect.Lean.Engine
+namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
     /// <summary>
     /// Represents a stream reader capable of reading lines from disk

@@ -22,11 +22,13 @@ namespace QuantConnect
     public static class Constants
     {
         /// <summary>
-        /// Gets the root directory of the data folder for this application
+        /// The root directory of the data folder for this application
         /// </summary>
-        public static string DataFolder
-        {
-            get { return @"../../../Data/"; }
-        }
+        public const string DataFolder = @"../../../Data/";
+
+        /// <summary>
+        /// The directory used for storing downloaded remote files
+        /// </summary>
+        public const string Cache = "./cache/data";
     }
 }

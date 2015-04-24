@@ -250,7 +250,9 @@ namespace QuantConnect
         /// TradeBar market data type (OHLC summary bar)
         TradeBar,
         /// Tick market data type (price-time pair)
-        Tick
+        Tick,
+        /// Data associated with an instrument
+        Auxiliary
     }
 
     /// <summary>

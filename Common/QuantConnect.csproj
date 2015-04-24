@@ -115,6 +115,7 @@
     <Compile Include="Data\Market\RenkoBar.cs" />
     <Compile Include="Brokerages\BrokerageMessageEvent.cs" />
     <Compile Include="Brokerages\BrokerageMessageType.cs" />
+    <Compile Include="Data\Market\Split.cs" />
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />

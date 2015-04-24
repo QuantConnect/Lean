@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Lean.Engine;
+using QuantConnect.Lean.Engine.DataFeeds.Auxiliary;
 
 namespace QuantConnect.Tests.Engine
 {
@@ -34,16 +35,16 @@ namespace QuantConnect.Tests.Engine
 
             // time price factors should be the price factor * split factor
 
-            Assert.AreEqual(1, file.GetTimePriceFactor(reference));
-            Assert.AreEqual(1, file.GetTimePriceFactor(reference.AddDays(-6)));
-            Assert.AreEqual(.9, file.GetTimePriceFactor(reference.AddDays(-7)));
-            Assert.AreEqual(.9, file.GetTimePriceFactor(reference.AddDays(-13)));
-            Assert.AreEqual(.8, file.GetTimePriceFactor(reference.AddDays(-14)));
-            Assert.AreEqual(.8, file.GetTimePriceFactor(reference.AddDays(-20)));
-            Assert.AreEqual(.8m * .5m, file.GetTimePriceFactor(reference.AddDays(-21)));
-            Assert.AreEqual(.8m * .5m, file.GetTimePriceFactor(reference.AddDays(-22)));
-            Assert.AreEqual(.8m * .5m, file.GetTimePriceFactor(reference.AddDays(-89)));
-            Assert.AreEqual(.8m * .25m, file.GetTimePriceFactor(reference.AddDays(-91)));
+            Assert.AreEqual(1, file.GetPriceScaleFactor(reference));
+            Assert.AreEqual(1, file.GetPriceScaleFactor(reference.AddDays(-6)));
+            Assert.AreEqual(.9, file.GetPriceScaleFactor(reference.AddDays(-7)));
+            Assert.AreEqual(.9, file.GetPriceScaleFactor(reference.AddDays(-13)));
+            Assert.AreEqual(.8, file.GetPriceScaleFactor(reference.AddDays(-14)));
+            Assert.AreEqual(.8, file.GetPriceScaleFactor(reference.AddDays(-20)));
+            Assert.AreEqual(.8m * .5m, file.GetPriceScaleFactor(reference.AddDays(-21)));
+            Assert.AreEqual(.8m * .5m, file.GetPriceScaleFactor(reference.AddDays(-22)));
+            Assert.AreEqual(.8m * .5m, file.GetPriceScaleFactor(reference.AddDays(-89)));
+            Assert.AreEqual(.8m * .25m, file.GetPriceScaleFactor(reference.AddDays(-91)));
         }
 
         [Test]
@@ -52,18 +53,25 @@ namespace QuantConnect.Tests.Engine
             var reference = DateTime.Today;
 
             const string symbol = "n/a";
+            decimal priceFactorRatio;
             var file = GetTestFactorFile(symbol, reference);
-            Assert.IsFalse(file.HasDividendEventOnNextTradingDay(reference.AddDays(-6)));
-            Assert.IsTrue (file.HasDividendEventOnNextTradingDay(reference.AddDays(-7)));
-            Assert.IsFalse(file.HasDividendEventOnNextTradingDay(reference.AddDays(-8)));
 
-            Assert.IsFalse(file.HasDividendEventOnNextTradingDay(reference.AddDays(-13)));
-            Assert.IsTrue (file.HasDividendEventOnNextTradingDay(reference.AddDays(-14)));
-            Assert.IsFalse(file.HasDividendEventOnNextTradingDay(reference.AddDays(-15)));
+            Assert.IsFalse(file.HasSplitEventOnNextTradingDay(reference, out priceFactorRatio));
 
-            Assert.IsFalse(file.HasDividendEventOnNextTradingDay(reference.AddDays(-364)));
-            Assert.IsTrue (file.HasDividendEventOnNextTradingDay(reference.AddDays(-365)));
-            Assert.IsFalse(file.HasDividendEventOnNextTradingDay(reference.AddDays(-366)));
+            Assert.IsFalse(file.HasDividendEventOnNextTradingDay(reference.AddDays(-6), out priceFactorRatio));
+            Assert.IsTrue(file.HasDividendEventOnNextTradingDay(reference.AddDays(-7), out priceFactorRatio));
+            Assert.AreEqual(.9m/1m, priceFactorRatio);
+            Assert.IsFalse(file.HasDividendEventOnNextTradingDay(reference.AddDays(-8), out priceFactorRatio));
+
+            Assert.IsFalse(file.HasDividendEventOnNextTradingDay(reference.AddDays(-13), out priceFactorRatio));
+            Assert.IsTrue(file.HasDividendEventOnNextTradingDay(reference.AddDays(-14), out priceFactorRatio));
+            Assert.AreEqual(.8m / .9m, priceFactorRatio);
+            Assert.IsFalse(file.HasDividendEventOnNextTradingDay(reference.AddDays(-15), out priceFactorRatio));
+
+            Assert.IsFalse(file.HasDividendEventOnNextTradingDay(reference.AddDays(-364), out priceFactorRatio));
+            Assert.IsTrue(file.HasDividendEventOnNextTradingDay(reference.AddDays(-365), out priceFactorRatio));
+            Assert.AreEqual(.7m / .8m, priceFactorRatio);
+            Assert.IsFalse(file.HasDividendEventOnNextTradingDay(reference.AddDays(-366), out priceFactorRatio));
         }
 
         [Test]
@@ -72,18 +80,25 @@ namespace QuantConnect.Tests.Engine
             var reference = DateTime.Today;
 
             const string symbol = "n/a";
+            decimal splitFactor;
             var file = GetTestFactorFile(symbol, reference);
-            Assert.IsFalse(file.HasSplitEventOnNextTradingDay(reference.AddDays(-20)));
-            Assert.IsTrue (file.HasSplitEventOnNextTradingDay(reference.AddDays(-21)));
-            Assert.IsFalse(file.HasSplitEventOnNextTradingDay(reference.AddDays(-22)));
 
-            Assert.IsFalse(file.HasSplitEventOnNextTradingDay(reference.AddDays(-89)));
-            Assert.IsTrue (file.HasSplitEventOnNextTradingDay(reference.AddDays(-90)));
-            Assert.IsFalse(file.HasSplitEventOnNextTradingDay(reference.AddDays(-91)));
+            Assert.IsFalse(file.HasSplitEventOnNextTradingDay(reference, out splitFactor));
 
-            Assert.IsFalse(file.HasSplitEventOnNextTradingDay(reference.AddDays(-364)));
-            Assert.IsTrue (file.HasSplitEventOnNextTradingDay(reference.AddDays(-365)));
-            Assert.IsFalse(file.HasSplitEventOnNextTradingDay(reference.AddDays(-366)));
+            Assert.IsFalse(file.HasSplitEventOnNextTradingDay(reference.AddDays(-20), out splitFactor));
+            Assert.IsTrue(file.HasSplitEventOnNextTradingDay(reference.AddDays(-21), out splitFactor));
+            Assert.AreEqual(.5, splitFactor);
+            Assert.IsFalse(file.HasSplitEventOnNextTradingDay(reference.AddDays(-22), out splitFactor));
+
+            Assert.IsFalse(file.HasSplitEventOnNextTradingDay(reference.AddDays(-89), out splitFactor));
+            Assert.IsTrue(file.HasSplitEventOnNextTradingDay(reference.AddDays(-90), out splitFactor));
+            Assert.AreEqual(.5, splitFactor);
+            Assert.IsFalse(file.HasSplitEventOnNextTradingDay(reference.AddDays(-91), out splitFactor));
+
+            Assert.IsFalse(file.HasSplitEventOnNextTradingDay(reference.AddDays(-364), out splitFactor));
+            Assert.IsTrue(file.HasSplitEventOnNextTradingDay(reference.AddDays(-365), out splitFactor));
+            Assert.AreEqual(.5, splitFactor);
+            Assert.IsFalse(file.HasSplitEventOnNextTradingDay(reference.AddDays(-366), out splitFactor));
         }
 
         private static FactorFile GetTestFactorFile(string symbol, DateTime reference)
@@ -95,7 +110,7 @@ namespace QuantConnect.Tests.Engine
                 new FactorFileRow(reference.AddDays(-14), .8m, 1),      // dividend
                 new FactorFileRow(reference.AddDays(-21), .8m, .5m),    // split
                 new FactorFileRow(reference.AddDays(-90), .8m, .25m),   // split
-                new FactorFileRow(reference.AddDays(-365), .7m, .0125m) // split+dividend
+                new FactorFileRow(reference.AddDays(-365), .7m, .125m) // split+dividend
             });
             return file;
         }

@@ -15,44 +15,54 @@
 */
 
 using System;
+using System.Globalization;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// Dividend event from a security
+    /// Split event from a security
     /// </summary>
-    public class Dividend : BaseData
+    public class Split : BaseData
     {
         /// <summary>
-        /// Initializes a new instance of the Dividend class
+        /// Initializes a new instance of the Split class
         /// </summary>
-        public Dividend()
+        public Split()
         {
             DataType = MarketDataType.Auxiliary;
         }
 
         /// <summary>
-        /// Initializes a new instance of the Dividend class
+        /// Initializes a new instance of the Split class
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="date">The date</param>
-        /// <param name="close">The close</param>
-        /// <param name="priceFactorRatio">The ratio of the price factors, pf_i/pf_i+1</param>
-        public Dividend(string symbol, DateTime date, decimal close, decimal priceFactorRatio)
-            : this()
+        /// <param name="price">The price at the time of the spli</param>
+        /// <param name="splitFactor">The split factor to be applied to current holdings</param>
+        public Split(string symbol, DateTime date, decimal price, decimal splitFactor)
+             : this()
         {
             Symbol = symbol;
             Time = date;
-            Distribution = close - (close*priceFactorRatio);
+            ReferencePrice = price;
+            SplitFactor = splitFactor;
         }
 
         /// <summary>
-        /// Gets the dividend payment
+        /// Gets the split factor
         /// </summary>
-        public decimal Distribution
+        public decimal SplitFactor
         {
-            get { return Value; } 
-            set { Value = Math.Round(value, 2); }
+            get { return Value; }
+            set { Value = value; }
+        }
+
+        /// <summary>
+        /// Gets the price at which the split occurred
+        /// </summary>
+        public decimal ReferencePrice
+        {
+            get; private set;
         }
 
         /// <summary>
@@ -67,7 +77,7 @@ namespace QuantConnect.Data.Market
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
         {
             // this is implemented in the SubscriptionDataReader.RefreshSource
-            throw new NotImplementedException("This method is not supposed to be called on the Dividend type.");
+            throw new NotImplementedException("This method is not supposed to be called on the Split type.");
         }
 
         /// <summary>
@@ -80,6 +90,11 @@ namespace QuantConnect.Data.Market
         public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
         {
             return Constants.DataFolder + @"/equity/factor_files/" + config.Symbol + ".csv";
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}: {1}", Symbol, SplitFactor);
         }
     }
 }

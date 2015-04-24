@@ -122,31 +122,30 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlgorithmManager.cs" />
+    <Compile Include="DataFeeds\Auxiliary\FactorFile.cs" />
+    <Compile Include="DataFeeds\Auxiliary\FactorFileRow.cs" />
+    <Compile Include="DataFeeds\Auxiliary\MapFile.cs" />
+    <Compile Include="DataFeeds\Auxiliary\MapFileRow.cs" />
     <Compile Include="DataFeeds\LiveTradingDataFeed.cs" />
     <Compile Include="DataFeeds\DatabaseDataFeed.cs" />
     <Compile Include="DataFeeds\PaperTradingDataFeed.cs" />
     <Compile Include="DataFeeds\Queues\DataQueue.cs" />
+    <Compile Include="DataFeeds\StreamStore.cs" />
+    <Compile Include="DataFeeds\SubscriptionDataReader.cs" />
+    <Compile Include="DataFeeds\Transport\IStreamReader.cs" />
+    <Compile Include="DataFeeds\Transport\LocalFileSubscriptionStreamReader.cs" />
+    <Compile Include="DataFeeds\Transport\RemoteFileSubscriptionStreamReader.cs" />
+    <Compile Include="DataFeeds\Transport\RestSubscriptionStreamReader.cs" />
     <Compile Include="DataStream.cs" />
-    <Compile Include="FactorFile.cs" />
-    <Compile Include="FactorFileRow.cs" />
-    <Compile Include="MapFile.cs" />
-    <Compile Include="MapFileRow.cs" />
     <Compile Include="RealTime\RealTimeEvent.cs" />
     <Compile Include="RealTime\LiveTradingRealTimeHandler.cs" />
     <Compile Include="RealTime\BacktestingRealTimeHandler.cs" />
     <Compile Include="RealTime\IRealTimeHandler.cs" />
-    <Compile Include="EnumerableStreamReader.cs" />
-    <Compile Include="LocalFileSubscriptionStreamReader.cs" />
-    <Compile Include="RemoteFileSubscriptionStreamReader.cs" />
-    <Compile Include="RestSubscriptionStreamReader.cs" />
     <Compile Include="Setup\BrokerageSetupHandler.cs" />
     <Compile Include="StateCheck.cs" />
-    <Compile Include="IStreamReader.cs" />
-    <Compile Include="StreamStore.cs" />
     <Compile Include="Setup\ConsoleSetupHandler.cs" />
     <Compile Include="Setup\BacktestingSetupHandler.cs" />
     <Compile Include="Setup\ISetupHandler.cs" />
-    <Compile Include="SubscriptionDataReader.cs" />
     <None Include="app.config" />
     <None Include="config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

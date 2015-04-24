@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 
 
@@ -332,15 +333,22 @@ namespace QuantConnect.Securities
                 //If its market data, look for the matching security symbol and update it:
                 foreach (var security in _securityManager.Values)
                 {
+                    BaseData dataPoint = null;
                     List<BaseData> dataPoints;
                     if (data.TryGetValue(security.SubscriptionDataConfig.SubscriptionIndex, out dataPoints) && dataPoints.Count != 0)
                     {
-                        security.Update(time, dataPoints[dataPoints.Count - 1]);
+                        // ignore aux data when doing data update, we trust the latest data more
+                        for (int i = dataPoints.Count - 1; i > -1; i--)
+                        {
+                            if (dataPoints[i].DataType == MarketDataType.Auxiliary)
+                            {
+                                continue;
+                            }
+                            dataPoint = dataPoints[i];
+                            break;
+                        }
                     }
-                    else
-                    {
-                        security.Update(time, null); //No data, update time
-                    }
+                    security.Update(time, dataPoint);
                 }
             }
             catch (Exception err) 

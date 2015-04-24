@@ -200,7 +200,7 @@ namespace QuantConnect.Data.Market
                     case SecurityType.Equity:
                         Symbol = config.Symbol;
                         Time = date.Date.AddMilliseconds(Convert.ToInt64(csv[0]));
-                        Value = (csv[1].ToDecimal() / 10000m) * config.PriceScaleFactor;
+                        Value = config.GetNormalizedPrice(csv[1].ToDecimal() / 10000m);
                         DataType = MarketDataType.Tick;
                         TickType = TickType.Trade;
                         Quantity = Convert.ToInt32(csv[2]);
@@ -284,7 +284,7 @@ namespace QuantConnect.Data.Market
                         dateFormat = "yyMMdd";
                     }
                     var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol; 
-                    source = @"../../../Data/" + config.SecurityType.ToString().ToLower();
+                    source = Constants.DataFolder + config.SecurityType.ToString().ToLower();
                     source += @"/" + config.Resolution.ToString().ToLower() + @"/" + symbol.ToLower() + @"/";
                     source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
                     break;

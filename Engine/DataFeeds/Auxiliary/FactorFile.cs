@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace QuantConnect.Lean.Engine
+namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
 {
     /// <summary>
     /// Represents an entire factor file for a specified symbol
@@ -47,52 +47,31 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public static FactorFile Read(string symbol)
         {
-            return new FactorFile(symbol, FactorFileRow.Read(Constants.DataFolder, symbol));
+            return new FactorFile(symbol, FactorFileRow.Read(symbol));
         }
 
         /// <summary>
         /// Gets the time price factor for the specified search date
         /// </summary>
-        public decimal GetTimePriceFactor(DateTime searchDate)
+        public decimal GetPriceScaleFactor(DateTime searchDate)
         {
             decimal factor = 1;
             //Iterate backwards to find the most recent factor:
             foreach (var splitDate in _data.Keys.Reverse())
             {
                 if (splitDate.Date < searchDate.Date) break;
-                factor = _data[splitDate].TimePriceFactor;
+                factor = _data[splitDate].PriceScaleFactor;
             }
             return factor;
         }
 
         /// <summary>
-        /// Gets the factor file row to be used for scaling price data at the specified date
-        /// </summary>
-        public FactorFileRow GetEffectiveRow(DateTime searchDate)
-        {
-            FactorFileRow row = null;
-            //Iterate backwards to find the most recent factor:
-            foreach (var splitDate in _data.Keys.Reverse())
-            {
-                if (splitDate.Date < searchDate.Date)
-                {
-                    // we found what we're looking for
-                    return row;
-                }
-                row = _data[splitDate];
-            }
-
-            // we didn't find one?? what to do here? This means we asked for a date before any date in the factor file
-            throw new ArgumentException("Unable to locate effective factor file row for " + Symbol + " at date " + searchDate.ToShortDateString());
-        }
-
-        /// <summary>
         /// Checks whether or not a symbol has scaling factors
         /// </summary>
-        public static bool HasScalingFactors(string dataFolder, string symbol)
+        public static bool HasScalingFactors(string symbol)
         {
             // check for factor files
-            if (File.Exists(dataFolder + "equity/factor_files/" + symbol.ToLower() + ".csv"))
+            if (File.Exists(Constants.DataFolder + "equity/factor_files/" + symbol.ToLower() + ".csv"))
             {
                 return true;
             }
@@ -116,7 +95,7 @@ namespace QuantConnect.Lean.Engine
         {
             priceFactorRatio = 0;
             var index = _data.IndexOfKey(date);
-            if (index > -1 && index < _data.Count)
+            if (index > -1 && index < _data.Count - 1)
             {
                 // grab the next key to ensure it's a dividend event
                 var thisRow = _data.Values[index];
@@ -142,17 +121,22 @@ namespace QuantConnect.Lean.Engine
         /// has a split on 1999.03.29, but in the factor file the split factor is applied on
         /// 1999.03.26, which is the first trading day BEFORE the actual split date.
         /// </remarks>
-        public bool HasSplitEventOnNextTradingDay(DateTime date)
+        public bool HasSplitEventOnNextTradingDay(DateTime date, out decimal splitFactor)
         {
+            splitFactor = 1;
             var index = _data.IndexOfKey(date);
-            if (index > -1 && index < _data.Count)
+            if (index > -1 && index < _data.Count - 1)
             {
                 // grab the next key to ensure it's a split event
                 var thisRow = _data.Values[index];
                 var nextRow = _data.Values[index + 1];
 
                 // if the split factors have changed then it's a split event
-                return thisRow.SplitFactor != nextRow.SplitFactor;
+                if (thisRow.SplitFactor != nextRow.SplitFactor)
+                {
+                    splitFactor = thisRow.SplitFactor/nextRow.SplitFactor;
+                    return true;
+                }
             }
             return false;
         }

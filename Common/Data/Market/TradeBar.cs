@@ -127,10 +127,10 @@ namespace QuantConnect.Data.Market
                     //Equity File Data Format:
                     case SecurityType.Equity:
                         Time = baseDate.Date.AddMilliseconds(Convert.ToInt32(csv[0]));
-                        Open = (csv[1].ToDecimal() / scaleFactor) * config.PriceScaleFactor;  //  Convert.ToDecimal(csv[1]) / scaleFactor;
-                        High = (csv[2].ToDecimal() / scaleFactor) * config.PriceScaleFactor;  // Using custom "ToDecimal" conversion for speed.
-                        Low = (csv[3].ToDecimal() / scaleFactor) * config.PriceScaleFactor;
-                        Close = (csv[4].ToDecimal() / scaleFactor) * config.PriceScaleFactor;
+                        Open = config.GetNormalizedPrice(csv[1].ToDecimal() / scaleFactor);  //  Convert.ToDecimal(csv[1]) / scaleFactor;
+                        High = config.GetNormalizedPrice(csv[2].ToDecimal() / scaleFactor);  // Using custom "ToDecimal" conversion for speed.
+                        Low = config.GetNormalizedPrice(csv[3].ToDecimal() / scaleFactor);
+                        Close = config.GetNormalizedPrice(csv[4].ToDecimal() / scaleFactor);
                         Volume = Convert.ToInt64(csv[5]);
                         break;
 
@@ -163,9 +163,9 @@ namespace QuantConnect.Data.Market
         /// <param name="volume">Volume sum over day</param>
         public TradeBar(DateTime time, string symbol, decimal open, decimal high, decimal low, decimal close, long volume)
         {
-            base.Time = time;
-            base.Symbol = symbol;
-            base.Value = close;
+            Time = time;
+            Symbol = symbol;
+            Value = close;
             Open = open;
             High = high;
             Low = low;
@@ -278,8 +278,8 @@ namespace QuantConnect.Data.Market
                         dateFormat = "yyMMdd";
                     }
 
-                    var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol; 
-                    source = @"../../../Data/" + config.SecurityType.ToString().ToLower();
+                    var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol;
+                    source = Constants.DataFolder + config.SecurityType.ToString().ToLower();
                     source += @"/" + config.Resolution.ToString().ToLower() + @"/" + symbol.ToLower() + @"/";
                     source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
                     break;

@@ -28,11 +28,12 @@ namespace QuantConnect.Algorithm.Examples
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2004, 11, 01);  //Set Start Date
+            SetStartDate(1998, 01, 01);  //Set Start Date
             SetEndDate(2006, 01, 01);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecurityType.Equity, "MSFT", Resolution.Minute);
+            Securities["MSFT"].SetDataNormalizationMode(DataNormalizationMode.TotalReturn);
         }
 
         /// <summary>
@@ -43,14 +44,19 @@ namespace QuantConnect.Algorithm.Examples
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings("MSFT", 1);
+                SetHoldings("MSFT", .5);
                 Debug("Purchased Stock");
             }
         }
 
         public void OnData(Dividend dividend) // update this to Dividends dictionary
         {
-            Console.WriteLine("{0} >> DIVIDEND >> {1} - {2}", dividend.Time.ToString("o"), dividend.Symbol, dividend.Distribution.ToString("C"));
+            Console.WriteLine("{0} >> DIVIDEND >> {1} - {2} - {3} - {4}", dividend.Time.ToString("o"), dividend.Symbol, dividend.Distribution.ToString("C"), Portfolio.Cash, Portfolio["MSFT"].Price.ToString("C"));
+        }
+
+        public void OnData(Split split)
+        {
+            Console.WriteLine("{0} >> SPLIT >> {1} - {2} - {3} - {4}", split.Time.ToString("o"), split.Symbol, split.SplitFactor, Portfolio.Cash, Portfolio["MSFT"].Quantity);
         }
     }
 }

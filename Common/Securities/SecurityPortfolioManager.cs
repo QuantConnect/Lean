@@ -514,18 +514,42 @@ namespace QuantConnect.Securities
         {
             var security = Securities[dividend.Symbol];
 
+            // only apply dividends when we're in raw mode
+            if (security.SubscriptionDataConfig.DataNormalizationMode != DataNormalizationMode.Raw)
+            {
+                return;
+            }
+
             // longs get benefits, shorts get clubbed on dividends
             var total = security.Holdings.Quantity*dividend.Distribution;
 
             // assuming USD, we still need to add Currency to the security object
             _baseCurrencyCash.Quantity += total;
+        }
 
+        /// <summary>
+        /// Applies a split to the portfolio
+        /// </summary>
+        /// <param name="split">The split to be applied</param>
+        public void ApplySplit(Split split)
+        {
+            var security = Securities[split.Symbol];
 
-            var newAvgPrice = security.Holdings.IsLong 
-                ? security.Holdings.AveragePrice - dividend.Distribution 
-                : security.Holdings.AveragePrice + dividend.Distribution;
+            // don't apply splits in adjusted mode
+            if (security.SubscriptionDataConfig.DataNormalizationMode == DataNormalizationMode.Adjusted)
+            {
+                return;
+            }
 
-            security.Holdings.SetHoldings(newAvgPrice, security.Holdings.Quantity);
+            var quantity = security.Holdings.Quantity/split.SplitFactor;
+            var avgPrice = security.Holdings.AveragePrice*split.SplitFactor;
+
+            // we'll model this as a cash adjustment
+            var leftOver = quantity - (int) quantity;
+            var extraCash = leftOver*split.ReferencePrice;
+            _baseCurrencyCash.Quantity += extraCash;
+
+            security.Holdings.SetHoldings(avgPrice, (int) quantity);
         }
 
         /// <summary>
