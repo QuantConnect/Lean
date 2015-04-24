@@ -78,7 +78,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the normalization mode used for this subscription
         /// </summary>
-        public DataNormalizationMode DataNormalizationMode = DataNormalizationMode.SplitAdjusted;
+        public DataNormalizationMode DataNormalizationMode = DataNormalizationMode.Adjusted;
         /// <summary>
         /// Price Scaling Factor:
         /// </summary>
