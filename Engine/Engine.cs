@@ -468,7 +468,7 @@ namespace QuantConnect.Lean.Engine
             StateCheck.Ping.Exit();
             
             // Make the console window pause so we can read log output before exiting and killing the application completely
-            Console.ReadKey();
+            Console.Read();
 
             //Finally if ping thread still not complete, kill.
             if (statusPingThread != null && statusPingThread.IsAlive) statusPingThread.Abort();

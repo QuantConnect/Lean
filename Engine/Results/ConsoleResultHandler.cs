@@ -50,6 +50,8 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly TimeSpan _resamplePeriod;
         private readonly TimeSpan _notificationPeriod;
 
+        public Dictionary<string, string> FinalStatistics { get; private set; } 
+
         /******************************************************** 
         * PUBLIC PROPERTIES
         *********************************************************/
@@ -130,6 +132,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <remarks>Setup the default sampling and notification periods based on the backtest length.</remarks>
         public ConsoleResultHandler(AlgorithmNodePacket packet) 
         {
+            FinalStatistics = new Dictionary<string, string>();
             Log.Trace("Launching Console Result Handler: QuantConnect v2.0");
             Messages = new ConcurrentQueue<Packet>();
             Charts = new ConcurrentDictionary<string, Chart>();
@@ -374,11 +377,17 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="banner">Runtime statistics banner information</param>
         public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, Dictionary<string, string> statistics, Dictionary<string, string> banner)
         {
+            // uncomment these code traces to help write regression tests
+            //Log.Trace("var statistics = new Dictionary<string, string>();");
+            
             // Bleh. Nicely format statistical analysis on your algorithm results. Save to file etc.
             foreach (var pair in statistics) 
             {
                 Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
+                //Log.Trace(string.Format("statistics.Add(\"{0}\",\"{1}\");", pair.Key, pair.Value));
             }
+
+            FinalStatistics = statistics;
         }
 
         /// <summary>
