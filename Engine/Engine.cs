@@ -185,8 +185,8 @@ namespace QuantConnect.Lean.Engine
             var algorithmPath = "";
             string mode = "RELEASE";
             AlgorithmNodePacket job = null;
-            var timer = Stopwatch.StartNew();
             var algorithm = default(IAlgorithm);
+            var startTime = DateTime.Now;
             Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
             _version = DateTime.ParseExact(Config.Get("version", DateTime.Now.ToString(DateFormat.UI)), DateFormat.UI, CultureInfo.InvariantCulture);
        
@@ -293,7 +293,7 @@ namespace QuantConnect.Lean.Engine
                     if (initializeComplete)
                     {
                         //-> Reset the backtest stopwatch; we're now running the algorithm.
-                        timer.Restart();
+                        startTime = DateTime.Now;
 
                         //Set algorithm as locked; set it to live mode if we're trading live, and set it to locked for no further updates.
                         algorithm.SetAlgorithmId(job.AlgorithmId);
@@ -413,8 +413,9 @@ namespace QuantConnect.Lean.Engine
                             }
 
                             //Diagnostics Completed, Send Result Packet:
+                            var totalSeconds = (DateTime.Now - startTime).TotalSeconds;
                             ResultHandler.DebugMessage(string.Format("Algorithm Id:({0}) completed in {1} seconds at {2}k data points per second. Processing total of {3} data points.",
-                                job.AlgorithmId, timer.Elapsed.TotalSeconds.ToString("F2"), (((int)AlgorithmManager.DataPoints / 1000) / timer.Elapsed.TotalSeconds).ToString("F0"), AlgorithmManager.DataPoints.ToString("N0")));
+                                job.AlgorithmId, totalSeconds.ToString("F2"), ((AlgorithmManager.DataPoints / (double)1000) / totalSeconds).ToString("F0"), AlgorithmManager.DataPoints.ToString("N0")));
 
                             ResultHandler.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, statistics, banner);
                         }
@@ -423,8 +424,7 @@ namespace QuantConnect.Lean.Engine
                             Log.Error("Engine.Main(): Error sending analysis result: " + err.Message + "  ST >> " + err.StackTrace);
                         }
 
-                        //Before we return, send terminate commands to close up the threads 
-                        timer.Stop(); //Algorithm finished running.
+                        //Before we return, send terminate commands to close up the threads
                         TransactionHandler.Exit();
                         DataFeed.Exit();
                         RealTimeHandler.Exit();

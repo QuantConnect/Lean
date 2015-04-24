@@ -106,7 +106,7 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Gets the number of data points processed per second
         /// </summary>
-        public static double DataPoints
+        public static long DataPoints
         {
             get
             {

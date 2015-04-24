@@ -326,8 +326,9 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Get the chart updates since the last request:
         /// </summary>
+        /// <param name="clearChartData"></param>
         /// <returns>List of Chart Updates</returns>
-        List<Chart> GetChartUpdates();
+        List<Chart> GetChartUpdates(bool clearChartData = false);
 
         /// <summary>
         /// Add a chart to the internal algorithm list.
