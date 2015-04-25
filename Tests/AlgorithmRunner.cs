@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -28,6 +29,8 @@ namespace QuantConnect.Tests
     {
         public static void RunLocalBacktest(string algorithm, Dictionary<string, string> expectedStatistics)
         {
+            Console.WriteLine("Running " + algorithm + "...");
+
             // set the configuration up
             Config.Set("algorithm-type-name", algorithm);
             Config.Set("local", "true");
