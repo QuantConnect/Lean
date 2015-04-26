@@ -49,12 +49,20 @@ namespace QuantConnect.Algorithm.Examples
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="data"></param>
         public void OnData(Dividends data) // update this to Dividends dictionary
         {
             var dividend = data["MSFT"];
             Console.WriteLine("{0} >> DIVIDEND >> {1} - {2} - {3} - {4}", dividend.Time.ToString("o"), dividend.Symbol, dividend.Distribution.ToString("C"), Portfolio.Cash, Portfolio["MSFT"].Price.ToString("C"));
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="data"></param>
         public void OnData(Splits data)
         {
             var split = data["MSFT"];

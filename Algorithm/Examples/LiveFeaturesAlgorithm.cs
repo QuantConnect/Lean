@@ -28,6 +28,12 @@ namespace QuantConnect
     /// </summary>
     public class LiveTradingFeaturesAlgorithm : QCAlgorithm
     {
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
+        /// <seealso cref="QCAlgorithm.SetStartDate(System.DateTime)"/>
+        /// <seealso cref="QCAlgorithm.SetEndDate(System.DateTime)"/>
+        /// <seealso cref="QCAlgorithm.SetCash(decimal)"/>
         public override void Initialize()
         {
             SetStartDate(2013, 1, 1);
@@ -44,7 +50,11 @@ namespace QuantConnect
             AddData<Bitcoin>("BTC", Resolution.Second);
         }
 
-        //New Bitcoin Data Event:
+        
+        /// <summary>
+        /// New Bitcoin Data Event:
+        /// </summary>
+        /// <param name="data"></param>
         public void OnData(Bitcoin data)
         {
             if (LiveMode) //Live Mode Property
@@ -64,6 +74,10 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Handle OnData Event
+        /// </summary>
+        /// <param name="data"></param>
         public void OnData(TradeBars data)
         {
             if (!Portfolio.HoldStock && data.ContainsKey("AAPL"))
@@ -208,13 +222,37 @@ namespace QuantConnect
     /// </summary>
     public class LiveBitcoin
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public int Timestamp = 0;
+        /// <summary>
+        /// 
+        /// </summary>
         public decimal Last = 0;
+        /// <summary>
+        /// 
+        /// </summary>
         public decimal High = 0;
+        /// <summary>
+        /// 
+        /// </summary>
         public decimal Low = 0;
+        /// <summary>
+        /// 
+        /// </summary>
         public decimal Bid = 0;
+        /// <summary>
+        /// 
+        /// </summary>
         public decimal Ask = 0;
+        /// <summary>
+        /// Volume Weighted Average Price
+        /// </summary>
         public decimal VWAP = 0;
+        /// <summary>
+        /// 
+        /// </summary>
         public decimal Volume = 0;
     }
 }

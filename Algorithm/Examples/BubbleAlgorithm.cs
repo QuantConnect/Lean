@@ -47,6 +47,9 @@ namespace QuantConnect
         Dictionary<string, MovingAverageConvergenceDivergence> macdDic = new Dictionary<string, MovingAverageConvergenceDivergence>();
 
 
+        /// <summary>
+        /// Initializes the Bubble Algo, adding the custom CAPE data source
+        /// </summary>
         public override void Initialize()
         {
             SetCash(100000);
@@ -218,20 +221,41 @@ namespace QuantConnect
     /// </summary>
     public class CAPE : BaseData
     {
+        /// <summary>
+        /// The Cape ratio
+        /// </summary>
         public decimal Cape = 0;
         string format = "yyyy-MM";
         CultureInfo provider = CultureInfo.InvariantCulture;
 
+        /// <summary>
+        /// Default Consturctor
+        /// </summary>
         public CAPE()
         {
             this.Symbol = "CAPE";
         }
 
+        /// <summary>
+        ///     Gets the source of the data for the CAPE algo
+        /// </summary>
+        /// <param name="config">SubscriptionDataConfig - the configuration for the algo</param>
+        /// <param name="date">DateTime - </param>
+        /// <param name="datafeed"></param>
+        /// <returns>string - the data source uri</returns>
         public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
         {
             return "https://www.dropbox.com/s/ggt6blmib54q36e/CAPE.csv?dl=1";
         }
 
+        /// <summary>
+        ///     The data reader reads from the data source specified in the SubscriptionDataConfig
+        /// </summary>
+        /// <param name="datafeed">Type of datafeed we're reqesting - backtest or live</param>
+        /// <param name="config">Configuration object</param>
+        /// <param name="line">string - the line from the datasource as shown in the example file format below</param>
+        /// <param name="date">Date of this source file</param>
+        /// <returns>String URL of source file.</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
         {
             var index = new CAPE();

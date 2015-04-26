@@ -21,9 +21,9 @@ using QuantConnect.Indicators;
 
 namespace QuantConnect
 {
-    /*
-    *   QuantConnect University: Indicator Suite Example:
-    */
+    /// <summary>
+    /// QuantConnect University: Indicator Suite Example:
+    /// </summary>
     public class IndicatorSuiteAlgorithm : QCAlgorithm
     {
         string _symbol = "SPY";
@@ -40,7 +40,10 @@ namespace QuantConnect
 
         decimal _price;
 
-        //Initialize the data and resolution you require for your strategy:
+        
+        /// <summary>
+        /// Initialize the data and resolution you require for your strategy:
+        /// </summary>
         public override void Initialize()
         {
             //Initialize
@@ -103,11 +106,19 @@ namespace QuantConnect
             _maxCustom = MAX(_customSymbol, 14, Resolution.Daily);
         }
 
-        //Custom data event handler:
+        
+        /// <summary>
+        /// Custom data event handler:
+        /// </summary>
+        /// <param name="data"></param>
         public void OnData(Bitcoin data)
         { //
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="data"></param>
         public void OnData(TradeBars data)
         {
             if (!_indicators.BB.IsReady || !_indicators.RSI.IsReady) return;
@@ -126,7 +137,12 @@ namespace QuantConnect
             }
         }
 
-        // Fire plotting events once per day:
+
+        /// <summary>
+        /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
+        /// Fire plotting events once per day:
+        /// </summary>
+        /// <remarks>Method is called 10 minutes before closing to allow user to close out position.</remarks>
         public override void OnEndOfDay()
         {
             if (!_indicators.BB.IsReady) return;

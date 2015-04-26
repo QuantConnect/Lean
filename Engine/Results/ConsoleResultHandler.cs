@@ -50,6 +50,9 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly TimeSpan _resamplePeriod;
         private readonly TimeSpan _notificationPeriod;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public Dictionary<string, string> FinalStatistics { get; private set; } 
 
         /******************************************************** 

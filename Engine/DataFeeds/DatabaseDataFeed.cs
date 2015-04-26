@@ -242,6 +242,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Generate a list of TradeBars from the database query result.
         /// </summary>
+        /// <param name="symbol"></param>
         /// <param name="data"></param>
         /// <returns></returns>
         private IEnumerable<TradeBar> GenerateBars(string symbol, IEnumerable<Dictionary<string, string>> data)
