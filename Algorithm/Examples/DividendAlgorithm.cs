@@ -49,12 +49,30 @@ namespace QuantConnect.Algorithm.Examples
             }
         }
 
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// In this case when a Dividend event is received from the data source, it fires this event so you can 
+        /// update any dividend data, such as:
+        /// 1. adding the proceeds to your portfolio,
+        /// 2. changing the factor which determines the adjusted price.  The dividends might change how the 
+        ///     TradeBar is reported to your algo and the adjustment could change your signals or indicators
+        /// 3. the proceeds of the dividend will also affect your return and statistics calculations.
+        /// </summary>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(Dividends data) // update this to Dividends dictionary
         {
             var dividend = data["MSFT"];
             Console.WriteLine("{0} >> DIVIDEND >> {1} - {2} - {3} - {4}", dividend.Time.ToString("o"), dividend.Symbol, dividend.Distribution.ToString("C"), Portfolio.Cash, Portfolio["MSFT"].Price.ToString("C"));
         }
 
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// This data point is caused by a stock split.
+        /// 
+        /// The change is price could really mess up your indicators, triggers and signals so you will need to handle
+        /// how the split affects your algo while it is running. A naive approach would be to liquidate and restart the algo.
+        /// </summary>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(Splits data)
         {
             var split = data["MSFT"];

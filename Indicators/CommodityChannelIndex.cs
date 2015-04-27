@@ -89,7 +89,7 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            decimal typicalPrice = (input.High + input.Low + input.Close)/3.0m;
+            decimal typicalPrice = (input.High + input.Low + input.Close) / 3.0m;
 
             TypicalPriceAverage.Update(input.Time, typicalPrice);
             TypicalPriceMeanDeviation.Update(input.Time, typicalPrice);
@@ -102,9 +102,12 @@ namespace QuantConnect.Indicators
                 return 0.0m;
             }
 
-            return (typicalPrice - TypicalPriceAverage.Current)/weightedMeanDeviation;
+            return (typicalPrice - TypicalPriceAverage.Current) / weightedMeanDeviation;
         }
 
+        /// <summary>
+        /// Resets the IndicatorBase classes properties by calling the IndicatorBase.Reset method.
+        /// </summary>
         public override void Reset()
         {
             TypicalPriceAverage.Reset();

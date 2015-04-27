@@ -62,8 +62,10 @@ namespace QuantConnect.Algorithm.Examples
         }
 
         /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// We're doing our analysis in the OnRenkoBar method, but the framework verifies that this method exists, so we define it.
         /// </summary>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
         }

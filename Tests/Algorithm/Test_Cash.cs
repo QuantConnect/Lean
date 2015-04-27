@@ -36,6 +36,10 @@ namespace QuantConnect
             AddData<CashType>("CASH");
         }
 
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">CashType A simple data type derived from BaseData</param>
         public void OnData(CashType data)
         {
             try

@@ -206,6 +206,13 @@ namespace QuantConnect.Data
             return ObjectActivator.Clone(this) as BaseData;
         }
 
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
             return string.Format("{0}: {1}", Symbol, Value.ToString("C"));
