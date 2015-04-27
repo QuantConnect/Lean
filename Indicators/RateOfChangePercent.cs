@@ -48,13 +48,15 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            if (!window.IsReady)
+            // if we're not ready just grab the first input point in the window
+            decimal denominator = !window.IsReady ? window[window.Count - 1] : window.MostRecentlyRemoved;
+
+            if (denominator == 0)
             {
-                // keep returning the delta from the first item put in there to init
-                return window[window.Count - 1] == 0 ? 0 : 100 * (input - window[window.Count - 1]) / window[window.Count - 1];
+                return 0;
             }
 
-            return window.MostRecentlyRemoved == 0 ? 0 : 100 * (input - window.MostRecentlyRemoved) / window.MostRecentlyRemoved;
+            return 100*(input - denominator)/denominator;
         }
     }
 }
