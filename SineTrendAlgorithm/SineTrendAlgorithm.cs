@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect;
 
@@ -46,12 +47,19 @@ namespace QuantConnect
                 WMA = WMA(_symbol, 4, Resolution.Minute)
             };
         }
-        public WeightedMovingAverage WMA(string symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
+        public void OnData(TradeBars data)
         {
-            string name = QuantConnect.Algorithm.QCAlgorithm.CreateIndicatorName(symbol, "EMA" + period, resolution);
-            var wma = new WeightedMovingAverage(name, period);
-            RegisterIndicator(symbol, wma, resolution, selector);
-            return wma;
+            if (!Portfolio.Invested)
+            {
+                SetHoldings("SPY", 1);
+                Debug("Purchased Stock");
+            }
         }
+
     }
 }

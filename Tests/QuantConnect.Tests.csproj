@@ -55,6 +55,7 @@
     <Compile Include="Common\Securities\CashTests.cs" />
     <Compile Include="Common\Securities\Forex\ForexTests.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />
+    <Compile Include="Indicators\WeightedMovingAverageTests.cs" />
     <Compile Include="Indicators\WilliamsPercentRTests.cs" />
     <Compile Include="Indicators\RateOfChangePercentTests.cs" />
     <Compile Include="Indicators\RateOfChangeTests.cs" />
@@ -175,6 +176,10 @@
     <ProjectReference Include="..\Queues\QuantConnect.Queues.csproj">
       <Project>{d6633172-1368-4df6-9444-825c3e00c819}</Project>
       <Name>QuantConnect.Queues</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SineTrendAlgorithm\SineTrendAlgorithm.csproj">
+      <Project>{be01e40d-8c39-4013-94b2-0398df4e8ee0}</Project>
+      <Name>SineTrendAlgorithm</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
