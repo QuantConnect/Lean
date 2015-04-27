@@ -26,13 +26,6 @@ namespace QuantConnect.Securities.Equity
     /// <seealso cref="Security"/>
     public class Equity : Security
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-        
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
@@ -49,14 +42,5 @@ namespace QuantConnect.Securities.Equity
             MarginModel = new EquityMarginModel(leverage);
             Holdings = new EquityHolding(this, TransactionModel, MarginModel);
         }
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-
     }
 }

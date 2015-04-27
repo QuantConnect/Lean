@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,9 +21,6 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.Configuration
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Configuration class loads the required external setup variables to launch the Lean engine.
     /// </summary>

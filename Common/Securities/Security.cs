@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -23,12 +20,8 @@ using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Interfaces;
 
-
 namespace QuantConnect.Securities 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// A base vehicle properties class for providing a common interface to all assets in QuantConnect.
     /// </summary>
@@ -38,7 +31,6 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class Security 
     {
-
         /******************************************************** 
         * CLASS PRIVATE VARIABLES
         *********************************************************/

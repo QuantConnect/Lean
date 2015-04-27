@@ -13,10 +13,6 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
@@ -25,9 +21,6 @@ using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities.Equity 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Transaction model for equity security trades. 
     /// </summary>

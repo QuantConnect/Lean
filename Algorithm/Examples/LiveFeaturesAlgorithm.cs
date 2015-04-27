@@ -28,6 +28,9 @@ namespace QuantConnect
     /// </summary>
     public class LiveTradingFeaturesAlgorithm : QCAlgorithm
     {
+		/// <summary>
+		/// Initialise the Algorithm and Prepare Required Data.
+		/// </summary>
         public override void Initialize()
         {
             SetStartDate(2013, 1, 1);
@@ -44,7 +47,10 @@ namespace QuantConnect
             AddData<Bitcoin>("BTC", Resolution.Second);
         }
 
-        //New Bitcoin Data Event:
+        /// <summary>
+		/// New Bitcoin Data Event.
+        /// </summary>
+        /// <param name="data">Data.</param>
         public void OnData(Bitcoin data)
         {
             if (LiveMode) //Live Mode Property
@@ -64,6 +70,10 @@ namespace QuantConnect
             }
         }
 
+		/// <summary>
+		/// Raises the data event.
+		/// </summary>
+		/// <param name="data">Data.</param>
         public void OnData(TradeBars data)
         {
             if (!Portfolio.HoldStock && data.ContainsKey("AAPL"))
@@ -75,7 +85,6 @@ namespace QuantConnect
             }
         }
     }
-
 
     /// <summary>
     /// Custom Data Type: Bitcoin data from Quandl - http://www.quandl.com/help/api-for-bitcoin-data

@@ -13,10 +13,6 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -28,9 +24,6 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.Statistics
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Calculate all the statistics required from the backtest, based on the equity curve and the profit loss statement.
     /// </summary>

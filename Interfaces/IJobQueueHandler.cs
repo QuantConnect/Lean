@@ -13,9 +13,7 @@
  * limitations under the License.
  *
 */
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
+
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Data.Market;

@@ -12,9 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 
 using QuantConnect.Interfaces;
 using QuantConnect.Notifications;
@@ -30,10 +27,6 @@ namespace QuantConnect.Messaging
     /// </summary>
     public class Messaging : IMessagingHandler
     {
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Initialize the messaging system
         /// </summary>

@@ -13,15 +13,8 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 namespace QuantConnect.Orders
 {
-    /******************************************************** 
-    * ORDER CLASS DEFINITION
-    *********************************************************/
     /// <summary>
     /// Type of the order: market, limit or stop
     /// </summary>

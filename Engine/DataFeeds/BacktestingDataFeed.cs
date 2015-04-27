@@ -14,10 +14,6 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
@@ -52,11 +48,5 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             DataFeed = DataFeedEndpoint.Backtesting;
         }
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-        
-
     } // End Backtesting Feed Class:
 } // End Namespace

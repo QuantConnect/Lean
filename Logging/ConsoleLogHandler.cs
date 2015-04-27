@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 using System.IO;
 
@@ -25,6 +26,9 @@ namespace QuantConnect.Logging
         private const string DateFormat = "yyyyMMdd HH:mm:ss";
         private readonly TextWriter _console;
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="QuantConnect.Logging.ConsoleLogHandler"/> class.
+		/// </summary>
         public ConsoleLogHandler()
         {
             // saves references to the real console text writer since in a deployed state we may overwrite this in order

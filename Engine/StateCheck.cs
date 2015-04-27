@@ -14,10 +14,6 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using System.Threading;
 using QuantConnect.Logging;

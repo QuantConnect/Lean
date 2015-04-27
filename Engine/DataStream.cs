@@ -13,9 +13,7 @@
  * limitations under the License.
  *
 */
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -23,7 +21,6 @@ using System.Diagnostics;
 using QuantConnect.Data;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
-
 
 namespace QuantConnect.Lean.Engine
 {

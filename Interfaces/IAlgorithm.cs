@@ -12,9 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 
 using System;
 using System.Collections.Concurrent;
@@ -27,9 +24,6 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Interfaces
 {
-    /********************************************************
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Interface for QuantConnect algorithm implementations. All algorithms must implement these
     /// basic members to allow interaction with the Lean Backtesting Engine.
