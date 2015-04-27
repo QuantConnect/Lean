@@ -109,16 +109,18 @@ namespace QuantConnect
         
         /// <summary>
         /// Custom data event handler:
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// 
         /// </summary>
-        /// <param name="data"></param>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>        
         public void OnData(Bitcoin data)
         { //
         }
 
         /// <summary>
-        /// 
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data"></param>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
             if (!_indicators.BB.IsReady || !_indicators.RSI.IsReady) return;

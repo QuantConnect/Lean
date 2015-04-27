@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using QuantConnect.Data;
+
 namespace QuantConnect.Indicators
 {
     /// <summary>
@@ -89,5 +92,7 @@ namespace QuantConnect.Indicators
             }
             return input*_k + Current*(1 - _k);
         }
+
+
     }
 }

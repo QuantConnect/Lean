@@ -45,10 +45,9 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Data Event Handler: New data arrives here. 
-        /// "TradeBars" type is a dictionary of strings so you can access it by symbol.
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data"></param>
+        /// <param name="data">Quandl - Properties of the imported data from Quandl</param>
         public void OnData(Quandl data)
         {
             if (!Portfolio.HoldStock)

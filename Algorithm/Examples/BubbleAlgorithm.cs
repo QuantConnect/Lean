@@ -90,7 +90,10 @@ namespace QuantConnect
 
         /// <summary>
         /// Trying to find if current Cape is the lowest Cape in three months to indicate selling period
+        /// 
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(CAPE data)
         {
             newLow = false;
@@ -117,8 +120,9 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// New TradeBar data for our assets.
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
             try

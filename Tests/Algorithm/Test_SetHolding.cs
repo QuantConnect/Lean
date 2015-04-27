@@ -36,6 +36,11 @@ namespace QuantConnect
             AddSecurity(SecurityType.Equity, "IBM", Resolution.Minute);  
         }
 
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// On each data event, buy a few of each one:
+        /// </summary>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
             //First Order, Set 50% MSFT:

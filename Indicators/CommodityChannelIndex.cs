@@ -106,7 +106,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// 
+        /// Resets the IndicatorBase classes properties by calling the IndicatorBase.Reset method.
         /// </summary>
         public override void Reset()
         {

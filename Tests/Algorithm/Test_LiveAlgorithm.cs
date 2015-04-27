@@ -40,7 +40,10 @@ namespace QuantConnect
             //AddData<Bitcoin>("BTC", res);
         }
 
-        //Data Event Handler: New data arrives here. Upload Data "TradeBars" type is a dictionary of strings so you can access it by symbol.
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
             string display = "";
@@ -51,7 +54,10 @@ namespace QuantConnect
             Debug("ALGO>> OnData(TradeBar) >> " + Time.ToString() + " >> " + data.Count + " >> " + display);
         }
 
-        //Bitcoin Handler:
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">Bitcoin - A bitcoin data type derived from BaseData</param>
         public void OnData(Bitcoin data)
         {
             Debug(Time.ToLongTimeString() + " >> ALGO >> OnData(BTC) >> BTC: " + data.Close);

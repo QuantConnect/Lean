@@ -42,7 +42,12 @@ namespace QuantConnect
             AddData<VIX>("VIX", Resolution.Minute);
         }
 
-        // Data Event Handler: New data arrives here. "TradeBars" type is a dictionary of strings so you can access it by symbol.
+
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// On each data event, buy a few of each one:
+        /// </summary>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
             if (_vix == 0) return;
@@ -68,7 +73,11 @@ namespace QuantConnect
             }
         }
 
-        // 
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// On each data event, buy a few of each one:
+        /// </summary>
+        /// <param name="data">VIX - Data derived from BaseData</param> 
         public void OnData(VIX vix)
         {
             _vix = vix.Close;

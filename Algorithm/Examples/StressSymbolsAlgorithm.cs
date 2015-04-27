@@ -43,11 +43,11 @@ namespace QuantConnect
             AllSymbols = StockSymbols.Concat(ForexSymbols);
         }
 
-        
         /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// On each data event, buy a few of each one:
         /// </summary>
-        /// <param name="data"></param>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
             Debug("REALTIME: " + DateTime.Now.ToString("o") + " DATATIME: " + data.Time.ToString("o") + " REALTIME DELTA: " + (DateTime.Now - data.Time).TotalSeconds.ToString("0.000") + "sec  COUNT: " + data.Count + " FILLFORWARD: " + data.Count(x => x.Value.IsFillForward));
@@ -76,7 +76,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// 
+        /// A large list of stocks for the stress test
         /// </summary>
         public List<string> StockSymbols = new List<string>
         {
@@ -179,7 +179,7 @@ namespace QuantConnect
         };
 
         /// <summary>
-        /// 
+        /// A list of Forex symbols for the stress test
         /// </summary>
         public List<string> ForexSymbols = new List<string>
         {

@@ -50,11 +50,12 @@ namespace QuantConnect
             AddData<Bitcoin>("BTC", Resolution.Second);
         }
 
-        
+
         /// <summary>
-        /// New Bitcoin Data Event:
+        /// Custom data event.
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data"></param>
+        /// <param name="data">Bitcoin - Custom TradeBar for bitcoin data</param>
         public void OnData(Bitcoin data)
         {
             if (LiveMode) //Live Mode Property
@@ -75,9 +76,9 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Handle OnData Event
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data"></param>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
             if (!Portfolio.HoldStock && data.ContainsKey("AAPL"))
@@ -223,27 +224,27 @@ namespace QuantConnect
     public class LiveBitcoin
     {
         /// <summary>
-        /// 
+        /// The timestamp when the data was generated
         /// </summary>
         public int Timestamp = 0;
         /// <summary>
-        /// 
+        /// The last trade price
         /// </summary>
         public decimal Last = 0;
         /// <summary>
-        /// 
+        /// The high for the "bar"
         /// </summary>
         public decimal High = 0;
         /// <summary>
-        /// 
+        /// The low for the "bar"
         /// </summary>
         public decimal Low = 0;
         /// <summary>
-        /// 
+        /// The bid for the current data point
         /// </summary>
         public decimal Bid = 0;
         /// <summary>
-        /// 
+        /// The ask for the current data point
         /// </summary>
         public decimal Ask = 0;
         /// <summary>
@@ -251,7 +252,7 @@ namespace QuantConnect
         /// </summary>
         public decimal VWAP = 0;
         /// <summary>
-        /// 
+        /// The volume for the "bar"
         /// </summary>
         public decimal Volume = 0;
     }

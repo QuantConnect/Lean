@@ -27,6 +27,7 @@ namespace QuantConnect.Algorithm.Examples
         }
 
         /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// Data arriving here will now be filtered.
         /// </summary>
         /// <param name="data">Ticks data array</param>
