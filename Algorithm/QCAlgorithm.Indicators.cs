@@ -377,7 +377,8 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new On Balance Volume indicator. This will compute the 
+        /// Creates a new On Balance Volume indicator. This will compute the cumulative total volume
+        /// based on whether the close price being higher or lower than the previous period.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose On Balance Volume we seek</param>

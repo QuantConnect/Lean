@@ -1,5 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
+using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
@@ -10,15 +11,19 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ComparesAgainstExternalData()
         {
-            var onBalanceVolumeIndicator = new OnBalanceVolume("OBV");
-
-            onBalanceVolumeIndicator.OnBalanceVoulumeValues.Update(
-                new DateTime(2013, 4, 30), Decimal.Parse("1.156486E+08", System.Globalization.NumberStyles.Float));
+            var onBalanceVolumeIndicator = new OnBalanceVolume("OBV")
+            {
+                Current =
+                {
+                    Time = new DateTime(2013, 4, 30),
+                    Value = Decimal.Parse("1.156486E+08", System.Globalization.NumberStyles.Float)
+                }
+            };
 
             TestHelper.TestIndicator(onBalanceVolumeIndicator, "spy_with_obv.txt", "OBV",
                 (ind, expected) => Assert.AreEqual(
                     expected.ToString("0.##E-00"),
-                    (onBalanceVolumeIndicator.OnBalanceVoulumeValues.Current.Value).ToString("0.##E-00")
+                    (onBalanceVolumeIndicator.Current.Value).ToString("0.##E-00")
                     )
 
                 );
