@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
@@ -28,18 +29,12 @@ namespace QuantConnect.Indicators
         private TradeBar _previousInput;
 
         /// <summary>
-        /// Gets the value of the On Balance Volume for a series of trade periods. 
-        /// </summary>
-        public IndicatorBase<IndicatorDataPoint> OnBalanceVoulumeValues { get; set; }
-
-        /// <summary>
         /// Initializes a new instance of the Indicator class using the specified name.
         /// </summary> 
         /// <param name="name">The name of this indicator</param>
         public OnBalanceVolume(string name)
             : base(name)
         {
-            OnBalanceVoulumeValues = new Identity("OBV");
         }
 
         /// <summary>
@@ -47,8 +42,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override bool IsReady
         {
-            //get { return OnBalanceVoulumeValues.IsReady && OnBalanceVoulumeValues.Current.Value != 0; }
-            get { return OnBalanceVoulumeValues.IsReady; }
+            get { return _previousInput != null; }
         }
 
         /// <summary>
@@ -58,23 +52,14 @@ namespace QuantConnect.Indicators
         /// <returns> A new value for this indicator </returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            decimal obv = 0;
-
-            if (_previousInput != null && input.Value == _previousInput.Value)
-            {
-                obv = OnBalanceVoulumeValues.Current.Value;
-                OnBalanceVoulumeValues.Update(new IndicatorDataPoint(input.Time, obv));
-
-                _previousInput = input;
-                return obv;
-            }
+            var obv = Current.Value;
 
             if (_previousInput != null && input.Value > _previousInput.Value)
             {
-                if (OnBalanceVoulumeValues.Current.Value != 0)
+                if (Current.Value != 0)
                 {
-                    obv = input.Volume + OnBalanceVoulumeValues.Current.Value;
-                    OnBalanceVoulumeValues.Update(new IndicatorDataPoint(input.Time, obv));
+                    obv = input.Volume + Current.Value;
+                    Update(input);
 
                     _previousInput = input;
                     return obv;
@@ -83,10 +68,10 @@ namespace QuantConnect.Indicators
 
             if (_previousInput != null && input.Value < _previousInput.Value)
             {
-                if (OnBalanceVoulumeValues.Current.Value != 0)
+                if (Current.Value != 0)
                 { 
-                    obv = OnBalanceVoulumeValues.Current.Value - input.Volume;
-                    OnBalanceVoulumeValues.Update(new IndicatorDataPoint(input.Time, obv));
+                    obv = Current.Value - input.Volume;
+                    Update(input);
 
                     _previousInput = input;
                     return obv;
@@ -102,7 +87,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            OnBalanceVoulumeValues.Reset();
+            _previousInput = null;
+            base.Reset();
         }
     }
 }
