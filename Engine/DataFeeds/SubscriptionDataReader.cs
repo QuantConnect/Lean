@@ -605,7 +605,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private decimal GetRawClose()
         {
+            if (Previous == null) return 0m;
+
             var close = Previous.Value;
+
             switch (_config.DataNormalizationMode)
             {
                 case DataNormalizationMode.Raw:
