@@ -56,7 +56,6 @@ namespace QuantConnect.Lean.Engine
         *********************************************************/
         private static bool _liveMode = Config.GetBool("live-mode");
         private static bool _local = Config.GetBool("local");
-        private static readonly string _version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
         private static IBrokerage _brokerage;
         private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
 
@@ -115,14 +114,6 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public static IApi Api;
 
-        /// <summary>
-        /// Version of the engine that is running. This is required for retiring old processing 
-        /// and live trading nodes during live trading.
-        /// </summary>
-        public static string Version
-        {
-            get { return _version; }
-        }
         /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
@@ -195,7 +186,7 @@ namespace QuantConnect.Lean.Engine
 
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
-            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + _version + " Mode: " + mode);
+            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + Constants.Version + " Mode: " + mode);
             Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
             Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + +OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
 
@@ -239,7 +230,7 @@ namespace QuantConnect.Lean.Engine
                         //-> Pull job from QuantConnect job queue, or, pull local build:
                         job = JobQueue.NextJob(out algorithmPath); // Blocking.
 
-                        if (!IsLocal && LiveMode && (job.Version != Version || (job.Version == Version && job.Redelivered)))
+                        if (!IsLocal && LiveMode && (job.Version != Constants.Version || (job.Version == Constants.Version && job.Redelivered)))
                         {
                             //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
                             //In this event kill the old algorithm and leave a message so the user can later review.
