@@ -130,13 +130,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     backtestJob.UserId = 1001;
                     backtestJob.Type = PacketType.BacktestNode;
 
-                    //Endpoints:
-                    backtestJob.TransactionEndpoint = TransactionHandlerEndpoint.Backtesting;
-                    backtestJob.ResultEndpoint = ResultHandlerEndpoint.Console;
-                    backtestJob.DataEndpoint = DataFeedEndpoint.FileSystem;
-                    backtestJob.RealTimeEndpoint = RealTimeEndpoint.Backtesting;
-                    backtestJob.SetupEndpoint = SetupHandlerEndpoint.Console;
-
                     //Backtest Specific Parameters:
                     StartingDate = backtestJob.PeriodStart;
                     StartingCapital = algorithm.Portfolio.Cash;
@@ -149,14 +142,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     liveJob.DeployId = "LOCALHOST";
                     liveJob.Type = PacketType.LiveNode;
 
-                    //Endpoints:
-                    liveJob.TransactionEndpoint = TransactionHandlerEndpoint.Backtesting;
-                    liveJob.ResultEndpoint = ResultHandlerEndpoint.LiveTrading;
-                    liveJob.DataEndpoint = DataFeedEndpoint.LiveTrading;
-                    liveJob.RealTimeEndpoint = RealTimeEndpoint.LiveTrading;
-                    liveJob.SetupEndpoint = SetupHandlerEndpoint.Console;
-
-                    //Call in the paper trading setup:
+                    //Call in the brokerage setup:
                     var setup = new BrokerageSetupHandler();
                     setup.Setup(algorithm, out brokerage, baseJob);
 
