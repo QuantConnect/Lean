@@ -1,6 +1,6 @@
 # Contributor's Guide
 
-Welcome and thank you for your interest in contributing to the QuantConnect Lean open source project.  This document aims to describe the preferred contributors should follow when contributing new source code to the project. This Git workflow is inspired greatly by the [irON-Parsers Contributors Guide](https://github.com/structureddynamics/irON-Parsers/wiki/Collaboration%3A-git-development-workflow).
+Welcome and thank you for your interest in contributing to the QuantConnect Lean open source project.  This document aims to describe the preferred workflow contributors should follow when contributing new source code to the project. This Git workflow is inspired greatly by the [irON-Parsers Contributors Guide](https://github.com/structureddynamics/irON-Parsers/wiki/Collaboration%3A-git-development-workflow).
 
 # Contributing
 
@@ -10,7 +10,7 @@ A collaborator is someone with write access to the QuantConnect Lean repository.
 
 ## Who is a Contributor?
 
-A contributor can be any! It could be you. Continue reading this section if you wish to get involved and contribute back to the QuantConnect Lean open source project!
+A contributor can be anyone! It could be you. Continue reading this section if you wish to get involved and contribute back to the QuantConnect Lean open source project!
 
 ## Initial Setup
 
@@ -19,7 +19,7 @@ A contributor can be any! It could be you. Continue reading this section if you 
 * Clone your fork locally
 
 ```bash
-$ https://github.com/username/Lean.git
+$ git clone https://github.com/username/Lean.git
 ```
 
 * Navigate to the QuantConnect Lean directory and add the upstream remote
@@ -29,30 +29,33 @@ $ cd Lean
 $ git remote add upstream https://github.com/QuantConnect/Lean.git
 ```
 
-The `remote upstream branch` links your fork of Lean with our master copy, so when you perform a `git pull --rebase` you'll be getting updates from our repository.
+The remote upstream branch links your fork of Lean with our master copy, so when you perform a `git pull --rebase` you'll be getting updates from our repository.
 
 ## Keeping your master up-to-date!
-Now that you've defined the `remote upstream branch`, you can refresh your local `master` with the following commands:
+Now that you've defined the `remote upstream branch`, you can refresh your local copy of master with the following commands:
 
 ```bash
 $ git checkout master
 $ git pull --rebase
 ```
 
-This will checkout your local `master branch` and then merge changes in from the `remote upstream branch`. We use [rebase](https://www.atlassian.com/git/tutorials/rewriting-history/git-rebase) to reduce noise from `merge` commits.
+This will checkout your local master branch and then merge changes in from the remote upstream branch. We use [rebase](https://www.atlassian.com/git/tutorials/rewriting-history/git-rebase) to reduce noise from merge commits.
 
 # Branching Model
-If unfamiliar with git branches, please read this [short guide on branches](https://www.atlassian.com/git/tutorials/using-branches/).The following names will be used to differentiate between the different repositories:
+
+If unfamiliar with git branches, please read this [short guide on branches](https://www.atlassian.com/git/tutorials/using-branches/).
+
+The following names will be used to differentiate between the different repositories:
 
 * **upstream** - The 'official' QuantConnect Lean [repository](https://github.com/QuantConnect/Lean.git) (what is on QuantConnect's GitHub account)
 * **origin** - Your fork of the official repository on GitHub (what is on your GitHub account)
 * **local** - This will be your local clone of **origin** (what is on your computer)
 
-As a **contributor** you will `push` your completed **local** topic branch to **origin**. As a **contributor** you will `pull` your updates from **upstream**. As a **collaborator** (write-access) you will merge branches from **contributors** into **upstream**.
+As a **contributor** you will push your completed **local** topic branch to **origin**. As a **contributor** you will pull your updates from **upstream**. As a **collaborator** (write-access) you will merge branches from **contributors** into **upstream**.
 
 ## Primary Branch
 
-The upstream repository holds a single primary branch that we maintain
+The upstream repository holds a single primary branch that we maintain:
 
 * **upstream/master** - This is the where main development takes place
 
@@ -86,14 +89,14 @@ $ git commit
 
 When committing, be sure to follow [best practices](https://github.com/erlang/otp/wiki/Writing-good-commit-messages) writing good commit descriptions.
 
-After performing some work you'll want to merge in changes from the **upstream/master**. You can use the following two commands in order to assist upstream merging.
+After performing some work you'll want to merge in changes from the **upstream/master**. You can use the following two commands in order to assist upstream merging:
 
 ```bash
 $ git fetch upstream
 $ git rebase upstream/master issue-123/short-issue-description
 ```
 
-The `fetch` command will download the **upstream** repository to your computer but not merge it. The `rebase upstream/master issue-123/short-issue-description` command will [rebase](https://www.atlassian.com/git/tutorials/rewriting-history/git-commit--amend) your changes on top of **upstream/master**. This will make the review process easier for **collaborators**.
+The `git fetch upstream` command will download the **upstream** repository to your computer but not merge it. The `rebase upstream/master issue-123/short-issue-description` command will [rebase](https://www.atlassian.com/git/tutorials/rewriting-history/git-commit--amend) your changes on top of **upstream/master**. This will make the review process easier for **collaborators**.
 
 > CAUTION Please note that once you have pushed your branch remotely you MUST NOT rebase!
 
@@ -107,8 +110,8 @@ When topic branches are finished and ready for review, they should be pushed bac
 
 ```bash
 $ git push origin issue-123/short-issue-description
-To git@github.com:username/Lean.gt
+To git@github.com:username/Lean.git
     * [new branch]       issue-123/short-issue-description -> issue-123/short-issue-description
 ```
 
-Now you're ready to send a [pull request](https://help.github.com/articles/using-pull-requests/) from this branch to **upstream/master** and update the GitHub issue tracker to let a collaborator know that your branch is ready to be reviewed and merged.  If extra changes are required, make those changes on the topic branch and re-push.
+Now you're ready to send a [pull request](https://help.github.com/articles/using-pull-requests/) from this branch to **upstream/master** and update the GitHub issue tracker to let a collaborator know that your branch is ready to be reviewed and merged.  If extra changes are required as part of the review process, make those changes on the topic branch and re-push.
