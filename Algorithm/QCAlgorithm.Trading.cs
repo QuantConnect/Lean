@@ -328,7 +328,7 @@ namespace QuantConnect.Algorithm
 
             if (price == 0)
             {
-                Error("Asset price is $0. If using custom data make sure you've set the 'Value' property.");
+                Error(symbol + ": asset price is $0. If using custom data make sure you've set the 'Value' property.");
                 return -1;
             }
 
