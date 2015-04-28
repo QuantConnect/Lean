@@ -74,6 +74,9 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Examples\BenchmarkAlgorithm.cs" />
     <Compile Include="Examples\BubbleAlgorithm.cs" />
     <Compile Include="Examples\DividendAlgorithm.cs" />
