@@ -56,7 +56,7 @@ namespace QuantConnect.Lean.Engine
         *********************************************************/
         private static bool _liveMode = Config.GetBool("live-mode");
         private static bool _local = Config.GetBool("local");
-        private static DateTime _version;
+        private static readonly string _version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
         private static IBrokerage _brokerage;
         private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
 
@@ -119,7 +119,7 @@ namespace QuantConnect.Lean.Engine
         /// Version of the engine that is running. This is required for retiring old processing 
         /// and live trading nodes during live trading.
         /// </summary>
-        public static DateTime Version
+        public static string Version
         {
             get { return _version; }
         }
@@ -188,7 +188,6 @@ namespace QuantConnect.Lean.Engine
             var algorithm = default(IAlgorithm);
             var startTime = DateTime.Now;
             Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
-            _version = DateTime.ParseExact(Config.Get("version", DateTime.Now.ToString(DateFormat.UI)), DateFormat.UI, CultureInfo.InvariantCulture);
        
             #if DEBUG 
                 mode = "DEBUG";
@@ -240,7 +239,7 @@ namespace QuantConnect.Lean.Engine
                         //-> Pull job from QuantConnect job queue, or, pull local build:
                         job = JobQueue.NextJob(out algorithmPath); // Blocking.
 
-                        if (!IsLocal && LiveMode && (job.Version < Version || (job.Version == Version && job.Redelivered)))
+                        if (!IsLocal && LiveMode && (job.Version != Version || (job.Version == Version && job.Redelivered)))
                         {
                             //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
                             //In this event kill the old algorithm and leave a message so the user can later review.
