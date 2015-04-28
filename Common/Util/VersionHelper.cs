@@ -23,6 +23,26 @@ namespace QuantConnect.Util
     public static class VersionHelper
     {
         /// <summary>
+        /// Determines whether or not the specified version is older than this instance
+        /// </summary>
+        /// <param name="version">The version to compare</param>
+        /// <returns>True if the specified version is older, false otherwise</returns>
+        public static bool IsOlderVersion(string version)
+        {
+            return CompareVersions(version, Constants.Version) < 0;
+        }
+
+        /// <summary>
+        /// Determines whether or not the specified version is newer than this instance
+        /// </summary>
+        /// <param name="version">The version to compare</param>
+        /// <returns>True if the specified version is newer, false otherwise</returns>
+        public static bool IsNewerVersion(string version)
+        {
+            return CompareVersions(version, Constants.Version) > 0;
+        }
+
+        /// <summary>
         /// Compares two versions
         /// </summary>
         /// <returns>1 if the left version is after the right, 0 if they're the same, -1 if the left is before the right</returns>
