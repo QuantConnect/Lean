@@ -111,11 +111,14 @@
     <Compile Include="Data\Consolidators\RenkoConsolidator.cs" />
     <Compile Include="Data\Consolidators\TickConsolidator.cs" />
     <Compile Include="Data\Consolidators\TradeBarConsolidatorBase.cs" />
+    <Compile Include="Data\Market\DataDictionary.cs" />
     <Compile Include="Data\Market\Dividend.cs" />
+    <Compile Include="Data\Market\Dividends.cs" />
     <Compile Include="Data\Market\RenkoBar.cs" />
     <Compile Include="Brokerages\BrokerageMessageEvent.cs" />
     <Compile Include="Brokerages\BrokerageMessageType.cs" />
     <Compile Include="Data\Market\Split.cs" />
+    <Compile Include="Data\Market\Splits.cs" />
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />
@@ -125,6 +128,7 @@
     <Compile Include="Orders\OrderTypes.cs" />
     <Compile Include="Orders\OrderError.cs" />
     <Compile Include="Packets\HandledErrorPacket.cs" />
+    <Compile Include="Properties\SharedAssemblyInfo.cs" />
     <Compile Include="Securities\Cash.cs" />
     <Compile Include="Securities\CashBook.cs" />
     <Compile Include="Securities\Equity\EquityMarginModel.cs" />
@@ -208,6 +212,7 @@
     <Compile Include="Util\FuncTextWriter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />
     <Compile Include="Util\ObjectActivator.cs" />
+    <Compile Include="Util\VersionHelper.cs" />
     <Compile Include="Util\XElementExtensions.cs" />
   </ItemGroup>
   <ItemGroup>

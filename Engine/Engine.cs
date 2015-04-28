@@ -56,7 +56,6 @@ namespace QuantConnect.Lean.Engine
         *********************************************************/
         private static bool _liveMode = Config.GetBool("live-mode");
         private static bool _local = Config.GetBool("local");
-        private static DateTime _version;
         private static IBrokerage _brokerage;
         private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
 
@@ -115,14 +114,6 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public static IApi Api;
 
-        /// <summary>
-        /// Version of the engine that is running. This is required for retiring old processing 
-        /// and live trading nodes during live trading.
-        /// </summary>
-        public static DateTime Version
-        {
-            get { return _version; }
-        }
         /******************************************************** 
         * CLASS PROPERTIES
         *********************************************************/
@@ -185,10 +176,9 @@ namespace QuantConnect.Lean.Engine
             var algorithmPath = "";
             string mode = "RELEASE";
             AlgorithmNodePacket job = null;
-            var timer = Stopwatch.StartNew();
             var algorithm = default(IAlgorithm);
-            Log.LogHandler = new CompositeLogHandler();
-            _version = DateTime.ParseExact(Config.Get("version", DateTime.Now.ToString(DateFormat.UI)), DateFormat.UI, CultureInfo.InvariantCulture);
+            var startTime = DateTime.Now;
+            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
        
             #if DEBUG 
                 mode = "DEBUG";
@@ -196,7 +186,7 @@ namespace QuantConnect.Lean.Engine
 
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
-            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + _version + " Mode: " + mode);
+            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + Constants.Version + " Mode: " + mode);
             Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
             Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + +OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
 
@@ -240,7 +230,7 @@ namespace QuantConnect.Lean.Engine
                         //-> Pull job from QuantConnect job queue, or, pull local build:
                         job = JobQueue.NextJob(out algorithmPath); // Blocking.
 
-                        if (!IsLocal && LiveMode && (job.Version < Version || (job.Version == Version && job.Redelivered)))
+                        if (!IsLocal && LiveMode && (job.Version != Constants.Version || (job.Version == Constants.Version && job.Redelivered)))
                         {
                             //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
                             //In this event kill the old algorithm and leave a message so the user can later review.
@@ -293,7 +283,7 @@ namespace QuantConnect.Lean.Engine
                     if (initializeComplete)
                     {
                         //-> Reset the backtest stopwatch; we're now running the algorithm.
-                        timer.Restart();
+                        startTime = DateTime.Now;
 
                         //Set algorithm as locked; set it to live mode if we're trading live, and set it to locked for no further updates.
                         algorithm.SetAlgorithmId(job.AlgorithmId);
@@ -413,8 +403,9 @@ namespace QuantConnect.Lean.Engine
                             }
 
                             //Diagnostics Completed, Send Result Packet:
+                            var totalSeconds = (DateTime.Now - startTime).TotalSeconds;
                             ResultHandler.DebugMessage(string.Format("Algorithm Id:({0}) completed in {1} seconds at {2}k data points per second. Processing total of {3} data points.",
-                                job.AlgorithmId, timer.Elapsed.TotalSeconds.ToString("F2"), (((int)AlgorithmManager.DataPoints / 1000) / timer.Elapsed.TotalSeconds).ToString("F0"), AlgorithmManager.DataPoints.ToString("N0")));
+                                job.AlgorithmId, totalSeconds.ToString("F2"), ((AlgorithmManager.DataPoints / (double)1000) / totalSeconds).ToString("F0"), AlgorithmManager.DataPoints.ToString("N0")));
 
                             ResultHandler.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, statistics, banner);
                         }
@@ -423,8 +414,7 @@ namespace QuantConnect.Lean.Engine
                             Log.Error("Engine.Main(): Error sending analysis result: " + err.Message + "  ST >> " + err.StackTrace);
                         }
 
-                        //Before we return, send terminate commands to close up the threads 
-                        timer.Stop(); //Algorithm finished running.
+                        //Before we return, send terminate commands to close up the threads
                         TransactionHandler.Exit();
                         DataFeed.Exit();
                         RealTimeHandler.Exit();
@@ -468,7 +458,7 @@ namespace QuantConnect.Lean.Engine
             StateCheck.Ping.Exit();
             
             // Make the console window pause so we can read log output before exiting and killing the application completely
-            Console.ReadKey();
+            Console.Read();
 
             //Finally if ping thread still not complete, kill.
             if (statusPingThread != null && statusPingThread.IsAlive) statusPingThread.Abort();

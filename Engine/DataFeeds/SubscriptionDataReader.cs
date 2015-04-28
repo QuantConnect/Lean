@@ -407,6 +407,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 case DataNormalizationMode.TotalReturn:
                     return;
                 
+                case DataNormalizationMode.SplitAdjusted:
+                    _config.PriceScaleFactor = _factorFile.GetSplitFactor(date);
+                    break;
+
                 case DataNormalizationMode.Adjusted:
                     _config.PriceScaleFactor = _factorFile.GetPriceScaleFactor(date);
                     break;
@@ -602,15 +606,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private decimal GetRawClose()
         {
             var close = Previous.Value;
-            if (_config.DataNormalizationMode == DataNormalizationMode.Adjusted)
+            switch (_config.DataNormalizationMode)
             {
-                // we need to 'unscale' the close to compute dividends
-                close = close / _config.PriceScaleFactor;
-            }
-            if (_config.DataNormalizationMode == DataNormalizationMode.TotalReturn)
-            {
-                // we need to remove the dividends since we've been accumulating them in the price
-                close -= _config.SumOfDividends;
+                case DataNormalizationMode.Raw:
+                    break;
+                
+                case DataNormalizationMode.SplitAdjusted:
+                case DataNormalizationMode.Adjusted:
+                    // we need to 'unscale' the price
+                    close = close/_config.PriceScaleFactor;
+                    break;
+                
+                case DataNormalizationMode.TotalReturn:
+                    // we need to remove the dividends since we've been accumulating them in the price
+                    close -= _config.SumOfDividends;
+                    break;
+                
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
             return close;
         }

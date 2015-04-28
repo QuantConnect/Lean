@@ -13,12 +13,14 @@
  * limitations under the License.
 */
 using System;
+using System.ComponentModel.Composition;
 
 namespace QuantConnect.Logging
 {
     /// <summary>
     /// Interface for redirecting log output
     /// </summary>
+    [InheritedExport(typeof(ILogHandler))]
     public interface ILogHandler : IDisposable
     {
         /// <summary>

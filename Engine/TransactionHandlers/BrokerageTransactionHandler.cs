@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -176,6 +177,20 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         public virtual void ProcessSynchronousEvents()
         {
             // how to do synchronous market orders for real brokerages?
+
+            // we want to remove orders older than 10k records, but only in live mode
+            if (!_algorithm.LiveMode) return;
+
+            const int maxOrdersToKeep = 10000;
+            if (_orders.Count < maxOrdersToKeep + 1) return;
+
+            int max = _orders.Max(x => x.Key);
+            int lowestOrderIdToKeep = max - maxOrdersToKeep;
+            foreach (var item in _orders.Where(x => x.Key <= lowestOrderIdToKeep))
+            {
+                Order value;
+                _orders.TryRemove(item.Key, out value);
+            }
         }
 
         /// <summary>
