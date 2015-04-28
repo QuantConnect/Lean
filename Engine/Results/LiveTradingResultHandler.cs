@@ -412,7 +412,7 @@ namespace QuantConnect.Lean.Engine.Results
                                 // trim data that's older than 2 days
                                 series.Value.Values =
                                     (from v in series.Value.Values
-                                     where v.x < Time.DateTimeToUnixTimeStamp(DateTime.Now.AddDays(-2))
+                                     where v.x > Time.DateTimeToUnixTimeStamp(DateTime.UtcNow.AddDays(-2))
                                      select v).ToList();
                             }
                         }
