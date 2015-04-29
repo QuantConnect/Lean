@@ -68,6 +68,12 @@ namespace QuantConnect.Lean.Engine
             //Wait for datafeeds to be ready, wait for first data to arrive:
             while (feed.Bridge.Length != _subscriptions) Thread.Sleep(100);
 
+            // clear data first when in live mode, start with fresh data
+            if (Engine.LiveMode)
+            {
+                feed.PurgeData();
+            }
+
             //Get all data in queues: return as a sorted dictionary:
             while (!feed.EndOfBridges)
             {
