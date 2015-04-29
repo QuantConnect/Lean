@@ -392,7 +392,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // pause for a moment to receive next valid ID message from gateway
             if (!_waitForNextValidID.WaitOne(5000))
             {
-                throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 1 second.");
+                throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 5 seconds.");
             }
 
             // wait for our account holdings to have been downloaded
