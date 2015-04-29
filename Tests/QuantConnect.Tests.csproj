@@ -59,6 +59,7 @@
     <Compile Include="Common\Securities\Forex\ForexTests.cs" />
     <Compile Include="Common\Util\VersionHelperTests.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />
+    <Compile Include="Indicators\OnBalanceVolumeTest.cs" />
     <Compile Include="Indicators\WilliamsPercentRTests.cs" />
     <Compile Include="Indicators\RateOfChangePercentTests.cs" />
     <Compile Include="Indicators\RateOfChangeTests.cs" />
