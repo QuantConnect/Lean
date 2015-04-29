@@ -29,7 +29,7 @@ namespace QuantConnect.Lean.Engine.Setup
     /// <summary>
     /// Interface to setup the algorithm. Pass in a raw algorithm, return one with portfolio, cash, etc already preset.
     /// </summary>
-    public interface ISetupHandler
+    public interface ISetupHandler : IDisposable
     {
         /******************************************************** 
         * INTERFACE PROPERTIES

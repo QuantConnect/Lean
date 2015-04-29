@@ -194,6 +194,10 @@ namespace QuantConnect.Lean.Engine.Setup
                 || currentTypeFullName.Substring(currentTypeFullName.LastIndexOf('.') + 1) == expectedTypeName;
         }
 
+        public void Dispose()
+        {
+            // nothing to clean up
+        }
     } // End Result Handler Thread:
 
 } // End Namespace

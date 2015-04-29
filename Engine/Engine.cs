@@ -434,13 +434,15 @@ namespace QuantConnect.Lean.Engine
                     if (threadFeed != null && threadFeed.IsAlive) threadFeed.Abort();
                     if (threadTransactions != null && threadTransactions.IsAlive) threadTransactions.Abort();
                     if (threadResults != null && threadResults.IsAlive) threadResults.Abort();
+                    _brokerage.Disconnect();
+                    SetupHandler.Dispose();
                     Log.Trace("Engine.Main(): Analysis Completed and Results Posted.");
                 }
                 catch (Exception err)
                 {
                     Log.Error("Engine.Main(): Error running algorithm: " + err.Message + " >> " + err.StackTrace);
                 }
-                finally 
+                finally
                 {
                     //Delete the message from the job queue:
                     JobQueue.AcknowledgeJob(job);

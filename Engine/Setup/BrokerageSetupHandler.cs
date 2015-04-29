@@ -61,6 +61,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
         // saves ref to algo so we can call quit if runtime error encountered
         private IAlgorithm _algorithm;
+        private IBrokerageFactory _factory;
 
         /// <summary>
         /// Initializes a new BrokerageSetupHandler
@@ -172,10 +173,10 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
 
                 // find the correct brokerage factory based on the specified brokerage in the live job packet
-                var brokerageFactory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
+                _factory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
 
                 // initialize the correct brokerage using the resolved factory
-                brokerage = brokerageFactory.CreateBrokerage(liveJob, algorithm);
+                brokerage = _factory.CreateBrokerage(liveJob, algorithm);
 
                 brokerage.Connect();
 
@@ -273,6 +274,18 @@ namespace QuantConnect.Lean.Engine.Setup
         private void AddInitializationError(string message)
         {
             Errors.Add("Failed to initialize algorithm: Initialize(): " + message);
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            if (_factory != null)
+            {
+                _factory.Dispose();
+            }
         }
     }
 }

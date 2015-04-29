@@ -448,7 +448,14 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             var ib = _interactiveBrokersBrokerage;
             var cashBalance = ib.GetCashBalance();
-            Assert.AreNotEqual(0m, cashBalance);
+            Assert.IsTrue(cashBalance.ContainsKey("USD"));
+            foreach (var item in cashBalance)
+            {
+                if (item.Key == "USD")
+                {
+                    Assert.AreNotEqual(0m, cashBalance["USD"]);
+                }
+            }
         }
 
         [Test]

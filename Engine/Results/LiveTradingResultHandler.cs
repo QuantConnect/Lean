@@ -368,13 +368,15 @@ namespace QuantConnect.Lean.Engine.Results
                         Log.Trace("LiveTradingResultHandler.Update(): Storing log...");
                         lock (_logStoreLock)
                         {
+                            Log.Trace("LiveTradingResultHandler.Updae(): Storing log with count: " + _logStore.Count);
                             var utc = DateTime.UtcNow;
                             var logs = (from log in _logStore
-                                        where log.Time > utc.RoundDown(TimeSpan.FromHours(1)) && log.Time < utc.RoundUp(TimeSpan.FromHours(1))
+                                        where log.Time >= utc.RoundDown(TimeSpan.FromHours(1))
                                         select log).ToList();
                             //Override the log master to delete the old entries and prevent memory creep.
                             _logStore = logs;
                             StoreLog(logs);
+                            Log.Trace("LiveTradingResultHandler.Updae(): Post truncation log with count: " + _logStore.Count);
                         }
                         _nextLogStoreUpdate = DateTime.Now.AddMinutes(2);
                     }
