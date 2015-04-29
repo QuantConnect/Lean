@@ -599,9 +599,17 @@ namespace QuantConnect.Algorithm
         /// Lock the algorithm initialization to avoid user modifiying cash and data stream subscriptions
         /// </summary>
         /// <remarks>Intended for Internal QC Lean Engine use only to prevent accidental manipulation of important properties</remarks>
-        public void SetLocked() 
+        public void SetLocked()
         {
             _locked = true;
+        }
+
+        /// <summary>
+        /// Gets whether or not this algorithm has been locked and fully initialized
+        /// </summary>
+        public bool GetLocked()
+        {
+            return _locked;
         }
 
         /// <summary>

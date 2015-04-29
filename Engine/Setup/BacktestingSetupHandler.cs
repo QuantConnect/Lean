@@ -75,7 +75,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         /// <remarks>Set from the user code.</remarks>
         /// <seealso cref="QCAlgorithm.SetCash(decimal)"/>
-        public decimal StartingCapital
+        public decimal StartingPortfolioValue
         {
             get 
             {

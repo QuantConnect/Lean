@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Starting capital for the algorithm (Loaded from the algorithm code).
         /// </summary>
-        public decimal StartingCapital { get; private set; }
+        public decimal StartingPortfolioValue { get; private set; }
 
         /// <summary>
         /// Start date for the backtest.
@@ -63,7 +63,7 @@ namespace QuantConnect.Lean.Engine.Setup
         public ConsoleSetupHandler()
         {
             MaxOrders = int.MaxValue;
-            StartingCapital = 0;
+            StartingPortfolioValue = 0;
             StartingDate = new DateTime(1998, 01, 01);
             MaximumRuntime = TimeSpan.FromDays(10 * 365);
             Errors = new List<string>();
@@ -132,7 +132,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     //Backtest Specific Parameters:
                     StartingDate = backtestJob.PeriodStart;
-                    StartingCapital = algorithm.Portfolio.Cash;
+                    StartingPortfolioValue = algorithm.Portfolio.Cash;
                 }
                 else
                 {
@@ -148,7 +148,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     //Live Specific Parameters:
                     StartingDate = DateTime.Now;
-                    StartingCapital = algorithm.Portfolio.Cash;
+                    StartingPortfolioValue = algorithm.Portfolio.Cash;
                 }
             }
             catch (Exception err)

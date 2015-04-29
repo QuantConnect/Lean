@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -58,6 +59,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ConcurrentDictionary<string, string> _accountProperties = new ConcurrentDictionary<string, string>();
         // number of shares per symbol
         private readonly ConcurrentDictionary<string, Holding> _accountHoldings = new ConcurrentDictionary<string, Holding>();
+        // sometimes a symbol alone is ambiguous, so we need to send the primary exchange along with it
+        private readonly ConcurrentDictionary<string, string> _symbolPrimaryExchanges = new ConcurrentDictionary<string, string>(); 
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
@@ -131,7 +134,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.Error += HandleError;
             _client.AccountDownloadEnd += (sender, args) =>
             {
-                Log.Trace("InteractiveBrokersBrokerage.AccounDownloadEnd(): Finished account download for " + args.AccountName);
+                Log.Trace("InteractiveBrokersBrokerage.AccountDownloadEnd(): Finished account download for " + args.AccountName);
                 _accountHoldingsResetEvent.Set();
             };
 
@@ -318,7 +321,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 var manualResetEvent = new ManualResetEvent(false);
 
-                int requestID = Interlocked.Increment(ref _nextRequestID);
+                int requestID = GetNextRequestID();
 
                 // define our event handlers
                 EventHandler<IB.ExecutionDataEndEventArgs> clientOnExecutionDataEnd = (sender, args) =>
@@ -438,6 +441,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new InvalidOperationException("InteractiveBrokersBrokerage.IBPlaceOrder(): Unable to place order while not connected.");
             }
 
+            var contract = CreateContract(order, exchange);
+
             int ibOrderID = 0;
             if (needsNewID)
             {
@@ -456,10 +461,54 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new ArgumentException("Expected order with populated BrokerId for updating orders.");
             }
 
-            var contract = CreateContract(order, exchange);
             var ibOrder = ConvertOrder(order, ibOrderID);
-
             _client.PlaceOrder(ibOrder.OrderId, contract, ibOrder);
+        }
+
+        private string GetPrimaryExchange(IB.Contract contract)
+        {
+            string primaryExchange;
+            if (_symbolPrimaryExchanges.TryGetValue(contract.Symbol, out primaryExchange))
+            {
+                return primaryExchange;
+            }
+
+            var requestID = GetNextRequestID();
+
+            var manualResetEvent = new ManualResetEvent(false);
+
+            // define our event handlers
+            EventHandler<IB.ContractDetailsEventArgs> clientOnContractDetails = (sender, args) =>
+            {
+                // ignore other requests
+                if (args.RequestId != requestID) return;
+
+                var symbolPrimaryExchange = args.ContractDetails.Summary.PrimaryExchange;
+                _symbolPrimaryExchanges[contract.Symbol] = symbolPrimaryExchange;
+                primaryExchange = symbolPrimaryExchange;
+            };
+
+            EventHandler<IB.ContractDetailsEndEventArgs> clientOnContractDetailsEnd = (sender, args) =>
+            {
+                // ignore other requests
+                if (args.RequestId != requestID) return;
+
+                manualResetEvent.Set();
+            };
+            
+            _client.ContractDetailsEnd += clientOnContractDetailsEnd;
+            _client.ContractDetails += clientOnContractDetails;
+
+            // make the request for data
+            _client.RequestContractDetails(requestID, contract);
+
+            manualResetEvent.WaitOne();
+            
+            // be sure to remove our event handlers
+            _client.ContractDetails -= clientOnContractDetails;
+            _client.ContractDetailsEnd -= clientOnContractDetailsEnd;
+
+            return primaryExchange;
         }
 
         /// <summary>
@@ -698,6 +747,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Symbol = order.Symbol.Substring(0, 3);
                 contract.Currency = order.Symbol.Substring(3);
             }
+
+            // some contracts require this, such as MSFT
+            contract.PrimaryExchange = GetPrimaryExchange(contract);
+
             return contract;
         }
 
@@ -894,6 +947,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             while (_nextValidID == 0) { Thread.Yield(); }
 
             return Interlocked.Increment(ref _nextValidID);
+        }
+
+        private int GetNextRequestID()
+        {
+            return Interlocked.Increment(ref _nextRequestID);
         }
 
         /// <summary>

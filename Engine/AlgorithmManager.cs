@@ -132,7 +132,7 @@ namespace QuantConnect.Lean.Engine
         {
             //Initialize:
             _dataPointCount = 0;
-            var startingPortfolioValue = setup.StartingCapital;
+            var startingPortfolioValue = setup.StartingPortfolioValue;
             var backtestMode = (job.Type == PacketType.BacktestNode);
             var methodInvokers = new Dictionary<Type, MethodInvoker>();
             var marginCallFrequency = TimeSpan.FromMinutes(5);

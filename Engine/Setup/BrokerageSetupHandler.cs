@@ -23,6 +23,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 
@@ -46,7 +47,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Algorithm starting capital for statistics calculations
         /// </summary>
-        public decimal StartingCapital { get; private set; }
+        public decimal StartingPortfolioValue { get; private set; }
 
         /// <summary>
         /// Start date for analysis loops to search for data.
@@ -148,7 +149,7 @@ namespace QuantConnect.Lean.Engine.Setup
                                 break;
 
                             default: //512
-                                algorithm.SetAssetLimits(50, 10, 5);
+                                algorithm.SetAssetLimits(50, 25, 15);
                                 break;
                         }
 
@@ -182,6 +183,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 var cashBalance = brokerage.GetCashBalance();
                 foreach (var item in cashBalance)
                 {
+                    Log.Trace("BrokerageSetupHandler.Setup(): Setting " + item.Key + " cash to " + item.Value);
                     algorithm.SetCash(item.Key, item.Value, 0);
                 }
 
@@ -190,6 +192,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 foreach (var order in openOrders)
                 {
                     // be sure to assign order IDs such that we increment from the SecurityTransactionManager to avoid ID collisions
+                    Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol + " - " + order.Quantity);
                     order.Id = algorithm.Transactions.GetIncrementOrderId();
                     algorithm.Orders.AddOrUpdate(order.Id, order, (i, o) => order);
                 }
@@ -201,6 +204,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     if (!algorithm.Portfolio.ContainsKey(holding.Symbol))
                     {
+                        Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol);
                         // for items not directly requested set leverage to 1 and at the min resolution
                         algorithm.AddSecurity(holding.Type, holding.Symbol, minResolution.Value, true, 1.0m, false);
                     }
@@ -221,8 +225,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 // call this after we've initialized everything from the brokerage since we may have added some holdings/currencies
                 algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager);
 
-                //Set the starting capital for the strategy to calculate performance:
-                StartingCapital = algorithm.Portfolio.Cash;
+                //Set the starting portfolio value for the strategy to calculate performance:
+                StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
                 StartingDate = DateTime.Now;
             }
             catch (Exception err)

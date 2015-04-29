@@ -54,7 +54,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Algorithm starting capital for statistics calculations
         /// </summary>
-        decimal StartingCapital
+        decimal StartingPortfolioValue
         {
             get;
         }

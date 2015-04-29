@@ -38,7 +38,6 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
     {
         private readonly List<Order> _orders = new List<Order>(); 
         private InteractiveBrokersBrokerage _interactiveBrokersBrokerage;
-        private InteractiveBrokersBrokerageFactory _factory;
         private const int buyQuantity = 100;
         private const string Symbol = "USDJPY";
         private const SecurityType Type = SecurityType.Forex;
@@ -46,11 +45,15 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [SetUp]
         public void InitializeBrokerage()
         {
-            _factory = new InteractiveBrokersBrokerageFactory();
+            InteractiveBrokersGatewayRunner.Start(Config.Get("ib-controller-dir"), 
+                Config.Get("ib-tws-dir"), 
+                Config.Get("ib-user-name"), 
+                Config.Get("ib-password"), 
+                Config.GetBool("ib-use-tws")
+                );
 
             // grabs account info from configuration
-            var job = new LiveNodePacket() {BrokerageData = _factory.BrokerageData};
-            _interactiveBrokersBrokerage = (InteractiveBrokersBrokerage) _factory.CreateBrokerage(job, InteractiveBrokersBrokerageFactoryTests.AlgorithmDependency);
+            _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(new OrderMapping(_orders));
             _interactiveBrokersBrokerage.Connect();
         }
 
@@ -114,7 +117,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             }
             finally
             {
-                _factory.Dispose();
+                InteractiveBrokersGatewayRunner.Stop();
             }
         }
 
