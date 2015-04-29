@@ -451,6 +451,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.IsTrue(cashBalance.ContainsKey("USD"));
             foreach (var item in cashBalance)
             {
+                Console.WriteLine("{0} - {1}", item.Key, item.Value);
                 if (item.Key == "USD")
                 {
                     Assert.AreNotEqual(0m, cashBalance["USD"]);

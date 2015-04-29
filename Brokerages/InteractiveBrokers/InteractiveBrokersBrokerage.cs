@@ -132,11 +132,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.OrderStatus += HandleOrderStatusUpdates;
             _client.UpdateAccountValue += HandleUpdateAccountValue;
             _client.Error += HandleError;
-            _client.AccountDownloadEnd += (sender, args) =>
-            {
-                Log.Trace("InteractiveBrokersBrokerage.AccountDownloadEnd(): Finished account download for " + args.AccountName);
-                _accountHoldingsResetEvent.Set();
-            };
 
             // we need to wait until we receive the next valid id from the server
             _client.NextValidId += (sender, e) =>
@@ -395,12 +390,42 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 5 seconds.");
             }
 
-            // wait for our account holdings to have been downloaded
+            // define our event handler, this acts as stop to make sure when we leave Connect we have downloaded the full account
+            EventHandler<IB.AccountDownloadEndEventArgs> clientOnAccountDownloadEnd = (sender, args) =>
+            {
+                Log.Trace("InteractiveBrokersBrokerage.AccountDownloadEnd(): Finished account download for " + args.AccountName);
+                _accountHoldingsResetEvent.Set();
+            };
+            _client.AccountDownloadEnd += clientOnAccountDownloadEnd;
+
+            // we'll wait to get our first account update, we need to be absolutely sure we 
+            // have downloaded the entire account before leaving this function
+            var firstAccountUpdateReceived = new ManualResetEvent(false);
+            EventHandler<IB.UpdateAccountValueEventArgs> clientOnUpdateAccountValue = (sender, args) =>
+            {
+                firstAccountUpdateReceived.Set();
+            };
+
+            _client.UpdateAccountValue += clientOnUpdateAccountValue;
+
+            // first we won't subscribe, wait for this to finish, below we'll subscribe for continuous updates
             _client.RequestAccountUpdates(true, _account);
+
+            // wait to see the first account value update
+            firstAccountUpdateReceived.WaitOne(2500);
+            _client.UpdateAccountValue -= clientOnUpdateAccountValue;
+
+            // take pause to ensure the account is downloaded before continuing, this was added because running in
+            // linux there appears to be different behavior where the account download end fires immediately.
+            Thread.Sleep(2500);
+
             if (!_accountHoldingsResetEvent.WaitOne(5000))
             {
                 throw new TimeoutException("InteractiveBrokersBrokerage.GetAccountHoldings(): Operation took longer than 5 seconds.");
             }
+
+            // remove our end handler
+            _client.AccountDownloadEnd -= clientOnAccountDownloadEnd;
         }
 
         /// <summary>
