@@ -342,8 +342,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 Log.Error(string.Format("BrokerageTransactionHandler.HandleAccountChanged(): {0} Cash Delta: {1}", account.CurrencySymbol, delta));
             }
 
+            // we don't actually want to do this, this data can be delayed
             // override the current cash value to we're always gauranted to be in sync with the brokerage's push updates
-            _algorithm.Portfolio.CashBook[account.CurrencySymbol].Quantity = account.CashBalance;
+            //_algorithm.Portfolio.CashBook[account.CurrencySymbol].Quantity = account.CashBalance;
         }
 
         /// <summary>
@@ -361,7 +362,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 Log.Error(string.Format("BrokerageTransactionHandler.HandleSecurityHoldingUpdated(): {0} DeltaQuantity: {1} DeltaAvgPrice: {2}", holding.Symbol, deltaQuantity, deltaAvgPrice));
             }
 
-            securityHolding.SetHoldings(holding.AveragePrice, holding.Quantity);
+            // we don't actually want to do this, this data can be delayed
+            //securityHolding.SetHoldings(holding.AveragePrice, holding.Quantity);
         }
     }
 }

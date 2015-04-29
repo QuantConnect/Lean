@@ -541,6 +541,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandleError(object sender, IB.ErrorEventArgs e)
         {
+            // rewrite these messages to be single lined
+            e.ErrorMsg = e.ErrorMsg.Replace("\r\n", ". ").Replace("\r", ". ").Replace("\n", ". ");
             Log.Trace(string.Format("InteractiveBrokersBrokerage.HandleError(): Order: {0} ErrorCode: {1} - {2}", e.TickerId, e.ErrorCode, e.ErrorMsg));
 
             // figure out the message type based on our code collections below

@@ -63,8 +63,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var process = Process.Start(processStartInfo);
                 ScriptProcessID = process.Id;
 
-                // wait for 25 seconds so it can start
-                Thread.Sleep(25000);
+                // wait for 30 seconds so it can start up completely
+                Thread.Sleep(30000);
             }
             catch (Exception err)
             {

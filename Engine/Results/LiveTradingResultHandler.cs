@@ -315,12 +315,11 @@ namespace QuantConnect.Lean.Engine.Results
                     var serverStatistics = OS.GetServerStatistics();
 
                     // only send holdings updates when we have changes in orders, except for first time, then we want to send all
-                    var holdingsToSend = _algorithm.Portfolio.Values.Where(x => _firstHoldingsPacket || deltaOrders.Any(o => o.Value.Symbol == x.Symbol));
-                    foreach (var holding in holdingsToSend.OrderBy(x => x.Symbol))
+                    foreach (var holding in _algorithm.Portfolio.Values.OrderBy(x => x.Symbol))
                     {
                         holdings.Add(holding.Symbol, new Holding(holding));
                     }
-                    _firstHoldingsPacket = false;
+                    //_firstHoldingsPacket = false;
 
                     //Add the algorithm statistics first.
                     lock (_runtimeStatistics)
