@@ -401,7 +401,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="data">New data packet from LEAN</param>
         /// <param name="frontier">Time frontier / where we are in time.</param>
-        public void Update(DateTime frontier, BaseData data) 
+        public void SetMarketPrice(DateTime frontier, BaseData data) 
         { 
             //Update the Exchange/Timer:
             Exchange.SetDateTimeFrontier(frontier);
@@ -409,7 +409,7 @@ namespace QuantConnect.Securities
             //Add new point to cache:
             if (data == null) return;
             Cache.AddData(data);
-            Holdings.UpdatePrice(data.Value);
+            Holdings.UpdateMarketPrice(data.Value);
         }
 
         /// <summary>

@@ -190,7 +190,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var time = DateTime.Now;
             const decimal buyPrice = 1m;
-            securities["AAPL"].Update(time, new TradeBar(time, "AAPL", buyPrice, buyPrice, buyPrice, buyPrice, 1));
+            securities["AAPL"].SetMarketPrice(time, new TradeBar(time, "AAPL", buyPrice, buyPrice, buyPrice, buyPrice, 1));
 
             var order = new MarketOrder("AAPL", quantity, time) {Price = buyPrice};
             var fill = new OrderEvent(order){FillPrice = buyPrice, FillQuantity = quantity};
@@ -212,7 +212,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             time = time.AddDays(1);
             const decimal highPrice = buyPrice * 2;
-            securities["AAPL"].Update(time, new TradeBar(time, "AAPL", highPrice, highPrice, highPrice, highPrice, 1));
+            securities["AAPL"].SetMarketPrice(time, new TradeBar(time, "AAPL", highPrice, highPrice, highPrice, highPrice, 1));
 
             Assert.AreEqual(quantity, portfolio.MarginRemaining);
             Assert.AreEqual(quantity, portfolio.TotalMarginUsed);
@@ -227,7 +227,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             time = time.AddDays(1);
             const decimal lowPrice = buyPrice/2;
-            securities["AAPL"].Update(time, new TradeBar(time, "AAPL", lowPrice, lowPrice, lowPrice, lowPrice, 1));
+            securities["AAPL"].SetMarketPrice(time, new TradeBar(time, "AAPL", lowPrice, lowPrice, lowPrice, lowPrice, 1));
 
             Assert.AreEqual(-quantity/2m, portfolio.MarginRemaining);
             Assert.AreEqual(quantity, portfolio.TotalMarginUsed);
@@ -259,7 +259,7 @@ namespace QuantConnect.Tests.Common.Securities
             var config1 = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, "AAPL", Resolution.Minute, true, true, true, true, true, 0);
             securities.Add(new Security(config1, 2, false));
             securities["AAPL"].Holdings.SetHoldings(100, 100);
-            securities["AAPL"].Update(time, new TradeBar{Time = time, Value = 100});
+            securities["AAPL"].SetMarketPrice(time, new TradeBar{Time = time, Value = 100});
             //Console.WriteLine("AAPL TMU: " + securities["AAPL"].MarginModel.GetMaintenanceMargin(securities["AAPL"]));
             //Console.WriteLine("AAPL Value: " + securities["AAPL"].Holdings.HoldingsValue);
 
@@ -268,7 +268,7 @@ namespace QuantConnect.Tests.Common.Securities
             var config2 = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Forex, "EURUSD", Resolution.Minute, true, true, true, true, true, 1);
             securities.Add(new QuantConnect.Securities.Forex.Forex(usdCash, config2, 100, false));
             securities["EURUSD"].Holdings.SetHoldings(1.1m, 1000);
-            securities["EURUSD"].Update(time, new TradeBar { Time = time, Value = 1.1m });
+            securities["EURUSD"].SetMarketPrice(time, new TradeBar { Time = time, Value = 1.1m });
             //Console.WriteLine("EURUSD TMU: " + securities["EURUSD"].MarginModel.GetMaintenanceMargin(securities["EURUSD"]));
             //Console.WriteLine("EURUSD Value: " + securities["EURUSD"].Holdings.HoldingsValue);
 
@@ -277,7 +277,7 @@ namespace QuantConnect.Tests.Common.Securities
             var config3 = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Forex, "EURGBP", Resolution.Minute, true, true, true, true, true, 2);
             securities.Add(new QuantConnect.Securities.Forex.Forex(gbpCash, config3, 100, false));
             securities["EURGBP"].Holdings.SetHoldings(1m, 1000);
-            securities["EURGBP"].Update(time, new TradeBar { Time = time, Value = 1m });
+            securities["EURGBP"].SetMarketPrice(time, new TradeBar { Time = time, Value = 1m });
             //Console.WriteLine("EURGBP TMU: " + securities["EURGBP"].MarginModel.GetMaintenanceMargin(securities["EURGBP"]));
             //Console.WriteLine("EURGBP Value: " + securities["EURGBP"].Holdings.HoldingsValue);
 

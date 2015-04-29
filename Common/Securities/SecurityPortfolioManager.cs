@@ -543,6 +543,7 @@ namespace QuantConnect.Securities
                 return;
             }
 
+            // we need to modify our holdings in lght of the split factor
             var quantity = security.Holdings.Quantity/split.SplitFactor;
             var avgPrice = security.Holdings.AveragePrice*split.SplitFactor;
 
@@ -552,6 +553,29 @@ namespace QuantConnect.Securities
             _baseCurrencyCash.Quantity += extraCash;
 
             security.Holdings.SetHoldings(avgPrice, (int) quantity);
+
+            // build a 'next' value to update the market prices in light of the split factor
+            var next = security.GetLastData();
+            next.Value *= split.SplitFactor;
+
+            // make sure to modify open/high/low as well for tradebar data types
+            var tradeBar = next as TradeBar;
+            if (tradeBar != null)
+            {
+                tradeBar.Open *= split.SplitFactor;
+                tradeBar.High *= split.SplitFactor;
+                tradeBar.Low *= split.SplitFactor;
+            }
+            
+            // make sure to modify bide/ask as well for tradebar data types
+            var tick = next as Tick;
+            if (tick != null)
+            {
+                tick.AskPrice *= split.SplitFactor;
+                tick.BidPrice *= split.SplitFactor;
+            }
+
+            security.SetMarketPrice(split.Time, next);
         }
 
         /// <summary>

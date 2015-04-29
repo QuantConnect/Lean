@@ -350,7 +350,7 @@ namespace QuantConnect.Securities
                             break;
                         }
                     }
-                    security.Update(time, dataPoint);
+                    security.SetMarketPrice(time, dataPoint);
                 }
             }
             catch (Exception err) 

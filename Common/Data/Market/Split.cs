@@ -37,7 +37,7 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="date">The date</param>
-        /// <param name="price">The price at the time of the spli</param>
+        /// <param name="price">The price at the time of the split</param>
         /// <param name="splitFactor">The split factor to be applied to current holdings</param>
         public Split(string symbol, DateTime date, decimal price, decimal splitFactor)
              : this()

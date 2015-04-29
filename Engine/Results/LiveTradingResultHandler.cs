@@ -986,7 +986,7 @@ namespace QuantConnect.Lean.Engine.Results
                         var subscription = Engine.DataFeed.Subscriptions[i];
                         
                         //Sample Portfolio Value:
-                        _algorithm.Portfolio[subscription.Symbol].UpdatePrice(price);
+                        _algorithm.Portfolio[subscription.Symbol].UpdateMarketPrice(price);
 
                         //Sample Asset Pricing:
                         SampleAssetPrices(subscription.Symbol, time, price);

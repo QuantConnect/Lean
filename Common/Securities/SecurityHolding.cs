@@ -373,7 +373,7 @@ namespace QuantConnect.Securities
         /// Update local copy of closing price value.
         /// </summary>
         /// <param name="closingPrice">Price of the underlying asset to be used for calculating market price / portfolio value</param>
-        public virtual void UpdatePrice(decimal closingPrice)
+        public virtual void UpdateMarketPrice(decimal closingPrice)
         {
             _price = closingPrice;
         }
