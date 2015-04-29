@@ -381,7 +381,10 @@ namespace QuantConnect.Algorithm
         /// <param name="frontier">Current datetime.</param>
         public void SetDateTime(DateTime frontier) 
         {
-            _time = frontier;
+            if (frontier > _time)
+            {
+                _time = frontier;
+            }
         }
 
         /// <summary>
