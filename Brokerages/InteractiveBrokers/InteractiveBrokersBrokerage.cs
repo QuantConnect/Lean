@@ -413,7 +413,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // wait to see the first account value update
             firstAccountUpdateReceived.WaitOne(2500);
-            _client.UpdateAccountValue -= clientOnUpdateAccountValue;
 
             // take pause to ensure the account is downloaded before continuing, this was added because running in
             // linux there appears to be different behavior where the account download end fires immediately.
@@ -426,6 +425,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // remove our end handler
             _client.AccountDownloadEnd -= clientOnAccountDownloadEnd;
+            _client.UpdateAccountValue -= clientOnUpdateAccountValue;
         }
 
         /// <summary>

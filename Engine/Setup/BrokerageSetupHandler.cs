@@ -175,6 +175,9 @@ namespace QuantConnect.Lean.Engine.Setup
                 // find the correct brokerage factory based on the specified brokerage in the live job packet
                 _factory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
 
+                // let the world know what we're doing since logging in can take a minute
+                Engine.ResultHandler.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.LoggingIn, "Logging into brokerage...");
+
                 // initialize the correct brokerage using the resolved factory
                 brokerage = _factory.CreateBrokerage(liveJob, algorithm);
 

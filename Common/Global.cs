@@ -415,7 +415,9 @@ namespace QuantConnect
         /// Runtime Error Stoped Algorithm
         RuntimeError,    //8
         /// Error in the algorithm id (not used).
-        Invalid
+        Invalid,
+        /// The algorithm is logging into the brokerage
+        LoggingIn
     }
 
     /// <summary>

@@ -63,14 +63,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var process = Process.Start(processStartInfo);
                 ScriptProcessID = process.Id;
 
-                if (useTws)
-                {
-                    // sleep an extra 10 seconds for TWS, it takes a little bit to come up all the way
-                    Thread.Sleep(10000);
-                }
-                // wait for 15 seconds so it can start
-                Thread.Sleep(15000);
-
+                // wait for 25 seconds so it can start
+                Thread.Sleep(25000);
             }
             catch (Exception err)
             {
