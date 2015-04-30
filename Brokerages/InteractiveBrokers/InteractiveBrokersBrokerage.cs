@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
@@ -24,6 +25,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Forex;
 using IB = Krs.Ats.IBNet;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
@@ -39,7 +41,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private static int _nextClientID = 0;
         // next valid request id for queries
         private int _nextRequestID = 0;
-
+        private int _nextTickerID = 0;
         private readonly int _port;
         private readonly string _account;
         private readonly string _host;
@@ -59,8 +61,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ConcurrentDictionary<string, string> _accountProperties = new ConcurrentDictionary<string, string>();
         // number of shares per symbol
         private readonly ConcurrentDictionary<string, Holding> _accountHoldings = new ConcurrentDictionary<string, Holding>();
-        // sometimes a symbol alone is ambiguous, so we need to send the primary exchange along with it
-        private readonly ConcurrentDictionary<string, string> _symbolPrimaryExchanges = new ConcurrentDictionary<string, string>(); 
+
+        private readonly ConcurrentDictionary<string, IB.ContractDetails> _contractDetails = new ConcurrentDictionary<string, IB.ContractDetails>(); 
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
@@ -280,7 +282,33 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            return _accountHoldings.Select(x => x.Value.Clone()).ToList();
+            var holdings = _accountHoldings.Select(x => x.Value.Clone()).ToList();
+
+            // fire up tasks to resolve the conversion rates so we can do them in parallel
+            var tasks = holdings.Select(local =>
+            {
+                // we need to resolve the conversion rate for non-USD currencies
+                if (local.Type != SecurityType.Forex)
+                {
+                    // this assumes all non-forex are us denominated, we should add the currency to 'holding'
+                    local.ConversionRate = 1m;
+                    return null;
+                }
+                // if quote currency is in USD don't bother making the request
+                string currency = local.Symbol.Substring(3);
+                if (currency == "USD")
+                {
+                    local.ConversionRate = 1m;
+                    return null;
+                }
+
+                // this will allow us to do this in parallel
+                return Task.Factory.StartNew(() => local.ConversionRate = GetUsdConversion(currency));
+            }).Where(x => x != null).ToArray();
+
+            Task.WaitAll(tasks, 5000);
+
+            return holdings;
         }
 
         /// <summary>
@@ -466,7 +494,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new InvalidOperationException("InteractiveBrokersBrokerage.IBPlaceOrder(): Unable to place order while not connected.");
             }
 
-            var contract = CreateContract(order, exchange);
+            var contract = CreateContract(order.Symbol, order.SecurityType, exchange);
 
             int ibOrderID = 0;
             if (needsNewID)
@@ -492,12 +520,25 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private string GetPrimaryExchange(IB.Contract contract)
         {
-            string primaryExchange;
-            if (_symbolPrimaryExchanges.TryGetValue(contract.Symbol, out primaryExchange))
+            IB.ContractDetails details;
+            if (_contractDetails.TryGetValue(contract.Symbol, out details))
             {
-                return primaryExchange;
+                return details.Summary.PrimaryExchange;
             }
 
+            details = GetContractDetails(contract);
+            if (details == null)
+            {
+                // we were unable to find the contract details
+                return null;
+            }
+
+            return details.Summary.PrimaryExchange;
+        }
+
+        private IB.ContractDetails GetContractDetails(IB.Contract contract)
+        {
+            IB.ContractDetails details = null;
             var requestID = GetNextRequestID();
 
             var manualResetEvent = new ManualResetEvent(false);
@@ -507,33 +548,83 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 // ignore other requests
                 if (args.RequestId != requestID) return;
-
-                var symbolPrimaryExchange = args.ContractDetails.Summary.PrimaryExchange;
-                _symbolPrimaryExchanges[contract.Symbol] = symbolPrimaryExchange;
-                primaryExchange = symbolPrimaryExchange;
-            };
-
-            EventHandler<IB.ContractDetailsEndEventArgs> clientOnContractDetailsEnd = (sender, args) =>
-            {
-                // ignore other requests
-                if (args.RequestId != requestID) return;
-
+                details = args.ContractDetails;
+                _contractDetails.TryAdd(contract.Symbol, details);
                 manualResetEvent.Set();
             };
-            
-            _client.ContractDetailsEnd += clientOnContractDetailsEnd;
+
             _client.ContractDetails += clientOnContractDetails;
 
             // make the request for data
             _client.RequestContractDetails(requestID, contract);
 
-            manualResetEvent.WaitOne();
-            
+            // we'll wait a second, but it may not exist so just pass through
+            manualResetEvent.WaitOne(1000);
+
             // be sure to remove our event handlers
             _client.ContractDetails -= clientOnContractDetails;
-            _client.ContractDetailsEnd -= clientOnContractDetailsEnd;
 
-            return primaryExchange;
+            return details;
+        }
+
+        /// <summary>
+        /// Gets the current conversion rate into USD
+        /// </summary>
+        /// <remarks>Synchronous, blocking</remarks>
+        private decimal GetUsdConversion(string currency)
+        {
+            if (currency == "USD")
+            {
+                return 1m;
+            }
+
+            // determine the correct symbol to choose
+            string invertedSymbol = "USD" + currency;
+            string normalSymbol = currency + "USD";
+            var currencyPair = Forex.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
+            if (currencyPair == null)
+            {
+                return 1m;
+            }
+
+            // is it XXXUSD or USDXXX
+            bool inverted = invertedSymbol == currencyPair;
+            var contract = CreateContract(currencyPair, SecurityType.Forex);
+            var details = GetContractDetails(contract);
+            if (details == null)
+            {
+                Log.Error("InteractiveBrokersBrokerage.GetUsdConversion(): Unable to resolve conversion for currency: " + currency);
+                return 1m;
+            }
+            int ticker = GetNextTickerID();
+            Console.WriteLine("{0} - {1}", ticker, currency);
+            decimal rate = 1m; 
+            var manualResetEvent = new ManualResetEvent(false);
+                
+            var priceTick = new Collection<IB.GenericTickType>();
+
+            // define and add our tick handler
+            EventHandler<IB.TickPriceEventArgs> clientOnTickPrice = (sender, args) =>
+            {
+                if (args.TickerId == ticker && args.TickType == IB.TickType.AskPrice)
+                {
+                    rate = args.Price;
+                    _client.CancelMarketData(ticker);
+                    manualResetEvent.Set();
+                }
+            };
+
+            _client.TickPrice += clientOnTickPrice;
+
+            _client.RequestMarketData(ticker, contract, priceTick, true, false);
+
+            manualResetEvent.WaitOne(2500);
+
+            if (inverted)
+            {
+                return 1/rate;
+            }
+            return rate;
         }
 
         /// <summary>
@@ -541,6 +632,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandleError(object sender, IB.ErrorEventArgs e)
         {
+            // https://www.interactivebrokers.com/en/software/api/apiguide/tables/api_message_codes.htm
+
             // rewrite these messages to be single lined
             e.ErrorMsg = e.ErrorMsg.Replace("\r\n", ". ").Replace("\r", ". ").Replace("\n", ". ");
             Log.Trace(string.Format("InteractiveBrokersBrokerage.HandleError(): Order: {0} ErrorCode: {1} - {2}", e.TickerId, e.ErrorCode, e.ErrorMsg));
@@ -760,19 +853,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Creates an IB contract from the order.
         /// </summary>
-        /// <param name="order">The order to create a contract from</param>
+        /// <param name="symbol">The symbol whose contract we need to create</param>
+        /// <param name="type">The security type of the symbol</param>
         /// <param name="exchange">The exchange where the order will be placed, defaults to 'Smart'</param>
         /// <returns>A new IB contract for the order</returns>
-        private IB.Contract CreateContract(Order order, string exchange = null)
+        private IB.Contract CreateContract(string symbol, SecurityType type, string exchange = null)
         {
-            var securityType = ConvertSecurityType(order.SecurityType);
-            var contract = new IB.Contract(order.Symbol, exchange ?? "Smart", securityType, "USD");
-            if (order.SecurityType == SecurityType.Forex)
+            var securityType = ConvertSecurityType(type);
+            var contract = new IB.Contract(symbol, exchange ?? "Smart", securityType, "USD");
+            if (type == SecurityType.Forex)
             {
                 // forex is special, so rewrite some of the properties to make it work
                 contract.Exchange = "IDEALPRO";
-                contract.Symbol = order.Symbol.Substring(0, 3);
-                contract.Currency = order.Symbol.Substring(3);
+                contract.Symbol = symbol.Substring(0, 3);
+                contract.Currency = symbol.Substring(3);
             }
 
             // some contracts require this, such as MSFT
@@ -940,13 +1034,21 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private Holding CreateHolding(IB.UpdatePortfolioEventArgs e)
         {
+            string currencySymbol;
+            if (!Forex.CurrencySymbols.TryGetValue(e.Contract.Currency, out currencySymbol))
+            {
+                currencySymbol = "$";
+            }
+
             return new Holding
             {
                 Symbol = MapSymbol(e.Contract),
                 Type = ConvertSecurityType(e.Contract.SecurityType),
                 Quantity = e.Position,
                 AveragePrice = e.AverageCost,
-                MarketPrice = e.MarketPrice
+                MarketPrice = e.MarketPrice,
+                ConversionRate = 1m, // this will be overwritten when GetAccountHoldings is called to ensure fresh values
+                CurrencySymbol =  currencySymbol
             };
         }
 
@@ -979,6 +1081,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private int GetNextRequestID()
         {
             return Interlocked.Increment(ref _nextRequestID);
+        }
+
+        private int GetNextTickerID()
+        {
+            return Interlocked.Increment(ref _nextTickerID);
         }
 
         /// <summary>

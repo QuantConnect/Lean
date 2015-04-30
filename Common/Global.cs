@@ -63,7 +63,7 @@ namespace QuantConnect
         /// Type of the security
         public SecurityType Type;
 
-        /// The currency symbol of the holding
+        /// The currency symbol of the holding, such as $
         public string CurrencySymbol;
 
         /// Average Price of our Holding in the currency the symbol is traded in
@@ -90,7 +90,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="holding">Holdings object we'll use to initialize the transport</param>
         public Holding(Securities.SecurityHolding holding)
-            : this()
+             : this()
         {
             Symbol = holding.Symbol;
             Type = holding.Type;
@@ -126,6 +126,14 @@ namespace QuantConnect
                 ConversionRate  = ConversionRate,
                 CurrencySymbol = CurrencySymbol
             };
+        }
+
+        /// <summary>
+        /// Writes out the properties of this instance to string
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Format("{0}: {1} @ {2}{3} - Market: {2}{4} - Conversion: {5}", Symbol, Quantity, CurrencySymbol, AveragePrice, MarketPrice, ConversionRate);
         }
     }
 

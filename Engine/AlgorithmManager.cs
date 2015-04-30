@@ -300,6 +300,7 @@ namespace QuantConnect.Lean.Engine
                             var dividend = dataPoint as Dividend;
                             if (dividend != null)
                             {
+                                Log.Trace("AlgorithmManager.Run(): Applying Dividend for " + dividend.Symbol);
                                 // if this is a dividend apply to portfolio
                                 algorithm.Portfolio.ApplyDividend(dividend);
                                 if (hasOnDataDividends)
@@ -313,6 +314,8 @@ namespace QuantConnect.Lean.Engine
                             var split = dataPoint as Split;
                             if (split != null)
                             {
+                                Log.Trace("AlgorithmManager.Run(): Applying Split for " + split.Symbol);
+
                                 // if this is a split apply to portfolio
                                 algorithm.Portfolio.ApplySplit(split);
                                 if (hasOnDataSplits)

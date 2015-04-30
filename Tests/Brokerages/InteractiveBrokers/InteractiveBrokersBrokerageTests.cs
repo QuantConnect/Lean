@@ -400,6 +400,11 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             var previousHoldings = ib.GetAccountHoldings().ToDictionary(x => x.Symbol);
 
+            foreach (var holding in previousHoldings)
+            {
+                Console.WriteLine(holding.Value);
+            }
+
             Log.Trace("Quantity: " + previousHoldings[Symbol].Quantity);
 
             bool hasSymbol = previousHoldings.ContainsKey(Symbol);
@@ -424,7 +429,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             ib.PlaceOrder(order);
 
             // wait for the order to go through
-            orderResetEvent.WaitOneAssertFail(2500, "Didn't receive order event");
+            orderResetEvent.WaitOneAssertFail(3000, "Didn't receive order event");
+
+            // ib is slow to update tws
+            Thread.Sleep(5000);
 
             // wait for account holdings to be updated
             portfolioResetEvent.WaitOneAssertFail(1500, "Didn't receive portfolio update event");
