@@ -217,6 +217,13 @@ namespace QuantConnect
         /// </summary>
         private static decimal Round(decimal input)
         {
+            // any larger numbers we still want some decimal places
+            if (input > 1000)
+            {
+                return Math.Round(input, 2);
+            }
+
+            // this is good for forex and other small numbers
             var d = (double) input;
             return (decimal) d.RoundToSignificantDigits(5);
         }
