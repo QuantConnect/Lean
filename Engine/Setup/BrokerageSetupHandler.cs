@@ -185,10 +185,10 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 // set the algorithm's cash balance for each currency
                 var cashBalance = brokerage.GetCashBalance();
-                foreach (var item in cashBalance)
+                foreach (var cash in cashBalance)
                 {
-                    Log.Trace("BrokerageSetupHandler.Setup(): Setting " + item.Key + " cash to " + item.Value);
-                    algorithm.SetCash(item.Key, item.Value, 0);
+                    Log.Trace("BrokerageSetupHandler.Setup(): Setting " + cash.Symbol + " cash to " + cash.Quantity);
+                    algorithm.SetCash(cash.Symbol, cash.Quantity, cash.ConversionRate);
                 }
 
                 // populate the algorithm with the account's outstanding orders

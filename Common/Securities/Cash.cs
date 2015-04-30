@@ -163,7 +163,10 @@ namespace QuantConnect.Securities
 
         public override string ToString()
         {
-            return string.Format("{0}: {1} @ {2} ({3})", Symbol, Quantity, ConversionRate.ToString("C"), ValueInAccountCurrency);
+            // round the conversion rate for output
+            decimal rate = ConversionRate;
+            rate = rate < 1000 ? rate.RoundToSignificantDigits(5) : Math.Round(rate, 2);
+            return string.Format("{0}: {1} @ ${2} = {3}", Symbol, Quantity, rate, ValueInAccountCurrency.ToString("C"));
         }
     }
 }

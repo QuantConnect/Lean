@@ -315,9 +315,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override Dictionary<string, decimal> GetCashBalance()
+        public override List<Cash> GetCashBalance()
         {
-            return new Dictionary<string, decimal>(_cashBalances);
+            return _cashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
         }
 
         /// <summary>
@@ -597,7 +597,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return 1m;
             }
             int ticker = GetNextTickerID();
-            Console.WriteLine("{0} - {1}", ticker, currency);
             decimal rate = 1m; 
             var manualResetEvent = new ManualResetEvent(false);
                 
@@ -609,7 +608,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 if (args.TickerId == ticker && args.TickType == IB.TickType.AskPrice)
                 {
                     rate = args.Price;
-                    _client.CancelMarketData(ticker);
                     manualResetEvent.Set();
                 }
             };

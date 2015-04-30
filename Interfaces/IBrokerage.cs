@@ -52,13 +52,13 @@ namespace QuantConnect.Interfaces
         /// Gets all holdings for the account
         /// </summary>
         /// <returns>The current holdings from the account</returns>
-        List<Holding> GetAccountHoldings(); 
+        List<Holding> GetAccountHoldings();
 
         /// <summary>
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        Dictionary<string, decimal> GetCashBalance();
+        List<Cash> GetCashBalance();
 
         /// <summary>
         /// Places a new order and assigns a new broker ID to the order
