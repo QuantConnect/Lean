@@ -338,6 +338,24 @@ namespace QuantConnect.Algorithm
         //
         //}
 
+        // <summary>
+        // Event - v2.0 SPLIT EVENT HANDLER: (Pattern) Basic template for user to override when requesting tick data.
+        // </summary>
+        // <param name="data">IDictionary of Splits Data Keyed by Symbol String</param>
+        //public void OnData(Splits data)
+        //{
+        //
+        //}
+
+        // <summary>
+        // Event - v2.0 DIVIDEND EVENT HANDLER: (Pattern) Basic template for user to override when requesting tick data.
+        // </summary>
+        // <param name="data">IDictionary of Dividend Data Keyed by Symbol String</param>
+        //public void OnData(Dividends data)
+        //{
+        //
+        //}
+
         /// <summary>
         /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
         /// </summary>
@@ -398,7 +416,6 @@ namespace QuantConnect.Algorithm
         {
             if (mode != RunMode.Parallel) return;
             Debug("Algorithm.SetRunMode(): RunMode-Parallel Type has been deprecated. Series analysis selected instead");
-            mode = RunMode.Series;
         }
 
 
@@ -811,7 +828,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Error(string)"/>
         public void Log(string message) 
         {
-            if (message == "") return;
+            if (!_liveMode && message == "") return;
             _logMessages.Add(message);
         }
 
@@ -823,7 +840,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Log"/>
         public void Error(string message)
         {
-            if (message == "" || _previousErrorMessage == message) return;
+            if (!_liveMode && (message == "" || _previousErrorMessage == message)) return;
             _errorMessages.Add(message);
             _previousErrorMessage = message;
         }
@@ -837,7 +854,7 @@ namespace QuantConnect.Algorithm
         public void Error(Exception error)
         {
             var message = error.Message;
-            if (message == "" || _previousErrorMessage == message) return;
+            if (!_liveMode && (message == "" || _previousErrorMessage == message)) return;
             _errorMessages.Add(message);
             _previousErrorMessage = message;
         }

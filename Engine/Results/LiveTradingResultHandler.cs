@@ -315,11 +315,10 @@ namespace QuantConnect.Lean.Engine.Results
                     var serverStatistics = OS.GetServerStatistics();
 
                     // only send holdings updates when we have changes in orders, except for first time, then we want to send all
-                    foreach (var holding in _algorithm.Portfolio.Values.OrderBy(x => x.Symbol))
+                    foreach (var asset in _algorithm.Securities.Values.OrderBy(x => x.Symbol))
                     {
-                        holdings.Add(holding.Symbol, new Holding(holding));
+                        holdings.Add(asset.Symbol, new Holding(asset.Holdings));
                     }
-                    //_firstHoldingsPacket = false;
 
                     //Add the algorithm statistics first.
                     lock (_runtimeStatistics)
@@ -367,7 +366,6 @@ namespace QuantConnect.Lean.Engine.Results
                         Log.Trace("LiveTradingResultHandler.Update(): Storing log...");
                         lock (_logStoreLock)
                         {
-                            Log.Trace("LiveTradingResultHandler.Updae(): Storing log with count: " + _logStore.Count);
                             var utc = DateTime.UtcNow;
                             var logs = (from log in _logStore
                                         where log.Time >= utc.RoundDown(TimeSpan.FromHours(1))
@@ -375,7 +373,6 @@ namespace QuantConnect.Lean.Engine.Results
                             //Override the log master to delete the old entries and prevent memory creep.
                             _logStore = logs;
                             StoreLog(logs);
-                            Log.Trace("LiveTradingResultHandler.Updae(): Post truncation log with count: " + _logStore.Count);
                         }
                         _nextLogStoreUpdate = DateTime.Now.AddMinutes(2);
                     }
