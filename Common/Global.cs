@@ -80,19 +80,21 @@ namespace QuantConnect
 
         /// Create a new default holding:
         public Holding()
-        { }
+        {
+            CurrencySymbol = "$";
+            ConversionRate = 1m;
+        }
 
         /// <summary>
         /// Create a simple JSON holdings from a Security holding class.
         /// </summary>
         /// <param name="holding">Holdings object we'll use to initialize the transport</param>
         public Holding(Securities.SecurityHolding holding)
+            : this()
         {
             Symbol = holding.Symbol;
             Type = holding.Type;
             Quantity = holding.Quantity;
-            CurrencySymbol = "$";
-            ConversionRate = 1m;
 
             var rounding = 2;
             if (holding.Type == SecurityType.Forex)
@@ -120,7 +122,9 @@ namespace QuantConnect
                 Symbol = Symbol,
                 Type = Type,
                 Quantity = Quantity,
-                MarketPrice = MarketPrice
+                MarketPrice = MarketPrice,
+                ConversionRate  = ConversionRate,
+                CurrencySymbol = CurrencySymbol
             };
         }
     }
