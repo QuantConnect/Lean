@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
@@ -48,6 +49,7 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly string _compileId;
         private readonly string _deployId;
         private ConcurrentDictionary<string, Chart> _charts;
+        private ConcurrentQueue<OrderEvent> _orderEvents; 
         private ConcurrentQueue<Packet> _messages;
         private IAlgorithm _algorithm;
         private bool _exitTriggered;
@@ -281,9 +283,15 @@ namespace QuantConnect.Lean.Engine.Results
                 if (DateTime.Now > _nextUpdate)
                 {
                     //Extract the orders created since last update
-                    deltaOrders = (from order in _algorithm.Transactions.Orders
-                                   where order.Value.Id > _lastOrderId
-                                   select order).ToDictionary(t => t.Key, t => t.Value);
+                    OrderEvent orderEvent;
+                    deltaOrders = new Dictionary<int, Order>();
+
+                    var stopwatch = Stopwatch.StartNew();
+                    while (_orderEvents.TryDequeue(out orderEvent) && stopwatch.ElapsedMilliseconds < 15)
+                    {
+                        var order = _algorithm.Transactions.GetOrderById(orderEvent.OrderId);
+                        deltaOrders[orderEvent.OrderId] = ObjectActivator.Clone(order) as Order;
+                    }
 
                     //For charting convert to UTC
                     foreach (var order in deltaOrders)
@@ -887,6 +895,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="newEvent">New event details</param>
         public void OrderEvent(OrderEvent newEvent)
         {
+            // we'll pull these out for the deltaOrders
+            _orderEvents.Enqueue(newEvent);
+
             //Send the message to frontend as packet:
             Log.Trace("LiveConsoleResultHandler.OrderEvent(): id:" + newEvent.OrderId + " >> Status:" + newEvent.Status + " >> Fill Price: " + newEvent.FillPrice.ToString("C") + " >> Fill Quantity: " + newEvent.FillQuantity);
             Messages.Enqueue(new OrderEventPacket(_deployId, newEvent));

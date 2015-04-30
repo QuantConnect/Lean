@@ -15,9 +15,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.InteropServices;
+using CloneExtensions;
+using Fasterflect;
 
 namespace QuantConnect.Util
 {
@@ -28,6 +30,7 @@ namespace QuantConnect.Util
     {
         private static readonly object _lock = new object();
         private static readonly object[] _emptyObjectArray = new object[0];
+        private static readonly Dictionary<Type, MethodInvoker> _cloneMethodsByType = new Dictionary<Type, MethodInvoker>(); 
         private static readonly Dictionary<Type, Func<object[], object>> _activatorsByType = new Dictionary<Type, Func<object[], object>>(); 
 
         /// <summary>
@@ -89,33 +92,19 @@ namespace QuantConnect.Util
         /// <returns>A field/property wise, non-recursive clone of the instance</returns>
         public static object Clone(object instanceToClone)
         {
-            if (instanceToClone == null)
-            {
-                return null;
-            }
-
             var type = instanceToClone.GetType();
-            var factory = GetActivator(type);
-            var members = type.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
-            var instance = factory.Invoke(_emptyObjectArray);
-            foreach (var member in members)
+            MethodInvoker func;
+            if (_cloneMethodsByType.TryGetValue(type, out func))
             {
-                var field = member as _FieldInfo;
-                if (field != null)
-                {
-                    field.SetValue(instance, field.GetValue(instanceToClone));
-                    continue;
-                }
-
-                var property = member as _PropertyInfo;
-                if (property != null && property.CanRead && property.CanWrite && property.GetIndexParameters().Length == 0)
-                {
-                    property.SetValue(instance, property.GetValue(instanceToClone, _emptyObjectArray), _emptyObjectArray);
-                }
+                return func(null, instanceToClone);
             }
 
-            return instance;
+            // public static T GetClone<T>(this T source, CloningFlags flags)
+            var method = typeof (CloneFactory).GetMethods().FirstOrDefault(x => x.Name == "GetClone" && x.GetParameters().Length == 1);
+            method = method.MakeGenericMethod(type);
+            func = method.DelegateForCallMethod();
+            _cloneMethodsByType[type] = func;
+            return func(null, instanceToClone);
         }
     }
 }
