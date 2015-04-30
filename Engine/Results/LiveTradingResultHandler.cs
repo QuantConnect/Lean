@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
@@ -996,7 +997,15 @@ namespace QuantConnect.Lean.Engine.Results
                         //Sample Portfolio Value:
                         var security = _algorithm.Securities[subscription.Symbol];
                         var last = security.GetLastData();
-                        last.Value = price;
+                        if (last != null)
+                        {
+                            last.Value = price;
+                        }
+                        else
+                        {
+                            // we haven't gotten data yet so just spoof a tick to push through the system to start with
+                            security.SetMarketPrice(DateTime.Now, new Tick(DateTime.Now, subscription.Symbol, price, price));
+                        }
 
                         //Sample Asset Pricing:
                         SampleAssetPrices(subscription.Symbol, time, price);
