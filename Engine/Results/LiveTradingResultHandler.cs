@@ -161,6 +161,7 @@ namespace QuantConnect.Lean.Engine.Results
             _deployId = job.DeployId;
             _compileId = job.CompileId;
             _charts = new ConcurrentDictionary<string, Chart>();
+            _orderEvents = new ConcurrentQueue<OrderEvent>();
             _messages = new ConcurrentQueue<Packet>();
             _isActive = true;
             _runtimeStatistics = new Dictionary<string, string>();
