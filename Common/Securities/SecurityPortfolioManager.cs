@@ -229,7 +229,7 @@ namespace QuantConnect.Securities
         /// <returns>Enumerable key value pair</returns>
         IEnumerator<KeyValuePair<string, SecurityHolding>> IEnumerable<KeyValuePair<string, SecurityHolding>>.GetEnumerator()
         {
-            return Securities.GetInternalPortfolioCollection().GetEnumerator();
+            return Securities.Select(x => new KeyValuePair<string, SecurityHolding>(x.Key, x.Value.Holdings)).GetEnumerator();
         }
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace QuantConnect.Securities
         /// <returns>Enumerator</returns>
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            return Securities.GetInternalPortfolioCollection().GetEnumerator();
+            return Securities.Select(x => new KeyValuePair<string, SecurityHolding>(x.Key, x.Value.Holdings)).GetEnumerator();
         }
 
         #endregion
