@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void IsFasterThanRawReflection()
         {
-            int count = 1000000;
+            int count = 100000;
             var data = new TradeBar(DateTime.Now, "SPY", 1m, 2m, 3m, 4m, 5);
             var stopwatch = Stopwatch.StartNew();
             for (int i = 0; i < count; i++)

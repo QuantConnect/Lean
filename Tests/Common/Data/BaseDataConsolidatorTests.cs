@@ -82,5 +82,74 @@ namespace QuantConnect.Tests.Common.Data
             // base data can't aggregate volume
             Assert.AreEqual(0, newTradeBar.Volume);
         }
+
+
+        [Test]
+        public void AggregatesPeriodInCountModeWithHourlyData()
+        {
+            TradeBar consolidated = null;
+            var consolidator = new BaseDataConsolidator(2);
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                consolidated = bar;
+            };
+
+            var reference = new DateTime(2015, 04, 13);
+            consolidator.Update(new Tick { Time = reference });
+            Assert.IsNull(consolidated);
+
+            consolidator.Update(new Tick { Time = reference.AddHours(1) });
+            Assert.IsNotNull(consolidated);
+
+            // sadly the first emit will be off by the data resolution since we 'swallow' a point, so to speak.
+            Assert.AreEqual(TimeSpan.FromHours(1), consolidated.Period);
+            consolidated = null;
+
+            consolidator.Update(new Tick { Time = reference.AddHours(2) });
+            Assert.IsNull(consolidated);
+
+            consolidator.Update(new Tick { Time = reference.AddHours(3) });
+            Assert.IsNotNull(consolidated);
+
+            Assert.AreEqual(TimeSpan.FromHours(2), consolidated.Period);
+            consolidated = null;
+
+            consolidator.Update(new Tick { Time = reference.AddHours(4) });
+            Assert.IsNull(consolidated);
+
+            consolidator.Update(new Tick { Time = reference.AddHours(5) });
+            Assert.IsNotNull(consolidated);
+
+            Assert.AreEqual(TimeSpan.FromHours(2), consolidated.Period);
+        }
+
+        [Test]
+        public void AggregatesPeriodInPeriodModeWithDailyData()
+        {
+            TradeBar consolidated = null;
+            var consolidator = new BaseDataConsolidator(TimeSpan.FromDays(1));
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                consolidated = bar;
+            };
+
+            var reference = new DateTime(2015, 04, 13);
+            consolidator.Update(new Tick { Time = reference });
+            Assert.IsNull(consolidated);
+
+            consolidator.Update(new Tick { Time = reference.AddDays(1) });
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
+            consolidated = null;
+
+            consolidator.Update(new Tick { Time = reference.AddDays(2) });
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
+            consolidated = null;
+
+            consolidator.Update(new Tick { Time = reference.AddDays(3) });
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
+        }
     }
 }
