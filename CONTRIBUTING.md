@@ -125,5 +125,5 @@ Now make responses to the review comments, commit, and re-push your changes:
 ```bash
 $ git add --all
 $ git commit
-$ git pus
+$ git push
 ```
