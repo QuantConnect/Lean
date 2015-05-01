@@ -17,13 +17,13 @@ using System;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Represents the traditional Weighted Moving Average indicator.  The weight are
+    /// Represents the traditional Weighted Moving Average indicator.  The weight are linearly
     /// distributed according to the number of periods in the indicator. 
     /// 
     /// For example, a 4 period indicator will have a numerator of (4 * window[0]) + (3 * window[1]) + (2 * window[2]) + window[3]
     /// and a denominator of 4 + 3 + 2 + 1 = 10
     /// 
-    /// During the warm up period, IsReady will return false, but the WMA will still be computed correctly because
+    /// During the warm up period, IsReady will return false, but the LWMA will still be computed correctly because
     /// the denominator will be the minimum of Samples factorial or Size factorial and 
     /// the computation iterates over that minimum value.
     /// 
