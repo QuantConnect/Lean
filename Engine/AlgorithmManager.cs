@@ -435,8 +435,8 @@ namespace QuantConnect.Lean.Engine
                         //Log.Debug("AlgorithmManager.Run(): Invoking v1.0 Event Handlers...");
                         try
                         {
-                            if (hasOnTradeBar && oldBars.Count > 0) methodInvokers[typeof (TradeBars)](algorithm, oldBars);
-                            if (hasOnTick && oldTicks.Count > 0) methodInvokers[typeof(Ticks)](algorithm, oldTicks);
+                            if (hasOnTradeBar && oldBars.Count > 0) methodInvokers[typeof (Dictionary<string, TradeBar>)](algorithm, oldBars);
+                            if (hasOnTick && oldTicks.Count > 0) methodInvokers[typeof(Dictionary<string, List<Tick>>)](algorithm, oldTicks);
                         }
                         catch (Exception err) 
                         {
