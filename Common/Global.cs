@@ -99,7 +99,7 @@ namespace QuantConnect
             var rounding = 2;
             if (holding.Type == SecurityType.Forex)
             {
-                rounding = 4;
+                rounding = 5;
                 string basec, quotec;
                 Forex.DecomposeCurrencyPair(holding.Symbol, out basec, out quotec);
                 CurrencySymbol = Forex.CurrencySymbols[quotec];
