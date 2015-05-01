@@ -1,6 +1,6 @@
 {
     // algorithm selector
-    "algorithm-type-name": "IndicatorSuiteAlgorithm",
+    "algorithm-type-name": "BasicTemplateAlgorithm",
 
     // engine
     "local": "true",

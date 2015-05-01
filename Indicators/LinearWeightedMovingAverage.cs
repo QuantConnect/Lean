@@ -1,6 +1,18 @@
-﻿using System;
-using MathNet.Numerics;
-using QuantConnect.Data;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+using System;
 
 namespace QuantConnect.Indicators
 {
@@ -16,7 +28,7 @@ namespace QuantConnect.Indicators
     /// the computation iterates over that minimum value.
     /// 
     /// The RollingWindow of inputs is created when the indicator is created.
-    /// A RollingWindow of WMAs is not saved.  That is up to the caller.
+    /// A RollingWindow of LWMAs is not saved.  That is up to the caller.
     /// </summary>
     public class LinearWeightedMovingAverage : WindowIndicator<IndicatorDataPoint>
     {
@@ -25,7 +37,7 @@ namespace QuantConnect.Indicators
         ///     Initializes a new instance of the LinearWeightedMovingAverage class with the specified name and period
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        /// <param name="period">The period of the WMA</param>
+        /// <param name="period">The period of the LWMA</param>
         public LinearWeightedMovingAverage(string name, int period)
             : base(name, period)
         {
@@ -34,9 +46,9 @@ namespace QuantConnect.Indicators
         /// <summary>
         ///     Initializes a new instance of the LinearWeightedMovingAverage class with the default name and period
         /// </summary>
-        /// <param name="period">The period of the WMA</param>
+        /// <param name="period">The period of the LWMA</param>
         public LinearWeightedMovingAverage(int period)
-            : this("WMA" + period, period)
+            : this("LWMA" + period, period)
         {
         }
 
@@ -65,7 +77,7 @@ namespace QuantConnect.Indicators
             }
             long index = window.Size;
 
-            // If the indicator is not ready, the WMA will still be correct
+            // If the indicator is not ready, the LWMA will still be correct
             //  because the numerator has the minimum of the Size (number of
             //  entries or the Samples (the allocated space)
             long minSizeSamples = (long)Math.Min(window.Size, window.Samples);
@@ -74,7 +86,7 @@ namespace QuantConnect.Indicators
                 decimal x = (index-- * window[(int)i]);
                 numerator += x;
             }
-            //System.Diagnostics.Debug.WriteLine(string.Format("WMA = {0}", (smooth/denominator)));
+            //System.Diagnostics.Debug.WriteLine(string.Format("LWMA = {0}", (smooth/denominator)));
             return numerator / denominator;
         }
 
