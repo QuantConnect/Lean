@@ -114,4 +114,16 @@ To git@github.com:username/Lean.git
     * [new branch]       issue-123/short-issue-description -> issue-123/short-issue-description
 ```
 
-Now you're ready to send a [pull request](https://help.github.com/articles/using-pull-requests/) from this branch to **upstream/master** and update the GitHub issue tracker to let a collaborator know that your branch is ready to be reviewed and merged.  If extra changes are required as part of the review process, make those changes on the topic branch and re-push.
+Now you're ready to send a [pull request](https://help.github.com/articles/using-pull-requests/) from this branch to **upstream/master** and update the GitHub issue tracker to let a collaborator know that your branch is ready to be reviewed and merged.  If extra changes are required as part of the review process, make those changes on the topic branch and re-push. First re-checkout the topic branch you made your original changes on:
+
+```bash
+$ git checkout issue-123/short-issue-description
+```
+
+Now make responses to the review comments, commit, and re-push your changes:
+
+```bash
+$ git add --all
+$ git commit
+$ git pus
+```
