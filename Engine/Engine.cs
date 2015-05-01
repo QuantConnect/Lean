@@ -271,7 +271,8 @@ namespace QuantConnect.Lean.Engine
                             //Get all the error messages: internal in algorithm and external in setup handler.
                             var errorMessage = String.Join(",", algorithm.ErrorMessages);
                             errorMessage += String.Join(",", SetupHandler.Errors);
-                            throw new Exception(errorMessage);
+                            ResultHandler.RuntimeError(errorMessage);
+                            Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError);
                         }
                     }
                     catch (Exception err)

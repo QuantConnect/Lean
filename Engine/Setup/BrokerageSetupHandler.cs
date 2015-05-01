@@ -181,7 +181,16 @@ namespace QuantConnect.Lean.Engine.Setup
                 // initialize the correct brokerage using the resolved factory
                 brokerage = _factory.CreateBrokerage(liveJob, algorithm);
 
-                brokerage.Connect();
+                try
+                {
+                    // this can fail for various reasons, such as already being logged in somewhere else
+                    brokerage.Connect();
+                }
+                catch (Exception err)
+                {
+                    AddInitializationError("Error connecting to brokerage. " + err.Message);
+                    return false;
+                }
 
                 // set the algorithm's cash balance for each currency
                 var cashBalance = brokerage.GetCashBalance();
@@ -276,7 +285,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="message">The error message to be added</param>
         private void AddInitializationError(string message)
         {
-            Errors.Add("Failed to initialize algorithm: Initialize(): " + message);
+            Errors.Add("Failed to initialize algorithm: " + message);
         }
 
         /// <summary>

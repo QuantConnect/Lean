@@ -191,7 +191,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     //If we know the market is closed for security then can declare bridge closed.
                     if (success) {
                         EndOfBridge[i] = false;
-                    } else {
+                    }
+                    else
+                    {
+                        ProcessMissingDayFillForward(SubscriptionReaders[i], i, tradeBarIncrements, date);
                         EndOfBridge[i] = true;
                     }
                 }
@@ -210,7 +213,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // for each smallest resolution
-                while ((frontier.Date == date.Date || frontier == date.Date.AddDays(1)) && !_exitTriggered)
+                var dataPlusOneDay = date.Date.AddDays(1);
+                while ((frontier.Date == date.Date || frontier == dataPlusOneDay) && !_exitTriggered)
                 {
                     var cache = new List<BaseData>[_subscriptions];
                     
@@ -236,12 +240,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
                         //Initialize data store:
-                        cache[i] = new List<BaseData>();
+                        cache[i] = new List<BaseData>(2);
 
                         //Add the last iteration to the new list: only if it falls into this time category
+                        var cacheAtIndex = cache[i];
                         while (manager.Current.Time < frontier)
                         {
-                            cache[i].Add(manager.Current);
+                            cacheAtIndex.Add(manager.Current);
                             if (!manager.MoveNext()) break;
                         }
 
@@ -344,6 +349,43 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
+        private void ProcessMissingDayFillForward(SubscriptionDataReader manager, int i, TimeSpan increment, DateTime dateToFill)
+        {
+            // we'll copy the current into the next day
+            var subscription = Subscriptions[i];
+            if (!subscription.FillDataForward || manager.Current == null) return;
+
+            var start = dateToFill.Date + manager.Exchange.MarketOpen;
+            if (subscription.ExtendedMarketHours)
+            {
+                // we need to loop to find the extended market open
+                start = dateToFill.Date;
+                while (!manager.Exchange.DateTimeIsExtendedOpen(start))
+                {
+                    start += increment;
+                }
+            }
+
+            var current = manager.Current;
+            for (var date = start; date.Date == dateToFill.Date; date = date + increment)
+            {
+                if (manager.IsMarketOpen(date) || (subscription.ExtendedMarketHours && manager.IsExtendedMarketOpen(date)))
+                {
+                    var cache = new List<BaseData>(1);
+                    var fillforward = current.Clone(true);
+                    fillforward.Time = date;
+                    FillForwardFrontiers[i] = date;
+                    cache.Add(fillforward);
+                    Bridge[i].Enqueue(cache);
+                }
+                else
+                {
+                    // stop fill forwarding when we're no longer open
+                    break;
+                }
+            }
+        }
+
 
         /// <summary>
         /// If this is a fillforward subscription, look at the previous time, and current time, and add new 
@@ -365,13 +407,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (FillForwardFrontiers[i].Ticks == 0) FillForwardFrontiers[i] = previous.Time;
 
             //Data ended before the market closed: premature ending flag - continue filling forward until market close.
-            if (manager.EndOfStream && manager.MarketOpen(current.Time))
+            if (manager.EndOfStream && manager.IsMarketOpen(current.Time))
             {
                 //Make sure we only fill forward to end of *today* -- don't fill forward tomorrow just because its also open.
                 var processingDate = FillForwardFrontiers[i].Date;
 
                 //Premature end of stream: fill manually until market closed.
-                for (var date = FillForwardFrontiers[i] + increment; (manager.MarketOpen(date) && date.Date == processingDate); date = date + increment)
+                for (var date = FillForwardFrontiers[i] + increment; (manager.IsMarketOpen(date) && date.Date == processingDate); date = date + increment)
                 {
                     var cache = new List<BaseData>(1);
                     var fillforward = current.Clone(true);
@@ -391,7 +433,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 //If we don't want aftermarket data, rewind it backwards until the market closes.
                 if (!Subscriptions[i].ExtendedMarketHours)
                 {
-                    if (!manager.MarketOpen(date))
+                    if (!manager.IsMarketOpen(date))
                     {
                         // Move fill forward so we don't waste time in this tight loop.
                         //Question is where to shuffle the date? 
@@ -401,14 +443,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         do
                         {
                             date = date - increment;
-                        } while (manager.MarketOpen(date));
+                        } while (manager.IsMarketOpen(date));
                         continue;
                     }
                 }
                 else
                 {
                     //If we've asked for extended hours, and the security is no longer inside extended market hours, skip:
-                    if (!manager.ExtendedMarketOpen(date))
+                    if (!manager.IsExtendedMarketOpen(date))
                     {
                         continue;
                     }

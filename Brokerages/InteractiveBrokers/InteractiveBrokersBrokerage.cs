@@ -43,6 +43,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // next valid request id for queries
         private int _nextRequestID = 0;
         private int _nextTickerID = 0;
+        private volatile bool _disconnected1100Fired = false;
+
         private readonly int _port;
         private readonly string _account;
         private readonly string _host;
@@ -646,6 +648,26 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             else if (WarningCodes.Contains((int) e.ErrorCode))
             {
                 brokerageMessageType = BrokerageMessageType.Warning;
+            }
+
+            // code 1100 is a connection failure, we'll wait a minute before exploding gracefully
+            if ((int) e.ErrorCode == 1100 && !_disconnected1100Fired)
+            {
+                _disconnected1100Fired = true;
+                // wait a minute and see if we've been reconnected
+                Task.Delay(TimeSpan.FromMinutes(1)).ContinueWith(task =>
+                {
+                    if (_disconnected1100Fired)
+                    {
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, "Connect with Interactive Brokers lost. " +
+                            "This could be because of internet connectivity issues or a log in from another location."
+                            ));
+                    }
+                }).Start();
+            }
+            else if ((int) e.ErrorCode == 1102)
+            {
+                _disconnected1100Fired = false;
             }
 
             if (InvalidatingCodes.Contains((int)e.ErrorCode))

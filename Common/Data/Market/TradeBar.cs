@@ -62,6 +62,15 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
+        /// The closing time of this bar, computed via the Time and Period
+        /// </summary>
+        public override DateTime EndTime
+        {
+            get { return Time + Period; }
+            set { Period = value - Time; } 
+        }
+
+        /// <summary>
         /// The period of this trade bar, (second, minute, daily, ect...)
         /// </summary>
         public TimeSpan Period { get; set; }

@@ -47,7 +47,7 @@ namespace QuantConnect.Tests
 
             foreach (var stat in expectedStatistics)
             {
-                Assert.AreEqual(stat.Value, statistics[stat.Key]);
+                Assert.AreEqual(stat.Value, statistics[stat.Key], "Failed on " + stat.Key);
             }
         }
     }
