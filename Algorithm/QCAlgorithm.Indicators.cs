@@ -392,7 +392,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new LinearWeightedMovingAverage indicator.  This indicator will linerly distribute
+        /// Creates a new LinearWeightedMovingAverage indicator.  This indicator will linearly distribute
         /// the weights across the periods.  
         /// </summary>
         /// <param name="symbol">The symbol whose Williams %R we want</param>
