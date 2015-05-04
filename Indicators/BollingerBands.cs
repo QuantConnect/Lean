@@ -29,7 +29,7 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> UpperBand { get; private set; }
 
         /// <summary>
-        /// Gets the upper bollinger band (middleBand - k * stdDev)
+        /// Gets the lower bollinger band (middleBand - k * stdDev)
         /// </summary>
         public IndicatorBase<IndicatorDataPoint> LowerBand { get; private set; }
 
