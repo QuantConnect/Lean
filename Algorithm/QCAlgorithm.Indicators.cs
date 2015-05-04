@@ -442,7 +442,7 @@ namespace QuantConnect.Algorithm
             consolidator.DataConsolidated += (sender, consolidated) =>
             {
                 var value = selector(consolidated);
-                indicator.Update(consolidated.Time, value);
+                indicator.Update(new IndicatorDataPoint(consolidated.Symbol, consolidated.EndTime, value));
             };
         }
 
