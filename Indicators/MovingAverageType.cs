@@ -31,6 +31,10 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The standard exponential moving average, using a smoothing factor of 1/n
         /// </summary>
-        Wilders
+        Wilders,
+        /// <summary>
+        /// A weighted moving average type
+        /// </summary>
+        LinearWeightedMovingAverage
     }
 }
