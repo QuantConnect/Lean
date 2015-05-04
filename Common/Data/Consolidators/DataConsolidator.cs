@@ -35,7 +35,7 @@ namespace QuantConnect.Data.Consolidators
             var typedData = data as TInput;
             if (typedData == null)
             {
-                throw new ArgumentNullException("data");
+                throw new ArgumentNullException("data", "Received type of " + data.GetType().Name + " but expected " + typeof(TInput).Name);
             }
             Update(typedData);
         }
