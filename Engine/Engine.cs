@@ -287,7 +287,7 @@ namespace QuantConnect.Lean.Engine
                     {
                         //-> Reset the backtest stopwatch; we're now running the algorithm.
                         startTime = DateTime.Now;
-
+                        
                         //Set algorithm as locked; set it to live mode if we're trading live, and set it to locked for no further updates.
                         algorithm.SetAlgorithmId(job.AlgorithmId);
                         algorithm.SetLiveMode(LiveMode);
@@ -315,6 +315,7 @@ namespace QuantConnect.Lean.Engine
                         threadTransactions.Start(); // Transaction modeller scanning new order requests
                         threadRealTime.Start(); // RealTime scan time for time based events:
                         // Result manager scanning message queue: (started earlier)
+                        ResultHandler.DebugMessage(string.Format("Launching analysis for {0} with LEAN Engine v{1}", job.AlgorithmId, Constants.Version));
 
                         try
                         {
