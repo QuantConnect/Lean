@@ -249,6 +249,11 @@ namespace QuantConnect.Lean.Engine
                     _algorithmState = AlgorithmStatus.Quit;
                     break;
                 }
+                if (algorithm.RunTimeError != null)
+                {
+                    _algorithmState = AlgorithmStatus.RuntimeError;
+                    break;
+                }
 
                 //Pass in the new time first:
                 algorithm.SetDateTime(time);

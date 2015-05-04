@@ -272,7 +272,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     case BrokerageMessageType.Error:
                         results.ErrorMessage("Brokerage Error: " + message.Message);
                         _algorithm.RunTimeError = new Exception(message.Message);
-                        _algorithm.Quit();
                         break;
                 }
             };
