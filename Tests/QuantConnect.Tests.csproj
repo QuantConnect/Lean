@@ -71,6 +71,7 @@
     <Compile Include="Indicators\StochasticTests.cs" />
     <Compile Include="RegressionTests.cs" />
     <Compile Include="TestExtensions.cs" />
+    <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />
     <None Include="Algorithm\Test_Cash.cs" />
     <None Include="Algorithm\Test_LiveAlgorithm.cs" />
     <None Include="Algorithm\Test_MixedAssets.cs" />
