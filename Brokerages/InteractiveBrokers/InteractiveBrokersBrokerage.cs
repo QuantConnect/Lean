@@ -482,6 +482,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
+        /// Gets the raw account values sent from IB
+        /// </summary>
+        public Dictionary<string, string> GetAccountValues()
+        {
+            return new Dictionary<string, string>(_accountProperties);
+        }
+
+        /// <summary>
         /// Places the order with InteractiveBrokers
         /// </summary>
         /// <param name="order">The order to be placed</param>
@@ -692,10 +700,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             try
             {
-                _accountProperties[e.Key] = e.Value;
+                _accountProperties[e.Currency + ":" + e.Key] = e.Value;
 
                 // we want to capture if the user's cash changes so we can reflect it in the algorithm
-                if (e.Key == AccountValueKeys.CashBalance && e.Currency != "BASE")
+                if (e.Key == AccountValueKeys.NetLiquidationByCurrency && e.Currency != "BASE")
                 {
                     var cashBalance = decimal.Parse(e.Value);
                     _cashBalances.AddOrUpdate(e.Currency, cashBalance);
@@ -1120,6 +1128,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private static class AccountValueKeys
         {
             public const string CashBalance = "CashBalance";
+            public const string AccruedCash = "AccruedCash";
+            public const string NetLiquidationByCurrency = "NetLiquidationByCurrency";
         }
 
         // these are fatal errors from IB
