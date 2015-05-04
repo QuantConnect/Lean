@@ -509,6 +509,11 @@ namespace QuantConnect.Algorithm
                 var marginPerShare = marginRequired/quantity;
                 quantity = (int) Math.Truncate(marginRemaining/marginPerShare);
                 marketOrder.Quantity = quantity;
+                if (quantity == 0)
+                {
+                    // can't order anything
+                    return;
+                }
                 marginRequired = security.MarginModel.GetInitialMarginRequiredForOrder(security, marketOrder);
 
                 // no need to iterate longer than 10
