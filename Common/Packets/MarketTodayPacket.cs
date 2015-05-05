@@ -73,8 +73,8 @@ namespace QuantConnect.Packets
             {
                 Date = date.Date,
                 Open = new MarketHours(date, 0, 24),
-                PostMarket = new MarketHours(date, 24, 24),
                 PreMarket = new MarketHours(date, 0, 0),
+                PostMarket = new MarketHours(date, 24, 24),
                 Status = "open"
             };
         }
@@ -182,6 +182,11 @@ namespace QuantConnect.Packets
         {
             Start = referenceDate.Date.AddHours(defaultStart);
             End = referenceDate.Date.AddHours(defaultEnd);
+            if (defaultEnd == 24)
+            {
+                // when we mark it as the end of the day other code that relies on .TimeOfDay has issues
+                End = End.AddTicks(-1);
+            }
         }
     }
 }

@@ -458,25 +458,27 @@ namespace QuantConnect.Lean.Engine.Results
             const int groupSize = 10;
             Dictionary<string, Chart> current = new Dictionary<string, Chart>();
             var chartPackets = new List<LiveResultPacket>();
+
+            // we only want to send data for the chart the user is subscribed to, but
+            // we still want to let consumers know that these other charts still exists
             foreach (var chart in deltaCharts.Values)
             {
-                if (chart.Series.Values.Sum(x => x.Values.Count) == 0) continue;
                 if (chart.Name != _subscription)
                 {
                     current.Add(chart.Name, new Chart(chart.Name));
-                    continue;
                 }
-
-                if (current.Count >= groupSize)
-                {
-                    current = new Dictionary<string, Chart>(groupSize);
-                    chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = current }));
-                }
-                current.Add(chart.Name, chart);
             }
 
-            //Add the last packet:
             chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = current }));
+
+            // add in our subscription symbol
+            Chart subscriptionChart;
+            if (deltaCharts.TryGetValue(_subscription, out subscriptionChart))
+            {
+                var scharts = new Dictionary<string,Chart>();
+                scharts.Add(_subscription, subscriptionChart);
+                chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = scharts }));
+            }
 
             // these are easier to split up, not as big as the chart objects
             var packets = new[]
@@ -624,8 +626,10 @@ namespace QuantConnect.Lean.Engine.Results
             Security security;
             if (_algorithm.Securities.TryGetValue(symbol, out security) && !security.SubscriptionDataConfig.IsInternalFeed && value > 0)
             {
-                if (DateTime.Now.TimeOfDay > security.Exchange.MarketOpen
-                 && DateTime.Now.TimeOfDay < security.Exchange.MarketClose)
+                var now = DateTime.Now;
+                var open = now.Date + security.Exchange.MarketOpen;
+                var close = now.Date + security.Exchange.MarketClose;
+                if (now > open && now < close)
                 {
                     Sample("Stockplot: " + symbol, ChartType.Overlay, "Stockplot: " + symbol, SeriesType.Line, time, value);
                 }
