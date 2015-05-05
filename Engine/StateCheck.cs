@@ -54,9 +54,6 @@ namespace QuantConnect.Lean.Engine
             /// DB Ping Run Method:
             public static void Run()
             {
-                //Don't run at all if local.
-                if (Engine.IsLocal) return;
-
                 while (!_exitTriggered)
                 {
                     if (AlgorithmManager.AlgorithmId != "" && AlgorithmManager.QuitState == false)
