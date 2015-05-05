@@ -544,7 +544,12 @@ namespace QuantConnect.Lean.Engine
         {
             lock (_lock)
             {
-                _algorithmState = state;
+                //We don't want anyone elseto set our internal state to "Running". 
+                //This is controlled by the algorithm private variable only.
+                if (state != AlgorithmStatus.Running)
+                {
+                    _algorithmState = state;
+                }
             }
         }
 
