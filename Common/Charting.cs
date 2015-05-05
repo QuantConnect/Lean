@@ -183,6 +183,15 @@ namespace QuantConnect
             }
             return copy;
         }
+
+        /// <summary>
+        /// Removes the data from this series and resets the update position to 0
+        /// </summary>
+        public void Purge()
+        {
+            Values.Clear();
+            _updatePosition = 0;
+        }
     }
 
 

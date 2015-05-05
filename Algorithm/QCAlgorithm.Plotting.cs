@@ -289,7 +289,7 @@ namespace QuantConnect.Algorithm
                 {
                     foreach (var series in chart.Value.Series)
                     {
-                        series.Value.Values.Clear();
+                        series.Value.Purge();
                     }
                 }
             }
