@@ -226,15 +226,23 @@ namespace QuantConnect
         /// </summary>
         private static decimal Round(decimal input)
         {
+            input = Normalize(input);
+
             // any larger numbers we still want some decimal places
             if (input > 1000)
             {
-                return Math.Round(input, 2);
+                return Math.Round(input, 4);
             }
 
             // this is good for forex and other small numbers
             var d = (double) input;
-            return (decimal) d.RoundToSignificantDigits(5);
+            return (decimal) d.RoundToSignificantDigits(7);
+        }
+
+        private static decimal Normalize(decimal input)
+        {
+            // http://stackoverflow.com/a/7983330/1582922
+            return input / 1.000000000000000000000000000000000m;
         }
     }
 
