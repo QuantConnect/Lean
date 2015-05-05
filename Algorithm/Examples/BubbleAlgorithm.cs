@@ -46,9 +46,9 @@ namespace QuantConnect
         Dictionary<string, RelativeStrengthIndex> rsiDic = new Dictionary<string, RelativeStrengthIndex>();
         Dictionary<string, MovingAverageConvergenceDivergence> macdDic = new Dictionary<string, MovingAverageConvergenceDivergence>();
 
-		/// <summary>
-		/// Initialise the Algorithm and Prepare Required Data.
-		/// </summary>
+        /// <summary>
+        /// Initialise the Algorithm and Prepare Required Data.
+        /// </summary>
         public override void Initialize()
         {
             SetCash(100000);

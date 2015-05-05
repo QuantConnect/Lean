@@ -59,7 +59,6 @@ namespace QuantConnect
             list.Insert(newIndex, oItem);
         }
 
-
         /// <summary>
         /// Extension method to convert a string into a byte array
         /// </summary>
@@ -71,7 +70,6 @@ namespace QuantConnect
             Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
             return bytes;
         }
-
 
         /// <summary>
         /// Extentsion method to clear all items from a thread safe queue
@@ -98,7 +96,6 @@ namespace QuantConnect
             Buffer.BlockCopy(bytes, 0, chars, 0, bytes.Length);
             return new string(chars);
         }
-
 
         /// <summary>
         /// Extension method to convert a string to a MD5 hash.
@@ -130,7 +127,6 @@ namespace QuantConnect
             dictionary.AddOrUpdate(key, value, (oldkey, oldvalue) => value);
         }
 
-
         /// <summary>
         /// Extension method to round a double value to a fixed number of significant figures instead of a fixed decimal places.
         /// </summary>
@@ -144,15 +140,14 @@ namespace QuantConnect
             return scale * Math.Round(d / scale, digits);
         }
 
-
         /// <summary>
         /// Extension method for faster string to decimal conversion. 
         /// </summary>
         /// <param name="str">String to be converted to decimal value</param>
         /// <remarks>Method makes some assuptions - always numbers, no "signs" +,- etc.</remarks>
         /// <returns>Decimal value of the string</returns>
-        public static decimal ToDecimal(this string str) {
-
+        public static decimal ToDecimal(this string str)
+        {
             long value = 0;
             var exp = 0;
             var decimalPlaces = int.MinValue;
@@ -213,7 +208,6 @@ namespace QuantConnect
             return ext;
         }
 
-
         /// <summary>
         /// Extension method to convert strings to stream to be read.
         /// </summary>
@@ -228,7 +222,6 @@ namespace QuantConnect
             stream.Position = 0;
             return stream;
         }
-
 
         /// <summary>
         /// Extension method to round a timeSpan to nearest timespan period.
@@ -265,7 +258,6 @@ namespace QuantConnect
             return Round(time, roundingInterval, MidpointRounding.ToEven);
         }
 
-
         /// <summary>
         /// Extension method to round a datetime down by a timespan interval.
         /// </summary>
@@ -282,7 +274,6 @@ namespace QuantConnect
             return dateTime.AddTicks(-(dateTime.Ticks % interval.Ticks));
         }
 
-
         /// <summary>
         /// Extension method to round a datetime to the nearest unit timespan.
         /// </summary>
@@ -293,7 +284,6 @@ namespace QuantConnect
         {
             return new DateTime((datetime - DateTime.MinValue).Round(roundingInterval).Ticks);
         }
-
 
         /// <summary>
         /// Extension method to explicitly round up to the nearest timespan interval.

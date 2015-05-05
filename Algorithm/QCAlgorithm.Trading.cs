@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">string Symbol of the asset to trade</param>
         /// <param name="quantity">decimal Quantity of the asset to trade</param>
-        /// <seealso cref="Buy(string, double)"/>
+        /// <seealso cref="Order(string, double)"/>
         public int Buy(string symbol, decimal quantity)
         {
             return Order(symbol, quantity);

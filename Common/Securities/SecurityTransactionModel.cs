@@ -283,7 +283,7 @@ namespace QuantConnect.Securities
                 Log.Error("SecurityTransactionModel.LimitFill(): " + err.Message);
             }
 
-			return fill;
+            return fill;
         }
 
         /// <summary>
@@ -294,7 +294,7 @@ namespace QuantConnect.Securities
         /// <returns>decimal approximation for slippage</returns>
         public virtual decimal GetSlippageApproximation(Security security, Order order)
         {
-			return Decimal.Zero;
+            return 0m;
         }
 
         /// <summary>
@@ -302,7 +302,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal GetOrderFee(decimal quantity, decimal price)
         {
-			return Decimal.Zero;
+            return 0m;
         }
 
         /// <summary>
@@ -313,9 +313,9 @@ namespace QuantConnect.Securities
         /// <returns>The cost of the order in units of the account currency</returns>
         public virtual decimal GetOrderFee(Security security, Order order)
         {
-			if (order.Quantity == Decimal.Zero)
+            if (order.Quantity == 0m)
             {
-				return Decimal.Zero;
+                return 0m;
             }
 
             return GetOrderFee(order.Quantity, order.Value/order.Quantity);
