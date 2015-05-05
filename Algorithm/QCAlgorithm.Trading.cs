@@ -498,6 +498,9 @@ namespace QuantConnect.Algorithm
             // we can't do anything if we don't have data yet
             if (security.Price == 0) return;
 
+            // we can't even afford one more share
+            if (marginRemaining < marginRequiredForSingleShare) return;
+
             // we want marginRequired to end up between this and marginRemaining
             var marginRequiredLowerThreshold = marginRemaining - marginRequiredForSingleShare;
 
