@@ -446,13 +446,13 @@ namespace QuantConnect.Lean.Engine
                 }
                 finally
                 {
+                    //No matter what for live mode; make sure we've set algorithm status in the API for "not running" conditions:
+                    if (LiveMode && AlgorithmManager.State != AlgorithmStatus.Running && AlgorithmManager.State != AlgorithmStatus.RuntimeError)
+                        Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmManager.State);
+
                     //Delete the message from the job queue:
                     JobQueue.AcknowledgeJob(job);
                     Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
-
-                    //No matter what for live mode; make sure we've set algorithm status in the API for "not running" conditions:
-                    if (LiveMode && AlgorithmManager.State != AlgorithmStatus.Running && AlgorithmManager.State != AlgorithmStatus.RuntimeError) 
-                        Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmManager.State);
                     
                     //Attempt to clean up ram usage:
                     GC.Collect();
