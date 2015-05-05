@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+/**********************************************************
+* USING NAMESPACES
+**********************************************************/
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,17 +23,23 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 
+
 namespace QuantConnect.Securities 
 {
+    /******************************************************** 
+    * CLASS DEFINITIONS
+    *********************************************************/
     /// <summary>
     /// Enumerable security management class for grouping security objects into an array and providing any common properties.
     /// </summary>
     /// <remarks>Implements IDictionary for the index searching of securities by symbol</remarks>
     public class SecurityManager : IDictionary<string, Security> 
     {
+        /******************************************************** 
+        * CLASS PRIVATE VARIABLES
+        *********************************************************/
         //Internal dictionary implementation:
         private IDictionary<string, Security> _securityManager;
-        private IDictionary<string, SecurityHolding> _securityHoldings;
         private int _minuteLimit = 500;
         private int _minuteMemory = 2;
         private int _secondLimit = 100;
@@ -39,21 +48,36 @@ namespace QuantConnect.Securities
         private int _tickMemory = 34;
         private decimal _maxRamEstimate = 1024;
 
+        /******************************************************** 
+        * CLASS PUBLIC VARIABLES
+        *********************************************************/
+
+        /******************************************************** 
+        * CLASS CONSTRUCTOR
+        *********************************************************/
         /// <summary>
         /// Initialise the algorithm security manager with two empty dictionaries
         /// </summary>
         public SecurityManager()
         {
             _securityManager = new Dictionary<string, Security>(); 
-            _securityHoldings = new Dictionary<string, SecurityHolding>();
         }
 
+        /******************************************************** 
+        * CLASS PROPERTIES
+        *********************************************************/
+        
+
+        /******************************************************** 
+        * CLASS METHODS
+        *********************************************************/
         /// <summary>
         /// Add a new security with this symbol to the collection.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <param name="symbol">symbol for security we're trading</param>
         /// <param name="security">security object</param>
+        /// <seealso cref="Add(string,Resolution,bool)"/>
         public void Add(string symbol, Security security)
         {
             CheckResolutionCounts(security.Resolution);
@@ -78,8 +102,8 @@ namespace QuantConnect.Securities
         {
             CheckResolutionCounts(pair.Value.Resolution);
             _securityManager.Add(pair.Key, pair.Value);
-            _securityHoldings.Add(pair.Key, pair.Value.Holdings);
         }
+
 
         /// <summary>
         /// Clear the securities array to delete all the portfolio and asset information.
@@ -89,6 +113,7 @@ namespace QuantConnect.Securities
         {
             _securityManager.Clear();
         }
+
 
         /// <summary>
         /// Check if this collection contains this key value pair.
@@ -101,6 +126,7 @@ namespace QuantConnect.Securities
             return _securityManager.Contains(pair);
         }
 
+
         /// <summary>
         /// Check if this collection contains this symbol.
         /// </summary>
@@ -111,6 +137,7 @@ namespace QuantConnect.Securities
         {
             return _securityManager.ContainsKey(symbol);
         }
+
 
         /// <summary>
         /// Copy from the internal array to an external array.
@@ -123,6 +150,7 @@ namespace QuantConnect.Securities
             _securityManager.CopyTo(array, number);
         }
 
+
         /// <summary>
         /// Count of the number of securities in the collection.
         /// </summary>
@@ -132,6 +160,7 @@ namespace QuantConnect.Securities
             get { return _securityManager.Count; }
         }
 
+
         /// <summary>
         /// Flag indicating if the internal arrray is read only.
         /// </summary>
@@ -140,6 +169,7 @@ namespace QuantConnect.Securities
         {
             get { return _securityManager.IsReadOnly;  }
         }
+
 
         /// <summary>
         /// Remove a key value of of symbol-securities from the collections.
@@ -151,6 +181,7 @@ namespace QuantConnect.Securities
         {
             return _securityManager.Remove(pair);
         }
+
 
         /// <summary>
         /// Remove this symbol security: Dictionary interface implementation.
@@ -170,6 +201,7 @@ namespace QuantConnect.Securities
         {
             get { return _securityManager.Keys; }
         }
+
 
         /// <summary>
         /// Try and get this security object with matching symbol and return true on success.
@@ -192,6 +224,7 @@ namespace QuantConnect.Securities
             get { return _securityManager.Values; }
         }
 
+
         /// <summary>
         /// Get the enumerator for this security collection.
         /// </summary>
@@ -202,15 +235,6 @@ namespace QuantConnect.Securities
             return _securityManager.GetEnumerator();
         }
 
-        /// <summary>
-        /// Get the internal enumerator for the securities collection for use by the Portfolio object.
-        /// </summary>
-        /// <remarks>IDictionary implementation</remarks>
-        /// <returns>Enumerator</returns>
-        public IDictionary<string, SecurityHolding> GetInternalPortfolioCollection()
-        {
-            return _securityHoldings;
-        }
 
         /// <summary>
         /// Get the enumerator for this securities collection.
@@ -235,16 +259,16 @@ namespace QuantConnect.Securities
                 symbol = symbol.ToUpper();
                 if (!_securityManager.ContainsKey(symbol))
                 {
-                    throw new Exception("This asset symbol (" + symbol + ") was not found in your security list. Please add this security or check it exists before using it with 'data.ContainsKey(\"" + symbol + "\")'");
+                    throw new Exception("This asset symbol (" + symbol + ") was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"" + symbol + "\")'");
                 } 
                 return _securityManager[symbol];
             }
             set 
             {
                 _securityManager[symbol] = value;
-                _securityHoldings[symbol] = value.Holdings;
             }
         }
+
 
         /// <summary>
         /// Get the number of securities that have this resolution.
@@ -254,19 +278,21 @@ namespace QuantConnect.Securities
         public int  GetResolutionCount(Resolution resolution) 
         {
             var count = 0;
-            try 
+            try
             {
                 count = (from security in _securityManager.Values
-                          where security.Resolution == resolution
-                          select security.Resolution).Count();
+                         where security.Resolution == resolution
+                         // don't count feeds we auto add
+                         where !security.SubscriptionDataConfig.IsInternalFeed
+                         select security.Resolution).Count();
             } 
             catch (Exception err) 
             {
                 Log.Error("Algorithm.Market.GetResolutionCount(): " + err.Message);
             }
-
             return count;
         }
+
 
         /// <summary>
         /// Limits on the number of minute, second and tick assets due to memory constraints.
@@ -309,7 +335,7 @@ namespace QuantConnect.Securities
                             break;
                         }
                     }
-                    security.Update(time, dataPoint);
+                    security.SetMarketPrice(time, dataPoint);
                 }
             }
             catch (Exception err) 
@@ -329,12 +355,10 @@ namespace QuantConnect.Securities
             {
                 throw new Exception("We currently only support " + _tickLimit + " tick assets at a time due to physical memory limitations.");
             }
-
             if (GetResolutionCount(Resolution.Second) >= _secondLimit && resolution == Resolution.Second)
             {
                 throw new Exception("We currently only support  " + _secondLimit + "  second resolution securities at a time due to physical memory limitations.");
             }
-
             if (GetResolutionCount(Resolution.Minute) >= _minuteLimit && resolution == Resolution.Minute)
             {
                 throw new Exception("We currently only support  " + _minuteLimit + "  minute assets at a time due to physical memory limitations.");

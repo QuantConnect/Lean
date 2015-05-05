@@ -44,8 +44,9 @@ namespace QuantConnect.Indicators
         /// <param name="first">The indicator that sends data via DataConsolidated even to the second</param>
         /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to alway send updates to second</param>
         /// <returns>The reference to the second indicator to allow for method chaining</returns>
-        public static IndicatorBase<IndicatorDataPoint> Of<T>(this IndicatorBase<IndicatorDataPoint> second, IndicatorBase<T> first, bool waitForFirstToReady = true)
+        public static TSecond Of<T, TSecond>(this TSecond second, IndicatorBase<T> first, bool waitForFirstToReady = true)
             where T : BaseData
+            where TSecond : IndicatorBase<IndicatorDataPoint>
         {
             first.Updated += (sender, consolidated) =>
             {

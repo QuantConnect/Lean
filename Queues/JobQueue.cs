@@ -81,7 +81,8 @@ namespace QuantConnect.Queues
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
                     Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
                     Channel = Config.Get("job-channel"),
-                    UserId = Config.GetInt("job-user-id")
+                    UserId = Config.GetInt("job-user-id"),
+                    Version = Constants.Version
                 };
 
                 try
@@ -107,7 +108,8 @@ namespace QuantConnect.Queues
                 ResultEndpoint = ResultHandlerEndpoint.Console,
                 RealTimeEndpoint = RealTimeEndpoint.Backtesting,
                 TransactionEndpoint = TransactionHandlerEndpoint.Backtesting,
-                Algorithm = File.ReadAllBytes(AlgorithmLocation)
+                Algorithm = File.ReadAllBytes(AlgorithmLocation),
+                Version = Constants.Version
             };
             return backtestJob;
         }

@@ -23,7 +23,6 @@ using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
-using MySql.Data;
 using MySql.Data.MySqlClient;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
@@ -158,8 +157,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _subscriptions = Subscriptions.Count;
 
             //Public Properties:
-            DataFeed = DataFeedEndpoint.FileSystem;
             IsActive = true;
+            DataFeed = DataFeedEndpoint.FileSystem;
             Bridge = new ConcurrentQueue<List<BaseData>>[_subscriptions];
             EndOfBridge = new bool[_subscriptions];
             SubscriptionReaderManagers = new SubscriptionDataReader[_subscriptions];
@@ -194,7 +193,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             //Initialize MYSQL Connection:
             Connect();
-            IsActive = true;
             
             while (!_exitTriggered && IsActive && !EndOfBridges)
             {
@@ -206,7 +204,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (Bridge[i].Count < 10000 && !EndOfBridge[i])
                     {
                         ////Fetch our data from mysql
-                        var data = Query("SELECT * FROM equity_" + subscription.Symbol + " WHERE time > '" + _mySQLBridgeTime[i].ToString("u") + "' AND time < '" + _endTime.ToString("u") + "' ORDER BY time ASC LIMIT 100");
+                        var data = Query("SELECT * FROM equity_" + subscription.Symbol + " WHERE time >= '" + _mySQLBridgeTime[i].ToString("u") + "' AND time <= '" + _endTime.ToString("u") + "' ORDER BY time ASC LIMIT 100");
 
                         //Comment out for live databases, where we should continue asking even if no data.
                         if (data.Count == 0)
@@ -241,7 +239,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        private IEnumerable<TradeBar> GenerateBars(string symbol, IEnumerable<Dictionary<string, string>> data)
+        private List<TradeBar> GenerateBars(string symbol, IEnumerable<Dictionary<string, string>> data)
         {
             var bars = new List<TradeBar>();
             foreach (var dictionary in data)

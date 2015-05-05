@@ -283,7 +283,7 @@ USD 2,000,000,001 - 5,000,000,000	0.10basis point * Trade Value    	USD 1.25
         public override decimal GetOrderFee(decimal quantity, decimal price)
         {
             var fee = _commissionRate*quantity*price;
-            return Math.Min(_minimumOrderFee, fee);
+            return Math.Max(_minimumOrderFee, fee);
         }
 
         /// <summary>
@@ -295,12 +295,11 @@ USD 2,000,000,001 - 5,000,000,000	0.10basis point * Trade Value    	USD 1.25
         public override decimal GetOrderFee(Security security, Order order)
         {
             var forex = (Forex) security;
-            // this is in units of the quote currency
-            var fee = _commissionRate * order.Value;
-            fee = Math.Min(_minimumOrderFee, fee);
 
-            // convert into units of the account currency
-            return forex.QuoteCurrency.ConversionRate*fee;
+            // get the total order value in the account currency
+            var totalOrderValue = order.Value*forex.QuoteCurrency.ConversionRate;
+            var fee = _commissionRate*totalOrderValue;
+            return Math.Max(_minimumOrderFee, fee);
         }
 
         /// <summary>

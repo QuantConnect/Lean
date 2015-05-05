@@ -38,7 +38,6 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
     {
         private readonly List<Order> _orders = new List<Order>(); 
         private InteractiveBrokersBrokerage _interactiveBrokersBrokerage;
-        private InteractiveBrokersBrokerageFactory _factory;
         private const int buyQuantity = 100;
         private const string Symbol = "USDJPY";
         private const SecurityType Type = SecurityType.Forex;
@@ -46,11 +45,15 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [SetUp]
         public void InitializeBrokerage()
         {
-            _factory = new InteractiveBrokersBrokerageFactory();
+            InteractiveBrokersGatewayRunner.Start(Config.Get("ib-controller-dir"), 
+                Config.Get("ib-tws-dir"), 
+                Config.Get("ib-user-name"), 
+                Config.Get("ib-password"), 
+                Config.GetBool("ib-use-tws")
+                );
 
             // grabs account info from configuration
-            var job = new LiveNodePacket() {BrokerageData = _factory.BrokerageData};
-            _interactiveBrokersBrokerage = (InteractiveBrokersBrokerage) _factory.CreateBrokerage(job, InteractiveBrokersBrokerageFactoryTests.AlgorithmDependency);
+            _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(new OrderMapping(_orders));
             _interactiveBrokersBrokerage.Connect();
         }
 
@@ -114,7 +117,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             }
             finally
             {
-                _factory.Dispose();
+                InteractiveBrokersGatewayRunner.Stop();
             }
         }
 
@@ -397,6 +400,11 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             var previousHoldings = ib.GetAccountHoldings().ToDictionary(x => x.Symbol);
 
+            foreach (var holding in previousHoldings)
+            {
+                Console.WriteLine(holding.Value);
+            }
+
             Log.Trace("Quantity: " + previousHoldings[Symbol].Quantity);
 
             bool hasSymbol = previousHoldings.ContainsKey(Symbol);
@@ -421,7 +429,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             ib.PlaceOrder(order);
 
             // wait for the order to go through
-            orderResetEvent.WaitOneAssertFail(2500, "Didn't receive order event");
+            orderResetEvent.WaitOneAssertFail(3000, "Didn't receive order event");
+
+            // ib is slow to update tws
+            Thread.Sleep(5000);
 
             // wait for account holdings to be updated
             portfolioResetEvent.WaitOneAssertFail(1500, "Didn't receive portfolio update event");
@@ -445,7 +456,15 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             var ib = _interactiveBrokersBrokerage;
             var cashBalance = ib.GetCashBalance();
-            Assert.AreNotEqual(0m, cashBalance);
+            Assert.IsTrue(cashBalance.Any(x => x.Symbol == "USD"));
+            foreach (var cash in cashBalance)
+            {
+                Console.WriteLine(cash);
+                if (cash.Symbol == "USD")
+                {
+                    Assert.AreNotEqual(0m, cashBalance.Single(x => x.Symbol == "USD"));
+                }
+            }
         }
 
         [Test]
@@ -492,7 +511,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             var ib = _interactiveBrokersBrokerage;
 
-            decimal balance = ib.GetCashBalance()["USD"];
+            decimal balance = ib.GetCashBalance().Single(x => x.Symbol == "USD").Quantity;
 
             // wait for our order to fill
             var manualResetEvent = new ManualResetEvent(false);
@@ -504,7 +523,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             manualResetEvent.WaitOneAssertFail(1500, "Didn't receive account changed event");
 
-            decimal balanceAfterTrade = ib.GetCashBalance()["USD"];
+            decimal balanceAfterTrade = ib.GetCashBalance().Single(x => x.Symbol == "USD").Quantity;
 
             Assert.AreNotEqual(balance, balanceAfterTrade);
         }

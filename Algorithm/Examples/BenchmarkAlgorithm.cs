@@ -20,9 +20,14 @@ namespace QuantConnect.Algorithm.Examples
     /// This algorithm is used to benchmark the Lean engine data points per second
     /// </summary>
     /// <remarks>
-    /// commit   | time (s) | K points/sec | Total points
-    /// 9924b0a  | 47.50    | 338          | ~16M
-    /// 9acf934  | 45.77    | 350          | ~16M
+    /// date     | commit   | time (s) | K points/sec | Total points | Description
+    /// 15.04.09 | 9924b0a  | 47.50    | 338          | ~16M         | Update all securities prices before any events
+    /// 15.04.13 | 9acf934  | 45.77    | 350          | ~16M         | Forex portfolio modelling
+    /// 15.04.23 | 6fd357b  | 44.38    | 361          | ~16M         | Adds support for dividends and splits
+    /// 15.04.24 | d80b173  | 43.18    | 372          | ~16M         | Pre IB launch review
+    /// 15.04.24 | 8b4fc17  | 43.43    | 369          | ~16M         | AlgorithmManager clean up
+    /// 15.04.30 | 9918628  | 43.11    | 372          | ~16M         | Improve ObjectActivator performance																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																										
+    /// 15.04.30 | 49b398f  | 43.02    | 373          | ~16M         | DataStream sync at end of bar																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																										
     /// </remarks>
     public class BenchmarkAlgorithm : QCAlgorithm
     {

@@ -85,7 +85,8 @@ namespace QuantConnect.Data.Consolidators
                     Low = data.Low,
                     Close = data.Close,
                     Volume = data.Volume,
-                    DataType = MarketDataType.TradeBar
+                    DataType = MarketDataType.TradeBar,
+                    Period = data.Period
                 };
             }
             else
@@ -93,6 +94,7 @@ namespace QuantConnect.Data.Consolidators
                 //Aggregate the working bar
                 workingBar.Close = data.Close;
                 workingBar.Volume += data.Volume;
+                workingBar.Period += data.Period;
                 if (data.Low < workingBar.Low) workingBar.Low = data.Low;
                 if (data.High > workingBar.High) workingBar.High = data.High;
             }

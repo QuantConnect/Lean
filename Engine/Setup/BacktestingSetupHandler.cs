@@ -71,7 +71,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         /// <remarks>Set from the user code.</remarks>
         /// <seealso cref="QCAlgorithm.SetCash(decimal)"/>
-        public decimal StartingCapital
+        public decimal StartingPortfolioValue
         {
             get 
             {
@@ -277,6 +277,14 @@ namespace QuantConnect.Lean.Engine.Setup
             return true;
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            // nothing to clean up
+        }
     } // End Result Handler Thread:
 
 } // End Namespace

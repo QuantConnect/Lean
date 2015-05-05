@@ -421,18 +421,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="time">Date and time we're checking to see if the market is open</param>
         /// <returns>Boolean true on market open</returns>
-        public bool MarketOpen(DateTime time) 
+        public bool IsMarketOpen(DateTime time) 
         {
             return _security.Exchange.DateTimeIsOpen(time);
         }
 
+        /// <summary>
+        /// Gets the associated exchange for this data reader/security
+        /// </summary>
+        public SecurityExchange Exchange
+        {
+            get { return _security.Exchange; }
+        }
 
         /// <summary>
         /// Check if we're still in the extended market hours
         /// </summary>
         /// <param name="time">Time to scan</param>
         /// <returns>True on extended market hours</returns>
-        public bool ExtendedMarketOpen(DateTime time) 
+        public bool IsExtendedMarketOpen(DateTime time) 
         {
             return _security.Exchange.DateTimeIsExtendedOpen(time);
         }
@@ -525,7 +532,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     Log.Error("Failed to get StreamReader for data source(" + _source + "), symbol(" + _mappedSymbol + "). Skipping date(" + date.ToShortDateString() + "). Reader is null.");
                     //Engine.ResultHandler.DebugMessage("We could not find the requested data. This may be an invalid data request, failed download of custom data, or a public holiday. Skipping date (" + date.ToShortDateString() + ").");
-
                     if (_isDynamicallyLoadedData)
                     {
                         Engine.ResultHandler.ErrorMessage("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source (" + _source + ").");
@@ -601,7 +607,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private decimal GetRawClose()
         {
+            if (Previous == null) return 0m;
+
             var close = Previous.Value;
+
             switch (_config.DataNormalizationMode)
             {
                 case DataNormalizationMode.Raw:

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
@@ -139,7 +140,7 @@ namespace QuantConnect.Indicators
                 // if we have left and right data (or if right is a constant) then we need to update
                 if (newRightData != null || rightIsConstant)
                 {
-                    Update(new T {Time = updated.Time});
+                    Update(new T {Time = MaxTime(updated)});
                     // reset these to null after each update
                     newLeftData = null;
                     newRightData = null;
@@ -153,12 +154,17 @@ namespace QuantConnect.Indicators
                 // if we have left and right data (or if left is a constant) then we need to update
                 if (newLeftData != null || leftIsConstant)
                 {
-                    Update(new T { Time = updated.Time });
+                    Update(new T {Time = MaxTime(updated)});
                     // reset these to null after each update
                     newLeftData = null;
                     newRightData = null;
                 }
             };
+        }
+
+        private DateTime MaxTime(IndicatorDataPoint updated)
+        {
+            return new DateTime(Math.Max(updated.Time.Ticks, Math.Max(Right.Current.Time.Ticks, Left.Current.Time.Ticks)));
         }
     }
 }

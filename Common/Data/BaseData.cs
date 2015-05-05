@@ -14,9 +14,6 @@
 */
 
 using System;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data
@@ -80,6 +77,16 @@ namespace QuantConnect.Data
             {
                 _time = value;
             }
+        }
+
+        /// <summary>
+        /// The end time of this data. Some data covers spans (trade bars) and as such we want
+        /// to know the entire time span covered
+        /// </summary>
+        public virtual DateTime EndTime
+        {
+            get { return _time; }
+            set { _time = value; }
         }
         
         /// <summary>

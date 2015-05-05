@@ -310,9 +310,16 @@ namespace QuantConnect.Algorithm
             var security = Securities[symbol];
             var price = security.Price;
 
+            //Check the exchange is open before sending a market order.
+            if (type == OrderType.Market && !security.Exchange.ExchangeOpen)
+            {
+                Error("Market order and exchange not open");
+                return -3;
+            }
+
             if (price == 0)
             {
-                Error("Asset price is $0. If using custom data make sure you've set the 'Value' property.");
+                Error(symbol + ": asset price is $0. If using custom data make sure you've set the 'Value' property.");
                 return -1;
             }
 
@@ -321,13 +328,6 @@ namespace QuantConnect.Algorithm
             {
                 Error("There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point.");
                 return -1;
-            }
-
-            //Check the exchange is open before sending a market order.
-            if (type == OrderType.Market && !security.Exchange.ExchangeOpen)
-            {
-                Error("Market order and exchange not open");
-                return -3;
             }
 
             //We've already processed too many orders: max 100 per day or the memory usage explodes
@@ -492,6 +492,11 @@ namespace QuantConnect.Algorithm
                 var marginPerShare = marginRequired/quantity;
                 quantity = (int) Math.Truncate(marginRemaining/marginPerShare);
                 marketOrder.Quantity = quantity;
+                if (quantity == 0)
+                {
+                    // can't order anything
+                    return;
+                }
                 marginRequired = security.MarginModel.GetInitialMarginRequiredForOrder(security, marketOrder);
 
                 // no need to iterate longer than 10

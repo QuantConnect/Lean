@@ -16,13 +16,17 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Forex;
+using QuantConnect.Util;
 using IB = Krs.Ats.IBNet;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
@@ -38,6 +42,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private static int _nextClientID = 0;
         // next valid request id for queries
         private int _nextRequestID = 0;
+        private int _nextTickerID = 0;
+        private volatile bool _disconnected1100Fired = false;
 
         private readonly int _port;
         private readonly string _account;
@@ -58,6 +64,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ConcurrentDictionary<string, string> _accountProperties = new ConcurrentDictionary<string, string>();
         // number of shares per symbol
         private readonly ConcurrentDictionary<string, Holding> _accountHoldings = new ConcurrentDictionary<string, Holding>();
+
+        private readonly ConcurrentDictionary<string, IB.ContractDetails> _contractDetails = new ConcurrentDictionary<string, IB.ContractDetails>(); 
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
@@ -129,11 +137,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.OrderStatus += HandleOrderStatusUpdates;
             _client.UpdateAccountValue += HandleUpdateAccountValue;
             _client.Error += HandleError;
-            _client.AccountDownloadEnd += (sender, args) =>
-            {
-                Log.Trace("InteractiveBrokersBrokerage.AccounDownloadEnd(): Finished account download for " + args.AccountName);
-                _accountHoldingsResetEvent.Set();
-            };
 
             // we need to wait until we receive the next valid id from the server
             _client.NextValidId += (sender, e) =>
@@ -282,16 +285,42 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            return _accountHoldings.Select(x => x.Value.Clone()).ToList();
+            var holdings = _accountHoldings.Select(x => (Holding) ObjectActivator.Clone(x.Value)).ToList();
+
+            // fire up tasks to resolve the conversion rates so we can do them in parallel
+            var tasks = holdings.Select(local =>
+            {
+                // we need to resolve the conversion rate for non-USD currencies
+                if (local.Type != SecurityType.Forex)
+                {
+                    // this assumes all non-forex are us denominated, we should add the currency to 'holding'
+                    local.ConversionRate = 1m;
+                    return null;
+                }
+                // if quote currency is in USD don't bother making the request
+                string currency = local.Symbol.Substring(3);
+                if (currency == "USD")
+                {
+                    local.ConversionRate = 1m;
+                    return null;
+                }
+
+                // this will allow us to do this in parallel
+                return Task.Factory.StartNew(() => local.ConversionRate = GetUsdConversion(currency));
+            }).Where(x => x != null).ToArray();
+
+            Task.WaitAll(tasks, 5000);
+
+            return holdings;
         }
 
         /// <summary>
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override Dictionary<string, decimal> GetCashBalance()
+        public override List<Cash> GetCashBalance()
         {
-            return new Dictionary<string, decimal>(_cashBalances);
+            return _cashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
         }
 
         /// <summary>
@@ -318,7 +347,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 var manualResetEvent = new ManualResetEvent(false);
 
-                int requestID = Interlocked.Increment(ref _nextRequestID);
+                int requestID = GetNextRequestID();
 
                 // define our event handlers
                 EventHandler<IB.ExecutionDataEndEventArgs> clientOnExecutionDataEnd = (sender, args) =>
@@ -389,15 +418,45 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // pause for a moment to receive next valid ID message from gateway
             if (!_waitForNextValidID.WaitOne(5000))
             {
-                throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 1 second.");
+                throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 5 seconds.");
             }
 
-            // wait for our account holdings to have been downloaded
+            // define our event handler, this acts as stop to make sure when we leave Connect we have downloaded the full account
+            EventHandler<IB.AccountDownloadEndEventArgs> clientOnAccountDownloadEnd = (sender, args) =>
+            {
+                Log.Trace("InteractiveBrokersBrokerage.AccountDownloadEnd(): Finished account download for " + args.AccountName);
+                _accountHoldingsResetEvent.Set();
+            };
+            _client.AccountDownloadEnd += clientOnAccountDownloadEnd;
+
+            // we'll wait to get our first account update, we need to be absolutely sure we 
+            // have downloaded the entire account before leaving this function
+            var firstAccountUpdateReceived = new ManualResetEvent(false);
+            EventHandler<IB.UpdateAccountValueEventArgs> clientOnUpdateAccountValue = (sender, args) =>
+            {
+                firstAccountUpdateReceived.Set();
+            };
+
+            _client.UpdateAccountValue += clientOnUpdateAccountValue;
+
+            // first we won't subscribe, wait for this to finish, below we'll subscribe for continuous updates
             _client.RequestAccountUpdates(true, _account);
+
+            // wait to see the first account value update
+            firstAccountUpdateReceived.WaitOne(2500);
+
+            // take pause to ensure the account is downloaded before continuing, this was added because running in
+            // linux there appears to be different behavior where the account download end fires immediately.
+            Thread.Sleep(2500);
+
             if (!_accountHoldingsResetEvent.WaitOne(5000))
             {
                 throw new TimeoutException("InteractiveBrokersBrokerage.GetAccountHoldings(): Operation took longer than 5 seconds.");
             }
+
+            // remove our end handler
+            _client.AccountDownloadEnd -= clientOnAccountDownloadEnd;
+            _client.UpdateAccountValue -= clientOnUpdateAccountValue;
         }
 
         /// <summary>
@@ -423,6 +482,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
+        /// Gets the raw account values sent from IB
+        /// </summary>
+        public Dictionary<string, string> GetAccountValues()
+        {
+            return new Dictionary<string, string>(_accountProperties);
+        }
+
+        /// <summary>
         /// Places the order with InteractiveBrokers
         /// </summary>
         /// <param name="order">The order to be placed</param>
@@ -437,6 +504,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 throw new InvalidOperationException("InteractiveBrokersBrokerage.IBPlaceOrder(): Unable to place order while not connected.");
             }
+
+            var contract = CreateContract(order.Symbol, order.SecurityType, exchange);
 
             int ibOrderID = 0;
             if (needsNewID)
@@ -456,10 +525,115 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new ArgumentException("Expected order with populated BrokerId for updating orders.");
             }
 
-            var contract = CreateContract(order, exchange);
             var ibOrder = ConvertOrder(order, ibOrderID);
-
             _client.PlaceOrder(ibOrder.OrderId, contract, ibOrder);
+        }
+
+        private string GetPrimaryExchange(IB.Contract contract)
+        {
+            IB.ContractDetails details;
+            if (_contractDetails.TryGetValue(contract.Symbol, out details))
+            {
+                return details.Summary.PrimaryExchange;
+            }
+
+            details = GetContractDetails(contract);
+            if (details == null)
+            {
+                // we were unable to find the contract details
+                return null;
+            }
+
+            return details.Summary.PrimaryExchange;
+        }
+
+        private IB.ContractDetails GetContractDetails(IB.Contract contract)
+        {
+            IB.ContractDetails details = null;
+            var requestID = GetNextRequestID();
+
+            var manualResetEvent = new ManualResetEvent(false);
+
+            // define our event handlers
+            EventHandler<IB.ContractDetailsEventArgs> clientOnContractDetails = (sender, args) =>
+            {
+                // ignore other requests
+                if (args.RequestId != requestID) return;
+                details = args.ContractDetails;
+                _contractDetails.TryAdd(contract.Symbol, details);
+                manualResetEvent.Set();
+            };
+
+            _client.ContractDetails += clientOnContractDetails;
+
+            // make the request for data
+            _client.RequestContractDetails(requestID, contract);
+
+            // we'll wait a second, but it may not exist so just pass through
+            manualResetEvent.WaitOne(1000);
+
+            // be sure to remove our event handlers
+            _client.ContractDetails -= clientOnContractDetails;
+
+            return details;
+        }
+
+        /// <summary>
+        /// Gets the current conversion rate into USD
+        /// </summary>
+        /// <remarks>Synchronous, blocking</remarks>
+        private decimal GetUsdConversion(string currency)
+        {
+            if (currency == "USD")
+            {
+                return 1m;
+            }
+
+            // determine the correct symbol to choose
+            string invertedSymbol = "USD" + currency;
+            string normalSymbol = currency + "USD";
+            var currencyPair = Forex.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
+            if (currencyPair == null)
+            {
+                return 1m;
+            }
+
+            // is it XXXUSD or USDXXX
+            bool inverted = invertedSymbol == currencyPair;
+            var contract = CreateContract(currencyPair, SecurityType.Forex);
+            var details = GetContractDetails(contract);
+            if (details == null)
+            {
+                Log.Error("InteractiveBrokersBrokerage.GetUsdConversion(): Unable to resolve conversion for currency: " + currency);
+                return 1m;
+            }
+            int ticker = GetNextTickerID();
+            decimal rate = 1m; 
+            var manualResetEvent = new ManualResetEvent(false);
+                
+            var priceTick = new Collection<IB.GenericTickType>();
+
+            // define and add our tick handler
+            EventHandler<IB.TickPriceEventArgs> clientOnTickPrice = (sender, args) =>
+            {
+                if (args.TickerId == ticker && args.TickType == IB.TickType.AskPrice)
+                {
+                    rate = args.Price;
+                    manualResetEvent.Set();
+                }
+            };
+
+            _client.TickPrice += clientOnTickPrice;
+
+            _client.RequestMarketData(ticker, contract, priceTick, true, false);
+
+            manualResetEvent.WaitOne(2500);
+
+            if (inverted)
+            {
+                return 1/rate;
+            }
+            return rate;
         }
 
         /// <summary>
@@ -467,6 +641,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandleError(object sender, IB.ErrorEventArgs e)
         {
+            // https://www.interactivebrokers.com/en/software/api/apiguide/tables/api_message_codes.htm
+
+            // rewrite these messages to be single lined
+            e.ErrorMsg = e.ErrorMsg.Replace("\r\n", ". ").Replace("\r", ". ").Replace("\n", ". ");
             Log.Trace(string.Format("InteractiveBrokersBrokerage.HandleError(): Order: {0} ErrorCode: {1} - {2}", e.TickerId, e.ErrorCode, e.ErrorMsg));
 
             // figure out the message type based on our code collections below
@@ -478,6 +656,26 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             else if (WarningCodes.Contains((int) e.ErrorCode))
             {
                 brokerageMessageType = BrokerageMessageType.Warning;
+            }
+
+            // code 1100 is a connection failure, we'll wait a minute before exploding gracefully
+            if ((int) e.ErrorCode == 1100 && !_disconnected1100Fired)
+            {
+                _disconnected1100Fired = true;
+                // wait a minute and see if we've been reconnected
+                Task.Delay(TimeSpan.FromMinutes(1)).ContinueWith(task =>
+                {
+                    if (_disconnected1100Fired)
+                    {
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, "Connect with Interactive Brokers lost. " +
+                            "This could be because of internet connectivity issues or a log in from another location."
+                            ));
+                    }
+                }).Start();
+            }
+            else if ((int) e.ErrorCode == 1102)
+            {
+                _disconnected1100Fired = false;
             }
 
             if (InvalidatingCodes.Contains((int)e.ErrorCode))
@@ -502,10 +700,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             try
             {
-                _accountProperties[e.Key] = e.Value;
+                _accountProperties[e.Currency + ":" + e.Key] = e.Value;
 
                 // we want to capture if the user's cash changes so we can reflect it in the algorithm
-                if (e.Key == AccountValueKeys.CashBalance && e.Currency != "BASE")
+                if (e.Key == AccountValueKeys.NetLiquidationByCurrency && e.Currency != "BASE")
                 {
                     var cashBalance = decimal.Parse(e.Value);
                     _cashBalances.AddOrUpdate(e.Currency, cashBalance);
@@ -684,20 +882,25 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Creates an IB contract from the order.
         /// </summary>
-        /// <param name="order">The order to create a contract from</param>
+        /// <param name="symbol">The symbol whose contract we need to create</param>
+        /// <param name="type">The security type of the symbol</param>
         /// <param name="exchange">The exchange where the order will be placed, defaults to 'Smart'</param>
         /// <returns>A new IB contract for the order</returns>
-        private IB.Contract CreateContract(Order order, string exchange = null)
+        private IB.Contract CreateContract(string symbol, SecurityType type, string exchange = null)
         {
-            var securityType = ConvertSecurityType(order.SecurityType);
-            var contract = new IB.Contract(order.Symbol, exchange ?? "Smart", securityType, "USD");
-            if (order.SecurityType == SecurityType.Forex)
+            var securityType = ConvertSecurityType(type);
+            var contract = new IB.Contract(symbol, exchange ?? "Smart", securityType, "USD");
+            if (type == SecurityType.Forex)
             {
                 // forex is special, so rewrite some of the properties to make it work
                 contract.Exchange = "IDEALPRO";
-                contract.Symbol = order.Symbol.Substring(0, 3);
-                contract.Currency = order.Symbol.Substring(3);
+                contract.Symbol = symbol.Substring(0, 3);
+                contract.Currency = symbol.Substring(3);
             }
+
+            // some contracts require this, such as MSFT
+            contract.PrimaryExchange = GetPrimaryExchange(contract);
+
             return contract;
         }
 
@@ -860,13 +1063,21 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private Holding CreateHolding(IB.UpdatePortfolioEventArgs e)
         {
+            string currencySymbol;
+            if (!Forex.CurrencySymbols.TryGetValue(e.Contract.Currency, out currencySymbol))
+            {
+                currencySymbol = "$";
+            }
+
             return new Holding
             {
                 Symbol = MapSymbol(e.Contract),
                 Type = ConvertSecurityType(e.Contract.SecurityType),
                 Quantity = e.Position,
                 AveragePrice = e.AverageCost,
-                MarketPrice = e.MarketPrice
+                MarketPrice = e.MarketPrice,
+                ConversionRate = 1m, // this will be overwritten when GetAccountHoldings is called to ensure fresh values
+                CurrencySymbol =  currencySymbol
             };
         }
 
@@ -896,6 +1107,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return Interlocked.Increment(ref _nextValidID);
         }
 
+        private int GetNextRequestID()
+        {
+            return Interlocked.Increment(ref _nextRequestID);
+        }
+
+        private int GetNextTickerID()
+        {
+            return Interlocked.Increment(ref _nextTickerID);
+        }
+
         /// <summary>
         /// Increments the client ID for communication with the gateway
         /// </summary>
@@ -907,6 +1128,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private static class AccountValueKeys
         {
             public const string CashBalance = "CashBalance";
+            public const string AccruedCash = "AccruedCash";
+            public const string NetLiquidationByCurrency = "NetLiquidationByCurrency";
         }
 
         // these are fatal errors from IB

@@ -318,6 +318,11 @@ namespace QuantConnect.Interfaces
         void SetLocked();
 
         /// <summary>
+        /// Gets whether or not this algorithm has been locked and fully initialized
+        /// </summary>
+        bool GetLocked();
+
+        /// <summary>
         /// Get the chart updates since the last request:
         /// </summary>
         /// <param name="clearChartData"></param>

@@ -28,7 +28,6 @@ namespace QuantConnect.Data.Consolidators
     public abstract class TradeBarConsolidatorBase<T> : DataConsolidator<T>
         where T : BaseData
     {
-
         //The minimum timespan between creating new bars.
         private readonly TimeSpan? _period;
         //The number of data updates between creating new bars.
@@ -111,14 +110,14 @@ namespace QuantConnect.Data.Consolidators
                 }
             }
 
+            if (!_lastEmit.HasValue)
+            {
+                // initialize this value for period computations
+                _lastEmit = data.Time;
+            }
+
             if (_period.HasValue)
             {
-                if (!_lastEmit.HasValue)
-                {
-                    // we're in time span mode and not initialized
-                    _lastEmit = data.Time;
-                }
-
                 // we're in time span mode and initialized
                 if (data.Time - _lastEmit.Value >= _period.Value)
                 {
@@ -140,11 +139,19 @@ namespace QuantConnect.Data.Consolidators
             //Fire the event
             if (fireDataConsolidated)
             {
+                // we kind of are cheating here...
                 if (_period.HasValue)
                 {
-                    _lastEmit = data.Time;
+                    _workingBar.Period = _period.Value;
                 }
+                // since trade bar has period it aggregates this properly
+                else if (!(data is TradeBar))
+                {
+                    _workingBar.Period = data.Time - _lastEmit.Value;
+                }
+
                 OnDataConsolidated(_workingBar);
+                _lastEmit = data.Time;
                 _workingBar = null;
             }
 

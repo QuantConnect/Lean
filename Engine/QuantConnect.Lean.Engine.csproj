@@ -121,7 +121,12 @@
     <Reference Include="System.Data" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="AlgorithmManager.cs" />
+    <Compile Include="DataFeeds\BaseDataFeed.cs" />
+    <Compile Include="DataFeeds\IQFeedDataFeed.cs" />
     <Compile Include="DataFeeds\Auxiliary\FactorFile.cs" />
     <Compile Include="DataFeeds\Auxiliary\FactorFileRow.cs" />
     <Compile Include="DataFeeds\Auxiliary\MapFile.cs" />

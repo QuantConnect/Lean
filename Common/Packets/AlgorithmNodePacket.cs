@@ -97,8 +97,8 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Version number identifier for the lean engine.
         /// </summary>
-        [JsonProperty(PropertyName = "dtVersion")]
-        public DateTime Version;
+        [JsonProperty(PropertyName = "sVersion")]
+        public string Version;
 
         /// <summary>
         /// An algorithm packet which has already been run and is being redelivered on this node.
@@ -148,7 +148,6 @@ namespace QuantConnect.Packets
         /// </summary>
         [JsonProperty(PropertyName = "eRealTimeEndpoint")]
         public RealTimeEndpoint RealTimeEndpoint = RealTimeEndpoint.Backtesting;
-
     } // End Node Packet:
 
 } // End of Namespace:

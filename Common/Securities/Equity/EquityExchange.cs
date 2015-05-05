@@ -82,7 +82,6 @@ namespace QuantConnect.Securities.Equity
             set { _marketClose = value; }
         }
 
-
         /******************************************************** 
         * CLASS METHODS
         *********************************************************/

@@ -57,6 +57,20 @@ namespace QuantConnect.Data.Market
             set { Value = value; }
         }
 
+        /// <summary>
+        /// The closing time of this bar, computed via the Time and Period
+        /// </summary>
+        public override DateTime EndTime
+        {
+            get { return Time + Period; }
+            set { Period = value - Time; } 
+        }
+
+        /// <summary>
+        /// The period of this trade bar, (second, minute, daily, ect...)
+        /// </summary>
+        public TimeSpan Period { get; set; }
+
         //In Base Class: Alias of Closing:
         //public decimal Price;
 
@@ -83,6 +97,7 @@ namespace QuantConnect.Data.Market
             Low = 0; 
             Close = 0;
             Volume = 0;
+            Period = TimeSpan.FromMinutes(1);
         }
 
         /// <summary>
@@ -100,6 +115,7 @@ namespace QuantConnect.Data.Market
             Low = original.Low;
             Close = original.Close;
             Volume = original.Volume;
+            Period = original.Period;
         }
 
         /// <summary>
@@ -113,6 +129,8 @@ namespace QuantConnect.Data.Market
         {
             try
             {
+                Period = config.Resolution.ToTimeSpan();
+
                 //Parse the data into a trade bar:
                 var csv = line.Split(',');
                 const decimal scaleFactor = 10000m;
@@ -157,7 +175,8 @@ namespace QuantConnect.Data.Market
         /// <param name="low">Decimal Low Price of this bar</param>
         /// <param name="close">Decimal Close price of this bar</param>
         /// <param name="volume">Volume sum over day</param>
-        public TradeBar(DateTime time, string symbol, decimal open, decimal high, decimal low, decimal close, long volume)
+        /// <param name="period">The period of this bar, specify null for default of 1 minute</param>
+        public TradeBar(DateTime time, string symbol, decimal open, decimal high, decimal low, decimal close, long volume, TimeSpan? period = null)
         {
             Time = time;
             Symbol = symbol;
@@ -167,6 +186,7 @@ namespace QuantConnect.Data.Market
             Low = low;
             Close = close;
             Volume = volume;
+            Period = period ?? TimeSpan.FromMinutes(1);
         }
 
         /******************************************************** 
@@ -184,7 +204,6 @@ namespace QuantConnect.Data.Market
         {
             //Initialize:
             var tradeBar = new TradeBar();
-
             //Handle end of file:
             if (line == null)
             {

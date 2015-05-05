@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Securities
 {
@@ -151,6 +152,7 @@ namespace QuantConnect.Securities
                     _config = subscriptions.Add(objectType, SecurityType.Forex, symbol, minimumResolution, true, false, isTradeBar, isTradeBar, true);
                     var security = new Forex.Forex(this, _config, 1m, false);
                     securities.Add(symbol, security);
+                    Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol + " for cash " + this.Symbol + " currency feed");
                     return;
                 }
             }
@@ -165,7 +167,10 @@ namespace QuantConnect.Securities
 		/// <returns>A <see cref="System.String"/> that represents the current <see cref="QuantConnect.Securities.Cash"/>.</returns>
         public override string ToString()
         {
-            return string.Format("{0}: {1} @ {2} ({3})", Symbol, Quantity, ConversionRate.ToString("C"), ValueInAccountCurrency);
+            // round the conversion rate for output
+            decimal rate = ConversionRate;
+            rate = rate < 1000 ? rate.RoundToSignificantDigits(5) : Math.Round(rate, 2);
+            return string.Format("{0}: {1} @ ${2} = {3}", Symbol, Quantity, rate, ValueInAccountCurrency.ToString("C"));
         }
     }
 }

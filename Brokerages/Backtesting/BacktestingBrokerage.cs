@@ -20,6 +20,7 @@ using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages.Backtesting
 {
@@ -95,12 +96,9 @@ namespace QuantConnect.Brokerages.Backtesting
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override Dictionary<string, decimal> GetCashBalance()
+        public override List<Cash> GetCashBalance()
         {
-            return new Dictionary<string, decimal>
-            {
-                {"USD", _algorithm.Portfolio.Cash}
-            };
+            return _algorithm.Portfolio.CashBook.Values.ToList();
         }
 
         /// <summary>

@@ -23,6 +23,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 
@@ -46,7 +47,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Algorithm starting capital for statistics calculations
         /// </summary>
-        public decimal StartingCapital { get; private set; }
+        public decimal StartingPortfolioValue { get; private set; }
 
         /// <summary>
         /// Start date for analysis loops to search for data.
@@ -60,6 +61,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
         // saves ref to algo so we can call quit if runtime error encountered
         private IAlgorithm _algorithm;
+        private IBrokerageFactory _factory;
 
         /// <summary>
         /// Initializes a new BrokerageSetupHandler
@@ -148,7 +150,7 @@ namespace QuantConnect.Lean.Engine.Setup
                                 break;
 
                             default: //512
-                                algorithm.SetAssetLimits(50, 10, 5);
+                                algorithm.SetAssetLimits(50, 25, 15);
                                 break;
                         }
 
@@ -171,18 +173,31 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
 
                 // find the correct brokerage factory based on the specified brokerage in the live job packet
-                var brokerageFactory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
+                _factory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
+
+                // let the world know what we're doing since logging in can take a minute
+                Engine.ResultHandler.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.LoggingIn, "Logging into brokerage...");
 
                 // initialize the correct brokerage using the resolved factory
-                brokerage = brokerageFactory.CreateBrokerage(liveJob, algorithm);
+                brokerage = _factory.CreateBrokerage(liveJob, algorithm);
 
-                brokerage.Connect();
+                try
+                {
+                    // this can fail for various reasons, such as already being logged in somewhere else
+                    brokerage.Connect();
+                }
+                catch (Exception err)
+                {
+                    AddInitializationError("Error connecting to brokerage. " + err.Message);
+                    return false;
+                }
 
                 // set the algorithm's cash balance for each currency
                 var cashBalance = brokerage.GetCashBalance();
-                foreach (var item in cashBalance)
+                foreach (var cash in cashBalance)
                 {
-                    algorithm.SetCash(item.Key, item.Value, 0);
+                    Log.Trace("BrokerageSetupHandler.Setup(): Setting " + cash.Symbol + " cash to " + cash.Quantity);
+                    algorithm.SetCash(cash.Symbol, cash.Quantity, cash.ConversionRate);
                 }
 
                 // populate the algorithm with the account's outstanding orders
@@ -190,6 +205,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 foreach (var order in openOrders)
                 {
                     // be sure to assign order IDs such that we increment from the SecurityTransactionManager to avoid ID collisions
+                    Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol + " - " + order.Quantity);
                     order.Id = algorithm.Transactions.GetIncrementOrderId();
                     algorithm.Orders.AddOrUpdate(order.Id, order, (i, o) => order);
                 }
@@ -201,11 +217,12 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     if (!algorithm.Portfolio.ContainsKey(holding.Symbol))
                     {
+                        Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol);
                         // for items not directly requested set leverage to 1 and at the min resolution
                         algorithm.AddSecurity(holding.Type, holding.Symbol, minResolution.Value, true, 1.0m, false);
                     }
                     algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int)holding.Quantity);
-                    algorithm.Securities[holding.Symbol].Update(DateTime.Now, new TradeBar
+                    algorithm.Securities[holding.Symbol].SetMarketPrice(DateTime.Now, new TradeBar
                     {
                         Time = DateTime.Now,
                         Open = holding.AveragePrice,
@@ -221,8 +238,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 // call this after we've initialized everything from the brokerage since we may have added some holdings/currencies
                 algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager);
 
-                //Set the starting capital for the strategy to calculate performance:
-                StartingCapital = algorithm.Portfolio.Cash;
+                //Set the starting portfolio value for the strategy to calculate performance:
+                StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
                 StartingDate = DateTime.Now;
             }
             catch (Exception err)
@@ -255,7 +272,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     case BrokerageMessageType.Error:
                         results.ErrorMessage("Brokerage Error: " + message.Message);
                         _algorithm.RunTimeError = new Exception(message.Message);
-                        _algorithm.Quit();
                         break;
                 }
             };
@@ -268,7 +284,19 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="message">The error message to be added</param>
         private void AddInitializationError(string message)
         {
-            Errors.Add("Failed to initialize algorithm: Initialize(): " + message);
+            Errors.Add("Failed to initialize algorithm: " + message);
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            if (_factory != null)
+            {
+                _factory.Dispose();
+            }
         }
     }
 }

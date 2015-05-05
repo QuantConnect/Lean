@@ -203,7 +203,18 @@ namespace QuantConnect.Lean.Engine.RealTime
                 //2. Set this time as the handler for EOD event:
                 if (endOfDayEventTime.HasValue)
                 {
-                    Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents(): Setup EOD Event for {0}", endOfDayEventTime.Value.ToString("u")));
+
+                    if (DateTime.Now < endOfDayEventTime.Value)
+                    {
+
+                        Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents(): Setup EOD Event for {0}", endOfDayEventTime.Value.ToString("u")));
+                    }
+                    else
+                    {
+
+                        Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents(): Skipping Setup of EOD Event for {0} because time has passed.", security.Symbol));
+                        continue;
+                    }
 
                     var symbol = security.Symbol;
                     AddEvent(new RealTimeEvent(endOfDayEventTime.Value, () =>
@@ -223,19 +234,23 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
 
             // fire just before the day rolls over, 11:58pm
-            AddEvent(new RealTimeEvent(DateTime.Today.AddHours(23.967), () =>
-            {
-                try
+            var endOfDay = DateTime.Today.AddHours(23.967);
+            if (DateTime.Now < endOfDay) 
+            { 
+                AddEvent(new RealTimeEvent(endOfDay, () =>
                 {
-                    _algorithm.OnEndOfDay();
-                    Log.Trace(string.Format("LiveTradingRealTimeHandler: Fired On End of Day Event() for Day({0})", _time.ToShortDateString()));
-                }
-                catch (Exception err)
-                {
-                    Engine.ResultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
-                    Log.Error("LiveTradingRealTimeHandler.SetupEvents.Trigger OnEndOfDay(): " + err.Message);
-                }
-            }, true));
+                    try
+                    {
+                        _algorithm.OnEndOfDay();
+                        Log.Trace(string.Format("LiveTradingRealTimeHandler: Fired On End of Day Event() for Day({0})", _time.ToShortDateString()));
+                    }
+                    catch (Exception err)
+                    {
+                        Engine.ResultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
+                        Log.Error("LiveTradingRealTimeHandler.SetupEvents.Trigger OnEndOfDay(): " + err.Message);
+                    }
+                }, true));
+            }
         }
 
 

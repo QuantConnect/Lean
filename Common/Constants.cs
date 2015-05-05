@@ -30,5 +30,10 @@ namespace QuantConnect
         /// The directory used for storing downloaded remote files
         /// </summary>
         public const string Cache = "./cache/data";
+
+        /// <summary>
+        /// The version of lean
+        /// </summary>
+        public static readonly string Version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
     }
 }

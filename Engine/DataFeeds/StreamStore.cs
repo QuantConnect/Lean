@@ -143,7 +143,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     case "TradeBar":
                         if (_data == null)
                         {
-                            _data = new TradeBar(barStartTime, _config.Symbol, tick.LastPrice, tick.LastPrice, tick.LastPrice, tick.LastPrice, tick.Quantity);
+                            _data = new TradeBar(barStartTime, _config.Symbol, tick.LastPrice, tick.LastPrice, tick.LastPrice, tick.LastPrice, tick.Quantity, _config.Resolution.ToTimeSpan());
                         }
                         else
                         {

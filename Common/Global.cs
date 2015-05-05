@@ -60,7 +60,7 @@ namespace QuantConnect
         /// Type of the security
         public SecurityType Type;
 
-        /// The currency symbol of the holding
+        /// The currency symbol of the holding, such as $
         public string CurrencySymbol;
 
         /// Average Price of our Holding in the currency the symbol is traded in
@@ -77,24 +77,26 @@ namespace QuantConnect
 
         /// Create a new default holding:
         public Holding()
-        { }
+        {
+            CurrencySymbol = "$";
+            ConversionRate = 1m;
+        }
 
         /// <summary>
         /// Create a simple JSON holdings from a Security holding class.
         /// </summary>
         /// <param name="holding">Holdings object we'll use to initialize the transport</param>
         public Holding(Securities.SecurityHolding holding)
+             : this()
         {
             Symbol = holding.Symbol;
             Type = holding.Type;
             Quantity = holding.Quantity;
-            CurrencySymbol = "$";
-            ConversionRate = 1m;
 
             var rounding = 2;
             if (holding.Type == SecurityType.Forex)
             {
-                rounding = 4;
+                rounding = 5;
                 string basec, quotec;
                 Forex.DecomposeCurrencyPair(holding.Symbol, out basec, out quotec);
                 CurrencySymbol = Forex.CurrencySymbols[quotec];
@@ -117,8 +119,18 @@ namespace QuantConnect
                 Symbol = Symbol,
                 Type = Type,
                 Quantity = Quantity,
-                MarketPrice = MarketPrice
+                MarketPrice = MarketPrice,
+                ConversionRate  = ConversionRate,
+                CurrencySymbol = CurrencySymbol
             };
+        }
+
+        /// <summary>
+        /// Writes out the properties of this instance to string
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Format("{0}: {1} @ {2}{3} - Market: {2}{4} - Conversion: {5}", Symbol, Quantity, CurrencySymbol, AveragePrice, MarketPrice, ConversionRate);
         }
     }
 
@@ -412,7 +424,9 @@ namespace QuantConnect
         /// Runtime Error Stoped Algorithm
         RuntimeError,    //8
         /// Error in the algorithm id (not used).
-        Invalid
+        Invalid,
+        /// The algorithm is logging into the brokerage
+        LoggingIn
     }
 
     /// <summary>
