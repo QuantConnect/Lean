@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 namespace QuantConnect.Securities.Forex
 {
     /******************************************************** 
@@ -38,17 +35,10 @@ namespace QuantConnect.Securities.Forex
         /// <summary>
         /// Initialize forex cache
         /// </summary>
-        public ForexCache() :
-            base()
+        public ForexCache()
+			: base()
         {
             //Nothing to do:
         }
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-
-
-
     } //End ForexCache Class
 } //End Namespace

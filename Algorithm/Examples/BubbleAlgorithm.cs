@@ -46,7 +46,9 @@ namespace QuantConnect
         Dictionary<string, RelativeStrengthIndex> rsiDic = new Dictionary<string, RelativeStrengthIndex>();
         Dictionary<string, MovingAverageConvergenceDivergence> macdDic = new Dictionary<string, MovingAverageConvergenceDivergence>();
 
-
+        /// <summary>
+        /// Initialise the Algorithm and Prepare Required Data.
+        /// </summary>
         public override void Initialize()
         {
             SetCash(100000);
@@ -222,16 +224,36 @@ namespace QuantConnect
         string format = "yyyy-MM";
         CultureInfo provider = CultureInfo.InvariantCulture;
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="QuantConnect.CAPE"/> indicator.
+		/// </summary>
         public CAPE()
         {
             this.Symbol = "CAPE";
         }
 
+		/// <summary>
+		/// Return the URL string source of the file. This will be converted to a stream
+		/// </summary>
+		/// <param name="datafeed">Type of datafeed we're reqesting - backtest or live</param>
+		/// <param name="config">Configuration object</param>
+		/// <param name="date">Date of this source file</param>
+		/// <returns>String URL of source file.</returns>
         public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
         {
             return "https://www.dropbox.com/s/ggt6blmib54q36e/CAPE.csv?dl=1";
         }
 
+		/// <summary>
+		/// Reader Method :: using set of arguements we specify read out type. Enumerate
+		/// until the end of the data stream or file. E.g. Read CSV file line by line and convert
+		/// into data types.
+		/// </summary>
+		/// <returns>BaseData type set by Subscription Method.</returns>
+		/// <param name="config">Config.</param>
+		/// <param name="line">Line.</param>
+		/// <param name="date">Date.</param>
+		/// <param name="datafeed">Datafeed.</param>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
         {
             var index = new CAPE();
@@ -257,5 +279,4 @@ namespace QuantConnect
             return index;
         }
     }
-
 }

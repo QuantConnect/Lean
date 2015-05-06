@@ -92,6 +92,10 @@ namespace QuantConnect.Data.Market
             return Constants.DataFolder + @"/equity/factor_files/" + config.Symbol + ".csv";
         }
 
+		/// <summary>
+		/// Returns a <see cref="System.String"/> that represents the current <see cref="QuantConnect.Data.Market.Split"/>.
+		/// </summary>
+		/// <returns>A <see cref="System.String"/> that represents the current <see cref="QuantConnect.Data.Market.Split"/>.</returns>
         public override string ToString()
         {
             return string.Format("{0}: {1}", Symbol, SplitFactor);

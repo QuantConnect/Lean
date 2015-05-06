@@ -24,6 +24,12 @@ namespace QuantConnect.Securities.Forex
     /// </summary>
     public class ForexPortfolioModel : SecurityPortfolioModel
     {
+		/// <summary>
+		/// Performs application of an OrderEvent to the portfolio
+		/// </summary>
+		/// <param name="portfolio">The algorithm's portfolio</param>
+		/// <param name="security">The fill's security</param>
+		/// <param name="fill">The order event fill object to be applied</param>
         public override void ProcessFill(SecurityPortfolioManager portfolio, Security security, OrderEvent fill)
         {
             // split the symbol into base and quote currencies

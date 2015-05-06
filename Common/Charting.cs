@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
@@ -151,15 +148,11 @@ namespace QuantConnect
         /// <param name="liveMode">This is a live mode point</param>
         public void AddPoint(DateTime time, decimal value, bool liveMode = false) 
         {
-            //Round off the chart values to significant figures:
-            var v = ((double)value).RoundToSignificantDigits(5);
-
             if (Values.Count < 4000 || liveMode)
             {
                 Values.Add(new ChartPoint(time, value));
             }
         }
-
 
         /// <summary>
         /// Get the updates since the last call to this function.

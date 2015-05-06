@@ -6,11 +6,19 @@ using QuantConnect.Data.Market;
 
 namespace QuantConnect
 {
+	/// <summary>
+	/// Stress symbols algorithm.
+	/// </summary>
     public class StressSymbolsAlgorithm : QCAlgorithm
     {
+		/// <summary>
+		/// All symbols.
+		/// </summary>
         public IEnumerable<string> AllSymbols;
 
-        // Add Hundreds of Stock and Forex Symbol:
+        /// <summary>
+		/// Add Hundreds of Stock and Forex Symbol
+        /// </summary>
         public override void Initialize()
         {
             AllSymbols = new List<string>();
@@ -35,7 +43,10 @@ namespace QuantConnect
             AllSymbols = StockSymbols.Concat(ForexSymbols);
         }
 
-        //On each data event, buy a few of each one:
+        /// <summary>
+		/// On each data event, buy a few of each one
+        /// </summary>
+        /// <param name="data">Data.</param>
         public void OnData(TradeBars data)
         {
             Debug("REALTIME: " + DateTime.Now.ToString("o") + " DATATIME: " + data.Time.ToString("o") + " REALTIME DELTA: " + (DateTime.Now - data.Time).TotalSeconds.ToString("0.000") + "sec  COUNT: " + data.Count + " FILLFORWARD: " + data.Count(x => x.Value.IsFillForward));
@@ -63,6 +74,9 @@ namespace QuantConnect
             if (Time.Second % 15 == 0) Log("Time: " + Time.ToShortTimeString());
         }
 
+		/// <summary>
+		/// The stock symbols.
+		/// </summary>
         public List<string> StockSymbols = new List<string>
         {
             "ABT",
@@ -163,6 +177,9 @@ namespace QuantConnect
             "SCHW"
         };
 
+		/// <summary>
+		/// The forex symbols.
+		/// </summary>
         public List<string> ForexSymbols = new List<string>
         {
             "EURUSD",

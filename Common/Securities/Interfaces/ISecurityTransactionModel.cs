@@ -13,10 +13,6 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Equity;
@@ -24,9 +20,6 @@ using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Securities.Interfaces 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Security transaction model interface for QuantConnect security objects
     /// </summary>

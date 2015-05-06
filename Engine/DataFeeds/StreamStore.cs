@@ -14,10 +14,6 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -27,9 +23,6 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// StreamStore manages the creation of data objects for live streams; including managing 
     /// a fillforward data stream request.

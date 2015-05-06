@@ -13,9 +13,6 @@
  * limitations under the License.
  *
 */
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 
 using System;
 using System.ComponentModel.Composition;

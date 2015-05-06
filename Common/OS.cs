@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,9 +20,6 @@ using System.Diagnostics;
 
 namespace QuantConnect 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Operating systems class for managing anything that is operation system specific.
     /// </summary>

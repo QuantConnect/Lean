@@ -139,61 +139,114 @@ namespace QuantConnect.Securities
 
         #region IDictionary Implementation
 
+		/// <summary>
+		/// Gets the count.
+		/// </summary>
+		/// <value>The count.</value>
         public int Count
         {
             get { return _currencies.Count; }
         }
 
+		/// <summary>
+		/// Gets a value indicating whether this instance is read only.
+		/// </summary>
+		/// <value><c>true</c> if this instance is read only; otherwise, <c>false</c>.</value>
         public bool IsReadOnly
         {
             get { return ((IDictionary<string, Cash>) _currencies).IsReadOnly; }
         }
 
+		/// <summary>
+		/// Add the specified item.
+		/// </summary>
+		/// <param name="item">Item.</param>
         public void Add(KeyValuePair<string, Cash> item)
         {
             _currencies.Add(item.Key, item.Value);
         }
 
+		/// <summary>
+		/// Add the specified key and value.
+		/// </summary>
+		/// <param name="key">Key.</param>
+		/// <param name="value">Value.</param>
         public void Add(string key, Cash value)
         {
             _currencies.Add(key, value);
         }
 
+		/// <summary>
+		/// Clear this instance.
+		/// </summary>
         public void Clear()
         {
             _currencies.Clear();
         }
 
+		/// <summary>
+		/// Remove the specified key.
+		/// </summary>
+		/// <param name="key">Key.</param>
         public bool Remove(string key)
-        {
-            return _currencies.Remove(key);
-        }
+		{
+			return _currencies.Remove (key);
+		}
 
+		/// <summary>
+		/// Remove the specified item.
+		/// </summary>
+		/// <param name="item">Item.</param>
         public bool Remove(KeyValuePair<string, Cash> item)
         {
             return _currencies.Remove(item.Key);
         }
 
+		/// <summary>
+		/// Determines whether the current instance contains an entry with the specified key..
+		/// </summary>
+		/// <returns><c>true</c>, if key was containsed, <c>false</c> otherwise.</returns>
+		/// <param name="key">Key.</param>
         public bool ContainsKey(string key)
         {
             return _currencies.ContainsKey(key);
         }
 
+		/// <summary>
+		/// Try to get the value.
+		/// </summary>
+		/// <remarks>To be added.</remarks>
+		/// <returns><c>true</c>, if get value was tryed, <c>false</c> otherwise.</returns>
+		/// <param name="key">Key.</param>
+		/// <param name="value">Value.</param>
         public bool TryGetValue(string key, out Cash value)
         {
             return _currencies.TryGetValue(key, out value);
         }
 
+		/// <summary>
+		/// Determines whether the current collection contains a specific value.
+		/// </summary>
+		/// <param name="item">Item.</param>
         public bool Contains(KeyValuePair<string, Cash> item)
         {
             return _currencies.Contains(item);
         }
 
+		/// <summary>
+		/// Copies to.
+		/// </summary>
+		/// <param name="array">Array.</param>
+		/// <param name="arrayIndex">Array index.</param>
         public void CopyTo(KeyValuePair<string, Cash>[] array, int arrayIndex)
         {
             ((IDictionary<string, Cash>) _currencies).CopyTo(array, arrayIndex);
         }
 
+		/// <summary>
+		/// Gets or sets the <see cref="QuantConnect.Securities.CashBook"/> with the specified symbol.
+		/// </summary>
+		/// <param name="symbol">Symbol.</param>
         public Cash this[string symbol]
         {
             get
@@ -208,16 +261,28 @@ namespace QuantConnect.Securities
             set { _currencies[symbol] = value; }
         }
 
+		/// <summary>
+		/// Gets the keys.
+		/// </summary>
+		/// <value>The keys.</value>
         public ICollection<string> Keys
         {
             get { return _currencies.Keys; }
         }
 
+		/// <summary>
+		/// Gets the values.
+		/// </summary>
+		/// <value>The values.</value>
         public ICollection<Cash> Values
         {
             get { return _currencies.Values; }
         }
 
+		/// <summary>
+		/// Gets the enumerator.
+		/// </summary>
+		/// <returns>The enumerator.</returns>
         public IEnumerator<KeyValuePair<string, Cash>> GetEnumerator()
         {
             return _currencies.GetEnumerator();
