@@ -667,11 +667,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     if (_disconnected1100Fired)
                     {
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, "Connect with Interactive Brokers lost. " +
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, "Connection with Interactive Brokers lost. " +
                             "This could be because of internet connectivity issues or a log in from another location."
                             ));
                     }
-                }).Start();
+                });
             }
             else if ((int) e.ErrorCode == 1102)
             {
