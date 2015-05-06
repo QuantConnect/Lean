@@ -1,69 +1,94 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities.Forex;
 
-namespace QuantConnect
+namespace QuantConnect.Algorithm.Examples
 {
+    /// <summary>
+    /// Randomly selects the specified number of symbols from the lists below
+    /// </summary>
     public class StressSymbolsAlgorithm : QCAlgorithm
     {
-        public IEnumerable<string> AllSymbols;
+        public const int TickSymbolsToRun = 5;
+        public const int SecondSymbolsToRun = 7;
+        public const int MinuteSymbolsToRun = 10;
 
-        // Add Hundreds of Stock and Forex Symbol:
         public override void Initialize()
         {
-            AllSymbols = new List<string>();
-
-            //Backtest period:
             SetStartDate(2014, 01, 01);
-            SetEndDate(2015, 01, 01);
-
-            //Set cash to 250k for test algorithm
+            SetEndDate(2014, 02, 01);
             SetCash(250000);
 
-            foreach (var symbol in StockSymbols)
+            var allSymbols = StockSymbols.Concat(ForexSymbols).ToList();
+            var symbolsUsed = new HashSet<string>();
+
+            int totalSymbols = TickSymbolsToRun + SecondSymbolsToRun + MinuteSymbolsToRun;
+
+            for (int i = 0; i < totalSymbols; i++)
             {
-                AddSecurity(SecurityType.Equity, symbol, Resolution.Second, true);
+                Resolution resolution = Resolution.Tick;
+                if (i >= TickSymbolsToRun && i < TickSymbolsToRun + SecondSymbolsToRun)
+                {
+                    resolution = Resolution.Second;
+                }
+                else if (i >= TickSymbolsToRun + SecondSymbolsToRun)
+                {
+                    resolution = Resolution.Minute;
+                }
+
+                string nextSymbol;
+                do
+                {
+                    nextSymbol = GetRandomItem(allSymbols);
+                }
+                while (!symbolsUsed.Add(nextSymbol));
+
+                SecurityType type = SecurityType.Equity;
+                if (ForexSymbols.Contains(nextSymbol))
+                {
+                    type = SecurityType.Forex;
+                }
+
+                AddSecurity(type, nextSymbol, resolution);
+                Debug("Added " + nextSymbol + " at " + resolution);
             }
 
-            foreach (var symbol in ForexSymbols)
-            {
-                AddSecurity(SecurityType.Forex, symbol, Resolution.Second, true);
-            }
+            int ticks = SubscriptionManager.Subscriptions.Count(x => x.Resolution == Resolution.Tick);
+            int seconds = SubscriptionManager.Subscriptions.Count(x => x.Resolution == Resolution.Second);
+            int minutes = SubscriptionManager.Subscriptions.Count(x => x.Resolution == Resolution.Minute);
+            Debug(string.Format("Ticks {0} Seconds {1} Minutes {2}", ticks, seconds, minutes));
+        }
 
-            AllSymbols = StockSymbols.Concat(ForexSymbols);
+        private readonly Random _random = new Random();
+        private T GetRandomItem<T>(List<T> list)
+        {
+            return list[_random.Next(list.Count)];
         }
 
         //On each data event, buy a few of each one:
         public void OnData(TradeBars data)
         {
-            Debug("REALTIME: " + DateTime.Now.ToString("o") + " DATATIME: " + data.Time.ToString("o") + " REALTIME DELTA: " + (DateTime.Now - data.Time).TotalSeconds.ToString("0.000") + "sec  COUNT: " + data.Count + " FILLFORWARD: " + data.Count(x => x.Value.IsFillForward));
 
-            foreach (var symbol in AllSymbols)
-            {
-                if (!Portfolio.ContainsKey(symbol)) continue;
-
-                if (!Portfolio[symbol].Invested)
-                {
-                    //Not invested, get invested:
-                    Order(symbol, 10);
-                }
-                else
-                {
-                    if (Time.Second % 15 == 0)
-                    {
-                        var holdings = Portfolio[symbol].Quantity;
-                        Order(symbol, holdings * -2);
-                    }
-                }
-            }
-
-            //Log timer:
-            if (Time.Second % 15 == 0) Log("Time: " + Time.ToShortTimeString());
         }
 
-        public List<string> StockSymbols = new List<string>
+        public HashSet<string> StockSymbols = new HashSet<string>
         {
             "ABT",
             "ABBV",
@@ -160,15 +185,18 @@ namespace QuantConnect
             "CTL",
             "CERN",
             "CF",
-            "SCHW"
+            "SCHW",
+            "MSFT",
+            "AAPL",
+            "GOOG",
+            "IBM",
+            "JNJ",
+            "TSLA",
+            "TWTR",
+            "LNKD",
+            "FB"
         };
 
-        public List<string> ForexSymbols = new List<string>
-        {
-            "EURUSD",
-            "NZDUSD",
-            "USDJPY",
-            "USDCAD"
-        };
+        public HashSet<string> ForexSymbols = new HashSet<string>(Forex.CurrencyPairs);
     }
 }
