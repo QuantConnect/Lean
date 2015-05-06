@@ -390,18 +390,11 @@ namespace QuantConnect.Securities
         /// <returns>True if suficient capital.</returns>
         public bool GetSufficientCapitalForOrder(SecurityPortfolioManager portfolio, Order order)
         {
-            var increasingPosition = true;
             var security = _securities[order.Symbol];
-            var currentAbsoluteHoldings = security.Holdings.AbsoluteQuantity;
-            var newAbsoluteHoldings = Math.Abs(order.Quantity + security.Holdings.Quantity);
-            if (newAbsoluteHoldings < currentAbsoluteHoldings)
-            {
-                increasingPosition = false;
-            }
-
+            
             var freeMargin = security.MarginModel.GetMarginRemaining(portfolio, security, order.Direction);
             var initialMarginRequiredForOrder = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
-            if (increasingPosition && Math.Abs(initialMarginRequiredForOrder) > freeMargin)
+            if (Math.Abs(initialMarginRequiredForOrder) > freeMargin)
             {
                 Log.Error(string.Format("Transactions.GetSufficientCapitalForOrder(): Id: {0}, Initial Margin: {1}, Free Margin: {2}", order.Id, initialMarginRequiredForOrder, freeMargin));
                 return false;

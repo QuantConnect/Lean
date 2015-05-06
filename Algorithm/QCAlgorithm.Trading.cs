@@ -481,8 +481,21 @@ namespace QuantConnect.Algorithm
             // compute the remaining margin for this security
             var direction = percentage > 0 ? OrderDirection.Buy : OrderDirection.Sell;
 
+            // we need to account for the margin gained if crossing the zero line
+            decimal extraMarginForClosing = 0m;
+            if (security.Holdings.IsLong && direction == OrderDirection.Sell)
+            {
+                extraMarginForClosing = security.MarginModel.GetMaintenanceMargin(security);
+            }
+            else if (security.Holdings.IsShort && direction == OrderDirection.Buy)
+            {
+                extraMarginForClosing = security.MarginModel.GetMaintenanceMargin(security);
+            }
+
             // compute an estimate of the buying power for this security incorporating the implied leverage
-            var marginRemaining = Math.Abs(percentage)*security.MarginModel.GetMarginRemaining(Portfolio, security, direction);
+            // we don't want to apply the percentag to the required margin to bring us to zero, so we back out the 'extraMaginForClosing'
+            var marginRemaining = Math.Abs(percentage)*(security.MarginModel.GetMarginRemaining(Portfolio, security, direction) - extraMarginForClosing);
+            marginRemaining += extraMarginForClosing;
 
             //
             // Since we can't assume anything about the fee structure and the relative size of fees in

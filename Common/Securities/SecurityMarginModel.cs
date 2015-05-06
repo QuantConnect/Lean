@@ -144,7 +144,7 @@ namespace QuantConnect.Securities
                     case OrderDirection.Buy:
                         return portfolio.MarginRemaining;
                     case OrderDirection.Sell:
-                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + portfolio.MarginRemaining;
+                        return security.MarginModel.GetMaintenanceMargin(security)*2 + portfolio.MarginRemaining;
                 }
             }
             else if (holdings.IsShort)
@@ -152,7 +152,7 @@ namespace QuantConnect.Securities
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        return (holdings.UnrealizedProfit + holdings.UnleveredAbsoluteHoldingsCost) * 2 + portfolio.MarginRemaining;
+                        return security.MarginModel.GetMaintenanceMargin(security)*2 + portfolio.MarginRemaining;
                     case OrderDirection.Sell:
                         return portfolio.MarginRemaining;
                 }
