@@ -162,7 +162,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Order(string, double)"/>
         public int Order(string symbol, double quantity)
         {
-            return Order(symbol, (int) Math.Abs(quantity) * -1);
+            return Order(symbol, (int) quantity);
         }
 
         /// <summary>
@@ -172,7 +172,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Order(string, double)"/>
         public int Order(string symbol, decimal quantity)
         {
-            return Order(symbol, (int) Math.Abs(quantity) * -1);
+            return Order(symbol, (int) quantity);
         }
 
         /// <summary>
