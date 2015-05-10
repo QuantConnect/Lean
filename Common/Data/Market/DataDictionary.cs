@@ -20,9 +20,10 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Constructor which sets teh Time to the frontier
+        /// Constructor which sets the Time to the frontier
         /// </summary>
-        /// <param name="frontier"></param>
+        /// <param name="frontier">DateTime - The most advanced moment in time 
+        ///     for which the data feed has completed loading data</param>
         public DataDictionary(DateTime frontier)
         {
             Time = frontier;
