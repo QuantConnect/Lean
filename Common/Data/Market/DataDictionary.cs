@@ -12,10 +12,17 @@ namespace QuantConnect.Data.Market
         // storage for the data
         private readonly IDictionary<string, T> _data = new Dictionary<string, T>();
 
+        /// <summary>
+        /// Empty Constructor
+        /// </summary>
         public DataDictionary()
         {
         }
 
+        /// <summary>
+        /// Constructor which sets teh Time to the frontier
+        /// </summary>
+        /// <param name="frontier"></param>
         public DataDictionary(DateTime frontier)
         {
             Time = frontier;

@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Order(string, double)"/>
         public int Buy(string symbol, int quantity)
         {
-            return Order(symbol, quantity);
+            return Order(symbol, Math.Abs(quantity));
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Order(string, double)"/>
         public int Buy(string symbol, double quantity)
         {
-            return Order(symbol, quantity);
+            return Order(symbol, Math.Abs(quantity));
         }
 
         /// <summary>
@@ -97,7 +97,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Order(string, double)"/>
         public int Buy(string symbol, decimal quantity)
         {
-            return Order(symbol, quantity);
+            return Order(symbol, Math.Abs(quantity));
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Order(string, double)"/>
         public int Buy(string symbol, float quantity)
         {
-            return Order(symbol, quantity);
+            return Order(symbol, Math.Abs(quantity));
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Order(string, double)"/>
         public int Sell(string symbol, int quantity)
         {
-            return Order(symbol, quantity);
+            return Order(symbol, Math.Abs(quantity) * -1);
         }
 
         /// <summary>
@@ -130,7 +130,7 @@ namespace QuantConnect.Algorithm
         /// <returns>int Order Id.</returns>
         public int Sell(string symbol, double quantity)
         {
-            return Order(symbol, quantity);
+            return Order(symbol, Math.Abs(quantity) * -1);
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Order(string, double)"/>
         public int Sell(string symbol, float quantity)
         {
-            return Order(symbol, quantity);
+            return Order(symbol, Math.Abs(quantity) * -1);
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace QuantConnect.Algorithm
         /// <returns>Int Order Id.</returns>
         public int Sell(string symbol, decimal quantity)
         {
-            return Order(symbol, quantity);
+            return Order(symbol, Math.Abs(quantity) * -1);
         }
 
         /// <summary>
@@ -162,7 +162,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Order(string, double)"/>
         public int Order(string symbol, double quantity)
         {
-            return Order(symbol, (int) quantity);
+            return Order(symbol, (int) Math.Abs(quantity) * -1);
         }
 
         /// <summary>
@@ -172,7 +172,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Order(string, double)"/>
         public int Order(string symbol, decimal quantity)
         {
-            return Order(symbol, (int) quantity);
+            return Order(symbol, (int) Math.Abs(quantity) * -1);
         }
 
         /// <summary>
