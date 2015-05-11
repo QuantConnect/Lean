@@ -113,7 +113,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
 
                 // fire off the event that says this order has been submitted
-                var submitted = new OrderEvent(order) { Status = OrderStatus.Submitted };
+                var submitted = new OrderEvent(order) {Status = OrderStatus.Submitted};
                 OnOrderEvent(submitted);
 
                 return true;
@@ -131,6 +131,11 @@ namespace QuantConnect.Brokerages.Backtesting
             if (order.Status == OrderStatus.Update)
             {
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
+
+                // fire off the event that says this order has been updated
+                var updated = new OrderEvent(order) {Status = OrderStatus.Update};
+                OnOrderEvent(updated);
+
                 return true;
             }
             return false;
@@ -147,8 +152,8 @@ namespace QuantConnect.Brokerages.Backtesting
             {
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
 
-                // fire off the event that says this order has been submitted
-                var canceled = new OrderEvent(order) { Status = OrderStatus.Canceled };
+                // fire off the event that says this order has been canceled
+                var canceled = new OrderEvent(order) {Status = OrderStatus.Canceled};
                 OnOrderEvent(canceled);
 
                 return true;
@@ -195,7 +200,8 @@ namespace QuantConnect.Brokerages.Backtesting
                 if (sufficientBuyingPower)
                 {
                     //Model:
-                    var model = _algorithm.Securities[order.Symbol].Model;
+                    var security = _algorithm.Securities[order.Symbol];
+                    var model = security.TransactionModel;
 
                     //Based on the order type: refresh its model to get fill price and quantity
                     try
@@ -203,16 +209,16 @@ namespace QuantConnect.Brokerages.Backtesting
                         switch (order.Type)
                         {
                             case OrderType.Limit:
-                                fill = model.LimitFill(_algorithm.Securities[order.Symbol], order as LimitOrder);
+                                fill = model.LimitFill(security, order as LimitOrder);
                                 break;
                             case OrderType.StopMarket:
-                                fill = model.StopMarketFill(_algorithm.Securities[order.Symbol], order as StopMarketOrder);
+                                fill = model.StopMarketFill(security, order as StopMarketOrder);
                                 break;
                             case OrderType.Market:
-                                fill = model.MarketFill(_algorithm.Securities[order.Symbol], order as MarketOrder);
+                                fill = model.MarketFill(security, order as MarketOrder);
                                 break;
                             case OrderType.StopLimit:
-                                fill = model.StopLimitFill(_algorithm.Securities[order.Symbol], order as StopLimitOrder);
+                                fill = model.StopLimitFill(security, order as StopLimitOrder);
                                 break;
                         }
                     }
@@ -229,7 +235,8 @@ namespace QuantConnect.Brokerages.Backtesting
                     _algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
                 }
 
-                if (order.Status != OrderStatus.None)
+                // change in status or a new fill
+                if (order.Status != fill.Status || fill.FillQuantity != 0)
                 {
                     //If the fill models come back suggesting filled, process the affects on portfolio
                     OnOrderEvent(fill);

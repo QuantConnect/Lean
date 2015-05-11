@@ -75,6 +75,20 @@ namespace QuantConnect.Securities
                 order.Price = asset.Price;
                 order.Status = OrderStatus.Filled;
 
+                //Calculate the model slippage: e.g. 0.01c
+                var slip = GetSlippageApproximation(asset, order);
+
+                //Apply slippage
+                switch (order.Direction)
+                {
+                    case OrderDirection.Buy:
+                        order.Price += slip;
+                        break;
+                    case OrderDirection.Sell:
+                        order.Price -= slip;
+                        break;
+                }
+
                 //For backtesting, we assuming the order is 100% filled on first attempt.
                 fill.FillPrice = order.Price;
                 fill.FillQuantity = order.Quantity;
@@ -111,6 +125,9 @@ namespace QuantConnect.Securities
                 decimal maximumPrice;
                 DataMinMaxPrices(asset, out minimumPrice, out maximumPrice);
 
+                //Calculate the model slippage: e.g. 0.01c
+                var slip = GetSlippageApproximation(asset, order);
+
                 //Check if the Stop Order was filled: opposite to a limit order
                 switch (order.Direction)
                 {
@@ -120,7 +137,7 @@ namespace QuantConnect.Securities
                         {
                             order.Status = OrderStatus.Filled;
                             // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
-                            order.Price = Math.Min(order.StopPrice, asset.Price); 
+                            order.Price = Math.Min(order.StopPrice, asset.Price - slip); 
                         }
                         break;
 
@@ -130,7 +147,7 @@ namespace QuantConnect.Securities
                         {
                             order.Status = OrderStatus.Filled;
                             // Assuming worse case scenario fill - fill at highest of the stop & asset price.
-                            order.Price = Math.Max(order.StopPrice, asset.Price);
+                            order.Price = Math.Max(order.StopPrice, asset.Price + slip);
                         }
                         break;
                 }
@@ -138,7 +155,7 @@ namespace QuantConnect.Securities
                 if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled)
                 {
                     fill.FillQuantity = order.Quantity;
-                    fill.FillPrice = asset.Price;        //Stop price as security price because can gap past stop price.
+                    fill.FillPrice = order.Price;        //we picked the correct fill price above, just respect it here
                     fill.Status = order.Status;
                 }
             }
