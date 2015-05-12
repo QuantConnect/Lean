@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
@@ -26,7 +23,7 @@ namespace QuantConnect
     /// <summary>
     /// Single Parent Chart Object for Custom Charting
     /// </summary>
-    [JsonObjectAttribute]
+    [JsonObject]
     public class Chart 
     {
         /// Name of the Chart:
@@ -97,7 +94,7 @@ namespace QuantConnect
     /// <summary>
     /// Chart Series Object - Series data and properties for a chart:
     /// </summary>
-    [JsonObjectAttribute]
+    [JsonObject]
     public class Series
     {
         /// <summary>
@@ -149,14 +146,23 @@ namespace QuantConnect
         /// <param name="time">Time of the chart point</param>
         /// <param name="value">Value of the chart point</param>
         /// <param name="liveMode">This is a live mode point</param>
-        public void AddPoint(DateTime time, decimal value, bool liveMode = false) 
+        public void AddPoint(DateTime time, decimal value, bool liveMode = false)
         {
-            //Round off the chart values to significant figures:
-            var v = ((double)value).RoundToSignificantDigits(5);
-
-            if (Values.Count < 4000 || liveMode)
+            if (Values.Count >= 4000 && !liveMode)
             {
-                Values.Add(new ChartPoint(time, value));
+                // perform rate limiting in backtest mode
+                return;
+            }
+
+            var chartPoint = new ChartPoint(time, value);
+            if (Values.Count > 0 && Values[Values.Count - 1].x == chartPoint.x)
+            {
+                // duplicate points at the same time, overwrite the value
+                Values[Values.Count - 1] = chartPoint;
+            }
+            else
+            {
+                Values.Add(chartPoint);
             }
         }
 
@@ -198,7 +204,7 @@ namespace QuantConnect
     /// <summary>
     /// Single Chart Point Value Type for QCAlgorithm.Plot();
     /// </summary>
-    [JsonObjectAttribute]
+    [JsonObject]
     public struct ChartPoint
     {
         /// Time of this chart point: lower case for javascript encoding simplicty
@@ -244,6 +250,14 @@ namespace QuantConnect
             // http://stackoverflow.com/a/7983330/1582922
             return input / 1.000000000000000000000000000000000m;
         }
+
+        /// <summary>
+        /// Provides a readable string representation of this instance.
+        /// </summary>
+        public override string ToString()
+        {
+            return Time.UnixTimeStampToDateTime(x).ToString("o") + " - " + y;
+        }
     }
 
     /// <summary>
@@ -273,5 +287,4 @@ namespace QuantConnect
         /// Stacked series on top of each other.
         Stacked
     }
-
-} // End QC Namespace:
+}

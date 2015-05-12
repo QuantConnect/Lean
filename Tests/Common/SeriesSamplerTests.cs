@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using NUnit.Framework;
 
 namespace QuantConnect.Tests.Common
@@ -108,6 +109,28 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(series.Values[2].x, sampled.Values[2].x);
             Assert.AreEqual(series.Values[2].y, sampled.Values[2].y);
+        }
+
+        [Test]
+        public void HandlesDuplicateTimes()
+        {
+            var series = new Series();
+            series.Values.Add(new ChartPoint(DateTime.Today, 1m));
+            series.Values.Add(new ChartPoint(DateTime.Today, 2m));
+            series.Values.Add(new ChartPoint(DateTime.Today.AddDays(1), 3m));
+
+            var sampler = new SeriesSampler(TimeSpan.FromDays(1));
+            var sampled = sampler.Sample(series, DateTime.Today, DateTime.Today.AddDays(1));
+
+            // sampler will only produce one value at the time
+            // it was also respect the latest value
+
+            Assert.AreEqual(2, sampled.Values.Count);
+            foreach (var pair in series.Values.Skip(1).Zip(sampled.Values, Tuple.Create))
+            {
+                Assert.AreEqual(pair.Item1.x, pair.Item2.x);
+                Assert.AreEqual(pair.Item1.y, pair.Item2.y);
+            }
         }
     }
 }

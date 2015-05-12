@@ -51,8 +51,9 @@ namespace QuantConnect
                 return sampled;
             }
 
-            double nextSample = Time.DateTimeToUnixTimeStamp(start);
-            double unixStopDate = Time.DateTimeToUnixTimeStamp(stop);
+            // chart point times are always in universal, so force it here as well
+            double nextSample = Time.DateTimeToUnixTimeStamp(start.ToUniversalTime());
+            double unixStopDate = Time.DateTimeToUnixTimeStamp(stop.ToUniversalTime());
 
             var enumerator = series.Values.GetEnumerator();
 
@@ -139,6 +140,13 @@ namespace QuantConnect
         private static decimal Interpolate(ChartPoint previous, ChartPoint current, long target)
         {
             var deltaTicks = current.x - previous.x;
+
+            // if they're at the same time return the current value
+            if (deltaTicks == 0)
+            {
+                return current.y;
+            }
+
             double percentage = (target - previous.x) / (double)deltaTicks;
 
             //  y=mx+b
