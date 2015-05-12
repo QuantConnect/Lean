@@ -29,10 +29,10 @@ namespace QuantConnect.Tests
                 {"Total Trades", "1"},
                 {"Average Win", "3.39%"},
                 {"Average Loss", "0%"},
-                {"Compounding Annual Return", "1629.068%"},
+                {"Compounding Annual Return", "1629.801%"},
                 {"Drawdown", "3.100%"},
                 {"Expectancy", "0"},
-                {"Net Profit", "3.391%"},
+                {"Net Profit", "3.392%"},
                 {"Sharpe Ratio", "4.445"},
                 {"Loss Rate", "0%"},
                 {"Win Rate", "100%"},
@@ -41,7 +41,7 @@ namespace QuantConnect.Tests
                 {"Beta", "2.049"},
                 {"Annual Standard Deviation", "0.393"},
                 {"Annual Variance", "0.155"},
-                {"Information Ratio", "4.401"},
+                {"Information Ratio", "4.403"},
                 {"Tracking Error", "0.201"},
                 {"Treynor Ratio", "0.853"}
             });
