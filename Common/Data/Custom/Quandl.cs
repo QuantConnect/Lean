@@ -43,10 +43,10 @@ namespace QuantConnect.Data.Custom
         /// <summary>
         /// Is the auth
         /// </summary>
-        private static bool IsAuthCodeSet
+        public static bool IsAuthCodeSet
         {
             get;
-            set;
+            private set;
         }
 
         /******************************************************** 
@@ -57,6 +57,7 @@ namespace QuantConnect.Data.Custom
         /// </summary>
         public Quandl()
         {
+            base.EndTime = Time + TimeSpan.FromDays(1);
             _valueColumn = "Close";
         }
         
