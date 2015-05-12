@@ -341,8 +341,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     var ticks = GetNextTicks();
 
+                    int ticksCount = 0;
                     foreach (var tick in ticks)
                     {
+                        ticksCount++;
                         //Get the stream store with this symbol:
                         for (var i = 0; i < Subscriptions.Count; i++)
                         {
@@ -357,7 +359,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     if (_exitTriggered) return;
-                    if (ticks.Count() == 0) Thread.Sleep(5);
+                    if (ticksCount == 0) Thread.Sleep(5);
                 }
             });
 

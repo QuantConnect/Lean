@@ -96,6 +96,12 @@ namespace QuantConnect.Queues
                     // import the brokerage data for the configured brokerage
                     var brokerageFactory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
                     liveJob.BrokerageData = brokerageFactory.BrokerageData;
+
+                    // if we're doing paper select the correct transaction handler
+                    if (liveJob.Brokerage == "PaperBrokerage")
+                    {
+                        liveJob.TransactionEndpoint = TransactionHandlerEndpoint.Backtesting;
+                    }
                 }
                 catch (Exception err)
                 {
