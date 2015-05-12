@@ -117,12 +117,13 @@ namespace QuantConnect.Statistics
         /// Run a full set of orders and return a Dictionary of statistics.
         /// </summary>
         /// <param name="pointsEquity">Equity value over time.</param>
-        /// <param name="pointsPerformance"> Daily performance</param>
         /// <param name="profitLoss">profit loss from trades</param>
+        /// <param name="pointsPerformance"> Daily performance</param>
         /// <param name="startingCash">Amount of starting cash in USD </param>
-        /// <returns>Statistics Array, Broken into Annual Periods</returns>
+        /// <param name="totalFees">The total fees incurred over the life time of the algorithm</param>
         /// <param name="tradingDaysPerYear">Number of trading days per year</param>
-        public static Dictionary<string, string> Generate(IEnumerable<ChartPoint> pointsEquity, SortedDictionary<DateTime, decimal> profitLoss, IEnumerable<ChartPoint> pointsPerformance, decimal startingCash, double tradingDaysPerYear = 252)
+        /// <returns>Statistics Array, Broken into Annual Periods</returns>
+        public static Dictionary<string, string> Generate(IEnumerable<ChartPoint> pointsEquity, SortedDictionary<DateTime, decimal> profitLoss, IEnumerable<ChartPoint> pointsPerformance, decimal startingCash, decimal totalFees, double tradingDaysPerYear = 252)
         {
             //Initialise the response:
             double riskFreeRate = 0;
@@ -314,8 +315,9 @@ namespace QuantConnect.Statistics
                 if (profitLossRatio == -1) profitLossRatioHuman = "0";
 
                 //Add the over all results first, break down by year later:
-                statistics = new Dictionary<string, string>() { 
+                statistics = new Dictionary<string, string> { 
                     { "Total Trades", Math.Round(totalTrades, 0).ToString() },
+                    { "Total Fees", totalFees.ToString("C") },
                     { "Average Win", Math.Round(averageWin * 100, 2) + "%"  },
                     { "Average Loss", Math.Round(averageLoss * 100, 2) + "%" },
                     { "Compounding Annual Return", Math.Round(algoCompoundingPerformance * 100, 3) + "%" },

@@ -27,6 +27,7 @@ namespace QuantConnect.Tests
             AlgorithmRunner.RunLocalBacktest("BasicTemplateAlgorithm", new Dictionary<string, string>
             {
                 {"Total Trades", "1"},
+                {"Total Fees", "$12.12"},
                 {"Average Win", "3.39%"},
                 {"Average Loss", "0%"},
                 {"Compounding Annual Return", "1629.801%"},
