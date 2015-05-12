@@ -322,7 +322,7 @@ namespace QuantConnect.Lean.Engine
                         try
                         {
                             // Execute the Algorithm Code:
-                            var complete = Isolator.ExecuteWithTimeLimit(SetupHandler.MaximumRuntime, () =>
+                            var complete = Isolator.ExecuteWithTimeLimit(SetupHandler.MaximumRuntime, AlgorithmManager.TimeLoopWithinLimits, () =>
                             {
                                 try
                                 {

@@ -18,11 +18,13 @@
 **********************************************************/
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Fasterflect;
 using QuantConnect.Algorithm;
+using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -51,6 +53,8 @@ namespace QuantConnect.Lean.Engine
         private static AlgorithmStatus _algorithmState = AlgorithmStatus.Running;
         private static readonly object _lock = new object();
         private static string _algorithmId = "";
+        private static Stopwatch _currentTimeStepStopwatch;
+        private static readonly TimeSpan _timeLoopMaximum = TimeSpan.FromMinutes(Config.GetDouble("algorithm-manager-time-loop-maximum", 10));
 
         private static long _dataPointCount;
 
@@ -80,6 +84,26 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
+        /// <summary>
+        /// Gets the amount of time spent on the current time step
+        /// </summary>
+        public static TimeSpan CurrentTimeStepElapsed
+        {
+            get { return _currentTimeStepStopwatch == null ? TimeSpan.Zero : _currentTimeStepStopwatch.Elapsed; }
+        }
+
+        /// <summary>
+        /// Gets a function used with the Isolator for verifying we're not spending too much time in each
+        /// algo manager timer loop
+        /// </summary>
+        public static readonly Func<string> TimeLoopWithinLimits = () =>
+        {
+            if (CurrentTimeStepElapsed > _timeLoopMaximum)
+            {
+                return "Algorithm took longer than 10 minutes on a single time loop.";
+            }
+            return null;
+        };
 
         /// <summary>
         /// Quit state flag for the running algorithm. When true the user has requested the backtest stops through a Quit() method.
@@ -177,6 +201,9 @@ namespace QuantConnect.Lean.Engine
             Log.Debug("AlgorithmManager.Run(): Algorithm initialized, launching time loop.");
             foreach (var newData in DataStream.GetData(feed, setup.StartingDate))
             {
+                // reset our timer on each loop
+                _currentTimeStepStopwatch = Stopwatch.StartNew();
+
                 //Check this backtest is still running:
                 if (_algorithmState != AlgorithmStatus.Running) break;
 
@@ -533,6 +560,7 @@ namespace QuantConnect.Lean.Engine
             //Reset before the next loop/
             DataStream.ResetFrontier();
             _algorithmId = "";
+            _currentTimeStepStopwatch = null;
             _algorithmState = AlgorithmStatus.Running;
         }
 

@@ -78,11 +78,16 @@ namespace QuantConnect
         /// Execute a code block with a maximum limit on time and memory.
         /// </summary>
         /// <param name="timeSpan">Timeout in timespan</param>
+        /// <param name="withinCustomLimits">Function used to determine if the codeBlock is within custom limits, such as with algorithm manager
+        /// timing individual time loops, return a non-null and non-empty string with a message indicating the error/reason for stoppage</param>
         /// <param name="codeBlock">Action codeblock to execute</param>
         /// <param name="memoryCap">Maximum memory allocation, default 1024Mb</param>
         /// <returns>True if algorithm exited successfully, false if cancelled because it exceeded limits.</returns>
-        public static bool ExecuteWithTimeLimit(TimeSpan timeSpan, Action codeBlock, long memoryCap = 1024)
+        public static bool ExecuteWithTimeLimit(TimeSpan timeSpan, Func<string> withinCustomLimits, Action codeBlock, long memoryCap = 1024)
         {
+            // default to always within custom limits
+            withinCustomLimits = withinCustomLimits ?? (() => null);
+
             var message = "";
             var end = DateTime.Now + timeSpan;
             var memoryLogger = DateTime.Now + TimeSpan.FromMinutes(1);
@@ -118,6 +123,15 @@ namespace QuantConnect
                     Log.Trace(DateTime.Now.ToString("u") + " Isolator.ExecuteWithTimeLimit(): Used: " + Math.Round(Convert.ToDouble(memoryUsed / (1024 * 1024))));
                     memoryLogger = DateTime.Now.AddMinutes(1);
                 }
+
+                // check to see if we're within other custom limits defined by the caller
+                var possibleMessage = withinCustomLimits();
+                if (!string.IsNullOrEmpty(possibleMessage))
+                {
+                    message = possibleMessage;
+                    break;
+                }
+
                 Thread.Sleep(100);
             }
 
@@ -134,6 +148,18 @@ namespace QuantConnect
                 throw new Exception(message);
             }
             return task.IsCompleted;
+        }
+
+        /// <summary>
+        /// Execute a code block with a maximum limit on time and memory.
+        /// </summary>
+        /// <param name="timeSpan">Timeout in timespan</param>
+        /// <param name="codeBlock">Action codeblock to execute</param>
+        /// <param name="memoryCap">Maximum memory allocation, default 1024Mb</param>
+        /// <returns>True if algorithm exited successfully, false if cancelled because it exceeded limits.</returns>
+        public static bool ExecuteWithTimeLimit(TimeSpan timeSpan, Action codeBlock, long memoryCap = 1024)
+        {
+            return ExecuteWithTimeLimit(timeSpan, null, codeBlock, memoryCap);
         }
     }
 }
