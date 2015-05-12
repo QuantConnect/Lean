@@ -335,7 +335,7 @@ namespace QuantConnect.Lean.Engine
                                 catch (Exception err)
                                 {
                                     //Debugging at this level is difficult, stack trace needed.
-                                    Log.Error("Engine.Run(): Error in Algo Manager: " + err.Message + " ST >> " + err.StackTrace);
+                                    Log.Error("Engine.Run", err);
                                 }
 
                                 Log.Trace("Engine.Run(): Exiting Algorithm Manager");

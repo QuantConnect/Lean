@@ -98,6 +98,34 @@ namespace QuantConnect.Logging
             }
         }
 
+        /// <summary>
+        /// Log error. This overload is usefull when exceptions are being thrown from within an anonymous function.
+        /// </summary>
+        /// <param name="method">The method identifier to be used</param>
+        /// <param name="exception">The exception to be logged</param>
+        /// <param name="message">An optional message to be logged, if null/whitespace the messge text will be extracted</param>
+        /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
+        public static void Error(string method, Exception exception, string message = null, bool overrideMessageFloodProtection = false)
+        {
+            message = message ?? method + "(): " + AggregateExceptionMessage(exception);
+            var stack = AggregateStackTrace(exception);
+            if (!string.IsNullOrEmpty(stack))
+            {
+                message += Environment.NewLine + stack;
+            }
+            Error(message, overrideMessageFloodProtection);
+        }
+
+        /// <summary>
+        /// Log error
+        /// </summary>
+        /// <param name="exception">The exception to be logged</param>
+        /// <param name="message">An optional message to be logged, if null/whitespace the messge text will be extracted</param>
+        /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
+        public static void Error(Exception exception, string message = null, bool overrideMessageFloodProtection = false)
+        {
+            Error(WhoCalledMe.GetMethodName(1), exception, message, overrideMessageFloodProtection);
+        }
 
         /// <summary>
         /// Log trace
@@ -229,6 +257,28 @@ namespace QuantConnect.Logging
             }
 
             return result.ToString();
+        }
+
+        private static string AggregateExceptionMessage(Exception exception)
+        {
+            var sb = new StringBuilder();
+            while (exception != null)
+            {
+                sb.Append(exception.Message);
+                exception = exception.InnerException;
+            }
+            return sb.ToString();
+        }
+
+        private static string AggregateStackTrace(Exception exception)
+        {
+            var sb = new StringBuilder();
+            while (exception != null)
+            {
+                sb.AppendLine(exception.StackTrace);
+                exception = exception.InnerException;
+            }
+            return sb.ToString();
         }
     }
 }
