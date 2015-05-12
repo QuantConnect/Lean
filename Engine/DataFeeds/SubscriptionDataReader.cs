@@ -215,7 +215,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var quandl = _dataFactory as Quandl;
             if (quandl != null)
             {
-                quandl.SetAuthCode(Config.Get("quandl-auth-token"));   
+                if (!Quandl.IsAuthCodeSet)
+                {
+                    Quandl.SetAuthCode(Config.Get("quandl-auth-token"));   
+                }
             }
 
             //Load the entire factor and symbol mapping tables into memory, we'll start with some defaults
