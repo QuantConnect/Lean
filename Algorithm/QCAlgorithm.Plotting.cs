@@ -225,6 +225,22 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Automatically plots each indicator when a new value is available
+        /// </summary>
+        public void PlotIndicator(string chart, params IndicatorBase<IndicatorDataPoint>[] indicators)
+        {
+            foreach (var i in indicators)
+            {
+                // copy loop variable for usage in closure
+                var ilocal = i;
+                i.Updated += (sender, args) =>
+                {
+                    Plot(chart, ilocal);
+                };
+            }
+        }
+
+        /// <summary>
         /// Set a runtime statistic for the algorithm. Runtime statistics are shown in the top banner of a live algorithm GUI.
         /// </summary>
         /// <param name="name">Name of your runtime statistic</param>

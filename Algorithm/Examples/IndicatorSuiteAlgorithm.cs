@@ -80,16 +80,16 @@ namespace QuantConnect
             //
             _selectorIndicators = new Indicators
             {
-                BB = BB(_symbol, 20, 1, MovingAverageType.Simple, Resolution.Daily, SelectorLow),
-                RSI = RSI(_symbol, 14, MovingAverageType.Simple, Resolution.Daily, SelectorLow),
-                EMA = EMA(_symbol, 14, Resolution.Daily, SelectorLow),
-                SMA = SMA(_symbol, 14, Resolution.Daily, SelectorLow),
-                MACD = MACD(_symbol, 12, 26, 9, MovingAverageType.Simple, Resolution.Daily, SelectorLow),
-                MOM = MOM(_symbol, 20, Resolution.Daily, SelectorLow),
-                MOMP = MOMP(_symbol, 20, Resolution.Daily, SelectorLow),
-                STD = STD(_symbol, 20, Resolution.Daily, SelectorLow),
-                MIN = MIN(_symbol, 14, Resolution.Daily, baseData => ((TradeBar)baseData).High), // this will find the 14 day min of the high property
-                MAX = MAX(_symbol, 14, Resolution.Daily, baseData => ((TradeBar)baseData).Low),  // this will find the 14 day max of the low property
+                BB = BB(_symbol, 20, 1, MovingAverageType.Simple, Resolution.Daily, Field.Low),
+                RSI = RSI(_symbol, 14, MovingAverageType.Simple, Resolution.Daily, Field.Low),
+                EMA = EMA(_symbol, 14, Resolution.Daily, Field.Low),
+                SMA = SMA(_symbol, 14, Resolution.Daily, Field.Low),
+                MACD = MACD(_symbol, 12, 26, 9, MovingAverageType.Simple, Resolution.Daily, Field.Low),
+                MOM = MOM(_symbol, 20, Resolution.Daily, Field.Low),
+                MOMP = MOMP(_symbol, 20, Resolution.Daily, Field.Low),
+                STD = STD(_symbol, 20, Resolution.Daily, Field.Low),
+                MIN = MIN(_symbol, 14, Resolution.Daily, Field.High), // this will find the 14 day min of the high property
+                MAX = MAX(_symbol, 14, Resolution.Daily, Field.Low),  // this will find the 14 day max of the low property
 
                 // ATR and AROON are special in that they accept a TradeBar instance instead of a decimal, we could easily project and/or transform the input TradeBar
                 // before it gets sent to the ATR/AROON indicator, here we use a function that will multiply the input trade bar by a factor of two
@@ -171,14 +171,6 @@ namespace QuantConnect
             public MovingAverageConvergenceDivergence MACD;
             public Minimum MIN;
             public Maximum MAX;
-        }
-
-        /// <summary>
-        /// Function used to select the low value. This method expects the input to be an instance of type TradeBar
-        /// </summary>
-        private static decimal SelectorLow(BaseData baseData)
-        {
-            return ((TradeBar)baseData).Low;
         }
 
         /// <summary>
