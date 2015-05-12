@@ -28,6 +28,7 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Data.Market;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -37,11 +38,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Live Data Feed Streamed From QC Source.
     /// </summary>
-    public abstract class LiveTradingDataFeed : IDataFeed
+    public class LiveTradingDataFeed : IDataFeed
     {
         /******************************************************** 
         * CLASS VARIABLES
         *********************************************************/
+        private LiveNodePacket _job;
         private List<SubscriptionDataConfig> _subscriptions = new List<SubscriptionDataConfig>();
         private List<bool> _isDynamicallyLoadedData = new List<bool>();
         private SubscriptionDataReader[] _subscriptionManagers;
@@ -157,16 +159,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// need only implement the GetNextTicks() function to return unprocessed ticks from a data source.
         /// This creates a new data feed with a DataFeedEndpoint of LiveTrading.
         /// </summary>
-        /// <param name="algorithm">Algorithm requesting data</param>
-        /// <param name="dataSource">Source of the live stream</param>
-        protected LiveTradingDataFeed(IAlgorithm algorithm, IDataQueueHandler dataSource)
+        public LiveTradingDataFeed(IAlgorithm algorithm, LiveNodePacket job, IDataQueueHandler dataSource)
         {
             //Subscription Count:
             _subscriptions = algorithm.SubscriptionManager.Subscriptions;
 
             //Set Properties:
-            _dataFeed = DataFeedEndpoint.LiveTrading;
             _isActive = true;
+            _dataFeed = DataFeedEndpoint.LiveTrading;
             _bridge = new ConcurrentQueue<List<BaseData>>[Subscriptions.Count];
             _endOfBridge = new bool[Subscriptions.Count];
             _subscriptionManagers = new SubscriptionDataReader[Subscriptions.Count];
@@ -177,6 +177,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             //Class Privates:
             _algorithm = algorithm;
+            _job = job;
 
             //Setup the arrays:
             for (var i = 0; i < Subscriptions.Count; i++)
@@ -195,6 +196,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 _realtimePrices.Add(0);
             }
+
+            // request for data from these symbols
+            _dataQueue.Subscribe(job, BuildTypeSymbolList(algorithm));
         }
 
 
@@ -435,7 +439,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// implementation would ask the IB API for the next ticks
         /// </summary>
         /// <returns>The next ticks to be aggregated and sent to algoithm</returns>
-        public abstract IEnumerable<Tick> GetNextTicks();
+        public virtual IEnumerable<Tick> GetNextTicks()
+        {
+            return _dataQueue.GetNextTicks();
+        }
 
         /// <summary>
         /// Trigger the live trading datafeed thread to abort and stop looping.
@@ -444,6 +451,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             lock (_lock)
             {
+                // Unsubscribe from these symbols
+                _dataQueue.Unsubscribe(_job, BuildTypeSymbolList(_algorithm));
                 _exitTriggered = true;
                 PurgeData();
             }
@@ -477,6 +486,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
             return open;
+        }
+
+        /// <summary>
+        /// Create list of symbols grouped by security type.
+        /// </summary>
+        private Dictionary<SecurityType, List<string>> BuildTypeSymbolList(IAlgorithm algorithm)
+        {
+            // create a lookup keyed by SecurityType
+            var symbols = new Dictionary<SecurityType, List<string>>();
+
+            // Only subscribe equities and forex symbols
+            foreach (var security in algorithm.Securities.Values)
+            {
+                if (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
+                {
+                    if (!symbols.ContainsKey(security.Type)) symbols.Add(security.Type, new List<string>());
+                    symbols[security.Type].Add(security.Symbol);
+                }
+            }
+            return symbols;
         }
 
     } // End Live Trading Data Feed Class:

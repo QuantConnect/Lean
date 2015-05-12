@@ -511,7 +511,7 @@ namespace QuantConnect.Lean.Engine
                 //Live Trading Data Source:
                 case DataFeedEndpoint.LiveTrading:
                     var ds = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Config.Get("data-queue-handler", "LiveDataQueue"));
-                    df = new PaperTradingDataFeed(algorithm, ds, (LiveNodePacket)job);
+                    df = new LiveTradingDataFeed(algorithm, (LiveNodePacket)job, ds);
                     Log.Trace("Engine.GetDataFeedHandler(): Selected LiveTrading Datafeed");
                     break;
             }

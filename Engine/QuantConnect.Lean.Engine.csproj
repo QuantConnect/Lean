@@ -133,7 +133,6 @@
     <Compile Include="DataFeeds\Auxiliary\MapFileRow.cs" />
     <Compile Include="DataFeeds\LiveTradingDataFeed.cs" />
     <Compile Include="DataFeeds\DatabaseDataFeed.cs" />
-    <Compile Include="DataFeeds\PaperTradingDataFeed.cs" />
     <Compile Include="DataFeeds\Queues\DataQueue.cs" />
     <Compile Include="DataFeeds\StreamStore.cs" />
     <Compile Include="DataFeeds\SubscriptionDataReader.cs" />
