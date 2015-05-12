@@ -475,27 +475,36 @@ namespace QuantConnect.Securities
             security.PortfolioModel.ProcessFill(this, security, fill);
         }
 
-
         /// <summary>
         /// Scan the portfolio and the updated data for a potential margin call situation which may get the holdings below zero! 
         /// If there is a margin call, liquidate the portfolio immediately before the portfolio gets sub zero.
         /// </summary>
+        /// <param name="issueMarginCallWarning">Set to true if a warning should be issued to the algorithm</param>
         /// <returns>True for a margin call on the holdings.</returns>
-        public List<Order> ScanForMarginCall()
+        public List<Order> ScanForMarginCall(out bool issueMarginCallWarning)
         {
+            issueMarginCallWarning = false;
+            var marginRemaining = MarginRemaining;
+
+            // issue a margin warning when we're down to 5% margin remaining
+            if (marginRemaining <= TotalPortfolioValue*0.05m)
+            {
+                issueMarginCallWarning = true;
+            }
+
             // if we still have margin remaining then there's no need for a margin call
-            if (MarginRemaining > 0)
+            if (marginRemaining > 0)
             {
                 return new List<Order>();
             }
 
             // generate a listing of margin call orders
             var marginCallOrders = new List<Order>();
-            foreach (var security in Securities.Values)
+
+            // skip securities that have no price data or no holdings, we can't liquidate nothingness
+            foreach (var security in Securities.Values.Where(x => x.Holdings.Quantity != 0 && x.Price != 0))
             {
-                // if the price is zero don't bother, we just don't have data for it
-                if (security.Price == 0) continue;
-                
+                // we need to recompute portfolio value and margin used on each loop iteration
                 var marginCallOrder = security.MarginModel.GenerateMarginCallOrder(security, TotalPortfolioValue, TotalMarginUsed);
                 if (marginCallOrder != null && marginCallOrder.Quantity != 0)
                 {

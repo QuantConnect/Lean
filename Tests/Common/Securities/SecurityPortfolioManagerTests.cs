@@ -241,7 +241,8 @@ namespace QuantConnect.Tests.Common.Securities
 
 
             // this would cause a margin call
-            var marginCallOrders = portfolio.ScanForMarginCall();
+            bool issueMarginCallWarning;
+            var marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
             Assert.AreNotEqual(0, marginCallOrders.Count);
             Assert.AreEqual(-quantity, marginCallOrders[0].Quantity);
             Assert.GreaterOrEqual(-portfolio.MarginRemaining, marginCallOrders[0].Price*marginCallOrders[0].Quantity);

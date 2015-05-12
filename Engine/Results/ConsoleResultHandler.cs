@@ -171,28 +171,6 @@ namespace QuantConnect.Lean.Engine.Results
         {
             while ( !_exitTriggered || Messages.Count > 0 ) 
             {
-                while (Messages.Count > 0)
-                {
-                    Packet packet;
-                    if (!Messages.TryDequeue(out packet)) continue;
-
-                    switch (packet.Type)
-                    { 
-                        case PacketType.Log:
-                            var log = packet as LogPacket;
-                            Log.Trace("Log Message >> " + log.Message);
-                            break;
-                        case PacketType.Debug:
-                            var debug = packet as DebugPacket;
-                            Log.Trace("Debug Message >> " + debug.Message);
-                            break;
-                        case PacketType.HandledError:
-                            var error = packet as HandledErrorPacket;
-                            Log.Error("Error Message >> " + error.Message);
-                            break;
-
-                    }
-                }
                 Thread.Sleep(100);
 
                 if (DateTime.Now > _updateTime)
@@ -212,8 +190,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public void DebugMessage(string message)
         {
-            //Don't queue up identical messages:
-            Messages.Enqueue(new DebugPacket(0, "", "", message));
+            Log.Trace("Debug Message >> " + message);
         }
 
         /// <summary>
@@ -222,7 +199,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd in the log.</param>
         public void LogMessage(string message)
         {
-            Messages.Enqueue(new LogPacket("", message));
+            Log.Trace("Log Message >> " + message);
         }
 
         /// <summary>
@@ -232,7 +209,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Stacktrace information string</param>
         public void RuntimeError(string message, string stacktrace = "")
         {
-            Messages.Enqueue(new RuntimeErrorPacket("", message, stacktrace));
+            Log.Error("Error Message >> " + message + (!string.IsNullOrEmpty(stacktrace) ? (" >> ST: " + stacktrace) : ""));
         }
 
         /// <summary>
@@ -242,7 +219,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Stacktrace information string</param>
         public void ErrorMessage(string message, string stacktrace = "")
         {
-            Messages.Enqueue(new HandledErrorPacket("", message, stacktrace));
+            Log.Error("Error Message >> " + message + (!string.IsNullOrEmpty(stacktrace) ? (" >> ST: " + stacktrace) : ""));
         }
 
         /// <summary>

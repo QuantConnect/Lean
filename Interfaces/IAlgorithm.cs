@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using QuantConnect;
 using QuantConnect.Data;
 using QuantConnect.Notifications;
 using QuantConnect.Orders;
@@ -256,6 +255,17 @@ namespace QuantConnect.Interfaces
         void Error(string message);
 
         /// <summary>
+        /// Margin call event handler. This method is called right before the margin call orders are placed in the market.
+        /// </summary>
+        /// <param name="orders">The orders to be executed to bring this algorithm within margin limits</param>
+        void OnMarginCall(List<Order> orders);
+
+        /// <summary>
+        /// Margin call warning event handler. This method is called when Portoflio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue
+        /// </summary>
+        void OnMarginCallWarning();
+
+        /// <summary>
         /// Call this method at the end of each day of data.
         /// </summary>
         void OnEndOfDay();
@@ -439,6 +449,5 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <returns>Boolean quit flag</returns>
         bool GetQuit();
-    }
-
+}
 }

@@ -35,6 +35,12 @@ namespace QuantConnect.Securities
         /// <returns>The list of orders that were actually executed</returns>
         public virtual List<Order> ExecuteMarginCall(IEnumerable<Order> generatedMarginCallOrders)
         {
+            // if our margin used is back under the portfolio value then we can stop liquidating
+            if (Portfolio.MarginRemaining >= 0)
+            {
+                return new List<Order>();
+            }
+
             // order by losers first
             var executedOrders = new List<Order>();
             var ordersWithSecurities = generatedMarginCallOrders.ToDictionary(x => x, x => Portfolio[x.Symbol]);

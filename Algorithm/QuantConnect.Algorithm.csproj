@@ -81,6 +81,7 @@
     <Compile Include="Examples\BubbleAlgorithm.cs" />
     <Compile Include="Examples\DividendAlgorithm.cs" />
     <Compile Include="Examples\IndicatorSuiteAlgorithm.cs" />
+    <Compile Include="Examples\MarginCallEventsAlgorithm.cs" />
     <Compile Include="Examples\MultipleSymbolConsolidationAlgorithm.cs" />
     <Compile Include="Examples\QuandlImporterAlgorithm.cs" />
     <Compile Include="Examples\BasicTemplateAlgorithm.cs" />

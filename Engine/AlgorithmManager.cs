@@ -255,14 +255,42 @@ namespace QuantConnect.Lean.Engine
                 if (time >= nextMarginCallTime || (Engine.LiveMode && nextMarginCallTime > DateTime.Now))
                 {
                     // determine if there are possible margin call orders to be executed
-                    var marginCallOrders = algorithm.Portfolio.ScanForMarginCall();
+                    bool issueMarginCallWarning;
+                    var marginCallOrders = algorithm.Portfolio.ScanForMarginCall(out issueMarginCallWarning);
                     if (marginCallOrders.Count != 0)
                     {
+                        try
+                        {
+                            // tell the algorithm we're about to issue the margin call
+                            algorithm.OnMarginCall(marginCallOrders);
+                        }
+                        catch (Exception err)
+                        {
+                            algorithm.RunTimeError = err;
+                            _algorithmState = AlgorithmStatus.RuntimeError;
+                            Log.Debug("AlgorithmManager.Run(): RuntimeError: OnMarginCall: " + err.Message + " STACK >>> " + err.StackTrace);
+                            return;
+                        }
+
                         // execute the margin call orders
                         var executedOrders = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
                         foreach (var order in executedOrders)
                         {
-                            algorithm.Error(string.Format("Executed MarginCallOrder: {0} - Quantity: {1} @ {2}", order.Symbol, order.Quantity, order.Price));
+                            algorithm.Error(string.Format("{0} - Executed MarginCallOrder: {1} - Quantity: {2} @ {3}", algorithm.Time, order.Symbol, order.Quantity, order.Price));
+                        }
+                    }
+                    // we didn't perform a margin call, but got the warning flag back, so issue the warning to the algorithm
+                    else if (issueMarginCallWarning)
+                    {
+                        try
+                        {
+                            algorithm.OnMarginCallWarning();
+                        }
+                        catch (Exception err)
+                        {
+                            algorithm.RunTimeError = err;
+                            _algorithmState = AlgorithmStatus.RuntimeError;
+                            Log.Debug("AlgorithmManager.Run(): RuntimeError: OnMarginCallWarning: " + err.Message + " STACK >>> " + err.StackTrace);
                         }
                     }
 
