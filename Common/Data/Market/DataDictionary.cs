@@ -12,21 +12,20 @@ namespace QuantConnect.Data.Market
         // storage for the data
         private readonly IDictionary<string, T> _data = new Dictionary<string, T>();
 
-        /// <summary>
-        /// Empty Constructor
-        /// </summary>
+       /// <summary>
+       /// Initializes a new instance of the <see cref="QuantConnect.Data.Market.DataDictionary{T}"/> class.
+       /// </summary>
         public DataDictionary()
         {
         }
 
         /// <summary>
-        /// Constructor which sets the Time to the frontier
+        /// Initializes a new instance of the <see cref="QuantConnect.Data.Market.DataDictionary{T}"/> class.
         /// </summary>
-        /// <param name="frontier">DateTime - The most advanced moment in time 
-        ///     for which the data feed has completed loading data</param>
-        public DataDictionary(DateTime frontier)
+        /// <param name="time">The time this data was emitted.</param>
+        public DataDictionary(DateTime time)
         {
-            Time = frontier;
+            Time = time;
         }
 
         /// <summary>

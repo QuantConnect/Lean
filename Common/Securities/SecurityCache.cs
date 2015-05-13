@@ -13,17 +13,10 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using QuantConnect.Data;
 
 namespace QuantConnect.Securities 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Base class caching caching spot for security data and any other temporary properties.
     /// </summary>

@@ -13,21 +13,14 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Interfaces;
 
-
 namespace QuantConnect.Securities 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Default security transaction model for user defined securities.
     /// </summary>
@@ -98,9 +91,9 @@ namespace QuantConnect.Securities
             {
                 Log.Error("SecurityTransactionModel.MarketFill(): " + err.Message);
             }
+
             return fill;
         }
-
 
         /// <summary>
         /// Default stop fill model implementation in base class security. (Stop Market Order Type)
@@ -166,7 +159,6 @@ namespace QuantConnect.Securities
 
             return fill;
         }
-
 
         /// <summary>
         /// Default stop limit fill model implementation in base class security. (Stop Limit Order Type)
@@ -249,7 +241,6 @@ namespace QuantConnect.Securities
             return fill;
         }
 
-
         /// <summary>
         /// Default limit order fill model in the base security class.
         /// </summary>
@@ -308,9 +299,9 @@ namespace QuantConnect.Securities
             {
                 Log.Error("SecurityTransactionModel.LimitFill(): " + err.Message);
             }
+
             return fill;
         }
-
 
         /// <summary>
         /// Get the slippage approximation for this order
@@ -320,16 +311,15 @@ namespace QuantConnect.Securities
         /// <returns>decimal approximation for slippage</returns>
         public virtual decimal GetSlippageApproximation(Security security, Order order)
         {
-            return 0;
+            return 0m;
         }
-
 
         /// <summary>
         /// Default security transaction model - no fees.
         /// </summary>
         public virtual decimal GetOrderFee(decimal quantity, decimal price)
         {
-            return 0;
+            return 0m;
         }
 
         /// <summary>
@@ -347,7 +337,6 @@ namespace QuantConnect.Securities
 
             return GetOrderFee(order.Quantity, order.Value/order.Quantity);
         }
-
 
         /// <summary>
         /// Get the minimum and maximum price for this security in the last bar:
@@ -371,7 +360,6 @@ namespace QuantConnect.Securities
             }
         }
 
-
         /// <summary>
         /// Process an order to see if it has been filled and return the matching order event.
         /// </summary>
@@ -383,7 +371,6 @@ namespace QuantConnect.Securities
         {
             return new OrderEvent(order);
         }
-
 
         /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.
@@ -399,7 +386,6 @@ namespace QuantConnect.Securities
             return MarketFill(security, order as MarketOrder);
         }
 
-
         /// <summary>
         /// Default stop fill model implementation in base class security. (Stop Market Order Type)
         /// </summary>
@@ -413,7 +399,6 @@ namespace QuantConnect.Securities
         {
             return StopMarketFill(security, order as StopMarketOrder);
         }
-
 
         /// <summary>
         /// Default limit order fill model in the base security class.

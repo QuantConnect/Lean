@@ -139,61 +139,114 @@ namespace QuantConnect.Securities
 
         #region IDictionary Implementation
 
+        /// <summary>
+        /// Gets the count of Cash items in this CashBook.
+        /// </summary>
+        /// <value>The count.</value>
         public int Count
         {
             get { return _currencies.Count; }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether this instance is read only.
+        /// </summary>
+        /// <value><c>true</c> if this instance is read only; otherwise, <c>false</c>.</value>
         public bool IsReadOnly
         {
             get { return ((IDictionary<string, Cash>) _currencies).IsReadOnly; }
         }
 
+        /// <summary>
+        /// Add the specified item to this CashBook.
+        /// </summary>
+        /// <param name="item">KeyValuePair of symbol -> Cash item</param>
         public void Add(KeyValuePair<string, Cash> item)
         {
             _currencies.Add(item.Key, item.Value);
         }
 
-        public void Add(string key, Cash value)
+        /// <summary>
+        /// Add the specified key and value.
+        /// </summary>
+        /// <param name="symbol">The symbol of the Cash value.</param>
+        /// <param name="value">Value.</param>
+        public void Add(string symbol, Cash value)
         {
-            _currencies.Add(key, value);
+            _currencies.Add(symbol, value);
         }
 
+        /// <summary>
+        /// Clear this instance of all Cash entries.
+        /// </summary>
         public void Clear()
         {
             _currencies.Clear();
         }
 
-        public bool Remove(string key)
+        /// <summary>
+        /// Remove the Cash item corresponding to the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbolto be removed</param>
+        public bool Remove(string symbol)
         {
-            return _currencies.Remove(key);
+            return _currencies.Remove (symbol);
         }
 
+        /// <summary>
+        /// Remove the specified item.
+        /// </summary>
+        /// <param name="item">Item.</param>
         public bool Remove(KeyValuePair<string, Cash> item)
         {
             return _currencies.Remove(item.Key);
         }
 
-        public bool ContainsKey(string key)
+        /// <summary>
+        /// Determines whether the current instance contains an entry with the specified symbol.
+        /// </summary>
+        /// <returns><c>true</c>, if key was contained, <c>false</c> otherwise.</returns>
+        /// <param name="symbol">Key.</param>
+        public bool ContainsKey(string symbol)
         {
-            return _currencies.ContainsKey(key);
+            return _currencies.ContainsKey(symbol);
         }
 
-        public bool TryGetValue(string key, out Cash value)
+        /// <summary>
+        /// Try to get the value.
+        /// </summary>
+        /// <remarks>To be added.</remarks>
+        /// <returns><c>true</c>, if get value was tryed, <c>false</c> otherwise.</returns>
+        /// <param name="symbol">The symbol.</param>
+        /// <param name="value">Value.</param>
+        public bool TryGetValue(string symbol, out Cash value)
         {
-            return _currencies.TryGetValue(key, out value);
+            return _currencies.TryGetValue(symbol, out value);
         }
 
+        /// <summary>
+        /// Determines whether the current collection contains the specified value.
+        /// </summary>
+        /// <param name="item">Item.</param>
         public bool Contains(KeyValuePair<string, Cash> item)
         {
             return _currencies.Contains(item);
         }
 
+        /// <summary>
+        /// Copies to the specified array.
+        /// </summary>
+        /// <param name="array">Array.</param>
+        /// <param name="arrayIndex">Array index.</param>
         public void CopyTo(KeyValuePair<string, Cash>[] array, int arrayIndex)
         {
             ((IDictionary<string, Cash>) _currencies).CopyTo(array, arrayIndex);
         }
 
+        /// <summary>
+        /// Gets or sets the <see cref="QuantConnect.Securities.Cash"/> with the specified symbol.
+        /// </summary>
+        /// <param name="symbol">Symbol.</param>
         public Cash this[string symbol]
         {
             get
@@ -208,16 +261,28 @@ namespace QuantConnect.Securities
             set { _currencies[symbol] = value; }
         }
 
+        /// <summary>
+        /// Gets the keys.
+        /// </summary>
+        /// <value>The keys.</value>
         public ICollection<string> Keys
         {
             get { return _currencies.Keys; }
         }
 
+        /// <summary>
+        /// Gets the values.
+        /// </summary>
+        /// <value>The values.</value>
         public ICollection<Cash> Values
         {
             get { return _currencies.Values; }
         }
 
+        /// <summary>
+        /// Gets the enumerator.
+        /// </summary>
+        /// <returns>The enumerator.</returns>
         public IEnumerator<KeyValuePair<string, Cash>> GetEnumerator()
         {
             return _currencies.GetEnumerator();

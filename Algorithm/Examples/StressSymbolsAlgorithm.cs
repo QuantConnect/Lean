@@ -30,6 +30,9 @@ namespace QuantConnect.Algorithm.Examples
         public const int SecondSymbolsToRun = 7;
         public const int MinuteSymbolsToRun = 10;
 
+        /// <summary>
+        /// Add Hundreds of Stock and Forex Symbol
+        /// </summary>
         public override void Initialize()
         {
             SetStartDate(2014, 01, 01);
@@ -82,12 +85,17 @@ namespace QuantConnect.Algorithm.Examples
             return list[_random.Next(list.Count)];
         }
 
-        //On each data event, buy a few of each one:
+        /// <summary>
+        /// TradeBar data event handler
+        /// </summary>
         public void OnData(TradeBars data)
         {
 
         }
 
+        /// <summary>
+        /// The stock symbols.
+        /// </summary>
         public HashSet<string> StockSymbols = new HashSet<string>
         {
             "ABT",
@@ -197,6 +205,9 @@ namespace QuantConnect.Algorithm.Examples
             "FB"
         };
 
+        /// <summary>
+        /// The forex symbols.
+        /// </summary>
         public HashSet<string> ForexSymbols = new HashSet<string>(Forex.CurrencyPairs);
     }
 }

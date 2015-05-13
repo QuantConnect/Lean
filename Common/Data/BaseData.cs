@@ -13,10 +13,6 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using QuantConnect.Util;
 
@@ -220,6 +216,5 @@ namespace QuantConnect.Data
         {
             return string.Format("{0}: {1}", Symbol, Value.ToString("C"));
         }
-    } // End Base Data Class
-
-} // End QC Namespace
+    }
+}

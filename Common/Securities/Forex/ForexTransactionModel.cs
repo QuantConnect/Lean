@@ -37,11 +37,11 @@ namespace QuantConnect.Securities.Forex
         {
             /*            Interactive Brokers Forex Commisions as of 2015.04.15
 
-                Monthly Trade Amount	            Commissions	                        Minimum per Order
-                <=USD 1,000,000,000	                0.20basis point * Trade Value	    USD 2.00
-                USD 1,000,000,001 - 2,000,000,000	0.15basis point * Trade Value	    USD 1.50
-                USD 2,000,000,001 - 5,000,000,000	0.10basis point * Trade Value    	USD 1.25
-                >USD 5,000,000,000	                0.08basis point * Trade Value    	USD 1.00
+                Monthly Trade Amount                   Commissions                          Minimum per Order
+                <=USD 1,000,000,000                    0.20basis point * Trade Value        USD 2.00
+                USD 1,000,000,001 - 2,000,000,000      0.15basis point * Trade Value        USD 1.50
+                USD 2,000,000,001 - 5,000,000,000      0.10basis point * Trade Value        USD 1.25
+                >USD 5,000,000,000                     0.08basis point * Trade Value        USD 1.00
              * 
             */
 

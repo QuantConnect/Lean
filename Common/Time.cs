@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -24,17 +21,11 @@ using QuantConnect.Securities;
 
 namespace QuantConnect 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Time helper class collection for working with trading dates
     /// </summary>
     public class Time 
     {
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Live charting is sensitive to timezone so need to convert the local system time to a UTC and display in browser as UTC.
         /// </summary>
@@ -43,16 +34,33 @@ namespace QuantConnect
             private readonly DateTime utcDateTime;
             private readonly TimeZoneInfo timeZone;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="QuantConnect.Time+DateTimeWithZone"/> struct.
+            /// </summary>
+            /// <param name="dateTime">Date time.</param>
+            /// <param name="timeZone">Time zone.</param>
             public DateTimeWithZone(DateTime dateTime, TimeZoneInfo timeZone)
             {
                 utcDateTime = TimeZoneInfo.ConvertTimeToUtc(dateTime, timeZone);
                 this.timeZone = timeZone;
             }
 
+            /// <summary>
+            /// Gets the universal time.
+            /// </summary>
+            /// <value>The universal time.</value>
             public DateTime UniversalTime { get { return utcDateTime; } }
 
+            /// <summary>
+            /// Gets the time zone.
+            /// </summary>
+            /// <value>The time zone.</value>
             public TimeZoneInfo TimeZone { get { return timeZone; } }
 
+            /// <summary>
+            /// Gets the local time.
+            /// </summary>
+            /// <value>The local time.</value>
             public DateTime LocalTime
             {
                 get

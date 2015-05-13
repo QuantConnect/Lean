@@ -13,17 +13,10 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 
 namespace QuantConnect.Securities.Forex 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Forex exchange class - information and helper tools for forex exchange properties
     /// </summary>

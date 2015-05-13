@@ -12,9 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 
 using System;
 using System.Collections.Generic;
@@ -27,9 +24,6 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Queues
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Implementation of local/desktop job request:
     /// </summary>

@@ -12,9 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 
 using System;
 using System.Collections.Concurrent;
@@ -25,21 +22,10 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
-
     public partial class QCAlgorithm
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
         private bool _processingOrder = false;
         private int _maxOrders = 10000;
-
-        /******************************************************** 
-        * CLASS PUBLIC PROPERTIES
-        *********************************************************/
 
         /// <summary>
         /// Transaction Manager - Process transaction fills and order management.
@@ -63,16 +49,12 @@ namespace QuantConnect.Algorithm
             get { return Transactions.Orders; }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-
         /// <summary>
         /// Buy Stock (Alias of Order)
         /// </summary>
         /// <param name="symbol">string Symbol of the asset to trade</param>
         /// <param name="quantity">int Quantity of the asset to trade</param>
-        /// <seealso cref="Order(string, double)"/>
+        /// <seealso cref="Buy(string, double)"/>
         public int Buy(string symbol, int quantity)
         {
             return Order(symbol, Math.Abs(quantity));
@@ -83,7 +65,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">string Symbol of the asset to trade</param>
         /// <param name="quantity">double Quantity of the asset to trade</param>
-        /// <seealso cref="Order(string, double)"/>
+        /// <seealso cref="Buy(string, int)"/>
         public int Buy(string symbol, double quantity)
         {
             return Order(symbol, Math.Abs(quantity));
@@ -105,7 +87,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">string Symbol of the asset to trade</param>
         /// <param name="quantity">float Quantity of the asset to trade</param>
-        /// <seealso cref="Order(string, double)"/>
+        /// <seealso cref="Buy(string, double)"/>
         public int Buy(string symbol, float quantity)
         {
             return Order(symbol, Math.Abs(quantity));
@@ -116,7 +98,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">string Symbol of the asset to trade</param>
         /// <param name="quantity">int Quantity of the asset to trade</param>
-        /// <seealso cref="Order(string, double)"/>
+        /// <seealso cref="Sell(string, double)"/>
         public int Sell(string symbol, int quantity)
         {
             return Order(symbol, Math.Abs(quantity) * -1);
@@ -139,7 +121,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">String symbol</param>
         /// <param name="quantity">Quantity to sell</param>
         /// <returns>int order id</returns>
-        /// <seealso cref="Order(string, double)"/>
+        /// <seealso cref="Sell(string, double)"/>
         public int Sell(string symbol, float quantity)
         {
             return Order(symbol, Math.Abs(quantity) * -1);
@@ -357,7 +339,6 @@ namespace QuantConnect.Algorithm
             return 0;
         }
 
-
         /// <summary>
         /// Liquidate all holdings. Called at the end of day for tick-strategies.
         /// </summary>
@@ -383,9 +364,11 @@ namespace QuantConnect.Algorithm
                 {
                     quantity = Math.Abs(Portfolio[symbol].Quantity);
                 }
+
                 //Liquidate at market price.
                 orderIdList.Add(Order(symbol, quantity));
             }
+
             return orderIdList;
         }
 
@@ -400,7 +383,6 @@ namespace QuantConnect.Algorithm
                 _maxOrders = max;
             }
         }
-
 
         /// <summary>
         /// Alias for SetHoldings to avoid the M-decimal errors.
@@ -426,7 +408,6 @@ namespace QuantConnect.Algorithm
         {
             SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings);
         }
-
 
         /// <summary>
         /// Alias for SetHoldings to avoid the M-decimal errors.
@@ -590,7 +571,5 @@ namespace QuantConnect.Algorithm
         {
             return Order(symbol, quantity);
         }
-
-    } // End Partial Algorithm Template - Trading..
-
-} // End QC Namespace
+    }
+}

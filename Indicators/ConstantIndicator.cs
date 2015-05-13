@@ -60,6 +60,9 @@ namespace QuantConnect.Indicators
             return _value;
         }
 
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
         public override void Reset()
         {
             base.Reset();

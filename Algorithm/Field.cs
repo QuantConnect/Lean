@@ -19,9 +19,9 @@ using QuantConnect.Data.Market;
 
 namespace QuantConnect.Algorithm
 {
-	/// <summary>
-	/// Provides static properties to be used as selectors with the indicator system
-	/// </summary>
+    /// <summary>
+    /// Provides static properties to be used as selectors with the indicator system
+    /// </summary>
     public static class Field
     {
         /// <summary>

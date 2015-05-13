@@ -66,6 +66,12 @@ namespace QuantConnect.Data.Consolidators
         {
         }
 
+        /// <summary>
+        /// Aggregates the new 'data' into the 'workingBar'. The 'workingBar' will be
+        /// null following the event firing
+        /// </summary>
+        /// <param name="workingBar">The bar we're building, null if the event was just fired and we're starting a new trade bar</param>
+        /// <param name="data">The new data</param>
         protected override void AggregateBar(ref TradeBar workingBar, TradeBar data)
         {
             if (workingBar == null)

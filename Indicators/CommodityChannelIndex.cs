@@ -105,6 +105,9 @@ namespace QuantConnect.Indicators
             return (typicalPrice - TypicalPriceAverage.Current)/weightedMeanDeviation;
         }
 
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
         public override void Reset()
         {
             TypicalPriceAverage.Reset();

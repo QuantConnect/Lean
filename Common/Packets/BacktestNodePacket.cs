@@ -14,26 +14,16 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Algorithm backtest task information packet.
     /// </summary>
     public class BacktestNodePacket : AlgorithmNodePacket
-    { 
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
+    {
         /// <summary>
         /// Name of the backtest as randomly defined in the IDE.
         /// </summary>
@@ -72,15 +62,13 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "eRunMode")]
         public RunMode RunMode = RunMode.Series;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for JSON
         /// </summary>
         public BacktestNodePacket() 
             : base(PacketType.BacktestNode)
-        { }
+        {
+        }
 
         /// <summary>
         /// Initialize the backtest task packet.
@@ -95,16 +83,5 @@ namespace QuantConnect.Packets
             UserPlan = userPlan;
             Name = name;
         }
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-            
-    } // End Queue Packet:
-
-} // End of Namespace:
+    }
+}

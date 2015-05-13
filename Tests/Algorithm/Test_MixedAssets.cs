@@ -98,8 +98,8 @@ namespace QuantConnect
             VIX fear = new VIX();
             //try
             //{
-            //Date	Open	High	Low	Close	Volume	Adjusted Close
-            //10/27/2014	17.24	17.87	16	16.04	0	16.04
+            //Date          Open     High     Low   Close    Volume    Adjusted Close
+            //10/27/2014    17.24    17.87    16    16.04    0         16.04
             string[] data = line.Split(',');
             fear.Time = DateTime.ParseExact(data[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);
             fear.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture); 

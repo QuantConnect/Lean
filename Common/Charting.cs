@@ -166,7 +166,6 @@ namespace QuantConnect
             }
         }
 
-
         /// <summary>
         /// Get the updates since the last call to this function.
         /// </summary>

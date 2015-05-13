@@ -21,9 +21,8 @@ using QuantConnect.Indicators;
 
 namespace QuantConnect
 {
-
     /// <summary>
-    /// QuantConnect University: Indicator Suite Example:
+    /// QuantConnect University: Indicator Suite Example.
     /// </summary>
     public class IndicatorSuiteAlgorithm : QCAlgorithm
     {
@@ -42,7 +41,7 @@ namespace QuantConnect
         decimal _price;
 
         /// <summary>
-        /// Initialize the data and resolution you require for your strategy:
+        /// Initialize the data and resolution you require for your strategy
         /// </summary>
         public override void Initialize()
         {
@@ -111,7 +110,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="data">Bitcoin - dictionary of TradeBarlike Bars of Bitcoin Data</param>
         public void OnData(Bitcoin data)
-        { //
+        {
         }
 
         /// <summary>
@@ -136,7 +135,9 @@ namespace QuantConnect
             }
         }
 
-        // Fire plotting events once per day:
+        /// <summary>
+        /// Fire plotting events once per day.
+        /// </summary>
         public override void OnEndOfDay()
         {
             if (!_indicators.BB.IsReady) return;

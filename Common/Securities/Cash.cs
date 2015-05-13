@@ -161,6 +161,10 @@ namespace QuantConnect.Securities
             throw new ArgumentException(string.Format("In order to maintain cash in {0} you are required to add a subscription for Forex pair {0}{1} or {1}{0}", Symbol, CashBook.AccountCurrency));
         }
 
+        /// <summary>
+        /// Returns a <see cref="System.String"/> that represents the current <see cref="QuantConnect.Securities.Cash"/>.
+        /// </summary>
+        /// <returns>A <see cref="System.String"/> that represents the current <see cref="QuantConnect.Securities.Cash"/>.</returns>
         public override string ToString()
         {
             // round the conversion rate for output
