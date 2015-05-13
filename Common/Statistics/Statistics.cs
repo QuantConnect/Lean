@@ -317,7 +317,6 @@ namespace QuantConnect.Statistics
                 //Add the over all results first, break down by year later:
                 statistics = new Dictionary<string, string> { 
                     { "Total Trades", Math.Round(totalTrades, 0).ToString() },
-                    { "Total Fees", totalFees.ToString("C") },
                     { "Average Win", Math.Round(averageWin * 100, 2) + "%"  },
                     { "Average Loss", Math.Round(averageLoss * 100, 2) + "%" },
                     { "Compounding Annual Return", Math.Round(algoCompoundingPerformance * 100, 3) + "%" },
@@ -334,7 +333,8 @@ namespace QuantConnect.Statistics
                     { "Annual Variance", Math.Round(AnnualVariance(listPerformance, tradingDaysPerYear), 3).ToString() },
                     { "Information Ratio", Math.Round(InformationRatio(listPerformance, listBenchmark), 3).ToString() },
                     { "Tracking Error", Math.Round(TrackingError(listPerformance, listBenchmark), 3).ToString() },
-                    { "Treynor Ratio", Math.Round(TreynorRatio(listPerformance, listBenchmark, riskFreeRate), 3).ToString() }
+                    { "Treynor Ratio", Math.Round(TreynorRatio(listPerformance, listBenchmark, riskFreeRate), 3).ToString() },
+                    { "Total Fees", "$" + totalFees.ToString("0.00") }
                 };
             }
             catch (Exception err)
