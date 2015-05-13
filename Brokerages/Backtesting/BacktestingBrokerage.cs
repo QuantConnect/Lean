@@ -33,6 +33,7 @@ namespace QuantConnect.Brokerages.Backtesting
         private readonly IAlgorithm _algorithm;
         // this is the orders dictionary reference from the algorithm for convenence
         private readonly ConcurrentDictionary<int, Order> _orders;
+        private readonly ConcurrentDictionary<int, Order> _pending;
 
         /// <summary>
         /// Creates a new BacktestingBrokerage for the specified algorithm
@@ -43,6 +44,7 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             _algorithm = algorithm;
             _orders = _algorithm.Transactions.Orders;
+            _pending = new ConcurrentDictionary<int, Order>();
         }
 
         /// <summary>
@@ -110,6 +112,7 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (order.Status == OrderStatus.New)
             {
+                _pending[order.Id] = order;
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
 
                 // fire off the event that says this order has been submitted
@@ -130,6 +133,7 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (order.Status == OrderStatus.Update)
             {
+                _pending[order.Id] = order;
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
 
                 // fire off the event that says this order has been updated
@@ -150,6 +154,8 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (order.Status == OrderStatus.Canceled)
             {
+                Order pending;
+                _pending.TryRemove(order.Id, out pending);
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
 
                 // fire off the event that says this order has been canceled
@@ -174,22 +180,30 @@ namespace QuantConnect.Brokerages.Backtesting
         /// </summary>
         public void Scan()
         {
+            // there's usually nothing in here
+            if (_pending.Count == 0)
+            {
+                return;
+            }
+
             //2. NOW ALL ORDERS IN ORDER DICTIONARY::> 
             //   Scan through Orders: Process fills. Trigger Events.
             //   Refresh the order model: look at the orders for ones - process every time.
             
             // find orders that still need to be processed, be sure to sort them by their id so we
             // fill them in the proper order
-            var orders = (from order in _orders
+            var orders = (from order in _pending
                           where order.Value.Status != OrderStatus.Filled &&
                                 order.Value.Status != OrderStatus.Canceled &&
                                 order.Value.Status != OrderStatus.Invalid
                           orderby order.Value.Id ascending
-                          select order.Value);
+                          select order);
 
             //Now we have the orders; re-apply the order models to each order.
-            foreach (var order in orders)
+            foreach (var kvp in orders)
             {
+                var order = kvp.Value;
+                
                 // verify sure we have enough cash to perform the fill
                 var sufficientBuyingPower = _algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order);
 
@@ -240,6 +254,11 @@ namespace QuantConnect.Brokerages.Backtesting
                 {
                     //If the fill models come back suggesting filled, process the affects on portfolio
                     OnOrderEvent(fill);
+                }
+
+                if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.Invalid || order.Status == OrderStatus.Canceled)
+                {
+                    _pending.TryRemove(order.Id, out order);
                 }
             }
         }
