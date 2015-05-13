@@ -57,6 +57,7 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             _algorithm = algorithm;
             _orders = _algorithm.Transactions.Orders;
+            _pending = new ConcurrentDictionary<int, Order>();
         }
 
         /// <summary>
