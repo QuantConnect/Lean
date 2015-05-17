@@ -414,7 +414,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution.</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value).</param>
         /// <returns>The On Balance Volume indicator for the requested symbol.</returns>
-        public OnBalanceVolume OnBalanceVolume(string symbol, Resolution? resolution = null,
+        public OnBalanceVolume OBV(string symbol, Resolution? resolution = null,
             Func<BaseData, TradeBar> selector = null)
         {
             string name = CreateIndicatorName(symbol, "OBV", resolution);
