@@ -45,7 +45,7 @@ The mailing list for the project can be found on [Google Groups][6]
 
 ## Contributors and Pull Requests ##
 
-Contributions are warmly very welcomed but we ask you read the existing code to see how it is formatted, commented and ensure contributions match the existing style. All code submissions must include accompanying tests.
+Contributions are warmly very welcomed but we ask you read the existing code to see how it is formatted, commented and ensure contributions match the existing style. All code submissions must include accompanying tests. Please see the [contributor guide lines][7].
 
 ## Build Status ##
 <img src="https://travis-ci.org/QuantConnect/Lean.svg?branch=master">
@@ -63,3 +63,4 @@ Ryan H, Pravin B, Jimmie B, Nick C, Sam C, Mattias S, Michael H, Mark M, Madhan,
   [4]: https://www.quantconnect.com "QuantConnect"
   [5]: https://github.com/QuantConnect/Lean/issues
   [6]: https://groups.google.com/forum/#!forum/lean-engine
+  [7]: https://github.com/QuantConnect/Lean/blob/master/CONTRIBUTING.md
