@@ -424,6 +424,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Stochastic indicator; defaulting to the period 14, with 
+        /// </summary>
+        /// <param name="symbol">The symbol whose stochastic we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="period">The period of the stochastic. Normally 14</param>
+        /// <param name="kPeriod">The sum period of the stochastic. Normally 14</param>
+        /// <param name="dPeriod">The sum period of the stochastic. Normally 3</param>
+        /// <returns>Stochastic indicator for the requested symbol.</returns>
+        public Stochastic STO(string symbol, int period, int kPeriod, int dPeriod, Resolution? resolution = null)
+        {
+            string name = CreateIndicatorName(symbol, "STO", resolution);
+            var stoch = new Stochastic(name, period, kPeriod, dPeriod);
+            RegisterIndicator(symbol, stoch, resolution);
+            return stoch;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
