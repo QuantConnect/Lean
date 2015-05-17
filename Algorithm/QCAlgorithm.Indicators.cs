@@ -424,7 +424,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Stochastic indicator; defaulting to the period 14, with 
+        /// Creates a new Stochastic indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose stochastic we seek</param>
         /// <param name="resolution">The resolution.</param>
@@ -438,6 +438,18 @@ namespace QuantConnect.Algorithm
             var stoch = new Stochastic(name, period, kPeriod, dPeriod);
             RegisterIndicator(symbol, stoch, resolution);
             return stoch;
+        }
+
+        /// <summary>
+        /// Overload short hand to create a new Stochastic indicator; defaulting to the 3 period for dStoch
+        /// </summary>
+        /// <param name="symbol">The symbol whose stochastic we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="period">The period of the stochastic. Normally 14</param>
+        /// <returns>Stochastic indicator for the requested symbol.</returns>
+        public Stochastic STO(string symbol, int period, Resolution? resolution = null)
+        {
+            return STO(symbol, period, period, 3, resolution);
         }
 
         /// <summary>
