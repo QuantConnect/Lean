@@ -662,19 +662,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if ((int) e.ErrorCode == 1100 && !_disconnected1100Fired)
             {
                 _disconnected1100Fired = true;
+
                 // wait a minute and see if we've been reconnected
-                Task.Delay(TimeSpan.FromMinutes(1)).ContinueWith(task =>
-                {
-                    if (_disconnected1100Fired)
-                    {
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, "Connection with Interactive Brokers lost. " +
-                            "This could be because of internet connectivity issues or a log in from another location."
-                            ));
-                    }
-                });
+                Task.Delay(TimeSpan.FromMinutes(1)).ContinueWith(task => TryWaitForReconnect());
             }
             else if ((int) e.ErrorCode == 1102)
             {
+                // we've reconnected
                 _disconnected1100Fired = false;
             }
 
@@ -689,6 +683,29 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             OnMessage(new BrokerageMessageEvent(brokerageMessageType, (int) e.ErrorCode, e.ErrorMsg));
+        }
+
+        /// <summary>
+        /// If we lose connection to TWS/IB servers we don't want to send the Error event if it is within
+        /// the scheduled server reset times
+        /// </summary>
+        private void TryWaitForReconnect()
+        {
+            // IB has server reset schedule: https://www.interactivebrokers.com/en/?f=%2Fen%2Fsoftware%2FsystemStatus.php%3Fib_entity%3Dllc
+            
+            if (_disconnected1100Fired && !IsWithinScheduledServerResetTimes())
+            {
+                // if we were disconnected and we're nothing within the reset times, send the error event
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, "Connection with Interactive Brokers lost. " +
+                    "This could be because of internet connectivity issues or a log in from another location."
+                    ));
+            }
+            else if (_disconnected1100Fired && IsWithinScheduledServerResetTimes())
+            {
+                Log.Trace("InteractiveBrokersBrokerage.TryWaitForReconnect(): Within server reset times, trying to wait for reconnect...");
+                // we're still not connected but we're also within the schedule reset time, so just keep polling
+                Task.Delay(TimeSpan.FromMinutes(1)).ContinueWith(_ => TryWaitForReconnect());
+            }
         }
 
         /// <summary>
@@ -1123,6 +1140,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private static int IncrementClientID()
         {
             return Interlocked.Increment(ref _nextClientID);
+        }
+
+        private bool IsWithinScheduledServerResetTimes()
+        {
+            // from 11:45 -> 12:30 with a little wiggle
+            var time = DateTime.Now.TimeOfDay;
+            var result = time < TimeSpan.FromHours(0.45) || time > TimeSpan.FromHours(23.65);
+
+            Log.Trace("InteractiveBrokersBrokerage.IsWithinScheduledServerRestTimes(): " + result);
+
+            return result;
         }
 
         private static class AccountValueKeys
