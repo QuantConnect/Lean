@@ -14,7 +14,7 @@
 */
 using System;
 using System.Collections.Generic;
-using QuantConnect.Data.Market;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
@@ -29,7 +29,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// Desktop/Local doesn't support live data from this handler
         /// </summary>
         /// <returns>Tick</returns>
-        public virtual IEnumerable<Tick> GetNextTicks()
+        public virtual IEnumerable<BaseData> GetNextTicks()
         {
             throw new NotImplementedException("QuantConnect.Queues.LiveDataQueue has not implemented live data.");
         }

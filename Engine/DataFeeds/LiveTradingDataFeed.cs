@@ -335,21 +335,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 //Blocking ForEach - Should stay within this loop as long as there is a data-connection
                 while (true)
                 {
-                    var ticks = GetNextTicks();
+                    var dataCollection = GetNextTicks();
 
                     int ticksCount = 0;
-                    foreach (var tick in ticks)
+                    foreach (var point in dataCollection)
                     {
                         ticksCount++;
+
                         //Get the stream store with this symbol:
                         for (var i = 0; i < Subscriptions.Count; i++)
                         {
-                            if (_subscriptions[i].Symbol == tick.Symbol)
+                            if (_subscriptions[i].Symbol != point.Symbol) continue;
+                            
+                            var tick = point as Tick;
+                            if (tick != null)
                             {
                                 // Update our internal counter
                                 _streamStore[i].Update(tick);
                                 // Update the realtime price stream value
-                                _realtimePrices[i] = tick.Value;
+                                _realtimePrices[i] = point.Value;
+                            }
+                            else
+                            {
+                                //If its not a tick, inject directly into bridge for this symbol:
+                                Bridge[i].Enqueue(new List<BaseData>() { point });
                             }
                         }
                     }
@@ -437,7 +446,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// implementation would ask the IB API for the next ticks
         /// </summary>
         /// <returns>The next ticks to be aggregated and sent to algoithm</returns>
-        public virtual IEnumerable<Tick> GetNextTicks()
+        public virtual IEnumerable<BaseData> GetNextTicks()
         {
             return _dataQueue.GetNextTicks();
         }

@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Packets;
 
@@ -31,7 +32,7 @@ namespace QuantConnect.Interfaces
         /// Get the next ticks from the live trading data queue
         /// </summary>
         /// <returns>IEnumerable list of ticks since the last update.</returns>
-        IEnumerable<Tick> GetNextTicks();
+        IEnumerable<BaseData> GetNextTicks();
 
         /// <summary>
         /// Adds the specified symbols to the subscription
