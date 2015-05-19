@@ -49,7 +49,7 @@ namespace QuantConnect.Indicators
         /// <value>
         /// The  index of the Plus Directional Indicator.
         /// </value>
-        public IndicatorBase<IndicatorDataPoint> PositiveDirectionalIndex { get; set; }
+        public IndicatorBase<IndicatorDataPoint> PositiveDirectionalIndex { get; private set; }
 
         /// <summary>
         /// Gets or sets the index of the Minus Directional Indicator
@@ -57,7 +57,7 @@ namespace QuantConnect.Indicators
         /// <value>
         /// The index of the Minus Directional Indicator.
         /// </value>
-        public IndicatorBase<IndicatorDataPoint> NegativeDirectionalIndex { get; set; }
+        public IndicatorBase<IndicatorDataPoint> NegativeDirectionalIndex { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AverageDirectionalIndex"/> class.
@@ -278,11 +278,14 @@ namespace QuantConnect.Indicators
             SmoothedTrueRange.Update(Current);
             SmoothedDirectionalMovementMinus.Update(Current);
             SmoothedDirectionalMovementPlus.Update(Current);
-            PositiveDirectionalIndex.Update(Current);
-            NegativeDirectionalIndex.Update(Current);
+            if (_previousInput != null)
+            {
+                PositiveDirectionalIndex.Update(Current);
+                NegativeDirectionalIndex.Update(Current);
+            }
             var diff = Math.Abs(PositiveDirectionalIndex - NegativeDirectionalIndex);
             var sum = PositiveDirectionalIndex + NegativeDirectionalIndex;
-            var value = Math.Round((sum == 0 ? 50 : ((_period - 1) * Current.Value + 100 * diff / sum) / _period), 5);
+            var value = sum == 0 ? 50 : ((_period - 1) * Current.Value + 100 * diff / sum ) / _period;
             _previousInput = input;
             return value;
         }
@@ -293,8 +296,6 @@ namespace QuantConnect.Indicators
         /// <returns></returns>
         private decimal ComputePositiveDirectionalIndex()
         {
-            if (SmoothedTrueRange == 0) return new decimal(0.0);
-
             var positiveDirectionalIndex = (SmoothedDirectionalMovementPlus.Current.Value / TrueRange.Current.Value) * 100;
 
             return positiveDirectionalIndex;
@@ -306,8 +307,6 @@ namespace QuantConnect.Indicators
         /// <returns></returns>
         private decimal ComputeNegativeDirectionalIndex()
         {
-            if (SmoothedTrueRange == 0) return new decimal(0.0);
-
             var negativeDirectionalIndex = (SmoothedDirectionalMovementMinus.Current.Value / TrueRange.Current.Value) * 100;
 
             return negativeDirectionalIndex;

@@ -412,10 +412,9 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose On Balance Volume we seek</param>
         /// <param name="resolution">The resolution.</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value).</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The On Balance Volume indicator for the requested symbol.</returns>
-        public OnBalanceVolume OBV(string symbol, Resolution? resolution = null,
-            Func<BaseData, TradeBar> selector = null)
+        public OnBalanceVolume OBV(string symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, "OBV", resolution);
             var onBalanceVolume = new OnBalanceVolume(name);
@@ -430,7 +429,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol whose Average Directional Index Average Directional Index we seek</param>
         /// <param name="resolution">The resolution.</param> 
         /// <param name="period">The period over which to compute the Average Directional Index</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value).</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The Average Directional Index indicator for the requested symbol.</returns>
         public AverageDirectionalIndex ADX(string symbol, int period, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
         {
