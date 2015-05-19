@@ -13,37 +13,39 @@
  * limitations under the License.
 */
 
-using QuantConnect.Indicators;
 using NUnit.Framework;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class StochasticTests
+    public class AverageDirectionalIndexTests
     {
         [Test]
-        public void ComparesAgainstExternalDataOnStochasticsK()
+        public void ComparesAgainstExternalData()
         {
-            var stochastics = new Stochastic("sto", 12, 3, 5);
+            var adx = new AverageDirectionalIndex("adx", 14);
 
-            const double epsilon = 1e-3;
+            const double epsilon = 1;
 
-            TestHelper.TestIndicator(stochastics, "spy_with_stoch12k3.txt", "Stochastics 12 %K 3",
-            (ind, expected) => Assert.AreEqual(expected, (double)((Stochastic)ind).StochK.Current.Value, epsilon)
+            TestHelper.TestIndicator(adx, "spy_with_adx.txt", "ADX 14",
+                (ind, expected) => Assert.AreEqual(expected, (double)((AverageDirectionalIndex)ind).Current.Value, epsilon)
 
             );
         }
 
         [Test]
-        public void ComparesAgainstExternalDataOnStochasticsD()
+        public void ResetsProperly()
         {
-            var stochastics = new Stochastic("sto", 12, 3, 5);
+            var adxIndicator = new AverageDirectionalIndex("ADX", 14);
+            foreach (var data in TestHelper.GetTradeBarStream("spy_with_adx.txt", false))
+            {
+                adxIndicator.Update(data);
+            }
 
-            const double epsilon = 1e-3;
-            TestHelper.TestIndicator(stochastics, "spy_with_stoch12k3.txt", "%D 5",
-                 (ind, expected) => Assert.AreEqual(expected, (double)((Stochastic)ind).StochD.Current.Value, epsilon)
+            Assert.IsTrue(adxIndicator.IsReady);
 
-                );
+            adxIndicator.Reset();
         }
     }
 }

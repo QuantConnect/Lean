@@ -69,6 +69,7 @@
     <Compile Include="Common\Util\VersionHelperTests.cs" />
     <Compile Include="Common\Util\WhoCalledMeTests.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />
+    <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
     <Compile Include="Indicators\OnBalanceVolumeTest.cs" />
     <Compile Include="Indicators\WilliamsPercentRTests.cs" />
     <Compile Include="Indicators\RateOfChangePercentTests.cs" />
