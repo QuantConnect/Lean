@@ -102,7 +102,7 @@ namespace QuantConnect
         /// <param name="zipPath">Output location to save the file.</param>
         /// <param name="filenamesAndData">File names and data in a dictionary format.</param>
         /// <returns>True on successfully saving the file</returns>
-        public static bool ZipData(string zipPath, Dictionary<string, byte[]> filenamesAndData)
+        public static bool ZipData(string zipPath, IReadOnlyDictionary<string, byte[]> filenamesAndData)
         {
             var success = true;
             var buffer = new byte[4096];
