@@ -417,10 +417,27 @@ namespace QuantConnect.Algorithm
         public OnBalanceVolume OBV(string symbol, Resolution? resolution = null,
             Func<BaseData, TradeBar> selector = null)
         {
-            string name = CreateIndicatorName(symbol, "OBV", resolution);
+            var name = CreateIndicatorName(symbol, "OBV", resolution);
             var onBalanceVolume = new OnBalanceVolume(name);
-            RegisterIndicator(symbol, onBalanceVolume, resolution);
+            RegisterIndicator(symbol, onBalanceVolume, resolution, selector);
             return onBalanceVolume;
+        }
+
+        /// <summary>
+        /// Creates a new Average Directional Index indicator. 
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Average Directional Index Average Directional Index we seek</param>
+        /// <param name="resolution">The resolution.</param> 
+        /// <param name="period">The period over which to compute the Average Directional Index</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value).</param>
+        /// <returns>The Average Directional Index indicator for the requested symbol.</returns>
+        public AverageDirectionalIndex ADX(string symbol, int period, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "ADX", resolution);
+            var averageDirectionalIndex = new AverageDirectionalIndex(name, period);
+            RegisterIndicator(symbol, averageDirectionalIndex, resolution, selector);
+            return averageDirectionalIndex;
         }
 
         /// <summary>
