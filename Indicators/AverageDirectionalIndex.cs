@@ -296,7 +296,9 @@ namespace QuantConnect.Indicators
         /// <returns></returns>
         private decimal ComputePositiveDirectionalIndex()
         {
-            var positiveDirectionalIndex = (SmoothedDirectionalMovementPlus.Current.Value / TrueRange.Current.Value) * 100;
+            if (SmoothedTrueRange == 0) return new decimal(0.0);
+
+            var positiveDirectionalIndex = (SmoothedDirectionalMovementPlus.Current.Value / SmoothedTrueRange.Current.Value) * 100;
 
             return positiveDirectionalIndex;
         }
@@ -307,7 +309,9 @@ namespace QuantConnect.Indicators
         /// <returns></returns>
         private decimal ComputeNegativeDirectionalIndex()
         {
-            var negativeDirectionalIndex = (SmoothedDirectionalMovementMinus.Current.Value / TrueRange.Current.Value) * 100;
+            if (SmoothedTrueRange == 0) return new decimal(0.0);
+
+            var negativeDirectionalIndex = (SmoothedDirectionalMovementMinus.Current.Value / SmoothedTrueRange.Current.Value) * 100;
 
             return negativeDirectionalIndex;
         }
