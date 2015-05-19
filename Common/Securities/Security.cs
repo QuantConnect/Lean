@@ -224,7 +224,7 @@ namespace QuantConnect.Securities
             PortfolioModel = new SecurityPortfolioModel();
             TransactionModel = new SecurityTransactionModel();
             MarginModel = new SecurityMarginModel(leverage);
-            Holdings = new SecurityHolding(this, TransactionModel, MarginModel);
+            Holdings = new SecurityHolding(this);
         }
 
         /******************************************************** 

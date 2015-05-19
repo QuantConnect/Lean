@@ -41,7 +41,7 @@ namespace QuantConnect.Securities.Equity
         /// <param name="transactionModel">The transaction model used for the security</param>
         /// <param name="marginModel">The margin model used for the security</param>
         public EquityHolding(Security security, ISecurityTransactionModel transactionModel, ISecurityMarginModel marginModel)
-            : base(security, transactionModel, marginModel)
+            : base(security)
         {
         }
 

@@ -15,7 +15,6 @@
 
 using System;
 using QuantConnect.Orders;
-using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities 
 {
@@ -39,8 +38,6 @@ namespace QuantConnect.Securities
         private decimal _lastTradeProfit = 0;
         private decimal _totalFees = 0;
         private readonly Security _security;
-        protected readonly ISecurityMarginModel MarginModel;
-        protected readonly ISecurityTransactionModel TransactionModel;
 
         /******************************************************** 
         * CONSTRUCTOR DEFINITION
@@ -50,13 +47,9 @@ namespace QuantConnect.Securities
         /// Create a new holding class instance setting the initial properties to $0.
         /// </summary>
         /// <param name="security">The security being held</param>
-        /// <param name="transactionModel">The transaction model used for the security</param>
-        /// <param name="marginModel">The margin model used for the security</param>
-        public SecurityHolding(Security security, ISecurityTransactionModel transactionModel, ISecurityMarginModel marginModel)
+        public SecurityHolding(Security security)
         {
             _security = security;
-            TransactionModel = transactionModel;
-            MarginModel = marginModel;
             //Total Sales Volume for the day
             _totalSaleVolume = 0;
             _lastTradeProfit = 0;
@@ -120,7 +113,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return MarginModel.GetLeverage(_security);
+                return _security.MarginModel.GetLeverage(_security);
             }
         }
         
@@ -388,7 +381,7 @@ namespace QuantConnect.Securities
 
             // this is in the account currency
             var marketOrder = new MarketOrder(_security.Symbol, -Quantity, _security.Time, type: _security.Type) {Price = Price};
-            var orderFee = TransactionModel.GetOrderFee(_security, marketOrder);
+            var orderFee = _security.TransactionModel.GetOrderFee(_security, marketOrder);
 
             return (Price - AveragePrice) * Quantity - orderFee;
         }

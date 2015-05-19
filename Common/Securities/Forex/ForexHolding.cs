@@ -44,7 +44,7 @@ namespace QuantConnect.Securities.Forex
         /// <param name="transactionModel">The transaction model used for the security</param>
         /// <param name="marginModel">The margin model used for the security</param>
         public ForexHolding(Forex security, ISecurityTransactionModel transactionModel, ISecurityMarginModel marginModel)
-            : base(security, transactionModel, marginModel)
+            : base(security)
         {
             _forex = security;
         }
@@ -100,7 +100,7 @@ namespace QuantConnect.Securities.Forex
             {
                 // this is in the account currency
                 var marketOrder = new MarketOrder(_forex.Symbol, -Quantity, _forex.Time, type:_forex.Type){Price = Price};
-                orderFee = TransactionModel.GetOrderFee(_forex, marketOrder);
+                orderFee = _forex.TransactionModel.GetOrderFee(_forex, marketOrder);
             }
 
             // we need to add a conversion since the data is in terms of the quote currency
