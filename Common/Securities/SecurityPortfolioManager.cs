@@ -271,6 +271,15 @@ namespace QuantConnect.Securities
             }
         }
 
+        /// <summary>
+        /// Gets the total absolute holdings cost of the portfolio. This sums up the individual 
+        /// absolute cost of each holding
+        /// </summary>
+        public decimal TotalAbsoluteHoldingsCost
+        {
+            get { return Securities.Sum(x => x.Value.Holdings.AbsoluteHoldingsCost); }
+        }
+
 
         /// <summary>
         /// Absolute sum the individual items in portfolio.
@@ -481,10 +490,27 @@ namespace QuantConnect.Securities
         public List<Order> ScanForMarginCall(out bool issueMarginCallWarning)
         {
             issueMarginCallWarning = false;
+
+            var totalMarginUsed = TotalMarginUsed;
+
+            // don't issue a margin call if we're not using margin
+            if (totalMarginUsed <= 0)
+            {
+                return new List<Order>();
+            }
+
+            // don't issue a margin call if we're under 1x implied leverage on the whole portfolio's holdings
+            var averageHoldingsLeverage = TotalAbsoluteHoldingsCost/totalMarginUsed;
+            if (averageHoldingsLeverage <= 1.0m)
+            {
+                return new List<Order>();
+            }
+
             var marginRemaining = MarginRemaining;
 
             // issue a margin warning when we're down to 5% margin remaining
-            if (marginRemaining <= TotalPortfolioValue*0.05m)
+            var totalPortfolioValue = TotalPortfolioValue;
+            if (marginRemaining <= totalPortfolioValue*0.05m)
             {
                 issueMarginCallWarning = true;
             }
@@ -501,8 +527,7 @@ namespace QuantConnect.Securities
             // skip securities that have no price data or no holdings, we can't liquidate nothingness
             foreach (var security in Securities.Values.Where(x => x.Holdings.Quantity != 0 && x.Price != 0))
             {
-                // we need to recompute portfolio value and margin used on each loop iteration
-                var marginCallOrder = security.MarginModel.GenerateMarginCallOrder(security, TotalPortfolioValue, TotalMarginUsed);
+                var marginCallOrder = security.MarginModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed);
                 if (marginCallOrder != null && marginCallOrder.Quantity != 0)
                 {
                     marginCallOrders.Add(marginCallOrder);
