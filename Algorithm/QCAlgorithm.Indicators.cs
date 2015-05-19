@@ -426,7 +426,7 @@ namespace QuantConnect.Algorithm
         /// Creates a new Average Directional Index indicator. 
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
-        /// <param name="symbol">The symbol whose Average Directional Index Average Directional Index we seek</param>
+        /// <param name="symbol">The symbol whose Average Directional Index we seek</param>
         /// <param name="resolution">The resolution.</param> 
         /// <param name="period">The period over which to compute the Average Directional Index</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
