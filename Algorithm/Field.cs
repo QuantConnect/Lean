@@ -56,12 +56,25 @@ namespace QuantConnect.Algorithm
             get { return x => x.Value; }
         }
 
-        private static Func<BaseData, decimal> TradeBarPropertyOrValue(Func<TradeBar, decimal> selector)
+        /// <summary>
+        /// Gets a selector that selectors the Volume value
+        /// </summary>
+        public static Func<BaseData, decimal> Volume
+        {
+            get { return TradeBarPropertyOrValue(x => x.Volume, x => 0m); }
+        }
+
+        private static Func<BaseData, decimal> TradeBarPropertyOrValue(Func<TradeBar, decimal> selector, Func<BaseData, decimal> defaultSelector = null)
         {
             return x =>
             {
                 var bar = x as TradeBar;
-                return bar != null ? selector(bar) : x.Value;
+                if (bar != null)
+                {
+                    return selector(bar);
+                }
+                defaultSelector = defaultSelector ?? (data => data.Value);
+                return defaultSelector(x);
             };
         }
     }
