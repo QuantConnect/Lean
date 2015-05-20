@@ -304,6 +304,18 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the unrealized profit as a percenage of holdings cost
+        /// </summary>
+        public decimal UnrealizedProfitPercent
+        {
+            get
+            {
+                if (AbsoluteHoldingsCost == 0) return 0m;
+                return UnrealizedProfit/AbsoluteHoldingsCost;
+            }
+        }
+
+        /// <summary>
         /// Unrealized profit of this security when absolute quantity held is more than zero.
         /// </summary>
         public virtual decimal UnrealizedProfit
