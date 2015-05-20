@@ -95,7 +95,7 @@ namespace QuantConnect.Lean.Engine.Setup
             // and step through some code that may take us longer than the default 10 seconds
             var loader = new Loader(TimeSpan.FromHours(1), names => names.Single(name => MatchTypeName(name, algorithmName)))
             {
-                TryLoadDebugInformation = true
+                TryLoadDebugInformation = !Config.GetBool("local")
             };
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
             if (!complete) throw new Exception(error + ": try re-building algorithm.");

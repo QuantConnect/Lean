@@ -138,18 +138,14 @@ namespace QuantConnect.AlgorithmFactory
                 {
                     // see if the pdb exists
                     var mdbFilename = assemblyPath + ".mdb";
-                    Log.Trace(assemblyPath);
-                    Log.Trace(mdbFilename);
                     var pdbFilename = assemblyPath.Substring(0, assemblyPath.Length - 4) + ".pdb";
                     if (File.Exists(pdbFilename))
                     {
-                        Log.Trace("pdb exists");
                         debugInformationBytes = File.ReadAllBytes(pdbFilename);
                     }
                     // see if the mdb exists
                     if (File.Exists(mdbFilename))
                     {
-                        Log.Trace("pdb exists");
                         debugInformationBytes = File.ReadAllBytes(mdbFilename);
                     }
                 }
