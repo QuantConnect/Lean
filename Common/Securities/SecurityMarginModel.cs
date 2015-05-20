@@ -168,7 +168,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="security">The security to generate a margin call order for</param>
         /// <param name="netLiquidationValue">The net liquidation value for the entire account</param>
-        /// <param name="totalMargin">The totl margin used by the account in units of base currency</param>
+        /// <param name="totalMargin">The total margin used by the account in units of base currency</param>
         /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
         public virtual Order GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin)
         {

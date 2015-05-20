@@ -185,18 +185,20 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void ComputeMarginProperlyAsSecurityPriceFluctuates()
         {
-            const int quantity = 1000;
+            const decimal leverage = 1m;
+            const int quantity = (int) (1000*leverage);
             var securities = new SecurityManager();
             var transactions = new SecurityTransactionManager(securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.CashBook["USD"].Quantity = quantity;
 
             var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, "AAPL", Resolution.Minute, true, true, true, true, true, 0);
-            securities.Add(new Security(config, 1, false));
+            securities.Add(new Security(config, leverage, false));
 
             var time = DateTime.Now;
             const decimal buyPrice = 1m;
-            securities["AAPL"].SetMarketPrice(time, new TradeBar(time, "AAPL", buyPrice, buyPrice, buyPrice, buyPrice, 1));
+            var security = securities["AAPL"];
+            security.SetMarketPrice(time, new TradeBar(time, "AAPL", buyPrice, buyPrice, buyPrice, buyPrice, 1));
 
             var order = new MarketOrder("AAPL", quantity, time) {Price = buyPrice};
             var fill = new OrderEvent(order){FillPrice = buyPrice, FillQuantity = quantity};
@@ -218,7 +220,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             time = time.AddDays(1);
             const decimal highPrice = buyPrice * 2;
-            securities["AAPL"].SetMarketPrice(time, new TradeBar(time, "AAPL", highPrice, highPrice, highPrice, highPrice, 1));
+            security.SetMarketPrice(time, new TradeBar(time, "AAPL", highPrice, highPrice, highPrice, highPrice, 1));
 
             Assert.AreEqual(quantity, portfolio.MarginRemaining);
             Assert.AreEqual(quantity, portfolio.TotalMarginUsed);
@@ -233,19 +235,32 @@ namespace QuantConnect.Tests.Common.Securities
 
             time = time.AddDays(1);
             const decimal lowPrice = buyPrice/2;
-            securities["AAPL"].SetMarketPrice(time, new TradeBar(time, "AAPL", lowPrice, lowPrice, lowPrice, lowPrice, 1));
+            security.SetMarketPrice(time, new TradeBar(time, "AAPL", lowPrice, lowPrice, lowPrice, lowPrice, 1));
 
             Assert.AreEqual(-quantity/2m, portfolio.MarginRemaining);
             Assert.AreEqual(quantity, portfolio.TotalMarginUsed);
             Assert.AreEqual(quantity/2m, portfolio.TotalPortfolioValue);
 
 
-            // this would cause a margin call
+            // this would not cause a margin call due to leverage = 1
             bool issueMarginCallWarning;
             var marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            Assert.AreEqual(0, marginCallOrders.Count);
+
+            // now change the leverage and buy more and we'll get a margin call
+            security.SetLeverage(leverage * 2);
+
+            order = new MarketOrder("AAPL", quantity, time) { Price = buyPrice };
+            fill = new OrderEvent(order) { FillPrice = buyPrice, FillQuantity = quantity };
+
+            portfolio.ProcessFill(fill);
+
+            Assert.AreEqual(0, portfolio.TotalPortfolioValue);
+
+            marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
             Assert.AreNotEqual(0, marginCallOrders.Count);
-            Assert.AreEqual(-quantity, marginCallOrders[0].Quantity);
-            Assert.GreaterOrEqual(-portfolio.MarginRemaining, marginCallOrders[0].Price*marginCallOrders[0].Quantity);
+            Assert.AreEqual(-security.Holdings.Quantity, marginCallOrders[0].Quantity); // we bought twice
+            Assert.GreaterOrEqual(-portfolio.MarginRemaining, marginCallOrders[0].Price * marginCallOrders[0].Quantity);
         }
 
         [Test]
