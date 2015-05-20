@@ -31,6 +31,11 @@ namespace QuantConnect.AlgorithmFactory
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class Loader : MarshalByRefObject
     {
+        /// <summary>
+        /// Sets a flag indicating whether or not to look for a pdb or mdb file with the same name as the assembly to be loaded
+        /// </summary>
+        public bool TryLoadDebugInformation;
+
         /******************************************************** 
         * CLASS VARIABLES
         *********************************************************/
@@ -125,10 +130,43 @@ namespace QuantConnect.AlgorithmFactory
             //Create a new app domain with a generic name.
             //CreateAppDomain();
 
-            try 
+            try
             {
+                // check for debug information if requested
+                byte[] debugInformationBytes = null;
+                if (TryLoadDebugInformation)
+                {
+                    // see if the pdb exists
+                    var mdbFilename = assemblyPath + ".mdb";
+                    Log.Trace(assemblyPath);
+                    Log.Trace(mdbFilename);
+                    var pdbFilename = assemblyPath.Substring(0, assemblyPath.Length - 4) + ".pdb";
+                    if (File.Exists(pdbFilename))
+                    {
+                        Log.Trace("pdb exists");
+                        debugInformationBytes = File.ReadAllBytes(pdbFilename);
+                    }
+                    // see if the mdb exists
+                    if (File.Exists(mdbFilename))
+                    {
+                        Log.Trace("pdb exists");
+                        debugInformationBytes = File.ReadAllBytes(mdbFilename);
+                    }
+                }
+
                 //Load the assembly:
-                var assembly = Assembly.LoadFrom(assemblyPath);
+                Assembly assembly;
+                if (debugInformationBytes == null)
+                {
+                    Log.Trace(Environment.NewLine + "Loading only the algorithm assembly..." + Environment.NewLine);
+                    assembly = Assembly.LoadFrom(assemblyPath);
+                }
+                else
+                {
+                    Log.Trace(Environment.NewLine + "Loading debug information with algorithm..."+ Environment.NewLine);
+                    var assemblyBytes = File.ReadAllBytes(assemblyPath);
+                    assembly = Assembly.Load(assemblyBytes, debugInformationBytes);
+                }
                 if (assembly == null)
                 {
                     errorMessage = "Assembly is null.";

@@ -434,8 +434,14 @@ namespace QuantConnect.Lean.Engine
                     if (threadFeed != null && threadFeed.IsAlive) threadFeed.Abort();
                     if (threadTransactions != null && threadTransactions.IsAlive) threadTransactions.Abort();
                     if (threadResults != null && threadResults.IsAlive) threadResults.Abort();
-                    _brokerage.Disconnect();
-                    SetupHandler.Dispose();
+                    if (_brokerage != null)
+                    {
+                        _brokerage.Disconnect();
+                    }
+                    if (SetupHandler != null)
+                    {
+                        SetupHandler.Dispose();
+                    }
                     Log.Trace("Engine.Main(): Analysis Completed and Results Posted.");
                 }
                 catch (Exception err)
