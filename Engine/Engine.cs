@@ -145,7 +145,7 @@ namespace QuantConnect.Lean.Engine
             get
             {
                 //Total Physical Ram Available:
-                var allocation = 1024;
+                var allocation = 3072;
                 var ram = Convert.ToInt32(OS.TotalPhysicalMemory);
                 
                 if (ram < allocation)
@@ -334,7 +334,7 @@ namespace QuantConnect.Lean.Engine
 
                             Log.Trace("Engine.Run(): Exiting Algorithm Manager");
 
-                        }, MaximumRamAllocation);
+                            }, job.UserPlan == UserPlan.Free ? 1024 : MaximumRamAllocation);
 
                         if (!complete)
                         {
