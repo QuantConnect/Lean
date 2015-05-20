@@ -133,6 +133,8 @@ namespace QuantConnect.Lean.Engine.Setup
 
             try
             {
+                Log.Trace("BrokerageSetupHandler.Setup(): Initializing algorithm...");
+
                 //Execute the initialize code:
                 var initializeComplete = Isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(10), () =>
                 {
@@ -169,12 +171,19 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 if (!initializeComplete)
                 {
-                    AddInitializationError("Failed to initialize algorithm.");
+                    AddInitializationError("Initialization timed out.");
                     return false;
                 }
-
-                // find the correct brokerage factory based on the specified brokerage in the live job packet
-                _factory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
+                try
+                {
+                    // find the correct brokerage factory based on the specified brokerage in the live job packet
+                    _factory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
+                }
+                catch (Exception err)
+                {
+                    Log.Error("BrokerageSetupHandler.Setup(): Error resolving brokerage factory for " + liveJob.Brokerage + ". " + err.Message);
+                    AddInitializationError("Unable to locate factory for brokerage: " + liveJob.Brokerage);
+                }
 
                 // let the world know what we're doing since logging in can take a minute
                 Engine.ResultHandler.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.LoggingIn, "Logging into brokerage...");
@@ -189,51 +198,80 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
                 catch (Exception err)
                 {
-                    AddInitializationError("Error connecting to brokerage. " + err.Message);
+                    Log.Error(err);
+                    AddInitializationError("Error connecting to brokerage.");
                     return false;
                 }
 
-                // set the algorithm's cash balance for each currency
-                var cashBalance = brokerage.GetCashBalance();
-                foreach (var cash in cashBalance)
+                try
                 {
-                    Log.Trace("BrokerageSetupHandler.Setup(): Setting " + cash.Symbol + " cash to " + cash.Quantity);
-                    algorithm.SetCash(cash.Symbol, cash.Quantity, cash.ConversionRate);
-                }
-
-                // populate the algorithm with the account's outstanding orders
-                var openOrders = brokerage.GetOpenOrders();
-                foreach (var order in openOrders)
-                {
-                    // be sure to assign order IDs such that we increment from the SecurityTransactionManager to avoid ID collisions
-                    Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol + " - " + order.Quantity);
-                    order.Id = algorithm.Transactions.GetIncrementOrderId();
-                    algorithm.Orders.AddOrUpdate(order.Id, order, (i, o) => order);
-                }
-
-                // populate the algorithm with the account's current holdings
-                var holdings = brokerage.GetAccountHoldings();
-                var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Min(x => x.Value.Resolution));
-                foreach (var holding in holdings)
-                {
-                    if (!algorithm.Portfolio.ContainsKey(holding.Symbol))
+                    // set the algorithm's cash balance for each currency
+                    var cashBalance = brokerage.GetCashBalance();
+                    foreach (var cash in cashBalance)
                     {
-                        Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol);
-                        // for items not directly requested set leverage to 1 and at the min resolution
-                        algorithm.AddSecurity(holding.Type, holding.Symbol, minResolution.Value, true, 1.0m, false);
+                        Log.Trace("BrokerageSetupHandler.Setup(): Setting " + cash.Symbol + " cash to " + cash.Quantity);
+                        algorithm.SetCash(cash.Symbol, cash.Quantity, cash.ConversionRate);
                     }
-                    algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int)holding.Quantity);
-                    algorithm.Securities[holding.Symbol].SetMarketPrice(DateTime.Now, new TradeBar
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    AddInitializationError("Error getting cash balance from brokerage.");
+                    return false;
+                }
+
+                try
+                {
+                    // populate the algorithm with the account's outstanding orders
+                    var openOrders = brokerage.GetOpenOrders();
+                    foreach (var order in openOrders)
                     {
-                        Time = DateTime.Now,
-                        Open = holding.AveragePrice,
-                        High = holding.AveragePrice,
-                        Low = holding.AveragePrice,
-                        Close = holding.AveragePrice,
-                        Volume = 0,
-                        Symbol = holding.Symbol,
-                        DataType = MarketDataType.TradeBar
-                    });
+                        // be sure to assign order IDs such that we increment from the SecurityTransactionManager to avoid ID collisions
+                        Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol + " - " + order.Quantity);
+                        order.Id = algorithm.Transactions.GetIncrementOrderId();
+                        algorithm.Orders.AddOrUpdate(order.Id, order, (i, o) => order);
+                    }
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    AddInitializationError("Error getting open orders from brokerage.");
+                    return false;
+                }
+
+                try
+                {
+                    // populate the algorithm with the account's current holdings
+                    var holdings = brokerage.GetAccountHoldings();
+                    var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Min(x => x.Value.Resolution));
+                    foreach (var holding in holdings)
+                    {
+                        Log.Trace("BrokerageSetupHandler.Setup(): Has existing holding: " + holding);
+                        if (!algorithm.Portfolio.ContainsKey(holding.Symbol))
+                        {
+                            Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol);
+                            // for items not directly requested set leverage to 1 and at the min resolution
+                            algorithm.AddSecurity(holding.Type, holding.Symbol, minResolution.Value, true, 1.0m, false);
+                        }
+                        algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int)holding.Quantity);
+                        algorithm.Securities[holding.Symbol].SetMarketPrice(DateTime.Now, new TradeBar
+                        {
+                            Time = DateTime.Now,
+                            Open = holding.MarketPrice,
+                            High = holding.MarketPrice,
+                            Low = holding.MarketPrice,
+                            Close = holding.MarketPrice,
+                            Volume = 0,
+                            Symbol = holding.Symbol,
+                            DataType = MarketDataType.TradeBar
+                        });
+                    }
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    AddInitializationError("Error getting account holdings from brokerage.");
+                    return false;
                 }
 
                 // call this after we've initialized everything from the brokerage since we may have added some holdings/currencies
@@ -268,7 +306,7 @@ namespace QuantConnect.Lean.Engine.Setup
                         results.DebugMessage("Brokerage Info: " + message.Message);
                         break;
                     case BrokerageMessageType.Warning:
-                        results.DebugMessage("Brokerage Warning: " + message.Message);
+                        results.ErrorMessage("Brokerage Warning: " + message.Message);
                         break;
                     case BrokerageMessageType.Error:
                         results.ErrorMessage("Brokerage Error: " + message.Message);

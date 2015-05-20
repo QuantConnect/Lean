@@ -32,10 +32,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public override decimal Value
         {
-            get
-            {
-                return Convert.ToDecimal(Quantity) * StopPrice;
-            }
+            get { return Quantity*StopPrice; }
         }
 
         /// <summary>
@@ -67,6 +64,17 @@ namespace QuantConnect.Orders
                 Tag = "Stop Price: " + stopPrice.ToString("C");
             }
         }
-    }
 
-} // End QC Namespace:
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            return string.Format("{0} order for {1} unit{2} of {3} at stop {4}", Type, Quantity, Quantity == 1 ? "" : "s", Symbol, StopPrice);
+        }
+    }
+}

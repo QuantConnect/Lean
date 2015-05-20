@@ -33,10 +33,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public override decimal Value
         {
-            get
-            {
-                return Convert.ToDecimal(Quantity) * LimitPrice;
-            }
+            get { return Quantity*LimitPrice; }
         }
 
         /// <summary>
@@ -68,6 +65,17 @@ namespace QuantConnect.Orders
                 Tag = "Limit Price: " + limitPrice.ToString("C");
             }
         }
-    }
 
-} // End QC Namespace:
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            return string.Format("{0} order for {1} unit{2} of {3} at limit {4}", Type, Quantity, Quantity == 1 ? "" : "s", Symbol, LimitPrice);
+        }
+    }
+}

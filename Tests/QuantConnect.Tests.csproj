@@ -40,6 +40,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Krs.Ats.IBNet.9.66.0.31\lib\net20\Krs.Ats.IBNet.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
@@ -58,6 +62,16 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AlgorithmRunner.cs" />
+    <Compile Include="Brokerages\BrokerageTests.cs" />
+    <Compile Include="Brokerages\HoldingsProvider.cs" />
+    <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersOrderTests.cs" />
+    <Compile Include="Brokerages\LimitOrderTestParameters.cs" />
+    <Compile Include="Brokerages\MarketOrderTestParameters.cs" />
+    <Compile Include="Brokerages\OrderMapping.cs" />
+    <Compile Include="Brokerages\OrderTestParameters.cs" />
+    <Compile Include="Brokerages\StopLimitOrderTestParameters.cs" />
+    <Compile Include="Brokerages\StopMarketOrderTestParameters.cs" />
+    <Compile Include="Brokerages\Tradier\TradierBrokerageTests.cs" />
     <Compile Include="Common\Securities\CashBookTests.cs" />
     <Compile Include="Common\Securities\CashTests.cs" />
     <Compile Include="Common\Securities\Equity\EquityTransactionModelTests.cs" />
@@ -66,6 +80,7 @@
     <Compile Include="Common\Securities\SecurityTransactionModelTests.cs" />
     <Compile Include="Common\SeriesTests.cs" />
     <Compile Include="Common\Util\ObjectActivatorTests.cs" />
+    <Compile Include="Common\Util\ObjectToListJsonConverterTests.cs" />
     <Compile Include="Common\Util\VersionHelperTests.cs" />
     <Compile Include="Common\Util\WhoCalledMeTests.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />

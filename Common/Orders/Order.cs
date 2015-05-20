@@ -108,12 +108,9 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Get the absolute quantity for this order
         /// </summary>
-        public decimal AbsoluteQuantity 
+        public decimal AbsoluteQuantity
         {
-            get 
-            {
-                return Math.Abs(Quantity);
-            }
+            get { return Math.Abs(Quantity); }
         }
 
         /// <summary>
@@ -127,7 +124,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
-        public Order()
+        protected Order()
         {
             Time = new DateTime();
             Price = 0;
@@ -152,7 +149,7 @@ namespace QuantConnect.Orders
         /// <param name="time">Time the order was placed</param>
         /// <param name="price">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public Order(string symbol, int quantity, OrderType order, DateTime time, decimal price = 0, string tag = "", SecurityType type = SecurityType.Base)
+        protected Order(string symbol, int quantity, OrderType order, DateTime time, decimal price = 0, string tag = "", SecurityType type = SecurityType.Base)
         {
             Time = time;
             Price = price;
@@ -177,7 +174,7 @@ namespace QuantConnect.Orders
         /// <param name="time">Time the order was placed</param>
         /// <param name="price">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public Order(string symbol, SecurityType type, int quantity, OrderType order, DateTime time, decimal price = 0, string tag = "") 
+        protected Order(string symbol, SecurityType type, int quantity, OrderType order, DateTime time, decimal price = 0, string tag = "") 
         {
             Time = time;
             Price = price;
@@ -191,6 +188,17 @@ namespace QuantConnect.Orders
             BrokerId = new List<long>();
             ContingentId = 0;
         }
-    }
 
-} // End QC Namespace:
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            return string.Format("{0} order for {1} unit{3} of {2}", Type, Quantity, Symbol, Quantity == 1 ? "" : "s");
+        }
+    }
+}

@@ -27,7 +27,7 @@ namespace QuantConnect.Securities
     /// Portfolio manager class groups popular properties and makes them accessible through one interface.
     /// It also provide indexing by the vehicle symbol to get the Security.Holding objects.
     /// </summary>
-    public class SecurityPortfolioManager : IDictionary<string, SecurityHolding> 
+    public class SecurityPortfolioManager : IDictionary<string, SecurityHolding>, IHoldingsProvider 
     {
         /******************************************************** 
         * CLASS VARIABLES
@@ -627,7 +627,20 @@ namespace QuantConnect.Securities
             }
             Transactions.TransactionRecord.Add(clone, transactionProfitLoss);
         }
-    }
 
-//End Algorithm Portfolio Class
-} // End QC Namespace
+        /// <summary>
+        /// Retrieves a summary of the holdings for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol to get holdings for</param>
+        /// <returns>The holdings for the symbol or null if the symbol is invalid and/or not in the portfolio</returns>
+        Holding IHoldingsProvider.GetHoldings(string symbol)
+        {
+            SecurityHolding holding;
+            if (TryGetValue(symbol, out holding))
+            {
+                return new Holding(holding);
+            }
+            return null;
+        }
+    }
+}

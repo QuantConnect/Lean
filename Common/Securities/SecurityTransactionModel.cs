@@ -413,7 +413,5 @@ namespace QuantConnect.Securities
         {
             return LimitFill(security, order as LimitOrder);
         }
-
-    } // End Algorithm Transaction Filling Classes
-
-} // End QC Namespace
+    }
+}

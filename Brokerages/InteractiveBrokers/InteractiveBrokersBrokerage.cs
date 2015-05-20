@@ -49,7 +49,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly string _account;
         private readonly string _host;
         private readonly int _clientID;
-        private readonly IOrderIDMapping _orderMapping;
+        private readonly IOrderMapping _orderMapping;
         private readonly IB.IBClient _client;
         private readonly IB.AgentDescription _agentDescription;
 
@@ -86,8 +86,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         ///     ib-port (optional, defaults to 4001)
         ///     ib-agent-description (optional, defaults to Individual)
         /// </summary>
-        /// <param name="orderMapping">An instance of IOrderIDMapping used to fetch Order objects by brokerage ID</param>
-        public InteractiveBrokersBrokerage(IOrderIDMapping orderMapping)
+        /// <param name="orderMapping">An instance of IOrderMapping used to fetch Order objects by brokerage ID</param>
+        public InteractiveBrokersBrokerage(IOrderMapping orderMapping)
             : this(
                 orderMapping,
                 Config.Get("ib-account"),
@@ -101,9 +101,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Creates a new InteractiveBrokeragBrokerage for the specified account
         /// </summary>
-        /// <param name="orderMapping">An instance of IOrderIDMapping used to fetch Order objects by brokerage ID</param>
+        /// <param name="orderMapping">An instance of IOrderMapping used to fetch Order objects by brokerage ID</param>
         /// <param name="account">The account used to connect to IB</param>
-        public InteractiveBrokersBrokerage(IOrderIDMapping orderMapping, string account)
+        public InteractiveBrokersBrokerage(IOrderMapping orderMapping, string account)
             : this(orderMapping,
                 account,
                 Config.Get("ib-host", "LOCALHOST"),
@@ -116,12 +116,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Creates a new InteractiveBrokersBrokerage from the specified values
         /// </summary>
-        /// <param name="orderMapping">An instance of IOrderIDMapping used to fetch Order objects by brokerage ID</param>
+        /// <param name="orderMapping">An instance of IOrderMapping used to fetch Order objects by brokerage ID</param>
         /// <param name="account">The Interactive Brokers account name</param>
         /// <param name="host">host name or IP address of the machine where TWS is running. Leave blank to connect to the local host.</param>
         /// <param name="port">must match the port specified in TWS on the Configure&gt;API&gt;Socket Port field.</param>
         /// <param name="agentDescription">Used for Rule 80A describes the type of trader.</param>
-        public InteractiveBrokersBrokerage(IOrderIDMapping orderMapping, string account, string host, int port, IB.AgentDescription agentDescription = IB.AgentDescription.Individual)
+        public InteractiveBrokersBrokerage(IOrderMapping orderMapping, string account, string host, int port, IB.AgentDescription agentDescription = IB.AgentDescription.Individual)
             : base("Interactive Brokers Brokerage")
         {
             _orderMapping = orderMapping;
@@ -784,7 +784,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // if we're able to add to our fixed length, unique queue then send the event
                 // otherwise it is a duplicate, so skip it
-                if (_recentOrderEvents.Add(orderEvent.ToString()))
+                if (_recentOrderEvents.Add(orderEvent.ToString() + update.Remaining))
                 {
                     OnOrderEvent(orderEvent);
                 }
@@ -946,6 +946,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case OrderType.Market:      return IB.OrderType.Market;
                 case OrderType.Limit:       return IB.OrderType.Limit;
                 case OrderType.StopMarket:  return IB.OrderType.Stop;
+                case OrderType.StopLimit:   return IB.OrderType.StopLimit;
                 default:
                     throw new InvalidEnumArgumentException("type", (int)type, typeof(OrderType));
             }
@@ -958,9 +959,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             switch (type)
             {
-                case IB.OrderType.Market: return OrderType.Market;
-                case IB.OrderType.Limit:  return OrderType.Limit;
-                case IB.OrderType.Stop:   return OrderType.StopMarket;
+                case IB.OrderType.Market:       return OrderType.Market;
+                case IB.OrderType.Limit:        return OrderType.Limit;
+                case IB.OrderType.Stop:         return OrderType.StopMarket;
+                case IB.OrderType.StopLimit:    return OrderType.StopLimit;
                 default:
                     throw new InvalidEnumArgumentException("type", (int)type, typeof(OrderType));
             }
@@ -1204,7 +1206,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     _queue.Enqueue(item);
                     if (_queue.Count > _size)
                     {
-                        _queue.Dequeue();
+                        // remove the item from both
+                        _hash.Remove(_queue.Dequeue());
                     }
                     return true;
                 }

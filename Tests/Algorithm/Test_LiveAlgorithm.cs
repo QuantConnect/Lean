@@ -102,6 +102,7 @@ namespace QuantConnect
                     break;
 
                 //Live socket for bitcoin prices:
+                case DataFeedEndpoint.Tradier:
                 case DataFeedEndpoint.LiveTrading:
                     //Live refreshing endpoint.
                     source = "https://www.bitstamp.net/api/ticker/";
@@ -160,6 +161,7 @@ namespace QuantConnect
 
                 //Example Line Format:
                 //{"high": "441.00", "last": "421.86", "timestamp": "1411606877", "bid": "421.96", "vwap": "428.58", "volume": "14120.40683975", "low": "418.83", "ask": "421.99"}
+                case DataFeedEndpoint.Tradier:
                 case DataFeedEndpoint.LiveTrading:
                     try
                     {

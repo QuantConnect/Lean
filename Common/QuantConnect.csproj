@@ -137,12 +137,14 @@
     <Compile Include="Properties\SharedAssemblyInfo.cs" />
     <Compile Include="Securities\Cash.cs" />
     <Compile Include="Securities\CashBook.cs" />
+    <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
     <Compile Include="Securities\Equity\EquityMarginModel.cs" />
     <Compile Include="Securities\Equity\EquityPortfolioModel.cs" />
     <Compile Include="Securities\Forex\ForexMarginModel.cs" />
     <Compile Include="Securities\Forex\ForexPortfolioModel.cs" />
+    <Compile Include="Securities\IHoldingsProvider.cs" />
     <Compile Include="Securities\ISecurityMarginModel.cs" />
-    <Compile Include="Securities\IOrderIDMapping.cs" />
+    <Compile Include="Securities\IOrderMapping.cs" />
     <Compile Include="Securities\ISecurityPortfolioModel.cs" />
     <Compile Include="Securities\MarginCallModel.cs" />
     <Compile Include="Securities\SecurityPortfolioModel.cs" />
@@ -217,7 +219,9 @@
     <Compile Include="Util\ExpressionBuilder.cs" />
     <Compile Include="Util\FuncTextWriter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />
+    <Compile Include="Util\NullStringValueConverter.cs" />
     <Compile Include="Util\ObjectActivator.cs" />
+    <Compile Include="Util\SingleValueListConverter.cs" />
     <Compile Include="Util\VersionHelper.cs" />
     <Compile Include="Util\XElementExtensions.cs" />
   </ItemGroup>

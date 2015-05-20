@@ -7,6 +7,7 @@ public class AssemblyInitialize
     [SetUp]
     public void SetLogHandler()
     {
-        Log.LogHandler = new ConsoleLogHandler();
+        // save output to file as well
+        Log.LogHandler = new CompositeLogHandler();
     }
 }

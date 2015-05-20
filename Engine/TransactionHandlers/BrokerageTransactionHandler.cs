@@ -249,7 +249,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private void HandleUpdatedOrder(Order order)
         {
             Order queued;
-            if (_orders.TryGetValue(order.Id, out queued) && (queued.Status == OrderStatus.Submitted)) //partially filled?
+            if (_orders.TryGetValue(order.Id, out queued) && CanUpdateOrder(queued)) // cant update filled or canceled orders
             {
                 _orders[order.Id] = order;
                 if (!_brokerage.UpdateOrder(order))
@@ -262,6 +262,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 Log.Error("BrokerageTransactionHandler.HandleUpdatedOrder(): Unable to update order with ID " + order.Id + ".");
             }
+        }
+
+        /// <summary>
+        /// Returns true if the specified order can be updated
+        /// </summary>
+        /// <param name="order">The order to check if we can update</param>
+        /// <returns>True if the order can be updated, false otherwise</returns>
+        private bool CanUpdateOrder(Order order)
+        {
+            return order.Status != OrderStatus.Filled
+                && order.Status != OrderStatus.Canceled
+                && order.Status != OrderStatus.PartiallyFilled
+                && order.Status != OrderStatus.Invalid;
         }
 
         /// <summary>

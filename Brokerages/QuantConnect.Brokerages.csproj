@@ -64,12 +64,25 @@
     <Compile Include="Backtesting\BacktestingBrokerageFactory.cs" />
     <Compile Include="Brokerage.cs" />
     <Compile Include="BrokerageException.cs" />
+    <Compile Include="BrokerageFactory.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerageFactory.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersGatewayRunner.cs" />
     <Compile Include="Paper\PaperBrokerage.cs" />
     <Compile Include="Paper\PaperBrokerageFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tradier\TradierBrokerage.cs" />
+    <Compile Include="Tradier\Balances.cs" />
+    <Compile Include="Tradier\Common.cs" />
+    <Compile Include="Tradier\Data.cs" />
+    <Compile Include="Tradier\Fault.cs" />
+    <Compile Include="Tradier\GainLoss.cs" />
+    <Compile Include="Tradier\History.cs" />
+    <Compile Include="Tradier\Orders.cs" />
+    <Compile Include="Tradier\Positions.cs" />
+    <Compile Include="Tradier\Tokens.cs" />
+    <Compile Include="Tradier\TradierBrokerageFactory.cs" />
+    <Compile Include="Tradier\UserProfile.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="InteractiveBrokers\run-ib-controller.bat">

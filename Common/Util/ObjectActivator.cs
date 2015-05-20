@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Runtime.InteropServices;
 using CloneExtensions;
 using Fasterflect;
 
@@ -105,6 +104,19 @@ namespace QuantConnect.Util
             func = method.DelegateForCallMethod();
             _cloneMethodsByType[type] = func;
             return func(null, instanceToClone);
+        }
+
+        /// <summary>
+        /// Clones the specified instance and then casts it to T before returning
+        /// </summary>
+        public static T Clone<T>(T instanceToClone) where T : class
+        {
+            var clone = Clone((object)instanceToClone) as T;
+            if (clone == null)
+            {
+                throw new Exception("Unable to clone instance of type " + instanceToClone.GetType().Name + " to " + typeof(T).Name);
+            }
+            return clone;
         }
     }
 }

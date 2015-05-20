@@ -32,7 +32,7 @@ namespace QuantConnect.Interfaces
         Type BrokerageType { get; }
 
         /// <summary>
-        /// Gets the brokerage data required to run the IB brokerage from configuration
+        /// Gets the brokerage data required to run the brokerage from configuration/disk
         /// </summary>
         /// <remarks>
         /// The implementation of this property will create the brokerage data dictionary required for

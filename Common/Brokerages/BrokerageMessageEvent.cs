@@ -28,7 +28,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets the brokerage specific code for this message, zero if no code was specified
         /// </summary>
-        public int Code { get; private set; }
+        public string Code { get; private set; }
 
         /// <summary>
         /// Gets the message text received from the brokerage
@@ -42,6 +42,19 @@ namespace QuantConnect.Brokerages
         /// <param name="code">The brokerage specific code</param>
         /// <param name="message">The message text received from the brokerage</param>
         public BrokerageMessageEvent(BrokerageMessageType type, int code, string message)
+        {
+            Type = type;
+            Code = code.ToString();
+            Message = message;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the BrokerageMessageEvent class
+        /// </summary>
+        /// <param name="type">The type of brokerage message</param>
+        /// <param name="code">The brokerage specific code</param>
+        /// <param name="message">The message text received from the brokerage</param>
+        public BrokerageMessageEvent(BrokerageMessageType type, string code, string message)
         {
             Type = type;
             Code = code;

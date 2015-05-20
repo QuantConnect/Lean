@@ -157,6 +157,7 @@ namespace QuantConnect.Configuration
         /// <param name="defaultValue">The default value to use if not found in configuration</param>
         /// <returns>Converted value of the config setting.</returns>
         public static T GetValue<T>(string key, T defaultValue = default(T))
+            where T : IConvertible
         {
             var value = Get(key);
             if (string.IsNullOrEmpty(value))

@@ -25,7 +25,6 @@ using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
 using Order = QuantConnect.Orders.Order;
 using OrderStatus = QuantConnect.Orders.OrderStatus;
 using OrderType = QuantConnect.Orders.OrderType;
@@ -634,24 +633,5 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             return null;
         }
 
-        class OrderMapping : IOrderIDMapping
-        {
-            private readonly IReadOnlyList<Order> _orders;
-
-            public OrderMapping(IReadOnlyList<Order> orders)
-            {
-                _orders = orders;
-            }
-
-            public Order GetOrderById(int orderId)
-            {
-                return _orders.FirstOrDefault(x => x.Id == orderId);
-            }
-
-            public Order GetOrderByBrokerageId(int brokerageId)
-            {
-                return _orders.FirstOrDefault(x => x.BrokerId.Contains(brokerageId));
-            }
-        }
     }
 }

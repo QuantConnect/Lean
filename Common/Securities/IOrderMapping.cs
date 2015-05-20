@@ -19,7 +19,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Represents a type capable of fetching Order instances by its QC order id or by a brokerage id
     /// </summary>
-    public interface IOrderIDMapping
+    public interface IOrderMapping
     {
         /// <summary>
         /// Get the order by its id

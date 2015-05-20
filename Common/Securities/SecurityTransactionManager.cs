@@ -26,7 +26,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Algorithm Transactions Manager - Recording Transactions
     /// </summary>
-    public class SecurityTransactionManager : IOrderIDMapping
+    public class SecurityTransactionManager : IOrderMapping
     {
         /******************************************************** 
         * CLASS PRIVATE VARIABLES
@@ -216,7 +216,7 @@ namespace QuantConnect.Securities
                 order.Time = _securities[order.Symbol].Time;
 
                 //Validate order:
-                if (order.Price == 0 || order.Quantity == 0) return -1;
+                if (order.Quantity == 0) return -1;
 
                 if (_orders.ContainsKey(id))
                 {

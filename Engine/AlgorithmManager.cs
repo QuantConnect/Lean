@@ -540,7 +540,7 @@ namespace QuantConnect.Lean.Engine
             if (_algorithmState == AlgorithmStatus.Liquidated || !Engine.LiveMode)
             {
                 // without this we can't liquidate equities since the exchange is 'technically' closed
-                var hackedFrontier = algorithm.Time.AddMilliseconds(-1);
+                var hackedFrontier = algorithm.Time == DateTime.MinValue ? DateTime.MinValue : algorithm.Time.AddMilliseconds(-1);
                 algorithm.SetDateTime(hackedFrontier);
                 foreach (var security in algorithm.Securities)
                 {
