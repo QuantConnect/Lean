@@ -141,5 +141,9 @@ namespace QuantConnect.Api
             //
         }
 
+        public void Dispose()
+        {
+            // NOP
+        }
     }
 }

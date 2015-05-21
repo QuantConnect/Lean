@@ -334,7 +334,7 @@ namespace QuantConnect.Lean.Engine
 
                             Log.Trace("Engine.Run(): Exiting Algorithm Manager");
 
-                        }, job.UserPlan == UserPlan.Free ? 1024 : MaximumRamAllocation);
+                            }, job.UserPlan == UserPlan.Free ? 1024 : MaximumRamAllocation);
 
                         if (!complete)
                         {
@@ -456,11 +456,16 @@ namespace QuantConnect.Lean.Engine
                 //Delete the message from the job queue:
                 JobQueue.AcknowledgeJob(job);
                 Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
-                    
+
                 //Attempt to clean up ram usage:
                 GC.Collect();
             }
 
+            if (Api != null)
+            {
+                Api.Dispose();
+            }
+            
             // Make the console window pause so we can read log output before exiting and killing the application completely
             if (IsLocal) Console.Read();
 
@@ -471,8 +476,6 @@ namespace QuantConnect.Lean.Engine
             {
                 Log.LogHandler.Dispose();
             }
-
-            Environment.Exit(0);
         }
 
 

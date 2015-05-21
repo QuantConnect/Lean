@@ -24,7 +24,7 @@ namespace QuantConnect.Interfaces
     /// Messaging Interface with Cloud System
     /// </summary>
     [InheritedExport(typeof(IApi))]
-    public interface IApi
+    public interface IApi : IDisposable
     {
         /// <summary>
         /// Initialize the control system
