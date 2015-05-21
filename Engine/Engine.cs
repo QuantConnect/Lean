@@ -302,9 +302,9 @@ namespace QuantConnect.Lean.Engine
                     ResultHandler.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Running);
 
                     //Launch the data, transaction and realtime handlers into dedicated threads
-                    threadFeed = new Thread(DataFeed.Run, 0) {Name = "DataFeed Thread"};
-                    threadTransactions = new Thread(TransactionHandler.Run, 0) {Name = "Transaction Thread"};
-                    threadRealTime = new Thread(RealTimeHandler.Run, 0) {Name = "RealTime Thread"};
+                    threadFeed = new Thread(DataFeed.Run) {Name = "DataFeed Thread"};
+                    threadTransactions = new Thread(TransactionHandler.Run) {Name = "Transaction Thread"};
+                    threadRealTime = new Thread(RealTimeHandler.Run) {Name = "RealTime Thread"};
 
                     //Launch the data feed, result sending, and transaction models/handlers in separate threads.
                     threadFeed.Start(); // Data feed pushing data packets into thread bridge; 
@@ -334,7 +334,7 @@ namespace QuantConnect.Lean.Engine
 
                             Log.Trace("Engine.Run(): Exiting Algorithm Manager");
 
-                            }, job.UserPlan == UserPlan.Free ? 1024 : MaximumRamAllocation);
+                        }, job.UserPlan == UserPlan.Free ? 1024 : MaximumRamAllocation);
 
                         if (!complete)
                         {
@@ -455,7 +455,7 @@ namespace QuantConnect.Lean.Engine
                 //Delete the message from the job queue:
                 JobQueue.AcknowledgeJob(job);
                 Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
-
+                    
                 //Attempt to clean up ram usage:
                 GC.Collect();
             }
@@ -463,11 +463,8 @@ namespace QuantConnect.Lean.Engine
             // Send the exit signal and then kill the thread
             StateCheck.Ping.Exit();
             
-            if (IsLocal)
-            {
-                // Make the console window pause so we can read log output before exiting and killing the application completely
-                Console.Read();
-            }
+            // Make the console window pause so we can read log output before exiting and killing the application completely
+            if (IsLocal) Console.Read();
 
             //Finally if ping thread still not complete, kill.
             if (statusPingThread != null && statusPingThread.IsAlive) statusPingThread.Abort();
