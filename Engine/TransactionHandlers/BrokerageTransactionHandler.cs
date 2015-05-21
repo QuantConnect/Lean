@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -33,6 +34,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private bool _exitTriggered;
         private IAlgorithm _algorithm;
         private readonly IBrokerage _brokerage;
+        private bool _syncedLiveBrokerageCashToday = false;
+
+        // this value is used for determining how confident we are in our cash balance update
+        private long _lastFillTimeTicks;
+        private long _lastSyncTimeTicks;
+        private static readonly TimeSpan _liveBrokerageCashSyncTime = new TimeSpan(7, 45, 0); // 7:45 am
 
         // pulled directly from the algorithm
 
@@ -66,6 +73,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 throw new ArgumentNullException("brokerage");
             }
 
+            // we don't need to do this today because we just initialized/synced
+            _syncedLiveBrokerageCashToday = true;
+            _lastSyncTimeTicks = DateTime.Now.Ticks;
+
             _brokerage = brokerage;
             _brokerage.OrderStatusChanged += (sender, fill) =>
             {
@@ -77,7 +88,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 HandleSecurityHoldingUpdated(holding);
             };
 
-            // maintain proper portfolio cash balance
             _brokerage.AccountChanged += (sender, account) =>
             {
                 HandleAccountChanged(account);
@@ -164,11 +174,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         break;
                 }
 
-                ProcessSynchronousEvents();
+                ProcessAsynchronousEvents();
             }
 
             Log.Trace("BrokerageTransactionHandler.Run(): Ending Thread...");
             IsActive = false;
+        }
+
+        /// <summary>
+        /// Processes asynchronous events on the transaction handler's thread
+        /// </summary>
+        public virtual void ProcessAsynchronousEvents()
+        {
+            // NOP
         }
 
         /// <summary>
@@ -178,9 +196,32 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             // how to do synchronous market orders for real brokerages?
 
-            // we want to remove orders older than 10k records, but only in live mode
             if (!_algorithm.LiveMode) return;
 
+            // every morning flip this switch back
+            if (_syncedLiveBrokerageCashToday && DateTime.Now.Date != LastSyncDate)
+            {
+                _syncedLiveBrokerageCashToday = false;
+            }
+
+            // we want to sync up our cash balance before market open
+            if (_algorithm.LiveMode && !_syncedLiveBrokerageCashToday && DateTime.Now.TimeOfDay >= _liveBrokerageCashSyncTime)
+            {
+                try
+                {
+                    // only perform cash syncs if we haven't had a fill for at least 10 seconds
+                    if (TimeSinceLastFill > TimeSpan.FromSeconds(10))
+                    {
+                        PerformCashSync();
+                    }
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err, "Updating cash balances");
+                }
+            }
+
+            // we want to remove orders older than 10k records, but only in live mode
             const int maxOrdersToKeep = 10000;
             if (_orders.Count < maxOrdersToKeep + 1) return;
 
@@ -191,6 +232,52 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 Order value;
                 _orders.TryRemove(item.Key, out value);
             }
+        }
+
+        /// <summary>
+        /// Syncs cash from brokerage with portfolio object
+        /// </summary>
+        private void PerformCashSync()
+        {
+            Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Sync cash balance");
+
+            var balances = _brokerage.GetCashBalance();
+            foreach (var balance in balances)
+            {
+                Cash cash;
+                if (_algorithm.Portfolio.CashBook.TryGetValue(balance.Symbol, out cash))
+                {
+                    // compare in dollars
+                    var delta = cash.Quantity - balance.Quantity;
+                    if (Math.Abs(delta) > _algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol))
+                    {
+                        // log the delta between 
+                        Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): {0} Delta: {1}", balance.Symbol, delta.ToString("0.00"));
+                    }
+                }
+                _algorithm.Portfolio.SetCash(balance.Symbol, balance.Quantity, balance.ConversionRate);
+            }
+
+            _syncedLiveBrokerageCashToday = true;
+
+            // fire off this task to check if we've had recent fills, if we have then we'll invalidate the cash sync
+            // and do it again until we're confident in it
+            Task.Delay(TimeSpan.FromSeconds(10)).ContinueWith(_ =>
+            {
+                // we want to make sure this is a good value, so check for any recent fills
+                if (TimeSinceLastFill <= TimeSpan.FromSeconds(20))
+                {
+                    // this will cause us to come back in and reset cash again until we 
+                    // haven't processed a fill for +- 10 seconds of the set cash time
+                    _syncedLiveBrokerageCashToday = false;
+                    Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Unverified cash sync - resync required.");
+                }
+                else
+                {
+                    _lastSyncTimeTicks = DateTime.Now.Ticks;
+                    Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Verified cash sync.");
+                }
+            });
         }
 
         /// <summary>
@@ -321,6 +408,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             //Apply the filled order to our portfolio:
             if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)
             {
+                Interlocked.Exchange(ref _lastFillTimeTicks, DateTime.Now.Ticks);
                 _algorithm.Portfolio.ProcessFill(fill);
             }
 
@@ -377,6 +465,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // we don't actually want to do this, this data can be delayed
             //securityHolding.SetHoldings(holding.AveragePrice, holding.Quantity);
+        }
+
+        /// <summary>
+        /// Gets the amount of time since the last call to algorithm.Portfolio.ProcessFill(fill)
+        /// </summary>
+        private TimeSpan TimeSinceLastFill
+        {
+            get { return DateTime.Now - new DateTime(Interlocked.Read(ref _lastFillTimeTicks)); }
+        }
+
+        /// <summary>
+        /// Gets the date of the last sync
+        /// </summary>
+        private DateTime LastSyncDate
+        {
+            get { return new DateTime(Interlocked.Read(ref _lastSyncTimeTicks)).Date; }
         }
     }
 }

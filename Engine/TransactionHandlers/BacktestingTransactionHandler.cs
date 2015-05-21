@@ -43,7 +43,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         public override void ProcessSynchronousEvents()
         {
             base.ProcessSynchronousEvents();
-            
+
+            _brokerage.Scan();
+        }
+
+        /// <summary>
+        /// Processes asynchronous events on the transaction handler's thread
+        /// </summary>
+        public override void ProcessAsynchronousEvents()
+        {
+            base.ProcessAsynchronousEvents();
+
             _brokerage.Scan();
         }
     }
