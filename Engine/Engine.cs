@@ -422,6 +422,7 @@ namespace QuantConnect.Lean.Engine
 
                 //Close result handler:
                 ResultHandler.Exit();
+                StateCheck.Ping.Exit();
 
                 //Wait for the threads to complete:
                 var ts = Stopwatch.StartNew();
@@ -460,9 +461,6 @@ namespace QuantConnect.Lean.Engine
                 GC.Collect();
             }
 
-            // Send the exit signal and then kill the thread
-            StateCheck.Ping.Exit();
-            
             // Make the console window pause so we can read log output before exiting and killing the application completely
             if (IsLocal) Console.Read();
 
@@ -473,6 +471,8 @@ namespace QuantConnect.Lean.Engine
             {
                 Log.LogHandler.Dispose();
             }
+
+            Environment.Exit(0);
         }
 
 
