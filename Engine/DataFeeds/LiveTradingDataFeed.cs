@@ -357,8 +357,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             }
                             else
                             {
+                                // reset the start time so it goes in sync with other data
+                                point.Time = DateTime.Now.RoundDown(_subscriptions[i].Increment);
+
                                 //If its not a tick, inject directly into bridge for this symbol:
-                                Bridge[i].Enqueue(new List<BaseData>() { point });
+                                Bridge[i].Enqueue(new List<BaseData> {point});
                             }
                         }
                     }
@@ -368,7 +371,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             });
 
-            // Micro-thread for custom data/feeds. This onl supports polling at this time. todo: Custom data sockets
+            // Micro-thread for custom data/feeds. This only supports polling at this time. todo: Custom data sockets
             var customFeedsTask = new Task(() =>
             {
                 while(true)
