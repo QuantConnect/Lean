@@ -207,6 +207,8 @@ namespace QuantConnect.Lean.Engine
             var statusPingThread = new Thread(StateCheck.Ping.Run);
             statusPingThread.Start();
 
+
+            do{
             try
             {
                 //Reset algo manager internal variables preparing for a new algorithm.
@@ -460,6 +462,7 @@ namespace QuantConnect.Lean.Engine
                 //Attempt to clean up ram usage:
                 GC.Collect();
             }
+            }while(!IsLocal);
 
             if (Api != null)
             {
