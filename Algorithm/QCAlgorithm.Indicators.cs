@@ -469,6 +469,22 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a Fisher transform indicator. 
+        /// </summary>
+        /// <param name="symbol">The symbol whose On Balance Volume we seek</param>
+        /// <param name="period">The number of periods over which to get the minimum and maximum values</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value).</param>
+        /// <returns>The current value of the indicator for the requested symbol</returns>
+        public FisherTransform FT(string symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        {
+            string name = QuantConnect.Algorithm.QCAlgorithm.CreateIndicatorName(symbol, "FT" + period, resolution);
+            var ft = new FisherTransform(name, period);
+            RegisterIndicator(symbol, ft, resolution, selector);
+            return ft;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
