@@ -29,7 +29,7 @@ namespace QuantConnect
         * CLASS VARIABLES
         *********************************************************/
         private TimeSpan _period;
-        private Action _callback = null;
+        private Action<DateTime> _callback = null;
         private Stopwatch _timer = new Stopwatch();
         private Thread _thread;
         private bool _stopped = false;
@@ -53,8 +53,8 @@ namespace QuantConnect
         /// This is expensive, it creates a new thread and closely monitors the loop.
         /// </summary>
         /// <param name="period">delay period between event callbacks</param>
-        /// <param name="callback">Callback event</param>
-        public RealTimeSynchronizedTimer(TimeSpan period, Action callback)
+        /// <param name="callback">Callback event passed the time the event is intended to be triggered</param>
+        public RealTimeSynchronizedTimer(TimeSpan period, Action<DateTime> callback)
         {
             _period = period;
             _callback = callback;
@@ -91,8 +91,9 @@ namespace QuantConnect
                 if (_callback != null && DateTime.Now >= _triggerTime)
                 {
                     _timer.Restart();
+                    var triggeredAt = _triggerTime;
                     _triggerTime = DateTime.Now.RoundDown(_period).Add(_period);
-                    _callback();
+                    _callback(triggeredAt);
                 }
 
                 while (_paused && !_stopped) Thread.Sleep(10);
