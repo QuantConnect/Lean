@@ -207,8 +207,6 @@ namespace QuantConnect.Lean.Engine
             var statusPingThread = new Thread(StateCheck.Ping.Run);
             statusPingThread.Start();
 
-
-            do{
             try
             {
                 //Reset algo manager internal variables preparing for a new algorithm.
@@ -312,6 +310,7 @@ namespace QuantConnect.Lean.Engine
                     threadFeed.Start(); // Data feed pushing data packets into thread bridge; 
                     threadTransactions.Start(); // Transaction modeller scanning new order requests
                     threadRealTime.Start(); // RealTime scan time for time based events:
+
                     // Result manager scanning message queue: (started earlier)
                     ResultHandler.DebugMessage(string.Format("Launching analysis for {0} with LEAN Engine v{1}", job.AlgorithmId, Constants.Version));
 
@@ -432,9 +431,13 @@ namespace QuantConnect.Lean.Engine
                 {
                     Thread.Sleep(100); Log.Trace("Waiting for threads to exit...");
                 }
+
+                //Terminate threads still in active state.
                 if (threadFeed != null && threadFeed.IsAlive) threadFeed.Abort();
                 if (threadTransactions != null && threadTransactions.IsAlive) threadTransactions.Abort();
                 if (threadResults != null && threadResults.IsAlive) threadResults.Abort();
+                if (statusPingThread != null && statusPingThread.IsAlive) statusPingThread.Abort();
+
                 if (_brokerage != null)
                 {
                     _brokerage.Disconnect();
@@ -462,23 +465,17 @@ namespace QuantConnect.Lean.Engine
                 //Attempt to clean up ram usage:
                 GC.Collect();
             }
-            }while(!IsLocal);
 
-            if (Api != null)
-            {
-                Api.Dispose();
-            }
+            //Final disposals.
+            Api.Dispose();
             
             // Make the console window pause so we can read log output before exiting and killing the application completely
-            if (IsLocal) Console.Read();
-
-            //Finally if ping thread still not complete, kill.
-            if (statusPingThread != null && statusPingThread.IsAlive) statusPingThread.Abort();
-
-            if (Log.LogHandler != null)
+            if (IsLocal)
             {
-                Log.LogHandler.Dispose();
+                Log.Trace("Engine.Main(): Analysis Complete. Press any key to continue.");
+                Console.ReadKey();
             }
+            Log.LogHandler.Dispose();
         }
 
 
