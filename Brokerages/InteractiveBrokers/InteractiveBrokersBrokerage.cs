@@ -1146,9 +1146,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private bool IsWithinScheduledServerResetTimes()
         {
-            // from 11:45 -> 12:30 with a little wiggle
+            // from 11:45 -> 12:45 is the IB reset times, we'll go from 11:30->1am for safety
             var time = DateTime.Now.TimeOfDay;
-            var result = time < TimeSpan.FromHours(0.45) || time > TimeSpan.FromHours(23.65);
+            var result = time > new TimeSpan(11, 30, 0) || time < new TimeSpan(1, 0, 0);
 
             Log.Trace("InteractiveBrokersBrokerage.IsWithinScheduledServerRestTimes(): " + result);
 
