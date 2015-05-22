@@ -154,12 +154,12 @@ namespace QuantConnect.AlgorithmFactory
                 Assembly assembly;
                 if (debugInformationBytes == null)
                 {
-                    Log.Trace(Environment.NewLine + "Loading only the algorithm assembly..." + Environment.NewLine);
+                    Log.Trace("Loader.CreateInstance(): Loading only the algorithm assembly");
                     assembly = Assembly.LoadFrom(assemblyPath);
                 }
                 else
                 {
-                    Log.Trace(Environment.NewLine + "Loading debug information with algorithm..."+ Environment.NewLine);
+                    Log.Trace("Loader.CreateInstance(): Loading debug information with algorithm");
                     var assemblyBytes = File.ReadAllBytes(assemblyPath);
                     assembly = Assembly.Load(assemblyBytes, debugInformationBytes);
                 }
