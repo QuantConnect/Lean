@@ -32,7 +32,7 @@ namespace QuantConnect.Indicators
     /// </summary>
     /// <typeparam name="T">The type of data input into this indicator</typeparam>
     [DebuggerDisplay("{ToDetailedString()}")]
-    public abstract class IndicatorBase<T>
+    public abstract class IndicatorBase<T> : IComparable<IndicatorBase<T>>, IComparable
         where T : BaseData
     {
         /// <summary>the most recent input that was given to this indicator</summary>
@@ -118,6 +118,42 @@ namespace QuantConnect.Indicators
         public static implicit operator decimal(IndicatorBase<T> instance)
         {
             return instance.Current;
+        }
+
+        /// <summary>
+        /// Compares the current object with another object of the same type.
+        /// </summary>
+        /// <returns>
+        /// A value that indicates the relative order of the objects being compared. The return value has the following meanings: Value Meaning Less than zero This object is less than the <paramref name="other"/> parameter.Zero This object is equal to <paramref name="other"/>. Greater than zero This object is greater than <paramref name="other"/>. 
+        /// </returns>
+        /// <param name="other">An object to compare with this object.</param>
+        public int CompareTo(IndicatorBase<T> other)
+        {
+            if (ReferenceEquals(other, null))
+            {
+                // everything is greater than null via MSDN
+                return 1;
+            }
+
+            return Current.CompareTo(other.Current);
+        }
+
+        /// <summary>
+        /// Compares the current instance with another object of the same type and returns an integer that indicates whether the current instance precedes, follows, or occurs in the same position in the sort order as the other object.
+        /// </summary>
+        /// <returns>
+        /// A value that indicates the relative order of the objects being compared. The return value has these meanings: Value Meaning Less than zero This instance precedes <paramref name="obj"/> in the sort order. Zero This instance occurs in the same position in the sort order as <paramref name="obj"/>. Greater than zero This instance follows <paramref name="obj"/> in the sort order. 
+        /// </returns>
+        /// <param name="obj">An object to compare with this instance. </param><exception cref="T:System.ArgumentException"><paramref name="obj"/> is not the same type as this instance. </exception><filterpriority>2</filterpriority>
+        public int CompareTo(object obj)
+        {
+            var other = obj as IndicatorBase<T>;
+            if (other == null)
+            {
+                throw new ArgumentException("Object must be of type " + GetType().GetBetterTypeName());
+            }
+
+            return CompareTo(other);
         }
 
         /// <summary>

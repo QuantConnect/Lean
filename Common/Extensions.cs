@@ -378,6 +378,27 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets a type's name with the generic parameters filled in the way they would look when
+        /// defined in code, such as converting Dictionary&lt;`1,`2&gt; to Dictionary&lt;string,int&gt;
+        /// </summary>
+        /// <param name="type">The type who's name we seek</param>
+        /// <returns>A better type name</returns>
+        public static string GetBetterTypeName(this Type type)
+        {
+            string name = type.Name;
+            if (type.IsGenericType)
+            {
+                var genericArguments = type.GetGenericArguments();
+                for (int i = 0; i < genericArguments.Length; i++)
+                {
+                    string toBeReplaced = "`" + (i + 1);
+                    name = name.Replace(toBeReplaced, genericArguments[i].GetBetterTypeName());
+                }
+            }
+            return name;
+        }
+
+        /// <summary>
         /// Converts the Resolution instance into a TimeSpan instance
         /// </summary>
         /// <param name="resolution">The resolution to be converted</param>

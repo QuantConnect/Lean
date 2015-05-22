@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 
 namespace QuantConnect.Tests.Common.Util
@@ -55,6 +56,15 @@ namespace QuantConnect.Tests.Common.Util
             const string input = "16:00";
             var timespan = input.ConvertTo<TimeSpan>();
             Assert.AreEqual(TimeSpan.FromHours(16), timespan);
+        }
+
+        [Test]
+        public void GetBetterTypeNameHandlesRecursiveGenericTypes()
+        {
+            var type = typeof (Dictionary<List<int>, Dictionary<int, string>>);
+            const string expected = "Dictionary<List<System.Int32>, Dictionary<System.Int32, System.String>>";
+            var actual = type.GetBetterTypeName();
+            Assert.AreNotEqual(expected, actual);
         }
 
         private class Super<T>

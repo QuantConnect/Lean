@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -83,6 +84,42 @@ namespace QuantConnect.Tests.Indicators
             // data based on time
             target.Update(data);
             Assert.AreEqual(value1, target.Current.Value);
+        }
+
+        [Test]
+        public void SortsTheSameAsDecimalDescending()
+        {
+            int count = 100;
+            var targets = Enumerable.Range(0, count).Select(x => new TestIndicator(x.ToString())).ToList();
+            for (int i = 0; i < targets.Count; i++)
+            {
+                targets[i].Update(DateTime.Today, i);
+            }
+
+            var expected = Enumerable.Range(0, count).Select(x => (decimal)x).OrderByDescending(x => x).ToList();
+            var actual = targets.OrderByDescending(x => x).ToList();
+            foreach (var pair in expected.Zip(actual, Tuple.Create))
+            {
+                Assert.AreEqual(pair.Item1, pair.Item2.Current.Value);
+            }
+        }
+
+        [Test]
+        public void SortsTheSameAsDecimalAsecending()
+        {
+            int count = 100;
+            var targets = Enumerable.Range(0, count).Select(x => new TestIndicator(x.ToString())).ToList();
+            for (int i = 0; i < targets.Count; i++)
+            {
+                targets[i].Update(DateTime.Today, i);
+            }
+
+            var expected = Enumerable.Range(0, count).Select(x => (decimal)x).OrderBy(x => x).ToList();
+            var actual = targets.OrderBy(x => x).ToList();
+            foreach (var pair in expected.Zip(actual, Tuple.Create))
+            {
+                Assert.AreEqual(pair.Item1, pair.Item2.Current.Value);
+            }
         }
 
         private class TestIndicator : Indicator
