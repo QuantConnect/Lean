@@ -167,8 +167,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// A time period has lapsed, trigger a save/queue of the current value of data.
         /// </summary>
+        /// <param name="triggerTime">The time we're triggering this archive for</param>
         /// <param name="fillForward">Data stream is a fillforward type</param>
-        public void TriggerArchive(bool fillForward)
+        public void TriggerArchive(DateTime triggerTime, bool fillForward)
         {
             lock (_lock)
             {
@@ -192,7 +193,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         // the time is actually the end time of a bar, check to see if the start time
                         // is within market hours, which is really just checking the _previousData's EndTime
-                        if (!ExchangeIsOpen(_previousData.EndTime))
+                        if (!ExchangeIsOpen(triggerTime.Subtract(_increment)))
                         {
                             Log.Debug("StreamStore.TriggerArchive(): Exchange is closed: " + Symbol);
                             return;

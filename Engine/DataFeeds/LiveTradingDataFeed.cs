@@ -215,23 +215,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // This thread converts data into bars "on" the second - assuring the bars are close as 
             // possible to a second unit tradebar (starting at 0 milliseconds).
-            var realtime = new RealTimeSynchronizedTimer(TimeSpan.FromSeconds(1), () =>
+            var realtime = new RealTimeSynchronizedTimer(TimeSpan.FromSeconds(1), triggerTime =>
             {
                 //Pause bridge queing operations:
                 resumeRun.Reset();
 
-                var now = DateTime.Now;
-                var onMinute = (now.Second == 0);
+                var onMinute = (triggerTime.Second == 0);
 
                 // Determine if this subscription needs to be archived:
                 for (var i = 0; i < Subscriptions.Count; i++)
                 {
                     //Do critical events every second regardless of the market/hybernate state:
-                    if (now.Date != sourceDate)
+                    if (triggerTime.Date != sourceDate)
                     {
                         //Every day refresh the source file for the custom user data:
-                        _subscriptionManagers[i].RefreshSource(now.Date);
-                        sourceDate = now.Date;
+                        _subscriptionManagers[i].RefreshSource(triggerTime.Date);
+                        sourceDate = triggerTime.Date;
                     }
 
                     switch (_subscriptions[i].Resolution)
@@ -239,14 +238,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         //This is a second resolution data source:
                         case Resolution.Second:
                             //Enqueue our live data:
-                            _streamStore[i].TriggerArchive(_subscriptions[i].FillDataForward);
+                            _streamStore[i].TriggerArchive(triggerTime, _subscriptions[i].FillDataForward);
                             break;
 
                         //This is a minute resolution data source:
                         case Resolution.Minute:
                             if (onMinute)
                             {
-                                _streamStore[i].TriggerArchive(_subscriptions[i].FillDataForward);
+                                _streamStore[i].TriggerArchive(triggerTime, _subscriptions[i].FillDataForward);
                             }
                             break;
                     }
