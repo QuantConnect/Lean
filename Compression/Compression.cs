@@ -18,6 +18,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Text;
 using ICSharpCode.SharpZipLib.Zip;
 using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.GZip;
@@ -67,7 +68,7 @@ namespace QuantConnect
                         //Create the space in the zip file:
                         var entry = new ZipEntry(filename);
                         //Get a Byte[] of the file data:
-                        var file = filenamesAndData[filename].GetBytes();
+                        var file = Encoding.Default.GetBytes(filenamesAndData[filename]);
                         stream.PutNextEntry(entry);
 
                         using (var ms = new MemoryStream(file))
