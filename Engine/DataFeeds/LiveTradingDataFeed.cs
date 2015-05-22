@@ -28,37 +28,28 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Live Data Feed Streamed From QC Source.
     /// </summary>
     public class LiveTradingDataFeed : IDataFeed
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-        private LiveNodePacket _job;
-        private List<SubscriptionDataConfig> _subscriptions = new List<SubscriptionDataConfig>();
-        private List<bool> _isDynamicallyLoadedData = new List<bool>();
+        private readonly LiveNodePacket _job;
+        private List<SubscriptionDataConfig> _subscriptions;
+        private readonly List<bool> _isDynamicallyLoadedData = new List<bool>();
         private SubscriptionDataReader[] _subscriptionManagers;
         private ConcurrentQueue<List<BaseData>>[] _bridge;
-        private bool _endOfBridges = false;
-        private bool _isActive = true;
-        private bool[] _endOfBridge = new bool[1];
-        private DataFeedEndpoint _dataFeed = DataFeedEndpoint.LiveTrading;
-        private IAlgorithm _algorithm;
-        private object _lock = new Object();
-        private bool _exitTriggered = false;
+        private bool _endOfBridges;
+        private bool _isActive;
+        private bool[] _endOfBridge;
+        private DataFeedEndpoint _dataFeed;
+        private readonly IAlgorithm _algorithm;
+        private readonly object _lock = new object();
+        private bool _exitTriggered;
         private List<string> _symbols = new List<string>();
         private Dictionary<int, StreamStore> _streamStore = new Dictionary<int, StreamStore>();
-        private List<decimal> _realtimePrices;
-        private IDataQueueHandler _dataQueue;
+        private readonly List<decimal> _realtimePrices;
+        private readonly IDataQueueHandler _dataQueue;
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Subscription collection for data requested.
         /// </summary>
@@ -67,7 +58,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             get  { return _subscriptions; }
             set { _subscriptions = value; }
         }
-
 
         /// <summary>
         /// Prices of the datafeed this instant for dynamically updating security values (and calculation of the total portfolio value in realtime).
@@ -146,10 +136,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public DateTime LoadedDataFrontier { get; private set; }
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
-
         /// <summary>
         /// Live trading datafeed handler provides a base implementation of a live trading datafeed. Derived types
         /// need only implement the GetNextTicks() function to return unprocessed ticks from a data source.
@@ -215,7 +201,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             for (var i = 0; i < Subscriptions.Count; i++)
             {
                 var config = _subscriptions[i];
-                _streamStore.Add(i, new StreamStore(config));
+                _streamStore.Add(i, new StreamStore(config, _algorithm.Securities[config.Symbol]));
             }
             Log.Trace(string.Format("LiveTradingDataFeed.Stream(): Initialized {0} stream stores.", _streamStore.Count));
 
@@ -346,7 +332,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         for (var i = 0; i < Subscriptions.Count; i++)
                         {
                             if (_subscriptions[i].Symbol != point.Symbol) continue;
-                            
+
                             var tick = point as Tick;
                             if (tick != null)
                             {
@@ -389,7 +375,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 {
                                     //Attempt 10 times to download the updated data:
                                     var attempts = 0;
-                                    var feedSuccess = false;
+                                    bool feedSuccess;
                                     do 
                                     {
                                         feedSuccess = _subscriptionManagers[i].MoveNext();
@@ -425,7 +411,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             liveThreadTask.Start();
 
             // define what tasks we're going to wait on, we use a task from result in place of the custom task, just in case we never start it
-            var tasks = new Task[2] {liveThreadTask, Task.FromResult(1)};
+            var tasks = new [] {liveThreadTask, Task.FromResult(1)};
 
             // if we have any dynamically loaded data, start the custom thread
             if (_isDynamicallyLoadedData.Any(x => x))
