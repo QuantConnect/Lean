@@ -17,33 +17,15 @@ using System;
 
 namespace QuantConnect.Securities
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Base exchange class providing information and helper tools for reading the current exchange situation
     /// </summary>
     public class SecurityExchange 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         private DateTime _frontier;
         private TimeSpan _marketOpen = TimeSpan.FromHours(0);
         private TimeSpan _marketClose = TimeSpan.FromHours(24).Subtract(TimeSpan.FromTicks(1));
 
-        /******************************************************** 
-        * CLASS CONSTRUCTION
-        *********************************************************/
-        /// <summary>
-        /// Initialise the exchange for this vehicle.
-        /// </summary>
-        public SecurityExchange() 
-        { }
-        
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Timezone for the exchange
         /// </summary>
@@ -71,6 +53,23 @@ namespace QuantConnect.Securities
             set { _marketClose = value; }
         }
 
+        /// <summary>
+        /// Default market open time 00:00
+        /// </summary>
+        public virtual TimeSpan ExtendedMarketOpen
+        {
+            get { return _marketOpen; }
+            set { _marketOpen = value; }
+        }
+
+        /// <summary>
+        /// Default market extended closing time 24:00
+        /// </summary>
+        public virtual TimeSpan ExtendedMarketClose
+        {
+            get { return _marketClose; }
+            set { _marketClose = value; }
+        }
 
         /// <summary>
         /// Number of trading days per year for this security. By default the market is open 365 days per year.
@@ -84,7 +83,6 @@ namespace QuantConnect.Securities
             }
         }
 
-
         /// <summary>
         /// Time from the most recent data
         /// </summary>
@@ -95,7 +93,6 @@ namespace QuantConnect.Securities
                 return _frontier;
             }
         }
-
 
         /// <summary>
         /// Boolean property for quickly testing if the exchange is open.
@@ -108,9 +105,6 @@ namespace QuantConnect.Securities
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Check if we are past a certain time: simple method for wrapping datetime.
         /// </summary>
@@ -140,8 +134,6 @@ namespace QuantConnect.Securities
             }
             return false;
         }
-
-
 
         /// <summary>
         /// Set the current datetime:
@@ -174,7 +166,6 @@ namespace QuantConnect.Securities
             return time.Date;
         }
 
-        
         /// <summary>
         /// Time of day the market closes.
         /// </summary>
@@ -196,7 +187,6 @@ namespace QuantConnect.Securities
             return DateIsOpen(dateTime);
         }
 
-
         /// <summary>
         /// Check if the object is open including the *Extended* market hours
         /// </summary>
@@ -206,7 +196,40 @@ namespace QuantConnect.Securities
         {
             return DateIsOpen(time);
         }
-    } //End of MarketExchange
 
+        /// <summary>
+        /// Determines if the exchange was open at any time between start and stop
+        /// </summary>
+        public bool IsOpenDuringBar(DateTime barStartTime, DateTime barEndTime, bool isExtendedMarketHours)
+        {
+            DateTime marketOpen;
+            DateTime marketClose;
+            var emitDate = barStartTime.Date;
+            if (!DateIsOpen(emitDate))
+            {
+                return false;
+            }
 
-} //End Namespace
+            // pick market open/close times based out whether or not we've requested extended market hour
+            if (isExtendedMarketHours)
+            {
+                marketOpen = emitDate + ExtendedMarketOpen;
+                marketClose = emitDate + ExtendedMarketClose;
+            }
+            else
+            {
+                marketOpen = emitDate + MarketOpen;
+                marketClose = emitDate + MarketClose;
+            }
+
+            // allow instantenous data to land exactly on the open/close times
+            if (barStartTime == barEndTime)
+            {
+                return barStartTime >= marketOpen && barStartTime <= marketClose;
+            }
+
+            // detect any overlap with requested market hours
+            return barStartTime < marketClose && barEndTime > marketOpen;
+        }
+    }
+}

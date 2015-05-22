@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests
 {
@@ -29,6 +30,12 @@ namespace QuantConnect.Tests
     {
         public static void RunLocalBacktest(string algorithm, Dictionary<string, string> expectedStatistics)
         {
+            Log.LogHandler = new CompositeLogHandler(new ILogHandler[]
+            {
+                new ConsoleLogHandler(),
+                new FileLogHandler("regression.log")
+            });
+
             Console.WriteLine("Running " + algorithm + "...");
 
             // set the configuration up

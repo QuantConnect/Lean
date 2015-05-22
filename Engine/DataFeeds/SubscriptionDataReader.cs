@@ -295,8 +295,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     if (instance != null)
                     {
-                        instanceMarketOpen = _security.Exchange.DateTimeIsOpen(instance.Time);
-
+                        // we care if the market was open at any time over the bar
+                        instanceMarketOpen = Exchange.IsOpenDuringBar(instance.Time, instance.EndTime, false);
+                        
                         //Apply custom user data filters:
                         try
                         {
@@ -329,8 +330,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                         if (instance.Time > _periodFinish)
                         {
-                            instance = null;
-                            continue;
+                            // we're done with data from this subscription, finalize the reader
+                            Current = null;
+                            _endOfStream = true;
+                            return false;
                         }
 
                         //Save bar for extended market hours (fill forward).
@@ -367,7 +370,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 Current = instance;
 
-                //End of Stream: rewind reader to last 
+                //End of Stream: rewind reader to last
                 if (_reader.EndOfStream && instance == null)
                 {
                     //Log.Debug("SubscriptionDataReader.MoveNext(): Reader EOS.");

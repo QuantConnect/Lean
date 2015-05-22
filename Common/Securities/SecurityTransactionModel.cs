@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -62,6 +63,13 @@ namespace QuantConnect.Securities
         {
             //Default order event to return.
             var fill = new OrderEvent(order);
+
+            if (order.Status == OrderStatus.Canceled) return fill;
+
+            // make sure the exchange is open before filling
+            var currentBar = asset.GetLastData();
+            if (!asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, false)) return fill;
+
             try
             {
                 //Order [fill]price for a market order model is the current security price.
@@ -108,10 +116,14 @@ namespace QuantConnect.Securities
             //Default order event to return.
             var fill = new OrderEvent(order);
 
+            // make sure the exchange is open before filling
+            var currentBar = asset.GetLastData();
+            if (!asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, false)) return fill;
+
             try
             {
                 //If its cancelled don't need anymore checks:
-                if (fill.Status == OrderStatus.Canceled) return fill;
+                if (order.Status == OrderStatus.Canceled) return fill;
 
                 //Get the range of prices in the last bar:
                 decimal minimumPrice;
@@ -183,7 +195,7 @@ namespace QuantConnect.Securities
             try
             {
                 //If its cancelled don't need anymore checks:
-                if (fill.Status == OrderStatus.Canceled) return fill;
+                if (order.Status == OrderStatus.Canceled) return fill;
 
                 //Get the range of prices in the last bar:
                 decimal minimumPrice;
@@ -257,7 +269,7 @@ namespace QuantConnect.Securities
             try
             {
                 //If its cancelled don't need anymore checks:
-                if (fill.Status == OrderStatus.Canceled) return fill;
+                if (order.Status == OrderStatus.Canceled) return fill;
 
                 //Get the range of prices in the last bar:
                 decimal minimumPrice;
@@ -308,34 +320,41 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Market on Open Fill Model. Return an order event with the fill details
         /// </summary>
-        /// <param name="security">Asset we're trading with this order</param>
+        /// <param name="asset">Asset we're trading with this order</param>
         /// <param name="order">Order to be filled</param>
         /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        public OrderEvent MarketOnOpenFill(Security security, MarketOnOpenOrder order)
+        public OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order)
         {
             var fill = new OrderEvent(order);
 
-            if (fill.Status == OrderStatus.Canceled) return fill;
+            if (order.Status == OrderStatus.Canceled) return fill;
 
             try
             {
+                // MOO should never fill on the same bar or on stale data
+                // Imagine the case where we have a thinly traded equity, ASUR, and another liquid
+                // equity, say SPY, SPY gets data every minute but ASUR, if not on fill forward, maybe
+                // have large gaps, in which case the currentBar.EndTime will be in the past
+                // ASUR  | | |      [order]        | | | | | | |
+                //  SPY  | | | | | | | | | | | | | | | | | | | |
+                var currentBar = asset.GetLastData();
+                if (order.Time >= currentBar.EndTime) return fill;
+
                 // if the MOO was submitted during market the previous day, wait for a day to turn over
-                if (security.Exchange.DateTimeIsOpen(order.Time) && order.Time.Date == security.Time.Date)
+                if (asset.Exchange.DateTimeIsOpen(order.Time) && order.Time.Date == asset.Time.Date)
                 {
                     return fill;
                 }
 
                 // wait until market open
-                if (!security.Exchange.ExchangeOpen)
-                {
-                    return fill;
-                }
+                // make sure the exchange is open before filling
+                if (!asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, false)) return fill;
 
-                order.Price = security.Open;
+                order.Price = asset.Open;
                 order.Status = OrderStatus.Filled;
 
                 //Calculate the model slippage: e.g. 0.01c
-                var slip = GetSlippageApproximation(security, order);
+                var slip = GetSlippageApproximation(asset, order);
 
                 //Apply slippage
                 switch (order.Direction)
@@ -364,28 +383,28 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Market on Close Fill Model. Return an order event with the fill details
         /// </summary>
-        /// <param name="security">Asset we're trading with this order</param>
+        /// <param name="asset">Asset we're trading with this order</param>
         /// <param name="order">Order to be filled</param>
         /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        public OrderEvent MarketOnCloseFill(Security security, MarketOnCloseOrder order)
+        public OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order)
         {
             var fill = new OrderEvent(order);
 
-            if (fill.Status == OrderStatus.Canceled) return fill;
+            if (order.Status == OrderStatus.Canceled) return fill;
 
             try
             {
                 // wait until market closes
-                if (security.Exchange.ExchangeOpen)
+                if (asset.Exchange.ExchangeOpen)
                 {
                     return fill;
                 }
 
-                order.Price = security.Close;
+                order.Price = asset.Close;
                 order.Status = OrderStatus.Filled;
 
                 //Calculate the model slippage: e.g. 0.01c
-                var slip = GetSlippageApproximation(security, order);
+                var slip = GetSlippageApproximation(asset, order);
 
                 //Apply slippage
                 switch (order.Direction)

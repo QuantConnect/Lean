@@ -329,26 +329,25 @@ namespace QuantConnect.Securities
         /// <returns>The order with the specified id, or null if no match is found</returns>
         public Order GetOrderById(int orderId)
         {
-            Order order = null;
             try
             {
-                if (!Orders.TryGetValue(orderId, out order))
+                // first check the order queue
+                var order = OrderQueue.FirstOrDefault(x => x.Id == orderId);
+                if (order != null)
                 {
-                    var pending = OrderQueue.ToList();
-
-                    var pendingOrder = (from o in pending 
-                                        where o.Id == orderId 
-                                        select o).FirstOrDefault();
-
-                    return pendingOrder;
+                    return order;
                 }
-                return order;
+                // then check permanent storage
+                if (Orders.TryGetValue(orderId, out order))
+                {
+                    return order;
+                }
             }
             catch (Exception err)
             {
                 Log.Error("TransactionManager.GetOrderById(): " + err.Message);
             }
-            return order;
+            return null;
         }
 
         /// <summary>

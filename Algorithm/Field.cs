@@ -22,7 +22,7 @@ namespace QuantConnect.Algorithm
     /// <summary>
     /// Provides static properties to be used as selectors with the indicator system
     /// </summary>
-    public static class Field
+    public static partial class Field
     {
         /// <summary>
         /// Gets a selector that selects the Open value
@@ -54,6 +54,17 @@ namespace QuantConnect.Algorithm
         public static Func<BaseData, decimal> Close
         {
             get { return x => x.Value; }
+        }
+
+        /// <summary>
+        /// Defines an average price that is equal to (2*O + H + L + 3*C)/7
+        /// </summary>
+        public static Func<BaseData, decimal> SevenBar
+        {
+            get
+            {
+                return TradeBarPropertyOrValue(x => (2*x.Open + x.High + x.Low + 3*x.Close)/7m);
+            }
         }
 
         /// <summary>

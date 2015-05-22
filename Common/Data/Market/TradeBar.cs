@@ -15,6 +15,7 @@
 
 using System;
 using System.Globalization;
+using System.IO;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Data.Market
@@ -140,7 +141,15 @@ namespace QuantConnect.Data.Market
                 {
                     //Equity File Data Format:
                     case SecurityType.Equity:
-                        Time = baseDate.Date.AddMilliseconds(Convert.ToInt32(csv[0]));
+                        if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
+                        {
+                            // hourly and daily have different time format
+                            Time = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
+                        }
+                        else
+                        {
+                            Time = baseDate.Date.AddMilliseconds(Convert.ToInt32(csv[0]));
+                        }
                         Open = config.GetNormalizedPrice(csv[1].ToDecimal() / scaleFactor);  //  Convert.ToDecimal(csv[1]) / scaleFactor;
                         High = config.GetNormalizedPrice(csv[2].ToDecimal() / scaleFactor);  // Using custom "ToDecimal" conversion for speed.
                         Low = config.GetNormalizedPrice(csv[3].ToDecimal() / scaleFactor);
@@ -150,7 +159,15 @@ namespace QuantConnect.Data.Market
 
                     //FOREX has a different data file format:
                     case SecurityType.Forex:
-                        Time = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm:ss.ffff", CultureInfo.InvariantCulture);
+                        if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
+                        {
+                            // hourly and daily have different time format
+                            Time = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
+                        }
+                        else
+                        {
+                            Time = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm:ss.ffff", CultureInfo.InvariantCulture);
+                        }
                         Open = csv[1].ToDecimal();
                         High = csv[2].ToDecimal();
                         Low = csv[3].ToDecimal();
@@ -293,10 +310,19 @@ namespace QuantConnect.Data.Market
                         dateFormat = "yyMMdd";
                     }
 
-                    var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol;
-                    source = Constants.DataFolder + config.SecurityType.ToString().ToLower();
-                    source += @"/" + config.Resolution.ToString().ToLower() + @"/" + symbol.ToLower() + @"/";
-                    source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
+                    var securityTypePath = config.SecurityType.ToString().ToLower();
+                    var resolutionPath = config.Resolution.ToString().ToLower();
+                    var symbolPath = (string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol).ToLower();
+                    var filename = date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
+
+                    if (config.Resolution == Resolution.Hour || config.Resolution == Resolution.Daily)
+                    {
+                        // hourly/daily data is all in a single file, no sub directories
+                        filename = symbolPath + ".zip";
+                        symbolPath = string.Empty;
+                    }
+
+                    source = Path.Combine(Constants.DataFolder, securityTypePath, resolutionPath, symbolPath, filename);
                     break;
 
                 //Live Trading Endpoint: Fake, not actually used but need for consistency with backtesting system. Set to "" so will not use subscription reader.

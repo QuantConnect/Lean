@@ -29,9 +29,11 @@ namespace QuantConnect
     public static class DateFormat
     {
         /// Year-Month-Date 6 Character Date Representation
-        public static string SixCharacter = "yyMMdd";
+        public const string SixCharacter = "yyMMdd";
         /// YYYY-MM-DD Eight Character Date Representation
-        public static string EightCharacter = "yyyyMMdd";
+        public const string EightCharacter = "yyyyMMdd";
+        /// Daily and hourly time format
+        public const string TwelveCharacter = "yyyyMMdd HH:mm";
         /// JSON Format Date Representation
         public static string JsonFormat = "yyyy-MM-ddThh:mm:ss";
         /// MySQL Format Date Representation

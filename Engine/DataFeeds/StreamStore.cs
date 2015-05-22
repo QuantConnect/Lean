@@ -35,13 +35,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class StreamStore
     {
         //Internal lock object
+        private readonly object _lock = new object();
+
         private BaseData _data;
         private BaseData _previousData;
         private readonly Type _type;
         private readonly SubscriptionDataConfig _config;
         private readonly Security _security;
         private readonly TimeSpan _increment;
-        private readonly object _lock = new object();
         private readonly ConcurrentQueue<BaseData> _queue;
 
         /// <summary>
@@ -110,13 +111,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Update(BaseData data)
         {
             // if we're not within the configured market hours don't process the data
-            if (!ExchangeIsOpen(data.Time))
+            if (!_security.Exchange.IsOpenDuringBar(data.Time, data.EndTime, _config.ExtendedMarketHours))
             {
                 return;
             }
 
             //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
-            while (_data != null && _data.Time < ComputeBarStartTime(data))
+            while (_data != null && _data.Time < ComputeBarStartTime())
             { Thread.Sleep(1); } 
 
             _data = data;
@@ -130,13 +131,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Update(Tick tick)
         {
             // if we're not within the configured market hours don't process the data
-            if (!ExchangeIsOpen(tick.Time))
+            if (!_security.Exchange.IsOpenDuringBar(tick.Time, tick.EndTime, _config.ExtendedMarketHours))
             {
                 return;
             }
 
             //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
-            var barStartTime = ComputeBarStartTime(tick);
+            var barStartTime = ComputeBarStartTime();
             while (_data != null && _data.Time < barStartTime)
             { Thread.Sleep(1); } 
 
@@ -193,7 +194,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         // the time is actually the end time of a bar, check to see if the start time
                         // is within market hours, which is really just checking the _previousData's EndTime
-                        if (!ExchangeIsOpen(triggerTime.Subtract(_increment)))
+                        if (!_security.Exchange.IsOpenDuringBar(triggerTime - _increment, triggerTime, _config.ExtendedMarketHours))
                         {
                             Log.Debug("StreamStore.TriggerArchive(): Exchange is closed: " + Symbol);
                             return;
@@ -218,20 +219,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Computes the start time of the bar this data belongs in
         /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        private DateTime ComputeBarStartTime(BaseData data)
+        private DateTime ComputeBarStartTime()
         {
             // for live data feeds compute a bar start time base on wall clock time, this prevents splitting of data into the algorithm
             return DateTime.Now.RoundDown(_increment);
-        }
-
-        /// <summary>
-        /// Returns true if this data should be forwarded to the bridges and algorithm
-        /// </summary>
-        private bool ExchangeIsOpen(DateTime time)
-        {
-            return _security.Exchange.DateTimeIsOpen(time) || (_security.IsExtendedMarketHours && _security.Exchange.DateTimeIsExtendedOpen(time));
         }
     }
 }

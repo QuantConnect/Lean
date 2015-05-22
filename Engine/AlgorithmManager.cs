@@ -196,7 +196,7 @@ namespace QuantConnect.Lean.Engine
             }
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
-            Log.Debug("AlgorithmManager.Run(): Algorithm initialized, launching time loop.");
+            Log.Trace("AlgorithmManager.Run(): Begin DataStream - Start: " + algorithm.StartDate + " Stop: " + algorithm.EndDate);
             foreach (var newData in DataStream.GetData(feed, setup.StartingDate))
             {
                 // reset our timer on each loop
@@ -249,6 +249,24 @@ namespace QuantConnect.Lean.Engine
                 //Update the securities properties: first before calling user code to avoid issues with data
                 algorithm.Securities.Update(time, newData);
 
+                //Pass in the new time first:
+                algorithm.SetDateTime(time);
+
+                // process fill models on the updated data before entering algorithm, applies to all non-market orders
+                transactions.ProcessSynchronousEvents();
+
+                //Check if the user's signalled Quit: loop over data until day changes.
+                if (algorithm.GetQuit())
+                {
+                    _algorithmState = AlgorithmStatus.Quit;
+                    break;
+                }
+                if (algorithm.RunTimeError != null)
+                {
+                    _algorithmState = AlgorithmStatus.RuntimeError;
+                    break;
+                }
+
                 // perform margin calls, in live mode we can also use realtime to emit these
                 if (time >= nextMarginCallTime || (Engine.LiveMode && nextMarginCallTime > DateTime.Now))
                 {
@@ -294,22 +312,6 @@ namespace QuantConnect.Lean.Engine
 
                     nextMarginCallTime = time + marginCallFrequency;
                 }
-
-
-                //Check if the user's signalled Quit: loop over data until day changes.
-                if (algorithm.GetQuit())
-                {
-                    _algorithmState = AlgorithmStatus.Quit;
-                    break;
-                }
-                if (algorithm.RunTimeError != null)
-                {
-                    _algorithmState = AlgorithmStatus.RuntimeError;
-                    break;
-                }
-
-                //Pass in the new time first:
-                algorithm.SetDateTime(time);
 
                 //Trigger the data events: Invoke the types we have data for:
                 var oldBars = new Dictionary<string, TradeBar>();

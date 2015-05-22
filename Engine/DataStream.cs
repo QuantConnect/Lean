@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.ConstrainedExecution;
 using QuantConnect.Data;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
@@ -39,7 +38,7 @@ namespace QuantConnect.Lean.Engine
         * CLASS VARIABLES
         *********************************************************/
         //Count of bridges and subscriptions.
-        private static int _subscriptions = 0;
+        private static int _subscriptions;
 
         /******************************************************** 
         * CLASS PROPERTIES
@@ -63,7 +62,6 @@ namespace QuantConnect.Lean.Engine
         public static IEnumerable<Dictionary<int, List<BaseData>>> GetData(IDataFeed feed, DateTime frontierOrigin)
         {
             //Initialize:
-            long earlyBirdTicks;
             _subscriptions = feed.Subscriptions.Count;
             AlgorithmTime = frontierOrigin;
             long algorithmTime = AlgorithmTime.Ticks;
@@ -84,7 +82,7 @@ namespace QuantConnect.Lean.Engine
             while (!feed.EndOfBridges)
             {
                 //Reset items which are not fill forward:
-                earlyBirdTicks = 0;
+                long earlyBirdTicks = 0;
                 var newData = new Dictionary<int, List<BaseData>>();
 
                 // spin wait until the feed catches up to our frontier
@@ -113,10 +111,14 @@ namespace QuantConnect.Lean.Engine
                             }
                             break;
                         }
-
-                        if (earlyBirdTicks == 0)
+                        if (result.Count > 0)
                         {
-                            earlyBirdTicks = result[0].EndTime.Ticks;
+                            // we have at least one item, check to see if its in ahead of the frontier,
+                            // if so, keep track of how many ticks in the future it is
+                            if (earlyBirdTicks == 0 || earlyBirdTicks > result[0].EndTime.Ticks)
+                            {
+                                earlyBirdTicks = result[0].EndTime.Ticks;
+                            }
                         }
 
                         //Pull a grouped time list out of the bridge

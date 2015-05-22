@@ -190,27 +190,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                     else
                     {
-                        ProcessMissingDayFillForward(SubscriptionReaders[i], i, tradeBarIncrements, date);
+                        ProcessMissingFileFillForward(SubscriptionReaders[i], i, tradeBarIncrements, date);
                         EndOfBridge[i] = true;
                     }
                 }
 
                 //Pause the DataFeed
-                var bridgeFullCount = 1;
-                var bridgeZeroCount = 0;
+                var bridgeFullCount = Bridge.Count(bridge => bridge.Count >= _bridgeMax);
+                var bridgeZeroCount = Bridge.Count(bridge => bridge.Count == 0);
                 var active = GetActiveStreams();
 
-                //Pause here while bridges are full and the 
-                while (bridgeFullCount > 0 && ((_subscriptions - active) == bridgeZeroCount) && !_exitTriggered) 
+                //Pause here while bridges are full, but allow missing files to pass
+                while (bridgeFullCount > 0 && ((_subscriptions - active) == bridgeZeroCount) && !_exitTriggered)
                 {
-                    bridgeFullCount = (from bridge in Bridge where bridge.Count >= _bridgeMax select bridge).Count();
-                    bridgeZeroCount = (from bridge in Bridge where bridge.Count == 0 select bridge).Count();
+                    bridgeFullCount = Bridge.Count(bridge => bridge.Count >= _bridgeMax);
+                    bridgeZeroCount = Bridge.Count(bridge => bridge.Count == 0);
                     Thread.Sleep(5);
                 }
 
                 // for each smallest resolution
-                var dataPlusOneDay = date.Date.AddDays(1);
-                while ((frontier.Date == date.Date || frontier == dataPlusOneDay) && !_exitTriggered)
+                var datePlusOneDay = date.Date.AddDays(1);
+                while ((frontier.Date == date.Date || frontier.Date == datePlusOneDay) && !_exitTriggered)
                 {
                     var cache = new List<BaseData>[_subscriptions];
                     
@@ -240,7 +240,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         //Add the last iteration to the new list: only if it falls into this time category
                         var cacheAtIndex = cache[i];
-                        while (manager.Current.Time < frontier)
+                        while (manager.Current.EndTime < frontier)
                         {
                             cacheAtIndex.Add(manager.Current);
                             if (!manager.MoveNext()) break;
@@ -249,9 +249,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         //Save the next earliest time from the bridges: only if we're not filling forward.
                         if (manager.Current != null)
                         {
-                            if (earlyBirdTicks == 0 || manager.Current.Time.Ticks < earlyBirdTicks)
+                            if (earlyBirdTicks == 0 || manager.Current.EndTime.Ticks < earlyBirdTicks)
                             {
-                                earlyBirdTicks = manager.Current.Time.Ticks;
+                                earlyBirdTicks = manager.Current.EndTime.Ticks;
                             }
                         }
                     }
@@ -267,7 +267,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         if (cache[i] != null && cache[i].Count > 0)
                         {
-                            FillForwardFrontiers[i] = cache[i][0].Time;
+                            FillForwardFrontiers[i] = cache[i][0].EndTime;
                             Bridge[i].Enqueue(cache[i]);
                         }
                         ProcessFillForward(SubscriptionReaders[i], i, tradeBarIncrements);
@@ -282,10 +282,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         //Jump increment to the nearest second, in the future: Round down, add increment
                         frontier = (new DateTime(earlyBirdTicks)).RoundDown(increment) + increment;
                     }
-                    else 
+                    else
                     {
                         //Otherwise step one forward.
-                        frontier += increment;  
+                        frontier += increment;
                     }
 
                 } // End of This Day.
@@ -302,8 +302,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 for (var i = 0; i < _subscriptions; i++)
                 {
-                    //Nothing left in the bridge, AND, the subscription reader is telling us its over.
-                    if (Bridge[i].Count == 0 && SubscriptionReaders[i].EndOfStream)
+                    //Nothing left in the bridge, mark it as finished
+                    if (Bridge[i].Count == 0)
                     {
                         EndOfBridge[i] = true;
                     }
@@ -345,7 +345,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        private void ProcessMissingDayFillForward(SubscriptionDataReader manager, int i, TimeSpan increment, DateTime dateToFill)
+        private void ProcessMissingFileFillForward(SubscriptionDataReader manager, int i, TimeSpan increment, DateTime dateToFill)
         {
             // we'll copy the current into the next day
             var subscription = Subscriptions[i];
@@ -354,25 +354,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var start = dateToFill.Date + manager.Exchange.MarketOpen;
             if (subscription.ExtendedMarketHours)
             {
-                // we need to loop to find the extended market open
-                start = dateToFill.Date;
-                while (!manager.Exchange.DateTimeIsExtendedOpen(start))
-                {
-                    start += increment;
-                }
+                start = dateToFill.Date + manager.Exchange.ExtendedMarketOpen;
             }
 
+            // shift the 'start' time to the end of the bar by adding the increment, this makes 'date'
+            // the end time which also allows the market open functions to behave as expected
+
             var current = manager.Current;
-            for (var date = start; date.Date == dateToFill.Date; date = date + increment)
+            for (var endTime = start.Add(increment); endTime.Date == dateToFill.Date; endTime = endTime + increment)
             {
-                if (manager.IsMarketOpen(date) || (subscription.ExtendedMarketHours && manager.IsExtendedMarketOpen(date)))
+                if (manager.IsMarketOpen(endTime) || (subscription.ExtendedMarketHours && manager.IsExtendedMarketOpen(endTime)))
                 {
-                    var cache = new List<BaseData>(1);
-                    var fillforward = current.Clone(true);
-                    fillforward.Time = date;
-                    FillForwardFrontiers[i] = date;
-                    cache.Add(fillforward);
-                    Bridge[i].Enqueue(cache);
+                    EnqueueFillForwardData(i, current, endTime);
                 }
                 else
                 {
@@ -381,7 +374,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
         }
-
 
         /// <summary>
         /// If this is a fillforward subscription, look at the previous time, and current time, and add new 
@@ -393,72 +385,96 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private void ProcessFillForward(SubscriptionDataReader manager, int i, TimeSpan increment)
         {
             // If previous == null cannot fill forward nothing there to move forward (e.g. cases where file not found on first file).
-            if (!Subscriptions[i].FillDataForward || manager.Previous == null) return;
+            if (!Subscriptions[i].FillDataForward || manager.Previous == null || manager.Current == null) return;
 
             //Last tradebar and the current one we're about to add to queue:
             var previous = manager.Previous;
             var current = manager.Current;
 
             //Initialize the frontier:
-            if (FillForwardFrontiers[i].Ticks == 0) FillForwardFrontiers[i] = previous.Time;
+            if (FillForwardFrontiers[i].Ticks == 0) FillForwardFrontiers[i] = previous.EndTime;
+
+            // using the previous to fill forward since 'current' is ahead the frontier
+            var whatToFill = previous;
+            // using current.EndTime as fill until because it's the next piece of data we have for this subscription
+            var fillUntil = current.EndTime;
 
             //Data ended before the market closed: premature ending flag - continue filling forward until market close.
-            if (manager.EndOfStream && manager.IsMarketOpen(current.Time))
+            if (manager.EndOfStream && manager.IsMarketOpen(current.EndTime))
             {
-                //Make sure we only fill forward to end of *today* -- don't fill forward tomorrow just because its also open.
-                var processingDate = FillForwardFrontiers[i].Date;
-
-                //Premature end of stream: fill manually until market closed.
-                for (var date = FillForwardFrontiers[i] + increment; (manager.IsMarketOpen(date) && date.Date == processingDate); date = date + increment)
-                {
-                    var cache = new List<BaseData>(1);
-                    var fillforward = current.Clone(true);
-                    fillforward.Time = date;
-                    FillForwardFrontiers[i] = date;
-                    cache.Add(fillforward);
-                    Bridge[i].Enqueue(cache);
-                }
-                return;
+                //Make sure we only fill forward to end of *today* -- don't fill forward tomorrow just because its also open
+                fillUntil = FillForwardFrontiers[i].Date.AddDays(1);
+                // since we ran out of data, use the current as the clone source, it's more recent than previous
+                whatToFill = current;
             }
 
-            //Once per increment, add a new cache to the Bridge: 
-            //If the current.Time is before market close, (e.g. suspended trading at 2pm) the date is always greater than currentTime and fillforward never runs.
-            //In this circumstance we need to keep looping till market/extended hours close even if no data. 
-            for (var date = FillForwardFrontiers[i] + increment; (date < current.Time); date = date + increment)
+            // loop from our last time (previous.EndTime) to our current.EndTime, filling in all missing day during
+            // request market hours
+            for (var endTime = FillForwardFrontiers[i] + increment; (endTime < fillUntil); endTime = endTime + increment)
             {
-                //If we don't want aftermarket data, rewind it backwards until the market closes.
-                if (!Subscriptions[i].ExtendedMarketHours)
+                if (Subscriptions[i].ExtendedMarketHours)
                 {
-                    if (!manager.IsMarketOpen(date))
+                    if (!manager.IsExtendedMarketOpen(endTime.Subtract(increment)))
                     {
-                        // Move fill forward so we don't waste time in this tight loop.
-                        //Question is where to shuffle the date? 
-                        // --> If BEFORE market open, shuffle forward.
-                        // --> If AFTER market close, and current.Time after market close, quit loop.
-                        date = current.Time;
-                        do
-                        {
-                            date = date - increment;
-                        } while (manager.IsMarketOpen(date));
+                        //If we've asked for extended hours, and the security is no longer inside extended market hours, skip:
                         continue;
                     }
                 }
                 else
                 {
-                    //If we've asked for extended hours, and the security is no longer inside extended market hours, skip:
-                    if (!manager.IsExtendedMarketOpen(date))
+                    // if the market isn't open skip to the current.EndTime and rewind until the market is open
+                    // this is the case where the previous value is from yesterday but we're trying to fill forward
+                    // the next day, so instead of zooming through 18 hours of off-market hours, skip to our current data
+                    // point and rewind the market open.
+                    //
+                    // E.g, Current.EndTime = 9:40am and Previous.EndTime = 2:00pm, so fill in from 2->4pm
+                    // and then skip to 9:40am, reverse to 9:30am and fill from 9:30->9:40
+                    if (!manager.IsMarketOpen(endTime.Subtract(increment)) && Subscriptions[i].Resolution != Resolution.Daily)
                     {
+                        // Move fill forward so we don't waste time in this tight loop.
+                        endTime = fillUntil;
+                        do
+                        {
+                            endTime = endTime - increment;
+                        }
+                        // is market open assumes start time of bars, open at 9:30 closed at 4:00
+                        // so decrement our date to use the start time
+                        while (manager.IsMarketOpen(endTime.Subtract(increment)));
                         continue;
                     }
                 }
 
-                var cache = new List<BaseData>(1);
-                var fillforward = previous.Clone(true);
-                fillforward.Time = date;
-                FillForwardFrontiers[i] = date;
-                cache.Add(fillforward);
-                Bridge[i].Enqueue(cache);
+                // add any overlap condition here
+                if (Subscriptions[i].Resolution == Resolution.Daily)
+                {
+                    // handle fill forward on lower resolutions
+                    var barStartTime = endTime - increment;
+                    if (manager.Exchange.IsOpenDuringBar(barStartTime, endTime, Subscriptions[i].ExtendedMarketHours))
+                    {
+                        EnqueueFillForwardData(i, previous, endTime);
+                    }
+                    // special case catch missing days
+                    else if (endTime.TimeOfDay.Ticks == 0 && manager.Exchange.DateIsOpen(endTime.Date.AddDays(-1)))
+                    {
+                        EnqueueFillForwardData(i, previous, endTime);
+                    }
+                    continue;
+                }
+
+                EnqueueFillForwardData(i, whatToFill, endTime);
             }
+        }
+
+
+        private void EnqueueFillForwardData(int i, BaseData previous, DateTime dataEndTime)
+        {
+            var cache = new List<BaseData>(1);
+            var fillforward = previous.Clone(true);
+            fillforward.Time = dataEndTime.Subtract(Subscriptions[i].Increment);
+            fillforward.EndTime = dataEndTime;
+            FillForwardFrontiers[i] = dataEndTime;
+            cache.Add(fillforward);
+            Bridge[i].Enqueue(cache);
         }
 
 

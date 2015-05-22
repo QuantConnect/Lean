@@ -186,7 +186,7 @@ namespace QuantConnect.Algorithm
             // then convert it into a market on open order
             if (!security.Exchange.ExchangeOpen)
             {
-                var id = MarketOnOpen(symbol, quantity, tag);
+                var id = MarketOnOpenOrder(symbol, quantity, tag);
                 Debug("Converted OrderID: " + id + " into a MarketOnOpen order.");
                 return id;
             }
@@ -206,8 +206,7 @@ namespace QuantConnect.Algorithm
             //Add the order and create a new order Id.
             var orderId = Transactions.AddOrder(order);
 
-            //Wait for the order event to process:
-            //Enqueue means send to order queue but don't wait for response:
+            //Wait for the order event to process, only if the exchange is open
             if (!asynchronous)
             {
                 //Wait for the market order to fill.
@@ -231,7 +230,7 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">The number of shares to required</param>
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <returns>The order ID</returns>
-        public int MarketOnOpen(string symbol, int quantity, string tag = "")
+        public int MarketOnOpenOrder(string symbol, int quantity, string tag = "")
         {
             var error = PreOrderChecks(symbol, quantity, OrderType.MarketOnOpen);
             if (error < 0)
@@ -252,7 +251,7 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">The number of shares to required</param>
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <returns>The order ID</returns>
-        public int MarketOnClose(string symbol, int quantity, string tag = "")
+        public int MarketOnCloseOrder(string symbol, int quantity, string tag = "")
         {
             var error = PreOrderChecks(symbol, quantity, OrderType.MarketOnClose);
             if (error < 0)
@@ -361,10 +360,11 @@ namespace QuantConnect.Algorithm
             var security = Securities[symbol];
             var price = security.Price;
 
-            //Check the exchange is open before sending a market orders.
-            if ((type == OrderType.Market || type == OrderType.MarketOnClose) && !security.Exchange.ExchangeOpen)
+            //Check the exchange is open before sending a market on close orders
+            //Allow market orders, they'll just execute when the exchange reopens
+            if (type == OrderType.MarketOnClose && !security.Exchange.ExchangeOpen)
             {
-                Error(type + " order and exchange not open");
+                Error(type + " order and exchange not open.");
                 return -3;
             }
 

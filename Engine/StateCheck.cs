@@ -65,7 +65,7 @@ namespace QuantConnect.Lean.Engine
                             //Set which chart the user is look at, so we can reduce excess messaging (e.g. trading 100 symbols, only send 1).
                             Engine.ResultHandler.SetChartSubscription(state.ChartSubscription);
                         }
-                        catch (ThreadAbortException err)
+                        catch (ThreadAbortException)
                         {
                             return;
                         }

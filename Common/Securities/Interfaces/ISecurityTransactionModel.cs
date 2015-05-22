@@ -60,18 +60,18 @@ namespace QuantConnect.Securities.Interfaces
         /// <summary>
         /// Market on Open Fill Model. Return an order event with the fill details
         /// </summary>
-        /// <param name="security">Asset we're trading with this order</param>
+        /// <param name="asset">Asset we're trading with this order</param>
         /// <param name="order">Order to be filled</param>
         /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        OrderEvent MarketOnOpenFill(Security security, MarketOnOpenOrder order);
+        OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order);
 
         /// <summary>
         /// Market on Close Fill Model. Return an order event with the fill details
         /// </summary>
-        /// <param name="security">Asset we're trading with this order</param>
+        /// <param name="asset">Asset we're trading with this order</param>
         /// <param name="order">Order to be filled</param>
         /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        OrderEvent MarketOnCloseFill(Security security, MarketOnCloseOrder order);
+        OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order);
 
         /// <summary>
         /// Slippage Model. Return a decimal cash slippage approximation on the order.

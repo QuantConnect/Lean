@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 
@@ -24,7 +25,7 @@ namespace QuantConnect
     /// <summary>
     /// Time helper class collection for working with trading dates
     /// </summary>
-    public class Time 
+    public static class Time 
     {
         /// <summary>
         /// Live charting is sensitive to timezone so need to convert the local system time to a UTC and display in browser as UTC.
@@ -243,7 +244,5 @@ namespace QuantConnect
             }
             return count;
         }
-
-
-    } // End Time Class
-} // End QC Namespace
+    }
+}

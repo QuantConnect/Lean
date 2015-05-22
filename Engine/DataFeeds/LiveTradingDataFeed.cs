@@ -220,7 +220,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 //Pause bridge queing operations:
                 resumeRun.Reset();
 
-                var onMinute = (triggerTime.Second == 0);
+                // determine if we're on even time boundaries for data emit
+                var onMinute = triggerTime.Second == 0;
+                var onHour = onMinute && triggerTime.Minute == 0;
+                var onDay = onHour && triggerTime.Hour == 0;
 
                 // Determine if this subscription needs to be archived:
                 for (var i = 0; i < Subscriptions.Count; i++)
@@ -233,21 +236,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         sourceDate = triggerTime.Date;
                     }
 
+                    bool triggerArchive = false;
                     switch (_subscriptions[i].Resolution)
-                    { 
-                        //This is a second resolution data source:
+                    {
                         case Resolution.Second:
-                            //Enqueue our live data:
-                            _streamStore[i].TriggerArchive(triggerTime, _subscriptions[i].FillDataForward);
+                            triggerArchive = true;
                             break;
-
-                        //This is a minute resolution data source:
                         case Resolution.Minute:
-                            if (onMinute)
-                            {
-                                _streamStore[i].TriggerArchive(triggerTime, _subscriptions[i].FillDataForward);
-                            }
+                            triggerArchive = onMinute;
                             break;
+                        case Resolution.Hour:
+                            triggerArchive = onHour;
+                            break;
+                        case Resolution.Daily:
+                            triggerArchive = onDay;
+                            break;
+                    }
+
+                    if (triggerArchive)
+                    {
+                        _streamStore[i].TriggerArchive(triggerTime, _subscriptions[i].FillDataForward);
                     }
                 }
                 //Resume bridge queing operations:

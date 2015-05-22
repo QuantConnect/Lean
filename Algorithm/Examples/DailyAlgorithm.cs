@@ -14,35 +14,39 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Data.Market;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm.Examples
 {
     /// <summary>
-    /// Basic template algorithm simply initializes the date range and cash
+    /// Uses daily data and a simple moving average cross to place trades and an ema for stop placement
     /// </summary>
-    public class MarketOnOpenOnCloseAlgorithm : QCAlgorithm
+    public class DailyAlgorithm : QCAlgorithm
     {
-        private bool submittedMarketOnCloseToday;
-        private Security security;
+        private DateTime lastAction;
+        private MovingAverageConvergenceDivergence macd;
+        private ExponentialMovingAverage ema;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
+            SetStartDate(1999, 01, 01);  //Set Start Date
+            SetEndDate(2015, 01, 01);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
+
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Second, fillDataForward: true, extendedMarketHours: true);
+            AddSecurity(SecurityType.Equity, "AAPL", Resolution.Hour);
+            AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
 
-            security = Securities["SPY"];
+            macd = MACD("SPY", 12, 26, 9, MovingAverageType.Wilders, Resolution.Daily, Field.Close);
+            ema = EMA("AAPL", 15*6, Resolution.Hour, Field.SevenBar);
+
+            Securities["AAPL"].SetLeverage(1.0m);
         }
-
-        private DateTime last = DateTime.MinValue;
 
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -50,23 +54,20 @@ namespace QuantConnect.Algorithm.Examples
         /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
-            if (Time.Date != last.Date) // each morning submit a market on open order
-            {
-                submittedMarketOnCloseToday = false;
-                MarketOnOpenOrder("SPY", 100);
-                last = Time;
-            }
-            if (!submittedMarketOnCloseToday && security.Exchange.ExchangeOpen) // once the exchange opens submit a market on close order
-            {
-                submittedMarketOnCloseToday = true;
-                MarketOnCloseOrder("SPY", -100);
-            }
-        }
+            if (!macd.IsReady) return;
+            if (!data.ContainsKey("AAPL")) return;
+            if (lastAction.Date == Time.Date) return;
+            lastAction = Time;
 
-        public override void OnOrderEvent(OrderEvent fill)
-        {
-            var order = Orders[fill.OrderId];
-            Console.WriteLine(Time + " - " + order.Type + " - " + fill.Status + ":: " + fill);
+            var holding = Portfolio["SPY"];
+            if (holding.Quantity <= 0 && macd > macd.Signal && data["AAPL"].Price > ema)
+            {
+                SetHoldings("AAPL", 0.25m);
+            }
+            else if (holding.Quantity >= 0 && macd < macd.Signal && data["AAPL"].Price < ema)
+            {
+                SetHoldings("AAPL", -0.25m);
+            }
         }
     }
 }

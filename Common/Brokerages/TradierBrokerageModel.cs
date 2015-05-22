@@ -26,6 +26,8 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class TradierBrokerageModel : IBrokerageModel
     {
+        private static readonly EquityExchange EquityExchange = new EquityExchange();
+
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.
@@ -76,7 +78,7 @@ namespace QuantConnect.Brokerages
         {
             // tradier doesn't support after hours trading
             var timeOfDay = security.Time.TimeOfDay;
-            if (timeOfDay < EquityExchange.EquityMarketOpen || timeOfDay > EquityExchange.EquityMarketClose)
+            if (timeOfDay < EquityExchange.MarketOpen || timeOfDay > EquityExchange.MarketClose)
             {
                 return false;
             }
