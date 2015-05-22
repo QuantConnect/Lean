@@ -132,5 +132,36 @@ namespace QuantConnect.Tests.Common
                 Assert.AreEqual(pair.Item1.y, pair.Item2.y);
             }
         }
+
+        [Test]
+        public void DoesNotSampleScatterPlots()
+        {
+            var scatter = new Series("scatter", SeriesType.Scatter);
+            scatter.AddPoint(DateTime.Today, 1m);
+            scatter.AddPoint(DateTime.Today, 3m);
+            scatter.AddPoint(DateTime.Today.AddSeconds(1), 1.5m);
+            scatter.AddPoint(DateTime.Today.AddSeconds(0.5), 1.5m);
+
+            var sampler = new SeriesSampler(TimeSpan.FromMilliseconds(1));
+            var sampled = sampler.Sample(scatter, DateTime.Today, DateTime.Today.AddDays(1));
+            foreach (var pair in scatter.Values.Zip(sampled.Values, Tuple.Create))
+            {
+                Assert.AreEqual(pair.Item1.x, pair.Item2.x);
+                Assert.AreEqual(pair.Item1.y, pair.Item2.y);
+            }
+        }
+
+        [Test]
+        public void EmitsEmptySeriesWithSinglePointOutsideOfStartStop()
+        {
+            var series = new Series { Name = "name" };
+            var reference = DateTime.Now;
+            series.AddPoint(reference.AddSeconds(-1), 1m);
+
+            var sampler = new SeriesSampler(TimeSpan.FromDays(1));
+
+            var sampled = sampler.Sample(series, reference, reference);
+            Assert.AreEqual(0, sampled.Values.Count);
+        }
     }
 }
