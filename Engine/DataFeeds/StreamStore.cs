@@ -20,6 +20,7 @@ using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -33,21 +34,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </remarks>
     public class StreamStore
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
         //Internal lock object
         private BaseData _data;
         private BaseData _previousData;
         private readonly Type _type;
         private readonly SubscriptionDataConfig _config;
+        private readonly Security _security;
         private readonly TimeSpan _increment;
         private readonly object _lock = new object();
         private readonly ConcurrentQueue<BaseData> _queue;
 
-        /******************************************************** 
-        * CLASS PUBLIC PROPERTIES:
-        *********************************************************/
         /// <summary>
         /// Public access to the data object we're dynamically generating.
         /// </summary>
@@ -92,31 +88,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Create a new self updating, thread safe data updater.
         /// </summary>
         /// <param name="config">Configuration for subscription</param>
-        public StreamStore(SubscriptionDataConfig config)
+        /// <param name="security">Security for the subscription</param>
+        public StreamStore(SubscriptionDataConfig config, Security security)
         {
             _type = config.Type;
             _data = null;
             _config = config;
+            _security = security;
             _increment = config.Increment;
             _queue = new ConcurrentQueue<BaseData>();
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// For custom data streams just manually set the data, it doesn't need to be compiled over time into a bar.
         /// </summary>
         /// <param name="data">New data</param>
         public void Update(BaseData data)
         {
+            // if we're not within the configured market hours don't process the data
+            if (!ExchangeIsOpen(data.Time))
+            {
+                return;
+            }
+
             //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
             while (_data != null && _data.Time < ComputeBarStartTime(data))
             { Thread.Sleep(1); } 
@@ -131,6 +129,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <remarks>We build bars from the trade data, or if its a tick stream just pass the trade through as a tick.</remarks>
         public void Update(Tick tick)
         {
+            // if we're not within the configured market hours don't process the data
+            if (!ExchangeIsOpen(tick.Time))
+            {
+                return;
+            }
+
             //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
             var barStartTime = ComputeBarStartTime(tick);
             while (_data != null && _data.Time < barStartTime)
@@ -157,9 +161,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         _queue.Enqueue(tick);
                         break;
                 }
-            } // End of Lock
-        } // End of Update
-
+            }
+        }
 
         /// <summary>
         /// A time period has lapsed, trigger a save/queue of the current value of data.
@@ -187,6 +190,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                     else if (fillForward && _data == null && _previousData != null)
                     {
+                        // the time is actually the end time of a bar, check to see if the start time
+                        // is within market hours, which is really just checking the _previousData's EndTime
+                        if (!ExchangeIsOpen(_previousData.EndTime))
+                        {
+                            Log.Debug("StreamStore.TriggerArchive(): Exchange is closed: " + Symbol);
+                            return;
+                        }
+
                         //There was no other data in this timer period, and this is a fillforward subscription:
                         Log.Debug("StreamStore.TriggerArchive(): Fillforward, Previous Enqueued: S:" + _previousData.Symbol + " V:" + _previousData.Value);
                         var cloneForward = _previousData.Clone(true);
@@ -214,5 +225,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return DateTime.Now.RoundDown(_increment);
         }
 
-    } // End of Class
-} // End of Namespace
+        /// <summary>
+        /// Returns true if this data should be forwarded to the bridges and algorithm
+        /// </summary>
+        private bool ExchangeIsOpen(DateTime time)
+        {
+            return _security.Exchange.DateTimeIsOpen(time) || (_security.IsExtendedMarketHours && _security.Exchange.DateTimeIsExtendedOpen(time));
+        }
+    }
+}
