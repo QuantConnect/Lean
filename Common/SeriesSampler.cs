@@ -44,16 +44,24 @@ namespace QuantConnect
         {
             var sampled = new Series(series.Name, series.SeriesType);
 
-            if (series.Values.Count < 2)
-            {
-                // return new instance, but keep the same data
-                sampled.Values.AddRange(series.Values);
-                return sampled;
-            }
-
             // chart point times are always in universal, so force it here as well
             double nextSample = Time.DateTimeToUnixTimeStamp(start.ToUniversalTime());
             double unixStopDate = Time.DateTimeToUnixTimeStamp(stop.ToUniversalTime());
+
+            // we can't sample a single point and it doesn't make sense to sample scatter plots
+            // in this case just copy the raw data
+            if (series.Values.Count < 2 || series.SeriesType == SeriesType.Scatter)
+            {
+                // we can minimally verify we're within the start/stop interval
+                foreach (var point in series.Values)
+                {
+                    if (point.x > nextSample && point.x < unixStopDate)
+                    {
+                        sampled.Values.Add(point);
+                    }
+                }
+                return sampled;
+            }
 
             var enumerator = series.Values.GetEnumerator();
 
