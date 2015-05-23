@@ -21,13 +21,23 @@ namespace QuantConnect.Securities.Equity
     /// Equity exchange information 
     /// </summary>
     /// <seealso cref="SecurityExchange"/>
-    public class EquityExchange : SecurityExchange 
+    public class EquityExchange : SecurityExchange
     {
+        /// <summary>
+        /// The equity market open time
+        /// </summary>
+        public static readonly TimeSpan EquityMarketOpen = new TimeSpan(9, 30, 0);
+
+        /// <summary>
+        /// The equity market close time
+        /// </summary>
+        public static readonly TimeSpan EquityMarketClose = new TimeSpan(12 + 4, 0, 0);
+
         /******************************************************** 
         * CLASS VARIABLES
         *********************************************************/
-        private TimeSpan _marketOpen = TimeSpan.FromHours(9.5);
-        private TimeSpan _marketClose = TimeSpan.FromHours(16);
+        private TimeSpan _marketOpen = EquityMarketOpen;
+        private TimeSpan _marketClose = EquityMarketClose;
 
         /******************************************************** 
         * CLASS CONSTRUCTION
@@ -94,8 +104,8 @@ namespace QuantConnect.Securities.Equity
         public override bool DateTimeIsOpen(DateTime dateToCheck)
         {
             //Market not open yet:
-            if (dateToCheck.TimeOfDay.TotalHours < 9.5 || 
-                dateToCheck.TimeOfDay.TotalHours >= 16 || 
+            if (dateToCheck.TimeOfDay < MarketOpen || 
+                dateToCheck.TimeOfDay >= MarketClose || 
                 dateToCheck.DayOfWeek == DayOfWeek.Saturday || 
                 dateToCheck.DayOfWeek == DayOfWeek.Sunday)
             {
@@ -114,7 +124,7 @@ namespace QuantConnect.Securities.Equity
         public override DateTime TimeOfDayOpen(DateTime time)
         {
             //Set open time to 9:30am for US equities.
-            return time.Date.AddHours(9.5);
+            return time.Date.Add(MarketOpen);
         }
 
 
@@ -126,7 +136,7 @@ namespace QuantConnect.Securities.Equity
         public override DateTime TimeOfDayClosed(DateTime time)
         {
             //Set close time to 4pm for US equities.
-            return time.Date.AddHours(16);
+            return time.Date.Add(MarketClose);
         }
 
 

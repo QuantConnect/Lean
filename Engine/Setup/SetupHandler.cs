@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -11,27 +11,33 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using QuantConnect.Brokerages.Backtesting;
+using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 
-namespace QuantConnect.Brokerages.Paper
+namespace QuantConnect.Lean.Engine.Setup
 {
     /// <summary>
-    /// Paper Trading Brokerage
+    /// Provides helper methods for setup handlers
     /// </summary>
-    public class PaperBrokerage : BacktestingBrokerage
+    public static class SetupHandler
     {
         /// <summary>
-        /// Creates a new PaperBrokerage
+        /// Sets the transaction models in the algorithm based on the selected brokerage properties
         /// </summary>
-        /// <param name="algorithm">The algorithm under analysis</param>
-        /// <param name="model">The brokerage properties used to emulate a specific brokerage</param>
-        public PaperBrokerage(IAlgorithm algorithm, IBrokerageModel model) 
-            : base(algorithm, "Paper Brokerage", model)
+        public static void UpdateTransactionModels(IAlgorithm algorithm, IBrokerageModel model)
         {
+            if (model.GetType() == typeof (DefaultBrokerageModel))
+            {
+                // if we're using the default don't do anything
+                return;
+            }
+
+            foreach (var security in algorithm.Securities.Values)
+            {
+                security.TransactionModel = model.GetTransactionModel(security.Symbol, security.Type);
+            }
         }
     }
 }

@@ -229,17 +229,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Determines whether or not this brokerage can process the specified order.
-        /// </summary>
-        /// <param name="order">The order to check</param>
-        /// <returns>True if this brokerage implementation can process the specified order, false otherwise</returns>
-        public override bool CanProcessOrder(Order order)
-        {
-            // we can't process custom data
-            return order.SecurityType != SecurityType.Base;
-        }
-
-        /// <summary>
         /// Gets all open orders on the account
         /// </summary>
         /// <returns>The open orders returned from IB</returns>

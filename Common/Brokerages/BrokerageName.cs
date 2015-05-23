@@ -1,37 +1,38 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using QuantConnect.Brokerages.Backtesting;
-using QuantConnect.Interfaces;
-
-namespace QuantConnect.Brokerages.Paper
+namespace QuantConnect.Brokerages
 {
     /// <summary>
-    /// Paper Trading Brokerage
+    /// Specifices what transaction model and submit/execution rules to use
     /// </summary>
-    public class PaperBrokerage : BacktestingBrokerage
+    public enum BrokerageName
     {
         /// <summary>
-        /// Creates a new PaperBrokerage
+        /// Transaction and submit/execution rules will be the default as initialized
         /// </summary>
-        /// <param name="algorithm">The algorithm under analysis</param>
-        /// <param name="model">The brokerage properties used to emulate a specific brokerage</param>
-        public PaperBrokerage(IAlgorithm algorithm, IBrokerageModel model) 
-            : base(algorithm, "Paper Brokerage", model)
-        {
-        }
+        Default,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use interactive brokers models
+        /// </summary>
+        InteractiveBrokers,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use tradier models
+        /// </summary>
+        Tradier
     }
 }

@@ -1058,21 +1058,6 @@ namespace QuantConnect.Brokerages.Tradier
         }
 
         /// <summary>
-        /// Determines whether or not this brokerage can process the specified order.
-        /// </summary>
-        /// <param name="order">The order to check</param>
-        /// <returns>True if this brokerage implementation can process the specified order, false otherwise</returns>
-        public override bool CanProcessOrder(Order order)
-        {
-            // we want to send users a message letting them know that the order won't hit the exchange until market open
-            if (!Exchange.DateTimeIsOpen(DateTime.Now))
-            {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "ExtendedMarket", "Tradier does not support extended market hours trading.  Your order will be processed at market open."));
-            }
-            return order.SecurityType == SecurityType.Equity;
-        }
-
-        /// <summary>
         /// Connects the client to the broker's remote servers
         /// </summary>
         public override void Connect()

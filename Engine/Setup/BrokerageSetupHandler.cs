@@ -191,6 +191,9 @@ namespace QuantConnect.Lean.Engine.Setup
                 // initialize the correct brokerage using the resolved factory
                 brokerage = _factory.CreateBrokerage(liveJob, algorithm);
 
+                // set the transaction models base on the brokerage properties
+                SetupHandler.UpdateTransactionModels(algorithm, algorithm.BrokerageModel);
+
                 try
                 {
                     // this can fail for various reasons, such as already being logged in somewhere else

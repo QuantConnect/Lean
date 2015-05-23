@@ -52,7 +52,8 @@ namespace QuantConnect.Brokerages.Backtesting
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="name">The name of the brokerage</param>
-        protected BacktestingBrokerage(IAlgorithm algorithm, string name)
+        /// <param name="model">The brokerage properties of the brokerage we're trying to emulate</param>
+        protected BacktestingBrokerage(IAlgorithm algorithm, string name, IBrokerageModel model)
             : base(name)
         {
             _algorithm = algorithm;
@@ -169,14 +170,6 @@ namespace QuantConnect.Brokerages.Backtesting
         }
 
         /// <summary>
-        /// In backtesting we can process all orders, so this implementation always returns true.
-        /// </summary>
-        public override bool CanProcessOrder(Order order)
-        {
-            return true;
-        }
-
-        /// <summary>
         /// Scans all the outstanding orders and applies the algorithm model fills to generate the order events
         /// </summary>
         public void Scan()
@@ -204,6 +197,12 @@ namespace QuantConnect.Brokerages.Backtesting
             foreach (var kvp in orders)
             {
                 var order = kvp.Value;
+
+                // check if we would actually be able to fill this
+                if (!_algorithm.BrokerageModel.CanExecuteOrder(_algorithm.Time, order))
+                {
+                    continue;
+                }
                 
                 // verify sure we have enough cash to perform the fill
                 var sufficientBuyingPower = _algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order);

@@ -97,13 +97,6 @@ namespace QuantConnect.Interfaces
         bool CancelOrder(Order order);
 
         /// <summary>
-        /// Determines whether or not this brokerage can process the specified order.
-        /// </summary>
-        /// <param name="order">The order to check</param>
-        /// <returns>True if this brokerage implementation can process the specified order, false otherwise</returns>
-        bool CanProcessOrder(Order order);
-
-        /// <summary>
         /// Connects the client to the broker's remote servers
         /// </summary>
         void Connect();

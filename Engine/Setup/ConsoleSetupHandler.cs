@@ -113,7 +113,6 @@ namespace QuantConnect.Lean.Engine.Setup
         public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob)
         {
             var initializeComplete = false;
-            brokerage = new BacktestingBrokerage(algorithm);
 
             try
             {
@@ -170,6 +169,12 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 initializeComplete = true;
             }
+
+            // we need to do this after algorithm initialization
+            brokerage = new BacktestingBrokerage(algorithm);
+
+            // set the transaction models base on the requested brokerage properties
+            SetupHandler.UpdateTransactionModels(algorithm, algorithm.BrokerageModel);
 
             return initializeComplete;
         }

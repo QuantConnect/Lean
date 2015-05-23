@@ -273,8 +273,9 @@ namespace QuantConnect.Securities
                         {
                             //Set order fill:
                             order.Status = OrderStatus.Filled;
-                            // Set order fill price to limit price: 99% of times limit orders fill at their limit price
-                            order.Price = order.LimitPrice; 
+                            // fill at the worse price this bar or the limit price, this allows far out of the money limits
+                            // to be executed properly
+                            order.Price = Math.Min(maximumPrice, order.LimitPrice); 
                         }
                         break;
                     case OrderDirection.Sell:
@@ -282,8 +283,9 @@ namespace QuantConnect.Securities
                         if (maximumPrice > order.LimitPrice)
                         {
                             order.Status = OrderStatus.Filled;
-                            // Set order fill price to limit price: 99% of times limit orders fill at their limit price
-                            order.Price = order.LimitPrice;
+                            // fill at the worse price this bar or the limit price, this allows far out of the money limits
+                            // to be executed properly
+                            order.Price = Math.Max(minimumPrice, order.LimitPrice);
                         }
                         break;
                 }

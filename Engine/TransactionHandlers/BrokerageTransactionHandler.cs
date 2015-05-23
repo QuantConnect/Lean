@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -305,11 +306,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
 
                 // verify that our current brokerage can actually take the order
-                if (!_brokerage.CanProcessOrder(order))
+                BrokerageMessageEvent message;
+                if (!_algorithm.BrokerageModel.CanSubmitOrder(_algorithm.Time, order, out message))
                 {
                     // if we couldn't actually process the order, mark it as invalid and bail
                     order.Status = OrderStatus.Invalid;
-                    _algorithm.Error(string.Format("Order Error: id: {0}, Brokerage {1} is unable to process order for {2} - {3}.", order.Id, _brokerage.Name, order.SecurityType, order.Symbol));
+                    if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrder", "BrokerageModel declared unable to submit order: " + order.Id);
+                    _algorithm.Error("OrderID: " + message);
                     return;
                 }
 
@@ -321,6 +324,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else
                 {
                     order.Status = OrderStatus.Invalid;
+                    _algorithm.Error("Brokerage failed to place order: " + order.Id);
                 }
             }
             else

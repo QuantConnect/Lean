@@ -146,6 +146,7 @@
     <Compile Include="RealTime\BacktestingRealTimeHandler.cs" />
     <Compile Include="RealTime\IRealTimeHandler.cs" />
     <Compile Include="Setup\BrokerageSetupHandler.cs" />
+    <Compile Include="Setup\SetupHandler.cs" />
     <Compile Include="StateCheck.cs" />
     <Compile Include="Setup\ConsoleSetupHandler.cs" />
     <Compile Include="Setup\BacktestingSetupHandler.cs" />

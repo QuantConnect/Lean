@@ -153,8 +153,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
             Log.Trace(string.Format("BacktestingSetupHandler.Setup(): Setting up job: Plan: {0}, UID: {1}, PID: {2}, Version: {3}, Source: {4}", job.UserPlan, job.UserId, job.ProjectId, job.Version, job.RequestSource));
 
-            // Must be set since its defined as an out parameters
-            brokerage = new BacktestingBrokerage(algorithm);
+            brokerage = null;
 
             if (algorithm == null)
             {
@@ -193,6 +192,11 @@ namespace QuantConnect.Lean.Engine.Setup
 
             //Before continuing, detect if this is ready:
             if (!initializeComplete) return false;
+
+            // this needs to be done after algorithm initialization
+            brokerage = new BacktestingBrokerage(algorithm);
+
+            SetupHandler.UpdateTransactionModels(algorithm, algorithm.BrokerageModel);
 
             //Calculate the max runtime for the strategy
             _maxRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager.Count);

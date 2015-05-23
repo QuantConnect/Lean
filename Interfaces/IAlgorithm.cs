@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Notifications;
 using QuantConnect.Orders;
@@ -73,6 +74,11 @@ namespace QuantConnect.Interfaces
             get;
             set;
         }
+
+        /// <summary>
+        /// Gets the brokerage model
+        /// </summary>
+        IBrokerageModel BrokerageModel { get; }
 
         /// <summary>
         /// Notification manager for storing and processing live event messages
@@ -279,7 +285,7 @@ namespace QuantConnect.Interfaces
         /// New order event handler: on order status changes (filled, partially filled, cancelled etc).
         /// </summary>
         /// <param name="newEvent">Event information</param>
-        void OnOrderEvent(OrderEvent newEvent);
+        void OnOrderFilled(OrderEvent newEvent);
 
         /// <summary>
         /// Set the DateTime Frontier: This is the master time and is

@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
@@ -60,7 +61,7 @@ namespace QuantConnect.Brokerages.Paper
                 algorithm.SetCash(consistentCash);
             }
 
-            return new PaperBrokerage(algorithm);
+            return new PaperBrokerage(algorithm, algorithm.BrokerageModel);
         }
 
         /// <summary>

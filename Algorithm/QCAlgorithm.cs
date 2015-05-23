@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -76,6 +77,7 @@ namespace QuantConnect.Algorithm
             Securities = new SecurityManager();
             Transactions = new SecurityTransactionManager(Securities);
             Portfolio = new SecurityPortfolioManager(Securities, Transactions);
+            BrokerageModel = new DefaultBrokerageModel();
             Notify = new NotificationManager(false); // Notification manager defaults to disabled.
 
             //Initialise Algorithm RunMode to Series - Parallel Mode deprecated:
@@ -124,6 +126,15 @@ namespace QuantConnect.Algorithm
             set; 
         }
 
+
+        /// <summary>
+        /// Gets the brokerage model - used to model interactions with specific brokerages.
+        /// </summary>
+        public IBrokerageModel BrokerageModel
+        {
+            get; 
+            set;
+        }
 
         /// <summary>
         /// Notification Manager for Sending Live Runtime Notifications to users about important events.
@@ -429,6 +440,31 @@ namespace QuantConnect.Algorithm
         {
             if (mode != RunMode.Parallel) return;
             Debug("Algorithm.SetRunMode(): RunMode-Parallel Type has been deprecated. Series analysis selected instead");
+        }
+
+        /// <summary>
+        /// Sets the brokerage to emulate in backtesting or paper trading.
+        /// This can be used for brokerages that have been implemented in LEAN
+        /// </summary>
+        /// <param name="brokerage">The brokerage to emulate</param>
+        public void SetBrokerage(BrokerageName brokerage)
+        {
+            switch (brokerage)
+            {
+                case BrokerageName.Default:
+                    BrokerageModel = new DefaultBrokerageModel();
+                    break;
+                case BrokerageName.InteractiveBrokers:
+                    BrokerageModel = new InteractiveBrokersBrokerageModel();
+                    break;
+
+                case BrokerageName.Tradier:
+                    BrokerageModel = new TradierBrokerageModel();
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException("brokerage", brokerage, null);
+            }
         }
 
 
