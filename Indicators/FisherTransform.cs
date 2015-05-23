@@ -106,7 +106,7 @@ namespace QuantConnect.Indicators
                 // The calculation uses the Current.Value from the last time the function was called,
                 //  so an intermediate variable is introduced so that it can be used in the 
                 //  calculation before the result is assigned to the Current.Value after the calculation is made.
-                var fishx = Convert.ToDecimal(.5 * 2.0 * Math.Log((1.0 + (double)value1[0].Value) / (1.0 - (double)value1[0].Value))) + .5m * current.Value;
+                var fishx = Convert.ToDecimal(.5 * Math.Log((1.0 + (double)value1[0].Value) / (1.0 - (double)value1[0].Value)));
                 Current.Value = fishx;
             }
             return this.Current;
