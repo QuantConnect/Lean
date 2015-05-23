@@ -483,6 +483,37 @@ namespace QuantConnect.Algorithm
             RegisterIndicator(symbol, ft, resolution, selector);
             return ft;
         }
+        /// <summary>
+        /// Creates an Inverse Fisher transform indicator. 
+        /// </summary>
+        /// <param name="symbol">The symbol which is the target of the indicator</param>
+        /// <param name="period">The number of periods over which to get the minimum and maximum values</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value).</param>
+        /// <returns>The current value of the indicator for the requested symbol</returns>
+        public InverseFisherTransform IFT(string symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        {
+            string name = QuantConnect.Algorithm.QCAlgorithm.CreateIndicatorName(symbol, "IFT" + period, resolution);
+            var ift = new InverseFisherTransform(name, period);
+            RegisterIndicator(symbol, ift, resolution, selector);
+            return ift;
+        }
+        /// <summary>
+        /// Creates a Relative Vigor Index indicator. 
+        /// </summary>
+        /// <param name="symbol">The symbol which is the target of the indicator</param>
+        /// <param name="period">The number of periods over which to get the Close-Open and High-Low are summed</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value).</param>
+        /// <returns>The current value of the indicator for the requested symbol</returns>
+        public RelativeVigorIndex RVI(string symbol, int period, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            string name = QuantConnect.Algorithm.QCAlgorithm.CreateIndicatorName(symbol, "RVI" + period, resolution);
+            var rvi = new RelativeVigorIndex(name, period);
+            RegisterIndicator(symbol, rvi, resolution, selector);
+            return rvi;
+        }
+
 
         /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures

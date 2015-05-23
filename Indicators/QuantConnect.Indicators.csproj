@@ -47,11 +47,13 @@
   <ItemGroup>
     <Compile Include="AverageDirectionalIndex.cs" />
     <Compile Include="FisherTransform.cs" />
+    <Compile Include="InverseFisherTransform.cs" />
     <Compile Include="OnBalanceVolume.cs" />
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="LinearWeightedMovingAverage.cs" />
+    <Compile Include="RelativeVigorIndex.cs" />
     <Compile Include="WilliamsPercentR.cs" />
     <Compile Include="AroonOscillator.cs" />
     <Compile Include="AverageTrueRange.cs" />
