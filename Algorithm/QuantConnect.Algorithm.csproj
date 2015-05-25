@@ -78,6 +78,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Examples\BenchmarkAlgorithm.cs" />
+    <Compile Include="Examples\BrokerageModelAlgorithm.cs" />
     <Compile Include="Examples\BubbleAlgorithm.cs" />
     <Compile Include="Examples\DividendAlgorithm.cs" />
     <Compile Include="Examples\IndicatorSuiteAlgorithm.cs" />

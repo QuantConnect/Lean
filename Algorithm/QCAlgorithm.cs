@@ -447,18 +447,18 @@ namespace QuantConnect.Algorithm
         /// This can be used for brokerages that have been implemented in LEAN
         /// </summary>
         /// <param name="brokerage">The brokerage to emulate</param>
-        public void SetBrokerage(BrokerageName brokerage)
+        public void SetBrokerageModel(BrokerageName brokerage)
         {
             switch (brokerage)
             {
                 case BrokerageName.Default:
                     BrokerageModel = new DefaultBrokerageModel();
                     break;
-                case BrokerageName.InteractiveBrokers:
+                case BrokerageName.InteractiveBrokersBrokerage:
                     BrokerageModel = new InteractiveBrokersBrokerageModel();
                     break;
 
-                case BrokerageName.Tradier:
+                case BrokerageName.TradierBrokerage:
                     BrokerageModel = new TradierBrokerageModel();
                     break;
 

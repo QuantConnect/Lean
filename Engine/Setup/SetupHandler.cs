@@ -36,7 +36,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
             foreach (var security in algorithm.Securities.Values)
             {
-                security.TransactionModel = model.GetTransactionModel(security.Symbol, security.Type);
+                security.TransactionModel = model.GetTransactionModel(security);
             }
         }
     }

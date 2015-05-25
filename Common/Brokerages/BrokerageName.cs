@@ -28,11 +28,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use interactive brokers models
         /// </summary>
-        InteractiveBrokers,
+        InteractiveBrokersBrokerage,
 
         /// <summary>
         /// Transaction and submit/execution rules will use tradier models
         /// </summary>
-        Tradier
+        TradierBrokerage
     }
 }

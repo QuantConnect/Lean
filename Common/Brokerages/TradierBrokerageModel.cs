@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Runtime.Remoting.Messaging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
@@ -27,20 +26,18 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class TradierBrokerageModel : IBrokerageModel
     {
-        public ISecurityTransactionModel GetTransactionModel(string symbol, SecurityType securityType)
-        {
-            if (securityType == SecurityType.Equity)
-            {
-                // tradier does 1 dollar trades for QC!!
-                return new ConstantFeeTransactionModel(1m);
-            }
-
-            // since tradier only processes equities (and options but it's not supported), we'll just make
-            // everything return a zero fee model
-            return new ConstantFeeTransactionModel(0m);
-        }
-
-        public bool CanSubmitOrder(DateTime time, Order order, out BrokerageMessageEvent message)
+        /// <summary>
+        /// Returns true if the brokerage could accept this order. This takes into account
+        /// order type, security type, and order size limits.
+        /// </summary>
+        /// <remarks>
+        /// For example, a brokerage may have no connectivity at certain times, or an order rate/size limit
+        /// </remarks>
+        /// <param name="security"></param>
+        /// <param name="order">The order to be processed</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
+        /// <returns>True if the brokerage could process the order, false otherwise</returns>
+        public bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
             message = null;
 
@@ -54,7 +51,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (!CanExecuteOrder(order.Time, order))
+            if (!CanExecuteOrder(security, order))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ExtendedMarket",
                     "Tradier does not support extended market hours trading.  Your order will be processed at market open."
@@ -65,15 +62,44 @@ namespace QuantConnect.Brokerages
             return true;
         }
 
-        public bool CanExecuteOrder(DateTime time, Order order)
+        /// <summary>
+        /// Returns true if the brokerage would be able to execute this order at this time assuming
+        /// market prices are sufficient for the fill to take place. This is used to emulate the 
+        /// brokerage fills in backtesting and paper trading. For example some brokerages may not perform
+        /// executions during extended market hours. This is not intended to be checking whether or not
+        /// the exchange is open, that is handled in the Security.Exchange property.
+        /// </summary>
+        /// <param name="security">The security being ordered</param>
+        /// <param name="order">The order to test for execution</param>
+        /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
+        public bool CanExecuteOrder(Security security, Order order)
         {
             // tradier doesn't support after hours trading
-            var timeOfDay = time.TimeOfDay;
+            var timeOfDay = security.Time.TimeOfDay;
             if (timeOfDay < EquityExchange.EquityMarketOpen || timeOfDay > EquityExchange.EquityMarketClose)
             {
                 return false;
             }
             return true;
         }
+
+        /// <summary>
+        /// Gets a new transaction model the represents this brokerage's fee structure and fill behavior
+        /// </summary>
+        /// <param name="security">The security to get a transaction model for</param>
+        /// <returns>The transaction model for this brokerage</returns>
+        public ISecurityTransactionModel GetTransactionModel(Security security)
+        {
+            if (security.Type == SecurityType.Equity)
+            {
+                // tradier does 1 dollar trades for QC!!
+                return new ConstantFeeTransactionModel(1m);
+            }
+
+            // since tradier only processes equities (and options but it's not supported), we'll just make
+            // everything return a zero fee model
+            return new ConstantFeeTransactionModel(0m);
+        }
+
     }
 }

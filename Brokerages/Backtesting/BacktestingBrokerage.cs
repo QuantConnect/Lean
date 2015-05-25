@@ -52,8 +52,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="name">The name of the brokerage</param>
-        /// <param name="model">The brokerage properties of the brokerage we're trying to emulate</param>
-        protected BacktestingBrokerage(IAlgorithm algorithm, string name, IBrokerageModel model)
+        protected BacktestingBrokerage(IAlgorithm algorithm, string name)
             : base(name)
         {
             _algorithm = algorithm;
@@ -198,8 +197,10 @@ namespace QuantConnect.Brokerages.Backtesting
             {
                 var order = kvp.Value;
 
+                var security = _algorithm.Securities[order.Symbol];
+
                 // check if we would actually be able to fill this
-                if (!_algorithm.BrokerageModel.CanExecuteOrder(_algorithm.Time, order))
+                if (!_algorithm.BrokerageModel.CanExecuteOrder(security, order))
                 {
                     continue;
                 }
@@ -214,7 +215,6 @@ namespace QuantConnect.Brokerages.Backtesting
                 if (sufficientBuyingPower)
                 {
                     //Model:
-                    var security = _algorithm.Securities[order.Symbol];
                     var model = security.TransactionModel;
 
                     //Based on the order type: refresh its model to get fill price and quantity

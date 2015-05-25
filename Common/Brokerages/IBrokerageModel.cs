@@ -14,8 +14,8 @@
  *
 */
 
-using System;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Brokerages
@@ -27,16 +27,16 @@ namespace QuantConnect.Brokerages
     {
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
-        /// order type, security type, order size limits, and time of day.
+        /// order type, security type, and order size limits.
         /// </summary>
         /// <remarks>
         /// For example, a brokerage may have no connectivity at certain times, or an order rate/size limit
         /// </remarks>
-        /// <param name="time">The current time</param>
+        /// <param name="security">The security being ordered</param>
         /// <param name="order">The order to be processed</param>
-        /// <param name="message"></param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        bool CanSubmitOrder(DateTime time, Order order, out BrokerageMessageEvent message);
+        bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message);
 
         /// <summary>
         /// Returns true if the brokerage would be able to execute this order at this time assuming
@@ -45,17 +45,16 @@ namespace QuantConnect.Brokerages
         /// executions during extended market hours. This is not intended to be checking whether or not
         /// the exchange is open, that is handled in the Security.Exchange property.
         /// </summary>
-        /// <param name="time">The current time</param>
+        /// <param name="security">The security being ordered</param>
         /// <param name="order">The order to test for execution</param>
         /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
-        bool CanExecuteOrder(DateTime time, Order order);
+        bool CanExecuteOrder(Security security, Order order);
 
         /// <summary>
         /// Gets a new transaction model the represents this brokerage's fee structure and fill behavior
         /// </summary>
-        /// <param name="symbol">The symbol whose transaction model we seek</param>
-        /// <param name="securityType">The security type whose transaction model we seek</param>
+        /// <param name="security">The security to get a transaction model for</param>
         /// <returns>The transaction model for this brokerage</returns>
-        ISecurityTransactionModel GetTransactionModel(string symbol, SecurityType securityType);
+        ISecurityTransactionModel GetTransactionModel(Security security);
     }
 }

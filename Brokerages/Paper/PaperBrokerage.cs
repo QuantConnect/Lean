@@ -28,9 +28,8 @@ namespace QuantConnect.Brokerages.Paper
         /// Creates a new PaperBrokerage
         /// </summary>
         /// <param name="algorithm">The algorithm under analysis</param>
-        /// <param name="model">The brokerage properties used to emulate a specific brokerage</param>
-        public PaperBrokerage(IAlgorithm algorithm, IBrokerageModel model) 
-            : base(algorithm, "Paper Brokerage", model)
+        public PaperBrokerage(IAlgorithm algorithm) 
+            : base(algorithm, "Paper Brokerage")
         {
         }
     }

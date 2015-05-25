@@ -76,7 +76,7 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
-        /// Gets the brokerage model
+        /// Gets the brokerage model used to emulate a real brokerage
         /// </summary>
         IBrokerageModel BrokerageModel { get; }
 
@@ -285,7 +285,7 @@ namespace QuantConnect.Interfaces
         /// New order event handler: on order status changes (filled, partially filled, cancelled etc).
         /// </summary>
         /// <param name="newEvent">Event information</param>
-        void OnOrderFilled(OrderEvent newEvent);
+        void OnOrderEvent(OrderEvent newEvent);
 
         /// <summary>
         /// Set the DateTime Frontier: This is the master time and is

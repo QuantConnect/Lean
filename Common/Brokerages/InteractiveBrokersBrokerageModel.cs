@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Brokerages
@@ -25,7 +26,18 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class InteractiveBrokersBrokerageModel : DefaultBrokerageModel
     {
-        public override bool CanSubmitOrder(DateTime time, Order order, out BrokerageMessageEvent message)
+        /// <summary>
+        /// Returns true if the brokerage could accept this order. This takes into account
+        /// order type, security type, and order size limits.
+        /// </summary>
+        /// <remarks>
+        /// For example, a brokerage may have no connectivity at certain times, or an order rate/size limit
+        /// </remarks>
+        /// <param name="security">The security being ordered</param>
+        /// <param name="order">The order to be processed</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
+        /// <returns>True if the brokerage could process the order, false otherwise</returns>
+        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
             message = null;
 
@@ -49,11 +61,24 @@ namespace QuantConnect.Brokerages
             }
         }
 
-        public override bool CanExecuteOrder(DateTime time, Order order)
+        /// <summary>
+        /// Returns true if the brokerage would be able to execute this order at this time assuming
+        /// market prices are sufficient for the fill to take place. This is used to emulate the 
+        /// brokerage fills in backtesting and paper trading. For example some brokerages may not perform
+        /// executions during extended market hours. This is not intended to be checking whether or not
+        /// the exchange is open, that is handled in the Security.Exchange property.
+        /// </summary>
+        /// <param name="security"></param>
+        /// <param name="order">The order to test for execution</param>
+        /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
+        public override bool CanExecuteOrder(Security security, Order order)
         {
             return order.SecurityType != SecurityType.Base;
         }
 
+        /// <summary>
+        /// Returns true if the specified order is within IB's order size limits
+        /// </summary>
         private bool IsForexWithinOrderSizeLimits(Order order, out BrokerageMessageEvent message)
         {
             /* https://www.interactivebrokers.com/en/?f=%2Fen%2Ftrading%2FforexOrderSize.php
@@ -103,27 +128,26 @@ namespace QuantConnect.Brokerages
 
         private static readonly IReadOnlyDictionary<string, decimal> ForexCurrencyLimits = new Dictionary<string, decimal>()
         {
-            {"USD", 7000000},
-            {"USD", 7000000},
-            {"AUD", 6000000},
-            {"CAD", 6000000},
-            {"CHF", 6000000},
-            {"CNH", 40000000},
-            {"CZK", 0}, // need market price in USD or EUR -- do later when we support
-            {"DKK", 35000000},
-            {"EUR", 5000000},
-            {"GBP", 4000000},
-            {"HKD", 50000000},
-            {"HUF", 0}, // need market price in USD or EUR -- do later when we support
-            {"ILS", 0}, // need market price in USD or EUR -- do later when we support
-            {"KRW", 750000000},
-            {"JPY", 550000000},
-            {"MXN", 70000000},
-            {"NOK", 35000000},
-            {"NZD", 8000000},
-            {"RUB", 30000000},
-            {"SEK", 40000000},
-            {"SGD", 8000000}
+            {"USD", 7000000m},
+            {"AUD", 6000000m},
+            {"CAD", 6000000m},
+            {"CHF", 6000000m},
+            {"CNH", 40000000m},
+            {"CZK", 0m}, // need market price in USD or EUR -- do later when we support
+            {"DKK", 35000000m},
+            {"EUR", 5000000m},
+            {"GBP", 4000000m},
+            {"HKD", 50000000m},
+            {"HUF", 0m}, // need market price in USD or EUR -- do later when we support
+            {"ILS", 0m}, // need market price in USD or EUR -- do later when we support
+            {"KRW", 750000000m},
+            {"JPY", 550000000m},
+            {"MXN", 70000000m},
+            {"NOK", 35000000m},
+            {"NZD", 8000000m},
+            {"RUB", 30000000m},
+            {"SEK", 40000000m},
+            {"SGD", 8000000m}
         };
     }
 }
