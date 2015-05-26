@@ -40,8 +40,8 @@ namespace QuantConnect.Orders
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
         public LimitOrder()
+            : base (OrderType.Limit)
         {
-            Type = OrderType.Limit;
         }
 
         /// <summary>
@@ -57,7 +57,6 @@ namespace QuantConnect.Orders
             base(symbol, quantity, OrderType.Limit, time, 0, tag, type)
         {
             LimitPrice = limitPrice;
-            Type = OrderType.Limit;
 
             if (tag == "")
             {

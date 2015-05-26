@@ -64,7 +64,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Order Type
         /// </summary>
-        public OrderType Type;
+        public OrderType Type { get; private set; }
 
         /// <summary>
         /// Status of the Order
@@ -124,11 +124,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
-        protected Order()
+        protected Order(OrderType type)
         {
             Time = new DateTime();
             Price = 0;
-            Type = OrderType.Market;
+            Type = type;
             Quantity = 0;
             Symbol = "";
             Status = OrderStatus.None;

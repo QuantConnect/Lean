@@ -39,8 +39,8 @@ namespace QuantConnect.Orders
         /// Default constructor for JSON Deserialization:
         /// </summary>
         public StopMarketOrder()
+            : base(OrderType.StopMarket)
         {
-            Type = OrderType.StopMarket;
         }
 
         /// <summary>
@@ -56,7 +56,6 @@ namespace QuantConnect.Orders
             base(symbol, quantity, OrderType.StopMarket, time, 0, tag, type)
         {
             StopPrice = stopPrice;
-            Type = OrderType.StopMarket;
 
             if (tag == "")
             {
