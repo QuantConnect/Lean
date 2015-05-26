@@ -180,6 +180,17 @@ namespace QuantConnect.Algorithm
         /// <returns>int Order id</returns>
         public int MarketOrder(string symbol, int quantity, bool asynchronous = false, string tag = "")
         {
+            var security = Securities[symbol];
+
+            // check the exchange is open before sending a market order, if it's not open
+            // then convert it into a market on open order
+            if (!security.Exchange.ExchangeOpen)
+            {
+                var id = MarketOnOpen(symbol, quantity, tag);
+                Debug("Converted OrderID: " + id + " into a MarketOnOpen order.");
+                return id;
+            }
+
             //Initalize the Market order parameters:
             var error = PreOrderChecks(symbol, quantity, OrderType.Market);
             if (error < 0)
@@ -187,10 +198,10 @@ namespace QuantConnect.Algorithm
                 return error;
             }
 
-            var order = new MarketOrder(symbol, quantity, Time, tag, Securities[symbol].Type);
+            var order = new MarketOrder(symbol, quantity, Time, tag, security.Type);
 
             //Set the rough price of the order for buying power calculations
-            order.Price = Securities[symbol].Price;
+            order.Price = security.Price;
 
             //Add the order and create a new order Id.
             var orderId = Transactions.AddOrder(order);
@@ -211,6 +222,48 @@ namespace QuantConnect.Algorithm
             }
 
             return orderId;
+        }
+
+        /// <summary>
+        /// Market on open order implementation: Send a market order when the exchange opens
+        /// </summary>
+        /// <param name="symbol">The symbol to be ordered</param>
+        /// <param name="quantity">The number of shares to required</param>
+        /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
+        /// <returns>The order ID</returns>
+        public int MarketOnOpen(string symbol, int quantity, string tag = "")
+        {
+            var error = PreOrderChecks(symbol, quantity, OrderType.MarketOnOpen);
+            if (error < 0)
+            {
+                return error;
+            }
+
+            var security = Securities[symbol];
+            var order = new MarketOnOpenOrder(symbol, security.Type, quantity, Time, security.Price, tag);
+
+            return Transactions.AddOrder(order);
+        }
+
+        /// <summary>
+        /// Market on close order implementation: Send a market order when the exchange closes
+        /// </summary>
+        /// <param name="symbol">The symbol to be ordered</param>
+        /// <param name="quantity">The number of shares to required</param>
+        /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
+        /// <returns>The order ID</returns>
+        public int MarketOnClose(string symbol, int quantity, string tag = "")
+        {
+            var error = PreOrderChecks(symbol, quantity, OrderType.MarketOnClose);
+            if (error < 0)
+            {
+                return error;
+            }
+
+            var security = Securities[symbol];
+            var order = new MarketOnCloseOrder(symbol, security.Type, quantity, Time, security.Price, tag);
+
+            return Transactions.AddOrder(order);
         }
 
         /// <summary>
@@ -308,10 +361,10 @@ namespace QuantConnect.Algorithm
             var security = Securities[symbol];
             var price = security.Price;
 
-            //Check the exchange is open before sending a market order.
-            if (type == OrderType.Market && !security.Exchange.ExchangeOpen)
+            //Check the exchange is open before sending a market orders.
+            if ((type == OrderType.Market || type == OrderType.MarketOnClose) && !security.Exchange.ExchangeOpen)
             {
-                Error("Market order and exchange not open");
+                Error(type + " order and exchange not open");
                 return -3;
             }
 
@@ -336,6 +389,19 @@ namespace QuantConnect.Algorithm
                 return -5;
             }
 
+            if (type == OrderType.MarketOnClose)
+            {
+                // must be submitted with at least 10 minutes in trading day, add buffer allow order submission
+                var latestSubmissionTime = (Time.Date + security.Exchange.MarketClose).AddMinutes(-10.75);
+                if (Time > latestSubmissionTime)
+                {
+                    // tell the user we require an 11 minute buffer, on minute data in live a user will receive the 3:49->3:50 bar at 3:50,
+                    // this is already too late to submit one of these orders, so make the user do it at the 3:48->3:49 bar so it's submitted
+                    // to the brokerage before 3:50.
+                    Error("MarketOnClose orders must be placed with at least a 11 minute buffer before market close.");
+                    return -6;
+                }
+            }
             return 0;
         }
 

@@ -132,6 +132,8 @@
     <Compile Include="Data\Market\Splits.cs" />
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
+    <Compile Include="Orders\MarketOnCloseOrder.cs" />
+    <Compile Include="Orders\MarketOnOpenOrder.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />
     <Compile Include="Orders\StopMarketOrder.cs" />
     <Compile Include="Orders\LimitOrder.cs" />

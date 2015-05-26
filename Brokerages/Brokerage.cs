@@ -105,7 +105,7 @@ namespace QuantConnect.Brokerages
         {
             try
             {
-                Log.Trace("Brokerage.OnOrderEvent(): " + e);
+                Log.Debug("Brokerage.OnOrderEvent(): " + e);
 
                 var handler = OrderStatusChanged;
                 if (handler != null) handler(this, e);

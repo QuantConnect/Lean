@@ -306,6 +306,112 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Market on Open Fill Model. Return an order event with the fill details
+        /// </summary>
+        /// <param name="security">Asset we're trading with this order</param>
+        /// <param name="order">Order to be filled</param>
+        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
+        public OrderEvent MarketOnOpenFill(Security security, MarketOnOpenOrder order)
+        {
+            var fill = new OrderEvent(order);
+
+            if (fill.Status == OrderStatus.Canceled) return fill;
+
+            try
+            {
+                // if the MOO was submitted during market the previous day, wait for a day to turn over
+                if (security.Exchange.DateTimeIsOpen(order.Time) && order.Time.Date == security.Time.Date)
+                {
+                    return fill;
+                }
+
+                // wait until market open
+                if (!security.Exchange.ExchangeOpen)
+                {
+                    return fill;
+                }
+
+                order.Price = security.Open;
+                order.Status = OrderStatus.Filled;
+
+                //Calculate the model slippage: e.g. 0.01c
+                var slip = GetSlippageApproximation(security, order);
+
+                //Apply slippage
+                switch (order.Direction)
+                {
+                    case OrderDirection.Buy:
+                        order.Price += slip;
+                        break;
+                    case OrderDirection.Sell:
+                        order.Price -= slip;
+                        break;
+                }
+
+                //For backtesting, we assuming the order is 100% filled on first attempt.
+                fill.FillPrice = order.Price;
+                fill.FillQuantity = order.Quantity;
+                fill.Status = order.Status;
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+
+            return fill;
+        }
+
+        /// <summary>
+        /// Market on Close Fill Model. Return an order event with the fill details
+        /// </summary>
+        /// <param name="security">Asset we're trading with this order</param>
+        /// <param name="order">Order to be filled</param>
+        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
+        public OrderEvent MarketOnCloseFill(Security security, MarketOnCloseOrder order)
+        {
+            var fill = new OrderEvent(order);
+
+            if (fill.Status == OrderStatus.Canceled) return fill;
+
+            try
+            {
+                // wait until market closes
+                if (security.Exchange.ExchangeOpen)
+                {
+                    return fill;
+                }
+
+                order.Price = security.Close;
+                order.Status = OrderStatus.Filled;
+
+                //Calculate the model slippage: e.g. 0.01c
+                var slip = GetSlippageApproximation(security, order);
+
+                //Apply slippage
+                switch (order.Direction)
+                {
+                    case OrderDirection.Buy:
+                        order.Price += slip;
+                        break;
+                    case OrderDirection.Sell:
+                        order.Price -= slip;
+                        break;
+                }
+
+                //For backtesting, we assuming the order is 100% filled on first attempt.
+                fill.FillPrice = order.Price;
+                fill.FillQuantity = order.Quantity;
+                fill.Status = order.Status;
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+
+            return fill;
+        }
+
+        /// <summary>
         /// Get the slippage approximation for this order
         /// </summary>
         /// <param name="security">Security asset we're filling</param>
