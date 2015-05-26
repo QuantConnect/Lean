@@ -18,6 +18,23 @@ using System;
 namespace QuantConnect.Indicators
 {
     /// <summary>
+    /// Computes an Inverse Fisher Transform also known as The hyperbolic tangent activation function (TANH)
+    /// 
+    /// The transform takes a window of values and gets the minimum and maximum values for the window. The new
+    /// input values is then located within a range of -1 to +1 according to the formula:
+    /// 
+    ///     f(x) = (e to the power of 2x -1) / (e to the power of 2x +1)
+    /// 
+    /// for the math function see http://www.heatonresearch.com/wiki/Hyperbolic_Tangent_Activation_Function
+    ///  
+    /// It is useful because it normalizes the current input, such as price, to fit within the range of the 
+    /// High and Low of the data window.
+    /// 
+    /// For a discussion of how it is used in trading to clarify other indicators turning points
+    /// see http://www.tradingsystemlab.com/files/The%20Inverse%20Fisher%20Transform.pdf
+    /// 
+    /// The formula comes from one of the activation functions of a neural network 
+    /// 
     /// </summary>
     public class InverseFisherTransform : WindowIndicator<IndicatorDataPoint>
     {
@@ -25,20 +42,19 @@ namespace QuantConnect.Indicators
         private readonly Minimum _minLow;
         private readonly Maximum _maxHigh;
         private RollingWindow<IndicatorDataPoint> value1;
-        private LinearWeightedMovingAverage value2;
+        
 
 
         /// <summary>
-        /// A Fisher Transform of Prices
+        /// An Inverse Fisher Transform of Prices
         /// </summary>
         /// <param name="name">string - the name of the indicator</param>
-        /// <param name="period">The number of periods for the indicator</param>
+        /// <param name="period">The number of periods for the indicator window</param>
         public InverseFisherTransform(string name, int period)
             : base(name, period)
         {
             // Initialize the local variables
             value1 = new RollingWindow<IndicatorDataPoint>(period);
-            value2 = new LinearWeightedMovingAverage(period);
 
             // add two minimum values to the value1 to get things started
             value1.Add(new IndicatorDataPoint(DateTime.MinValue, .0001m));
@@ -47,8 +63,6 @@ namespace QuantConnect.Indicators
             // Initialize the local variables
             _maxHigh = new Maximum("MaxHigh", period);
             _minLow = new Minimum("MinLow", period);
-
-
         }
 
         /// <summary>
