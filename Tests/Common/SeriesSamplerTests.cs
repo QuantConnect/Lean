@@ -26,12 +26,12 @@ namespace QuantConnect.Tests.Common
         public void ReturnsIdentityOnSinglePoint()
         {
             var series = new Series {Name = "name"};
-            var reference = DateTime.Now;
+            var reference = DateTime.Now.ToUniversalTime();
             series.AddPoint(reference, 1m);
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(1));
 
-            var sampled = sampler.Sample(series, reference, reference);
+            var sampled = sampler.Sample(series, reference.AddSeconds(-1), reference.AddSeconds(1));
             Assert.AreEqual(1, sampled.Values.Count);
             Assert.AreEqual(series.Values[0].x, sampled.Values[0].x);
             Assert.AreEqual(series.Values[0].y, sampled.Values[0].y);

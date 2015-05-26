@@ -350,10 +350,11 @@ namespace QuantConnect.Securities
         {
             var marketData = asset.GetLastData();
 
-            if (marketData.DataType == MarketDataType.TradeBar)
+            var tradeBar = marketData as TradeBar;
+            if (tradeBar != null)
             {
-                minimumPrice = ((TradeBar)marketData).Low;
-                maximumPrice = ((TradeBar)marketData).High;
+                minimumPrice = tradeBar.Low;
+                maximumPrice = tradeBar.High;
             }
             else
             {

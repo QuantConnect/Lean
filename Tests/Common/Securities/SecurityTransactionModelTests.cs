@@ -26,15 +26,17 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class SecurityTransactionModelTests
     {
+        private const string Symbol = "SPY";
+
         [Test]
         public void PerformsMarketFillBuy()
         {
             var model = new SecurityTransactionModel();
-            var order = new MarketOrder("SPY", 100, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, "SPY", Resolution.Minute, true, true, true, true, false, 0);
+            var order = new MarketOrder(Symbol, 100, DateTime.Now, type: SecurityType.Equity);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
             var security = new Security(config, 1);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 101.123m));
+            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101.123m));
 
             var fill = model.MarketFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
@@ -46,11 +48,11 @@ namespace QuantConnect.Tests.Common.Securities
         public void PerformsMarketFillSell()
         {
             var model = new SecurityTransactionModel();
-            var order = new MarketOrder("SPY", -100, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, "SPY", Resolution.Minute, true, true, true, true, false, 0);
+            var order = new MarketOrder(Symbol, -100, DateTime.Now, type: SecurityType.Equity);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
             var security = new Security(config, 1);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 101.123m));
+            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101.123m));
 
             var fill = model.MarketFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
@@ -63,10 +65,10 @@ namespace QuantConnect.Tests.Common.Securities
         public void PerformsLimitFillBuy()
         {
             var model = new SecurityTransactionModel();
-            var order = new LimitOrder("SPY", 100, 101.5m, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, "SPY", Resolution.Minute, true, true, true, true, false, 0);
+            var order = new LimitOrder(Symbol, 100, 101.5m, DateTime.Now, type: SecurityType.Equity);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
             var security = new Security(config, 1);
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 102m));
+            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 102m));
 
             var fill = model.LimitFill(security, order);
 
@@ -75,13 +77,13 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 1.123m));
+            security.SetMarketPrice(DateTime.Now, new TradeBar(DateTime.Now, Symbol, 102m, 103m, 101m, 102.3m, 100));
 
             fill = model.LimitFill(security, order);
 
             // this fills worst case scenario, so it's at the limit price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(order.LimitPrice, fill.FillPrice);
+            Assert.AreEqual(Math.Min(order.LimitPrice, security.High), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
             Assert.AreEqual(OrderStatus.Filled, order.Status);
         }
@@ -90,10 +92,10 @@ namespace QuantConnect.Tests.Common.Securities
         public void PerformsLimitFillSell()
         {
             var model = new SecurityTransactionModel();
-            var order = new LimitOrder("SPY", -100, 101.5m, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, "SPY", Resolution.Minute, true, true, true, true, false, 0);
+            var order = new LimitOrder(Symbol, -100, 101.5m, DateTime.Now, type: SecurityType.Equity);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
             var security = new Security(config, 1);
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 101m));
+            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101m));
 
             var fill = model.LimitFill(security, order);
 
@@ -102,13 +104,13 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 101.623m));
+            security.SetMarketPrice(DateTime.Now, new TradeBar(DateTime.Now, Symbol, 102m, 103m, 101m, 102.3m, 100));
 
             fill = model.LimitFill(security, order);
 
             // this fills worst case scenario, so it's at the limit price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(order.LimitPrice, fill.FillPrice);
+            Assert.AreEqual(Math.Max(order.LimitPrice, security.Low), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
             Assert.AreEqual(OrderStatus.Filled, order.Status);
         }
@@ -117,10 +119,10 @@ namespace QuantConnect.Tests.Common.Securities
         public void PerformsStopLimitFillBuy()
         {
             var model = new SecurityTransactionModel();
-            var order = new StopLimitOrder("SPY", 100, 101.5m, 101.75m, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, "SPY", Resolution.Minute, true, true, true, true, false, 0);
+            var order = new StopLimitOrder(Symbol, 100, 101.5m, 101.75m, DateTime.Now, type: SecurityType.Equity);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
             var security = new Security(config, 1);
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 100m));
+            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 100m));
 
             var fill = model.StopLimitFill(security, order);
 
@@ -129,7 +131,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 102m));
+            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 102m));
 
             fill = model.StopLimitFill(security, order);
 
@@ -138,7 +140,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 101.66m));
+            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101.66m));
 
             fill = model.StopLimitFill(security, order);
 
@@ -153,10 +155,10 @@ namespace QuantConnect.Tests.Common.Securities
         public void PerformsStopLimitFillSell()
         {
             var model = new SecurityTransactionModel();
-            var order = new StopLimitOrder("SPY", -100, 101.75m, 101.50m, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, "SPY", Resolution.Minute, true, true, true, true, false, 0);
+            var order = new StopLimitOrder(Symbol, -100, 101.75m, 101.50m, DateTime.Now, type: SecurityType.Equity);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
             var security = new Security(config, 1);
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 102m));
+            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 102m));
 
             var fill = model.StopLimitFill(security, order);
 
@@ -165,7 +167,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 101m));
+            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101m));
 
             fill = model.StopLimitFill(security, order);
 
@@ -174,7 +176,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 101.66m));
+            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101.66m));
 
             fill = model.StopLimitFill(security, order);
 
@@ -189,10 +191,10 @@ namespace QuantConnect.Tests.Common.Securities
         public void PerformsStopMarketFillBuy()
         {
             var model = new SecurityTransactionModel();
-            var order = new StopMarketOrder("SPY", 100, 101.5m, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, "SPY", Resolution.Minute, true, true, true, true, false, 0);
+            var order = new StopMarketOrder(Symbol, 100, 101.5m, DateTime.Now, type: SecurityType.Equity);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
             var security = new Security(config, 1);
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 101m));
+            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101m));
 
             var fill = model.StopMarketFill(security, order);
 
@@ -201,7 +203,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 102.5m));
+            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 102.5m));
 
             fill = model.StopMarketFill(security, order);
 
@@ -216,10 +218,10 @@ namespace QuantConnect.Tests.Common.Securities
         public void PerformsStopMarketFillSell()
         {
             var model = new SecurityTransactionModel();
-            var order = new StopMarketOrder("SPY", -100, 101.5m, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, "SPY", Resolution.Minute, true, true, true, true, false, 0);
+            var order = new StopMarketOrder(Symbol, -100, 101.5m, DateTime.Now, type: SecurityType.Equity);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
             var security = new Security(config, 1);
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 102m));
+            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 102m));
 
             var fill = model.StopMarketFill(security, order);
 
@@ -228,7 +230,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint("SPY", DateTime.Now, 101m));
+            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101m));
 
             fill = model.StopMarketFill(security, order);
 

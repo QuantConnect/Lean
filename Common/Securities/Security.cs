@@ -310,9 +310,11 @@ namespace QuantConnect.Securities
             get 
             { 
                 var data = GetLastData();
-                if (data.DataType == MarketDataType.TradeBar) 
+
+                var bar = data as TradeBar;
+                if (bar != null) 
                 {
-                    return ((TradeBar)data).High;
+                    return bar.High;
                 }
                 return data.Value;
             }
@@ -325,9 +327,11 @@ namespace QuantConnect.Securities
             get 
             {
                 var data = GetLastData();
-                if (data.DataType == MarketDataType.TradeBar) 
+
+                var bar = data as TradeBar;
+                if (bar != null)
                 {
-                    return ((TradeBar)data).Low;
+                    return bar.Low;
                 }
                 return data.Value;
             }
@@ -352,9 +356,11 @@ namespace QuantConnect.Securities
         public virtual decimal Open {
             get {
                 var data = GetLastData();
-                if (data.DataType == MarketDataType.TradeBar) 
+
+                var bar = data as TradeBar;
+                if (bar != null)
                 {
-                    return ((TradeBar)data).Open;
+                    return bar.Open;
                 }
                 return data.Value;
             }
@@ -368,9 +374,11 @@ namespace QuantConnect.Securities
             get
             {
                 var data = GetLastData();
-                if (data.DataType == MarketDataType.TradeBar)
+
+                var bar = data as TradeBar;
+                if (bar != null)
                 {
-                    return ((TradeBar)data).Volume;
+                    return bar.Volume;
                 }
                 return 0;
             }

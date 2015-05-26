@@ -55,7 +55,7 @@ namespace QuantConnect
                 // we can minimally verify we're within the start/stop interval
                 foreach (var point in series.Values)
                 {
-                    if (point.x > nextSample && point.x < unixStopDate)
+                    if (point.x >= nextSample && point.x <= unixStopDate)
                     {
                         sampled.Values.Add(point);
                     }
