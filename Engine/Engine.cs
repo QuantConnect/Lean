@@ -473,7 +473,7 @@ namespace QuantConnect.Lean.Engine
             if (IsLocal)
             {
                 Log.Trace("Engine.Main(): Analysis Complete. Press any key to continue.");
-                Console.ReadKey();
+                Console.Read();
             }
             Log.LogHandler.Dispose();
         }
