@@ -88,26 +88,52 @@ namespace QuantConnect.Indicators
                 var minL = _minLow.Current.Value;
                 var maxH = _maxHigh.Current.Value;
 
-                // get the value1 from the last time this function was called
-                var v1 = value1[0].Value;
+                if (price == 0)
+                {
+                    Current = new IndicatorDataPoint(input.EndTime, 0);
+                }
+                else
+                {
+                    // get the value1 from the last time this function was called
+                    var v1 = value1[0].Value;
 
-                // compute the EMA of the price and the last value1
-                value1.Add(new IndicatorDataPoint(input.Time, .33m * 2m * ((price - minL) / (maxH - minL) - .5m) + .67m * v1));
+                    try
+                    {
 
-                // limit the new value1 so that it falls within positive or negative unity
-                if (value1[0].Value > .9999m)
-                    value1[0].Value = .9999m;
-                if (value1[0].Value < -.9999m)
-                    value1[0].Value = -.9999m;
-                var current = Current;
+                        // compute the EMA of the price and the last value1
+                        value1.Add(new IndicatorDataPoint(input.Time,
+                            .33m*2m*((price - minL)/(maxH - minL) - .5m) + .67m*v1));
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception(ex.Message + ex.StackTrace);
+                    }
+                    try
+                    {
 
-                // calcuate the Fisher transform according the the formula above and from Ehlers
-                //  Math.Log takes and produces doubles, so the result is converted back to Decimal
-                // The calculation uses the Current.Value from the last time the function was called,
-                //  so an intermediate variable is introduced so that it can be used in the 
-                //  calculation before the result is assigned to the Current.Value after the calculation is made.
-                var fishx = Convert.ToDecimal(.5 * Math.Log((1.0 + (double)value1[0].Value) / (1.0 - (double)value1[0].Value)));
-                Current.Value = fishx;
+                        // limit the new value1 so that it falls within positive or negative unity
+                        if (value1[0].Value > .9999m)
+                            value1[0].Value = .9999m;
+                        if (value1[0].Value < -.9999m)
+                            value1[0].Value = -.9999m;
+                        var current = Current;
+
+                        // calcuate the Fisher transform according the the formula above and from Ehlers
+                        //  Math.Log takes and produces doubles, so the result is converted back to Decimal
+                        // The calculation uses the Current.Value from the last time the function was called,
+                        //  so an intermediate variable is introduced so that it can be used in the 
+                        //  calculation before the result is assigned to the Current.Value after the calculation is made.
+                        var fishx =
+                            Convert.ToDecimal(.5*
+                                              Math.Log((1.0 + (double) value1[0].Value)/(1.0 - (double) value1[0].Value)));
+                        Current.Value = fishx;
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception(ex.Message + ex.StackTrace);
+                    }
+                }
+
             }
             return this.Current;
         }

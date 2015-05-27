@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="epsilon">The maximum delta between expected and actual</param>
         public static void TestIndicator(IndicatorBase<IndicatorDataPoint> indicator, string targetColumn, double epsilon = 1e-3)
         {
-            TestIndicator(indicator, "spy_with_indicators.txt", targetColumn, (i, expected) => Assert.AreEqual(expected, (double) i.Current.Value, epsilon));
+            TestIndicator(indicator, "spy_with_indicators.txt", targetColumn, (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon));
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Indicators
             int targetIndex = -1;
             foreach (var line in File.ReadLines(Path.Combine("TestData", externalDataFilename)))
             {
-                string[] parts = line.Split(new[] {','}, StringSplitOptions.None);
+                string[] parts = line.Split(new[] { ',' }, StringSplitOptions.None);
 
                 if (first)
                 {
@@ -93,16 +93,31 @@ namespace QuantConnect.Tests.Indicators
                             targetIndex = i;
                         }
                     }
-                    if (closeIndex*targetIndex < 0)
+                    if (closeIndex * targetIndex < 0)
                     {
                         Assert.Fail("Didn't find one of 'Close' or '{0}' in the header: " + line, targetColumn);
                     }
 
                     continue;
                 }
-
-                decimal close = decimal.Parse(parts[closeIndex], CultureInfo.InvariantCulture);
-                DateTime date = Time.ParseDate(parts[0]);
+                decimal close;
+                try
+                {
+                    close = decimal.Parse(parts[closeIndex], CultureInfo.InvariantCulture);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(ex.Message);
+                }
+                DateTime date;
+                try
+                {
+                    date = Time.ParseDate(parts[0]);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(ex.Message);
+                }
 
                 var data = new IndicatorDataPoint(date, close);
                 indicator.Update(data);
@@ -117,7 +132,78 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
+        /// <summary>
+        /// Compare the specified indicator against external data using the specificied comma delimited text file.
+        /// The customIndicatorFeedColumnName column will be fed to the indicator as input
+        /// </summary>
+        /// <param name="indicator">The indicator under test</param>
+        /// <param name="externalDataFilename"></param>
+        /// <param name="customIndicatorFeedColumnName">custom column name to feed indicator</param>
+        /// <param name="targetColumn">The column with the correct answers</param>
+        /// <param name="customAssertion">Sets custom assertion logic, parameter is the indicator, expected value from the file</param>
+        public static void TestIndicator(IndicatorBase<IndicatorDataPoint> indicator, string externalDataFilename, string customIndicatorFeedColumnName, string targetColumn, Action<IndicatorBase<IndicatorDataPoint>, double> customAssertion)
+        {
+            // assumes the Date is in the first index
 
+            bool first = true;
+            int customColumnIndex = -1;
+            int targetIndex = -1;
+            foreach (var line in File.ReadLines(Path.Combine("TestData", externalDataFilename)))
+            {
+                string[] parts = line.Split(new[] { ',' }, StringSplitOptions.None);
+
+                if (first)
+                {
+                    first = false;
+                    for (int i = 0; i < parts.Length; i++)
+                    {
+                        if (parts[i].Trim() == customIndicatorFeedColumnName)
+                        {
+                            customColumnIndex = i;
+                        }
+                        if (parts[i].Trim() == targetColumn)
+                        {
+                            targetIndex = i;
+                        }
+                    }
+                    if (customColumnIndex * targetIndex < 0)
+                    {
+                        Assert.Fail("Didn't find one of 'Close' or '{0}' in the header: " + line, targetColumn);
+                    }
+
+                    continue;
+                }
+                decimal close;
+                try
+                {
+                    close = decimal.Parse(parts[customColumnIndex], CultureInfo.InvariantCulture);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(ex.Message);
+                }
+                DateTime date;
+                try
+                {
+                    date = Time.ParseDate(parts[0]);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(ex.Message);
+                }
+
+                var data = new IndicatorDataPoint(date, close);
+                indicator.Update(data);
+
+                if (!indicator.IsReady || parts[targetIndex].Trim() == string.Empty)
+                {
+                    continue;
+                }
+
+                double expected = double.Parse(parts[targetIndex], CultureInfo.InvariantCulture);
+                customAssertion.Invoke(indicator, expected);
+            }
+        }
         /// <summary>
         /// Compare the specified indicator against external data using the specificied comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
@@ -211,7 +297,7 @@ namespace QuantConnect.Tests.Indicators
             while (enumerator.MoveNext())
             {
                 var values = enumerator.Current.Split(',');
-                var headerAndValues = header.Zip(values, (h, v) => new {h, v});
+                var headerAndValues = header.Zip(values, (h, v) => new { h, v });
                 var dictionary = headerAndValues.ToDictionary(x => x.h.Trim(), x => x.v.Trim(), StringComparer.OrdinalIgnoreCase);
                 yield return new ReadOnlyDictionary<string, string>(dictionary);
             }
@@ -259,7 +345,7 @@ namespace QuantConnect.Tests.Indicators
             return (indicator, expected) =>
             {
                 // the delta should be forever decreasing
-                var currentDelta = Math.Abs((double) indicator.Current.Value - expected);
+                var currentDelta = Math.Abs((double)indicator.Current.Value - expected);
                 if (currentDelta - delta > epsilon)
                 {
                     Assert.Fail("The delta increased!");
