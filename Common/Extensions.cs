@@ -311,7 +311,8 @@ namespace QuantConnect
                 // divide by zero exception
                 return time;
             }
-            return new DateTime(((time.Ticks + d.Ticks - 1) / d.Ticks) * d.Ticks);
+            //return new DateTime(((time.Ticks + d.Ticks - 1) / d.Ticks) * d.Ticks);
+            return time.AddTicks(time.Ticks / d.Ticks);
         }
 
         /// <summary>
