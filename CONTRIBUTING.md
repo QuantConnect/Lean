@@ -12,6 +12,12 @@ A collaborator is someone with write access to the QuantConnect Lean repository.
 
 A contributor can be anyone! It could be you. Continue reading this section if you wish to get involved and contribute back to the QuantConnect Lean open source project!
 
+## Code Style and Testing
+
+Code reviewers will be expecting to see code that follows Microsoft's C# guidelines. There are a few resources available [here](https://msdn.microsoft.com/en-us/library/czefa0ke(VS.71).aspx) and [here](https://msdn.microsoft.com/en-us/library/ff926074.aspx).
+
+All pull requests must be accompanied by units tests. If it is a new feature, the tests should highlight expected use cases as well as edge cases, if applicable. If it is a bugfix, there should be tests that expose the bug in question.
+
 ## Initial Setup
 
 * Setup a [GitHub](https://github.com/) account
