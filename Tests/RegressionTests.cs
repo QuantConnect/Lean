@@ -47,5 +47,32 @@ namespace QuantConnect.Tests
                 {"Treynor Ratio", "0.853"}
             });
         }
+
+        [Test]
+        public void BasicTemplateFillForwardAlgorithm()
+        {
+            AlgorithmRunner.RunLocalBacktest("BasicTemplateFillForwardAlgorithm", new Dictionary<string, string>
+            {
+                {"Total Trades", "1"},
+                {"Average Win", "34.56%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "521.383%"},
+                {"Drawdown", "18.400%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "34.562%"},
+                {"Sharpe Ratio", "2.599"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "100%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0.899"},
+                {"Beta", "2.879"},
+                {"Annual Standard Deviation", "0.785"},
+                {"Annual Variance", "0.616"},
+                {"Information Ratio", "2.192"},
+                {"Tracking Error", "0.749"},
+                {"Treynor Ratio", "0.708"},
+                {"Total Fees", "$460.82"}
+            });
+        }
     }
 }
