@@ -315,7 +315,7 @@ namespace QuantConnect.Lean.Engine.Results
                 //Reset loop variables:
                 try
                 {
-                    _lastUpdate = DataStream.AlorithmTime.Date;
+                    _lastUpdate = DataStream.AlgorithmTime.Date;
                     _lastDaysProcessed = _daysProcessed;
                     _nextUpdate = DateTime.Now.AddSeconds(0.5);
                 }

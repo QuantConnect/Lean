@@ -211,7 +211,7 @@ namespace QuantConnect.Lean.Engine
                     return;
                 }
 
-                var time = DataStream.AlorithmTime;
+                var time = DataStream.AlgorithmTime;
 
                 //If we're in backtest mode we need to capture the daily performance. We do this here directly
                 //before updating the algorithm state with the new data from this time step, otherwise we'll
@@ -574,8 +574,8 @@ namespace QuantConnect.Lean.Engine
 
             //Take final samples:
             results.SampleRange(algorithm.GetChartUpdates());
-            results.SampleEquity(DataStream.AlorithmTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
-            results.SamplePerformance(DataStream.AlorithmTime, Math.Round((algorithm.Portfolio.TotalPortfolioValue - startingPortfolioValue) * 100 / startingPortfolioValue, 10));
+            results.SampleEquity(DataStream.AlgorithmTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
+            results.SamplePerformance(DataStream.AlgorithmTime, Math.Round((algorithm.Portfolio.TotalPortfolioValue - startingPortfolioValue) * 100 / startingPortfolioValue, 10));
         } // End of Run();
 
         /// <summary>
