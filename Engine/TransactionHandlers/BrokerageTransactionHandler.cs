@@ -115,7 +115,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public bool Ready
         {
-            get { return !_algorithm.ProcessingOrder; }
+            get { return _orderQueue.Count == 0 && !_algorithm.ProcessingOrder; }
         }
 
         /// <summary>
@@ -190,6 +190,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // NOP
         }
 
+
         /// <summary>
         /// Processes all synchronous events that must take place before the next time loop for the algorithm
         /// </summary>
@@ -197,7 +198,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             // how to do synchronous market orders for real brokerages?
 
-            if (!_algorithm.LiveMode) return;
+            // in backtesting we need to wait for orders to be removed from the queue and finished processing
+            if (!_algorithm.LiveMode)
+            {
+                // spin wait until the queue has finished processing
+                while (!Ready)
+                {
+                    Thread.Sleep(1);
+                }
+                return;
+            }
 
             // every morning flip this switch back
             if (_syncedLiveBrokerageCashToday && DateTime.Now.Date != LastSyncDate)
