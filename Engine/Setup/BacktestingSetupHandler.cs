@@ -212,6 +212,7 @@ namespace QuantConnect.Lean.Engine.Setup
             else
             {
                 _maxOrders = int.MaxValue;
+                _maxRuntime += _maxRuntime;
             }
 
             //Set back to the algorithm,
