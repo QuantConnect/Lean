@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using QuantConnect.Data;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
@@ -93,7 +94,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     //If there's data on the bridge, check to see if it's time to pull it off, if it's in the future
                     // we'll record the time as 'earlyBirdTicks' so we can fast forward the frontier time
-                    while (feed.Bridge[i].Count > 0)
+                    while (!feed.Bridge[i].IsEmpty)
                     {
                         //Look at first item on list, leave it there until time passes this item.
                         List<BaseData> result;
@@ -111,6 +112,11 @@ namespace QuantConnect.Lean.Engine
                                 earlyBirdTicks = result[0].EndTime.Ticks;
                             }
                             break;
+                        }
+
+                        if (earlyBirdTicks == 0)
+                        {
+                            earlyBirdTicks = result[0].EndTime.Ticks;
                         }
 
                         //Pull a grouped time list out of the bridge
@@ -231,7 +237,7 @@ namespace QuantConnect.Lean.Engine
             for (var i = 0; i < _subscriptions; i++)
             {
                 if (feed.EndOfBridge[i]) continue;
-                if (feed.Bridge[i].Count == 0)
+                if (feed.Bridge[i].IsEmpty)
                 {
                     return false;
                 }
