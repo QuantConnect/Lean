@@ -100,24 +100,8 @@ namespace QuantConnect.Tests.Indicators
 
                     continue;
                 }
-                decimal close;
-                try
-                {
-                    close = decimal.Parse(parts[closeIndex], CultureInfo.InvariantCulture);
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception(ex.Message);
-                }
-                DateTime date;
-                try
-                {
-                    date = Time.ParseDate(parts[0]);
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception(ex.Message);
-                }
+                decimal close = decimal.Parse(parts[closeIndex], CultureInfo.InvariantCulture);
+                DateTime date = Time.ParseDate(parts[0]);
 
                 var data = new IndicatorDataPoint(date, close);
                 indicator.Update(data);
@@ -173,24 +157,9 @@ namespace QuantConnect.Tests.Indicators
 
                     continue;
                 }
-                decimal close;
-                try
-                {
-                    close = decimal.Parse(parts[customColumnIndex], CultureInfo.InvariantCulture);
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception(ex.Message);
-                }
-                DateTime date;
-                try
-                {
-                    date = Time.ParseDate(parts[0]);
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception(ex.Message);
-                }
+                decimal close = decimal.Parse(parts[customColumnIndex], CultureInfo.InvariantCulture);
+
+                DateTime date = Time.ParseDate(parts[0]);
 
                 var data = new IndicatorDataPoint(date, close);
                 indicator.Update(data);
