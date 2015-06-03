@@ -77,6 +77,14 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Gets a copy of the current 'workingBar'.
+        /// </summary>
+        public TradeBar WorkingBar
+        {
+            get { return _workingBar != null ? (TradeBar)_workingBar.Clone() : null; }
+        }
+
+        /// <summary>
         /// Event handler that fires when a new piece of data is produced. We define this as a 'new'
         /// event so we can expose it as a TradeBar instead of a BaseData instance
         /// </summary>
@@ -119,7 +127,7 @@ namespace QuantConnect.Data.Consolidators
             if (_period.HasValue)
             {
                 // we're in time span mode and initialized
-                if (data.Time - _lastEmit.Value >= _period.Value)
+                if (_workingBar != null && data.Time - _workingBar.Time >= _period.Value)
                 {
                     fireDataConsolidated = true;
                 }
@@ -127,6 +135,7 @@ namespace QuantConnect.Data.Consolidators
                 // special case: always aggregate before event trigger when TimeSpan is zero
                 if (_period.Value == TimeSpan.Zero)
                 {
+                    fireDataConsolidated = true;
                     aggregateBeforeFire = true;
                 }
             }
@@ -139,15 +148,18 @@ namespace QuantConnect.Data.Consolidators
             //Fire the event
             if (fireDataConsolidated)
             {
-                // we kind of are cheating here...
-                if (_period.HasValue)
+                if (_workingBar != null)
                 {
-                    _workingBar.Period = _period.Value;
-                }
-                // since trade bar has period it aggregates this properly
-                else if (!(data is TradeBar))
-                {
-                    _workingBar.Period = data.Time - _lastEmit.Value;
+                    // we kind of are cheating here...
+                    if (_period.HasValue)
+                    {
+                        _workingBar.Period = _period.Value;
+                    }
+                    // since trade bar has period it aggregates this properly
+                    else if (!(data is TradeBar))
+                    {
+                        _workingBar.Period = data.Time - _lastEmit.Value;
+                    }
                 }
 
                 OnDataConsolidated(_workingBar);
@@ -181,5 +193,16 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="workingBar">The bar we're building, null if the event was just fired and we're starting a new trade bar</param>
         /// <param name="data">The new data</param>
         protected abstract void AggregateBar(ref TradeBar workingBar, T data);
+
+        /// <summary>
+        /// Gets a rounded-down bar time. Called by AggregateBar in derived classes.
+        /// </summary>
+        /// <param name="time">The bar time to be rounded down</param>
+        /// <returns>The rounded bar time</returns>
+        protected DateTime GetRoundedBarTime(DateTime time)
+        {
+            // rounding is performed only in time span mode
+            return _period.HasValue && !_maxCount.HasValue ? time.RoundDown((TimeSpan) _period) : time;
+        }
     }
 }
