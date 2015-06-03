@@ -202,7 +202,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 catch (Exception err)
                 {
                     Log.Error(err);
-                    AddInitializationError("Error connecting to brokerage.");
+                    AddInitializationError("Error connecting to brokerage: " + err.Message);
                     return false;
                 }
 
@@ -219,7 +219,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 catch (Exception err)
                 {
                     Log.Error(err);
-                    AddInitializationError("Error getting cash balance from brokerage.");
+                    AddInitializationError("Error getting cash balance from brokerage: " + err.Message);
                     return false;
                 }
 
@@ -238,7 +238,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 catch (Exception err)
                 {
                     Log.Error(err);
-                    AddInitializationError("Error getting open orders from brokerage.");
+                    AddInitializationError("Error getting open orders from brokerage: " + err.Message);
                     return false;
                 }
 
@@ -273,7 +273,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 catch (Exception err)
                 {
                     Log.Error(err);
-                    AddInitializationError("Error getting account holdings from brokerage.");
+                    AddInitializationError("Error getting account holdings from brokerage: " + err.Message);
                     return false;
                 }
 
