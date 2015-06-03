@@ -587,29 +587,17 @@ namespace QuantConnect.Algorithm
 
             var timeSpan = resolution.Value.ToTimeSpan();
 
-            // if our type can be used as a trade bar, then let's just make one of those
-            // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to TradeBar
-            if (typeof(TradeBar).IsAssignableFrom(subscription.Type))
+            // verify this consolidator will give reasonable results, if someone asks for second consolidation but we have minute
+            // data we won't be able to do anything good, we'll call it second, but it would really just be minute!
+            if (timeSpan < subscription.Resolution.ToTimeSpan())
             {
-                return new TradeBarConsolidator(timeSpan);
+                throw new ArgumentException(string.Format("Unable to create {0} {1} consolidator because {0} is registered for {2} data. " +
+                    "Consolidators require higher resolution data to produce lower resolution data.",
+                    symbol, resolution.Value, subscription.Resolution)
+                    );
             }
 
-            // if our type can be used as a tick then we'll use the tick consolidator
-            // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to Tick
-            if (typeof(Tick).IsAssignableFrom(subscription.Type))
-            {
-                return new TickConsolidator(timeSpan);
-            }
-
-            // if our type can be used as a DynamicData then we'll use the DynamicDataConsolidator, inspect
-            // the subscription to figure out the isTradeBar and hasVolume flags
-            if (typeof(DynamicData).IsAssignableFrom(subscription.Type))
-            {
-                return new DynamicDataConsolidator(timeSpan, subscription.IsTradeBar, subscription.HasVolume);
-            }
-
-            // no matter what we can always consolidate based on the time-value pair of BaseData
-            return new BaseDataConsolidator(timeSpan);
+            return ResolveConsolidator(symbol, timeSpan);
         }
 
         /// <summary>
@@ -628,6 +616,16 @@ namespace QuantConnect.Algorithm
                 // since there's a generic type parameter that we don't have access to, we'll just use the activator
                 var identityConsolidatorType = typeof(IdentityDataConsolidator<>).MakeGenericType(subscription.Type);
                 return (IDataConsolidator)Activator.CreateInstance(identityConsolidatorType);
+            }
+
+            // verify this consolidator will give reasonable results, if someone asks for second consolidation but we have minute
+            // data we won't be able to do anything good, we'll call it second, but it would really just be minute!
+            if (timeSpan.Value < subscription.Resolution.ToTimeSpan())
+            {
+                throw new ArgumentException(string.Format("Unable to create {0} consolidator because {0} is registered for {1} data. " +
+                    "Consolidators require higher resolution data to produce lower resolution data.",
+                    symbol, subscription.Resolution)
+                    );
             }
 
             // if our type can be used as a trade bar, then let's just make one of those
