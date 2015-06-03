@@ -391,6 +391,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var previous = manager.Previous;
             var current = manager.Current;
 
+            // final two points of file that ends at midnight, causes issues in the day rollover/fill forward
+            if (current.EndTime.TimeOfDay.Ticks == 0 && previous.EndTime == current.Time)
+            {
+                return;
+            }
+
             //Initialize the frontier:
             if (FillForwardFrontiers[i].Ticks == 0) FillForwardFrontiers[i] = previous.EndTime;
 
