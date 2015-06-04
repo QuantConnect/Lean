@@ -451,9 +451,9 @@ namespace QuantConnect.Algorithm
         public DonchianChannel DCH(string symbol, int period, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, "DCH", resolution);
-            var dnchianChannel = new DonchianChannel(name, period);
-            RegisterIndicator(symbol, dnchianChannel, resolution, selector);
-            return dnchianChannel;
+            var donchianChannel = new DonchianChannel(name, period);
+            RegisterIndicator(symbol, donchianChannel, resolution, selector);
+            return donchianChannel;
         }
 
         /// <summary>
