@@ -140,5 +140,112 @@ namespace QuantConnect.Tests.Common.Data
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
         }
+
+        [Test]
+        public void AggregatesPeriodInPeriodModeWithDailyDataAndRoundedTime()
+        {
+            TradeBar consolidated = null;
+            var consolidator = new TickConsolidator(TimeSpan.FromDays(1));
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                consolidated = bar;
+            };
+
+            var reference = new DateTime(2015, 04, 13);
+            consolidator.Update(new Tick { Time = reference.AddSeconds(5) });
+            Assert.IsNull(consolidated);
+
+            consolidator.Update(new Tick { Time = reference.AddDays(1).AddSeconds(15) });
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
+            Assert.AreEqual(reference, consolidated.Time);
+            consolidated = null;
+
+            consolidator.Update(new Tick { Time = reference.AddDays(2).AddMinutes(1) });
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
+            Assert.AreEqual(reference.AddDays(1), consolidated.Time);
+            consolidated = null;
+
+            consolidator.Update(new Tick { Time = reference.AddDays(3).AddMinutes(5) });
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
+            Assert.AreEqual(reference.AddDays(2), consolidated.Time);
+        }
+
+        [Test]
+        public void AggregatesNewTicksInPeriodWithRoundedTime()
+        {
+            TradeBar consolidated = null;
+            var consolidator = new TickConsolidator(TimeSpan.FromMinutes(1));
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                consolidated = bar;
+            };
+
+            var reference = new DateTime(2015, 06, 02);
+            var tick1 = new Tick
+            {
+                Symbol = "EURUSD",
+                Time = reference.AddSeconds(3),
+                Value = 1.1000m
+            };
+            consolidator.Update(tick1);
+            Assert.IsNull(consolidated);
+
+            var tick2 = new Tick
+            {
+                Symbol = "EURUSD",
+                Time = reference.AddSeconds(10),
+                Value = 1.1005m
+            };
+            consolidator.Update(tick2);
+            Assert.IsNull(consolidated);
+
+            var tick3 = new Tick
+            {
+                Symbol = "EURUSD",
+                Time = reference.AddSeconds(61),
+                Value = 1.1010m
+            };
+            consolidator.Update(tick3);
+            Assert.IsNotNull(consolidated);
+
+            Assert.AreEqual(consolidated.Time, reference);
+            Assert.AreEqual(consolidated.Open, tick1.Value);
+            Assert.AreEqual(consolidated.Close, tick2.Value);
+
+            var tick4 = new Tick
+            {
+                Symbol = "EURUSD",
+                Time = reference.AddSeconds(70),
+                Value = 1.1015m
+            };
+            consolidator.Update(tick4);
+            Assert.IsNotNull(consolidated);
+
+            var tick5 = new Tick
+            {
+                Symbol = "EURUSD",
+                Time = reference.AddSeconds(118),
+                Value = 1.1020m
+            };
+            consolidator.Update(tick5);
+            Assert.IsNotNull(consolidated);
+
+            var tick6 = new Tick
+            {
+                Symbol = "EURUSD",
+                Time = reference.AddSeconds(140),
+                Value = 1.1025m
+            };
+            consolidator.Update(tick6);
+            Assert.IsNotNull(consolidated);
+
+            Assert.AreEqual(consolidated.Time, reference.AddSeconds(60));
+            Assert.AreEqual(consolidated.Open, tick3.Value);
+            Assert.AreEqual(consolidated.Close, tick5.Value);
+        }
+
     }
 }
