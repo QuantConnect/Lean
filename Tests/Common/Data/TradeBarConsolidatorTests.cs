@@ -112,10 +112,10 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
-        public void OneMinuteAlwaysFiresEveryTimeOnMinueDataExceptFirstPoint()
+        public void OneMinuteAlwaysFiresEveryTimeOnMinuteDataExceptFirstPoint()
         {
             // defining a TradeBarConsolidator with the same period as the resolution of input data will cause
-            // it to not fire on the first piece of data as it is initializing, but will thenfire for each
+            // it to not fire on the first piece of data as it is initializing, but will then fire for each
             // consecutive data point
 
             TradeBar consolidated = null;
@@ -412,7 +412,40 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(period, consolidated.Period);
         }
 
-        private readonly TimeSpan marketStop = new DateTime(2000, 1, 1, 12+4, 0, 0).TimeOfDay;
+        [Test]
+        public void AggregatesPeriodInPeriodModeWithDailyDataAndRoundedTime()
+        {
+            TradeBar consolidated = null;
+            var period = TimeSpan.FromDays(1);
+            var consolidator = new TradeBarConsolidator(period);
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                consolidated = bar;
+            };
+
+            var reference = new DateTime(2015, 04, 13);
+            consolidator.Update(new TradeBar { Time = reference.AddSeconds(45), Period = period });
+            Assert.IsNull(consolidated);
+
+            consolidator.Update(new TradeBar { Time = reference.AddDays(1).AddMinutes(1), Period = period });
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(period, consolidated.Period);
+            Assert.AreEqual(reference, consolidated.Time);
+            consolidated = null;
+
+            consolidator.Update(new TradeBar { Time = reference.AddDays(2).AddHours(1), Period = period });
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(period, consolidated.Period);
+            Assert.AreEqual(reference.AddDays(1), consolidated.Time);
+            consolidated = null;
+
+            consolidator.Update(new TradeBar { Time = reference.AddDays(3).AddMinutes(1).AddSeconds(1), Period = period });
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(period, consolidated.Period);
+            Assert.AreEqual(reference.AddDays(2), consolidated.Time);
+        }
+
+        private readonly TimeSpan marketStop = new DateTime(2000, 1, 1, 12 + 4, 0, 0).TimeOfDay;
         private readonly TimeSpan marketStart = new DateTime(2000, 1, 1, 9, 30, 0).TimeOfDay;
         private IEnumerable<TradeBar> StreamTradeBars(DateTime start, DateTime end, TimeSpan resolution, bool skipAferMarketHours = true)
         {

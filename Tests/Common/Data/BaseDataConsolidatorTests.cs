@@ -151,5 +151,37 @@ namespace QuantConnect.Tests.Common.Data
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
         }
+
+        [Test]
+        public void AggregatesPeriodInPeriodModeWithDailyDataAndRoundedTime()
+        {
+            TradeBar consolidated = null;
+            var consolidator = new BaseDataConsolidator(TimeSpan.FromDays(1));
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                consolidated = bar;
+            };
+
+            var reference = new DateTime(2015, 04, 13);
+            consolidator.Update(new Tick { Time = reference.AddSeconds(45) });
+            Assert.IsNull(consolidated);
+
+            consolidator.Update(new Tick { Time = reference.AddDays(1).AddMinutes(1) });
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
+            Assert.AreEqual(reference, consolidated.Time);
+            consolidated = null;
+
+            consolidator.Update(new Tick { Time = reference.AddDays(2).AddHours(1).AddMinutes(1).AddSeconds(1) });
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
+            Assert.AreEqual(reference.AddDays(1), consolidated.Time);
+            consolidated = null;
+
+            consolidator.Update(new Tick { Time = reference.AddDays(3) });
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
+            Assert.AreEqual(reference.AddDays(2), consolidated.Time);
+        }
     }
 }
