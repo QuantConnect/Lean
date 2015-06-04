@@ -38,7 +38,21 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.TestIndicator(donchianChannel, "spy_with_don50.txt", "Donchian Channels 50 Bottom",
                     (ind, expected) => Assert.AreEqual(expected, (double)((DonchianChannel)ind).LowerBand.Current.Value));
         }
+        
+        [Test]
+        public void ComputesPrimaryOutputCorrectly()
+        {
+            var donchianChannel = new DonchianChannel("dch", 50);
 
+            foreach (var data in TestHelper.GetTradeBarStream("spy_with_don50.txt", false))
+            {
+                donchianChannel.Update(data);
+                if (donchianChannel.IsReady)
+                {
+                    Assert.AreEqual(donchianChannel.Current.Value, donchianChannel.UpperBand.Current.Value - donchianChannel.LowerBand.Current.Value);
+                }
+            }
+        }
 
         [Test]
         public void ResetsProperly()
@@ -50,8 +64,15 @@ namespace QuantConnect.Tests.Indicators
             }
 
             Assert.IsTrue(donchianChannelIndicator.IsReady);
+            Assert.IsTrue(donchianChannelIndicator.UpperBand.IsReady);
+            Assert.IsTrue(donchianChannelIndicator.LowerBand.IsReady);
 
             donchianChannelIndicator.Reset();
+
+            TestHelper.AssertIndicatorIsInDefaultState(donchianChannelIndicator);
+            TestHelper.AssertIndicatorIsInDefaultState(donchianChannelIndicator.UpperBand);
+            TestHelper.AssertIndicatorIsInDefaultState(donchianChannelIndicator.LowerBand);
+
         }
     }
 }

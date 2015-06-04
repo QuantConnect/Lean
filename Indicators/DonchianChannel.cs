@@ -21,6 +21,7 @@ namespace QuantConnect.Indicators
     /// This indicator computes the upper and lower band of the Donchian Channel.
     /// The upper band is computed by finding the highest high over the given period.
     /// The lower band is computed by finding the lowest low over the given period.
+    /// The primary out of the indicator is the range/delta between the upper band and lower band.
     /// </summary>
     public class DonchianChannel : TradeBarIndicator
     {
@@ -59,7 +60,7 @@ namespace QuantConnect.Indicators
         /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
-        /// <returns>A new value for this indicator, which by convention is the middle band of the Donchian Channel if called upon.</returns>
+        /// <returns>A new value for this indicator, which by convention is the delta of the upper band and lower band of the Donchanian Channel.</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
             if (_previousInput != null)
@@ -69,7 +70,7 @@ namespace QuantConnect.Indicators
             }
 
             _previousInput = input;
-            return UpperBand.Current.Value + LowerBand.Current.Value / 2;
+            return UpperBand.Current.Value - LowerBand.Current.Value;
         }
 
     }
