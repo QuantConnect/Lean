@@ -44,14 +44,9 @@ namespace QuantConnect.Tests.Indicators
         {
             var donchianChannel = new DonchianChannel("dch", 50);
 
-            foreach (var data in TestHelper.GetTradeBarStream("spy_with_don50.txt", false))
-            {
-                donchianChannel.Update(data);
-                if (donchianChannel.IsReady)
-                {
-                    Assert.AreEqual(donchianChannel.Current.Value, donchianChannel.UpperBand.Current.Value - donchianChannel.LowerBand.Current.Value);
-                }
-            }
+            TestHelper.TestIndicator(donchianChannel, "spy_with_don50.txt", "Donchian Channels 50 Mean",
+                    (ind, expected) => Assert.AreEqual(expected, (double)((DonchianChannel)ind).Current.Value));
+
         }
 
         [Test]
