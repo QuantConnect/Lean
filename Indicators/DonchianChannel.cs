@@ -73,5 +73,14 @@ namespace QuantConnect.Indicators
             return UpperBand.Current.Value - LowerBand.Current.Value;
         }
 
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            base.Reset();
+            UpperBand.Reset();
+            LowerBand.Reset();
+        }
     }
 }
