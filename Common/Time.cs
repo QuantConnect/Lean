@@ -25,8 +25,13 @@ namespace QuantConnect
     /// <summary>
     /// Time helper class collection for working with trading dates
     /// </summary>
-    public static class Time 
+    public static class Time
     {
+        public static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
+        public static readonly TimeSpan OneHour = TimeSpan.FromHours(1);
+        public static readonly TimeSpan OneMinute = TimeSpan.FromMinutes(1);
+        public static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
+
         /// <summary>
         /// Live charting is sensitive to timezone so need to convert the local system time to a UTC and display in browser as UTC.
         /// </summary>

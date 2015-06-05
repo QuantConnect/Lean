@@ -121,6 +121,7 @@ namespace QuantConnect.Logging
         /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
         public static void Error(Exception exception, string message = null, bool overrideMessageFloodProtection = false)
         {
+            message = message == null ? exception.Message : message + "\t-\t" + exception.Message;
             Error(WhoCalledMe.GetMethodName(1), exception, message, overrideMessageFloodProtection);
         }
 
