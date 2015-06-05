@@ -96,7 +96,6 @@ namespace QuantConnect
             return success;
         }
 
-
         /// <summary>
         /// Create a zip file of the supplied file names and data using a byte array
         /// </summary>
@@ -146,7 +145,6 @@ namespace QuantConnect
             return success;
         }
 
-
         /// <summary>
         /// Uncompress zip data byte array into a dictionary string array of filename-contents.
         /// </summary>
@@ -194,7 +192,6 @@ namespace QuantConnect
             return data;
         }
 
-
         /// <summary>
         /// Compress a given file and delete the original file. Automatically rename the file to name.zip.
         /// </summary>
@@ -241,6 +238,38 @@ namespace QuantConnect
             return zipPath;
         } // End Zip:
 
+        /// <summary>
+        /// Zips all files specified to a new zip at the destination path
+        /// </summary>
+        public static void ZipFiles(string destination, IEnumerable<string> files)
+        {
+            try
+            {
+                using (var zipStream = new ZipOutputStream(File.Create(destination)))
+                {
+                    var buffer = new byte[4096];
+                    foreach (var file in files)
+                    {
+                        if (!File.Exists(file))
+                        {
+                            Log.Trace("ZipFiles(): File does not exist: " + file);
+                            continue;
+                        }
+
+                        var entry = new ZipEntry(Path.GetFileName(file));
+                        zipStream.PutNextEntry(entry);
+                        using (var fstream = File.OpenRead(file))
+                        {
+                            StreamUtils.Copy(fstream, zipStream, buffer);
+                        }
+                    }
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+        }
 
         /// <summary>
         /// Unzip a local file and return its contents via streamreader.
@@ -282,6 +311,44 @@ namespace QuantConnect
             return reader;
         } // End UnZip
 
+        /// <summary>
+        /// Streams each line from the first zip entry in the specified zip file
+        /// </summary>
+        /// <param name="filename">The zip file path to stream</param>
+        /// <returns>An enumerable containing each line from the first unzipped entry</returns>
+        public static IEnumerable<string> ReadLines(string filename)
+        {
+            if (!File.Exists(filename))
+            {
+                Log.Error("Compression.ReadFirstZipEntry(): File does not exist: " + filename);
+                return null;
+            }
+
+            try
+            {
+                return ReadLinesImpl(filename);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+            return null;
+        }
+
+        private static IEnumerable<string> ReadLinesImpl(string filename)
+        {
+            using (var zip = Ionic.Zip.ZipFile.Read(filename))
+            {
+                var entry = zip[0];
+                using (var entryReader = new StreamReader(entry.OpenReader()))
+                {
+                    while (!entryReader.EndOfStream)
+                    {
+                        yield return entryReader.ReadLine();
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Unzip a local file and return its contents via streamreader:
@@ -316,7 +383,6 @@ namespace QuantConnect
 
             return reader;
         } // End UnZip
-
 
         /// <summary>
         /// Unzip a local file and return its contents via streamreader to a local the same location as the ZIP.
@@ -372,7 +438,6 @@ namespace QuantConnect
             return files;
         } // End UnZip
 
-
         /// <summary>
         /// Extracts all file from a zip archive and copies them to a destination folder.
         /// </summary>
@@ -386,7 +451,6 @@ namespace QuantConnect
             tarArchive.Close();
             inStream.Close();
         }
-
 
         /// <summary>
         /// Extract tar.gz files to disk
@@ -403,7 +467,5 @@ namespace QuantConnect
             gzipStream.Close();
             inStream.Close();
         }
-
-
     } // End OS Class
 } // End QC Namespace
