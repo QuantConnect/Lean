@@ -57,6 +57,7 @@
     </Compile>
     <Compile Include="Compression.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ZipStreamWriter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
