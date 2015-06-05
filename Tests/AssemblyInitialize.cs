@@ -8,6 +8,6 @@ public class AssemblyInitialize
     public void SetLogHandler()
     {
         // save output to file as well
-        Log.LogHandler = new CompositeLogHandler();
+        Log.LogHandler = new ConsoleLogHandler();
     }
 }
