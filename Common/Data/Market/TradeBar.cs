@@ -132,7 +132,13 @@ namespace QuantConnect.Data.Market
             {
                 //Parse the data into a trade bar:
                 var csv = line.Split(',');
-                const decimal scaleFactor = 10000m;
+                var scaleFactor = 10000m;
+                if (config.Resolution == Resolution.Hour || config.Resolution == Resolution.Daily)
+                {
+                    // hourly/daily data is saved as dollars
+                    scaleFactor = 1m;
+                }
+                
                 Symbol = config.Symbol;
                 Period = config.Resolution.ToTimeSpan();
 

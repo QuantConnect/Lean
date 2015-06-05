@@ -176,6 +176,26 @@ namespace QuantConnect.Data.Market
             AskPrice = Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture);
         }
 
+        /// <summary>
+        /// Constructor for QuantConnect tick data
+        /// </summary>
+        /// <param name="symbol">Symbol for underlying asset</param>
+        /// <param name="line">CSV line of data from QC tick csv</param>
+        /// <param name="baseDate">The base date of the tick</param>
+        public Tick(string symbol, string line, DateTime baseDate)
+        {
+            var csv = line.Split(',');
+            DataType = MarketDataType.Tick;
+            Symbol = symbol;
+            Time = baseDate.Date.AddMilliseconds(Convert.ToInt32(csv[0]));
+            Value = csv[1].ToDecimal()/10000m;
+            TickType = TickType.Trade;
+            Quantity = Convert.ToInt32(csv[2]);
+            Exchange = csv[3].Trim();
+            SaleCondition = csv[4];
+            Suspicious = Convert.ToInt32(csv[5]) == 1;
+        }
+
 
         /// <summary>
         /// Parse a tick data line from quantconnect zip source files.
