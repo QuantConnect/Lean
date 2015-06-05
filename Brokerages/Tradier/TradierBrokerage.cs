@@ -324,7 +324,7 @@ namespace QuantConnect.Brokerages.Tradier
             if (!success)
             {
                 // if we can't refresh our tokens then we must stop the algorithm
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "RefreshSession", "Failed to refresh access token."));
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "RefreshSession", "Failed to refresh access token: " + raw));
             }
 
             return success;
