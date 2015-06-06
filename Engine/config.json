@@ -5,6 +5,7 @@
     // engine
     "local": "true",
     "live-mode": "false",
+    "data-folder": "../../../Data/",
 
     // handlers
     "log-handler":  "QuantConnect.Logging.CompositeLogHandler",

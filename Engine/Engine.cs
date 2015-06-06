@@ -52,6 +52,7 @@ namespace QuantConnect.Lean.Engine
         *********************************************************/
         private static bool _liveMode = Config.GetBool("live-mode");
         private static bool _local = Config.GetBool("local");
+        private static readonly string _dataFolder = Config.Get("data-folder", @"../../../Data/");
         private static IBrokerage _brokerage;
         private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
 
@@ -134,6 +135,17 @@ namespace QuantConnect.Lean.Engine
             get
             {
                 return _liveMode;
+            }
+        }
+
+        /// <summary>
+        /// The root directory of the data folder for this application
+        /// </summary>
+        public static string DataFolder
+        {
+            get
+            {
+                return _dataFolder;
             }
         }
 

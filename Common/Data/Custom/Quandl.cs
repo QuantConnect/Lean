@@ -118,9 +118,10 @@ namespace QuantConnect.Data.Custom
         /// </summary>
         /// <param name="config">Subscription configuration object</param>
         /// <param name="date">Date of the data file we're looking for</param>
-        /// <param name="datafeed"></param>
+        /// <param name="datafeed">Type of datafeed we're requesting - backtest or live</param>
+        /// <param name="dataFolder">The root directory of the data folder for this application</param>
         /// <returns>STRING API Url for Quandl.</returns>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed, string dataFolder)
         {
             return @"https://www.quandl.com/api/v1/datasets/" + config.Symbol + ".csv?sort_order=asc&exclude_headers=false&auth_token=" + _authCode;
         }
