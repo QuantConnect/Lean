@@ -35,12 +35,12 @@ namespace QuantConnect
         /// <summary>
         /// Algo cancellation controls - cancel source.
         /// </summary>
-        public static CancellationTokenSource cancellation = new CancellationTokenSource();
+        public static CancellationTokenSource Cancellation = new CancellationTokenSource();
 
         /// <summary>
         /// Algo cancellation controls - cancellation token for algorithm thread.
         /// </summary>
-        public static CancellationToken cancelToken = new CancellationToken();
+        public static CancellationToken CancelToken = new CancellationToken();
 
 
         /******************************************************** 
@@ -53,7 +53,7 @@ namespace QuantConnect
         {
             get 
             {
-                return cancelToken.IsCancellationRequested;
+                return CancelToken.IsCancellationRequested;
             }
         }
 
@@ -66,8 +66,8 @@ namespace QuantConnect
         /// </summary>
         public static void ResetCancelToken() 
         {
-            cancellation = new CancellationTokenSource();
-            cancelToken = cancellation.Token;
+            Cancellation = new CancellationTokenSource();
+            CancelToken = Cancellation.Token;
         }
 
 
@@ -95,7 +95,7 @@ namespace QuantConnect
             ResetCancelToken();
 
             //Thread:
-            var task = Task.Factory.StartNew(codeBlock, cancelToken);
+            var task = Task.Factory.StartNew(codeBlock, CancelToken);
 
             while (!task.IsCompleted && DateTime.Now < end)
             {
@@ -140,7 +140,7 @@ namespace QuantConnect
 
             if (message != "")
             {
-                cancellation.Cancel();
+                Cancellation.Cancel();
                 Log.Error("Security.ExecuteWithTimeLimit(): " + message);
                 throw new Exception(message);
             }
