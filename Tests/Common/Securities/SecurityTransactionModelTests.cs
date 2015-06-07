@@ -245,7 +245,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test, Ignore("Unknown temporary error: JB, 7th June 2015")]
         public void PerformsMarketOnOpenUsingOpenPrice()
         {
-            var reference = DateTime.Today.AddHours(9);// before market open
+            var reference = new DateTime(2015, 06, 05, 9, 0, 0); // before market open
             var model = new SecurityTransactionModel();
             var order = new MarketOnOpenOrder(Symbol, SecurityType.Equity, 100, reference, 1m);
             var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
@@ -275,7 +275,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test, Ignore("Unknown temporary error: JB, 7th June 2015")]
         public void PerformsMarketOnCloseUsingClosingPrice()
         {
-            var reference = DateTime.Today.AddHours(15);// before market close
+            var reference = new DateTime(2015, 06, 05, 15, 0, 0); // before market close
             var model = new SecurityTransactionModel();
             var order = new MarketOnCloseOrder(Symbol, SecurityType.Equity, 100, reference, 1m);
             var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);

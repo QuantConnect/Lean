@@ -261,8 +261,9 @@ namespace QuantConnect.Data.Market
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source request if source spread across multiple files</param>
         /// <param name="datafeed">Source of the datafeed enum</param>
+        /// <param name="dataFolder">The root directory of the data folder for this application</param>
         /// <returns>String source location of the file to be opened with a stream</returns>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed, string dataFolder)
         {
             var source = "";
             var dataType = TickType.Trade;
@@ -280,7 +281,7 @@ namespace QuantConnect.Data.Market
                         dateFormat = "yyMMdd";
                     }
                     var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol; 
-                    source = Constants.DataFolder + config.SecurityType.ToString().ToLower();
+                    source = dataFolder + config.SecurityType.ToString().ToLower();
                     source += @"/" + config.Resolution.ToString().ToLower() + @"/" + symbol.ToLower() + @"/";
                     source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
                     break;

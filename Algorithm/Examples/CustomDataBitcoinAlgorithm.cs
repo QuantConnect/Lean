@@ -130,8 +130,9 @@ namespace QuantConnect.Algorithm.Examples
         /// <param name="config">Subscription data, symbol name, data type</param>
         /// <param name="date">Current date we're requesting. This allows you to break up the data source into daily files.</param>
         /// <param name="datafeed">Datafeed type: Backtesting or the Live data broker who will provide live data. You can specify a different source for live trading! </param>
+        /// <param name="dataFolder">The root directory of the data folder for this application</param>
         /// <returns>string URL end point.</returns>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed, string dataFolder)
         {
             switch (datafeed)
             {

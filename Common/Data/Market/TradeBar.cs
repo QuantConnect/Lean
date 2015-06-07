@@ -291,8 +291,9 @@ namespace QuantConnect.Data.Market
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source request if source spread across multiple files</param>
         /// <param name="datafeed">Source of the datafeed</param>
+        /// <param name="dataFolder">The root directory of the data folder for this application</param>
         /// <returns>String source location of the file</returns>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed, string dataFolder)
         {
             var source = "";
             var dataType = TickType.Trade;
@@ -322,7 +323,7 @@ namespace QuantConnect.Data.Market
                         symbolPath = string.Empty;
                     }
 
-                    source = Path.Combine(Constants.DataFolder, securityTypePath, resolutionPath, symbolPath, filename);
+                    source = Path.Combine(dataFolder, securityTypePath, resolutionPath, symbolPath, filename);
                     break;
 
                 //Live Trading Endpoint: Fake, not actually used but need for consistency with backtesting system. Set to "" so will not use subscription reader.

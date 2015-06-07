@@ -43,7 +43,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         }
 
         /// <summary>
-        /// Reads a FactorFile in from the <see cref="Constants.DataFolder"/>.
+        /// Reads a FactorFile in from the <see cref="Engine.DataFolder"/>.
         /// </summary>
         public static FactorFile Read(string symbol)
         {
@@ -86,7 +86,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         public static bool HasScalingFactors(string symbol)
         {
             // check for factor files
-            if (File.Exists(Constants.DataFolder + "equity/factor_files/" + symbol.ToLower() + ".csv"))
+            if (File.Exists(Engine.DataFolder + "equity/factor_files/" + symbol.ToLower() + ".csv"))
             {
                 return true;
             }

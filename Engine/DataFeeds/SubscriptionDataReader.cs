@@ -711,7 +711,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 try
                 {
-                    newSource = _dataFactory.GetSource(_config, date, _feedEndpoint);
+                    newSource = _dataFactory.GetSource(_config, date, _feedEndpoint, Engine.DataFolder);
                 }
                 catch (Exception err) 
                 {

@@ -169,7 +169,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// This function is purposefully not implemented.
         /// </summary>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed, string dataFolder)
         {
             throw new NotImplementedException("IndicatorDataPoint does not support the GetSource function. This function should never be called on this type.");
         }

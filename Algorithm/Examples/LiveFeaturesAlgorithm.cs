@@ -133,7 +133,7 @@ namespace QuantConnect
         /// <summary>
         /// Source URL's of Backtesting and Live Streams:
         /// </summary>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed, string dataFolder)
         {
             var source = "";
 

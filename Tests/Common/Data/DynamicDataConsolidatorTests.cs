@@ -263,7 +263,7 @@ namespace QuantConnect.Tests.Common.Data
                 throw new NotImplementedException();
             }
 
-            public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+            public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed, string dataFolder)
             {
                 throw new NotImplementedException();
             }

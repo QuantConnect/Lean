@@ -83,13 +83,14 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream 
         /// </summary>
-        /// <param name="datafeed">Type of datafeed we're reqesting - backtest or live</param>
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source file</param>
+        /// <param name="datafeed">Type of datafeed we're requesting - backtest or live</param>
+        /// <param name="dataFolder">The root directory of the data folder for this application</param>
         /// <returns>String URL of source file.</returns>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed, string dataFolder)
         {
-            return Constants.DataFolder + @"/equity/factor_files/" + config.Symbol + ".csv";
+            return dataFolder + @"/equity/factor_files/" + config.Symbol + ".csv";
         }
 
         /// <summary>

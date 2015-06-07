@@ -163,7 +163,7 @@ namespace QuantConnect.Algorithm.Examples
         /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream 
         /// </summary>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed, string dataFolder)
         {
             return "https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1";
         }
@@ -234,7 +234,7 @@ namespace QuantConnect.Algorithm.Examples
         /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream 
         /// </summary>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed, string dataFolder)
         {
             return "https://www.dropbox.com/s/m6ecmkg9aijwzy2/USDINR.csv?dl=1";
         }
