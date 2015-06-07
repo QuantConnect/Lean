@@ -43,16 +43,15 @@ namespace QuantConnect.Lean.Engine.Results
         *********************************************************/
         // Required properties for the cloud app.
         private bool _isActive;
-        private bool _firstHoldingsPacket = true;
-        private readonly string _compileId;
-        private readonly string _deployId;
+        private string _compileId;
+        private string _deployId;
+        private LiveNodePacket _job;
         private ConcurrentDictionary<string, Chart> _charts;
         private ConcurrentQueue<OrderEvent> _orderEvents; 
         private ConcurrentQueue<Packet> _messages;
         private IAlgorithm _algorithm;
         private bool _exitTriggered;
         private readonly DateTime _startTime;
-        private readonly LiveNodePacket _job;
         private readonly Dictionary<string, string> _runtimeStatistics = new Dictionary<string, string>();
 
         //Sampling Periods:
@@ -152,12 +151,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Initialize the live trading result handler
         /// </summary>
-        /// <param name="job">Live trading job</param>
-        public LiveTradingResultHandler(LiveNodePacket job)
+        public LiveTradingResultHandler()
         {
-            _job = job;
-            _deployId = job.DeployId;
-            _compileId = job.CompileId;
             _charts = new ConcurrentDictionary<string, Chart>();
             _orderEvents = new ConcurrentQueue<OrderEvent>();
             _messages = new ConcurrentQueue<Packet>();
@@ -176,6 +171,18 @@ namespace QuantConnect.Lean.Engine.Results
         /******************************************************** 
         * CLASS METHODS
         *********************************************************/
+        /// <summary>
+        /// Initialize the result handler with this result packet.
+        /// </summary>
+        /// <param name="job">Algorithm job packet for this result handler</param>
+        public void Initialize(AlgorithmNodePacket job)
+        {
+            _job = (LiveNodePacket)job;
+            if (_job == null) throw new Exception("LiveResultHandler.Constructor(): Submitted Job type invalid."); 
+            _deployId = _job.DeployId;
+            _compileId = _job.CompileId;
+        }
+        
         /// <summary>
         /// Live trading result handler thread.
         /// </summary>

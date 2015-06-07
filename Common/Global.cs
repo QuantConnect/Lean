@@ -297,19 +297,6 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Result events handler options for processing algorithm messages
-    /// </summary>
-    public enum ResultHandlerEndpoint
-    {
-        /// Send Results to the Backtesting Web Application
-        Backtesting,
-        /// Send the Results to the Local Console
-        Console,
-        /// Send Results to the Live Web Application
-        LiveTrading,
-    }
-
-    /// <summary>
     /// Setup handler options for setting up algorithm state and the livetrading/backtest requirements.
     /// </summary>
     public enum SetupHandlerEndpoint

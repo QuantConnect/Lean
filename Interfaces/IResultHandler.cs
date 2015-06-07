@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -27,6 +28,7 @@ namespace QuantConnect.Lean.Engine.Results
     /// Handle the results of the backtest: where should we send the profit, portfolio updates:
     /// Backtester or the Live trading platform:
     /// </summary>
+    [InheritedExport(typeof(IResultHandler))]
     public interface IResultHandler
     {
         /******************************************************** 
@@ -80,6 +82,12 @@ namespace QuantConnect.Lean.Engine.Results
         /******************************************************** 
         * INTERFACE METHODS
         *********************************************************/
+        /// <summary>
+        /// Initialize the result handler with this result packet.
+        /// </summary>
+        /// <param name="job">Algorithm job packet for this result handler</param>
+        void Initialize(AlgorithmNodePacket job);
+
         /// <summary>
         /// Primary result thread entry point to process the result message queue and send it to whatever endpoint is set.
         /// </summary>

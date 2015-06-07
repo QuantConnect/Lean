@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Lean.Engine", "Engine\QuantConnect.Lean.Engine.csproj", "{12156F46-D07E-4E3D-AD2B-7409E82AB62F}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -36,6 +36,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Compression", "Compression\QuantConnect.Compression.csproj", "{BC3BC77E-0502-43DB-A727-B94F9765D74B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Api", "Api\QuantConnect.Api.csproj", "{C5D44209-49A0-4505-A870-043C5EF5FDDF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Views", "UserInterface\QuantConnect.Views.csproj", "{C68BEEED-B0C0-4002-94D4-1E871133D02A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -232,6 +234,18 @@ Global
 		{C5D44209-49A0-4505-A870-043C5EF5FDDF}.Release|x64.ActiveCfg = Release|x64
 		{C5D44209-49A0-4505-A870-043C5EF5FDDF}.Release|x64.Build.0 = Release|x64
 		{C5D44209-49A0-4505-A870-043C5EF5FDDF}.Release|x86.ActiveCfg = Release|Any CPU
+		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Release|x64.ActiveCfg = Release|Any CPU
+		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

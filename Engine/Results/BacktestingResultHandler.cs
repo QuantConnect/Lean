@@ -44,7 +44,6 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextUpdate = new DateTime();
         private DateTime _nextS3Update = new DateTime();
         DateTime _lastUpdate = new DateTime();
-        DateTime _timeRequested = new DateTime();
         private string _debugMessage = "";
         private List<string> _log = new List<string>();
         private string _errorMessage = "";
@@ -71,6 +70,9 @@ namespace QuantConnect.Lean.Engine.Results
         //Processing Time:
         private DateTime _startTime;
         private DateTime _nextSample;
+
+        private const double _samples = 4000;
+        private const double _minimumSamplePeriod = 4;
 
         /********************************************************
         * CLASS PROPERTIES
@@ -163,33 +165,19 @@ namespace QuantConnect.Lean.Engine.Results
         * CONSTRUCTOR
         *********************************************************/
         /// <summary>
-        /// Backtesting result handler constructor.
+        /// Default initializer for 
         /// </summary>
-        /// <remarks>Setup the default sampling and notification periods based on the backtest length.</remarks>
-        public BacktestingResultHandler(BacktestNodePacket job) 
+        public BacktestingResultHandler()
         {
-            _job = job;
-            _exitTriggered = false;
-            _compileId = job.CompileId;
-            _backtestId = job.BacktestId;
-            _timeRequested = DateTime.Now;
-
-            //Get the resample period:
-            double samples = 4000;
-            double minimumSamplePeriod = 4;
-            double totalMinutes = (job.PeriodFinish - job.PeriodStart).TotalMinutes;
-            var resampleMinutes = (totalMinutes < (minimumSamplePeriod * samples)) ? minimumSamplePeriod : (totalMinutes / samples); // Space out the sampling every 
-            _resamplePeriod = TimeSpan.FromMinutes(resampleMinutes);
-            Log.Trace("BacktestingResultHandler(): Sample Period Set: " + resampleMinutes.ToString("00.00"));
-
-            //Notification Period for Browser Pushes:
-            _notificationPeriod = TimeSpan.FromSeconds(2);
-
             //Initialize Properties:
             _messages = new ConcurrentQueue<Packet>();
             _charts = new ConcurrentDictionary<string, Chart>();
             _chartLock = new Object();
             _isActive = true;
+
+            //Notification Period for Browser Pushes:
+            _notificationPeriod = TimeSpan.FromSeconds(2);
+            _exitTriggered = false;
 
             //Set the start time for the algorithm
             _startTime = DateTime.Now;
@@ -203,6 +191,24 @@ namespace QuantConnect.Lean.Engine.Results
         /******************************************************** 
         * CLASS METHODS
         *********************************************************/
+        /// <summary>
+        /// Initialize the result handler with this result packet.
+        /// </summary>
+        /// <param name="job">Algorithm job packet for this result handler</param>
+        public void Initialize(AlgorithmNodePacket job)
+        {
+            _job = (BacktestNodePacket)job;
+            if (_job == null) throw new Exception("BacktestingResultHandler.Constructor(): Submitted Job type invalid.");
+            _compileId = _job.CompileId;
+            _backtestId = _job.BacktestId;
+
+            //Get the resample period:
+            var totalMinutes = (_job.PeriodFinish - _job.PeriodStart).TotalMinutes;
+            var resampleMinutes = (totalMinutes < (_minimumSamplePeriod * _samples)) ? _minimumSamplePeriod : (totalMinutes / _samples); // Space out the sampling every 
+            _resamplePeriod = TimeSpan.FromMinutes(resampleMinutes);
+            Log.Trace("BacktestingResultHandler(): Sample Period Set: " + resampleMinutes.ToString("00.00"));
+        }
+        
         /// <summary>
         /// The main processing method steps through the messaging queue and processes the messages one by one.
         /// </summary>

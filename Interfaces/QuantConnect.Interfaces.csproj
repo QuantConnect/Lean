@@ -74,6 +74,7 @@
     <Compile Include="IMessagingHandler.cs" />
     <Compile Include="IDataQueueHandler.cs" />
     <Compile Include="IJobQueueHandler.cs" />
+    <Compile Include="IResultHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

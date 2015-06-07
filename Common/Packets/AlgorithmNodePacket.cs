@@ -134,8 +134,11 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Result endpoint plugin to select for task
         /// </summary>
-        [JsonProperty(PropertyName = "eResultEndpoint")]
-        public ResultHandlerEndpoint ResultEndpoint = ResultHandlerEndpoint.Backtesting;
+        /// <remarks>
+        ///     DEPRECATED: Maintained here for temporary consistency. Eventually all the endpoint enums will be replaced with MEF / Type import loading by config.
+        /// </remarks>
+        //[JsonProperty(PropertyName = "eResultEndpoint")]
+        //public ResultHandlerEndpoint ResultEndpoint = ResultHandlerEndpoint.Backtesting;
 
         /// <summary>
         /// Setup handler endpoint for this task

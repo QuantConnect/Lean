@@ -26,27 +26,25 @@ using QuantConnect.Packets;
 namespace QuantConnect.Lean.Engine.Results
 {
     /// <summary>
-    /// Console local resulthandler passes messages back to the console/local GUI display.
+    /// Desktop Result Handler - Desktop GUI Result Handler for Piping Results to WinForms:
     /// </summary>
-    public class ConsoleResultHandler : IResultHandler
+    public class DesktopResultHandler : IResultHandler
     {
         /******************************************************** 
         * PRIVATE VARIABLES
         *********************************************************/
         private bool _isActive;
         private bool _exitTriggered;
-        private DateTime _updateTime;
-        private DateTime _lastSampledTimed;
         private IAlgorithm _algorithm;
         private readonly object _chartLock;
-        private IConsoleStatusHandler _algorithmNode;
+        private AlgorithmNodePacket _job;
 
         //Sampling Periods:
         private DateTime _nextSample;
-        private TimeSpan _resamplePeriod;
-        private TimeSpan _notificationPeriod;
-
+        private readonly TimeSpan _resamplePeriod;
+        private readonly TimeSpan _notificationPeriod;
         public Dictionary<string, string> FinalStatistics { get; private set; } 
+
 
         /******************************************************** 
         * PUBLIC PROPERTIES
@@ -123,16 +121,18 @@ namespace QuantConnect.Lean.Engine.Results
         * PUBLIC CONSTRUCTOR
         *********************************************************/
         /// <summary>
-        /// Console result handler constructor.
+        /// Desktop default constructor
         /// </summary>
-        public ConsoleResultHandler() 
+        public DesktopResultHandler() 
         {
+            FinalStatistics = new Dictionary<string, string>();
             Messages = new ConcurrentQueue<Packet>();
             Charts = new ConcurrentDictionary<string, Chart>();
-            FinalStatistics = new Dictionary<string, string>();
+
             _chartLock = new Object();
             _isActive = true;
-            _notificationPeriod = TimeSpan.FromSeconds(5);
+            _resamplePeriod = TimeSpan.FromSeconds(2);
+            _notificationPeriod = TimeSpan.FromSeconds(2);
         }
 
         /******************************************************** 
@@ -141,27 +141,15 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Initialize the result handler with this result packet.
         /// </summary>
-        /// <param name="packet">Algorithm job packet for this result handler</param>
-        public void Initialize(AlgorithmNodePacket packet)
+        /// <param name="job">Algorithm job packet for this result handler</param>
+        public void Initialize(AlgorithmNodePacket job)
         {
-            // we expect one of two types here, the backtest node packet or the live node packet
-            var job = packet as BacktestNodePacket;
-            if (job != null)
-            {
-                _algorithmNode = new BacktestConsoleStatusHandler(job);
-            }
-            else
-            {
-                var live = packet as LiveNodePacket;
-                if (live == null)
-                {
-                    throw new ArgumentException("Unexpected AlgorithmNodeType: " + packet.GetType().Name);
-                }
-                _algorithmNode = new LiveConsoleStatusHandler(live);
-            }
-            _resamplePeriod = _algorithmNode.ComputeSampleEquityPeriod();
+            //Redirect the log messages here:
+            _job = job;
+            var desktopLogging = new FunctionalLogHandler(DebugMessage, DebugMessage, ErrorMessage);
+            Log.LogHandler = new CompositeLogHandler(new[] { desktopLogging, Log.LogHandler });
         }
-        
+
         /// <summary>
         /// Entry point for console result handler thread.
         /// </summary>
@@ -170,15 +158,8 @@ namespace QuantConnect.Lean.Engine.Results
             while ( !_exitTriggered || Messages.Count > 0 ) 
             {
                 Thread.Sleep(100);
-
-                if (DateTime.Now > _updateTime)
-                {
-                    _updateTime = DateTime.Now.AddSeconds(5);
-                    _algorithmNode.LogAlgorithmStatus(_lastSampledTimed);
-                }
             }
-
-            Log.Trace("ConsoleResultHandler: Ending Thread...");
+            DebugMessage("DesktopResultHandler: Ending Thread...");
             _isActive = false;
         }
 
@@ -188,7 +169,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public void DebugMessage(string message)
         {
-            Log.Trace("Debug Message >> " + message);
+            Messages.Enqueue(new DebugPacket(0, "", "", message));
         }
 
         /// <summary>
@@ -197,7 +178,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd in the log.</param>
         public void LogMessage(string message)
         {
-            Log.Trace("Log Message >> " + message);
+            Messages.Enqueue(new LogPacket("", message));
         }
 
         /// <summary>
@@ -207,7 +188,16 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Stacktrace information string</param>
         public void RuntimeError(string message, string stacktrace = "")
         {
-            Log.Error("Error Message >> " + message + (!string.IsNullOrEmpty(stacktrace) ? (" >> ST: " + stacktrace) : ""));
+            Messages.Enqueue(new RuntimeErrorPacket("", message, stacktrace));
+        }
+
+        /// <summary>
+        /// Send an error message back to the console highlighted in red with a stacktrace.
+        /// </summary>
+        /// <param name="message">Error message we'd like shown in console.</param>
+        public void ErrorMessage(string message)
+        {
+            Messages.Enqueue(new HandledErrorPacket("", message, ""));
         }
 
         /// <summary>
@@ -217,7 +207,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Stacktrace information string</param>
         public void ErrorMessage(string message, string stacktrace = "")
         {
-            Log.Error("Error Message >> " + message + (!string.IsNullOrEmpty(stacktrace) ? (" >> ST: " + stacktrace) : ""));
+            Messages.Enqueue(new HandledErrorPacket("", message, stacktrace));
         }
 
         /// <summary>
@@ -260,7 +250,6 @@ namespace QuantConnect.Lean.Engine.Results
         public void SampleEquity(DateTime time, decimal value)
         {
             Sample("Strategy Equity", ChartType.Stacked, "Equity", SeriesType.Candle, time, value);
-            _lastSampledTimed = time;
         }
 
         /// <summary>
@@ -292,7 +281,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <remarks>In backtesting we do not send the algorithm status updates.</remarks>
         public void SendStatusUpdate(string algorithmId, AlgorithmStatus status, string message = "")
         {
-            Log.Trace("ConsoleResultHandler.SendStatusUpdate(): Algorithm Status: " + status + " : " + message);
+            DebugMessage("DesktopResultHandler.SendStatusUpdate(): Algorithm Status: " + status + " : " + message);
         }
 
 
@@ -358,8 +347,7 @@ namespace QuantConnect.Lean.Engine.Results
             // Bleh. Nicely format statistical analysis on your algorithm results. Save to file etc.
             foreach (var pair in statistics) 
             {
-                Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
-                //Log.Trace(string.Format("statistics.Add(\"{0}\",\"{1}\");", pair.Key, pair.Value));
+                DebugMessage("STATISTICS:: " + pair.Key + " " + pair.Value);
             }
 
             FinalStatistics = statistics;
@@ -390,7 +378,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="newEvent">New order event details</param>
         public void OrderEvent(OrderEvent newEvent)
         {
-            Log.Debug("ConsoleResultHandler.OrderEvent(): id:" + newEvent.OrderId + " >> Status:" + newEvent.Status + " >> Fill Price: " + newEvent.FillPrice.ToString("C") + " >> Fill Quantity: " + newEvent.FillQuantity);
+            DebugMessage("DesktopResultHandler.OrderEvent(): id:" + newEvent.OrderId + " >> Status:" + newEvent.Status + " >> Fill Price: " + newEvent.FillPrice.ToString("C") + " >> Fill Quantity: " + newEvent.FillQuantity);
         }
 
 
@@ -401,7 +389,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="value">Runtime headline statistic value</param>
         public void RuntimeStatistic(string key, string value)
         {
-            Log.Trace("ConsoleResultHandler.RuntimeStatistic(): "  + key + " : " + value);
+            DebugMessage("DesktopResultHandler.RuntimeStatistic(): " + key + " : " + value);
         }
 
 
@@ -423,96 +411,6 @@ namespace QuantConnect.Lean.Engine.Results
         {
             // Do nothing.
         }
-
-        /// <summary>
-        /// Provides an abstraction layer for live vs backtest packets to provide status/sampling to the AlgorithmManager
-        /// </summary>
-        /// <remarks>
-        /// Since we can run both live and back test from the console, we need two implementations of what to do
-        /// at certain times
-        /// </remarks>
-        private interface IConsoleStatusHandler
-        {
-            void LogAlgorithmStatus(DateTime current);
-            TimeSpan ComputeSampleEquityPeriod();
-        }
-
-        // uses a const 2 second sample equity period and does nothing for logging algorithm status
-        private class LiveConsoleStatusHandler : IConsoleStatusHandler
-        {
-            private readonly LiveNodePacket _job;
-            public LiveConsoleStatusHandler(LiveNodePacket _job)
-            {
-                this._job = _job;
-            }
-            public void LogAlgorithmStatus(DateTime current)
-            {
-                // later we can log daily %Gain if possible
-            }
-            public TimeSpan ComputeSampleEquityPeriod()
-            {
-                return TimeSpan.FromSeconds(2);
-            }
-        }
-        // computes sample equity period from 4000 samples evenly spaced over the backtest interval and logs %complete to log file
-        private class BacktestConsoleStatusHandler : IConsoleStatusHandler
-        {
-            private readonly BacktestNodePacket _job;
-            private double? _backtestSpanInDays;
-            public BacktestConsoleStatusHandler(BacktestNodePacket _job)
-            {
-                this._job = _job;
-            }
-            public void LogAlgorithmStatus(DateTime current)
-            {
-                if (!_backtestSpanInDays.HasValue)
-                {
-                    _backtestSpanInDays = Math.Round((_job.PeriodFinish - _job.PeriodStart).TotalDays);
-                    if (_backtestSpanInDays == 0.0)
-                    {
-                        _backtestSpanInDays = null;
-                    }
-                }
-
-                // we need to wait until we've called initialize on the algorithm
-                // this is not ideal at all
-                if (_backtestSpanInDays.HasValue)
-                {
-                    var daysProcessed = (current - _job.PeriodStart).TotalDays;
-                    if (daysProcessed < 0) daysProcessed = 0;
-                    if (daysProcessed > _backtestSpanInDays.Value) daysProcessed = _backtestSpanInDays.Value;
-                    Log.Trace("Progress: " + (daysProcessed * 100 / _backtestSpanInDays.Value).ToString("F2") + "% Processed: " + daysProcessed.ToString("0.000") + " days of total: " + (int)_backtestSpanInDays.Value);
-                }
-                else
-                {
-                    Log.Trace("Initializing...");
-                }
-            }
-
-            public TimeSpan ComputeSampleEquityPeriod()
-            {
-                const double samples = 4000;
-                const double minimumSamplePeriod = 4 * 60;
-                double resampleMinutes = minimumSamplePeriod;
-
-                var totalMinutes = (_job.PeriodFinish - _job.PeriodStart).TotalMinutes;
-
-                // before initialize is called this will be zero
-                if (totalMinutes > 0.0)
-                {
-                    resampleMinutes = (totalMinutes < (minimumSamplePeriod * samples)) ? minimumSamplePeriod : (totalMinutes / samples);
-                }
-
-                // set max value
-                if (resampleMinutes < minimumSamplePeriod)
-                {
-                    resampleMinutes = minimumSamplePeriod;
-                }
-                    
-                return TimeSpan.FromMinutes(resampleMinutes);
-            }
-        }
-
 
         /// <summary>
         /// Not used
