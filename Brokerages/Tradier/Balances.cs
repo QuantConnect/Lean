@@ -222,11 +222,11 @@ namespace QuantConnect.Brokerages.Tradier
 
         ///"Cash Available"
         [JsonProperty(PropertyName = "cash_available")]
-        public int CashAvailable;
+        public decimal CashAvailable;
 
         ///"Unsettled."
         [JsonProperty(PropertyName = "unsettled_funds")]
-        public int UnsettledFunds;
+        public decimal UnsettledFunds;
 
         /// Constructor
         public TradierAccountTypeCash()
