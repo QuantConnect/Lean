@@ -440,6 +440,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Donchian Channel indicator which will compute the Upper Band and Lower Band.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Donchian Channel we seek.</param>
+        /// <param name="period">The period over which to compute the Donchian Channel.</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Donchian Channel indicator for the requested symbol.</returns>
+        public DonchianChannel DCH(string symbol, int period, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "DCH", resolution);
+            var donchianChannel = new DonchianChannel(name, period);
+            RegisterIndicator(symbol, donchianChannel, resolution, selector);
+            return donchianChannel;
+        }
+
+        /// <summary>
         /// Creates a new Stochastic indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose stochastic we seek</param>

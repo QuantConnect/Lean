@@ -112,7 +112,7 @@ namespace QuantConnect.Data.Consolidators
                 workingBar = new TradeBar
                 {
                     Symbol = data.Symbol,
-                    Time = data.Time,
+                    Time = GetRoundedBarTime(data.Time),
                     Open = open,
                     High = high,
                     Low = low,
