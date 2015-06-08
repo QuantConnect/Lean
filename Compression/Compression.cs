@@ -238,6 +238,26 @@ namespace QuantConnect
             return zipPath;
         } // End Zip:
 
+        public static void Zip(string data, string zipPath, string zipEntry)
+        {
+            using (var stream = new ZipOutputStream(File.Create(zipPath)))
+            {
+                var entry = new ZipEntry(zipEntry);
+                stream.PutNextEntry(entry);
+                var buffer = new byte[4096];
+                using (var dataReader = new MemoryStream(Encoding.Default.GetBytes(data)))
+                {
+                    int sourceBytes;
+                    do
+                    {
+                        sourceBytes = dataReader.Read(buffer, 0, buffer.Length);
+                        stream.Write(buffer, 0, sourceBytes);
+                    }
+                    while (sourceBytes > 0);
+                }
+            }
+        }
+
         /// <summary>
         /// Zips all files specified to a new zip at the destination path
         /// </summary>
@@ -378,7 +398,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error("Data.UnZip(): Stream >> " + err.Message);
+                Log.Error(err, "Data.UnZip(): Stream >> " + err.Message);
             }
 
             return reader;
