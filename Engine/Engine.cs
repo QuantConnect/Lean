@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -291,7 +291,7 @@ namespace QuantConnect.Lean.Engine
 
                     //Load the associated handlers for data, transaction and realtime events:
                     ResultHandler.SetAlgorithm(algorithm);
-                    DataFeed            = GetDataFeedHandler(algorithm, job);
+                    DataFeed = GetDataFeedHandler(algorithm, _brokerage, job);
                     TransactionHandler  = GetTransactionHandler(algorithm, _brokerage, ResultHandler, job);
                     RealTimeHandler     = GetRealTimeHandler(algorithm, _brokerage, DataFeed, ResultHandler, job);
 
@@ -486,7 +486,7 @@ namespace QuantConnect.Lean.Engine
         /// <param name="algorithm">User algorithm to scan for securities</param>
         /// <param name="job">Algorithm Node Packet</param>
         /// <returns>Class matching IDataFeed Interface</returns>
-        private static IDataFeed GetDataFeedHandler(IAlgorithm algorithm, AlgorithmNodePacket job)
+        private static IDataFeed GetDataFeedHandler(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket job)
         {
             var df = default(IDataFeed);
             switch (job.DataEndpoint) 
@@ -511,7 +511,13 @@ namespace QuantConnect.Lean.Engine
 
                 //Live Trading Data Source:
                 case DataFeedEndpoint.LiveTrading:
-                    var ds = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Config.Get("data-queue-handler", "LiveDataQueue"));
+
+                    var useBroker = Config.GetBool("use-broker-data-queue-handler", false);
+
+                    var ds = useBroker == true ?  
+                                brokerage as IDataQueueHandler:
+                                Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Config.Get("data-queue-handler", "LiveDataQueue"));
+
                     df = new LiveTradingDataFeed(algorithm, (LiveNodePacket)job, ds);
                     Log.Trace("Engine.GetDataFeedHandler(): Selected LiveTrading Datafeed");
                     break;
@@ -577,11 +583,28 @@ namespace QuantConnect.Lean.Engine
         /// <returns>Class Matching IResultHandler Inteface</returns>
         private static IResultHandler GetResultHandler(AlgorithmNodePacket job)
         {
-            var resultHandler = Config.Get("result-handler", "ConsoleResultHandler");
-            var rh = Composer.Instance.GetExportedValueByTypeName<IResultHandler>(resultHandler);
-            
-            rh.Initialize(job);
-            Log.Trace("Engine.GetResultHandler(): Loaded and Initialized Result Handler: " + resultHandler + "  v" + Constants.Version);
+            var rh = default(IResultHandler);
+
+            switch (job.ResultEndpoint)
+            {
+                //Local backtesting and live trading result handler route messages to the local console.
+                case ResultHandlerEndpoint.Console:
+                    Log.Trace("Engine.GetResultHandler(): Selected Console Output.");
+                    rh = new ConsoleResultHandler(job);
+                    break;
+
+                // Backtesting route messages to user browser.
+                case ResultHandlerEndpoint.Backtesting:
+                    Log.Trace("Engine.GetResultHandler(): Selected Backtesting API Result Endpoint.");
+                    rh = new BacktestingResultHandler((BacktestNodePacket)job);
+                    break;
+
+                // Live trading route messages to user's browser.
+                case ResultHandlerEndpoint.LiveTrading:
+                    Log.Trace("Engine.GetResultHandler(): Selected Live Trading API Result Endpoint.");
+                    rh = new LiveTradingResultHandler((LiveNodePacket)job);
+                    break;
+            }
             return rh;
         }
 
