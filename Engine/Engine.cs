@@ -583,28 +583,11 @@ namespace QuantConnect.Lean.Engine
         /// <returns>Class Matching IResultHandler Inteface</returns>
         private static IResultHandler GetResultHandler(AlgorithmNodePacket job)
         {
-            var rh = default(IResultHandler);
-
-            switch (job.ResultEndpoint)
-            {
-                //Local backtesting and live trading result handler route messages to the local console.
-                case ResultHandlerEndpoint.Console:
-                    Log.Trace("Engine.GetResultHandler(): Selected Console Output.");
-                    rh = new ConsoleResultHandler(job);
-                    break;
-
-                // Backtesting route messages to user browser.
-                case ResultHandlerEndpoint.Backtesting:
-                    Log.Trace("Engine.GetResultHandler(): Selected Backtesting API Result Endpoint.");
-                    rh = new BacktestingResultHandler((BacktestNodePacket)job);
-                    break;
-
-                // Live trading route messages to user's browser.
-                case ResultHandlerEndpoint.LiveTrading:
-                    Log.Trace("Engine.GetResultHandler(): Selected Live Trading API Result Endpoint.");
-                    rh = new LiveTradingResultHandler((LiveNodePacket)job);
-                    break;
-            }
+            var resultHandler = Config.Get("result-handler", "ConsoleResultHandler");
+            var rh = Composer.Instance.GetExportedValueByTypeName<IResultHandler>(resultHandler);
+            
+            rh.Initialize(job);
+            Log.Trace("Engine.GetResultHandler(): Loaded and Initialized Result Handler: " + resultHandler + "  v" + Constants.Version);
             return rh;
         }
 
