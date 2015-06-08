@@ -577,11 +577,8 @@ namespace QuantConnect.Lean.Engine
         /// <returns>Class Matching IResultHandler Inteface</returns>
         private static IResultHandler GetResultHandler(AlgorithmNodePacket job)
         {
-            var resultHandler = Config.Get("result-handler"); //, "BacktestingResultHandler"
-            var rhoh = Activator.CreateInstance(null, resultHandler);
-            var rh = (IResultHandler)rhoh.Unwrap();
-
-            // Composer.Instance.GetExportedValueByTypeName<IResultHandler>(resultHandler);
+            var resultHandler = Config.Get("result-handler", "ConsoleResultHandler");
+            var rh = Composer.Instance.GetExportedValueByTypeName<IResultHandler>(resultHandler);
             
             rh.Initialize(job);
             Log.Trace("Engine.GetResultHandler(): Loaded and Initialized Result Handler: " + resultHandler + "  v" + Constants.Version);

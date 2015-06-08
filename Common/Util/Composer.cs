@@ -34,8 +34,10 @@ namespace QuantConnect.Util
         private Composer()
         {
             // grab assemblies from current executing directory
-            var catalog = new DirectoryCatalog(AppDomain.CurrentDomain.BaseDirectory);
-            _compositionContainer = new CompositionContainer(catalog);
+            var dllCatalog = new DirectoryCatalog(AppDomain.CurrentDomain.BaseDirectory, "*.dll");
+            var exeCatalog = new DirectoryCatalog(AppDomain.CurrentDomain.BaseDirectory, "*.exe");
+            var aggregate = new AggregateCatalog(dllCatalog, exeCatalog);
+            _compositionContainer = new CompositionContainer(aggregate);
             _exportedValues = new Dictionary<Type, IEnumerable>();
         }
 

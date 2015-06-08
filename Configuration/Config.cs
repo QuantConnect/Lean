@@ -44,6 +44,7 @@ namespace QuantConnect.Configuration
             //Engine code:
             {"local", "true"},
             {"live-mode", "false"},
+            {"result-handler", "QuantConnect.Lean.Engine.Results.ConsoleResultHandler"},
             {"messaging-handler", "QuantConnect.Messaging.Messaging"},
             {"queue-handler", "QuantConnect.Queues.Queues"},
             {"api-handler", "QuantConnect.Api.Api"}
@@ -95,7 +96,7 @@ namespace QuantConnect.Configuration
                 else
                 {
                     value = defaultValue;
-                    Log.Trace("Config.Get(): Configuration key not found. Key: " + key);
+                    Log.Trace("Config.Get(): Configuration key not found. Key: " + key + " - Using default value: "+ defaultValue);
                 }
             }
             catch (Exception err)
