@@ -36,6 +36,19 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private static int ScriptProcessID;
 
         /// <summary>
+        /// Starts the interactive brokers gateway using values from configuration
+        /// </summary>
+        public static void StartFromConfiguration()
+        {
+            Start(Config.Get("ib-controller-dir"),
+                Config.Get("ib-tws-dir"),
+                Config.Get("ib-user-name"),
+                Config.Get("ib-password"),
+                Config.GetBool("ib-use-tws")
+                );
+        }
+
+        /// <summary>
         /// Starts the IB Gateway
         /// </summary>
         /// <param name="ibControllerDirectory">Directory to the IB controller installation</param>

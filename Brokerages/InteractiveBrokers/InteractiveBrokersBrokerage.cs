@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -28,13 +28,17 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Util;
 using IB = Krs.Ats.IBNet;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
+    using SymbolCacheKey = Tuple<SecurityType, string>;
+
     /// <summary>
     /// The Interactive Brokers brokerage
     /// </summary>
-    public sealed class InteractiveBrokersBrokerage : Brokerage
+    public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler
     {
         // next valid order id for this client
         private int _nextValidID;
@@ -137,6 +141,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.OrderStatus += HandleOrderStatusUpdates;
             _client.UpdateAccountValue += HandleUpdateAccountValue;
             _client.Error += HandleError;
+            _client.TickPrice += HandleTickPrice;
+            _client.TickSize += HandleTickSize;
+            _client.CurrentTime += HandleBrokerTime;
 
             // we need to wait until we receive the next valid id from the server
             _client.NextValidId += (sender, e) =>
@@ -1179,6 +1186,231 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return result;
         }
 
+        private DateTime GetBrokerTime()
+        {
+            return DateTime.Now.Add(_brokerTimeDiff);
+        }
+        void HandleBrokerTime(object sender, IB.CurrentTimeEventArgs e)
+        {
+            DateTime brokerTime = e.Time.ToLocalTime();
+            _brokerTimeDiff = brokerTime.Subtract(DateTime.Now);
+        }
+        TimeSpan _brokerTimeDiff = new TimeSpan(0);
+
+
+        /// <summary>
+        /// IDataQueueHandler interface implementaion 
+        /// </summary>
+        /// 
+        public IEnumerable<Data.BaseData> GetNextTicks()
+        {
+            var ticks = new List<Tick>();
+            Tick tick;
+
+            while (_ticks.TryDequeue(out tick))
+                ticks.Add(tick);
+
+            return ticks;
+        }
+
+        /// <summary>
+        /// Adds the specified symbols to the subscription
+        /// </summary>
+        /// <param name="job">Job we're subscribing for:</param>
+        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
+        public void Subscribe(Packets.LiveNodePacket job, IDictionary<SecurityType, List<string>> symbols)
+        {
+            foreach (var secType in symbols)
+                foreach (var symbol in secType.Value)
+                {
+                    var id = GetNextRequestID();
+                    var contract = CreateContract(symbol, secType.Key);
+                    Client.RequestMarketData(id, contract, null, false, false);
+
+                    var symbolTuple = Tuple.Create(secType.Key, symbol);
+                    _subscribedSymbols[symbolTuple] = id;
+                    _subscribedTickets[id] = symbolTuple;
+                }
+            
+        }
+
+        /// <summary>
+        /// Removes the specified symbols to the subscription
+        /// </summary>
+        /// <param name="job">Job we're processing.</param>
+        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
+        public void Unsubscribe(Packets.LiveNodePacket job, IDictionary<SecurityType, List<string>> symbols)
+        {
+            foreach (var secType in symbols)
+                foreach (var symbol in secType.Value)
+                {
+                    var res = default(int);
+
+                    if (_subscribedSymbols.TryRemove(Tuple.Create(secType.Key, symbol), out res))
+                    {
+                        Client.CancelMarketData(res);
+
+                        var secRes = default(SymbolCacheKey);
+                        _subscribedTickets.TryRemove(res, out secRes);
+                    }
+                }
+        }
+
+        
+        void HandleTickPrice(object sender, IB.TickPriceEventArgs e)
+        {
+            var symbol = default(SymbolCacheKey);
+
+            if (!_subscribedTickets.TryGetValue(e.TickerId, out symbol)) return;
+
+            var tick = new Tick();
+            tick.Symbol = symbol.Item2;
+            tick.Time = GetBrokerTime();
+            tick.Value = e.Price;
+
+            if (e.Price <= 0 &&
+                symbol.Item1 != SecurityType.Future &&
+                symbol.Item1 != SecurityType.Option)
+                return;
+
+            switch (e.TickType)
+            {
+                case IB.TickType.BidPrice:
+
+                    tick.TickType = TickType.Quote;
+                    tick.BidPrice = e.Price;
+                    _lastBidSizes.TryGetValue(symbol, out tick.Quantity);
+                    _lastBidPrices[symbol] = e.Price;
+                    break;
+
+                case IB.TickType.AskPrice:
+
+                    tick.TickType = TickType.Quote;
+                    tick.AskPrice = e.Price;
+                    _lastAskSizes.TryGetValue(symbol, out tick.Quantity);
+                    _lastAskPrices[symbol] = e.Price;
+                    break;
+
+                case IB.TickType.LastPrice:
+
+                    tick.TickType = TickType.Trade;
+                    tick.Value = e.Price;
+                    _lastPrices[symbol] = e.Price;
+                    break;
+
+                case IB.TickType.HighPrice:
+                case IB.TickType.LowPrice:
+                case IB.TickType.ClosePrice:
+                case IB.TickType.OpenPrice:
+                default:
+                    return;
+            }
+
+        }
+
+        /// <summary>
+        /// Modifies the quantity received from IB based on the security type
+        /// </summary>
+        public static int AdjustQuantity(SecurityType type, int size)
+        {
+            switch (type)
+            {
+                case SecurityType.Equity:
+                    return size * 100;
+                default:
+                    return size;
+            }
+        }
+
+        void HandleTickSize(object sender, IB.TickSizeEventArgs e)
+        {
+            var symbol = default(SymbolCacheKey);
+
+            if (!_subscribedTickets.TryGetValue(e.TickerId, out symbol)) return;
+
+            var tick = new Tick();
+            tick.Symbol = symbol.Item2;
+            tick.Quantity = AdjustQuantity(symbol.Item1, e.Size);
+            tick.Time = GetBrokerTime();
+
+            if (tick.Quantity == 0) return;
+
+            switch (e.TickType)
+            { 
+                case IB.TickType.BidSize:
+
+                    tick.TickType = TickType.Quote;
+
+                    _lastBidPrices.TryGetValue(symbol, out tick.BidPrice);
+                    _lastBidSizes[symbol] = tick.Quantity;
+
+                    tick.Value = tick.BidPrice;
+                    break;
+
+                case IB.TickType.AskSize:
+
+                    tick.TickType = TickType.Quote;
+
+                    _lastAskPrices.TryGetValue(symbol, out tick.AskPrice);
+                    _lastAskSizes[symbol] = tick.Quantity;
+
+                    tick.Value = tick.AskPrice;
+                    break;
+
+                case IB.TickType.Volume:
+
+                    bool bSend = true;
+                    int lastVolume;
+                    decimal lastPrice; 
+
+                    tick.TickType = TickType.Trade;
+
+                    if (!_lastVolumes.TryGetValue(symbol, out lastVolume))
+                    {
+                        bSend = false;
+                    }
+                    else if (e.Size <= lastVolume)
+                    {
+                        bSend = false;
+                    }
+                    else if (!_lastPrices.TryGetValue(symbol, out lastPrice))
+                    {
+                        bSend = false;
+                    }
+                    else
+                    {
+                        tick.Value = lastPrice;
+                    };
+
+                    if (bSend)
+                        tick.Quantity = AdjustQuantity(symbol.Item1, e.Size - lastVolume);
+
+                    if (e.Size > 0)
+                    {
+                        _lastVolumes[symbol] = e.Size;
+                    }
+
+                    break;
+                
+                case IB.TickType.LastSize:
+                default:
+                    return;
+            }
+
+            _ticks.Enqueue(tick);
+        }
+
+        private ConcurrentDictionary<SymbolCacheKey, int> _subscribedSymbols = new ConcurrentDictionary<SymbolCacheKey, int>();
+        private ConcurrentDictionary<int, SymbolCacheKey> _subscribedTickets = new ConcurrentDictionary<int, SymbolCacheKey>();
+        private ConcurrentDictionary<SymbolCacheKey, decimal> _lastPrices = new ConcurrentDictionary<SymbolCacheKey, decimal>();
+        private ConcurrentDictionary<SymbolCacheKey, int> _lastVolumes = new ConcurrentDictionary<SymbolCacheKey, int>();
+        private ConcurrentDictionary<SymbolCacheKey, decimal> _lastBidPrices = new ConcurrentDictionary<SymbolCacheKey, decimal>();
+        private ConcurrentDictionary<SymbolCacheKey, int> _lastBidSizes = new ConcurrentDictionary<SymbolCacheKey, int>();
+        private ConcurrentDictionary<SymbolCacheKey, decimal> _lastAskPrices = new ConcurrentDictionary<SymbolCacheKey, decimal>();
+        private ConcurrentDictionary<SymbolCacheKey, int> _lastAskSizes = new ConcurrentDictionary<SymbolCacheKey, int>();
+        private ConcurrentQueue<Tick> _ticks = new ConcurrentQueue<Tick>();
+
+
         private static class AccountValueKeys
         {
             public const string CashBalance = "CashBalance";
@@ -1238,5 +1470,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return false;
             }
         }
+
     }
 }
