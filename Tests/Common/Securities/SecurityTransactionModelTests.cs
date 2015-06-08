@@ -242,7 +242,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.Filled, order.Status);
         }
 
-        [Test, Ignore("Unknown temporary error: JB, 7th June 2015")]
+        [Test]
         public void PerformsMarketOnOpenUsingOpenPrice()
         {
             var reference = DateTime.Today.AddHours(9);// before market open
@@ -272,7 +272,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(security.Open, fill.FillPrice);
         }
 
-        [Test, Ignore("Unknown temporary error: JB, 7th June 2015")]
+        [Test]
         public void PerformsMarketOnCloseUsingClosingPrice()
         {
             var reference = DateTime.Today.AddHours(15);// before market close
