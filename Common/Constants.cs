@@ -14,6 +14,8 @@
  *
 */
 
+using QuantConnect.Configuration;
+
 namespace QuantConnect
 {
     /// <summary>
@@ -24,7 +26,10 @@ namespace QuantConnect
         /// <summary>
         /// The root directory of the data folder for this application
         /// </summary>
-        public const string DataFolder = @"../../../Data/";
+        public static string DataFolder
+        {
+            get { return Config.Get("data-folder", @"../../../Data/"); }
+        }
 
         /// <summary>
         /// The directory used for storing downloaded remote files
