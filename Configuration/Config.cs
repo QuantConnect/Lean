@@ -44,6 +44,7 @@ namespace QuantConnect.Configuration
             //Engine code:
             {"local", "true"},
             {"live-mode", "false"},
+            {"data-folder", @"../../../Data/"},
             {"result-handler", "QuantConnect.Lean.Engine.Results.ConsoleResultHandler"},
             {"messaging-handler", "QuantConnect.Messaging.Messaging"},
             {"queue-handler", "QuantConnect.Queues.Queues"},

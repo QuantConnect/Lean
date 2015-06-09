@@ -233,6 +233,10 @@
     <Compile Include="Util\XElementExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
+      <Project>{0aeb4ea3-28c8-476e-89fd-926f06590b4c}</Project>
+      <Name>QuantConnect.Configuration</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
       <Project>{01911409-86BE-4E7D-9947-DF714138610D}</Project>
       <Name>QuantConnect.Logging</Name>
