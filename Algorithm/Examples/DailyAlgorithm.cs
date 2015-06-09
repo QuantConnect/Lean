@@ -34,18 +34,18 @@ namespace QuantConnect.Algorithm.Examples
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(1999, 01, 01);  //Set Start Date
-            SetEndDate(2015, 01, 01);    //Set End Date
+            SetStartDate(2013, 01, 01);  //Set Start Date
+            SetEndDate(2014, 01, 01);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType.Equity, "AAPL", Resolution.Hour);
+            AddSecurity(SecurityType.Equity, "IBM", Resolution.Hour);
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
 
             macd = MACD("SPY", 12, 26, 9, MovingAverageType.Wilders, Resolution.Daily, Field.Close);
-            ema = EMA("AAPL", 15*6, Resolution.Hour, Field.SevenBar);
+            ema = EMA("IBM", 15*6, Resolution.Hour, Field.SevenBar);
 
-            Securities["AAPL"].SetLeverage(1.0m);
+            Securities["IBM"].SetLeverage(1.0m);
         }
 
         /// <summary>
@@ -55,18 +55,18 @@ namespace QuantConnect.Algorithm.Examples
         public void OnData(TradeBars data)
         {
             if (!macd.IsReady) return;
-            if (!data.ContainsKey("AAPL")) return;
+            if (!data.ContainsKey("IBM")) return;
             if (lastAction.Date == Time.Date) return;
             lastAction = Time;
 
             var holding = Portfolio["SPY"];
-            if (holding.Quantity <= 0 && macd > macd.Signal && data["AAPL"].Price > ema)
+            if (holding.Quantity <= 0 && macd > macd.Signal && data["IBM"].Price > ema)
             {
-                SetHoldings("AAPL", 0.25m);
+                SetHoldings("IBM", 0.25m);
             }
-            else if (holding.Quantity >= 0 && macd < macd.Signal && data["AAPL"].Price < ema)
+            else if (holding.Quantity >= 0 && macd < macd.Signal && data["IBM"].Price < ema)
             {
-                SetHoldings("AAPL", -0.25m);
+                SetHoldings("IBM", -0.25m);
             }
         }
     }

@@ -133,11 +133,6 @@ namespace QuantConnect.Data.Market
                 //Parse the data into a trade bar:
                 var csv = line.Split(',');
                 var scaleFactor = 10000m;
-                if (config.Resolution == Resolution.Hour || config.Resolution == Resolution.Daily)
-                {
-                    // hourly/daily data is saved as dollars
-                    scaleFactor = 1m;
-                }
                 
                 Symbol = config.Symbol;
                 Period = config.Resolution.ToTimeSpan();
@@ -150,19 +145,19 @@ namespace QuantConnect.Data.Market
                         {
                             // hourly and daily have different time format, and can use slow, robust c# parser.
                             Time = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
-                            Open = config.GetNormalizedPrice(Convert.ToDecimal(csv[1]));
-                            High = config.GetNormalizedPrice(Convert.ToDecimal(csv[2]));
-                            Low = config.GetNormalizedPrice(Convert.ToDecimal(csv[3]));
-                            Close = config.GetNormalizedPrice(Convert.ToDecimal(csv[4]));
+                            Open = config.GetNormalizedPrice(Convert.ToDecimal(csv[1])/scaleFactor);
+                            High = config.GetNormalizedPrice(Convert.ToDecimal(csv[2])/scaleFactor);
+                            Low = config.GetNormalizedPrice(Convert.ToDecimal(csv[3])/scaleFactor);
+                            Close = config.GetNormalizedPrice(Convert.ToDecimal(csv[4])/scaleFactor);
                         }
                         else
                         {
                             // Using custom "ToDecimal" conversion for speed on high resolution data.
                             Time = baseDate.Date.AddMilliseconds(Convert.ToInt32(csv[0]));
-                            Open = config.GetNormalizedPrice(csv[1].ToDecimal() / scaleFactor);
-                            High = config.GetNormalizedPrice(csv[2].ToDecimal() / scaleFactor);  
-                            Low = config.GetNormalizedPrice(csv[3].ToDecimal() / scaleFactor);
-                            Close = config.GetNormalizedPrice(csv[4].ToDecimal() / scaleFactor);
+                            Open = config.GetNormalizedPrice(csv[1].ToDecimal()/scaleFactor);
+                            High = config.GetNormalizedPrice(csv[2].ToDecimal()/scaleFactor);
+                            Low = config.GetNormalizedPrice(csv[3].ToDecimal()/scaleFactor);
+                            Close = config.GetNormalizedPrice(csv[4].ToDecimal()/scaleFactor);
                         }
                         Volume = Convert.ToInt64(csv[5]);
                         break;
@@ -173,10 +168,10 @@ namespace QuantConnect.Data.Market
                         {
                             // hourly and daily have different time format, and can use slow, robust c# parser.
                             Time = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
-                            Open = config.GetNormalizedPrice(Convert.ToDecimal(csv[1]));
-                            High = config.GetNormalizedPrice(Convert.ToDecimal(csv[2]));
-                            Low = config.GetNormalizedPrice(Convert.ToDecimal(csv[3]));
-                            Close = config.GetNormalizedPrice(Convert.ToDecimal(csv[4]));
+                            Open = Convert.ToDecimal(csv[1])/scaleFactor;
+                            High = Convert.ToDecimal(csv[2])/scaleFactor;
+                            Low = Convert.ToDecimal(csv[3])/scaleFactor;
+                            Close = Convert.ToDecimal(csv[4])/scaleFactor;
                         }
                         else
                         {
