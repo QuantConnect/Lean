@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Threading;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Algorithm
 {
@@ -372,6 +373,27 @@ namespace QuantConnect.Algorithm
             {
                 Error(symbol + ": asset price is $0. If using custom data make sure you've set the 'Value' property.");
                 return -1;
+            }
+
+            if (security.Type == SecurityType.Forex)
+            {
+                // for forex pairs we need to verify that the conversions to USD have values as well
+                string baseCurrency, quoteCurrency;
+                Forex.DecomposeCurrencyPair(security.Symbol, out baseCurrency, out quoteCurrency);
+                
+                // verify they're in the portfolio
+                Cash baseCash, quoteCash;
+                if (!Portfolio.CashBook.TryGetValue(baseCurrency, out baseCash) || !Portfolio.CashBook.TryGetValue(quoteCurrency, out quoteCash))
+                {
+                    Error(symbol + ": requires " + baseCurrency + " and " + quoteCurrency + " in the cashbook to trade.");
+                    return -1;
+                }
+                // verify we have conversion rates for each leg of the pair back into the account currency
+                if (baseCash.ConversionRate == 0m || quoteCash.ConversionRate == 0m)
+                {
+                    Error(symbol + ": requires " + baseCurrency + " and " + quoteCurrency + " to have non-zero conversion rates. This can be caused by lack of data.");
+                    return -1;
+                }
             }
 
             //Make sure the security has some data:
