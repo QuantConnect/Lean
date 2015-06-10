@@ -51,7 +51,7 @@ namespace QuantConnect.Lean.Engine
         private static AlgorithmStatus _algorithmState = AlgorithmStatus.Running;
         private static readonly object _lock = new object();
         private static string _algorithmId = "";
-        private static Stopwatch _currentTimeStepStopwatch;
+        private static DateTime _currentTimeStepTime;
         private static readonly TimeSpan _timeLoopMaximum = TimeSpan.FromMinutes(Config.GetDouble("algorithm-manager-time-loop-maximum", 10));
 
         private static long _dataPointCount;
@@ -87,7 +87,7 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public static TimeSpan CurrentTimeStepElapsed
         {
-            get { return _currentTimeStepStopwatch == null ? TimeSpan.Zero : _currentTimeStepStopwatch.Elapsed; }
+            get { return _currentTimeStepTime == DateTime.MinValue ? TimeSpan.Zero : DateTime.UtcNow - _currentTimeStepTime; }
         }
 
         /// <summary>
@@ -200,7 +200,7 @@ namespace QuantConnect.Lean.Engine
             foreach (var newData in DataStream.GetData(feed, setup.StartingDate))
             {
                 // reset our timer on each loop
-                _currentTimeStepStopwatch = Stopwatch.StartNew();
+                _currentTimeStepTime = DateTime.UtcNow;
 
                 //Check this backtest is still running:
                 if (_algorithmState != AlgorithmStatus.Running) break;
@@ -588,7 +588,7 @@ namespace QuantConnect.Lean.Engine
             //Reset before the next loop/
             DataStream.ResetFrontier();
             _algorithmId = "";
-            _currentTimeStepStopwatch = null;
+            _currentTimeStepTime = new DateTime();
             _algorithmState = AlgorithmStatus.Running;
         }
 
