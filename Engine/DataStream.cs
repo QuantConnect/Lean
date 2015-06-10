@@ -198,10 +198,9 @@ namespace QuantConnect.Lean.Engine
         private static void WaitForDataOrEndOfBridges(IDataFeed feed, DateTime dataStreamFrontier)
         {
             //Make sure all bridges have data to to peek sync properly.
-            var now = Stopwatch.StartNew();
 
             // timeout to prevent infinite looping here -- 50ms for live and 30sec for non-live
-            var loopTimeout = (Engine.LiveMode) ? 50 : 30000;
+            var timeout = DateTime.UtcNow + (Engine.LiveMode ? new TimeSpan(0, 0, 0, 0, 50) : new TimeSpan(0, 0, 30));
 
             if (Engine.LiveMode)
             {
@@ -210,7 +209,7 @@ namespace QuantConnect.Lean.Engine
             }
 
             //Waiting for data in the bridges:
-            while (!AllBridgesHaveData(feed) && now.ElapsedMilliseconds < loopTimeout)
+            while (!AllBridgesHaveData(feed) && DateTime.UtcNow < timeout)
             {
                 Thread.Sleep(1);
             }
@@ -219,7 +218,7 @@ namespace QuantConnect.Lean.Engine
             //this acts as a virtual lock around the bridge so we can wait for the feed
             //to be ahead of us
             // if we're out of data then the feed will never update (it will stay here forever if there's no more data, so use a timeout!!)
-            while (dataStreamFrontier > feed.LoadedDataFrontier && (!feed.EndOfBridges && !feed.LoadingComplete) && now.ElapsedMilliseconds < loopTimeout)
+            while (dataStreamFrontier > feed.LoadedDataFrontier && (!feed.EndOfBridges && !feed.LoadingComplete) && DateTime.UtcNow < timeout)
             {
                 Thread.Sleep(1);
             }
