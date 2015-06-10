@@ -44,6 +44,8 @@ namespace QuantConnect
         public const string EXT = "yyyy-MM-dd HH:mm:ss";
         /// en-US format
         public const string US = "M/d/yyyy h:mm:ss tt";
+        /// Date format of QC forex data
+        public const string Forex = "yyyyMMdd HH:mm:ss.ffff";
     }
 
 
