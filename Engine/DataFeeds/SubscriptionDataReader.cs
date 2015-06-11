@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Net;
 using QuantConnect.Configuration;
@@ -44,7 +45,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         /// Source string to create memory stream:
-        private string _source = "";
+        private SubscriptionDataSource _source;
 
         ///Default true to fillforward for this subscription, take the previous result and continue returning it till the next time barrier.
         private bool _isFillForward = true;
@@ -103,6 +104,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         // we set the split factor when we encounter a split in the factor file
         // and on the next trading day we use this data to produce the split instance
         private decimal? _splitFactor;
+
+        // true if we're in live mode, false otherwise
+        private readonly bool _isLiveMode;
 
         /******************************************************** 
         * CLASS PUBLIC VARIABLES
@@ -186,6 +190,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Save access to securities
             _security = security;
             _isDynamicallyLoadedData = security.IsDynamicallyLoadedData;
+            _isLiveMode = _feedEndpoint == DataFeedEndpoint.LiveTrading;
 
             // do we have factor tables?
             _hasScaleFactors = FactorFile.HasScalingFactors(config.Symbol);
@@ -283,7 +288,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var line = _reader.ReadLine();
                     try
                     {
-                        instance = _dataFactory.Reader(_config, line, _date, _feedEndpoint);
+                        instance = _dataFactory.Reader(_config, line, _date, _isLiveMode);
                     }
                     catch (Exception err)
                     {
@@ -481,7 +486,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             CheckForDividend(date);
             CheckForSplit(date);
 
-            var newSource = "";
 
             //If we can find scale factor files on disk, use them. LiveTrading will aways use 1 by definition
             if (_hasScaleFactors)
@@ -501,18 +505,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            //Choose the new source file, hide the QC source file locations
-            newSource = GetSource(date);
+            //Choose the new source file, hide the QC source file locations, if we're returned null new up a default instance
+            var newSource = GetSource(date) ?? new SubscriptionDataSource("", SubscriptionTransportMedium.LocalFile);
 
             //When stream over stop looping on this data.
-            if (newSource == "") 
+            if (newSource.Source == "") 
             {
                 _endOfStream = true;
                 return false;
             }
 
             //Log.Debug("SubscriptionDataReader.MoveNext(): Source Refresh: " + newSource);
-            if (_source != newSource && newSource != "")
+            if (_source != newSource && newSource.Source != "")
             {
                 //If a new file, reset the EOS flag:
                 _endOfStream = false;
@@ -645,39 +649,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="source">Source URL for the data:</param>
         /// <returns>StreamReader for the data source</returns>
-        private IStreamReader GetReader(string source)
+        private IStreamReader GetReader(SubscriptionDataSource source)
         {
-            IStreamReader reader = null;
-
-            if (_feedEndpoint == DataFeedEndpoint.LiveTrading)
+            switch (source.TransportMedium)
             {
-                // live trading currently always gets a rest endpoint
-                return new RestSubscriptionStreamReader(source);
+                case SubscriptionTransportMedium.LocalFile:
+                    return HandleLocalFileSource(source.Source);
+                
+                case SubscriptionTransportMedium.RemoteFile:
+                    return HandleRemoteSourceFile(source.Source);
+                
+                case SubscriptionTransportMedium.Rest:
+                    return new RestSubscriptionStreamReader(source.Source);
+
+                default:
+                    throw new InvalidEnumArgumentException("Unexpected SubscriptionTransportMedium specified: " + source.TransportMedium);
             }
-
-            // determine if we're hitting the file system/backtest
-            if (_feedEndpoint == DataFeedEndpoint.FileSystem || _feedEndpoint == DataFeedEndpoint.Backtesting)
-            {
-                // construct a uri to determine if we have a local or remote file
-                var uri = new Uri(source, UriKind.RelativeOrAbsolute);
-
-                if (uri.IsAbsoluteUri && !uri.IsLoopback)
-                {
-                    reader = HandleRemoteSourceFile(source);
-                }
-                else
-                {
-                    reader = HandleLocalFileSource(source);
-                }
-            }
-
-            // if the reader is already at end of stream, just set to null so we don't try to get data for today
-            if (reader != null && reader.EndOfStream)
-            {
-                reader = null;
-            }
-
-            return reader;
         }
 
 
@@ -703,15 +690,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="date">DateTime we're requesting.</param>
         /// <returns>URL string of the source file</returns>
-        public string GetSource(DateTime date)
+        public SubscriptionDataSource GetSource(DateTime date)
         {
-            var newSource = "";
             //Invoke our instance of this method.
             if (_dataFactory != null) 
             {
                 try
                 {
-                    newSource = _dataFactory.GetSource(_config, date, _feedEndpoint);
+                    return _dataFactory.GetSource(_config, date, _isLiveMode);
                 }
                 catch (Exception err) 
                 {
@@ -719,8 +705,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     Engine.ResultHandler.ErrorMessage("Error getting string source location for custom data source: " + err.Message, err.StackTrace);
                 }
             }
-            //Return the freshly calculated source URL.
-            return newSource;
+
+            // return a default instance with an empty string source, this is an indication of failure
+            return new SubscriptionDataSource("", SubscriptionTransportMedium.LocalFile);
         }
 
         /// <summary>

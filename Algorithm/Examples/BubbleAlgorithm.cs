@@ -235,13 +235,13 @@ namespace QuantConnect
         /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
-        /// <param name="datafeed">Type of datafeed we're reqesting - backtest or live</param>
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source file</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>String URL of source file.</returns>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            return "https://www.dropbox.com/s/ggt6blmib54q36e/CAPE.csv?dl=1";
+            return new SubscriptionDataSource("https://www.dropbox.com/s/ggt6blmib54q36e/CAPE.csv?dl=1", SubscriptionTransportMedium.RemoteFile);
         }
 
         /// <summary>
@@ -253,8 +253,8 @@ namespace QuantConnect
         /// <param name="config">Config.</param>
         /// <param name="line">Line.</param>
         /// <param name="date">Date.</param>
-        /// <param name="datafeed">Datafeed.</param>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             var index = new CAPE();
 

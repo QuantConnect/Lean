@@ -116,6 +116,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return;
             }
 
+            if (_config.Resolution == Resolution.Tick)
+            {
+                // just keep pumping them directly in
+                _queue.Enqueue(data);
+                return;
+            }
+
             //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
             while (_data != null && _data.Time < ComputeBarStartTime())
             { Thread.Sleep(1); } 

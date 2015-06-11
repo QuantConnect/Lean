@@ -76,9 +76,9 @@ namespace QuantConnect.Data.Custom
         /// <param name="config">Subscription configuration</param>
         /// <param name="line">CSV line of data from the souce</param>
         /// <param name="date">Date of the requested line</param>
-        /// <param name="datafeed">Datafeed type - live or backtest</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns></returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             var data = new Quandl();
             data.Symbol = config.Symbol;
@@ -118,11 +118,12 @@ namespace QuantConnect.Data.Custom
         /// </summary>
         /// <param name="config">Subscription configuration object</param>
         /// <param name="date">Date of the data file we're looking for</param>
-        /// <param name="datafeed"></param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>STRING API Url for Quandl.</returns>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            return @"https://www.quandl.com/api/v1/datasets/" + config.Symbol + ".csv?sort_order=asc&exclude_headers=false&auth_token=" + _authCode;
+            var source = @"https://www.quandl.com/api/v1/datasets/" + config.Symbol + ".csv?sort_order=asc&exclude_headers=false&auth_token=" + _authCode;
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
         }
 
         

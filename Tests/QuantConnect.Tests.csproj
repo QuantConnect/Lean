@@ -74,6 +74,7 @@
     <Compile Include="Brokerages\StopMarketOrderTestParameters.cs" />
     <Compile Include="Brokerages\Tradier\TradierBrokerageTests.cs" />
     <Compile Include="Common\Data\Market\TickTests.cs" />
+    <Compile Include="Common\Data\SubscriptionDataSourceTests.cs" />
     <Compile Include="Common\Securities\CashBookTests.cs" />
     <Compile Include="Common\Securities\CashTests.cs" />
     <Compile Include="Common\Securities\Equity\EquityTransactionModelTests.cs" />

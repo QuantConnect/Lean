@@ -163,16 +163,16 @@ namespace QuantConnect.Algorithm.Examples
         /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream 
         /// </summary>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            return "https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1";
+            return new SubscriptionDataSource("https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1", SubscriptionTransportMedium.RemoteFile);
         }
 
         /// <summary>
         /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object 
         /// each time it is called. 
         /// </summary>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             //New Nifty object
             Nifty index = new Nifty();
@@ -234,16 +234,16 @@ namespace QuantConnect.Algorithm.Examples
         /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream 
         /// </summary>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            return "https://www.dropbox.com/s/m6ecmkg9aijwzy2/USDINR.csv?dl=1";
+            return new SubscriptionDataSource("https://www.dropbox.com/s/m6ecmkg9aijwzy2/USDINR.csv?dl=1", SubscriptionTransportMedium.RemoteFile);
         }
 
         /// <summary>
         /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object 
         /// each time it is called. 
         /// </summary>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             //New USDINR object
             DollarRupee currency = new DollarRupee();

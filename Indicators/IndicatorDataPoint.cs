@@ -161,7 +161,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// This function is purposefully not implemented.
         /// </summary>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             throw new NotImplementedException("IndicatorDataPoint does not support the Reader function. This function should never be called on this type.");
         }
@@ -169,7 +169,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// This function is purposefully not implemented.
         /// </summary>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             throw new NotImplementedException("IndicatorDataPoint does not support the GetSource function. This function should never be called on this type.");
         }

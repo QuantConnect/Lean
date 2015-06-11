@@ -440,7 +440,7 @@ namespace QuantConnect
         RemoteFile,
 
         /// <summary>
-        /// The subscription's data comes from a rest call
+        /// The subscription's data comes from a rest call that is polled and returns a single line/data point of information
         /// </summary>
         Rest
     }

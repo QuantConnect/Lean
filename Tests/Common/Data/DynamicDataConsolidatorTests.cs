@@ -258,12 +258,12 @@ namespace QuantConnect.Tests.Common.Data
 
         private class CustomData : DynamicData
         {
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
             {
                 throw new NotImplementedException();
             }
 
-            public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
                 throw new NotImplementedException();
             }

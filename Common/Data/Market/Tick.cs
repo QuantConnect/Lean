@@ -203,8 +203,7 @@ namespace QuantConnect.Data.Market
         /// <param name="line">CSV source line of the compressed source</param>
         /// <param name="date">Base date for the tick (ticks date is stored as int milliseconds since midnight)</param>
         /// <param name="config">Subscription configuration object</param>
-        /// <param name="datafeed">Datafeed for tick - live or backtesting.</param>
-        public Tick(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
+        public Tick(SubscriptionDataConfig config, string line, DateTime date)
         {
             try
             {
@@ -250,29 +249,20 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Tick implementation of reader method: read a line of data from the source and convert it to a tick object.
         /// </summary>
-        /// <param name="datafeed">Source of the datafeed</param>
         /// <param name="config">Subscription configuration object for algorithm</param>
         /// <param name="line">Line from the datafeed source</param>
         /// <param name="date">Date of this reader request</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>New Initialized tick</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var _tick = new Tick();
-
-            //Select the URL source of the data depending on where the system is trading.
-            switch (datafeed)
+            if (isLiveMode)
             {
-                //Local File System Storage and Backtesting QC Data Store Feed use same files:
-                case DataFeedEndpoint.FileSystem:
-                case DataFeedEndpoint.Backtesting:
-                    //Create a new instance of our tradebar:
-                    _tick = new Tick(config, line, date, datafeed);
-                    break;
-                case DataFeedEndpoint.LiveTrading:
-                    break;
+                // currently ticks don't come through the reader function
+                return new Tick();
             }
-
-            return _tick;
+            
+            return new Tick(config, line, date);
         }
 
         /// <summary>
@@ -280,38 +270,29 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source request if source spread across multiple files</param>
-        /// <param name="datafeed">Source of the datafeed enum</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>String source location of the file to be opened with a stream</returns>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var source = "";
             var dataType = TickType.Trade;
 
-            switch (datafeed)
+            if (isLiveMode)
             {
-                //Backtesting S3 Endpoint:
-                case DataFeedEndpoint.Backtesting:
-                case DataFeedEndpoint.FileSystem:
-
-                    var dateFormat = "yyyyMMdd";
-                    if (config.SecurityType == SecurityType.Forex)
-                    {
-                        dataType = TickType.Quote;
-                        dateFormat = "yyMMdd";
-                    }
-                    var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol; 
-                    source = Constants.DataFolder + config.SecurityType.ToString().ToLower();
-                    source += @"/" + config.Resolution.ToString().ToLower() + @"/" + symbol.ToLower() + @"/";
-                    source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
-                    break;
-
-                //Live Trading Endpoint: Fake, not actually used but need for consistency with backtesting system. Set to "" so will not use subscription reader.
-                case DataFeedEndpoint.LiveTrading:
-                    source = "";
-                    break;
+                // currently ticks aren't sourced through GetSource in live mode
+                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile);
             }
 
-            return source;
+            var dateFormat = "yyyyMMdd";
+            if (config.SecurityType == SecurityType.Forex)
+            {
+                dataType = TickType.Quote;
+                dateFormat = "yyMMdd";
+            }
+            var symbol = string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol; 
+            var source = Constants.DataFolder + config.SecurityType.ToString().ToLower();
+            source += @"/" + config.Resolution.ToString().ToLower() + @"/" + symbol.ToLower() + @"/";
+            source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
         }
 
 

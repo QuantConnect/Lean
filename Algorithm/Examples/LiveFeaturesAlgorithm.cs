@@ -111,11 +111,16 @@ namespace QuantConnect
         /// Closing Price
         /// </summary>
         public decimal Close = 0;
-        
+
         /// <summary>
         /// Volume in BTC
         /// </summary>
         public decimal VolumeBTC = 0;
+
+        /// <summary>
+        /// Volume in USD
+        /// </summary>
+        public decimal VolumeUSD = 0;
         
         /// <summary>
         /// Volume in USD:
@@ -123,7 +128,8 @@ namespace QuantConnect
         public decimal WeightedPrice = 0;
 
         /// <summary>
-        /// Default Constructor Required.
+        /// 1. DEFAULT CONSTRUCTOR: Custom data types need a default constructor.
+        /// We search for a default constructor so please provide one here. It won't be used for data, just to generate the "Factory".
         /// </summary>
         public Bitcoin()
         {
@@ -131,82 +137,80 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Source URL's of Backtesting and Live Streams:
+        /// 2. RETURN THE STRING URL SOURCE LOCATION FOR YOUR DATA:
+        /// This is a powerful and dynamic select source file method. If you have a large dataset, 10+mb we recommend you break it into smaller files. E.g. One zip per year.
+        /// We can accept raw text or ZIP files. We read the file extension to determine if it is a zip file.
         /// </summary>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        /// <param name="config">Configuration object</param>
+        /// <param name="date">Date of this source file</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
+        /// <returns>String URL of source file.</returns>
+        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var source = "";
-
-            switch (datafeed)
+            if (isLiveMode)
             {
-                //Historical backtesting data:
-                case DataFeedEndpoint.FileSystem:
-                case DataFeedEndpoint.Backtesting:
-                    source = "http://www.quandl.com/api/v1/datasets/BITCOIN/BITSTAMPUSD.csv?sort_order=asc";
-                    break;
-
-                //Live socket for bitcoin prices:
-                case DataFeedEndpoint.LiveTrading:
-                    //Live refreshing endpoint.
-                    source = "https://www.bitstamp.net/api/ticker/";
-                    break;
+                return new SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.Rest);
             }
 
-            System.Console.WriteLine(DateTime.Now.ToString("u") + " SOURCE >> " + source);
-
-            return source;
+            //return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip";
+            // OR simply return a fixed small data file. Large files will slow down your backtest
+            return new SubscriptionDataSource("http://www.quandl.com/api/v1/datasets/BITCOIN/BITSTAMPUSD.csv?sort_order=asc", SubscriptionTransportMedium.RemoteFile);
         }
 
         /// <summary>
-        /// Backtesting &amp; Live Bitcoin Decoder:
+        /// 3. READER METHOD: Read 1 line from data source and convert it into Object.
+        /// Each line of the CSV File is presented in here. The backend downloads your file, loads it into memory and then line by line
+        /// feeds it into your algorithm
         /// </summary>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
+        /// <param name="line">string line from the data source file submitted above</param>
+        /// <param name="config">Subscription data, symbol name, data type</param>
+        /// <param name="date">Current date we're requesting. This allows you to break up the data source into daily files.</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
+        /// <returns>New Bitcoin Object which extends BaseData.</returns>
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            Bitcoin coin = new Bitcoin();
-            switch (datafeed)
+            var coin = new Bitcoin();
+            if (isLiveMode)
             {
                 //Example Line Format:
-                //Date      Open   High    Low     Close   Volume (BTC)    Volume (Currency)   Weighted Price
-                //2011-09-13 5.8    6.0     5.65    5.97    58.37138238,    346.0973893944      5.929230648356
-                case DataFeedEndpoint.FileSystem:
-                case DataFeedEndpoint.Backtesting:
-                    try
-                    {
-                        string[] data = line.Split(',');
-                        coin.Time = DateTime.Parse(data[0]);
-                        coin.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
-                        coin.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
-                        coin.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
-                        coin.Close = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture);
-                        coin.VolumeBTC = Convert.ToDecimal(data[5], CultureInfo.InvariantCulture);
-                        coin.WeightedPrice = Convert.ToDecimal(data[7], CultureInfo.InvariantCulture);
-                        coin.Symbol = "BTC";
-                        coin.Value = coin.Close;
-                    }
-                    catch { /* Do nothing, skip first title row */ }
-                    break;
-
-                //Example Line Format:
                 //{"high": "441.00", "last": "421.86", "timestamp": "1411606877", "bid": "421.96", "vwap": "428.58", "volume": "14120.40683975", "low": "418.83", "ask": "421.99"}
-                case DataFeedEndpoint.LiveTrading:
-                    try
-                    {
-                        var liveBTC = JsonConvert.DeserializeObject<LiveBitcoin>(line);
-                        coin.Time = DateTime.Now;
-                        coin.Open = liveBTC.Last;
-                        coin.High = liveBTC.High;
-                        coin.Low = liveBTC.Low;
-                        coin.Close = liveBTC.Last;
-                        coin.VolumeBTC = liveBTC.Volume;
-                        coin.WeightedPrice = liveBTC.VWAP;
-                        coin.Symbol = "BTC";
-                        coin.Value = coin.Close;
-                    }
-                    catch { /* Do nothing, possible error in json decoding */ }
-                    break;
+                try
+                {
+                    var liveBTC = JsonConvert.DeserializeObject<LiveBitcoin>(line);
+                    coin.Time = DateTime.Now;
+                    coin.Open = liveBTC.Last;
+                    coin.High = liveBTC.High;
+                    coin.Low = liveBTC.Low;
+                    coin.Close = liveBTC.Last;
+                    coin.VolumeBTC = liveBTC.Volume;
+                    coin.WeightedPrice = liveBTC.VWAP;
+                    coin.Symbol = "BTC";
+                    coin.Value = coin.Close;
+                }
+                catch { /* Do nothing, possible error in json decoding */ }
+                return coin;
             }
+            
+            //Example Line Format:
+            //Date      Open   High    Low     Close   Volume (BTC)    Volume (Currency)   Weighted Price
+            //2011-09-13 5.8    6.0     5.65    5.97    58.37138238,    346.0973893944      5.929230648356
+            try
+            {
+                string[] data = line.Split(',');
+                coin.Time = DateTime.Parse(data[0]);
+                coin.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
+                coin.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
+                coin.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
+                coin.Close = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture);
+                coin.VolumeBTC = Convert.ToDecimal(data[5], CultureInfo.InvariantCulture);
+                coin.VolumeUSD = Convert.ToDecimal(data[6], CultureInfo.InvariantCulture);
+                coin.WeightedPrice = Convert.ToDecimal(data[7], CultureInfo.InvariantCulture);
+                coin.Symbol = "BTC";
+                coin.Value = coin.Close;
+            }
+            catch { /* Do nothing, skip first title row */ }
 
-            System.Console.WriteLine(DateTime.Now.ToString("u") + " READER >> " + line + " COIN >> " + coin.Time.ToString("u"));
+            Console.WriteLine(DateTime.Now.ToString("u") + " READER >> " + line + " COIN >> " + coin.Time.ToString("u"));
 
             return coin;
         }

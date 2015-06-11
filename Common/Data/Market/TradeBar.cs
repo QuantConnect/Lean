@@ -125,8 +125,7 @@ namespace QuantConnect.Data.Market
         /// <param name="config">Configuration class object for this data subscription</param>
         /// <param name="baseDate">Base date of this tradebar line</param>
         /// <param name="line">CSV line from source data file</param>
-        /// <param name="datafeed">Datafeed this csv line is sourced from (backtesting or live)</param>
-        public TradeBar(SubscriptionDataConfig config, string line,  DateTime baseDate, DataFeedEndpoint datafeed = DataFeedEndpoint.Backtesting)
+        public TradeBar(SubscriptionDataConfig config, string line,  DateTime baseDate)
         {
             try
             {
@@ -222,43 +221,25 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// TradeBar Reader: Fetch the data from the QC storage and feed it line by line into the engine.
         /// </summary>
-        /// <param name="datafeed">Destination for the this datafeed - live or backtesting</param>
         /// <param name="config">Symbols, Resolution, DataType, </param>
         /// <param name="line">Line from the data file requested</param>
         /// <param name="date">Date of this reader request</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed) 
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode) 
         {
-            //Initialize:
-            var tradeBar = new TradeBar();
             //Handle end of file:
             if (line == null)
             {
                 return null;
             }
 
-            //Select the URL source of the data depending on where the system is trading.
-            switch (datafeed)
+            if (isLiveMode)
             {
-                //Amazon S3 Backtesting Data:
-                case DataFeedEndpoint.Backtesting:
-                    //Create a new instance of our tradebar:
-                    tradeBar = new TradeBar(config, line, date, datafeed);
-                    break;
-
-                //Localhost Data Source
-                case DataFeedEndpoint.FileSystem:
-                    //Create a new instance of our tradebar:
-                    tradeBar = new TradeBar(config, line, date, datafeed);
-                    break;
-
-                //QuantConnect Live Tick Stream:
-                case DataFeedEndpoint.LiveTrading:
-                    break;
+                return new TradeBar();
             }
 
-            //Return initialized TradeBar:
-            return tradeBar;
+            return new TradeBar(config, line, date);
         }
 
 
@@ -300,50 +281,38 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source request if source spread across multiple files</param>
-        /// <param name="datafeed">Source of the datafeed</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>String source location of the file</returns>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var source = "";
-            var dataType = TickType.Trade;
 
-            switch (datafeed)
+            if (isLiveMode)
             {
-                //Backtesting S3 Endpoint:
-                case DataFeedEndpoint.Backtesting:
-                case DataFeedEndpoint.FileSystem:
-
-                    var dateFormat = "yyyyMMdd";
-                    if (config.SecurityType == SecurityType.Forex)
-                    {
-                        dataType = TickType.Quote;
-                        dateFormat = "yyMMdd";
-                    }
-
-                    var securityTypePath = config.SecurityType.ToString().ToLower();
-                    var resolutionPath = config.Resolution.ToString().ToLower();
-                    var symbolPath = (string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol).ToLower();
-                    var filename = date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
-
-                    if (config.Resolution == Resolution.Hour || config.Resolution == Resolution.Daily)
-                    {
-                        // hourly/daily data is all in a single file, no sub directories
-                        filename = symbolPath + ".zip";
-                        symbolPath = string.Empty;
-                    }
-
-                    source = Path.Combine(Constants.DataFolder, securityTypePath, resolutionPath, symbolPath, filename);
-                    break;
-
-                //Live Trading Endpoint: Fake, not actually used but need for consistency with backtesting system. Set to "" so will not use subscription reader.
-                case DataFeedEndpoint.LiveTrading:
-                    source = "";
-                    break;
+                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile);
             }
-            return source;
+
+            var dateFormat = "yyyyMMdd";
+            var dataType = TickType.Trade;
+            if (config.SecurityType == SecurityType.Forex)
+            {
+                dataType = TickType.Quote;
+                dateFormat = "yyMMdd";
+            }
+
+            var securityTypePath = config.SecurityType.ToString().ToLower();
+            var resolutionPath = config.Resolution.ToString().ToLower();
+            var symbolPath = (string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol).ToLower();
+            var filename = date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
+
+            if (config.Resolution == Resolution.Hour || config.Resolution == Resolution.Daily)
+            {
+                // hourly/daily data is all in a single file, no sub directories
+                filename = symbolPath + ".zip";
+                symbolPath = string.Empty;
+            }
+
+            var source = Path.Combine(Constants.DataFolder, securityTypePath, resolutionPath, symbolPath, filename);
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
         }
-
-
-
     } // End Trade Bar Class
 }
