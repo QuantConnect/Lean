@@ -193,6 +193,23 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
+        /// Parses the trade bar data line assuming QC data formats
+        /// </summary>
+        public static TradeBar Parse(SubscriptionDataConfig config, string line, DateTime baseDate)
+        {
+            if (config.SecurityType == SecurityType.Forex)
+            {
+                return ParseForex<TradeBar>(config, line);
+            }
+            if (config.SecurityType == SecurityType.Equity)
+            {
+                return ParseEquity<TradeBar>(config, line, baseDate);
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Parses equity trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
         /// </summary>
         /// <typeparam name="T">The requested output type, must derive from TradeBar</typeparam>
@@ -200,7 +217,7 @@ namespace QuantConnect.Data.Market
         /// <param name="line">Line from the data file requested</param>
         /// <param name="date">Date of this reader request</param>
         /// <returns></returns>
-        public static BaseData ParseEquity<T>(SubscriptionDataConfig config, string line, DateTime date)
+        protected static T ParseEquity<T>(SubscriptionDataConfig config, string line, DateTime date)
             where T : TradeBar, new()
         {
             var tradeBar = new T
@@ -240,7 +257,7 @@ namespace QuantConnect.Data.Market
         /// <param name="config">Symbols, Resolution, DataType, </param>
         /// <param name="line">Line from the data file requested</param>
         /// <returns></returns>
-        public static BaseData ParseForex<T>(SubscriptionDataConfig config, string line)
+        protected static T ParseForex<T>(SubscriptionDataConfig config, string line)
             where T : TradeBar, new()
         {
             var tradeBar = new T
