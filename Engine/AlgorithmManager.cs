@@ -389,7 +389,7 @@ namespace QuantConnect.Lean.Engine
 
                         // TRADEBAR -- add to our dictionary
                         var bar = dataPoint as TradeBar;
-                        if (bar != null)
+                        if (bar != null && bar.DataType == MarketDataType.TradeBar)
                         {
                             try
                             {
@@ -413,7 +413,7 @@ namespace QuantConnect.Lean.Engine
                         }
                         // TICK -- add to our dictionary
                         var tick = dataPoint as Tick;
-                        if (tick != null)
+                        if (tick != null && tick.DataType == MarketDataType.Tick)
                         {
                             if (backwardsCompatibilityMode)
                             {

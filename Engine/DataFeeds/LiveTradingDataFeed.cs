@@ -180,7 +180,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // request for data from these symbols
-            _dataQueue.Subscribe(job, BuildTypeSymbolList(algorithm));
+            var symbols = BuildTypeSymbolList(algorithm);
+            if (symbols.Any())
+            {
+                // don't subscribe if there's nothing there, this allows custom data to
+                // work without an IDataQueueHandler implementation by specifying LiveDataQueue
+                // in the configuration, that implementation throws on every method, but we actually
+                // don't need it if we're only doing custom data
+                _dataQueue.Subscribe(job, symbols);
+            }
         }
 
 
@@ -325,6 +333,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Micro-thread for polling for new data from data source:
             var liveThreadTask = new Task(()=> 
             {
+                if (_isDynamicallyLoadedData.All(x => x))
+                {
+                    // if we're all custom data data don't waste CPU cycle with this thread
+                    return;
+                }
+
                 //Blocking ForEach - Should stay within this loop as long as there is a data-connection
                 while (true)
                 {
@@ -367,6 +381,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // Micro-thread for custom data/feeds. This only supports polling at this time. todo: Custom data sockets
             var customFeedsTask = new Task(() =>
             {
+                // used to help prevent future data from entering the algorithm
+                // initial to all true, when we get future data, flip flag to false to prevent move next
+                var needsMoveNext = Enumerable.Range(0, Subscriptions.Count).Select(x => true).ToArray();
                 while(true)
                 {
                     for (var i = 0; i < Subscriptions.Count; i++)
@@ -382,13 +399,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 {
                                     //Attempt 10 times to download the updated data:
                                     var attempts = 0;
-                                    bool feedSuccess;
-                                    do 
+                                    bool feedSuccess = true;
+                                    if (needsMoveNext[i])
                                     {
-                                        feedSuccess = _subscriptionManagers[i].MoveNext();
-                                        if (!feedSuccess) Thread.Sleep(1000);   //Network issues may cause download to fail. Sleep a little to make it more robust.
+                                        // if we didn't emit the previous value it's because it was in
+                                        // the future, so don't call MoveNext, just perform the date range
+                                        // checks below again
+                                        do
+                                        {
+                                            feedSuccess = _subscriptionManagers[i].MoveNext();
+                                            if (!feedSuccess)
+                                                Thread.Sleep(1000); //Network issues may cause download to fail. Sleep a little to make it more robust.
+                                        }
+                                        while (!feedSuccess && attempts++ < 10);
                                     }
-                                    while (!feedSuccess && attempts++ < 10);
 
                                     if (!feedSuccess)
                                     {
@@ -400,8 +424,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     var data = _subscriptionManagers[i].Current;
                                     if (data != null)
                                     {
-                                        _streamStore[i].Update(data);       //Update bar builder.
-                                        _realtimePrices[i] = data.Value;    //Update realtime price value.
+                                        if (data.EndTime < DateTime.Now.Subtract(_subscriptions[i].Increment.Add(Time.OneSecond)))
+                                        {
+                                            // repeat this subscription, we're in the past still
+                                            i--;
+                                            continue;
+                                        }
+                                        if (data.EndTime < DateTime.Now)
+                                        {
+                                            _streamStore[i].Update(data);    //Update bar builder.
+                                            _realtimePrices[i] = data.Value; //Update realtime price value.
+                                            needsMoveNext[i] = true;
+                                        }
+                                        else
+                                        {
+                                            needsMoveNext[i] = false;
+                                        }
                                     }
                                 }
                                 update[i] = DateTime.Now.Add(_subscriptions[i].Increment);
@@ -455,7 +493,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             lock (_lock)
             {
                 // Unsubscribe from these symbols
-                _dataQueue.Unsubscribe(_job, BuildTypeSymbolList(_algorithm));
+                var symbols = BuildTypeSymbolList(_algorithm);
+                if (symbols.Any())
+                {
+                    // don't unsubscribe if there's nothing there, this allows custom data to
+                    // work with the LiveDataQueue default LEAN implemetation that just throws on every method.
+                    _dataQueue.Unsubscribe(_job, symbols);
+                }
                 _exitTriggered = true;
                 PurgeData();
             }

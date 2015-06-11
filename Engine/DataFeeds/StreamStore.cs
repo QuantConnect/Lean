@@ -124,7 +124,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
-            while (_data != null && _data.Time < ComputeBarStartTime())
+            while (_data != null && _data.EndTime < ComputeBarStartTime())
             { Thread.Sleep(1); } 
 
             _data = data;

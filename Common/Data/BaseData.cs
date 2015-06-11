@@ -230,8 +230,9 @@ namespace QuantConnect.Data
         /// <returns>A clone of the current object</returns>
         public virtual BaseData Clone()
         {
-            return ObjectActivator.Clone(this) as BaseData;
+            return ObjectActivator.Clone(this);
         }
+
         /// <summary>
         /// Formats a string with the symbol and value.
         /// </summary>
