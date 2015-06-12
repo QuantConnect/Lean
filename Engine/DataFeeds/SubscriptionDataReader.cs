@@ -654,20 +654,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>StreamReader for the data source</returns>
         private IStreamReader GetReader(SubscriptionDataSource source)
         {
+            IStreamReader reader;
             switch (source.TransportMedium)
             {
                 case SubscriptionTransportMedium.LocalFile:
-                    return HandleLocalFileSource(source.Source);
-                
+                    reader = HandleLocalFileSource(source.Source);
+                    break;
+
                 case SubscriptionTransportMedium.RemoteFile:
-                    return HandleRemoteSourceFile(source.Source);
-                
+                    reader = HandleRemoteSourceFile(source.Source);
+                    break;
+
                 case SubscriptionTransportMedium.Rest:
-                    return new RestSubscriptionStreamReader(source.Source);
+                    reader = new RestSubscriptionStreamReader(source.Source);
+                    break;
 
                 default:
                     throw new InvalidEnumArgumentException("Unexpected SubscriptionTransportMedium specified: " + source.TransportMedium);
             }
+
+            // if the reader is already at end of stream, just set to null so we don't try to get data for today
+            // this provides a fail fast mechanism so we don't need to go into MoveNext via RefreshSource
+            if (reader != null && reader.EndOfStream)
+            {
+                reader = null;
+            }
+
+            return reader;
         }
 
 

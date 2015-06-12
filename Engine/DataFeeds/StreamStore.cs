@@ -124,7 +124,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
-            while (_data != null && _data.EndTime < ComputeBarStartTime())
+            // we're waiting for the trigger archive to enqueue and set _data to null
+            while (_data != null && _data.Time < ComputeBarStartTime())
             { Thread.Sleep(1); } 
 
             _data = data;
@@ -144,6 +145,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
+            // we're waiting for the trigger archive to enqueue and set _data to null
             var barStartTime = ComputeBarStartTime();
             while (_data != null && _data.Time < barStartTime)
             { Thread.Sleep(1); } 

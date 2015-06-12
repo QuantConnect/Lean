@@ -189,7 +189,7 @@ namespace QuantConnect.Data.Market
             }
 
             // if we couldn't parse it above return a default instance
-            return new TradeBar{Symbol = config.Symbol, Period = config.Resolution.ToTimeSpan()};
+            return new TradeBar{Symbol = config.Symbol, Period = config.Increment};
         }
 
         /// <summary>
@@ -223,7 +223,7 @@ namespace QuantConnect.Data.Market
             var tradeBar = new T
             {
                 Symbol = config.Symbol,
-                Period = config.Resolution.ToTimeSpan()
+                Period = config.Increment
             };
 
             var csv = line.Split(',');
@@ -263,7 +263,7 @@ namespace QuantConnect.Data.Market
             var tradeBar = new T
             {
                 Symbol = config.Symbol,
-                Period = config.Resolution.ToTimeSpan()
+                Period = config.Increment
             };
 
             var csv = line.Split(',');

@@ -210,8 +210,6 @@ namespace QuantConnect
             }
             catch { /* Do nothing, skip first title row */ }
 
-            Console.WriteLine(DateTime.Now.ToString("u") + " READER >> " + line + " COIN >> " + coin.Time.ToString("u"));
-
             return coin;
         }
     }

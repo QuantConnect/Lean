@@ -388,10 +388,10 @@ namespace QuantConnect.Lean.Engine
                         }
 
                         // TRADEBAR -- add to our dictionary
-                        var bar = dataPoint as TradeBar;
-                        if (bar != null && bar.DataType == MarketDataType.TradeBar)
+                        if (dataPoint.DataType == MarketDataType.TradeBar)
                         {
-                            try
+                            var bar = dataPoint as TradeBar;
+                            if (bar != null)
                             {
                                 if (backwardsCompatibilityMode)
                                 {
@@ -401,41 +401,38 @@ namespace QuantConnect.Lean.Engine
                                 {
                                     newBars[bar.Symbol] = bar;
                                 }
+                                continue;
                             }
-                            catch (Exception err)
-                            {
-                                Log.Error(time.ToLongTimeString() + " >> " + bar.Time.ToLongTimeString() + " >> " + bar.Symbol + " >> "
-                                    + bar.Value.ToString("C"));
-                                Log.Error("AlgorithmManager.Run(): Failed to add TradeBar (" + bar.Symbol + ") Time: (" + time.ToLongTimeString()
-                                    + ") Count:(" + newBars.Count + ") " + err.Message);
-                            }
-                            continue;
                         }
+
                         // TICK -- add to our dictionary
-                        var tick = dataPoint as Tick;
-                        if (tick != null && tick.DataType == MarketDataType.Tick)
+                        if (dataPoint.DataType == MarketDataType.Tick)
                         {
-                            if (backwardsCompatibilityMode)
+                            var tick = dataPoint as Tick;
+                            if (tick != null)
                             {
-                                List<Tick> ticks;
-                                if (!oldTicks.TryGetValue(tick.Symbol, out ticks))
+                                if (backwardsCompatibilityMode)
                                 {
-                                    ticks = new List<Tick>(3);
-                                    oldTicks.Add(tick.Symbol, ticks);
+                                    List<Tick> ticks;
+                                    if (!oldTicks.TryGetValue(tick.Symbol, out ticks))
+                                    {
+                                        ticks = new List<Tick>(3);
+                                        oldTicks.Add(tick.Symbol, ticks);
+                                    }
+                                    ticks.Add(tick);
                                 }
-                                ticks.Add(tick);
-                            }
-                            else
-                            {
-                                List<Tick> ticks;
-                                if (!newTicks.TryGetValue(tick.Symbol, out ticks))
+                                else
                                 {
-                                    ticks = new List<Tick>(3);
-                                    newTicks.Add(tick.Symbol, ticks);
+                                    List<Tick> ticks;
+                                    if (!newTicks.TryGetValue(tick.Symbol, out ticks))
+                                    {
+                                        ticks = new List<Tick>(3);
+                                        newTicks.Add(tick.Symbol, ticks);
+                                    }
+                                    ticks.Add(tick);
                                 }
-                                ticks.Add(tick);
+                                continue;
                             }
-                            continue;
                         }
 
                         // if it was nothing else then it must be custom data

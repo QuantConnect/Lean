@@ -89,7 +89,8 @@ namespace QuantConnect.Data.Market
         /// <returns>String URL of source file.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            return new SubscriptionDataSource(Constants.DataFolder + @"/equity/factor_files/" + config.Symbol + ".csv", SubscriptionTransportMedium.LocalFile);
+            // this data is derived from map files and factor files in backtesting
+            throw new NotImplementedException("This method is not supposed to be called on the Split type.");
         }
 
         /// <summary>

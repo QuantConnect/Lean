@@ -427,12 +427,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     var data = _subscriptionManagers[i].Current;
                                     if (data != null)
                                     {
+                                        // check to see if the data is too far in the past
+                                        // this is useful when using custom remote files that may stretch far into the past,
+                                        // so this if block will cause us to fast forward the reader until its recent increment
                                         if (data.EndTime < DateTime.Now.Subtract(_subscriptions[i].Increment.Add(Time.OneSecond)))
                                         {
                                             // repeat this subscription, we're in the past still
                                             i--;
                                             continue;
                                         }
+                                        // don't emit data in the future
                                         if (data.EndTime < DateTime.Now)
                                         {
                                             _streamStore[i].Update(data);    //Update bar builder.
@@ -441,6 +445,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                         }
                                         else
                                         {
+                                            // since this data is in the future and we didn't emit it,
+                                            // don't call MoveNext again and we'll keep performing time checks
+                                            // until its end time has passed and we can emit it into the bridge
                                             needsMoveNext[i] = false;
                                         }
                                     }
