@@ -248,7 +248,7 @@ namespace QuantConnect.Lean.Engine
                         var errorMessage = String.Join(",", algorithm.ErrorMessages);
                         errorMessage += String.Join(",", SetupHandler.Errors);
                         ResultHandler.RuntimeError(errorMessage);
-                        Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError);
+                        Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, errorMessage);
                     }
                 }
                 catch (Exception err)

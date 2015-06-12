@@ -130,6 +130,16 @@ namespace QuantConnect.Lean.Engine.Setup
                 return false;
             }
 
+
+            // attach to the message event to relay brokerage specific initialization messages
+            EventHandler<BrokerageMessageEvent> brokerageOnMessage = (sender, args) =>
+            {
+                if (args.Type == BrokerageMessageType.Error)
+                {
+                    AddInitializationError(string.Format("Brokerage Error Code: {0} - {1}", args.Code, args.Message));
+                }
+            };
+
             try
             {
                 Log.Trace("BrokerageSetupHandler.Setup(): Initializing algorithm...");
@@ -139,7 +149,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 var initializeComplete = isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(10), () =>
                 {
                     try
-                    {                
+                    {
                         //Set the live trading level asset/ram allocation limits. 
                         //Protects algorithm from linux killing the job by excess memory:
                         switch (job.ServerType)
@@ -191,6 +201,14 @@ namespace QuantConnect.Lean.Engine.Setup
                 // initialize the correct brokerage using the resolved factory
                 brokerage = _factory.CreateBrokerage(liveJob, algorithm);
 
+                if (brokerage == null)
+                {
+                    AddInitializationError("Failed to create instance of brokerage: " + liveJob.Brokerage);
+                    return false;
+                }
+
+                brokerage.Message += brokerageOnMessage;
+
                 // set the transaction models base on the brokerage properties
                 SetupHandler.UpdateTransactionModels(algorithm, algorithm.BrokerageModel);
 
@@ -203,6 +221,13 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     Log.Error(err);
                     AddInitializationError("Error connecting to brokerage: " + err.Message);
+                    return false;
+                }
+
+                if (!brokerage.IsConnected)
+                {
+                    // if we're reporting that we're not connected, bail
+                    AddInitializationError("Unable to connect to brokerage.");
                     return false;
                 }
 
@@ -256,7 +281,7 @@ namespace QuantConnect.Lean.Engine.Setup
                             // for items not directly requested set leverage to 1 and at the min resolution
                             algorithm.AddSecurity(holding.Type, holding.Symbol, minResolution.Value, true, 1.0m, false);
                         }
-                        algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int)holding.Quantity);
+                        algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int) holding.Quantity);
                         algorithm.Securities[holding.Symbol].SetMarketPrice(DateTime.Now, new TradeBar
                         {
                             Time = DateTime.Now,
@@ -287,6 +312,13 @@ namespace QuantConnect.Lean.Engine.Setup
             catch (Exception err)
             {
                 AddInitializationError(err.Message);
+            }
+            finally
+            {
+                if (brokerage != null)
+                {
+                    brokerage.Message -= brokerageOnMessage;
+                }
             }
 
             return Errors.Count == 0;
