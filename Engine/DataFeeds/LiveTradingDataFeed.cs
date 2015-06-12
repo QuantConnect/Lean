@@ -233,16 +233,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var onHour = onMinute && triggerTime.Minute == 0;
                 var onDay = onHour && triggerTime.Hour == 0;
 
-                // Determine if this subscription needs to be archived:
-                for (var i = 0; i < Subscriptions.Count; i++)
+                if (triggerTime.Date != sourceDate)
                 {
-                    //Do critical events every second regardless of the market/hybernate state:
-                    if (triggerTime.Date != sourceDate)
+                    //Every day refresh the source file for the custom user data:
+                    for (int i = 0; i < Subscriptions.Count; i++)
                     {
-                        //Every day refresh the source file for the custom user data:
                         _subscriptionManagers[i].RefreshSource(triggerTime.Date);
                         sourceDate = triggerTime.Date;
                     }
+                }
+
+                // Determine if this subscription needs to be archived:
+                for (var i = 0; i < Subscriptions.Count; i++)
+                {
 
                     bool triggerArchive = false;
                     switch (_subscriptions[i].Resolution)
