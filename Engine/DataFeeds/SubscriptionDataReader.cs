@@ -516,10 +516,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // if the source has changed refresh it, in some cases the source string may
-            // not actually change, such is the case with a remote file, but we still want
-            // to re-fetch it, so make a special case for remote file types, we'll assume
+            // not actually change, such is the case with a live remote file, but we still want
+            // to re-fetch it, so make a special case for live remote file types, we'll assume
             // local files aren't changing, instead they should point to a new file
-            if (_source != newSource && newSource.Source != "" || _source.TransportMedium == SubscriptionTransportMedium.RemoteFile)
+            if (_source != newSource && newSource.Source != "" || (_isLiveMode && _source.TransportMedium == SubscriptionTransportMedium.RemoteFile))
             {
                 //If a new file, reset the EOS flag:
                 _endOfStream = false;

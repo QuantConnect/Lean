@@ -196,16 +196,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 //Pause the DataFeed
-                var bridgeFullCount = Bridge.Count(bridge => bridge.Count >= _bridgeMax);
-                var bridgeZeroCount = Bridge.Count(bridge => bridge.Count == 0);
+                var bridgeFullCount = 1;
+                var bridgeZeroCount = 0;
                 var active = GetActiveStreams();
 
                 //Pause here while bridges are full, but allow missing files to pass
+                int count = 0;
                 while (bridgeFullCount > 0 && ((_subscriptions - active) == bridgeZeroCount) && !_exitTriggered)
                 {
                     bridgeFullCount = Bridge.Count(bridge => bridge.Count >= _bridgeMax);
                     bridgeZeroCount = Bridge.Count(bridge => bridge.Count == 0);
-                    Thread.Sleep(5);
+                    if (count++ > 0)
+                    {
+                        Thread.Sleep(5);
+                    }
                 }
 
                 // for each smallest resolution

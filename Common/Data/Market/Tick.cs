@@ -118,6 +118,7 @@ namespace QuantConnect.Data.Market
             SaleCondition = original.SaleCondition;
             Quantity = original.Quantity;
             Suspicious = original.Suspicious;
+            DataType = MarketDataType.Tick;
         }
 
         /// <summary>
@@ -208,6 +209,7 @@ namespace QuantConnect.Data.Market
             try
             {
                 var csv = line.Split(',');
+                DataType = MarketDataType.Tick;
 
                 // Which security type is this data feed:
                 switch (config.SecurityType)
@@ -216,7 +218,6 @@ namespace QuantConnect.Data.Market
                         Symbol = config.Symbol;
                         Time = date.Date.AddMilliseconds(Convert.ToInt64(csv[0]));
                         Value = config.GetNormalizedPrice(csv[1].ToDecimal() / 10000m);
-                        DataType = MarketDataType.Tick;
                         TickType = TickType.Trade;
                         Quantity = Convert.ToInt32(csv[2]);
                         if (csv.Length > 3)
