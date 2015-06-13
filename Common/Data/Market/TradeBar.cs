@@ -340,5 +340,11 @@ namespace QuantConnect.Data.Market
             var source = Path.Combine(Constants.DataFolder, securityTypePath, resolutionPath, symbolPath, filename);
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
         }
+
+        public override BaseData Clone()
+        {
+            return (BaseData)MemberwiseClone();
+        }
+
     } // End Trade Bar Class
 }
