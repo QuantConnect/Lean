@@ -101,13 +101,15 @@ namespace QuantConnect.Lean.Engine
                             // if there's no item skip to the next subscription
                             break;
                         }
-                        if (result.Count > 0 && result[0].EndTime > frontier)
+
+                        DateTime endTime = result[0].EndTime;
+                        if (result.Count > 0 && endTime > frontier)
                         {
                             // we have at least one item, check to see if its in ahead of the frontier,
                             // if so, keep track of how many ticks in the future it is
-                            if (earlyBirdTicks == 0 || earlyBirdTicks > result[0].EndTime.Ticks)
+                            if (earlyBirdTicks == 0 || earlyBirdTicks > endTime.Ticks)
                             {
-                                earlyBirdTicks = result[0].EndTime.Ticks;
+                                earlyBirdTicks = endTime.Ticks;
                             }
                             break;
                         }
@@ -115,9 +117,9 @@ namespace QuantConnect.Lean.Engine
                         {
                             // we have at least one item, check to see if its in ahead of the frontier,
                             // if so, keep track of how many ticks in the future it is
-                            if (earlyBirdTicks == 0 || earlyBirdTicks > result[0].EndTime.Ticks)
+                            if (earlyBirdTicks == 0 || earlyBirdTicks > endTime.Ticks)
                             {
-                                earlyBirdTicks = result[0].EndTime.Ticks;
+                                earlyBirdTicks = endTime.Ticks;
                             }
                         }
 
