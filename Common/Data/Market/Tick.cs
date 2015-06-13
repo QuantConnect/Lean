@@ -25,9 +25,6 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class Tick : BaseData
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// Type of the Tick: Trade or Quote.
         /// </summary>
@@ -85,9 +82,6 @@ namespace QuantConnect.Data.Market
         //In Base Class: DateTime Of this TradeBar
         //public DateTime Time;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTORS
-        *********************************************************/
         /// <summary>
         /// Initialize tick class with a default constructor.
         /// </summary>
@@ -244,9 +238,6 @@ namespace QuantConnect.Data.Market
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Tick implementation of reader method: read a line of data from the source and convert it to a tick object.
         /// </summary>

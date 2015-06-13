@@ -20,17 +20,11 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Live job task packet: container for any live specific job variables
     /// </summary>
     public class LiveNodePacket : AlgorithmNodePacket 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// Deploy Id for this live algorithm.
         /// </summary>
@@ -49,9 +43,6 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "aBrokerageData")]
         public Dictionary<string, string> BrokerageData = new Dictionary<string, string>();
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for JSON of the Live Task Packet
         /// </summary>

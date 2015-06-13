@@ -30,9 +30,6 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public class ConsoleResultHandler : IResultHandler
     {
-        /******************************************************** 
-        * PRIVATE VARIABLES
-        *********************************************************/
         private bool _isActive;
         private bool _exitTriggered;
         private DateTime _updateTime;
@@ -48,9 +45,6 @@ namespace QuantConnect.Lean.Engine.Results
 
         public Dictionary<string, string> FinalStatistics { get; private set; } 
 
-        /******************************************************** 
-        * PUBLIC PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Messaging to store notification messages for processing.
         /// </summary>
@@ -119,9 +113,6 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-        /******************************************************** 
-        * PUBLIC CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Console result handler constructor.
         /// </summary>
@@ -135,9 +126,6 @@ namespace QuantConnect.Lean.Engine.Results
             _notificationPeriod = TimeSpan.FromSeconds(5);
         }
 
-        /******************************************************** 
-        * PUBLIC METHODS
-        *********************************************************/
         /// <summary>
         /// Initialize the result handler with this result packet.
         /// </summary>
@@ -295,7 +283,6 @@ namespace QuantConnect.Lean.Engine.Results
             Log.Trace("ConsoleResultHandler.SendStatusUpdate(): Algorithm Status: " + status + " : " + message);
         }
 
-
         /// <summary>
         /// Sample the asset prices to generate plots.
         /// </summary>
@@ -306,7 +293,6 @@ namespace QuantConnect.Lean.Engine.Results
         { 
             //NOP. Don't sample asset prices in console.
         }
-
 
         /// <summary>
         /// Add a range of samples to the store.
@@ -340,7 +326,6 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-        
         /// <summary>
         /// Algorithm final analysis results dumped to the console.
         /// </summary>
@@ -393,7 +378,6 @@ namespace QuantConnect.Lean.Engine.Results
             Log.Debug("ConsoleResultHandler.OrderEvent(): id:" + newEvent.OrderId + " >> Status:" + newEvent.Status + " >> Fill Price: " + newEvent.FillPrice.ToString("C") + " >> Fill Quantity: " + newEvent.FillQuantity);
         }
 
-
         /// <summary>
         /// Set the current runtime statistics of the algorithm
         /// </summary>
@@ -403,7 +387,6 @@ namespace QuantConnect.Lean.Engine.Results
         {
             Log.Trace("ConsoleResultHandler.RuntimeStatistic(): "  + key + " : " + value);
         }
-
 
         /// <summary>
         /// Clear the outstanding message queue to exit the thread.
@@ -512,7 +495,6 @@ namespace QuantConnect.Lean.Engine.Results
                 return TimeSpan.FromMinutes(resampleMinutes);
             }
         }
-
 
         /// <summary>
         /// Not used

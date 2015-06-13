@@ -14,9 +14,6 @@
  *
 */
 
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
     /// <summary>
@@ -26,10 +23,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// <remarks>A new transaction handler is required for each each brokerage endpoint.</remarks>
     public interface ITransactionHandler
     {
-        /******************************************************** 
-        * INTERFACE PROPERTIES
-        *********************************************************/
-
         /// <summary>
         /// Boolean flag indicating the thread is busy. 
         /// False indicates it is completely finished processing and ready to be terminated.
@@ -46,9 +39,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             get;
         }
-        /******************************************************** 
-        * INTERFACE METHODS
-        *********************************************************/
+
         /// <summary>
         /// Primary thread entry point to launch the transaction thread.
         /// </summary>

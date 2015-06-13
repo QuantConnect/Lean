@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using QuantConnect.Interfaces;
@@ -36,9 +35,6 @@ namespace QuantConnect.AlgorithmFactory
         /// </summary>
         public bool TryLoadDebugInformation;
 
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         // Defines the maximum amount of time we will allow for instantiating an instance of IAlgorithm
         private readonly TimeSpan _loaderTimeLimit;
 
@@ -91,10 +87,6 @@ namespace QuantConnect.AlgorithmFactory
             _loaderTimeLimit = loaderTimeLimit;
             _multipleTypeNameResolverFunction = multipleTypeNameResolverFunction;
         }
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
 
         /// <summary>
         /// Shim method -- Creates an instance of the 'baseTypeName' Type

@@ -18,17 +18,11 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Send a simple debug message from the users algorithm to the console.
     /// </summary>
     public class DebugPacket : Packet
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// String debug message to send to the users console
         /// </summary>
@@ -53,9 +47,6 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "iProjectID")]
         public int ProjectId;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for JSON
         /// </summary>

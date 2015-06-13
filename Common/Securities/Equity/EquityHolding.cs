@@ -17,23 +17,12 @@ using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities.Equity
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Holdings class for equities securities: no specific properties here but it is a placeholder for future equities specific behaviours.
     /// </summary>
     /// <seealso cref="SecurityHolding"/>
     public class EquityHolding : SecurityHolding 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
-
         /// <summary>
         /// Constructor for equities holdings.
         /// </summary>
@@ -44,14 +33,5 @@ namespace QuantConnect.Securities.Equity
             : base(security)
         {
         }
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-            
-
-        /******************************************************** 
-        * CLASS METHODS 
-        *********************************************************/
     }
 }

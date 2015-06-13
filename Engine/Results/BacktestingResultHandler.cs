@@ -33,9 +33,6 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public class BacktestingResultHandler : IResultHandler
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         private bool _exitTriggered = false;
         private BacktestNodePacket _job;
         private int _jobDays = 0;
@@ -74,9 +71,6 @@ namespace QuantConnect.Lean.Engine.Results
         private const double _samples = 4000;
         private const double _minimumSamplePeriod = 4;
 
-        /********************************************************
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Packeting message queue to temporarily store packets and then pull for processing.
         /// </summary>
@@ -159,11 +153,6 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-
-
-        /******************************************************** 
-        * CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default initializer for 
         /// </summary>
@@ -188,9 +177,6 @@ namespace QuantConnect.Lean.Engine.Results
             Charts["Strategy Equity"].Series.Add("Daily Performance", new Series("Daily Performance", SeriesType.Bar, "%"));
         }
         
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Initialize the result handler with this result packet.
         /// </summary>
@@ -284,8 +270,6 @@ namespace QuantConnect.Lean.Engine.Results
             _isActive = false;
         } // End Run();
 
-
-
         /// <summary>
         /// Send a backtest update to the browser taking a latest snapshot of the charting data.
         /// </summary>
@@ -368,7 +352,6 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-
         /// <summary>
         /// Run over all the data and break it into smaller packets to ensure they all arrive at the terminal
         /// </summary>
@@ -392,7 +375,6 @@ namespace QuantConnect.Lean.Engine.Results
 
             return splitPackets;
         }
-
 
         /// <summary>
         /// Save the snapshot of the total results to storage.
@@ -439,7 +421,6 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-
         /// <summary>
         /// Send a final analysis result back to the IDE.
         /// </summary>
@@ -482,7 +463,6 @@ namespace QuantConnect.Lean.Engine.Results
                 Log.Error("Algorithm.Worker.SendResult(): " + err.Message);
             }
         }
-
 
         /// <summary>
         /// Set the Algorithm instance for ths result.
@@ -819,7 +799,6 @@ namespace QuantConnect.Lean.Engine.Results
             Log.Trace("BacktestingResultHandler.ProcessLogMessages(): Ready: " + remoteUrl);
             return remoteUrl;
         }
-
 
         /// <summary>
         /// Set the chart subscription we want data for. Not used in backtesting.

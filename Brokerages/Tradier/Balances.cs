@@ -14,16 +14,10 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.Tradier
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Inside "Account" User-account balance information.
     /// </summary>

@@ -26,9 +26,6 @@ namespace QuantConnect.Configuration
     /// </summary>
     public static class Config
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         //Location of the configuration file.
         private const string _config = "config.json";
 
@@ -51,13 +48,6 @@ namespace QuantConnect.Configuration
             {"api-handler", "QuantConnect.Api.Api"}
         };
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS METHODS:
-        *********************************************************/
         /// <summary>
         /// Initialize the configuration file and if it doesnt exist create one with the default values above.
         /// </summary>

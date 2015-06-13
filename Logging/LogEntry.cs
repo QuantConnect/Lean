@@ -18,17 +18,11 @@ using System;
 
 namespace QuantConnect.Logging
 {
-    /******************************************************** 
-    * CLASS DEFINITION
-    *********************************************************/
     /// <summary>
     /// Log entry wrapper to make logging simpler:
     /// </summary>
     public class LogEntry
     {
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Time of the log entry
         /// </summary>
@@ -39,9 +33,6 @@ namespace QuantConnect.Logging
         /// </summary>
         public string Message;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Create a default log message with the current time.
         /// </summary>

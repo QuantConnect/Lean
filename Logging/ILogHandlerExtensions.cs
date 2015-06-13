@@ -17,9 +17,6 @@ using System;
 
 namespace QuantConnect.Logging
 {
-    /********************************************************
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Logging extensions.
     /// </summary>

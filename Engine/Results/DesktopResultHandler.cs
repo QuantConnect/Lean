@@ -30,9 +30,6 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public class DesktopResultHandler : IResultHandler
     {
-        /******************************************************** 
-        * PRIVATE VARIABLES
-        *********************************************************/
         private bool _isActive;
         private bool _exitTriggered;
         private IAlgorithm _algorithm;
@@ -45,10 +42,6 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly TimeSpan _notificationPeriod;
         public Dictionary<string, string> FinalStatistics { get; private set; } 
 
-
-        /******************************************************** 
-        * PUBLIC PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Messaging to store notification messages for processing.
         /// </summary>
@@ -117,9 +110,6 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-        /******************************************************** 
-        * PUBLIC CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Desktop default constructor
         /// </summary>
@@ -135,9 +125,6 @@ namespace QuantConnect.Lean.Engine.Results
             _notificationPeriod = TimeSpan.FromSeconds(2);
         }
 
-        /******************************************************** 
-        * PUBLIC METHODS
-        *********************************************************/
         /// <summary>
         /// Initialize the result handler with this result packet.
         /// </summary>

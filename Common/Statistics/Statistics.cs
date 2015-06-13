@@ -30,9 +30,6 @@ namespace QuantConnect.Statistics
     /// <remarks>This is a particularly ugly class and one of the first ones written. It should be thrown out and re-written.</remarks>
     public class Statistics
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         private static DateTime _benchmarkAge = new DateTime();
         private static SortedDictionary<DateTime, decimal> _benchmark = new SortedDictionary<DateTime, decimal>();
 
@@ -71,9 +68,6 @@ namespace QuantConnect.Statistics
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Convert the charting data into an equity array.
         /// </summary>

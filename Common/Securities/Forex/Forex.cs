@@ -19,22 +19,12 @@ using QuantConnect.Data;
 
 namespace QuantConnect.Securities.Forex 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// FOREX Security Object Implementation for FOREX Assets
     /// </summary>
     /// <seealso cref="Security"/>
     public class Forex : Security 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
         /// <summary>
         /// Constructor for the forex security
         /// </summary>
@@ -62,11 +52,6 @@ namespace QuantConnect.Securities.Forex
             QuoteCurrencySymbol = quoteCurrencySymbol;
         }
 
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-
         /// <summary>
         /// Gets the Cash object used for converting the quote currency to the account currency
         /// </summary>
@@ -89,10 +74,6 @@ namespace QuantConnect.Securities.Forex
         /// going long the EUR/USD a trader is spending US dollars in order to acquire euros.
         /// </remarks>
         public string QuoteCurrencySymbol { get; private set; }
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
 
         /// <summary>
         /// Decomposes the specified currency pair into a base and quote currency provided as out parameters

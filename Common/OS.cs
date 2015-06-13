@@ -26,9 +26,6 @@ namespace QuantConnect
     /// <remarks>Good design should remove the need for this function. Over time it should disappear.</remarks>
     public static class OS 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         private static PerformanceCounter _ramTotalCounter;
         private static PerformanceCounter _ramAvailableBytes;
         private static PerformanceCounter _cpuUsageCounter;
@@ -55,9 +52,6 @@ namespace QuantConnect
             }
         }
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Memory free on the machine available for use:
         /// </summary>

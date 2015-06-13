@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -33,9 +32,6 @@ namespace QuantConnect.Queues
         private const string PaperBrokerageTypeName = "PaperBrokerage";
         private bool _liveMode = Config.GetBool("live-mode"); 
         
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Physical location of Algorithm DLL.
         /// </summary>
@@ -48,9 +44,6 @@ namespace QuantConnect.Queues
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Initialize the job queue:
         /// </summary>

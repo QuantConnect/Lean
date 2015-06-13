@@ -14,9 +14,6 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
@@ -24,9 +21,6 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Tradier
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Tradier deserialization container for history
     /// </summary>
@@ -36,7 +30,7 @@ namespace QuantConnect.Brokerages.Tradier
         [JsonProperty(PropertyName = "history")]
         public TradierEvents TradierEvents;
 
-        /// Default Constructor:
+        /// Default constructor for json serialization
         public TradierEventContainer()
         { }
     }

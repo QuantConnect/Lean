@@ -21,24 +21,14 @@ using System.Reflection;
 
 namespace QuantConnect.Data
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Dynamic Data Class: Accept flexible data, adapting to the columns provided by source.
     /// </summary>
     /// <remarks>Intended for use with Quandl class.</remarks>
     public abstract class DynamicData : BaseData, IDynamicMetaObjectProvider
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
         private readonly IDictionary<string, object> _storage = new Dictionary<string, object>();
 
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Get the metaObject required for Dynamism.
         /// </summary>

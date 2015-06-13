@@ -21,27 +21,14 @@ using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Enumerable Subscription Management Class
     /// </summary>
     public class SubscriptionManager
     {
-        /******************************************************** 
-        * PUBLIC VARIABLES
-        *********************************************************/
         /// Generic Market Data Requested and Object[] Arguements to Get it:
         public List<SubscriptionDataConfig> Subscriptions;
 
-        /******************************************************** 
-        * PRIVATE VARIABLES
-        *********************************************************/
-        
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Initialise the Generic Data Manager Class
         /// </summary>
@@ -51,9 +38,6 @@ namespace QuantConnect.Data
             Subscriptions = new List<SubscriptionDataConfig>();
         }
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Get the count of assets:
         /// </summary>
@@ -65,9 +49,6 @@ namespace QuantConnect.Data
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Add Market Data Required (Overloaded method for backwards compatibility).
         /// </summary>
@@ -86,7 +67,6 @@ namespace QuantConnect.Data
             }
             return Add(dataType, security, symbol, resolution, fillDataForward, extendedMarketHours, true, true);
         }
-
 
         /// <summary>
         /// Add Market Data Required - generic data typing support as long as Type implements IBaseData.
@@ -142,7 +122,6 @@ namespace QuantConnect.Data
             //If we made it here it is because we never found the symbol in the subscription list
             throw new ArgumentException("Please subscribe to this symbol before adding a consolidator for it. Symbol: " + symbol);
         }
-
 
         /// <summary>
         /// Get the settings object for this ticker:

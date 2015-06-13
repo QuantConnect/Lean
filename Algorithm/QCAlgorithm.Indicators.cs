@@ -22,25 +22,8 @@ using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     public partial class QCAlgorithm
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
-
-
-        /******************************************************** 
-        * CLASS PUBLIC PROPERTIES
-        *********************************************************/
-
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-
         /// <summary>
         /// Creates a new Identity indicator for the symbol The indicator will be automatically
         /// updated on the symbol's subscription resolution

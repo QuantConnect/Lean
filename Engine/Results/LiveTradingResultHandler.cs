@@ -38,9 +38,6 @@ namespace QuantConnect.Lean.Engine.Results
     /// <remarks>Live trading result handler is quite busy. It sends constant price updates, equity updates and order/holdings updates.</remarks>
     public class LiveTradingResultHandler : IResultHandler
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         // Required properties for the cloud app.
         private bool _isActive;
         private string _compileId;
@@ -73,9 +70,6 @@ namespace QuantConnect.Lean.Engine.Results
         private List<LogEntry> _logStore;
         private DateTime _nextSample;
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Live packet messaging queue. Queue the messages here and send when the result queue is ready.
         /// </summary>
@@ -145,9 +139,6 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-        /******************************************************** 
-        * CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Initialize the live trading result handler
         /// </summary>
@@ -167,10 +158,6 @@ namespace QuantConnect.Lean.Engine.Results
             _logStore = new List<LogEntry>();
         }
 
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Initialize the result handler with this result packet.
         /// </summary>

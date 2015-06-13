@@ -15,9 +15,6 @@
 
 namespace QuantConnect.Notifications
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Local/desktop implementation of messaging system for Lean Engine.
     /// </summary>

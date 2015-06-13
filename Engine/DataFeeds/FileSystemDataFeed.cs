@@ -26,29 +26,20 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Historical datafeed stream reader for processing files on a local disk.
     /// </summary>
     /// <remarks>Filesystem datafeeds are incredibly fast</remarks>
     public class FileSystemDataFeed : IDataFeed
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         // Set types in public area to speed up:
         private IAlgorithm _algorithm;
         private BacktestNodePacket _job;
-        private bool _endOfStreams = false;
-        private int _subscriptions = 0;
+        private bool _endOfStreams;
+        private int _subscriptions;
         private int _bridgeMax = 500000;
-        private bool _exitTriggered = false;
+        private bool _exitTriggered;
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// List of the subscription the algorithm has requested. Subscriptions contain the type, sourcing information and manage the enumeration of data.
         /// </summary>
@@ -119,9 +110,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public DateTime[] FillForwardFrontiers;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Create a new backtesting data feed.
         /// </summary>
@@ -157,9 +145,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Main routine for datafeed analysis.
         /// </summary>

@@ -14,7 +14,6 @@
 */
 
 using System;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -27,30 +26,12 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityTransactionModel : ISecurityTransactionModel
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS PUBLIC VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Initialize the default transaction model class
         /// </summary>
         public SecurityTransactionModel() 
         {  }
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.
         /// </summary>

@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory;
-using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -33,17 +32,11 @@ namespace QuantConnect.Lean.Engine.Setup
     /// </summary>
     public class BacktestingSetupHandler : ISetupHandler
     {
-        /******************************************************** 
-        * PRIVATE VARIABLES
-        *********************************************************/
         private TimeSpan _maxRuntime = TimeSpan.FromSeconds(300);
         private decimal _startingCaptial = 0;
         private int _maxOrders = 0;
         private DateTime _startingDate = new DateTime(1998, 01, 01);
 
-        /******************************************************** 
-        * PUBLIC PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Internal errors list from running the setup proceedures.
         /// </summary>
@@ -64,7 +57,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 return _maxRuntime;
             }
         }
-
 
         /// <summary>
         /// Starting capital according to the users initialize routine.
@@ -103,9 +95,6 @@ namespace QuantConnect.Lean.Engine.Setup
             }
         }
 
-        /******************************************************** 
-        * PUBLIC CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Initialize the backtest setup handler.
         /// </summary>
@@ -114,9 +103,6 @@ namespace QuantConnect.Lean.Engine.Setup
             Errors = new List<string>();
         }
 
-        /******************************************************** 
-        * PUBLIC METHODS
-        *********************************************************/
         /// <summary>
         /// Creates a new algorithm instance. Verified there's only one defined in the assembly and requires
         /// instantiation to take less than 10 seconds
@@ -231,7 +217,6 @@ namespace QuantConnect.Lean.Engine.Setup
             }
             return initializeComplete;
         }
-
 
         /// <summary>
         /// Calculate the maximum runtime for this algorithm job.

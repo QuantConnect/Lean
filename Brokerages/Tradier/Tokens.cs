@@ -14,17 +14,11 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.Tradier
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Token response model from QuantConnect terminal
     /// </summary>

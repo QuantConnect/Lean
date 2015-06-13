@@ -31,62 +31,77 @@ namespace QuantConnect.Data
         /// Type of data
         /// </summary>
         public readonly Type Type;
+
         /// <summary>
         /// Security type of this data subscription
         /// </summary>
         public readonly SecurityType SecurityType;
+
         /// <summary>
         /// Symbol of the asset we're requesting.
         /// </summary>
         public readonly string Symbol;
+
         /// <summary>
         /// Resolution of the asset we're requesting, second minute or tick
         /// </summary>
         public readonly Resolution Resolution;
+
         /// <summary>
         /// Timespan increment between triggers of this data:
         /// </summary>
         public readonly TimeSpan Increment;
+
         /// <summary>
         /// True if wish to send old data when time gaps in data feed.
         /// </summary>
         public readonly bool FillDataForward;
+
         /// <summary>
         /// Boolean Send Data from between 4am - 8am (Equities Setting Only)
         /// </summary>
         public readonly bool ExtendedMarketHours;
+
         /// <summary>
         /// True if the data type has OHLC properties, even if dynamic data
         /// </summary>
         public readonly bool IsTradeBar;
+
         /// <summary>
         /// True if the data type has a Volume property, even if it is dynamic data
         /// </summary>
         public readonly bool HasVolume;
+
         /// <summary>
         /// True if this subscription was added for the sole purpose of providing currency conversion rates via <see cref="CashBook.EnsureCurrencyDataFeeds"/>
         /// </summary>
         public readonly bool IsInternalFeed;
+
         /// <summary>
         /// The subscription index from the SubscriptionManager
         /// </summary>
         public readonly int SubscriptionIndex;
+
         /// <summary>
         /// The sum of dividends accrued in this subscription, used for scaling total return prices
         /// </summary>
         public decimal SumOfDividends;
+
         /// <summary>
         /// Gets the normalization mode used for this subscription
         /// </summary>
         public DataNormalizationMode DataNormalizationMode = DataNormalizationMode.Adjusted;
+
         /// <summary>
         /// Price Scaling Factor:
         /// </summary>
         public decimal PriceScaleFactor;
+
         /// <summary>
         /// Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
         /// </summary>
         public string MappedSymbol;
+
         /// <summary>
         /// Consolidators that are registred with this subscription
         /// </summary>

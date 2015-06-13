@@ -18,8 +18,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -28,9 +26,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public interface IDataFeed
     {
-        /******************************************************** 
-        * INTERFACE PROPERTIES
-        *********************************************************/
         /// <summary>
         /// List of the subscription the algorithm has requested. Subscriptions contain the type, sourcing information and manage the enumeration of data.
         /// </summary>
@@ -38,7 +33,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             get;
         }
-
 
         /// <summary>
         /// Prices of the datafeed this instant for dynamically updating security values (and calculation of the total portfolio value in realtime).
@@ -105,20 +99,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             get;
         }
 
-        /******************************************************** 
-        * INTERFACE METHODS
-        *********************************************************/
         /// <summary>
         /// Primary entry point.
         /// </summary>
         void Run();
 
-
         /// <summary>
         /// External controller calls to signal a terminate of the thread.
         /// </summary>
         void Exit();
-
 
         /// <summary>
         /// Purge all remaining data in the thread.

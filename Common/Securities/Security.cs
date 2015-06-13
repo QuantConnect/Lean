@@ -31,16 +31,10 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class Security 
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
         private readonly string _symbol;
         private readonly bool _isDynamicallyLoadedData;
         private readonly SubscriptionDataConfig _config;
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// String symbol for the asset.
         /// </summary>
@@ -206,9 +200,6 @@ namespace QuantConnect.Securities
             set;
         }
 
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
@@ -227,9 +218,6 @@ namespace QuantConnect.Securities
             Holdings = new SecurityHolding(this);
         }
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Read only property that checks if we currently own stock in the company.
         /// </summary>

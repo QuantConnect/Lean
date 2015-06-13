@@ -24,21 +24,15 @@ namespace QuantConnect
     /// </summary>
     /// <remarks>Due to the way Window's system clock works the clock is only accurate to the nearest 16ms. In linux it is accurate to the millisecond.</remarks>
     public class RealTimeSynchronizedTimer
-    {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
+    {        
+        private bool _stopped;
+        private Thread _thread;
         private TimeSpan _period;
         private Action<DateTime> _callback = null;
         private Stopwatch _timer = new Stopwatch();
-        private Thread _thread;
-        private bool _stopped = false;
-        private DateTime _triggerTime = new DateTime();
-        private bool _paused = false;
+        private DateTime _triggerTime;
+        private bool _paused;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Constructor for Real Time Event Driver:
         /// </summary>
@@ -64,13 +58,6 @@ namespace QuantConnect
             _triggerTime = DateTime.Now.RoundUp(period);
         }
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Start the synchronized real time timer - fire events at start of each second or minute 
         /// </summary>

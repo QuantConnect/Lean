@@ -20,9 +20,6 @@ using QuantConnect.Securities.Forex;
 
 namespace QuantConnect
 {
-    /********************************************************
-    * GLOBAL CONST
-    *********************************************************/
     /// <summary>
     /// Shortcut date format strings
     /// </summary>
@@ -48,10 +45,6 @@ namespace QuantConnect
         public const string Forex = "yyyyMMdd HH:mm:ss.ffff";
     }
 
-
-    /********************************************************
-    * GLOBAL STRUCT DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Singular holding of assets from backend live nodes:
     /// </summary>
@@ -142,9 +135,6 @@ namespace QuantConnect
         }
     }
 
-    /********************************************************
-    * GLOBAL ENUMS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Processing runmode of the backtest.
     /// </summary>
@@ -503,10 +493,6 @@ namespace QuantConnect
         TotalReturn
     }
 
-
-    /********************************************************
-    * GLOBAL MARKETS
-    *********************************************************/
     /// <summary>
     /// Global Market Short Codes and their full versions: (used in tick objects)
     /// </summary>

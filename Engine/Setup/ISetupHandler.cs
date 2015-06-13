@@ -27,9 +27,6 @@ namespace QuantConnect.Lean.Engine.Setup
     /// </summary>
     public interface ISetupHandler : IDisposable
     {
-        /******************************************************** 
-        * INTERFACE PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Any errors from the initialization stored here:
         /// </summary>
@@ -71,10 +68,6 @@ namespace QuantConnect.Lean.Engine.Setup
             get;
         }
 
-        /******************************************************** 
-        * INTERFACE METHODS
-        *********************************************************/
-
         /// <summary>
         /// Create a new instance of an algorithm from a physical dll path.
         /// </summary>
@@ -90,7 +83,6 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="job">Algorithm job task</param>
         /// <returns>True on successfully setting up the algorithm state, or false on error.</returns>
         bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket job);
-
 
         /// <summary>
         /// Setup the error handler for the brokerage errors.

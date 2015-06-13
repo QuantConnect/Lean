@@ -24,9 +24,6 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public class RealTimeEvent
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         // Trigger Timing
         private readonly DateTime _triggerTime;
         private readonly Action _callback;
@@ -35,9 +32,6 @@ namespace QuantConnect.Lean.Engine.RealTime
         // Trigger Action
         private bool _triggered;
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Flag indicating the event has been triggered
         /// </summary>
@@ -46,9 +40,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             get { return _triggered; }
         }
 
-        /******************************************************** 
-        * CONSTRUCTOR METHODS
-        *********************************************************/
         /// <summary>
         /// Setup new event to fire at a specific time. Managed by a RealTimeHandler thread.
         /// </summary>
@@ -64,9 +55,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             _logging = logging;
         }
 
-        /******************************************************** 
-        * CLASS METHODS:
-        *********************************************************/
         /// <summary>
         /// Scan this event to see if this real time event has been triggered.
         /// </summary>

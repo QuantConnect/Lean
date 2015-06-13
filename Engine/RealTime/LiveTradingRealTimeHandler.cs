@@ -31,11 +31,8 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public class LiveTradingRealTimeHandler : IRealTimeHandler
     {
-        /******************************************************** 
-        * PRIVATE VARIABLES
-        *********************************************************/
-        private DateTime _time = new DateTime();
-        private bool _exitTriggered = false;
+        private DateTime _time;
+        private bool _exitTriggered;
         private bool _isActive = true;
         private List<RealTimeEvent> _events;
         private Dictionary<SecurityType, MarketToday> _today;
@@ -46,9 +43,6 @@ namespace QuantConnect.Lean.Engine.RealTime
         //Algorithm and Handlers:
         private IAlgorithm _algorithm;
 
-        /******************************************************** 
-        * PUBLIC PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Current time.
         /// </summary>
@@ -82,7 +76,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
         }
 
-
         /// <summary>
         /// Market hours for today for each security type in the algorithm
         /// </summary>
@@ -94,9 +87,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
         }
 
-        /******************************************************** 
-        * PUBLIC CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Initialize the realtime event handler with all information required for triggering daily events.
         /// </summary>
@@ -110,9 +100,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             _results = results;
         }
 
-        /******************************************************** 
-        * PUBLIC METHODS
-        *********************************************************/
         /// <summary>
         /// Execute the live realtime event thread montioring. 
         /// It scans every second monitoring for an event trigger.
@@ -144,7 +131,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             _isActive = false;
         }
 
-
         /// <summary>
         /// Set up the realtime event handlers for today.
         /// </summary>
@@ -173,7 +159,6 @@ namespace QuantConnect.Lean.Engine.RealTime
                 Log.Error("LiveTradingRealTimeHandler.SetupEvents(): " + err.Message);
             }
         }
-
 
         /// <summary>
         /// Setup the end of day event handler for all symbols in the users algorithm. 
@@ -252,7 +237,6 @@ namespace QuantConnect.Lean.Engine.RealTime
                 }, true));
             }
         }
-
 
         /// <summary>
         /// Refresh the Today variable holding the market hours information

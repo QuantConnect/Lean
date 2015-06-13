@@ -25,9 +25,6 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public interface IRealTimeHandler
     {
-        /******************************************************** 
-        * INTERFACE PROPERTIES
-        *********************************************************/
         /// <summary>
         /// The real time handlers internal record of current time used to scan the events.
         /// </summary>
@@ -60,9 +57,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             get;
         }
 
-        /******************************************************** 
-        * INTERFACE METHODS
-        *********************************************************/
         /// <summary>
         /// Main entry point to scan and trigger the realtime events.
         /// </summary>

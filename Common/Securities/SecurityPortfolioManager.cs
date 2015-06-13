@@ -16,9 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Securities 
@@ -29,9 +27,6 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityPortfolioManager : IDictionary<string, SecurityHolding>, IHoldingsProvider 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// Local access to the securities collection for the portfolio summation.
         /// </summary>
@@ -50,9 +45,6 @@ namespace QuantConnect.Securities
         //Record keeping variables
         private readonly Cash _baseCurrencyCash;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Initialise security portfolio manager.
         /// </summary>
@@ -71,9 +63,6 @@ namespace QuantConnect.Securities
 
         #region IDictionary Implementation
 
-        /******************************************************** 
-        * DICTIONARY IMPLEMENTATION
-        *********************************************************/
         /// <summary>
         /// Add a new securities string-security to the portfolio.
         /// </summary>
@@ -241,10 +230,6 @@ namespace QuantConnect.Securities
 
         #endregion
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-
         /// <summary>
         /// Sum of all currencies in account in US dollars
         /// </summary>
@@ -280,7 +265,6 @@ namespace QuantConnect.Securities
             get { return Securities.Sum(x => x.Value.Holdings.AbsoluteHoldingsCost); }
         }
 
-
         /// <summary>
         /// Absolute sum the individual items in portfolio.
         /// </summary>
@@ -304,7 +288,6 @@ namespace QuantConnect.Securities
             get { return TotalHoldingsValue > 0; }
         }
 
-
         /// <summary>
         /// Alias for HoldStock. Check if we have and holdings.
         /// </summary>
@@ -325,7 +308,6 @@ namespace QuantConnect.Securities
                         select position.Holdings.UnrealizedProfit).Sum();
             }
         }
-
 
         /// <summary>
         /// Get the total unrealised profit in our portfolio from the individual security unrealized profits.
@@ -422,10 +404,6 @@ namespace QuantConnect.Securities
         /// is used to executed margin call orders.
         /// </summary>
         public MarginCallModel MarginCallModel { get; set; }
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
 
         /// <summary>
         /// Indexer for the PortfolioManager class to access the underlying security holdings objects.

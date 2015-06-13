@@ -36,29 +36,19 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine
 {
-    /******************************************************** 
-    * QUANTCONNECT NAMESPACES
-    *********************************************************/
     /// <summary>
     /// Algorithm manager class executes the algorithm and generates and passes through the algorithm events.
     /// </summary>
     public static class AlgorithmManager
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
+
         private static DateTime _previousTime;
         private static AlgorithmStatus _algorithmState = AlgorithmStatus.Running;
         private static readonly object _lock = new object();
         private static string _algorithmId = "";
         private static DateTime _currentTimeStepTime;
         private static readonly TimeSpan _timeLoopMaximum = TimeSpan.FromMinutes(Config.GetDouble("algorithm-manager-time-loop-maximum", 10));
-
         private static long _dataPointCount;
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
 
         /// <summary>
         /// Publicly accessible algorithm status
@@ -126,9 +116,6 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Launch the algorithm manager to run this strategy
         /// </summary>

@@ -31,14 +31,11 @@ namespace QuantConnect.Data
         * CLASS PRIVATE VARIABLES
         *********************************************************/
         private MarketDataType _dataType = MarketDataType.Base;
-        private DateTime _time = new DateTime();
-        private string _symbol = "";
-        private decimal _value = 0;
-        private bool _isFillForward = false;
+        private DateTime _time;
+        private string _symbol = string.Empty;
+        private decimal _value;
+        private bool _isFillForward;
 
-        /******************************************************** 
-        * CLASS PUBLIC VARIABLES
-        *********************************************************/
         /// <summary>
         /// Market Data Type of this data - does it come in individual price packets or is it grouped into OHLC.
         /// </summary>
@@ -130,9 +127,7 @@ namespace QuantConnect.Data
                 return Value;
             }
         }
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
+
         /// <summary>
         /// Constructor for initialising the dase data class
         /// </summary>
@@ -141,13 +136,6 @@ namespace QuantConnect.Data
             //Empty constructor required for fast-reflection initialization
         }
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-        
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object 
         /// each time it is called. 

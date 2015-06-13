@@ -18,9 +18,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Orders
 {
-    /******************************************************** 
-    * BASE ORDER CLASS DEFINITION - DEFAULT TO MARKET ORDER.
-    *********************************************************/
     /// <summary>
     /// Order struct for placing new trade
     /// </summary>

@@ -19,19 +19,13 @@ using System.Globalization;
 
 namespace QuantConnect.Data.Custom
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Quandl Data Type - Import generic data from quandl, without needing to define Reader methods. 
     /// This reads the headers of the data imported, and dynamically creates properties for the imported data.
     /// </summary>
     public class Quandl : DynamicData
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
-        private bool _isInitialized = false;
+        private bool _isInitialized;
         private readonly List<string> _propertyNames = new List<string>();
         private readonly string _valueColumn;
         private static string _authCode = "";
@@ -45,9 +39,6 @@ namespace QuantConnect.Data.Custom
             private set;
         }
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default quandl constructor uses Close as its value column
         /// </summary>
@@ -66,10 +57,6 @@ namespace QuantConnect.Data.Custom
             _valueColumn = valueColumnName;
         }
 
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Generic Reader Implementation for Quandl Data.
         /// </summary>

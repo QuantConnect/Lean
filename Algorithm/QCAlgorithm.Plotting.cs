@@ -21,20 +21,11 @@ using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     public partial class QCAlgorithm
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
         private Dictionary<string, Chart> _charts = new Dictionary<string, Chart>();
         private Dictionary<string, string> _runtimeStatistics = new Dictionary<string, string>();
 
-        /******************************************************** 
-        * CLASS PUBLIC PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Access to the runtime statistics property. User provided statistics.
         /// </summary>
@@ -47,9 +38,6 @@ namespace QuantConnect.Algorithm
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Add a Chart object to algorithm collection
         /// </summary>

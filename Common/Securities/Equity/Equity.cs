@@ -17,9 +17,6 @@ using QuantConnect.Data;
 
 namespace QuantConnect.Securities.Equity 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Equity Security Type : Extension of the underlying Security class for equity specific behaviours.
     /// </summary>

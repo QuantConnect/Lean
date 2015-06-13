@@ -19,17 +19,11 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Security types packet contains information on the markets the user data has requested.
     /// </summary>
     public class SecurityTypesPacket : Packet
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// List of Security Type the user has requested (Equity, Forex, Futures etc).
         /// </summary>
@@ -53,9 +47,6 @@ namespace QuantConnect.Packets
             }
         }
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for JSON
         /// </summary>

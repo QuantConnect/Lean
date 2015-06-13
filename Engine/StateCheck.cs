@@ -20,26 +20,12 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Algorithm status monitor reads the central command directive for this algorithm/backtest. When it detects
     /// the backtest has been deleted or cancelled the backtest is aborted.
     /// </summary>
     public class StateCheck
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
 
         /// DB Ping Class
         public class Ping

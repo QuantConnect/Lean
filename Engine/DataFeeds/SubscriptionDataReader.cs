@@ -32,18 +32,12 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Subscription data reader is a wrapper on the stream reader class to download, unpack and iterate over a data file.
     /// </summary>
     /// <remarks>The class accepts any subscription configuration and automatically makes it availble to enumerate</remarks>
     public class SubscriptionDataReader : IEnumerator<BaseData>
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
         /// Source string to create memory stream:
         private SubscriptionDataSource _source;
 
@@ -108,9 +102,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         // true if we're in live mode, false otherwise
         private readonly bool _isLiveMode;
 
-        /******************************************************** 
-        * CLASS PUBLIC VARIABLES
-        *********************************************************/
         /// <summary>
         /// Last read BaseData object from this type and source
         /// </summary>
@@ -162,9 +153,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Subscription data reader takes a subscription request, loads the type, accepts the data source and enumerate on the results.
         /// </summary>
@@ -239,9 +227,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
            }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Try and create a new instance of the object and return it using the MoveNext enumeration pattern ("Current" public variable).
         /// </summary>
@@ -646,7 +631,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return close;
         }
 
-
         /// <summary>
         /// Using this source URL, download it to our cache and open a local reader.
         /// </summary>
@@ -682,7 +666,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             return reader;
         }
-
 
         /// <summary>
         /// Dispose of the Stream Reader and close out the source stream and file connections.

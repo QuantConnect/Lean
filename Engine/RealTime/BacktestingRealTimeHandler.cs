@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Logging;
@@ -28,11 +27,8 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public class BacktestingRealTimeHandler : IRealTimeHandler
     {
-        /******************************************************** 
-        * PRIVATE VARIABLES
-        *********************************************************/
         //Threading
-        private DateTime _time = new DateTime();
+        private DateTime _time;
         private bool _exitTriggered;
         private bool _isActive = true;
         private AlgorithmNodePacket _job;
@@ -44,9 +40,6 @@ namespace QuantConnect.Lean.Engine.RealTime
         private IAlgorithm _algorithm;
         private Dictionary<SecurityType, MarketToday> _today;
 
-        /******************************************************** 
-        * PUBLIC PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Realtime Moment.
         /// </summary>
@@ -92,9 +85,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
         }
 
-        /******************************************************** 
-        * PUBLIC CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Setup the algorithm data, cash, job start end date etc.
         /// </summary>
@@ -107,9 +97,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             _today = new Dictionary<SecurityType, MarketToday>();
         }
 
-        /******************************************************** 
-        * PUBLIC METHODS
-        *********************************************************/
         /// <summary>
         /// Setup the events for this date.
         /// </summary>
@@ -207,7 +194,6 @@ namespace QuantConnect.Lean.Engine.RealTime
                 _events[i].Reset();
             }
         }
-
 
         /// <summary>
         /// Set the time for the realtime event handler.

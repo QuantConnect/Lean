@@ -17,22 +17,12 @@ using QuantConnect.Data;
 
 namespace QuantConnect.Securities.Forex 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Forex packet by packet data filtering mechanism for dynamically detecting bad ticks.
     /// </summary>
     /// <seealso cref="SecurityDataFilter"/>
     public class ForexDataFilter : SecurityDataFilter
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
         /// <summary>
         /// Initialize forex data filter class:
         /// </summary>
@@ -42,9 +32,6 @@ namespace QuantConnect.Securities.Forex
             
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Forex data filter: a true value means accept the packet, a false means fail.
         /// </summary>

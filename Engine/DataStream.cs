@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Diagnostics;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -25,33 +24,20 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine
 {
-    /******************************************************** 
-    * QUANTCONNECT NAMESPACES
-    *********************************************************/
     /// <summary>
     /// Data stream class takes a datafeed hander and converts it into a synchronized enumerable data format for looping 
     /// in the primary algorithm thread.
     /// </summary>
     public static class DataStream
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         //Count of bridges and subscriptions.
         private static int _subscriptions;
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
 
         /// <summary>
         /// The frontier time of the data stream
         /// </summary>
         public static DateTime AlgorithmTime { get; private set; }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Process over the datafeed cross thread bridges to generate an enumerable sorted collection of the data, ready for a consumer
         /// to use and already synchronized in time.
@@ -223,7 +209,6 @@ namespace QuantConnect.Lean.Engine
                 Thread.Sleep(1);
             }
         }
-
 
         /// <summary>
         /// Check if all the bridges have data or are dead before starting the analysis

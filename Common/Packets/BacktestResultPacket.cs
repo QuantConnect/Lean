@@ -22,17 +22,11 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Backtest result packet: send backtest information to GUI for user consumption.
     /// </summary>
     public class BacktestResultPacket : Packet 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// User Id placing this task
         /// </summary>
@@ -125,9 +119,6 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "iTradeableDates")]
         public int TradeableDates = 0;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for JSON Serialization
         /// </summary>

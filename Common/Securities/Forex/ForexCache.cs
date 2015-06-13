@@ -15,9 +15,6 @@
 
 namespace QuantConnect.Securities.Forex
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    ********************************************************/
     /// <summary>
     /// Forex specific caching support
     /// </summary>
@@ -25,13 +22,6 @@ namespace QuantConnect.Securities.Forex
     /// <seealso cref="SecurityCache"/>
     public class ForexCache : SecurityCache
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
         /// <summary>
         /// Initialize forex cache
         /// </summary>

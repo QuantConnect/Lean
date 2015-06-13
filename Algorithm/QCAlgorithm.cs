@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -28,9 +27,6 @@ using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Algorithm
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// QC Algorithm Base Class - Handle the basic requirements of a trading algorithm, 
     /// allowing user to focus on event methods. The QCAlgorithm class implements Portfolio, 
@@ -38,9 +34,6 @@ namespace QuantConnect.Algorithm
     /// </summary>
     public partial class QCAlgorithm : MarshalByRefObject, IAlgorithm
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
         private DateTime _time;
         private DateTime _startDate;   //Default start and end dates.
         private DateTime _endDate;     //Default end to yesterday
@@ -58,9 +51,6 @@ namespace QuantConnect.Algorithm
         private string _previousErrorMessage = "";
         private bool _sentNoDataError = false;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
         /// QCAlgorithm manages the transactions, portfolio, charting and security subscriptions for the users algorithms.
@@ -91,10 +81,6 @@ namespace QuantConnect.Algorithm
             _endDate = DateTime.Now.AddDays(-1);
         }
 
-
-        /******************************************************** 
-        * CLASS PUBLIC VARIABLES
-        *********************************************************/
         /// <summary>
         /// Security collection is an array of the security objects such as Equities and FOREX. Securities data 
         /// manages the properties of tradeable assets such as price, open and close time and holdings information.
@@ -290,9 +276,6 @@ namespace QuantConnect.Algorithm
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -798,7 +781,6 @@ namespace QuantConnect.Algorithm
             }
         }
 
-
         /// <summary>
         /// AddData<typeparam name="T"/> a new user defined data source, requiring only the minimum config options.
         /// </summary>
@@ -830,7 +812,6 @@ namespace QuantConnect.Algorithm
 
             AddData<T>(symbol, resolution, fillDataForward: false, leverage: 1m, isTradeBar: isTradeBar, hasVolume: hasVolume);
         }
-
 
         /// <summary>
         /// AddData<typeparam name="T"/> a new user defined data source, requiring only the minimum config options.

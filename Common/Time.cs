@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 
@@ -27,9 +26,24 @@ namespace QuantConnect
     /// </summary>
     public static class Time
     {
+        /// <summary>
+        /// One Day TimeSpan Period Constant
+        /// </summary>
         public static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
+
+        /// <summary>
+        /// One Hour TimeSpan Period Constant
+        /// </summary>
         public static readonly TimeSpan OneHour = TimeSpan.FromHours(1);
+        
+        /// <summary>
+        /// One Minute TimeSpan Period Constant
+        /// </summary>
         public static readonly TimeSpan OneMinute = TimeSpan.FromMinutes(1);
+
+        /// <summary>
+        /// One Second TimeSpan Period Constant
+        /// </summary>
         public static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
 
         /// <summary>

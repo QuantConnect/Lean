@@ -30,9 +30,6 @@ namespace QuantConnect.Interfaces
     /// </summary>
     public interface IAlgorithm
     {
-        /********************************************************
-        * INTERFACE PROPERTIES:
-        *********************************************************/
         /// <summary>
         /// Data subscription manager controls the information and subscriptions the algorithms recieves.
         /// Subscription configurations can be added through the Subscription Manager.
@@ -210,9 +207,6 @@ namespace QuantConnect.Interfaces
             get;
         }
 
-        /********************************************************
-        * INTERFACE METHODS
-        *********************************************************/
         /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
         /// </summary>

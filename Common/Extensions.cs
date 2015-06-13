@@ -19,31 +19,15 @@ using System.Text;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
-using System.ComponentModel.Composition.Hosting;
-using System.Globalization;
-using System.Linq;
 using System.Timers;
 
 namespace QuantConnect 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Extensions function collections - group all static extensions functions here.
     /// </summary>
-    public static class Extensions {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
+    public static class Extensions 
+    {
         /// <summary>
         /// Extension to move one element from list from A to position B.
         /// </summary>

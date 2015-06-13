@@ -17,9 +17,6 @@ using System;
 
 namespace QuantConnect.Orders
 {
-    /******************************************************** 
-    * ORDER EVENT CLASS DEFINITION
-    *********************************************************/
     /// <summary>
     /// Order Event - Messaging class signifying a change in an order state and record the change in the user's algorithm portfolio 
     /// </summary>

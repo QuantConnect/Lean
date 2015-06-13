@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Globalization;
 
 namespace QuantConnect.Data.Market
 {

@@ -18,24 +18,13 @@ using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities.Forex 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// FOREX holdings implementation of the base securities class
     /// </summary>
     /// <seealso cref="SecurityHolding"/>
     public class ForexHolding : SecurityHolding 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-
         private readonly Forex _forex;
-
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
 
         /// <summary>
         /// Forex Holding Class
@@ -48,10 +37,6 @@ namespace QuantConnect.Securities.Forex
         {
             _forex = security;
         }
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
 
         /// <summary>
         /// Gets the conversion rate from the quote currency into the account currency
@@ -78,10 +63,6 @@ namespace QuantConnect.Securities.Forex
             // we need to add a conversion since the data is in terms of the quote currency
             get { return base.HoldingsValue*_forex.QuoteCurrency.ConversionRate; }
         }
-
-        /******************************************************** 
-        * CLASS METHODS 
-        *********************************************************/
 
         /// <summary>
         /// Profit if we closed the holdings right now including the approximate fees.

@@ -31,9 +31,6 @@ namespace QuantConnect.Lean.Engine.Results
     [InheritedExport(typeof(IResultHandler))]
     public interface IResultHandler
     {
-        /******************************************************** 
-        * INTERFACE PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Put messages to process into the queue so they are processed by this thread.
         /// </summary>
@@ -79,9 +76,6 @@ namespace QuantConnect.Lean.Engine.Results
             get;
         }
 
-        /******************************************************** 
-        * INTERFACE METHODS
-        *********************************************************/
         /// <summary>
         /// Initialize the result handler with this result packet.
         /// </summary>
@@ -196,7 +190,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="status">Status enum of the algorithm.</param>
         /// <param name="message">Optional string message describing reason for status change.</param>
         void SendStatusUpdate(string algorithmId, AlgorithmStatus status, string message = "");
-
 
         /// <summary>
         /// Set the chart name:

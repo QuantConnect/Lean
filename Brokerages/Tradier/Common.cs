@@ -14,18 +14,12 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Runtime.Serialization;
 
 namespace QuantConnect.Brokerages.Tradier
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Rate limiting categorization
     /// </summary>

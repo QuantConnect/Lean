@@ -17,22 +17,12 @@ using QuantConnect.Data;
 
 namespace QuantConnect.Securities.Equity 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Equity security type data filter 
     /// </summary>
     /// <seealso cref="SecurityDataFilter"/>
     public class EquityDataFilter : SecurityDataFilter
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-        
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
         /// <summary>
         /// Initialize Data Filter Class:
         /// </summary>
@@ -41,9 +31,6 @@ namespace QuantConnect.Securities.Equity
 
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Equity filter the data: true - accept, false - fail.
         /// </summary>

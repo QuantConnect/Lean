@@ -14,23 +14,15 @@
  *
 */
 
-using System;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Algorithm Node Packet is a work task for the Lean Engine
     /// </summary>
     public class AlgorithmNodePacket : Packet
     {
-
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for the algorithm node:
         /// </summary>
@@ -39,9 +31,6 @@ namespace QuantConnect.Packets
             : base(type)
         { }
 
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// User Id placing request
         /// </summary>

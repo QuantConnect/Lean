@@ -17,9 +17,6 @@ using QuantConnect.Data;
 
 namespace QuantConnect.Securities.Interfaces
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Security data filter interface. Defines pattern for the user defined data filter techniques.
     /// </summary>
@@ -32,9 +29,6 @@ namespace QuantConnect.Securities.Interfaces
     /// </remarks>
     public interface ISecurityDataFilter 
     {
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Filter out a tick from this security, with this new data:
         /// </summary>

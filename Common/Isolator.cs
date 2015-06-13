@@ -20,18 +20,12 @@ using QuantConnect.Logging;
 
 namespace QuantConnect 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Isolator class - create a new instance of the algorithm and ensure it doesn't 
     /// exceed memory or time execution limits.
     /// </summary>
     public class Isolator
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// Algo cancellation controls - cancel source.
         /// </summary>
@@ -40,12 +34,8 @@ namespace QuantConnect
         /// <summary>
         /// Algo cancellation controls - cancellation token for algorithm thread.
         /// </summary>
-        public static CancellationToken CancelToken = new CancellationToken();
+        public static CancellationToken CancelToken;
 
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Check if this task isolator is cancelled, and exit the analysis
         /// </summary>
@@ -57,10 +47,6 @@ namespace QuantConnect
             }
         }
 
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Reset the cancellation token variables for a new task:
         /// </summary>
@@ -69,7 +55,6 @@ namespace QuantConnect
             Cancellation = new CancellationTokenSource();
             CancelToken = Cancellation.Token;
         }
-
 
         /// <summary>
         /// Execute a code block with a maximum limit on time and memory.

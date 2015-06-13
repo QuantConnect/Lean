@@ -17,32 +17,19 @@ using System;
 using System.Threading;
 using System.Text;
 using System.Collections;
-using System.Diagnostics;
-using System.IO;
 
 namespace QuantConnect.Logging 
 {
-
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Logging management class.
     /// </summary>
     public static class Log
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         private static string _lastTraceText = "";
         private static string _lastErrorText = "";
         private static bool _debuggingEnabled;
         private static int _level = 1;
         private static ILogHandler _logHandler = new ConsoleLogHandler();
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
 
         /// <summary>
         /// Gets or sets the ILogHandler instance used as the global logging implementation.
@@ -53,7 +40,6 @@ namespace QuantConnect.Logging
             set { _logHandler = value; }
         }
 
-
         /// <summary>
         /// Global flag whether to enable debugging logging:
         /// </summary>
@@ -62,7 +48,6 @@ namespace QuantConnect.Logging
             get { return _debuggingEnabled; }
             set { _debuggingEnabled = value; }
         }
-
 
         /// <summary>
         /// Set the minimum message level:
@@ -73,9 +58,6 @@ namespace QuantConnect.Logging
             set { _level = value; }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Log error
         /// </summary>

@@ -35,9 +35,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DatabaseDataFeed : IDataFeed
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         // Set types in public area to speed up:
         private IAlgorithm _algorithm;
         private BacktestNodePacket _job;
@@ -51,9 +48,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private DateTime[] _mySQLBridgeTime;
         private DateTime _endTime;
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// List of the subscription the algorithm has requested. Subscriptions contain the type, sourcing information and manage the enumeration of data.
         /// </summary>
@@ -119,8 +113,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public bool[] EndOfBridge { get; set; }
 
-
-
         /// <summary>
         /// Flag for when we're connected:
         /// </summary>
@@ -142,9 +134,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             get { return _connection.State; }
         }
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Prepare and create the new MySQL Database connection datafeed.
         /// </summary>
@@ -271,7 +260,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             PurgeData();
         }
 
-
         /// <summary>
         /// Loop over all the queues and clear them to fast-quit this thread and return to main.
         /// </summary>
@@ -282,7 +270,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 t.Clear();
             }
         }
-
 
         /// <summary>
         /// Connect to the database: if we're running locally connect to local host.

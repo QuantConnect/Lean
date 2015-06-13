@@ -24,9 +24,6 @@ namespace QuantConnect.Packets
     /// </summary>
     public class AlgorithmStatusPacket : Packet
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// Current algorithm status
         /// </summary>
@@ -52,9 +49,6 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "sAlgorithmID")]
         public string AlgorithmId;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for JSON
         /// </summary>

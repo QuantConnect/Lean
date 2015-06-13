@@ -18,9 +18,6 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
 
     /// <summary>
     /// Market today information class
@@ -57,7 +54,9 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "postmarket")]
         public MarketHours PostMarket = new MarketHours(DateTime.Now, 16, 20);
 
-        /// Default Constructor:
+        /// <summary>
+        /// Default constructor (required for JSON serialization)
+        /// </summary>
         public MarketToday()
         { }
 

@@ -14,9 +14,6 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -31,21 +28,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public abstract class BaseDataFeed : IDataFeed
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         private IAlgorithm _algorithm;
         private BacktestNodePacket _job;
-        private bool _endOfStreams = false;
-        private int _subscriptions = 0;
+        private bool _endOfStreams;
+        private int _subscriptions;
         private int _bridgeMax = 500000;
-        private bool _exitTriggered = false;
+        private bool _exitTriggered;
 
         private DateTime[] _frontierTime;
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// List of the subscription the algorithm has requested. Subscriptions contain the type, sourcing information and manage the enumeration of data.
         /// </summary>
@@ -111,9 +102,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public bool[] EndOfBridge { get; set; }
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Create an instance of the base datafeed.
         /// </summary>
@@ -147,7 +135,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 SubscriptionReaderManagers[i] = new SubscriptionDataReader(Subscriptions[i], algorithm.Securities[Subscriptions[i].Symbol], DataFeedEndpoint.Database, job.PeriodStart, job.PeriodFinish);
             }
         }
-
 
         /// <summary>
         /// Launch the primary data thread.
@@ -189,14 +176,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IsActive = false;
         }
 
-
         /// <summary>
         /// Get the next set of data for this subscription
         /// </summary>
         /// <param name="subscription"></param>
         /// <returns></returns>
         public abstract  List<BaseData> GetData(SubscriptionDataConfig subscription);
-
 
         /// <summary>
         /// Send an exit signal to the thread.

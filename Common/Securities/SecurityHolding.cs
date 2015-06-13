@@ -18,30 +18,20 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Securities 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// SecurityHolding is a base class for purchasing and holding a market item which manages the asset portfolio
     /// </summary>
     public class SecurityHolding
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         //Working Variables
-        private decimal _averagePrice = 0;
-        private int     _quantity = 0;
-        private decimal _price = 0;
-        private decimal _totalSaleVolume = 0;
-        private decimal _profit = 0;
-        private decimal _lastTradeProfit = 0;
-        private decimal _totalFees = 0;
+        private decimal _averagePrice;
+        private int     _quantity;
+        private decimal _price;
+        private decimal _totalSaleVolume;
+        private decimal _profit;
+        private decimal _lastTradeProfit;
+        private decimal _totalFees;
         private readonly Security _security;
-
-        /******************************************************** 
-        * CONSTRUCTOR DEFINITION
-        *********************************************************/
 
         /// <summary>
         /// Create a new holding class instance setting the initial properties to $0.
@@ -55,9 +45,6 @@ namespace QuantConnect.Securities
             _lastTradeProfit = 0;
         }
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Average price of the security holdings.
         /// </summary>
@@ -68,7 +55,6 @@ namespace QuantConnect.Securities
                 return _averagePrice;
             }
         }
-
 
         /// <summary>
         /// Quantity of the security held.
@@ -82,7 +68,6 @@ namespace QuantConnect.Securities
                 return _quantity;
             }
         }
-
 
         /// <summary>
         /// Symbol identifier of the underlying security.
@@ -323,9 +308,6 @@ namespace QuantConnect.Securities
             get { return TotalCloseProfit(); }
         }
 
-        /******************************************************** 
-        * CLASS METHODS 
-        *********************************************************/
         /// <summary>
         /// Adds a fee to the running total of total fees.
         /// </summary>

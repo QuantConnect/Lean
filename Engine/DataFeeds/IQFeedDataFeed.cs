@@ -14,10 +14,6 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
@@ -31,21 +27,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class IQFeedDataFeed : BaseDataFeed
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         // Set types in public area to speed up:
         private IAlgorithm _algorithm;
         private BacktestNodePacket _job;
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-
-
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Create and connect to IQFeed.
         /// </summary>

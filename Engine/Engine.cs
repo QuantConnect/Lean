@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -36,9 +36,6 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// LEAN ALGORITHMIC TRADING ENGINE: ENTRY POINT.
     /// 
@@ -47,17 +44,11 @@ namespace QuantConnect.Lean.Engine
     /// </summary>
     public class Engine 
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
         private static bool _liveMode = Config.GetBool("live-mode");
         private static bool _local = Config.GetBool("local");
         private static IBrokerage _brokerage;
         private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
 
-        /******************************************************** 
-        * CLASS PUBLIC VARIABLES
-        *********************************************************/
         /// <summary>
         /// Datafeed handler creates local, live, historical data feed management all through specific dedicated DLL's.
         /// </summary>
@@ -110,9 +101,6 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public static IApi Api;
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Are we operating this as a local independent node, independent of the cloud.
         /// Running on a local algorithm, and local datasources.
@@ -160,9 +148,6 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Primary Analysis Thread:
         /// </summary>

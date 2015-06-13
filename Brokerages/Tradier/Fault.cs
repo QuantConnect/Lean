@@ -14,9 +14,6 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.Tradier

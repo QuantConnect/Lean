@@ -28,25 +28,15 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityTransactionManager : IOrderMapping
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
-        private SecurityManager _securities;
-        private ConcurrentDictionary<int, Order> _orders = new ConcurrentDictionary<int, Order>();
-        private ConcurrentQueue<Order> _orderQueue = new ConcurrentQueue<Order>();
-        private ConcurrentDictionary<int, List<OrderEvent>> _orderEvents = new ConcurrentDictionary<int, List<OrderEvent>>();
-        private Dictionary<DateTime, decimal> _transactionRecord = new Dictionary<DateTime, decimal>();
         private int _orderId = 1;
-        private decimal _minimumOrderSize = 0;
-        private int _minimumOrderQuantity = 1;
-
-        /******************************************************** 
-        * CLASS PUBLIC VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
+        private readonly SecurityManager _securities;
+        private const decimal _minimumOrderSize = 0;
+        private const int _minimumOrderQuantity = 1;
+        private ConcurrentQueue<Order> _orderQueue;
+        private ConcurrentDictionary<int, Order> _orders;
+        private ConcurrentDictionary<int, List<OrderEvent>> _orderEvents;
+        private Dictionary<DateTime, decimal> _transactionRecord;
+        
         /// <summary>
         /// Initialise the transaction manager for holding and processing orders.
         /// </summary>
@@ -68,9 +58,6 @@ namespace QuantConnect.Securities
             _transactionRecord = new Dictionary<DateTime, decimal>();
         }
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Queue for holding all orders sent for processing.
         /// </summary>
@@ -160,7 +147,6 @@ namespace QuantConnect.Securities
             }
         }
 
-
         /// <summary>
         /// Get the last order id.
         /// </summary>
@@ -172,9 +158,6 @@ namespace QuantConnect.Securities
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Add an order to collection and return the unique order id or negative if an error.
         /// </summary>
@@ -320,7 +303,6 @@ namespace QuantConnect.Securities
 
             return openOrders;
         } 
-
 
         /// <summary>
         /// Get the order by its id

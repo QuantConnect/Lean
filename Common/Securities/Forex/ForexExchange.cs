@@ -21,17 +21,12 @@ namespace QuantConnect.Securities.Forex
     /// Forex exchange class - information and helper tools for forex exchange properties
     /// </summary>
     /// <seealso cref="SecurityExchange"/>
-    public class ForexExchange : SecurityExchange {
+    public class ForexExchange : SecurityExchange 
+    {
 
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         private TimeSpan _marketOpen = TimeSpan.FromHours(0);
         private TimeSpan _marketClose = TimeSpan.FromDays(1).Subtract(TimeSpan.FromTicks(1));
 
-        /******************************************************** 
-        * CLASS CONSTRUCTION
-        *********************************************************/
         /// <summary>
         /// Initialise forex exchange exchange
         /// </summary>
@@ -39,9 +34,6 @@ namespace QuantConnect.Securities.Forex
             base() {
         }
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Override the base ExchangeOpen property with FXCM Market Hours
         /// </summary>
@@ -52,7 +44,6 @@ namespace QuantConnect.Securities.Forex
                 return DateTimeIsOpen(Time);
             }
         }
-
 
         /// <summary>
         /// Number of trading days per year for this security, used for performance statistics.
@@ -65,7 +56,6 @@ namespace QuantConnect.Securities.Forex
                 return 313;
             }
         }
-
 
         /// <summary>
         /// Check this date time is open for the forex market.
@@ -86,7 +76,6 @@ namespace QuantConnect.Securities.Forex
             return true;
         }
 
-
         /// <summary>
         /// Check if this datetime is open for the FXCM markets:
         /// </summary>
@@ -101,7 +90,6 @@ namespace QuantConnect.Securities.Forex
             //Otherwise all other days at least partially open
             return true;
         }
-
 
         /// <summary>
         /// FOREX market opening time: midnight on week days, 5pm on Sunday
@@ -121,9 +109,6 @@ namespace QuantConnect.Securities.Forex
             set { _marketClose = value; }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Time of day the market opens.
         /// </summary>
@@ -142,7 +127,6 @@ namespace QuantConnect.Securities.Forex
                     return time.Date;
             }
         }
-
 
         /// <summary>
         /// Time of day the market closes.

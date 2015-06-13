@@ -19,26 +19,12 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Backtesting data feed extends the filesystem data feed with almost no modifications. Later this method can
     /// be used for implementing alternative sources/generation for backtesting data.
     /// </summary>
     public class BacktestingDataFeed : FileSystemDataFeed
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Pass through the backtesting datafeed to the underlying file system datafeed implementation.
         /// </summary>

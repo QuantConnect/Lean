@@ -19,9 +19,6 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Messaging
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Local/desktop implementation of messaging system for Lean Engine.
     /// </summary>

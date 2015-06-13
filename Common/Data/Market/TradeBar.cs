@@ -29,9 +29,6 @@ namespace QuantConnect.Data.Market
         // scale factor used in QC equity/forex data files
         private const decimal _scaleFactor = 10000m;
 
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// Volume:
         /// </summary>
@@ -84,9 +81,6 @@ namespace QuantConnect.Data.Market
         //In Base Class: DateTime Of this TradeBar
         //public DateTime Time;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTORS
-        *********************************************************/
         /// <summary>
         /// Default initializer to setup an empty tradebar.
         /// </summary>
@@ -146,9 +140,6 @@ namespace QuantConnect.Data.Market
             Period = period ?? TimeSpan.FromMinutes(1);
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// TradeBar Reader: Fetch the data from the QC storage and feed it line by line into the engine.
         /// </summary>
