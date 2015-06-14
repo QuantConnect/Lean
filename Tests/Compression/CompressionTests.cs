@@ -24,7 +24,7 @@ namespace QuantConnect.Tests.Compression
         [Test]
         public void ReadLinesCountMatchesLineCount()
         {
-            const string file = "../../../Data/equity/minute/spy/20131008_trade.zip";
+            const string file = "../../../Data/equity/usa/minute/spy/20131008_trade.zip";
 
             const int expected = 827;
             int actual = QuantConnect.Compression.ReadLines(file).Count();
