@@ -103,6 +103,16 @@ namespace QuantConnect.Data
         public string MappedSymbol;
 
         /// <summary>
+        /// Country code for the subscription
+        /// </summary>
+        public CountryCode Country = CountryCode.None;
+
+        /// <summary>
+        /// The liquidity provider source for the data.
+        /// </summary>
+        public LiquiditityProviderDataSource LiquditySource = LiquiditityProviderDataSource.NotApplicable;
+
+        /// <summary>
         /// Consolidators that are registred with this subscription
         /// </summary>
         public readonly List<IDataConsolidator> Consolidators;

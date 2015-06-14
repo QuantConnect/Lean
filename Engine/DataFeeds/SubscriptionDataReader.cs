@@ -81,8 +81,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly BaseData _dataFactory;
 
         /// Remember edge conditions as market enters/leaves open-closed.
-        private BaseData _lastBarOfStream = null;
-        private BaseData _lastBarOutsideMarketHours = null;
+        private BaseData _lastBarOfStream;
+        private BaseData _lastBarOutsideMarketHours;
 
         //Start finish times of the backtest:
         private readonly DateTime _periodStart;
