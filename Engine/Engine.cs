@@ -17,9 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
-using System.Globalization;
 using System.Threading;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Configuration;
@@ -132,18 +130,15 @@ namespace QuantConnect.Lean.Engine
         {
             get
             {
-                //Total Physical Ram Available:
-                var allocation = 3072;
+                //Total Physical Ram Available: 4gb max allocation per backtest
+                var allocation = 4096;
                 var ram = Convert.ToInt32(OS.TotalPhysicalMemory);
-                
                 if (ram < allocation)
                 {
                     //If memory on machine less 100 allocation for OS: 
                     allocation = ram - 100;
                 }
-
                 Log.Trace("Engine.MaximumRamAllocation(): Allocated: " + allocation);
-
                 return allocation;
             }
         }
@@ -301,8 +296,11 @@ namespace QuantConnect.Lean.Engine
 
                     try
                     {
+                        //Create a new engine isolator class 
+                        var isolator = new Isolator();
+
                         // Execute the Algorithm Code:
-                        var complete = Isolator.ExecuteWithTimeLimit(SetupHandler.MaximumRuntime, AlgorithmManager.TimeLoopWithinLimits, () =>
+                        var complete = isolator.ExecuteWithTimeLimit(SetupHandler.MaximumRuntime, AlgorithmManager.TimeLoopWithinLimits, () =>
                         {
                             try
                             {
@@ -310,7 +308,7 @@ namespace QuantConnect.Lean.Engine
                                 // -> Using this Data Feed, 
                                 // -> Send Orders to this TransactionHandler, 
                                 // -> Send Results to ResultHandler.
-                                AlgorithmManager.Run(job, algorithm, DataFeed, TransactionHandler, ResultHandler, SetupHandler, RealTimeHandler);
+                                AlgorithmManager.Run(job, algorithm, DataFeed, TransactionHandler, ResultHandler, SetupHandler, RealTimeHandler, isolator.CancelToken);
                             }
                             catch (Exception err)
                             {
@@ -320,7 +318,7 @@ namespace QuantConnect.Lean.Engine
 
                             Log.Trace("Engine.Run(): Exiting Algorithm Manager");
 
-                            }, job.UserPlan == UserPlan.Free ? 1024 : MaximumRamAllocation);
+                        }, job.UserPlan == UserPlan.Free ? Math.Min(1024, MaximumRamAllocation) : MaximumRamAllocation);
 
                         if (!complete)
                         {
@@ -462,8 +460,6 @@ namespace QuantConnect.Lean.Engine
             }
             Log.LogHandler.Dispose();
         }
-
-
 
         /// <summary>
         /// Get an instance of the data feed handler we're requesting for this work.

@@ -274,10 +274,11 @@ namespace QuantConnect.AlgorithmFactory
         public bool TryCreateAlgorithmInstanceWithIsolator(string assemblyPath, out IAlgorithm algorithmInstance, out string errorMessage)
         {
             IAlgorithm instance = null;
-            string error = string.Empty;
+            var error = string.Empty;
 
-            bool success = false;
-            bool complete = Isolator.ExecuteWithTimeLimit(_loaderTimeLimit, () =>
+            var success = false;
+            var isolator = new Isolator();
+            var complete = isolator.ExecuteWithTimeLimit(_loaderTimeLimit, () =>
             {
                 success = TryCreateAlgorithmInstance(assemblyPath, out instance, out error);
             });

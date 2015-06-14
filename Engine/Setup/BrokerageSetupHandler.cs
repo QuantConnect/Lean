@@ -135,7 +135,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 Log.Trace("BrokerageSetupHandler.Setup(): Initializing algorithm...");
 
                 //Execute the initialize code:
-                var initializeComplete = Isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(10), () =>
+                var isolator = new Isolator();
+                var initializeComplete = isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(10), () =>
                 {
                     try
                     {                

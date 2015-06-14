@@ -29,31 +29,22 @@ namespace QuantConnect
         /// <summary>
         /// Algo cancellation controls - cancel source.
         /// </summary>
-        public static CancellationTokenSource Cancellation = new CancellationTokenSource();
+        public CancellationTokenSource Cancellation = new CancellationTokenSource();
 
         /// <summary>
         /// Algo cancellation controls - cancellation token for algorithm thread.
         /// </summary>
-        public static CancellationToken CancelToken;
+        public CancellationToken CancelToken;
 
         /// <summary>
         /// Check if this task isolator is cancelled, and exit the analysis
         /// </summary>
-        public static bool IsCancellationRequested
+        public bool IsCancellationRequested
         {
             get 
             {
                 return CancelToken.IsCancellationRequested;
             }
-        }
-
-        /// <summary>
-        /// Reset the cancellation token variables for a new task:
-        /// </summary>
-        public static void ResetCancelToken() 
-        {
-            Cancellation = new CancellationTokenSource();
-            CancelToken = Cancellation.Token;
         }
 
         /// <summary>
@@ -65,7 +56,7 @@ namespace QuantConnect
         /// <param name="codeBlock">Action codeblock to execute</param>
         /// <param name="memoryCap">Maximum memory allocation, default 1024Mb</param>
         /// <returns>True if algorithm exited successfully, false if cancelled because it exceeded limits.</returns>
-        public static bool ExecuteWithTimeLimit(TimeSpan timeSpan, Func<string> withinCustomLimits, Action codeBlock, long memoryCap = 1024)
+        public bool ExecuteWithTimeLimit(TimeSpan timeSpan, Func<string> withinCustomLimits, Action codeBlock, long memoryCap = 1024)
         {
             // default to always within custom limits
             withinCustomLimits = withinCustomLimits ?? (() => null);
@@ -77,9 +68,11 @@ namespace QuantConnect
             //Convert to bytes
             memoryCap *= 1024 * 1024;
 
-            ResetCancelToken();
+            //Setup the cancellation system
+            Cancellation = new CancellationTokenSource();
+            CancelToken = Cancellation.Token;
 
-            //Thread:
+            //Launch task
             var task = Task.Factory.StartNew(codeBlock, CancelToken);
 
             while (!task.IsCompleted && DateTime.Now < end)
@@ -139,7 +132,7 @@ namespace QuantConnect
         /// <param name="codeBlock">Action codeblock to execute</param>
         /// <param name="memoryCap">Maximum memory allocation, default 1024Mb</param>
         /// <returns>True if algorithm exited successfully, false if cancelled because it exceeded limits.</returns>
-        public static bool ExecuteWithTimeLimit(TimeSpan timeSpan, Action codeBlock, long memoryCap = 1024)
+        public bool ExecuteWithTimeLimit(TimeSpan timeSpan, Action codeBlock, long memoryCap = 1024)
         {
             return ExecuteWithTimeLimit(timeSpan, null, codeBlock, memoryCap);
         }

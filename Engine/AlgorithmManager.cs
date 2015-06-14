@@ -126,8 +126,9 @@ namespace QuantConnect.Lean.Engine
         /// <param name="results">Result handler object</param>
         /// <param name="setup">Setup handler object</param>
         /// <param name="realtime">Realtime processing object</param>
+        /// <param name="token">Cancellation token</param>
         /// <remarks>Modify with caution</remarks>
-        public static void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, ISetupHandler setup, IRealTimeHandler realtime) 
+        public static void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, ISetupHandler setup, IRealTimeHandler realtime, CancellationToken token) 
         {
             //Initialize:
             _dataPointCount = 0;
@@ -193,10 +194,7 @@ namespace QuantConnect.Lean.Engine
                 if (_algorithmState != AlgorithmStatus.Running) break;
 
                 //Execute with TimeLimit Monitor:
-                if (Isolator.IsCancellationRequested)
-                {
-                    return;
-                }
+                if (token.IsCancellationRequested) return;
 
                 var time = DataStream.AlgorithmTime;
 
