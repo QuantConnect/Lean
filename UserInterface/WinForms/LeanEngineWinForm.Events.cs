@@ -29,7 +29,6 @@ namespace QuantConnect.Views.WinForms
         /// </summary>
         private void OnClosed(object sender, EventArgs eventArgs)
         {
-            Isolator.Cancellation.Cancel();
             Environment.Exit(0);
         }
 
