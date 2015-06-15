@@ -470,5 +470,39 @@ namespace QuantConnect
             gzipStream.Close();
             inStream.Close();
         }
+
+        /// <summary>
+        /// Creates the entry name for a QC zip data file
+        /// </summary>
+        public static string CreateZipEntryName(string symbol, SecurityType securityType, DateTime date, Resolution resolution)
+        {
+            if (resolution == Resolution.Hour || resolution == Resolution.Daily)
+            {
+                return symbol + ".csv";
+            }
+            if (securityType == SecurityType.Forex)
+            {
+                return String.Format("{0}_{1}_{2}_quote.csv", date.ToString(DateFormat.EightCharacter), symbol.ToLower(), resolution.ToString().ToLower());
+            }
+            return String.Format("{0}_{1}_{2}_trade.csv", date.ToString(DateFormat.EightCharacter), symbol.ToLower(), resolution.ToString().ToLower());
+        }
+
+        /// <summary>
+        /// Creates the zip file name for a QC zip data file
+        /// </summary>
+        public static string CreateZipFileName(string symbol, SecurityType securityType, DateTime date, Resolution resolution)
+        {
+            if (resolution == Resolution.Hour || resolution == Resolution.Daily)
+            {
+                return symbol + ".zip";
+            }
+
+            var zipFileName = date.ToString(DateFormat.EightCharacter);
+            if (securityType == SecurityType.Forex)
+            {
+                return zipFileName + "_quote.zip";
+            }
+            return zipFileName + "_trade.zip";
+        }
     } // End OS Class
 } // End QC Namespace
