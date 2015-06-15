@@ -23,8 +23,7 @@
     // The number of bars to retrieve in each request (max=5000)
     "bars-per-request": 5000,
 
-    // Supported formats: "csv", "lean"
-    // Note: the CSV format is not used by Lean, but is implemented for debugging purposes.
+    // Supported formats: "lean"
     "output-format": "lean",
 
     // If set to true, enables trace information displayed in the console

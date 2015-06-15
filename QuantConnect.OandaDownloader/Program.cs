@@ -25,6 +25,7 @@ using Newtonsoft.Json;
 using OANDARestLibrary;
 using OANDARestLibrary.TradeLibrary.DataTypes;
 using OANDARestLibrary.TradeLibrary.DataTypes.Communications.Requests;
+using QuantConnect.ToolBox;
 
 namespace QuantConnect.OandaDownloader
 {
@@ -71,7 +72,7 @@ namespace QuantConnect.OandaDownloader
                     RunProcess(symbol, _settings.StartDate, _settings.EndDate, _settings.BarsPerRequest, _settings.OutputFormat).Wait();
                 }
 
-                Console.WriteLine("Download and save completed.");
+                Console.WriteLine("Process completed.");
             }
             catch (Exception ex)
             {
@@ -311,12 +312,16 @@ namespace QuantConnect.OandaDownloader
         {
             switch (outputFormat)
             {
-                case "csv":
-                    SaveBarsCsv(bars, symbol, date);
-                    break;
-
+                // zipped CSV format
                 case "lean":
-                    SaveBarsLean(bars, symbol, date);
+                    {
+                        // Write 5-second resolution bars to zip file
+                        SaveLeanBarsSecond(bars, symbol, date);
+
+                        // Aggregate to minute resolution + write zip file
+                        var barsMinute = AggregateBarsToMinuteBars(bars);
+                        SaveLeanBarsMinute(barsMinute, symbol, date);
+                    }
                     break;
 
                 default:
@@ -325,21 +330,65 @@ namespace QuantConnect.OandaDownloader
         }
 
         /// <summary>
-        /// Saves a list of downloaded bars in Lean format (zipped CSV)
+        /// Saves a list of bars in 1-minute resolution in Lean format (zipped CSV)
         /// </summary>
-        /// <param name="bars"></param>
+        /// <param name="barsMinute"></param>
         /// <param name="symbol"></param>
         /// <param name="date"></param>
-        private static void SaveBarsLean(List<Candle> bars, string symbol, string date)
+        private static void SaveLeanBarsMinute(List<LeanBar> barsMinute, string symbol, string date)
         {
-            // Write second resolution bars to zip file
             var sb = new StringBuilder();
-            foreach (var row in bars)
+            foreach (var row in barsMinute)
             {
                 // convert datetime to millis
-                var timeValue = (int)GetDateTimeFromString(row.time).TimeOfDay.TotalMilliseconds;
+                var timestamp = (int)row.Time.TimeOfDay.TotalMilliseconds;
+                // var timestamp = row.Time.ToString("yyyyMMdd HH:mm:ss.ffff");
 
-                sb.AppendLine(string.Join(",", timeValue, row.openMid, row.highMid, row.lowMid, row.closeMid, row.volume));
+                sb.AppendLine(string.Join(",", timestamp, row.Open, row.High, row.Low, row.Close, row.TickVolume));
+            }
+
+            // File path: /Lean/Data/forex/oanda/minute/eurusd/yymmdd_quote.zip -> yyyymmdd_Minute.csv
+            var path = Path.Combine(
+                _settings.OutputFolder,
+                _instruments[symbol].Type.ToString().ToLower(),
+                "oanda",
+                "minute",
+                symbol.Replace("_", "").ToLower());
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+
+            var zipFileName = Path.Combine(path, string.Format("{0}_quote.zip", date.Substring(2).Replace("-", "")));
+            var entryName = string.Format("{0}_Minute.csv", date.Replace("-", ""));
+
+            if (File.Exists(zipFileName)) File.Delete(zipFileName);
+
+            using (var zip = new ZipFile(zipFileName))
+            {
+                zip.AddEntry(entryName, sb.ToString());
+                zip.Save();
+            }
+
+            if (_settings.EnableTrace)
+            {
+                Console.WriteLine("Created: " + zipFileName);
+            }
+        }
+
+        /// <summary>
+        /// Saves a list of bars with 5-second resolution in Lean format (zipped CSV)
+        /// </summary>
+        /// <param name="barsSecond"></param>
+        /// <param name="symbol"></param>
+        /// <param name="date"></param>
+        private static void SaveLeanBarsSecond(List<Candle> barsSecond, string symbol, string date)
+        {
+            var sb = new StringBuilder();
+            foreach (var row in barsSecond)
+            {
+                // convert datetime to millis
+                var timestamp = (int)GetDateTimeFromString(row.time).TimeOfDay.TotalMilliseconds;
+                // var timestamp = GetDateTimeFromString(row.time).ToString("yyyyMMdd HH:mm:ss.ffff");
+
+                sb.AppendLine(string.Join(",", timestamp, row.openMid, row.highMid, row.lowMid, row.closeMid, row.volume));
             }
 
             // File path: /Lean/Data/forex/oanda/second/eurusd/yymmdd_quote.zip -> yyyymmdd_Second.csv
@@ -356,7 +405,7 @@ namespace QuantConnect.OandaDownloader
 
             if (File.Exists(zipFileName)) File.Delete(zipFileName);
 
-            using(var zip = new ZipFile(zipFileName))
+            using (var zip = new ZipFile(zipFileName))
             {
                 zip.AddEntry(entryName, sb.ToString());
                 zip.Save();
@@ -364,44 +413,30 @@ namespace QuantConnect.OandaDownloader
 
             if (_settings.EnableTrace)
             {
-                Console.WriteLine("File saved: " + zipFileName);
+                Console.WriteLine("Created: " + zipFileName);
             }
-
-            // TODO: aggregate to minute resolution + write zip file
-
-
         }
 
         /// <summary>
-        /// Saves a list of downloaded bars in CSV format
+        /// Aggregates a list of 5-second bars into 1-minute bars
         /// </summary>
         /// <param name="bars"></param>
-        /// <param name="symbol"></param>
-        /// <param name="date"></param>
-        private static void SaveBarsCsv(List<Candle> bars, string symbol, string date)
+        /// <returns></returns>
+        private static List<LeanBar> AggregateBarsToMinuteBars(List<Candle> bars)
         {
-            var sb = new StringBuilder();
-            foreach (var row in bars)
-            {
-                sb.AppendLine(string.Join(",", row.time, row.openMid, row.highMid, row.lowMid, row.closeMid, row.volume));
-            }
-
-            // File path: /Lean/Data/forex/oanda/debug/eurusd/yyyy-mm-dd.txt
-            var path = Path.Combine(
-                _settings.OutputFolder,
-                _instruments[symbol].Type.ToString().ToLower(),
-                "oanda",
-                "debug",
-                symbol.Replace("_", "").ToLower());
-            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
-
-            var fileName = Path.Combine(path, string.Format("{0}.txt", date));
-            File.WriteAllText(fileName, sb.ToString());
-
-            if (_settings.EnableTrace)
-            {
-                Console.WriteLine("File saved: " + fileName);
-            }
+            return
+                (from b in bars
+                group b by GetDateTimeFromString(b.time).RoundDown(new TimeSpan(0, 1, 0))
+                into g
+                select new LeanBar
+                {
+                    Time = g.Key,
+                    Open = g.First().openMid,
+                    High = g.Max(b => b.highMid),
+                    Low = g.Min(b => b.lowMid),
+                    Close = g.Last().closeMid,
+                    TickVolume = g.Sum(b => b.volume)
+                }).ToList();
         }
 
         /// <summary>

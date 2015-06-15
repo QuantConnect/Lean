@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="ConfigSettings.cs" />
     <Compile Include="InstrumentType.cs" />
+    <Compile Include="LeanBar.cs" />
     <Compile Include="LeanInstrument.cs" />
     <Compile Include="OandaRestLibrary\Credentials.cs" />
     <Compile Include="OandaRestLibrary\Rest.cs" />
@@ -78,6 +79,12 @@
     <None Include="instruments.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\QuantConnect.ToolBox\QuantConnect.ToolBox.csproj">
+      <Project>{ac9a142c-b485-44d7-91ff-015c22c43d05}</Project>
+      <Name>QuantConnect.ToolBox</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
