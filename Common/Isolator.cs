@@ -29,22 +29,33 @@ namespace QuantConnect
         /// <summary>
         /// Algo cancellation controls - cancel source.
         /// </summary>
-        public CancellationTokenSource Cancellation = new CancellationTokenSource();
+        public CancellationTokenSource CancellationTokenSource
+        {
+            get; private set;
+        }
 
         /// <summary>
         /// Algo cancellation controls - cancellation token for algorithm thread.
         /// </summary>
-        public CancellationToken CancelToken;
+        public CancellationToken CancellationToken
+        {
+            get { return CancellationTokenSource.Token; }
+        }
 
         /// <summary>
         /// Check if this task isolator is cancelled, and exit the analysis
         /// </summary>
         public bool IsCancellationRequested
         {
-            get 
-            {
-                return CancelToken.IsCancellationRequested;
-            }
+            get { return CancellationTokenSource.IsCancellationRequested; }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Isolator"/> class
+        /// </summary>
+        public Isolator()
+        {
+            CancellationTokenSource = new CancellationTokenSource();
         }
 
         /// <summary>
@@ -68,12 +79,8 @@ namespace QuantConnect
             //Convert to bytes
             memoryCap *= 1024 * 1024;
 
-            //Setup the cancellation system
-            Cancellation = new CancellationTokenSource();
-            CancelToken = Cancellation.Token;
-
             //Launch task
-            var task = Task.Factory.StartNew(codeBlock, CancelToken);
+            var task = Task.Factory.StartNew(codeBlock, CancellationTokenSource.Token);
 
             while (!task.IsCompleted && DateTime.Now < end)
             {
@@ -118,7 +125,7 @@ namespace QuantConnect
 
             if (message != "")
             {
-                Cancellation.Cancel();
+                CancellationTokenSource.Cancel();
                 Log.Error("Security.ExecuteWithTimeLimit(): " + message);
                 throw new Exception(message);
             }
