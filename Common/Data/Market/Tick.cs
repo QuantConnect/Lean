@@ -226,7 +226,7 @@ namespace QuantConnect.Data.Market
                     case SecurityType.Forex:
                         Symbol = config.Symbol;
                         TickType = TickType.Quote;
-                        Time = DateTime.ParseExact(csv[0], DateFormat.Forex, CultureInfo.InvariantCulture);
+                        Time = date.Date.AddMilliseconds(Convert.ToInt64(csv[0]));
                         BidPrice = csv[1].ToDecimal();
                         AskPrice = csv[2].ToDecimal();
                         Value = BidPrice + (AskPrice - BidPrice) / 2;
