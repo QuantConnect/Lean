@@ -172,7 +172,7 @@ namespace QuantConnect.Data.Market
 
                     //FOREX has a different data file format:
                     case SecurityType.Forex:
-                        return ParseForex<TradeBar>(config, line);
+                        return ParseForex<TradeBar>(config, line, date);
                 }
             }
             catch (Exception err)
@@ -191,7 +191,7 @@ namespace QuantConnect.Data.Market
         {
             if (config.SecurityType == SecurityType.Forex)
             {
-                return ParseForex<TradeBar>(config, line);
+                return ParseForex<TradeBar>(config, line, baseDate);
             }
             if (config.SecurityType == SecurityType.Equity)
             {
@@ -223,19 +223,19 @@ namespace QuantConnect.Data.Market
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
                 tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
-                tradeBar.Open = config.GetNormalizedPrice(Convert.ToDecimal(csv[1]) / _scaleFactor);
-                tradeBar.High = config.GetNormalizedPrice(Convert.ToDecimal(csv[2]) / _scaleFactor);
-                tradeBar.Low = config.GetNormalizedPrice(Convert.ToDecimal(csv[3]) / _scaleFactor);
-                tradeBar.Close = config.GetNormalizedPrice(Convert.ToDecimal(csv[4]) / _scaleFactor);
+                tradeBar.Open = config.GetNormalizedPrice(Convert.ToDecimal(csv[1])/_scaleFactor);
+                tradeBar.High = config.GetNormalizedPrice(Convert.ToDecimal(csv[2])/_scaleFactor);
+                tradeBar.Low = config.GetNormalizedPrice(Convert.ToDecimal(csv[3])/_scaleFactor);
+                tradeBar.Close = config.GetNormalizedPrice(Convert.ToDecimal(csv[4])/_scaleFactor);
             }
             else
             {
                 // Using custom "ToDecimal" conversion for speed on high resolution data.
                 tradeBar.Time = date.Date.AddMilliseconds(Convert.ToInt32(csv[0]));
-                tradeBar.Open = config.GetNormalizedPrice(csv[1].ToDecimal() / _scaleFactor);
-                tradeBar.High = config.GetNormalizedPrice(csv[2].ToDecimal() / _scaleFactor);
-                tradeBar.Low = config.GetNormalizedPrice(csv[3].ToDecimal() / _scaleFactor);
-                tradeBar.Close = config.GetNormalizedPrice(csv[4].ToDecimal() / _scaleFactor);
+                tradeBar.Open = config.GetNormalizedPrice(csv[1].ToDecimal()/_scaleFactor);
+                tradeBar.High = config.GetNormalizedPrice(csv[2].ToDecimal()/_scaleFactor);
+                tradeBar.Low = config.GetNormalizedPrice(csv[3].ToDecimal()/_scaleFactor);
+                tradeBar.Close = config.GetNormalizedPrice(csv[4].ToDecimal()/_scaleFactor);
             }
 
             tradeBar.Volume = Convert.ToInt64(csv[5]);
@@ -248,8 +248,9 @@ namespace QuantConnect.Data.Market
         /// <typeparam name="T">The requested output type, must derive from TradeBar</typeparam>
         /// <param name="config">Symbols, Resolution, DataType, </param>
         /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
         /// <returns></returns>
-        protected static T ParseForex<T>(SubscriptionDataConfig config, string line)
+        protected static T ParseForex<T>(SubscriptionDataConfig config, string line, DateTime date)
             where T : TradeBar, new()
         {
             var tradeBar = new T
@@ -263,15 +264,15 @@ namespace QuantConnect.Data.Market
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
                 tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
-                tradeBar.Open = Convert.ToDecimal(csv[1]) / _scaleFactor;
-                tradeBar.High = Convert.ToDecimal(csv[2]) / _scaleFactor;
-                tradeBar.Low = Convert.ToDecimal(csv[3]) / _scaleFactor;
-                tradeBar.Close = Convert.ToDecimal(csv[4]) / _scaleFactor;
+                tradeBar.Open = Convert.ToDecimal(csv[1]);
+                tradeBar.High = Convert.ToDecimal(csv[2]);
+                tradeBar.Low = Convert.ToDecimal(csv[3]);
+                tradeBar.Close = Convert.ToDecimal(csv[4]);
             }
             else
             {
                 //Fast decimal conversion
-                tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.Forex, CultureInfo.InvariantCulture);
+                tradeBar.Time = date.Date.AddMilliseconds(Convert.ToInt32(csv[0]));
                 tradeBar.Open = csv[1].ToDecimal();
                 tradeBar.High = csv[2].ToDecimal();
                 tradeBar.Low = csv[3].ToDecimal();
