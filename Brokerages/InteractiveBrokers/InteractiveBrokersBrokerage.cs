@@ -1358,49 +1358,25 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     tick.Value = tick.AskPrice;
                     break;
-
-                case IB.TickType.Volume:
-
-                    bool bSend = true;
-                    int lastVolume;
-                    decimal lastPrice; 
-
-                    tick.TickType = TickType.Trade;
-
-                    if (!_lastVolumes.TryGetValue(symbol, out lastVolume))
-                    {
-                        bSend = false;
-                    }
-                    else if (e.Size <= lastVolume)
-                    {
-                        bSend = false;
-                    }
-                    else if (!_lastPrices.TryGetValue(symbol, out lastPrice))
-                    {
-                        bSend = false;
-                    }
-                    else
-                    {
-                        tick.Value = lastPrice;
-                    };
-
-                    if (bSend)
-                        tick.Quantity = AdjustQuantity(symbol.Item1, e.Size - lastVolume);
-
-                    if (e.Size > 0)
-                    {
-                        _lastVolumes[symbol] = e.Size;
-                    }
-
-                    break;
+                
                 
                 case IB.TickType.LastSize:
+                    tick.TickType = TickType.Trade;
+
+                    decimal lastPrice;
+                    _lastPrices.TryGetValue(symbol, out lastPrice);
+                    _lastVolumes[symbol] = tick.Quantity;
+
+                    tick.Value = lastPrice;
+                        
+                    break;
+
                 default:
                     return;
             }
-
             lock (_ticks)
                 if (tick.IsValid()) _ticks.Add(tick);
+
         }
 
         private ConcurrentDictionary<SymbolCacheKey, int> _subscribedSymbols = new ConcurrentDictionary<SymbolCacheKey, int>();
