@@ -40,6 +40,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         // this value is used for determining how confident we are in our cash balance update
         private long _lastFillTimeTicks;
         private long _lastSyncTimeTicks;
+        private readonly object _performCashSyncReentranceGuard = new object();
         private static readonly TimeSpan _liveBrokerageCashSyncTime = new TimeSpan(7, 45, 0); // 7:45 am
 
         // pulled directly from the algorithm
@@ -249,26 +250,44 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private void PerformCashSync()
         {
-            Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Sync cash balance");
-
-            var balances = _brokerage.GetCashBalance();
-            foreach (var balance in balances)
+            try
             {
-                Cash cash;
-                if (_algorithm.Portfolio.CashBook.TryGetValue(balance.Symbol, out cash))
+                // prevent reentrance in this method
+                if (!Monitor.TryEnter(_performCashSyncReentranceGuard))
                 {
-                    // compare in dollars
-                    var delta = cash.Quantity - balance.Quantity;
-                    if (Math.Abs(delta) > _algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol))
-                    {
-                        // log the delta between 
-                        Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): {0} Delta: {1}", balance.Symbol, delta.ToString("0.00"));
-                    }
+                    return;
                 }
-                _algorithm.Portfolio.SetCash(balance.Symbol, balance.Quantity, balance.ConversionRate);
-            }
 
-            _syncedLiveBrokerageCashToday = true;
+                Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Sync cash balance");
+
+                var balances = _brokerage.GetCashBalance();
+                if (balances.Count > 0)
+                {
+                    // if we were returned our balances, update everything and flip our flag as having performed sync today
+                    foreach (var balance in balances)
+                    {
+                        Cash cash;
+                        if (_algorithm.Portfolio.CashBook.TryGetValue(balance.Symbol, out cash))
+                        {
+                            // compare in dollars
+                            var delta = cash.Quantity - balance.Quantity;
+                            if (Math.Abs(delta) > _algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol))
+                            {
+                                // log the delta between 
+                                Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): {0} Delta: {1}", balance.Symbol,
+                                    delta.ToString("0.00"));
+                            }
+                        }
+                        _algorithm.Portfolio.SetCash(balance.Symbol, balance.Quantity, balance.ConversionRate);
+                    }
+
+                    _syncedLiveBrokerageCashToday = true;
+                }
+            }
+            finally
+            {
+                Monitor.Exit(_performCashSyncReentranceGuard);
+            }
 
             // fire off this task to check if we've had recent fills, if we have then we'll invalidate the cash sync
             // and do it again until we're confident in it
