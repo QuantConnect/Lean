@@ -235,10 +235,11 @@ namespace QuantConnect.Brokerages.Tradier
                         // tradier sometimes sends back poorly formed messages, response will be null
                         // and we'll extract from it below
                     }
-                    if (fault != null)
+                    if (fault != null && fault.Fault != null)
                     {
                         // JSON Errors:
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "JsonError", fault.Fault.Description));
+                        Log.Error("TradierBrokerage.Execute." + request.Resource + "(): " + fault.Fault.Description);
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "JsonError", fault.Fault.Description));
                     }
                     else
                     {
@@ -249,7 +250,7 @@ namespace QuantConnect.Brokerages.Tradier
                         }
                         // Text Errors:
                         Log.Error("TradierBrokerage.Execute." + request.Resource + "(): " + raw.Content);
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "Unknown", raw.Content));
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "Unknown", raw.Content));
                     }
                 }
 
@@ -1195,7 +1196,14 @@ namespace QuantConnect.Brokerages.Tradier
 
             try
             {
-                var updatedOrders = GetIntradayAndPendingOrders().ToDictionary(x => x.Id);
+                var intradayAndPendingOrders = GetIntradayAndPendingOrders();
+                if (intradayAndPendingOrders == null)
+                {
+                    Log.Error("TradierBrokerage.CheckForFills(): Returned null response!");
+                    return;
+                }
+
+                var updatedOrders = intradayAndPendingOrders.ToDictionary(x => x.Id);
 
                 // loop over our cache of orders looking for changes in status for fill quantities
                 foreach (var cachedOrder in _cachedOpenOrdersByTradierOrderID)
