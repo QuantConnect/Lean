@@ -241,3 +241,6 @@ testrunner/
 
 # Meld original diff files
 *.orig
+
+# Output chart data
+Charts/

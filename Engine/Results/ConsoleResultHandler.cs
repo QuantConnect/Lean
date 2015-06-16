@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -42,6 +43,7 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextSample;
         private TimeSpan _resamplePeriod;
         private TimeSpan _notificationPeriod;
+        private string _chartDirectory;
 
         public Dictionary<string, string> FinalStatistics { get; private set; } 
 
@@ -148,6 +150,18 @@ namespace QuantConnect.Lean.Engine.Results
                 _algorithmNode = new LiveConsoleStatusHandler(live);
             }
             _resamplePeriod = _algorithmNode.ComputeSampleEquityPeriod();
+
+            var time = DateTime.Now.ToString("yyyy-mm-dd-hh-mm");
+            _chartDirectory = Path.Combine("../../../Charts/", packet.AlgorithmId, time);
+            if (Directory.Exists(_chartDirectory))
+            {
+                foreach (var file in Directory.EnumerateFiles(_chartDirectory, "*.csv", SearchOption.AllDirectories))
+                {
+                    File.Delete(file);
+                }
+                Directory.Delete(_chartDirectory, true);
+            }
+            Directory.CreateDirectory(_chartDirectory);
         }
         
         /// <summary>
@@ -221,6 +235,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// <remarks>Sample can be used to create new charts or sample equity - daily performance.</remarks>
         public void Sample(string chartName, ChartType chartType, string seriesName, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
         {
+            var chartFilename = Path.Combine(_chartDirectory, chartName + "-" + seriesName + ".csv");
+            using (var writer = new StreamWriter(File.Open(chartFilename, FileMode.Append)))
+            {
+                writer.WriteLine(time + "," + value);
+            }
             lock (_chartLock)
             {
                 //Add a copy locally:
