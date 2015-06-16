@@ -544,7 +544,7 @@ namespace QuantConnect
         /// </summary>
         SplitAdjusted,
         /// <summary>
-        /// The raw price plus dividends
+        /// The split adjusted price plus dividends
         /// </summary>
         TotalReturn
     }

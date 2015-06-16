@@ -396,9 +396,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             switch (_config.DataNormalizationMode)
             {
                 case DataNormalizationMode.Raw:
-                case DataNormalizationMode.TotalReturn:
                     return;
                 
+                case DataNormalizationMode.TotalReturn:
                 case DataNormalizationMode.SplitAdjusted:
                     _config.PriceScaleFactor = _factorFile.GetSplitFactor(date);
                     break;
@@ -622,7 +622,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 
                 case DataNormalizationMode.TotalReturn:
                     // we need to remove the dividends since we've been accumulating them in the price
-                    close -= _config.SumOfDividends;
+                    close = (close - _config.SumOfDividends)/_config.PriceScaleFactor;
                     break;
                 
                 default:

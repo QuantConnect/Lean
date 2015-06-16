@@ -198,7 +198,7 @@ namespace QuantConnect.Data
                     return price*PriceScaleFactor;
                 
                 case DataNormalizationMode.TotalReturn:
-                    return price + SumOfDividends;
+                    return (price*PriceScaleFactor) + SumOfDividends;
                 
                 default:
                     throw new ArgumentOutOfRangeException();

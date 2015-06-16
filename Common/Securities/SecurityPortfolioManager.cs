@@ -545,9 +545,9 @@ namespace QuantConnect.Securities
         {
             var security = Securities[split.Symbol];
 
-            // don't apply splits in adjusted modes
+            // only apply splits in raw data mode, 
             var mode = security.SubscriptionDataConfig.DataNormalizationMode;
-            if (mode == DataNormalizationMode.Adjusted || mode == DataNormalizationMode.SplitAdjusted)
+            if (mode != DataNormalizationMode.Raw)
             {
                 return;
             }
