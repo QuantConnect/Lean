@@ -33,9 +33,11 @@ namespace QuantConnect.OandaDownloader
     {
         private const string ConfigFileName = "config.json";
         private const string InstrumentsFileName = "instruments.txt";
+        private const string EndOfLine = "\r\n";
 
         private static ConfigSettings _settings;
         private static Dictionary<string, LeanInstrument>  _instruments;
+
 
         /// <summary>
         /// Primary entry point to the program
@@ -97,21 +99,18 @@ namespace QuantConnect.OandaDownloader
 
             _instruments = new Dictionary<string, LeanInstrument>();
 
-            using (var reader = new StreamReader(InstrumentsFileName))
+            var lines = File.ReadAllLines(InstrumentsFileName);
+            foreach (var line in lines)
             {
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                var tokens = line.Split(',');
+                if (tokens.Length >= 3)
                 {
-                    var tokens = line.Split(',');
-                    if (tokens.Length == 3)
+                    _instruments.Add(tokens[0], new LeanInstrument
                     {
-                        _instruments.Add(tokens[0], new LeanInstrument
-                        {
-                            Symbol = tokens[0],
-                            Name = tokens[1],
-                            Type = (InstrumentType)Enum.Parse(typeof(InstrumentType), tokens[2])
-                        });
-                    }
+                        Symbol = tokens[0],
+                        Name = tokens[1],
+                        Type = (InstrumentType)Enum.Parse(typeof(InstrumentType), tokens[2])
+                    });
                 }
             }
 
@@ -192,6 +191,7 @@ namespace QuantConnect.OandaDownloader
         {
             Console.WriteLine("Symbol: {0}, from: {1} to {2}", symbol, fromDate.ToString("yyyy-MM-dd"), toDate.ToString("yyyy-MM-dd"));
 
+            var barsTotalInPeriod = new List<Candle>();
             var barsToSave = new List<Candle>();
 
             // set the starting date/time
@@ -227,6 +227,7 @@ namespace QuantConnect.OandaDownloader
                         barsToSave.AddRange(groupedBars[currentDate]);
 
                         SaveBars(barsToSave, symbol, dateString, outputFormat);
+                        barsTotalInPeriod.AddRange(barsToSave);
 
                         barsToSave.Clear();
 
@@ -263,11 +264,16 @@ namespace QuantConnect.OandaDownloader
             if (barsToSave.Count > 0)
             {
                 SaveBars(barsToSave, symbol, dateString, outputFormat);
+                barsTotalInPeriod.AddRange(barsToSave);
             }
 
-            // TODO: merge/append to existing hourly/daily files ?
+            // Aggregate bars to hourly bars
+            var hourlyBars = AggregateBars(barsTotalInPeriod, new TimeSpan(1, 0, 0));
+            SaveHourlyBars(hourlyBars, symbol);
 
-
+            // Aggregate second bars to one single daily bar
+            var dailyBars = AggregateBars(barsTotalInPeriod, new TimeSpan(1, 0, 0, 0));
+            SaveDailyBars(dailyBars, symbol);
         }
 
         /// <summary>
@@ -316,11 +322,11 @@ namespace QuantConnect.OandaDownloader
                 case "lean":
                     {
                         // Write 5-second resolution bars to zip file
-                        SaveLeanBarsSecond(bars, symbol, date);
+                        SaveSecondBars(bars, symbol, date);
 
-                        // Aggregate to minute resolution + write zip file
-                        var barsMinute = AggregateBarsToMinuteBars(bars);
-                        SaveLeanBarsMinute(barsMinute, symbol, date);
+                        // Aggregate to 1-minute resolution + write zip file
+                        var barsMinute = AggregateBars(bars, new TimeSpan(0, 1, 0));
+                        SaveMinuteBars(barsMinute, symbol, date);
                     }
                     break;
 
@@ -330,21 +336,100 @@ namespace QuantConnect.OandaDownloader
         }
 
         /// <summary>
-        /// Saves a list of bars in 1-minute resolution in Lean format (zipped CSV)
+        /// Saves a list of bars in hourly resolution in Lean format (zipped CSV)
         /// </summary>
-        /// <param name="barsMinute"></param>
+        /// <param name="hourlyBars"></param>
         /// <param name="symbol"></param>
-        /// <param name="date"></param>
-        private static void SaveLeanBarsMinute(List<LeanBar> barsMinute, string symbol, string date)
+        private static void SaveHourlyBars(List<LeanBar> hourlyBars, string symbol)
         {
             var sb = new StringBuilder();
-            foreach (var row in barsMinute)
+            foreach (var row in hourlyBars)
+            {
+                var timestamp = row.Time.ToString("yyyyMMdd HH:mm");
+
+                sb.AppendLine(string.Join(",", timestamp,
+                    row.Open.ToString(CultureInfo.InvariantCulture),
+                    row.High.ToString(CultureInfo.InvariantCulture),
+                    row.Low.ToString(CultureInfo.InvariantCulture),
+                    row.Close.ToString(CultureInfo.InvariantCulture), 
+                    row.TickVolume));
+            }
+
+            // File path: /Lean/Data/forex/oanda/daily/eurusd.zip -> eurusd.csv
+            var path = Path.Combine(
+                _settings.OutputFolder,
+                _instruments[symbol].Type.ToString().ToLower(),
+                "oanda",
+                "hour");
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+
+            var zipFileName = Path.Combine(path, string.Format("{0}.zip", symbol.Replace("_", "").ToLower()));
+            var entryName = string.Format("{0}.csv", symbol.Replace("_", "").ToLower());
+
+            if (File.Exists(zipFileName))
+                UpdateZipFile(zipFileName, entryName, sb);
+            else
+                WriteZipFile(zipFileName, entryName, sb);
+        }
+
+        /// <summary>
+        /// Saves a list of bars in daily resolution in Lean format (zipped CSV)
+        /// </summary>
+        /// <param name="dailyBars"></param>
+        /// <param name="symbol"></param>
+        private static void SaveDailyBars(List<LeanBar> dailyBars, string symbol)
+        {
+            var sb = new StringBuilder();
+            foreach (var row in dailyBars)
+            {
+                var timestamp = row.Time.ToString("yyyyMMdd 00:00");
+
+                sb.AppendLine(string.Join(",", timestamp,
+                    row.Open.ToString(CultureInfo.InvariantCulture),
+                    row.High.ToString(CultureInfo.InvariantCulture),
+                    row.Low.ToString(CultureInfo.InvariantCulture),
+                    row.Close.ToString(CultureInfo.InvariantCulture), 
+                    row.TickVolume));
+            }
+
+            // File path: /Lean/Data/forex/oanda/daily/eurusd.zip -> eurusd.csv
+            var path = Path.Combine(
+                _settings.OutputFolder,
+                _instruments[symbol].Type.ToString().ToLower(),
+                "oanda",
+                "daily");
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+
+            var zipFileName = Path.Combine(path, string.Format("{0}.zip", symbol.Replace("_", "").ToLower()));
+            var entryName = string.Format("{0}.csv", symbol.Replace("_", "").ToLower());
+
+            if (File.Exists(zipFileName))
+                UpdateZipFile(zipFileName, entryName, sb);
+            else
+                WriteZipFile(zipFileName, entryName, sb);
+        }
+
+        /// <summary>
+        /// Saves a list of bars in 1-minute resolution in Lean format (zipped CSV)
+        /// </summary>
+        /// <param name="minuteBars"></param>
+        /// <param name="symbol"></param>
+        /// <param name="date"></param>
+        private static void SaveMinuteBars(List<LeanBar> minuteBars, string symbol, string date)
+        {
+            var sb = new StringBuilder();
+            foreach (var row in minuteBars)
             {
                 // convert datetime to millis
                 var timestamp = (int)row.Time.TimeOfDay.TotalMilliseconds;
                 // var timestamp = row.Time.ToString("yyyyMMdd HH:mm:ss.ffff");
 
-                sb.AppendLine(string.Join(",", timestamp, row.Open, row.High, row.Low, row.Close, row.TickVolume));
+                sb.AppendLine(string.Join(",", timestamp,
+                    row.Open.ToString(CultureInfo.InvariantCulture),
+                    row.High.ToString(CultureInfo.InvariantCulture),
+                    row.Low.ToString(CultureInfo.InvariantCulture),
+                    row.Close.ToString(CultureInfo.InvariantCulture), 
+                    row.TickVolume));
             }
 
             // File path: /Lean/Data/forex/oanda/minute/eurusd/yymmdd_quote.zip -> yyyymmdd_Minute.csv
@@ -359,36 +444,30 @@ namespace QuantConnect.OandaDownloader
             var zipFileName = Path.Combine(path, string.Format("{0}_quote.zip", date.Substring(2).Replace("-", "")));
             var entryName = string.Format("{0}_Minute.csv", date.Replace("-", ""));
 
-            if (File.Exists(zipFileName)) File.Delete(zipFileName);
-
-            using (var zip = new ZipFile(zipFileName))
-            {
-                zip.AddEntry(entryName, sb.ToString());
-                zip.Save();
-            }
-
-            if (_settings.EnableTrace)
-            {
-                Console.WriteLine("Created: " + zipFileName);
-            }
+            WriteZipFile(zipFileName, entryName, sb);
         }
 
         /// <summary>
-        /// Saves a list of bars with 5-second resolution in Lean format (zipped CSV)
+        /// Saves a list of bars in 5-second resolution in Lean format (zipped CSV)
         /// </summary>
-        /// <param name="barsSecond"></param>
+        /// <param name="secondBars"></param>
         /// <param name="symbol"></param>
         /// <param name="date"></param>
-        private static void SaveLeanBarsSecond(List<Candle> barsSecond, string symbol, string date)
+        private static void SaveSecondBars(List<Candle> secondBars, string symbol, string date)
         {
             var sb = new StringBuilder();
-            foreach (var row in barsSecond)
+            foreach (var row in secondBars)
             {
                 // convert datetime to millis
                 var timestamp = (int)GetDateTimeFromString(row.time).TimeOfDay.TotalMilliseconds;
                 // var timestamp = GetDateTimeFromString(row.time).ToString("yyyyMMdd HH:mm:ss.ffff");
 
-                sb.AppendLine(string.Join(",", timestamp, row.openMid, row.highMid, row.lowMid, row.closeMid, row.volume));
+                sb.AppendLine(string.Join(",", timestamp, 
+                    row.openMid.ToString(CultureInfo.InvariantCulture),
+                    row.highMid.ToString(CultureInfo.InvariantCulture),
+                    row.lowMid.ToString(CultureInfo.InvariantCulture),
+                    row.closeMid.ToString(CultureInfo.InvariantCulture), 
+                    row.volume));
             }
 
             // File path: /Lean/Data/forex/oanda/second/eurusd/yymmdd_quote.zip -> yyyymmdd_Second.csv
@@ -403,6 +482,18 @@ namespace QuantConnect.OandaDownloader
             var zipFileName = Path.Combine(path, string.Format("{0}_quote.zip", date.Substring(2).Replace("-", "")));
             var entryName = string.Format("{0}_Second.csv", date.Replace("-", ""));
 
+            WriteZipFile(zipFileName, entryName, sb);
+        }
+
+        /// <summary>
+        /// Writes bars to an entry in a zip file 
+        /// The zip file is always overwritten.
+        /// </summary>
+        /// <param name="zipFileName"></param>
+        /// <param name="entryName"></param>
+        /// <param name="sb"></param>
+        private static void WriteZipFile(string zipFileName, string entryName, StringBuilder sb)
+        {
             if (File.Exists(zipFileName)) File.Delete(zipFileName);
 
             using (var zip = new ZipFile(zipFileName))
@@ -418,15 +509,69 @@ namespace QuantConnect.OandaDownloader
         }
 
         /// <summary>
-        /// Aggregates a list of 5-second bars into 1-minute bars
+        /// Inserts/Updates/appends bars to an entry in a zip file
+        /// The existing bars are updated with the newer ones.
+        /// </summary>
+        /// <param name="zipFileName"></param>
+        /// <param name="entryName"></param>
+        /// <param name="sb"></param>
+        private static void UpdateZipFile(string zipFileName, string entryName, StringBuilder sb)
+        {
+            using (var zip = ZipFile.Read(zipFileName))
+            {
+                var entry = zip[entryName];
+
+                using (var stream = new MemoryStream())
+                {
+                    entry.Extract(stream);
+                    stream.Seek(0, SeekOrigin.Begin);
+
+                    using (var reader = new StreamReader(stream))
+                    {
+                        // old bars
+                        var rowsExisting = reader.ReadToEnd().Split(new[] { EndOfLine }, StringSplitOptions.RemoveEmptyEntries);
+                        // new bars
+                        var rowsNew = sb.ToString().Split(new[] { EndOfLine }, StringSplitOptions.RemoveEmptyEntries);
+
+                        // merge bars
+                        var rowsFinal = new SortedDictionary<string, string>();
+                        foreach (var row in rowsExisting)
+                        {
+                            rowsFinal.Add(row.Substring(0, 14), row);
+                        }
+                        // new bars always overwrite existing ones
+                        foreach (var row in rowsNew)
+                        {
+                            rowsFinal[row.Substring(0, 14)] = row;
+                        }
+
+                        // new entry content
+                        string content = string.Join(EndOfLine, rowsFinal.Values.ToList()) + EndOfLine;
+
+                        // update zip entry and save
+                        zip.UpdateEntry(entryName, content);
+                        zip.Save();
+                    }
+                }
+            }
+
+            if (_settings.EnableTrace)
+            {
+                Console.WriteLine("Updated: " + zipFileName);
+            }
+        }
+
+        /// <summary>
+        /// Aggregates a list of 5-second bars at the requested resolution
         /// </summary>
         /// <param name="bars"></param>
+        /// <param name="resolution"></param>
         /// <returns></returns>
-        private static List<LeanBar> AggregateBarsToMinuteBars(List<Candle> bars)
+        private static List<LeanBar> AggregateBars(List<Candle> bars, TimeSpan resolution)
         {
             return
                 (from b in bars
-                group b by GetDateTimeFromString(b.time).RoundDown(new TimeSpan(0, 1, 0))
+                group b by GetDateTimeFromString(b.time).RoundDown(resolution)
                 into g
                 select new LeanBar
                 {

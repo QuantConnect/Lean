@@ -14,10 +14,10 @@
     // The list of symbols can be found in the first column of the instruments.txt file
     "instrument-list": [ "SPX500_USD", "DE30_EUR", "WTICO_USD", "XAU_USD", "EUR_USD", "USD_JPY" ],
 
-    // Starting date for the download (in yyyy-mm-dd format)
-    "start-date": "2015-06-12",
+    // Starting date for download requests (in yyyy-mm-dd format)
+    "start-date": "2015-06-11",
 
-    // Ending date for the download (in yyyy-mm-dd format)
+    // Ending date for download requests (in yyyy-mm-dd format)
     "end-date": "2015-06-12",
 
     // The number of bars to retrieve in each request (max=5000)
@@ -28,5 +28,4 @@
 
     // If set to true, enables trace information displayed in the console
     "enable-trace": true
-
 }
