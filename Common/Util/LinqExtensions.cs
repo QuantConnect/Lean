@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -44,6 +45,31 @@ namespace QuantConnect.Util
         public static bool IsNullOrEmpty<T>(this IEnumerable<T> enumerable)
         {
             return enumerable == null || !enumerable.Any();
+        }
+
+        /// <summary>
+        /// Gets the median value in the collection
+        /// </summary>
+        /// <typeparam name="T">The item type in the collection</typeparam>
+        /// <param name="enumerable">The enumerable of items to search</param>
+        /// <returns>The median value, throws InvalidOperationException if no items are present</returns>
+        public static T Median<T>(this IEnumerable<T> enumerable)
+        {
+            var collection = enumerable.ToList();
+            return collection.OrderBy(x => x).Skip(collection.Count/2).First();
+        }
+
+        /// <summary>
+        /// Gets the median value in the collection
+        /// </summary>
+        /// <typeparam name="T">The item type in the collection</typeparam>
+        /// <typeparam name="TProperty">The type of the value selected</typeparam>
+        /// <param name="collection">The collection of items to search</param>
+        /// <param name="selector">Function used to select a value from collection items</param>
+        /// <returns>The median value, throws InvalidOperationException if no items are present</returns>
+        public static TProperty Median<T, TProperty>(this IEnumerable<T> collection, Func<T, TProperty> selector)
+        {
+            return collection.Select(selector).Median();
         }
     }
 }
