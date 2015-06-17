@@ -528,7 +528,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (_reader == null)
                 {
-                    Log.Error("Failed to get StreamReader for data source(" + _source + "), symbol(" + _mappedSymbol + "). Skipping date(" + date.ToShortDateString() + "). Reader is null.");
+                    Log.Error("Failed to get StreamReader for data source(" + _source.Source + "), symbol(" + _mappedSymbol + "). Skipping date(" + date.ToShortDateString() + "). Reader is null.");
                     //Engine.ResultHandler.DebugMessage("We could not find the requested data. This may be an invalid data request, failed download of custom data, or a public holiday. Skipping date (" + date.ToShortDateString() + ").");
                     if (_isDynamicallyLoadedData)
                     {

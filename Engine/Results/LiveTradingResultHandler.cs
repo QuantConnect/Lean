@@ -915,7 +915,7 @@ namespace QuantConnect.Lean.Engine.Results
             _orderEvents.Enqueue(newEvent);
 
             //Send the message to frontend as packet:
-            Log.Trace("LiveConsoleResultHandler.OrderEvent(): id:" + newEvent.OrderId + " >> Status:" + newEvent.Status + " >> Fill Price: " + newEvent.FillPrice.ToString("C") + " >> Fill Quantity: " + newEvent.FillQuantity);
+            Log.Trace("LiveTradingResultHandler.OrderEvent(): id:" + newEvent.OrderId + " >> Status:" + newEvent.Status + " >> Fill Price: " + newEvent.FillPrice.ToString("C") + " >> Fill Quantity: " + newEvent.FillQuantity);
             Messages.Enqueue(new OrderEventPacket(_deployId, newEvent));
 
             //Add the order event message to the log:
