@@ -20,7 +20,6 @@ using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 
@@ -37,7 +36,6 @@ namespace QuantConnect.Lean.Engine.RealTime
         private List<RealTimeEvent> _events;
         private Dictionary<SecurityType, MarketToday> _today;
         private IDataFeed _feed;
-        private IResultHandler _results;
         private TimeSpan _endOfDayDelta = TimeSpan.FromMinutes(10);
 
         //Algorithm and Handlers:
@@ -88,16 +86,14 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Initialize the realtime event handler with all information required for triggering daily events.
+        /// Intializes the real time handler for the specified algorithm and job
         /// </summary>
-        public LiveTradingRealTimeHandler(IAlgorithm algorithm, IDataFeed feed, IResultHandler results) 
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job)
         {
             //Initialize:
             _algorithm = algorithm;
             _events = new List<RealTimeEvent>();
             _today = new Dictionary<SecurityType, MarketToday>();
-            _feed = feed;
-            _results = results;
         }
 
         /// <summary>
@@ -246,7 +242,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             _today.Clear();
 
             //Setup the Security Open Close Market Hours:
-            foreach (var sub in _feed.Subscriptions)
+            foreach (var sub in _algorithm.SubscriptionManager.Subscriptions)
             {
                 var security = _algorithm.Securities[sub.Symbol];
 

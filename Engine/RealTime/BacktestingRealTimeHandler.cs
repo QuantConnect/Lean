@@ -86,9 +86,9 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Setup the algorithm data, cash, job start end date etc.
+        /// Intializes the real time handler for the specified algorithm and job
         /// </summary>
-        public BacktestingRealTimeHandler(IAlgorithm algorithm, AlgorithmNodePacket job) 
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job) 
         {
             //Initialize:
             _algorithm = algorithm;

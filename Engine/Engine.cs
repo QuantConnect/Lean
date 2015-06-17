@@ -273,7 +273,8 @@ namespace QuantConnect.Lean.Engine
                     ResultHandler.SetAlgorithm(algorithm);
                     DataFeed = GetDataFeedHandler(algorithm, _brokerage, job);
                     TransactionHandler  = GetTransactionHandler(algorithm, _brokerage, ResultHandler, job);
-                    RealTimeHandler     = GetRealTimeHandler(algorithm, _brokerage, DataFeed, ResultHandler, job);
+                    RealTimeHandler = Composer.Instance.GetExportedValueByTypeName<IRealTimeHandler>(Config.Get("real-time-handler", "BacktestingRealTimeHandler"));
+                    RealTimeHandler.Initialize(algorithm, job);
 
                     //Set the error handlers for the brokerage asynchronous errors.
                     SetupHandler.SetupErrorHandler(ResultHandler, _brokerage);
@@ -504,29 +505,6 @@ namespace QuantConnect.Lean.Engine
                     break;
             }
             return df;
-        }
-
-        /// <summary>
-        /// Select the realtime event handler set in the job.
-        /// </summary>
-        private static IRealTimeHandler GetRealTimeHandler(IAlgorithm algorithm, IBrokerage brokerage, IDataFeed feed, IResultHandler results, AlgorithmNodePacket job)
-        {
-            var rth = default(IRealTimeHandler);
-            switch (job.RealTimeEndpoint)
-            { 
-                //Don't fire based on system time but virtualized backtesting time.
-                case RealTimeEndpoint.Backtesting:
-                    Log.Trace("Engine.GetRealTimeHandler(): Selected Backtesting RealTimeEvent Handler");
-                    rth = new BacktestingRealTimeHandler(algorithm, job);
-                    break;
-
-                // Fire events based on real system clock time.
-                case RealTimeEndpoint.LiveTrading:
-                    Log.Trace("Engine.GetRealTimeHandler(): Selected LiveTrading RealTimeEvent Handler");
-                    rth = new LiveTradingRealTimeHandler(algorithm, feed, results);
-                    break;
-            }
-            return rth;
         }
 
 
