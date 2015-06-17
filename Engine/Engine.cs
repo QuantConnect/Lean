@@ -224,11 +224,12 @@ namespace QuantConnect.Lean.Engine
                 var setupHandlerTypeName = Config.Get("setup-handler", "ConsoleSetupHandler");
                 var transactionHandlerTypeName = Config.Get("transaction-handler", "BacktestingTransactionHandler");
                 var realTimeHandlerTypeName = Config.Get("real-time-handler", "BacktestingRealTimeHandler");
+                var dataFeedHandlerTypeName = Config.Get("data-feed-handler", "FileSystemDataFeed");
                 Log.Trace("JOB HANDLERS: ");
-                Log.Trace("         Setup: " + setupHandlerTypeName);
-                Log.Trace("  Transactions: " + transactionHandlerTypeName);
-                Log.Trace("      RealTime: " + realTimeHandlerTypeName);
-                Log.Trace("      DataFeed: " +  job.DataEndpoint);
+                Log.Trace("         Setup:        " + setupHandlerTypeName);
+                Log.Trace("         Transactions: " + transactionHandlerTypeName);
+                Log.Trace("         RealTime:     " + realTimeHandlerTypeName);
+                Log.Trace("         DataFeed:     " + dataFeedHandlerTypeName);
                     
 
                 //-> Initialize messaging system
@@ -281,7 +282,9 @@ namespace QuantConnect.Lean.Engine
 
                     //Load the associated handlers for data, transaction and realtime events:
                     ResultHandler.SetAlgorithm(algorithm);
-                    DataFeed = GetDataFeedHandler(algorithm, _brokerage, job);
+                    
+                    DataFeed = Composer.Instance.GetExportedValueByTypeName<IDataFeed>(dataFeedHandlerTypeName);
+                    DataFeed.Initialize(algorithm, job);
                     
                     TransactionHandler = Composer.Instance.GetExportedValueByTypeName<ITransactionHandler>(transactionHandlerTypeName);
                     TransactionHandler.Initialize(algorithm, _brokerage);
@@ -473,51 +476,6 @@ namespace QuantConnect.Lean.Engine
                 Console.Read();
             }
             Log.LogHandler.Dispose();
-        }
-
-        /// <summary>
-        /// Get an instance of the data feed handler we're requesting for this work.
-        /// </summary>
-        /// <param name="algorithm">User algorithm to scan for securities</param>
-        /// <param name="job">Algorithm Node Packet</param>
-        /// <returns>Class matching IDataFeed Interface</returns>
-        private static IDataFeed GetDataFeedHandler(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket job)
-        {
-            var df = default(IDataFeed);
-            switch (job.DataEndpoint) 
-            {
-                //default:
-                ////Backtesting:
-                case DataFeedEndpoint.Backtesting:
-                    df = new BacktestingDataFeed(algorithm, (BacktestNodePacket)job);
-                    Log.Trace("Engine.GetDataFeedHandler(): Selected Backtesting Datafeed");
-                    break;
-
-                case DataFeedEndpoint.Database:
-                    df = new DatabaseDataFeed(algorithm, (BacktestNodePacket)job);
-                    Log.Trace("Engine.GetDataFeedHandler(): Selected Database Datafeed");
-                    break;
-
-                //Operation from local files:
-                case DataFeedEndpoint.FileSystem:
-                    df = new FileSystemDataFeed(algorithm, (BacktestNodePacket)job);
-                    Log.Trace("Engine.GetDataFeedHandler(): Selected FileSystem Datafeed");
-                    break;
-
-                //Live Trading Data Source:
-                case DataFeedEndpoint.LiveTrading:
-
-                    var useBroker = Config.GetBool("use-broker-data-queue-handler", false);
-
-                    var ds = useBroker == true ?  
-                                brokerage as IDataQueueHandler:
-                                Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Config.Get("data-queue-handler", "LiveDataQueue"));
-
-                    df = new LiveTradingDataFeed(algorithm, (LiveNodePacket)job, ds);
-                    Log.Trace("Engine.GetDataFeedHandler(): Selected LiveTrading Datafeed");
-                    break;
-            }
-            return df;
         }
 
 

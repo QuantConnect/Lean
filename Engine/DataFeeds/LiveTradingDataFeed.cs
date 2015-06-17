@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,6 +26,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Data.Market;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -33,7 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class LiveTradingDataFeed : IDataFeed
     {
-        private readonly LiveNodePacket _job;
+        private LiveNodePacket _job;
         private List<SubscriptionDataConfig> _subscriptions;
         private readonly List<bool> _isDynamicallyLoadedData = new List<bool>();
         private SubscriptionDataReader[] _subscriptionManagers;
@@ -42,13 +44,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _isActive;
         private bool[] _endOfBridge;
         private DataFeedEndpoint _dataFeed;
-        private readonly IAlgorithm _algorithm;
+        private IAlgorithm _algorithm;
         private readonly object _lock = new object();
         private bool _exitTriggered;
         private List<string> _symbols = new List<string>();
         private Dictionary<int, StreamStore> _streamStore = new Dictionary<int, StreamStore>();
-        private readonly List<decimal> _realtimePrices;
-        private readonly IDataQueueHandler _dataQueue;
+        private List<decimal> _realtimePrices;
+        private IDataQueueHandler _dataQueue;
 
         /// <summary>
         /// Subscription collection for data requested.
@@ -141,7 +143,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// need only implement the GetNextTicks() function to return unprocessed ticks from a data source.
         /// This creates a new data feed with a DataFeedEndpoint of LiveTrading.
         /// </summary>
-        public LiveTradingDataFeed(IAlgorithm algorithm, LiveNodePacket job, IDataQueueHandler dataSource)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job)
         {
             //Subscription Count:
             _subscriptions = algorithm.SubscriptionManager.Subscriptions;
@@ -155,11 +157,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _realtimePrices = new List<decimal>();
 
             //Set the source of the live data:
-            _dataQueue = dataSource;
+            _dataQueue = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Configuration.Config.Get("data-queue-handler", "LiveDataQueue"));
 
             //Class Privates:
             _algorithm = algorithm;
-            _job = job;
+            if (!(job is LiveNodePacket))
+            {
+                throw new ArgumentException("The LiveTradingDataFeed requires a LiveNodePacket.");
+            }
+
+            _job = (LiveNodePacket) job;
 
             //Setup the arrays:
             for (var i = 0; i < Subscriptions.Count; i++)
@@ -187,7 +194,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // work without an IDataQueueHandler implementation by specifying LiveDataQueue
                 // in the configuration, that implementation throws on every method, but we actually
                 // don't need it if we're only doing custom data
-                _dataQueue.Subscribe(job, symbols);
+                _dataQueue.Subscribe(_job, symbols);
             }
         }
 

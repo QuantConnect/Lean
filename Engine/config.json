@@ -51,19 +51,37 @@
 
     // defines the 'backtesting' environment
     "backtesting": {
-        // the backtesting environment doesn't define anything special
-        // but you can redefine any configuration item here and it will
-        // be effective if this is the selected environment
-        //"algorithm-type-name": ""
+
         "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
+        "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
         "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
         "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
     },
 
-    // defines the 'live' environment
-    "live": {
+    // defines the 'live-paper' environment
+    "live-paper": {
         "live-mode": "true",
+
+        // the paper brokerage requires the BacktestingTransactionHandler
+        "live-mode-brokerage": "PaperBrokerage",
+
         "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+        "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+        "data-queue-handler": "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue",
+        "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+        "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
+    },
+
+    // defines the 'live-brokerage' environment
+    "live-brokerage": {
+        "live-mode": "true",
+
+        // real brokerage implementations require the BrokerageTransactionHandler
+        "live-mode-brokerage": "TradierBrokerage",
+
+        "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+        "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+        "data-queue-handler": "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue",
         "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
         "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
     }

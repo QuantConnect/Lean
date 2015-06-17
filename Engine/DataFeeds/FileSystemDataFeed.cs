@@ -34,7 +34,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         // Set types in public area to speed up:
         private IAlgorithm _algorithm;
-        private BacktestNodePacket _job;
         private bool _endOfStreams;
         private int _subscriptions;
         private int _bridgeMax = 500000;
@@ -110,12 +109,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public DateTime[] FillForwardFrontiers;
 
-        /// <summary>
-        /// Create a new backtesting data feed.
-        /// </summary>
-        /// <param name="algorithm">Instance of the algorithm</param>
-        /// <param name="job">Algorithm work task</param>
-        public FileSystemDataFeed(IAlgorithm algorithm, BacktestNodePacket job)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job)
         {
             Subscriptions = algorithm.SubscriptionManager.Subscriptions;
             _subscriptions = Subscriptions.Count;
@@ -130,7 +124,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             RealtimePrices = new List<decimal>(_subscriptions);
 
             //Class Privates:
-            _job = job;
             _algorithm = algorithm;
             _endOfStreams = false;
             _bridgeMax = _bridgeMax / _subscriptions; //Set the bridge maximum count:
@@ -140,7 +133,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 //Create a new instance in the dictionary:
                 Bridge[i] = new ConcurrentQueue<List<BaseData>>();
                 EndOfBridge[i] = false;
-                SubscriptionReaders[i] = new SubscriptionDataReader(Subscriptions[i], _algorithm.Securities[Subscriptions[i].Symbol], DataFeed, _job.PeriodStart, _job.PeriodFinish);
+                SubscriptionReaders[i] = new SubscriptionDataReader(Subscriptions[i], _algorithm.Securities[Subscriptions[i].Symbol], DataFeed, _algorithm.StartDate, _algorithm.EndDate);
                 FillForwardFrontiers[i] = new DateTime();
             }
         }
@@ -156,7 +149,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var increment = CalculateIncrement(includeTick: true);
 
             //Loop over each date in the job
-            foreach (var date in Time.EachTradeableDay(_algorithm.Securities, _job.PeriodStart, _job.PeriodFinish))
+            foreach (var date in Time.EachTradeableDay(_algorithm.Securities, _algorithm.StartDate, _algorithm.EndDate))
             {
                 //Update the source-URL from the BaseData, reset the frontier to today. Update the source URL once per day.
                 // this is really the next frontier in the future

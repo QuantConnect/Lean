@@ -107,12 +107,6 @@ namespace QuantConnect.Packets
         /// </summary>
         [JsonProperty(PropertyName = "sRequestSource")]
         public string RequestSource = "WebIDE";
-
-        /// <summary>
-        /// DataFeed plugin name to select for the task
-        /// </summary>
-        [JsonProperty(PropertyName = "eDataEndpoint")]
-        public DataFeedEndpoint DataEndpoint = DataFeedEndpoint.Backtesting;
     } // End Node Packet:
 
 } // End of Namespace:

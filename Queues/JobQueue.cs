@@ -68,7 +68,6 @@ namespace QuantConnect.Queues
                 var liveJob = new LiveNodePacket
                 {
                     Type = PacketType.LiveNode,
-                    DataEndpoint = DataFeedEndpoint.LiveTrading,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
                     Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
                     Channel = Config.Get("job-channel"),
@@ -95,7 +94,6 @@ namespace QuantConnect.Queues
             var backtestJob = new BacktestNodePacket(0, 0, "", new byte[] {}, 10000, "local")
             {
                 Type = PacketType.BacktestNode,
-                DataEndpoint = DataFeedEndpoint.FileSystem,
                 Algorithm = File.ReadAllBytes(AlgorithmLocation),
                 Version = Constants.Version,
                 BacktestId = Config.Get("algorithm-type-name")

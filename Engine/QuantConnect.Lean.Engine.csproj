@@ -166,7 +166,6 @@
     <Compile Include="DataFeeds\IDataFeed.cs" />
     <Compile Include="Results\LiveTradingResultHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="DataFeeds\BacktestingDataFeed.cs" />
     <Compile Include="Engine.cs" />
   </ItemGroup>
   <ItemGroup>

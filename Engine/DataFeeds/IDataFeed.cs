@@ -17,13 +17,17 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
     /// Datafeed interface for creating custom datafeed sources.
     /// </summary>
+    [InheritedExport]
     public interface IDataFeed
     {
         /// <summary>
@@ -98,6 +102,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             get;
         }
+
+        /// <summary>
+        /// Initializes the data feed for the specified job and algorithm
+        /// </summary>
+        void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job);
 
         /// <summary>
         /// Primary entry point.

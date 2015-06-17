@@ -28,8 +28,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public abstract class BaseDataFeed : IDataFeed
     {
-        private IAlgorithm _algorithm;
-        private BacktestNodePacket _job;
         private bool _endOfStreams;
         private int _subscriptions;
         private int _bridgeMax = 500000;
@@ -105,7 +103,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Create an instance of the base datafeed.
         /// </summary>
-        public BaseDataFeed(IAlgorithm algorithm, BacktestNodePacket job)
+        public virtual void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job)
         {
             //Save the data subscriptions
             Subscriptions = algorithm.SubscriptionManager.Subscriptions;
@@ -121,18 +119,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _frontierTime = new DateTime[_subscriptions];
 
             //Class Privates:
-            _job = job;
-            _algorithm = algorithm;
             _endOfStreams = false;
             _bridgeMax = _bridgeMax / _subscriptions;
 
             //Initialize arrays:
             for (var i = 0; i < _subscriptions; i++)
             {
-                _frontierTime[i] = job.PeriodStart;
+                _frontierTime[i] = algorithm.StartDate;
                 EndOfBridge[i] = false;
                 Bridge[i] = new ConcurrentQueue<List<BaseData>>();
-                SubscriptionReaderManagers[i] = new SubscriptionDataReader(Subscriptions[i], algorithm.Securities[Subscriptions[i].Symbol], DataFeedEndpoint.Database, job.PeriodStart, job.PeriodFinish);
+                SubscriptionReaderManagers[i] = new SubscriptionDataReader(Subscriptions[i], algorithm.Securities[Subscriptions[i].Symbol], DataFeedEndpoint.Database, algorithm.StartDate, algorithm.EndDate);
             }
         }
 

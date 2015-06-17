@@ -36,8 +36,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class DatabaseDataFeed : IDataFeed
     {
         // Set types in public area to speed up:
-        private IAlgorithm _algorithm;
-        private BacktestNodePacket _job;
         private bool _endOfStreams = false;
         private int _subscriptions = 0;
         private int _bridgeMax = 500000;
@@ -139,7 +137,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="algorithm"></param>
         /// <param name="job"></param>
-        public DatabaseDataFeed(IAlgorithm algorithm, BacktestNodePacket job)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job)
         {
             //Save the data subscriptions
             Subscriptions = algorithm.SubscriptionManager.Subscriptions;
@@ -155,19 +153,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _mySQLBridgeTime = new DateTime[_subscriptions];
 
             //Class Privates:
-            _job = job;
-            _algorithm = algorithm;
             _endOfStreams = false;
             _bridgeMax = _bridgeMax / _subscriptions; //Set the bridge maximum count:
-            _endTime = job.PeriodFinish;
+            _endTime = algorithm.EndDate;
 
             //Initialize arrays:
             for (var i = 0; i < _subscriptions; i++)
             {
-                _mySQLBridgeTime[i] = job.PeriodStart;
+                _mySQLBridgeTime[i] = algorithm.StartDate;
                 EndOfBridge[i] = false;
                 Bridge[i] = new ConcurrentQueue<List<BaseData>>();
-                SubscriptionReaderManagers[i] = new SubscriptionDataReader(Subscriptions[i], algorithm.Securities[Subscriptions[i].Symbol], DataFeedEndpoint.Database, job.PeriodStart, job.PeriodFinish);
+                SubscriptionReaderManagers[i] = new SubscriptionDataReader(Subscriptions[i], algorithm.Securities[Subscriptions[i].Symbol], DataFeedEndpoint.Database, algorithm.StartDate, algorithm.EndDate);
             }
         }
 

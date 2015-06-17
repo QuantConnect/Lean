@@ -27,18 +27,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class IQFeedDataFeed : BaseDataFeed
     {
-        // Set types in public area to speed up:
-        private IAlgorithm _algorithm;
-        private BacktestNodePacket _job;
-
-        /// <summary>
-        /// Create and connect to IQFeed.
-        /// </summary>
-        public IQFeedDataFeed(IAlgorithm algorithm, BacktestNodePacket job) 
-            : base(algorithm, job)
+        public override void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job)
         {
-            _algorithm = algorithm;
-            _job = job;
+            // add IQFeed initialization logic here
+            base.Initialize(algorithm, job);
         }
 
         public override List<BaseData> GetData(SubscriptionDataConfig subscription)

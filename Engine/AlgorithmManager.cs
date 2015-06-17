@@ -477,7 +477,6 @@ namespace QuantConnect.Lean.Engine
                 }
                 else
                 {
-                    //Log.Debug("AlgorithmManager.Run(): Invoking v2.0 Event Handlers...");
                     try
                     {
                         if (hasOnDataTradeBars && newBars.Count > 0) methodInvokers[typeof (TradeBars)](algorithm, newBars);
