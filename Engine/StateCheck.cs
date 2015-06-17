@@ -38,9 +38,10 @@ namespace QuantConnect.Lean.Engine
             {
                 while (!_exitTriggered)
                 {
-                    if (AlgorithmManager.AlgorithmId != "" && AlgorithmManager.QuitState == false)
+                    try
                     {
-                        try
+                        Thread.Sleep(500);
+                        if (AlgorithmManager.AlgorithmId != "" && AlgorithmManager.QuitState == false)
                         {
                             //Get the state from the central server:
                             var state = Engine.Api.GetAlgorithmStatus(AlgorithmManager.AlgorithmId);
@@ -51,16 +52,15 @@ namespace QuantConnect.Lean.Engine
                             //Set which chart the user is look at, so we can reduce excess messaging (e.g. trading 100 symbols, only send 1).
                             Engine.ResultHandler.SetChartSubscription(state.ChartSubscription);
                         }
-                        catch (ThreadAbortException)
-                        {
-                            return;
-                        }
-                        catch (Exception err) 
-                        {
-                            Log.Error("StateCheck.Run(): Error in state check: " + err.Message);
-                        }
                     }
-                    Thread.Sleep(500);
+                    catch (ThreadAbortException)
+                    {
+                        return;
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error("StateCheck.Run(): Error in state check: " + err.Message);
+                    }
                 }
             }
 
