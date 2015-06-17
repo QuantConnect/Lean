@@ -93,7 +93,7 @@ namespace QuantConnect.Data
             {
                 case SecurityType.Forex:
                     //Currently QC FX data source is FXCM pricing.
-                    newConfig.LiquditySource = LiquiditityProviderDataSource.FXCM;
+                    newConfig.LiquiditySource = LiquidityProviderDataSource.FXCM;
                     break;
                 case SecurityType.Equity:
                     //Currently QC Equities are US Only.

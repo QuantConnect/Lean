@@ -297,7 +297,7 @@ namespace QuantConnect.Data.Market
             else if (config.SecurityType == SecurityType.Forex || config.SecurityType == SecurityType.Cfd)
             {
                 //FX, CFD's are brokerage/liquidity provider specific (eg. different brokerages have different spreads). 
-                var dataSource = config.LiquditySource.ToString().ToLower();
+                var dataSource = config.LiquiditySource.ToString().ToLower();
                 source = Path.Combine(Constants.DataFolder, securityType, dataSource, resolution, symbol.ToLower(), file);
             }
             else

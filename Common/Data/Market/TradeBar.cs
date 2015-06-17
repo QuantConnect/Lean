@@ -332,7 +332,7 @@ namespace QuantConnect.Data.Market
             var resolutionPath = config.Resolution.ToString().ToLower();
             var symbolPath = (string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol).ToLower();
             var countryCode = config.Country.ToString().ToLower();
-            var liquiditySource = config.LiquditySource.ToString().ToLower();
+            var liquiditySource = config.LiquiditySource.ToString().ToLower();
             var filename = date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
 
 
