@@ -14,9 +14,7 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Logging;
 
@@ -30,31 +28,29 @@ namespace QuantConnect.Configuration
         //Location of the configuration file.
         private const string ConfigurationFileName = "config.json";
 
-        /// Initialize the settings array and its defaults:
-        private static readonly IReadOnlyDictionary<string, string> DefaultSettings = new Dictionary<string, string>
-        {
-            //User configurable: Select which algorithm the engine can run.
-            {"algorithm-type-name", "BasicTemplateAlgorithm"},
-
-            //Engine code:
-            {"local", "true"},
-            {"live-mode", "false"},
-            {"data-folder", @"../../../Data/"},
-            {"result-handler", "QuantConnect.Lean.Engine.Results.ConsoleResultHandler"},
-            {"messaging-handler", "QuantConnect.Messaging.Messaging"},
-            {"queue-handler", "QuantConnect.Queues.Queues"},
-            {"api-handler", "QuantConnect.Api.Api"}
-        };
-
-        private static readonly Lazy<Dictionary<string, string>> Settings = new Lazy<Dictionary<string, string>>(() =>
+        private static readonly Lazy<JObject> Settings = new Lazy<JObject>(() =>
         {
             // initialize settings inside a lazy for free thread-safe, one-time initialization
             if (!File.Exists(ConfigurationFileName))
             {
-                return DefaultSettings.ToDictionary(setting => setting.Key, setting => setting.Value);
+                return new JObject
+                {
+                    {"algorithm-type-name", "BasicTemplateAlgorithm"},
+                    {"local", true},
+                    {"live-mode", false},
+                    {"data-folder", "../../../Data/"},
+                    {"messaging-handler", "QuantConnect.Messaging.Messaging"},
+                    {"queue-handler", "QuantConnect.Queues.Queues"},
+                    {"api-handler", "QuantConnect.Api.Api"},
+                    {"setup-handler", "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler"},
+                    {"result-handler", "QuantConnect.Lean.Engine.Results.ConsoleResultHandler"},
+                    {"data-feed-handler", "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed"},
+                    {"real-time-handler", "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler"},
+                    {"transaction-handler", "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"}
+                };
             }
 
-            return ParseConfigurationFile(File.ReadAllText(ConfigurationFileName));
+            return JObject.Parse(File.ReadAllText(ConfigurationFileName));
         });
         
         /// <summary>
@@ -65,13 +61,13 @@ namespace QuantConnect.Configuration
         /// <returns>String value of the configuration setting or empty string if nothing found.</returns>
         public static string Get(string key, string defaultValue = "")
         {
-            string value;
-            if (!Settings.Value.TryGetValue(key, out value))
+            var token = GetToken(Settings.Value, key);
+            if (token == null)
             {
-                Log.Trace("Config.Get(): Configuration key not found. Key: " + key + " - Using default value: " + defaultValue);
+                Log.Trace(string.Format("Config.Get(): Configuration key not found. Key: {0} - Using default value: {1}", key, defaultValue));
                 return defaultValue;
             }
-            return value;
+            return token.Value<string>();
         }
 
         /// <summary>
@@ -128,14 +124,15 @@ namespace QuantConnect.Configuration
         public static T GetValue<T>(string key, T defaultValue = default(T))
             where T : IConvertible
         {
-            string value;
-            if (!Settings.Value.TryGetValue(key, out value))
+            var token = GetToken(Settings.Value, key);
+            if (token == null)
             {
-                Log.Trace("Config.GetValue(): " + key + " - Using default value: " + defaultValue);
+                Log.Trace(string.Format("Config.GetValue(): {0} - Using default value: {1}", key, defaultValue));
                 return defaultValue;
             }
 
-            var type = typeof (T);
+            var type = typeof(T);
+            var value = token.Value<string>();
             if (type.IsEnum)
             {
                 return (T) Enum.Parse(type, value);
@@ -143,73 +140,30 @@ namespace QuantConnect.Configuration
             return (T) Convert.ChangeType(value, type);
         }
 
-        /// <summary>
-        /// Parses the specified configuration file contents into a key value pair. This include logic
-        /// to detect the 'environment' and load those values on top of any default configuration
-        /// </summary>
-        /// <param name="configurationFileContents">The JSON configuration file's contents</param>
-        /// <returns>A dictionary of configuration keys to values</returns>
-        public static Dictionary<string, string> ParseConfigurationFile(string configurationFileContents)
+        private static JToken GetToken(JToken settings, string key)
         {
-            var environment = string.Empty;
-            // begin with the defaults and lay on top of them
-            var settings = DefaultSettings.ToDictionary(x => x.Key, x => x.Value); 
-            var environmentSettings = new Dictionary<string, string>();
-            var configuration = JToken.Parse(configurationFileContents);
-            foreach (var rootItem in configuration)
-            {
-                if (rootItem.Type == JTokenType.Property && rootItem.HasValues)
-                {
-                    var children = rootItem.Children();
-                    foreach (var child in children)
-                    {
-                        // this is an environment
-                        if (child.Type == JTokenType.Object && rootItem.Path == environment)
-                        {
-                            if (child.HasValues)
-                            {
-                                var children2 = child.Children();
-                                foreach (var child2 in children2)
-                                {
-                                    if (child2.Type == JTokenType.Property)
-                                    {
-                                        if (child2.HasValues)
-                                        {
-                                            var children3 = child2.Children();
-                                            foreach (var child3 in children3)
-                                            {
-                                                if (child3.Type == JTokenType.String)
-                                                {
-                                                    var value = child3.Value<string>();
-                                                    var envKey = child3.Path.Substring(child3.Path.LastIndexOf('.') + 1);
-                                                    environmentSettings[envKey] = value;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        // this is a top level configuration item
-                        else if (child.Type == JTokenType.String)
-                        {
-                            var value = child.Value<string>();
-                            if (child.Path == "environment")
-                            {
-                                environment = value;
-                            }
-                            settings[child.Path] = value;
-                        }
-                    }
-                }
-            }
+            return GetToken(settings, key, settings.SelectToken(key));
+        }
 
-            // lay environmet settings on top of global settings
-            foreach (var environmentSetting in environmentSettings)
+        private static JToken GetToken(JToken settings, string key, JToken current)
+        {
+            var environmentSetting = settings.SelectToken("environment");
+            if (environmentSetting != null)
             {
-                settings[environmentSetting.Key] = environmentSetting.Value;
+                var environment = settings.SelectToken("environments." + environmentSetting.Value<string>());
+                var setting = environment.SelectToken(key);
+                if (setting != null)
+                {
+                    current = setting;
+                }
+                // allows nesting of environments, live.tradier, live.interactive, ect...
+                return GetToken(environment, key, current);
             }
-            return settings;
+            if (current == null)
+            {
+                return settings.SelectToken(key);
+            }
+            return current;
         }
     }
 }
