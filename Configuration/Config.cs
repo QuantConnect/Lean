@@ -16,7 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
+using System.Linq;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Configuration
@@ -27,13 +28,10 @@ namespace QuantConnect.Configuration
     public static class Config
     {
         //Location of the configuration file.
-        private const string _config = "config.json";
-
-        //Has the configuration been loaded from disk:
-        private static bool _loaded;
+        private const string ConfigurationFileName = "config.json";
 
         /// Initialize the settings array and its defaults:
-        private static Dictionary<string, string> _settings = new Dictionary<string, string>
+        private static readonly IReadOnlyDictionary<string, string> DefaultSettings = new Dictionary<string, string>
         {
             //User configurable: Select which algorithm the engine can run.
             {"algorithm-type-name", "BasicTemplateAlgorithm"},
@@ -48,24 +46,16 @@ namespace QuantConnect.Configuration
             {"api-handler", "QuantConnect.Api.Api"}
         };
 
-        /// <summary>
-        /// Initialize the configuration file and if it doesnt exist create one with the default values above.
-        /// </summary>
-        private static void Initialize()
+        private static readonly Lazy<Dictionary<string, string>> Settings = new Lazy<Dictionary<string, string>>(() =>
         {
-            var file = "";
-            
-            if (_loaded) return;
-
-            // if we find the configuration, load it, otherwise just stick with the defaults in _settings
-            if (File.Exists(_config))
+            // initialize settings inside a lazy for free thread-safe, one-time initialization
+            if (!File.Exists(ConfigurationFileName))
             {
-                file = File.ReadAllText(_config);
-                _settings = JsonConvert.DeserializeObject<Dictionary<string, string>>(file);
+                return DefaultSettings.ToDictionary(setting => setting.Key, setting => setting.Value);
             }
 
-            _loaded = true;
-        }
+            return ParseConfigurationFile(File.ReadAllText(ConfigurationFileName));
+        });
         
         /// <summary>
         /// Get the matching config setting from the file searching for this key.
@@ -75,24 +65,11 @@ namespace QuantConnect.Configuration
         /// <returns>String value of the configuration setting or empty string if nothing found.</returns>
         public static string Get(string key, string defaultValue = "")
         {
-            var value = "";
-            try
+            string value;
+            if (!Settings.Value.TryGetValue(key, out value))
             {
-                if (!_loaded) Initialize();
-
-                if (_settings != null && _settings.ContainsKey(key))
-                {
-                    value = _settings[key];
-                }
-                else
-                {
-                    value = defaultValue;
-                    Log.Trace("Config.Get(): Configuration key not found. Key: " + key + " - Using default value: "+ defaultValue);
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error("Config.Get(): " + err.Message);
+                Log.Trace("Config.Get(): Configuration key not found. Key: " + key + " - Using default value: " + defaultValue);
+                return defaultValue;
             }
             return value;
         }
@@ -104,7 +81,7 @@ namespace QuantConnect.Configuration
         /// <param name="value">The new value</param>
         public static void Set(string key, string value)
         {
-            _settings[key] = value;
+            Settings.Value[key] = value;
         }
 
         /// <summary>
@@ -151,8 +128,8 @@ namespace QuantConnect.Configuration
         public static T GetValue<T>(string key, T defaultValue = default(T))
             where T : IConvertible
         {
-            var value = Get(key);
-            if (string.IsNullOrEmpty(value))
+            string value;
+            if (!Settings.Value.TryGetValue(key, out value))
             {
                 Log.Trace("Config.GetValue(): " + key + " - Using default value: " + defaultValue);
                 return defaultValue;
@@ -163,7 +140,76 @@ namespace QuantConnect.Configuration
             {
                 return (T) Enum.Parse(type, value);
             }
-            return (T)Convert.ChangeType(value, type);
+            return (T) Convert.ChangeType(value, type);
+        }
+
+        /// <summary>
+        /// Parses the specified configuration file contents into a key value pair. This include logic
+        /// to detect the 'environment' and load those values on top of any default configuration
+        /// </summary>
+        /// <param name="configurationFileContents">The JSON configuration file's contents</param>
+        /// <returns>A dictionary of configuration keys to values</returns>
+        public static Dictionary<string, string> ParseConfigurationFile(string configurationFileContents)
+        {
+            var environment = string.Empty;
+            // begin with the defaults and lay on top of them
+            var settings = DefaultSettings.ToDictionary(x => x.Key, x => x.Value); 
+            var environmentSettings = new Dictionary<string, string>();
+            var configuration = JToken.Parse(configurationFileContents);
+            foreach (var rootItem in configuration)
+            {
+                if (rootItem.Type == JTokenType.Property && rootItem.HasValues)
+                {
+                    var children = rootItem.Children();
+                    foreach (var child in children)
+                    {
+                        // this is an environment
+                        if (child.Type == JTokenType.Object && rootItem.Path == environment)
+                        {
+                            if (child.HasValues)
+                            {
+                                var children2 = child.Children();
+                                foreach (var child2 in children2)
+                                {
+                                    if (child2.Type == JTokenType.Property)
+                                    {
+                                        if (child2.HasValues)
+                                        {
+                                            var children3 = child2.Children();
+                                            foreach (var child3 in children3)
+                                            {
+                                                if (child3.Type == JTokenType.String)
+                                                {
+                                                    var value = child3.Value<string>();
+                                                    var envKey = child3.Path.Substring(child3.Path.LastIndexOf('.') + 1);
+                                                    environmentSettings[envKey] = value;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // this is a top level configuration item
+                        else if (child.Type == JTokenType.String)
+                        {
+                            var value = child.Value<string>();
+                            if (child.Path == "environment")
+                            {
+                                environment = value;
+                            }
+                            settings[child.Path] = value;
+                        }
+                    }
+                }
+            }
+
+            // lay environmet settings on top of global settings
+            foreach (var environmentSetting in environmentSettings)
+            {
+                settings[environmentSetting.Key] = environmentSetting.Value;
+            }
+            return settings;
         }
     }
 }

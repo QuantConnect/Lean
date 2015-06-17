@@ -1,4 +1,13 @@
 {
+    // this configuration file works by first loading all top-level
+    // configuration items and then will load the specified environment
+    // on top, this provides a layering affect. environment names can be
+    // anything, and just require definition in this file. There's
+    // two predefined environments, 'backtesting' and 'live', feel free
+    // to add more!
+
+    "environment": "backtesting",
+
     // algorithm selector
     "algorithm-type-name": "BasicTemplateAlgorithm",
 
@@ -9,11 +18,11 @@
 	"language":"VisualBasic",
 
     // handlers
-    "log-handler":  "QuantConnect.Logging.CompositeLogHandler",
+    "log-handler": "QuantConnect.Logging.CompositeLogHandler",
     "messaging-handler": "QuantConnect.Messaging.Messaging",
     "job-queue-handler": "QuantConnect.Queues.JobQueue",
     "api-handler": "QuantConnect.Api.Api",
-	"result-handler":"QuantConnect.Lean.Engine.Results.ConsoleResultHandler",
+    "result-handler": "QuantConnect.Lean.Engine.Results.ConsoleResultHandler",
 
     // interactive brokers configuration
     "ib-account": "DUxxxx",
@@ -22,13 +31,34 @@
     "ib-host": "127.0.0.1",
     "ib-port": "4001",
     "ib-agent-description": "Individual",
-    "ib-use-tws": "true",
+    "ib-use-tws": "false",
     "ib-tws-dir": "C:\\Jts",
     "ib-controller-dir": "C:\\IBController",
+
+    // tradier configuration
+    "qc-user-id": "",
+    "tradier-account-id": "",
+    "tradier-access-token": "",
+    "tradier-refresh-token": "",
+    "tradier-issued-at": "",
+    "trader-lifespan": "",
 
     //Database Datafeed Connection:
     "database-address": "localhost",
     "database-user": "root",
     "database-password": "",
-    "database-name": "lean"
+    "database-name": "lean",
+
+    // defines the 'backtesting' environment
+    "backtesting": {
+        // the backtesting environment doesn't define anything special
+        // but you can redefine any configuration item here and it will
+        // be effective if this is the selected environment
+        //"algorithm-type-name": ""
+    },
+
+    // defines the 'live' environment
+    "live": {
+        "live-mode": "true"
+    }
 }

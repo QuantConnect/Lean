@@ -35,6 +35,17 @@ namespace QuantConnect.Util
         {
             return lookup.ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
         }
+        /// <summary>
+        /// Creates a dictionary enumerable of key value pairs
+        /// </summary>
+        /// <typeparam name="K">The key type</typeparam>
+        /// <typeparam name="V">The value type</typeparam>
+        /// <param name="lookup">The IEnumerable of KeyValuePair instance to convert to a dictionary</param>
+        /// <returns>A dictionary holding the same data as 'lookup'</returns>
+        public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>> lookup)
+        {
+            return lookup.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
 
         /// <summary>
         /// Returns true if the specified enumerable is null or has no elements
