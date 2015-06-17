@@ -16,7 +16,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
+using System.ComponentModel.Composition.Primitives;
+using System.ComponentModel.Composition.ReflectionModel;
 using System.Linq;
 
 namespace QuantConnect.Util
@@ -72,18 +75,51 @@ namespace QuantConnect.Util
         public T GetExportedValueByTypeName<T>(string typeName)
             where T : class
         {
-            var values = Instance.GetExportedValues<T>().ToList();
-
-            // search the values by type to find the requested type
-            var matchingType = values.Select(x => x.GetType()).FirstOrDefault(type => type.MatchesTypeName(typeName));
-            if (matchingType == null)
+            lock (_exportedValuesLockObject)
             {
-                throw new ArgumentException("Unable to locate any exports matching the requested typeName: " + typeName, "typeName");
+                T instance;
+                IEnumerable values;
+                var type = typeof (T);
+                if (_exportedValues.TryGetValue(type, out values))
+                {
+                    // if we've alread loaded this part, then just reserve the same one
+                    instance = values.OfType<T>().FirstOrDefault(x => x.GetType().MatchesTypeName(typeName));
+                    if (instance != null)
+                    {
+                        return instance;
+                    }
+                }
+
+                // we want to get the requested part without instantiating each one of that type
+                var selectedPart = _compositionContainer.Catalog.Parts
+                    .Select(x => new {part = x, Type = ReflectionModelServices.GetPartType(x).Value})
+                    .Where(x => type.IsAssignableFrom(x.Type))
+                    .Where(x => x.Type.MatchesTypeName(typeName))
+                    .Select(x => x.part)
+                    .FirstOrDefault();
+
+                if (selectedPart == null)
+                {
+                    throw new ArgumentException("Unable to locate any exports matching the requested typeName: " + typeName, "typeName");
+                }
+
+                var exportDefinition = selectedPart.ExportDefinitions.First(x => x.ContractName == AttributedModelServices.GetContractName(type));
+                instance = (T) selectedPart.CreatePart().GetExportedValue(exportDefinition);
+
+                // cache the new value for next time
+                if (values == null)
+                {
+                    values = new List<T> {instance};
+                    _exportedValues[type] = values;
+                }
+                else
+                {
+                    ((List<T>) values).Add(instance);
+                }
+
+                return instance;
             }
-
-            return values.First(x => x.GetType() == matchingType);
         }
-
         /// <summary>
         /// Gets all exports of type T
         /// </summary>
