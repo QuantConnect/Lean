@@ -33,9 +33,25 @@ namespace QuantConnect.Algorithm
         /// <returns>A new Identity indicator for the specified symbol and selector</returns>
         public Identity Identity(string symbol, Func<BaseData, decimal> selector = null)
         {
-            string name = CreateIndicatorName(symbol, "_Identity", null);
+            string name = CreateIndicatorName(string.Empty, symbol, null);
             var identity = new Identity(name);
             RegisterIndicator(symbol, identity, (Resolution?)null, selector);
+            return identity;
+        }
+
+        /// <summary>
+        /// Creates a new Identity indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The symbol whose values we want as an indicator</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <param name="selector">Selects a value from the BaseData, if null defaults to the .Value property (x => x.Value)</param>
+        /// <returns>A new Identity indicator for the specified symbol and selector</returns>
+        public Identity Identity(string symbol, Resolution resolution, Func<BaseData, decimal> selector = null)
+        {
+            string name = CreateIndicatorName(string.Empty, symbol, resolution);
+            var identity = new Identity(name);
+            RegisterIndicator(symbol, identity, resolution, selector);
             return identity;
         }
 
