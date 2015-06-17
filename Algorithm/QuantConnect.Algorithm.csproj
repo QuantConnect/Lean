@@ -95,31 +95,6 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Examples\BasicTemplateFillForwardAlgorithm.cs" />
-    <Compile Include="Examples\BenchmarkAlgorithm.cs" />
-    <Compile Include="Examples\BrokerageModelAlgorithm.cs" />
-    <Compile Include="Examples\BubbleAlgorithm.cs" />
-    <Compile Include="Examples\DailyAlgorithm.cs" />
-    <Compile Include="Examples\DividendAlgorithm.cs" />
-    <Compile Include="Examples\IndicatorSuiteAlgorithm.cs" />
-    <Compile Include="Examples\MarginCallEventsAlgorithm.cs" />
-    <Compile Include="Examples\MarketOnOpenOnCloseAlgorithm.cs" />
-    <Compile Include="Examples\MultipleSymbolConsolidationAlgorithm.cs" />
-    <Compile Include="Examples\QuandlImporterAlgorithm.cs" />
-    <Compile Include="Examples\BasicTemplateAlgorithm.cs" />
-    <Compile Include="Examples\CustomDataNIFTYAlgorithm.cs" />
-    <Compile Include="Examples\DisplacedMovingAverageRibbon.cs" />
-    <Compile Include="Examples\ETFGlobalRotationAlgorithm.cs" />
-    <Compile Include="Examples\CustomDataBitcoinAlgorithm.cs" />
-    <Compile Include="Examples\CustomChartingAlgorithm.cs" />
-    <Compile Include="Examples\DataConsolidationAlgorithm.cs" />
-    <Compile Include="Examples\MACDTrendAlgorithm.cs" />
-    <Compile Include="Examples\MovingAverageCrossAlgorithm.cs" />
-    <Compile Include="Examples\QuandlFuturesDataAlgorithm.cs" />
-    <Compile Include="Examples\RenkoConsolidatorAlgorithm.cs" />
-    <Compile Include="Examples\StressSymbolsAlgorithm.cs" />
-    <Compile Include="Examples\LiveFeaturesAlgorithm.cs" />
-    <Compile Include="Examples\TickDataFilteringAlgorithm.cs" />
     <Compile Include="QCAlgorithm.cs" />
     <Compile Include="QCAlgorithm.Trading.cs" />
     <Compile Include="QCAlgorithm.Indicators.cs" />
@@ -146,7 +121,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <Compile Include="Field.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
