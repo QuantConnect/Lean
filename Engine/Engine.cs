@@ -219,13 +219,23 @@ namespace QuantConnect.Lean.Engine
                         job = null;
                     }
                 } while (job == null);
+
+                // log the job endpoints
+                var setupHandlerTypeName = Config.Get("setup-handler", "ConsoleSetupHandler");
+                var transactionHandlerTypeName = Config.Get("transaction-handler", "BacktestingTransactionHandler");
+                var realTimeHandlerTypeName = Config.Get("real-time-handler", "BacktestingRealTimeHandler");
+                Log.Trace("JOB HANDLERS: ");
+                Log.Trace("         Setup: " + setupHandlerTypeName);
+                Log.Trace("  Transactions: " + transactionHandlerTypeName);
+                Log.Trace("      RealTime: " + realTimeHandlerTypeName);
+                Log.Trace("      DataFeed: " +  job.DataEndpoint);
                     
 
                 //-> Initialize messaging system
                 Notify.SetChannel(job.Channel);
 
                 //-> Create SetupHandler to configure internal algorithm state:
-                SetupHandler = Composer.Instance.GetExportedValueByTypeName<ISetupHandler>(Config.Get("setup-handler", "ConsoleSetupHandler"));
+                SetupHandler = Composer.Instance.GetExportedValueByTypeName<ISetupHandler>(setupHandlerTypeName);
 
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
                 ResultHandler = GetResultHandler(job);
@@ -272,8 +282,11 @@ namespace QuantConnect.Lean.Engine
                     //Load the associated handlers for data, transaction and realtime events:
                     ResultHandler.SetAlgorithm(algorithm);
                     DataFeed = GetDataFeedHandler(algorithm, _brokerage, job);
-                    TransactionHandler  = GetTransactionHandler(algorithm, _brokerage, ResultHandler, job);
-                    RealTimeHandler = Composer.Instance.GetExportedValueByTypeName<IRealTimeHandler>(Config.Get("real-time-handler", "BacktestingRealTimeHandler"));
+                    
+                    TransactionHandler = Composer.Instance.GetExportedValueByTypeName<ITransactionHandler>(transactionHandlerTypeName);
+                    TransactionHandler.Initialize(algorithm, _brokerage);
+                    
+                    RealTimeHandler = Composer.Instance.GetExportedValueByTypeName<IRealTimeHandler>(realTimeHandlerTypeName);
                     RealTimeHandler.Initialize(algorithm, job);
 
                     //Set the error handlers for the brokerage asynchronous errors.
@@ -507,33 +520,6 @@ namespace QuantConnect.Lean.Engine
             return df;
         }
 
-
-        /// <summary>
-        /// Get an instance of the transaction handler set by the task.
-        /// </summary>
-        /// <param name="algorithm">Algorithm instance</param>
-        /// <param name="job">Algorithm job packet</param>
-        /// <param name="brokerage">Brokerage instance to avoid access token duplication</param>
-        /// <param name="results">Results array for sending order events.</param>
-        /// <returns>Class matching ITransactionHandler interface</returns>
-        private static ITransactionHandler GetTransactionHandler(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler results, AlgorithmNodePacket job)
-        {
-            ITransactionHandler th;
-            switch (job.TransactionEndpoint)
-            {
-                case TransactionHandlerEndpoint.Brokerage:
-                    th = new BrokerageTransactionHandler(algorithm, brokerage);
-                    Log.Trace("Engine.GetTransactionHandler(): Selected Brokerage Transaction Models.");
-                    break;
-
-                //Operation from local files:
-                default:
-                    th = new BacktestingTransactionHandler(algorithm, brokerage as BacktestingBrokerage);
-                    Log.Trace("Engine.GetTransactionHandler(): Selected Backtesting Transaction Models.");
-                    break;
-            }
-            return th;
-        }
 
         /// <summary>
         /// Get an instance of the data feed handler we're requesting for this work.

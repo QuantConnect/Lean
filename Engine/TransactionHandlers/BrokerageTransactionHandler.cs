@@ -34,7 +34,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     {
         private bool _exitTriggered;
         private IAlgorithm _algorithm;
-        private readonly IBrokerage _brokerage;
+        private IBrokerage _brokerage;
         private bool _syncedLiveBrokerageCashToday = false;
 
         // this value is used for determining how confident we are in our cash balance update
@@ -68,7 +68,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="brokerage">The brokerage implementation to process orders and fire fill events</param>
-        public BrokerageTransactionHandler(IAlgorithm algorithm, IBrokerage brokerage)
+        public virtual void Initialize(IAlgorithm algorithm, IBrokerage brokerage)
         {
             if (brokerage == null)
             {

@@ -113,18 +113,6 @@ namespace QuantConnect.Packets
         /// </summary>
         [JsonProperty(PropertyName = "eDataEndpoint")]
         public DataFeedEndpoint DataEndpoint = DataFeedEndpoint.Backtesting;
-
-        /// <summary>
-        /// Transaction handler plugin to select for task
-        /// </summary>
-        [JsonProperty(PropertyName = "eTransactionEndpoint")]
-        public TransactionHandlerEndpoint TransactionEndpoint = TransactionHandlerEndpoint.Backtesting;
-
-        /// <summary>
-        /// Realtime events handler for this task
-        /// </summary>
-        [JsonProperty(PropertyName = "eRealTimeEndpoint")]
-        public RealTimeEndpoint RealTimeEndpoint = RealTimeEndpoint.Backtesting;
     } // End Node Packet:
 
 } // End of Namespace:

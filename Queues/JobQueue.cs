@@ -69,8 +69,6 @@ namespace QuantConnect.Queues
                 {
                     Type = PacketType.LiveNode,
                     DataEndpoint = DataFeedEndpoint.LiveTrading,
-                    RealTimeEndpoint = RealTimeEndpoint.LiveTrading,
-                    TransactionEndpoint = TransactionHandlerEndpoint.Brokerage,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
                     Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
                     Channel = Config.Get("job-channel"),
@@ -84,12 +82,6 @@ namespace QuantConnect.Queues
                     // import the brokerage data for the configured brokerage
                     var brokerageFactory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
                     liveJob.BrokerageData = brokerageFactory.BrokerageData;
-
-                    // if we're doing paper select the correct transaction handler
-                    if (liveJob.Brokerage == "PaperBrokerage")
-                    {
-                        liveJob.TransactionEndpoint = TransactionHandlerEndpoint.Backtesting;
-                    }
                 }
                 catch (Exception err)
                 {
@@ -104,8 +96,6 @@ namespace QuantConnect.Queues
             {
                 Type = PacketType.BacktestNode,
                 DataEndpoint = DataFeedEndpoint.FileSystem,
-                RealTimeEndpoint = RealTimeEndpoint.Backtesting,
-                TransactionEndpoint = TransactionHandlerEndpoint.Backtesting,
                 Algorithm = File.ReadAllBytes(AlgorithmLocation),
                 Version = Constants.Version,
                 BacktestId = Config.Get("algorithm-type-name")
