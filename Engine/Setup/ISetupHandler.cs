@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
@@ -25,6 +26,7 @@ namespace QuantConnect.Lean.Engine.Setup
     /// <summary>
     /// Interface to setup the algorithm. Pass in a raw algorithm, return one with portfolio, cash, etc already preset.
     /// </summary>
+    [InheritedExport(typeof(ISetupHandler))]
     public interface ISetupHandler : IDisposable
     {
         /// <summary>

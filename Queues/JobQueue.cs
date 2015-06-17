@@ -70,7 +70,6 @@ namespace QuantConnect.Queues
                     Type = PacketType.LiveNode,
                     DataEndpoint = DataFeedEndpoint.LiveTrading,
                     RealTimeEndpoint = RealTimeEndpoint.LiveTrading,
-                    SetupEndpoint = SetupHandlerEndpoint.Brokerage,
                     TransactionEndpoint = TransactionHandlerEndpoint.Brokerage,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
                     Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
@@ -105,7 +104,6 @@ namespace QuantConnect.Queues
             {
                 Type = PacketType.BacktestNode,
                 DataEndpoint = DataFeedEndpoint.FileSystem,
-                SetupEndpoint = SetupHandlerEndpoint.Console,
                 RealTimeEndpoint = RealTimeEndpoint.Backtesting,
                 TransactionEndpoint = TransactionHandlerEndpoint.Backtesting,
                 Algorithm = File.ReadAllBytes(AlgorithmLocation),

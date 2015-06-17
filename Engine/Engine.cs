@@ -225,7 +225,7 @@ namespace QuantConnect.Lean.Engine
                 Notify.SetChannel(job.Channel);
 
                 //-> Create SetupHandler to configure internal algorithm state:
-                SetupHandler = GetSetupHandler(job.SetupEndpoint);
+                SetupHandler = Composer.Instance.GetExportedValueByTypeName<ISetupHandler>(Config.Get("setup-handler", "ConsoleSetupHandler"));
 
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
                 ResultHandler = GetResultHandler(job);
@@ -570,36 +570,6 @@ namespace QuantConnect.Lean.Engine
             rh.Initialize(job);
             Log.Trace("Engine.GetResultHandler(): Loaded and Initialized Result Handler: " + resultHandler + "  v" + Constants.Version);
             return rh;
-        }
-
-
-        /// <summary>
-        /// Get the setup handler for this algorithm, depending on its use case.
-        /// </summary>
-        /// <param name="setupMethod">Setup handler</param>
-        /// <returns>Instance of a setup handler:</returns>
-        private static ISetupHandler GetSetupHandler(SetupHandlerEndpoint setupMethod)
-        {
-            var sh = default(ISetupHandler);
-
-            switch (setupMethod)
-            {
-                //Setup console handler:
-                case SetupHandlerEndpoint.Console:
-                    sh = new ConsoleSetupHandler();
-                    Log.Trace("Engine.GetSetupHandler(): Selected Console Algorithm Setup Handler.");
-                    break;
-                //Default, backtesting result handler:
-                case SetupHandlerEndpoint.Backtesting:
-                    sh = new BacktestingSetupHandler();
-                    Log.Trace("Engine.GetSetupHandler(): Selected Backtesting Algorithm Setup Handler.");
-                    break;
-                case SetupHandlerEndpoint.Brokerage:
-                    sh = new BrokerageSetupHandler();
-                    Log.Trace("Engine.GetSetupHandler(): Selected Brokerage Algorithm Setup Handler.");
-                    break;
-            }
-            return sh;
         }
     } // End Algorithm Node Core Thread
     

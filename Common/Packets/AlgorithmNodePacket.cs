@@ -121,21 +121,6 @@ namespace QuantConnect.Packets
         public TransactionHandlerEndpoint TransactionEndpoint = TransactionHandlerEndpoint.Backtesting;
 
         /// <summary>
-        /// Result endpoint plugin to select for task
-        /// </summary>
-        /// <remarks>
-        ///     DEPRECATED: Maintained here for temporary consistency. Eventually all the endpoint enums will be replaced with MEF / Type import loading by config.
-        /// </remarks>
-        //[JsonProperty(PropertyName = "eResultEndpoint")]
-        //public ResultHandlerEndpoint ResultEndpoint = ResultHandlerEndpoint.Backtesting;
-
-        /// <summary>
-        /// Setup handler endpoint for this task
-        /// </summary>
-        [JsonProperty(PropertyName = "eSetupEndpoint")]
-        public SetupHandlerEndpoint SetupEndpoint = SetupHandlerEndpoint.Backtesting;
-
-        /// <summary>
         /// Realtime events handler for this task
         /// </summary>
         [JsonProperty(PropertyName = "eRealTimeEndpoint")]

@@ -55,10 +55,12 @@
         // but you can redefine any configuration item here and it will
         // be effective if this is the selected environment
         //"algorithm-type-name": ""
+        "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler"
     },
 
     // defines the 'live' environment
     "live": {
-        "live-mode": "true"
+        "live-mode": "true",
+        "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler"
     }
 }
