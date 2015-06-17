@@ -40,7 +40,7 @@ namespace QuantConnect.Queues
             get
             {
                 // we expect this dll to be copied into the output directory
-                return "QuantConnect.Algorithm.dll";
+                return "QuantConnect.Algorithm.CSharp.dll";
             }
         }
 
@@ -110,6 +110,7 @@ namespace QuantConnect.Queues
                 Version = Constants.Version,
                 BacktestId = Config.Get("algorithm-type-name")
             };
+
             return backtestJob;
         }
 

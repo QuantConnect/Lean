@@ -443,7 +443,7 @@ namespace QuantConnect.Lean.Engine
 
                 //Delete the message from the job queue:
                 JobQueue.AcknowledgeJob(job);
-                Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
+                if (job != null) Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
 
                 //Attempt to clean up ram usage:
                 GC.Collect();

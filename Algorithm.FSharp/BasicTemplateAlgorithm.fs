@@ -18,7 +18,6 @@ namespace QuantConnect.Orders
 namespace QuantConnect.Algorithm
 namespace QuantConnect.Securities
 namespace QuantConnect.Algorithm.FSharp
-namespace QuantConnect.Securities.Forex
 
 open System
 open System.Collections.Generic
@@ -29,23 +28,22 @@ open QuantConnect.Orders
 
 
 // Declare algorithm name
-type FSharpBasicTemplateAlgorithm() = 
+type BasicTemplateAlgorithm() = 
 
     //Reuse all the base class of QCAlgorithm
     inherit QCAlgorithm()
         
         //Implement core methods:
-        override this.Initialize() = printfn "woof"
+        override this.Initialize() = 
+            this.SetCash(100000)
+            this.SetStartDate(2013, 10, 07)
+            this.SetEndDate(2013, 10, 11)
+            this.AddSecurity(SecurityType.Equity, "SPY", Resolution.Second)
 
         //TradeBars Data Event
-        member this.OnData(bar:TradeBars) = printfn "woof"
-
-        //Ticks Data Event
-        member this.OnData(bar:Ticks) = printfn "woof"
-
-        //Custom Events:
-        override this.OnEndOfDay() = printfn "woof"
-        override this.OnEndOfAlgorithm() = printfn "woof"
-        override this.OnOrderEvent(orderEvent:OrderEvent) = printfn "woof"
-        override this.OnMarginCallWarning() = printfn "woof"
-        override this.OnMarginCall(orders)  = printfn "woof"
+        member this.OnData(bar:TradeBars) = 
+            
+                if not this.Portfolio.Invested then 
+                    this.SetHoldings("SPY", 1);
+                else 
+                    ()
