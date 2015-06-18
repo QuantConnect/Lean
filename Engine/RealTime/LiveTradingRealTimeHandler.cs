@@ -111,9 +111,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             _isActive = true;
             _time = DateTime.Now;
 
-            //Set up the realtime events:
-            SetupEvents(DateTime.Now);
-
             //Continue looping until exit triggered:
             while (!_exitTriggered)
             {
@@ -121,9 +118,6 @@ namespace QuantConnect.Lean.Engine.RealTime
                 var nextSecond = DateTime.Now.RoundUp(TimeSpan.FromSeconds(1));
                 var delay = Convert.ToInt32((nextSecond - DateTime.Now).TotalMilliseconds);
                 Thread.Sleep(delay < 0 ? 1 : delay);
-
-                //Set the current time:
-                SetTime(DateTime.Now);
 
                 //Refresh event processing:
                 ScanEvents();

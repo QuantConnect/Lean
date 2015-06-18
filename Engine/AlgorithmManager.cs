@@ -205,10 +205,6 @@ namespace QuantConnect.Lean.Engine
                 //produce incorrect samples (they'll take into account this time step's new price values)
                 if (backtestMode)
                 {
-                    //Refresh the realtime event monitor: 
-                    //in backtest mode use the algorithms clock as realtime.
-                    realtime.SetTime(time);
-
                     //On day-change sample equity and daily performance for statistics calculations
                     if (_previousTime.Date != time.Date)
                     {
@@ -236,8 +232,9 @@ namespace QuantConnect.Lean.Engine
                 //Update the securities properties: first before calling user code to avoid issues with data
                 algorithm.Securities.Update(time, newData);
 
-                //Pass in the new time first:
+                //Set the algorithm and real time handler's time
                 algorithm.SetDateTime(time);
+                realtime.SetTime(time);
 
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
