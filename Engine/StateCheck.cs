@@ -26,28 +26,34 @@ namespace QuantConnect.Lean.Engine
     /// </summary>
     public class StateCheck
     {
-
         /// DB Ping Class
         public class Ping
         {
             // set to true to break while loop in Run()
             private static volatile bool _exitTriggered;
 
+            private readonly AlgorithmManager _algorithmManager;
+
+            public Ping(AlgorithmManager algorithmManager)
+            {
+                _algorithmManager = algorithmManager;
+            }
+
             /// DB Ping Run Method:
-            public static void Run()
+            public void Run()
             {
                 while (!_exitTriggered)
                 {
                     try
                     {
                         Thread.Sleep(500);
-                        if (AlgorithmManager.AlgorithmId != "" && AlgorithmManager.QuitState == false)
+                        if (_algorithmManager.AlgorithmId != "" && _algorithmManager.QuitState == false)
                         {
                             //Get the state from the central server:
-                            var state = Engine.Api.GetAlgorithmStatus(AlgorithmManager.AlgorithmId);
+                            var state = Engine.Api.GetAlgorithmStatus(_algorithmManager.AlgorithmId);
 
                             //Set state via get/set method:
-                            AlgorithmManager.SetStatus(state.Status);
+                            _algorithmManager.SetStatus(state.Status);
 
                             //Set which chart the user is look at, so we can reduce excess messaging (e.g. trading 100 symbols, only send 1).
                             Engine.ResultHandler.SetChartSubscription(state.ChartSubscription);

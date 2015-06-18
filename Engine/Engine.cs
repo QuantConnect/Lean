@@ -183,14 +183,15 @@ namespace QuantConnect.Lean.Engine
             Notify.Initialize();
             JobQueue.Initialize();
 
+            var algorithmManager = new AlgorithmManager();
+
             //Start monitoring the backtest active status:
-            var statusPingThread = new Thread(StateCheck.Ping.Run);
+            var statusPing = new StateCheck.Ping(algorithmManager);
+            var statusPingThread = new Thread(statusPing.Run);
             statusPingThread.Start();
 
             try
             {
-                //Reset algo manager internal variables preparing for a new algorithm.
-                AlgorithmManager.ResetManager();
 
                 //Reset thread holders.
                 var initializeComplete = false;
@@ -317,7 +318,7 @@ namespace QuantConnect.Lean.Engine
                         var isolator = new Isolator();
 
                         // Execute the Algorithm Code:
-                        var complete = isolator.ExecuteWithTimeLimit(SetupHandler.MaximumRuntime, AlgorithmManager.TimeLoopWithinLimits, () =>
+                        var complete = isolator.ExecuteWithTimeLimit(SetupHandler.MaximumRuntime, algorithmManager.TimeLoopWithinLimits, () =>
                         {
                             try
                             {
@@ -325,7 +326,7 @@ namespace QuantConnect.Lean.Engine
                                 // -> Using this Data Feed, 
                                 // -> Send Orders to this TransactionHandler, 
                                 // -> Send Results to ResultHandler.
-                                AlgorithmManager.Run(job, algorithm, DataFeed, TransactionHandler, ResultHandler, SetupHandler, RealTimeHandler, isolator.CancellationToken);
+                                algorithmManager.Run(job, algorithm, DataFeed, TransactionHandler, ResultHandler, RealTimeHandler, isolator.CancellationToken);
                             }
                             catch (Exception err)
                             {
@@ -406,7 +407,7 @@ namespace QuantConnect.Lean.Engine
                         //Diagnostics Completed, Send Result Packet:
                         var totalSeconds = (DateTime.Now - startTime).TotalSeconds;
                         ResultHandler.DebugMessage(string.Format("Algorithm Id:({0}) completed in {1} seconds at {2}k data points per second. Processing total of {3} data points.",
-                            job.AlgorithmId, totalSeconds.ToString("F2"), ((AlgorithmManager.DataPoints / (double)1000) / totalSeconds).ToString("F0"), AlgorithmManager.DataPoints.ToString("N0")));
+                            job.AlgorithmId, totalSeconds.ToString("F2"), ((algorithmManager.DataPoints / (double)1000) / totalSeconds).ToString("F0"), algorithmManager.DataPoints.ToString("N0")));
 
                         ResultHandler.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, statistics, banner);
                     }
@@ -455,8 +456,8 @@ namespace QuantConnect.Lean.Engine
             finally
             {
                 //No matter what for live mode; make sure we've set algorithm status in the API for "not running" conditions:
-                if (LiveMode && AlgorithmManager.State != AlgorithmStatus.Running && AlgorithmManager.State != AlgorithmStatus.RuntimeError)
-                    Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmManager.State);
+                if (LiveMode && algorithmManager.State != AlgorithmStatus.Running && algorithmManager.State != AlgorithmStatus.RuntimeError)
+                    Api.SetAlgorithmStatus(job.AlgorithmId, algorithmManager.State);
 
                 //Delete the message from the job queue:
                 JobQueue.AcknowledgeJob(job);
