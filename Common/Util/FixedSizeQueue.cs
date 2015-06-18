@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -15,14 +15,14 @@
 
 using System.Collections.Generic;
 
-namespace QuantConnect 
+namespace QuantConnect.Util 
 {
     /// <summary>
     /// Helper method for a limited length queue which self-removes the extra elements.
     /// http://stackoverflow.com/questions/5852863/fixed-size-queue-which-automatically-dequeues-old-values-upon-new-enques
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class FixedSizedQueue<T> : Queue<T>
+    /// <typeparam name="T">The type of item the queue holds</typeparam>
+    public class FixedSizeQueue<T> : Queue<T>
     {
         private int _limit = -1;
 
@@ -38,7 +38,7 @@ namespace QuantConnect
         /// <summary>
         /// Create a new fixed length queue:
         /// </summary>
-        public FixedSizedQueue(int limit)
+        public FixedSizeQueue(int limit)
             : base(limit)
         {
             Limit = limit;
@@ -56,6 +56,4 @@ namespace QuantConnect
             base.Enqueue(item);
         }
     }
-
-
-} // End QC Namespace
+}

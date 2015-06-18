@@ -281,41 +281,6 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Realtime events handler options for handling realtime events in the algorithm
-    /// </summary>
-    public enum RealTimeEndpoint
-    {
-        /// Backtesting Faked RealTime Events
-        Backtesting,
-        /// Live Trading RealTime Events
-        LiveTrading
-    }
-
-    /// <summary>
-    /// Setup handler options for setting up algorithm state and the livetrading/backtest requirements.
-    /// </summary>
-    public enum SetupHandlerEndpoint
-    {
-        /// Configure algorithm+job for backtesting:
-        Backtesting,
-        /// Configure algorithm+job for the console:
-        Console,
-        /// Live trading against a user's brokerage
-        Brokerage
-    }
-
-    /// <summary>
-    /// Transaction handler options for selecting who processes the transactions
-    /// </summary>
-    public enum TransactionHandlerEndpoint
-    {
-        /// Use Backtesting Models to Process Transactions
-        Backtesting,
-        /// Use a brokerage for live/paper trading in realtime
-        Brokerage
-    }
-
-    /// <summary>
     /// Cloud storage permission options.
     /// </summary>
     public enum StoragePermissions

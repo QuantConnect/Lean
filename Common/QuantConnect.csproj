@@ -181,7 +181,6 @@
     <Compile Include="Packets\Packet.cs" />
     <Compile Include="Packets\RuntimeErrorPacket.cs" />
     <Compile Include="Packets\SecurityTypesPacket .cs" />
-    <Compile Include="Queues.cs" />
     <Compile Include="Data\BaseData.cs" />
     <Compile Include="Data\IBaseData.cs" />
     <Compile Include="Data\SubscriptionDataConfig.cs" />
@@ -226,6 +225,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\Composer.cs" />
     <Compile Include="Util\ExpressionBuilder.cs" />
+    <Compile Include="Util\FixedSizeQueue.cs" />
     <Compile Include="Util\FixedSizeHashQueue.cs" />
     <Compile Include="Util\FuncTextWriter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />

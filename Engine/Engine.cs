@@ -82,12 +82,15 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Primary Analysis Thread:
         /// </summary>
-        public static void Main(string[] args) 
+        public static void Main(string[] args)
         {
+            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+
             //Initialize:
             string mode = "RELEASE";
-            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
-       
+            var isLocal = Config.GetBool("local");
+            var liveMode = Config.GetBool("live-mode");
+
             #if DEBUG 
                 mode = "DEBUG";
             #endif
@@ -123,23 +126,19 @@ namespace QuantConnect.Lean.Engine
 
             // log the job endpoints
             Log.Trace("JOB HANDLERS: ");
-            Log.Trace("         DataFeed:     " + leanEngineAlgorithmHandlers.DataFeed);
-            Log.Trace("         Setup:        " + leanEngineAlgorithmHandlers.Setup);
-            Log.Trace("         RealTime:     " + leanEngineAlgorithmHandlers.RealTime);
-            Log.Trace("         Results:      " + leanEngineAlgorithmHandlers.Results);
-            Log.Trace("         Transactions: " + leanEngineAlgorithmHandlers.Transactions);
+            Log.Trace("         DataFeed:     " + leanEngineAlgorithmHandlers.DataFeed.GetType().FullName);
+            Log.Trace("         Setup:        " + leanEngineAlgorithmHandlers.Setup.GetType().FullName);
+            Log.Trace("         RealTime:     " + leanEngineAlgorithmHandlers.RealTime.GetType().FullName);
+            Log.Trace("         Results:      " + leanEngineAlgorithmHandlers.Results.GetType().FullName);
+            Log.Trace("         Transactions: " + leanEngineAlgorithmHandlers.Transactions.GetType().FullName);
 
             //Setup packeting, queue and controls system: These don't do much locally.
             leanEngineSystemHandlers.Initialize();
 
-            bool isLocal = Config.GetBool("local");
-            var liveMode = Config.GetBool("live-mode");
-
-            var engine = new Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
-            engine.Run();
-
-            //Final disposals.
-            leanEngineSystemHandlers.Dispose();
+            using (var engine = new Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode))
+            {
+                engine.Run();
+            }
             
             // Make the console window pause so we can read log output before exiting and killing the application completely
             if (isLocal)
@@ -192,16 +191,6 @@ namespace QuantConnect.Lean.Engine
                     //-> Pull job from QuantConnect job queue, or, pull local build:
                     job = _systemHandlers.JobQueue.NextJob(out algorithmPath); // Blocking.
 
-                    // verify the job matches our live mode flag
-                    if (job is LiveNodePacket && !_liveMode)
-                    {
-                        continue;
-                    }
-                    if (job is BacktestNodePacket && _liveMode)
-                    {
-                        continue;
-                    }
-
                     // if the job version doesn't match this instance version then we can't process it
                     // we also don't want to reprocess redelivered live jobs
                     if (job.Version != Constants.Version || (_liveMode && job.Redelivered))
@@ -221,8 +210,6 @@ namespace QuantConnect.Lean.Engine
 
                 //-> Initialize messaging system
                 _systemHandlers.Notify.SetChannel(job.Channel);
-
-                //-> Create SetupHandler to configure internal algorithm state:
 
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
                 _algorithmHandlers.Results.Initialize(job, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.DataFeed, _algorithmHandlers.Setup);

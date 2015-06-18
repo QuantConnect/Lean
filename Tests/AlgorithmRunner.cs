@@ -64,6 +64,8 @@ namespace QuantConnect.Tests
             {
                 Assert.AreEqual(stat.Value, statistics[stat.Key], "Failed on " + stat.Key);
             }
+
+            engine.Dispose();
         }
     }
 }

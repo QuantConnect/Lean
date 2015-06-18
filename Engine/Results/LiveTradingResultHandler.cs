@@ -323,7 +323,7 @@ namespace QuantConnect.Lean.Engine.Results
                             deltaCharts.Add(chart.Value.Name, chart.Value.GetUpdates());
                         }
                     }
-                    Log.Trace("LiveTradingResultHandler.Update(): Build delta charts");
+                    Log.Trace("LiveTradingResultHandler.Update(): End build delta charts");
 
                     //Profit loss changes, get the banner statistics, summary information on the performance for the headers.
                     var holdings = new Dictionary<string, Holding>();

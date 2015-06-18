@@ -398,7 +398,7 @@ namespace QuantConnect.Algorithm
         /// <returns></returns>
         public LinearWeightedMovingAverage LWMA(string symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
         {
-            string name = QuantConnect.Algorithm.QCAlgorithm.CreateIndicatorName(symbol, "LWMA" + period, resolution);
+            string name = CreateIndicatorName(symbol, "LWMA" + period, resolution);
             var lwma = new LinearWeightedMovingAverage(name, period);
             RegisterIndicator(symbol, lwma, resolution, selector);
             return lwma;
@@ -699,8 +699,12 @@ namespace QuantConnect.Algorithm
         /// <param name="type">The indicator type, for example, 'SMA5'</param>
         /// <param name="resolution">The resolution requested</param>
         /// <returns>A unique for the given parameters</returns>
-        protected static string CreateIndicatorName(string symbol, string type, Resolution? resolution)
+        protected string CreateIndicatorName(string symbol, string type, Resolution? resolution)
         {
+            if (!resolution.HasValue)
+            {
+                resolution = GetSubscription(symbol).Resolution;
+            }
             string res;
             switch (resolution)
             {

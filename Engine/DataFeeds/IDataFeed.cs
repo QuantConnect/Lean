@@ -28,7 +28,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Datafeed interface for creating custom datafeed sources.
     /// </summary>
-    [InheritedExport]
+    [InheritedExport(typeof(IDataFeed))]
     public interface IDataFeed
     {
         /// <summary>

@@ -32,6 +32,7 @@ namespace QuantConnect.Views.WinForms
     /// </summary>
     public partial class LeanEngineWinForm : Form
     {
+        private readonly Engine _engine;
         //Form Controls:
         private RichTextBox _console;
 
@@ -47,6 +48,7 @@ namespace QuantConnect.Views.WinForms
         /// <param name="engine">Accept the engine instance we just launched</param>
         public LeanEngineWinForm(Engine engine)
         {
+            _engine = engine;
             //Setup the State:
             _resultsHandler = engine.AlgorithmHandlers.Results;
 

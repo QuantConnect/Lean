@@ -123,10 +123,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return;
             }
 
-            //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
-            // we're waiting for the trigger archive to enqueue and set _data to null
-            while (_data != null && _data.Time < ComputeBarStartTime())
-            { Thread.Sleep(1); } 
+            try
+            {
+                //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
+                // we're waiting for the trigger archive to enqueue and set _data to null
+                while (_data != null && _data.Time < ComputeBarStartTime())
+                { Thread.Sleep(1); }
+            }
+            catch (NullReferenceException)
+            {
+                // we were waiting for _data to go null, it just so happened to go null
+                // between the null check and the comparison
+            }
 
             lock (_lock)
             {
@@ -147,11 +155,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return;
             }
 
-            //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
-            // we're waiting for the trigger archive to enqueue and set _data to null
             var barStartTime = ComputeBarStartTime();
-            while (_data != null && _data.Time < barStartTime)
-            { Thread.Sleep(1); } 
+            try
+            {
+                //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
+                // we're waiting for the trigger archive to enqueue and set _data to null
+                while (_data != null && _data.Time < barStartTime)
+                { Thread.Sleep(1); }
+            }
+            catch (NullReferenceException)
+            {
+                // we were waiting for _data to go null, it just so happened to go null
+                // between the null check and the comparison
+            }
             
             lock (_lock)
             {

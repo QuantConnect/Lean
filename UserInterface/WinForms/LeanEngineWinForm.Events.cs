@@ -29,6 +29,7 @@ namespace QuantConnect.Views.WinForms
         /// </summary>
         private void OnClosed(object sender, EventArgs eventArgs)
         {
+            _engine.Dispose();
             Environment.Exit(0);
         }
 

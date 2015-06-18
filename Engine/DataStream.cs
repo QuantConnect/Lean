@@ -84,7 +84,7 @@ namespace QuantConnect.Lean.Engine
                 var newData = new Dictionary<int, List<BaseData>>();
 
                 // spin wait until the feed catches up to our frontier
-                WaitForDataOrEndOfBridges(_feed, frontier);
+                WaitForDataOrEndOfBridges(frontier);
 
                 for (var i = 0; i < _subscriptions; i++)
                 {
@@ -193,9 +193,8 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Waits until the data feed is ready for the data stream to pull data from it.
         /// </summary>
-        /// <param name="feed">The IDataFeed instance populating the bridges</param>
         /// <param name="dataStreamFrontier">The frontier of the data stream</param>
-        private void WaitForDataOrEndOfBridges(IDataFeed feed, DateTime dataStreamFrontier)
+        private void WaitForDataOrEndOfBridges(DateTime dataStreamFrontier)
         {
             //Make sure all bridges have data to to peek sync properly.
 
@@ -209,7 +208,7 @@ namespace QuantConnect.Lean.Engine
             }
 
             //Waiting for data in the bridges:
-            while (!AllBridgesHaveData(feed) && DateTime.UtcNow < timeout)
+            while (!AllBridgesHaveData() && DateTime.UtcNow < timeout)
             {
                 Thread.Sleep(1);
             }
@@ -218,7 +217,7 @@ namespace QuantConnect.Lean.Engine
             //this acts as a virtual lock around the bridge so we can wait for the feed
             //to be ahead of us
             // if we're out of data then the feed will never update (it will stay here forever if there's no more data, so use a timeout!!)
-            while (dataStreamFrontier > feed.LoadedDataFrontier && (!feed.EndOfBridges && !feed.LoadingComplete) && DateTime.UtcNow < timeout)
+            while (dataStreamFrontier > _feed.LoadedDataFrontier && (!_feed.EndOfBridges && !_feed.LoadingComplete) && DateTime.UtcNow < timeout)
             {
                 Thread.Sleep(1);
             }
@@ -229,15 +228,14 @@ namespace QuantConnect.Lean.Engine
         /// 
         /// This determines whether or not the data stream can pull data from the data feed.
         /// </summary>
-        /// <param name="feed">Feed Interface with concurrent connection between producer and consumer</param>
         /// <returns>Boolean true more data to download</returns>
-        private bool AllBridgesHaveData(IDataFeed feed)
+        private bool AllBridgesHaveData()
         {
             //Lock on the bridge to scan if it has data:
             for (var i = 0; i < _subscriptions; i++)
             {
-                if (feed.EndOfBridge[i]) continue;
-                if (feed.Bridge[i].IsEmpty)
+                if (_feed.EndOfBridge[i]) continue;
+                if (_feed.Bridge[i].IsEmpty)
                 {
                     return false;
                 }

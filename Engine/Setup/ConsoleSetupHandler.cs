@@ -135,19 +135,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
                 else
                 {
-                    var liveJob = baseJob as LiveNodePacket;
-                    
-                    //Live Job Parameters:
-                    liveJob.DeployId = "LOCALHOST";
-                    liveJob.Type = PacketType.LiveNode;
-
-                    //Call in the brokerage setup:
-                    var setup = new BrokerageSetupHandler();
-                    setup.Setup(algorithm, out brokerage, baseJob, resultHandler);
-
-                    //Live Specific Parameters:
-                    StartingDate = DateTime.Now;
-                    StartingPortfolioValue = algorithm.Portfolio.Cash;
+                    throw new Exception("The ConsoleSetupHandler is for backtests only. Use the BrokerageSetupHandler.");
                 }
             }
             catch (Exception err)
