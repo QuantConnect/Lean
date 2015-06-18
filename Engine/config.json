@@ -14,7 +14,7 @@
     // engine
     "local": true,
     "data-folder": "../../../Data/",
-	"language":"VisualBasic",
+	"language":"CSharp",
 
     // handlers
     "log-handler": "QuantConnect.Logging.CompositeLogHandler",
