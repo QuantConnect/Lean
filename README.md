@@ -19,6 +19,12 @@ The QuantQuote converter ports an extracted QuantQuote order to QuantConnect dat
  - Directory where Lean Data is located "Lean/Data".
  - Resolution of the QuantQuote data.
 
+## Oanda Downloader ##
+
+Download data directly from the Oanda database using your personal access token. The downloader will save the information to your FX directory.
+
+ 
+
   [1]: https://lean.quantconnect.com "Lean Open Source Home Page"
   [2]: https://lean.quantconnect.com/docs "Lean Documentation"
   [3]: https://github.com/QuantConnect/Lean/archive/master.zip
