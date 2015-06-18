@@ -14,7 +14,11 @@
     // engine
     "local": true,
     "data-folder": "../../../Data/",
+
+    // languages match the project name, QuantConnect.Algorithm.{language}.dll
     "language": "CSharp",
+    //"language": "FSharp",
+    //"language": "VisualBasic",
 
     // handlers
     "log-handler": "QuantConnect.Logging.CompositeLogHandler",
