@@ -188,7 +188,8 @@ namespace QuantConnect.Lean.Engine
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Trace("AlgorithmManager.Run(): Begin DataStream - Start: " + algorithm.StartDate + " Stop: " + algorithm.EndDate);
-            foreach (var newData in DataStream.GetData(feed, algorithm.StartDate))
+            var dataStream = new DataStream(feed);
+            foreach (var newData in dataStream.GetData(algorithm.StartDate))
             {
                 // reset our timer on each loop
                 _currentTimeStepTime = DateTime.UtcNow;
@@ -199,7 +200,7 @@ namespace QuantConnect.Lean.Engine
                 //Execute with TimeLimit Monitor:
                 if (token.IsCancellationRequested) return;
 
-                var time = DataStream.AlgorithmTime;
+                var time = dataStream.AlgorithmTime;
 
                 //If we're in backtest mode we need to capture the daily performance. We do this here directly
                 //before updating the algorithm state with the new data from this time step, otherwise we'll
@@ -560,8 +561,8 @@ namespace QuantConnect.Lean.Engine
 
             //Take final samples:
             results.SampleRange(algorithm.GetChartUpdates());
-            results.SampleEquity(DataStream.AlgorithmTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
-            results.SamplePerformance(DataStream.AlgorithmTime, Math.Round((algorithm.Portfolio.TotalPortfolioValue - startingPortfolioValue) * 100 / startingPortfolioValue, 10));
+            results.SampleEquity(dataStream.AlgorithmTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
+            results.SamplePerformance(dataStream.AlgorithmTime, Math.Round((algorithm.Portfolio.TotalPortfolioValue - startingPortfolioValue) * 100 / startingPortfolioValue, 10));
         } // End of Run();
 
         /// <summary>

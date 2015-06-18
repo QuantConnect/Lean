@@ -28,61 +28,70 @@ namespace QuantConnect.Lean.Engine
     /// Data stream class takes a datafeed hander and converts it into a synchronized enumerable data format for looping 
     /// in the primary algorithm thread.
     /// </summary>
-    public static class DataStream
+    public class DataStream
     {
+        private readonly IDataFeed _feed;
+
         //Count of bridges and subscriptions.
-        private static int _subscriptions;
+        private int _subscriptions;
 
         /// <summary>
         /// The frontier time of the data stream
         /// </summary>
-        public static DateTime AlgorithmTime { get; private set; }
+        public DateTime AlgorithmTime { get; private set; }
+
+        /// <summary>
+        /// Initializes a new <see cref="DataStream"/> for the specified data feed instance
+        /// </summary>
+        /// <param name="feed">The data feed to be streamed</param>
+        public DataStream(IDataFeed feed)
+        {
+            _feed = feed;
+        }
 
         /// <summary>
         /// Process over the datafeed cross thread bridges to generate an enumerable sorted collection of the data, ready for a consumer
         /// to use and already synchronized in time.
         /// </summary>
-        /// <param name="feed">DataFeed object</param>
         /// <param name="frontierOrigin">Starting date for the data feed</param>
         /// <returns></returns>
-        public static IEnumerable<Dictionary<int, List<BaseData>>> GetData(IDataFeed feed, DateTime frontierOrigin)
+        public IEnumerable<Dictionary<int, List<BaseData>>> GetData(DateTime frontierOrigin)
         {
             //Initialize:
-            _subscriptions = feed.Subscriptions.Count;
+            _subscriptions = _feed.Subscriptions.Count;
             AlgorithmTime = frontierOrigin;
             long algorithmTime = AlgorithmTime.Ticks;
             var frontier = frontierOrigin;
             var nextEmitTime = DateTime.MinValue;
-            var periods = feed.Subscriptions.Select(x => x.Resolution.ToTimeSpan()).ToArray();
-
+            var periods = _feed.Subscriptions.Select(x => x.Resolution.ToTimeSpan()).ToArray();
             //Wait for datafeeds to be ready, wait for first data to arrive:
-            while (feed.Bridge.Length != _subscriptions) Thread.Sleep(100);
+            while (_feed.Bridge.Length != _subscriptions) Thread.Sleep(100);
 
             // clear data first when in live mode, start with fresh data
             if (Engine.LiveMode)
             {
-                feed.PurgeData();
+                _feed.PurgeData();
             }
 
             //Get all data in queues: return as a sorted dictionary:
-            while (!feed.EndOfBridges)
+            while (!_feed.EndOfBridges)
             {
                 //Reset items which are not fill forward:
                 long earlyBirdTicks = 0;
                 var newData = new Dictionary<int, List<BaseData>>();
 
                 // spin wait until the feed catches up to our frontier
-                WaitForDataOrEndOfBridges(feed, frontier);
+                WaitForDataOrEndOfBridges(_feed, frontier);
 
                 for (var i = 0; i < _subscriptions; i++)
                 {
                     //If there's data on the bridge, check to see if it's time to pull it off, if it's in the future
                     // we'll record the time as 'earlyBirdTicks' so we can fast forward the frontier time
-                    while (!feed.Bridge[i].IsEmpty)
+                    while (!_feed.Bridge[i].IsEmpty)
                     {
                         //Look at first item on list, leave it there until time passes this item.
                         List<BaseData> result;
-                        if (!feed.Bridge[i].TryPeek(out result))
+                        if (!_feed.Bridge[i].TryPeek(out result))
                         {
                             // if there's no item skip to the next subscription
                             break;
@@ -111,7 +120,7 @@ namespace QuantConnect.Lean.Engine
 
                         //Pull a grouped time list out of the bridge
                         List<BaseData> dataPoints;
-                        if (feed.Bridge[i].TryDequeue(out dataPoints))
+                        if (_feed.Bridge[i].TryDequeue(out dataPoints))
                         {
                             // round the time down based on the requested resolution for fill forward data
                             // this is a temporary fix, long term fill forward logic should be moved into this class
@@ -161,7 +170,7 @@ namespace QuantConnect.Lean.Engine
                     //Seek forward in time to next data event from stream: there's nothing here for us to do now: why loop over empty seconds
                     frontier = new DateTime(earlyBirdTicks);
                 }
-                else if (feed.EndOfBridges)
+                else if (_feed.EndOfBridges)
                 {
                     // we're out of data or quit
                     break;
@@ -183,7 +192,7 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         /// <param name="feed">The IDataFeed instance populating the bridges</param>
         /// <param name="dataStreamFrontier">The frontier of the data stream</param>
-        private static void WaitForDataOrEndOfBridges(IDataFeed feed, DateTime dataStreamFrontier)
+        private void WaitForDataOrEndOfBridges(IDataFeed feed, DateTime dataStreamFrontier)
         {
             //Make sure all bridges have data to to peek sync properly.
 
@@ -219,7 +228,7 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         /// <param name="feed">Feed Interface with concurrent connection between producer and consumer</param>
         /// <returns>Boolean true more data to download</returns>
-        private static bool AllBridgesHaveData(IDataFeed feed)
+        private bool AllBridgesHaveData(IDataFeed feed)
         {
             //Lock on the bridge to scan if it has data:
             for (var i = 0; i < _subscriptions; i++)
@@ -231,14 +240,6 @@ namespace QuantConnect.Lean.Engine
                 }
             }
             return true;
-        }
-
-        /// <summary>
-        /// Resets the frontier time to DateTime.MinValue
-        /// </summary>
-        public static void ResetFrontier()
-        {
-            AlgorithmTime = new DateTime();
         }
     }
 }
