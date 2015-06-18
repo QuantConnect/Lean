@@ -43,7 +43,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "QuantConnect.Algorithm.FSha
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Algorithm.CSharp", "Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj", "{39A81C16-A1E8-425E-A8F2-1433ADB80228}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "QuantConnect.Algorithm.VisualBasic", "QuantConnect.Algorithm.VisualBasic\QuantConnect.Algorithm.VisualBasic.vbproj", "{AF8F124B-B441-4AA7-92B7-CEA72BDB4118}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "QuantConnect.Algorithm.VisualBasic", "Algorithm.VisualBasic\QuantConnect.Algorithm.VisualBasic.vbproj", "{AF8F124B-B441-4AA7-92B7-CEA72BDB4118}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
