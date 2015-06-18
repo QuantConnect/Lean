@@ -83,8 +83,9 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="algorithm">Algorithm instance</param>
         /// <param name="brokerage">New brokerage output instance</param>
         /// <param name="job">Algorithm job task</param>
+        /// <param name="resultHandler"></param>
         /// <returns>True on successfully setting up the algorithm state, or false on error.</returns>
-        bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket job);
+        bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler);
 
         /// <summary>
         /// Setup the error handler for the brokerage errors.

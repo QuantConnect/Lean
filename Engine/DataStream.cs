@@ -34,6 +34,7 @@ namespace QuantConnect.Lean.Engine
 
         //Count of bridges and subscriptions.
         private int _subscriptions;
+        private readonly bool _liveMode;
 
         /// <summary>
         /// The frontier time of the data stream
@@ -44,9 +45,11 @@ namespace QuantConnect.Lean.Engine
         /// Initializes a new <see cref="DataStream"/> for the specified data feed instance
         /// </summary>
         /// <param name="feed">The data feed to be streamed</param>
-        public DataStream(IDataFeed feed)
+        /// <param name="liveMode"></param>
+        public DataStream(IDataFeed feed, bool liveMode)
         {
             _feed = feed;
+            _liveMode = liveMode;
         }
 
         /// <summary>
@@ -68,7 +71,7 @@ namespace QuantConnect.Lean.Engine
             while (_feed.Bridge.Length != _subscriptions) Thread.Sleep(100);
 
             // clear data first when in live mode, start with fresh data
-            if (Engine.LiveMode)
+            if (_liveMode)
             {
                 _feed.PurgeData();
             }
@@ -177,7 +180,7 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 //Allow loop pass through emits every second to allow event handling (liquidate/stop/ect...)
-                if (Engine.LiveMode && DateTime.Now > nextEmitTime)
+                if (_liveMode && DateTime.Now > nextEmitTime)
                 {
                     AlgorithmTime = DateTime.Now.RoundDown(periods.Min());
                     nextEmitTime = DateTime.Now + TimeSpan.FromSeconds(1);
@@ -197,9 +200,9 @@ namespace QuantConnect.Lean.Engine
             //Make sure all bridges have data to to peek sync properly.
 
             // timeout to prevent infinite looping here -- 50ms for live and 30sec for non-live
-            var timeout = DateTime.UtcNow + (Engine.LiveMode ? new TimeSpan(0, 0, 0, 0, 50) : new TimeSpan(0, 0, 30));
+            var timeout = DateTime.UtcNow + (_liveMode ? new TimeSpan(0, 0, 0, 0, 50) : new TimeSpan(0, 0, 30));
 
-            if (Engine.LiveMode)
+            if (_liveMode)
             {
                 // give some time to the other threads in live mode
                 Thread.Sleep(1);

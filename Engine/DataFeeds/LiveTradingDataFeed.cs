@@ -25,6 +25,7 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 
@@ -143,7 +144,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// need only implement the GetNextTicks() function to return unprocessed ticks from a data source.
         /// This creates a new data feed with a DataFeedEndpoint of LiveTrading.
         /// </summary>
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
             //Subscription Count:
             _subscriptions = algorithm.SubscriptionManager.Subscriptions;
@@ -178,7 +179,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _isDynamicallyLoadedData.Add(algorithm.Securities[_subscriptions[i].Symbol].IsDynamicallyLoadedData);
 
                 //Subscription managers for downloading user data:
-                _subscriptionManagers[i] = new SubscriptionDataReader(_subscriptions[i], algorithm.Securities[_subscriptions[i].Symbol], DataFeedEndpoint.LiveTrading, DateTime.MinValue, DateTime.MaxValue);
+                _subscriptionManagers[i] = new SubscriptionDataReader(_subscriptions[i], algorithm.Securities[_subscriptions[i].Symbol], DataFeedEndpoint.LiveTrading, DateTime.MinValue, DateTime.MaxValue, resultHandler);
 
                 //Set up the source file for today:
                 _subscriptionManagers[i].RefreshSource(DateTime.Now.Date);

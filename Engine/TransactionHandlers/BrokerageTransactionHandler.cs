@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -63,12 +64,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private ConcurrentDictionary<int, List<OrderEvent>> _orderEvents;
 
+        private IResultHandler _resultHandler;
+
         /// <summary>
         /// Creates a new BrokerageTransactionHandler to process orders using the specified brokerage implementation
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="brokerage">The brokerage implementation to process orders and fire fill events</param>
-        public virtual void Initialize(IAlgorithm algorithm, IBrokerage brokerage)
+        /// <param name="resultHandler"></param>
+        public virtual void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler)
         {
             if (brokerage == null)
             {
@@ -76,6 +80,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             // we don't need to do this today because we just initialized/synced
+            _resultHandler = resultHandler;
             _syncedLiveBrokerageCashToday = true;
             _lastSyncTimeTicks = DateTime.Now.Ticks;
 
@@ -448,7 +453,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (fill.Status != OrderStatus.None) //order.Status != OrderStatus.Submitted
             {
                 //Create new order event:
-                Engine.ResultHandler.OrderEvent(fill);
+                _resultHandler.OrderEvent(fill);
                 try
                 {
                     //Trigger our order event handler

@@ -21,6 +21,8 @@ using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -67,6 +69,8 @@ namespace QuantConnect.Lean.Engine.Results
         //Processing Time:
         private DateTime _startTime;
         private DateTime _nextSample;
+        private IMessagingHandler _messagingHandler;
+        private IApi _api;
 
         private const double _samples = 4000;
         private const double _minimumSamplePeriod = 4;
@@ -176,13 +180,19 @@ namespace QuantConnect.Lean.Engine.Results
             Charts["Strategy Equity"].Series.Add("Equity", new Series("Equity", SeriesType.Candle));
             Charts["Strategy Equity"].Series.Add("Daily Performance", new Series("Daily Performance", SeriesType.Bar, "%"));
         }
-        
+
         /// <summary>
         /// Initialize the result handler with this result packet.
         /// </summary>
         /// <param name="job">Algorithm job packet for this result handler</param>
-        public void Initialize(AlgorithmNodePacket job)
+        /// <param name="messagingHandler">The handler responsible for communicating messages to listeners</param>
+        /// <param name="api">The api instance used for handling logs</param>
+        /// <param name="dataFeed"></param>
+        /// <param name="setupHandler"></param>
+        public void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler)
         {
+            _api = api;
+            _messagingHandler = messagingHandler;
             _job = (BacktestNodePacket)job;
             if (_job == null) throw new Exception("BacktestingResultHandler.Constructor(): Submitted Job type invalid.");
             _compileId = _job.CompileId;
@@ -229,7 +239,7 @@ namespace QuantConnect.Lean.Engine.Results
                                 if (lastMessage != debug.Message)
                                 {
                                     //Log.Trace("BacktestingResultHandlerRun(): Debug Packet: " + debug.Message);
-                                    Engine.Notify.DebugMessage(debug.Message, debug.ProjectId, _backtestId, _compileId);
+                                    _messagingHandler.DebugMessage(debug.Message, debug.ProjectId, _backtestId, _compileId);
                                     lastMessage = debug.Message;
                                 }
                                 break;
@@ -237,24 +247,24 @@ namespace QuantConnect.Lean.Engine.Results
                             //Send log messages to the browser as well for live trading:
                             case PacketType.SecurityTypes:
                                 var securityPacket = packet as SecurityTypesPacket;
-                                Engine.Notify.SecurityTypes(securityPacket);
+                                _messagingHandler.SecurityTypes(securityPacket);
                                 break;
 
                             case PacketType.RuntimeError:
                                 //Log.Error("QC.AlgorithmWorker.Run(): " + packet.Message);
                                 var runtime = packet as RuntimeErrorPacket;
-                                Engine.Notify.RuntimeError(_backtestId, runtime.Message, runtime.StackTrace);
+                                _messagingHandler.RuntimeError(_backtestId, runtime.Message, runtime.StackTrace);
                                 break;
 
                             case PacketType.HandledError:
                                 var handled = packet as HandledErrorPacket;
                                 Log.Error("BacktestingResultHandler.Run(): HandledError Packet: " + handled.Message);
-                                Engine.Notify.Send(handled);
+                                _messagingHandler.Send(handled);
                                 break;
 
                             default:
                                 //Default case..
-                                Engine.Notify.Send(packet);
+                                _messagingHandler.Send(packet);
                                 Log.Trace("BacktestingResultHandler.Run(): Default packet type: " + packet.Type);
                                 break;
                         }
@@ -343,7 +353,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                 foreach (var backtestingPacket in splitPackets)
                 {
-                    Engine.Notify.Send(backtestingPacket);
+                    _messagingHandler.Send(backtestingPacket);
                 }
             }
             catch (Exception err) 
@@ -412,7 +422,7 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     //Upload Results Portion
-                    Engine.Api.Store(serialized, key, StoragePermissions.Authenticated, async);
+                    _api.Store(serialized, key, StoragePermissions.Authenticated, async);
                 }
             }
             catch (Exception err)
@@ -454,7 +464,7 @@ namespace QuantConnect.Lean.Engine.Results
                 result.Results = new BacktestResult();
 
                 //Second, send the truncated packet:
-                Engine.Notify.BacktestResult(result, finalPacket: true);
+                _messagingHandler.BacktestResult(result, finalPacket: true);
 
                 Log.Trace("BacktestingResultHandler.SendAnalysisResult(): Processed final packet"); 
             } 
@@ -668,7 +678,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             //Process all the log messages and send them to the S3:
             var logURL = ProcessLogMessages(_job);
-            if (logURL != "" && !Engine.IsLocal) DebugMessage("Your log was successfully created and can be downloaded from: " + logURL);
+            if (logURL != "") DebugMessage("Your log was successfully created and can be downloaded from: " + logURL);
 
             //Set exit flag, and wait for the messages to send:
             _exitTriggered = true;
@@ -743,7 +753,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (!_log.Any()) return "";
 
                 //Get the max length allowed for the algorithm:
-                var allowance = Engine.Api.ReadLogAllowance(job.UserId, job.Channel);
+                var allowance = _api.ReadLogAllowance(job.UserId, job.Channel);
                 var logBacktestMax = allowance[0];
                 var logDailyMax = allowance[1];
                 var logRemaining = Math.Min(logBacktestMax, allowance[2]); //Minimum of maxium backtest or remaining allowance.
@@ -788,9 +798,9 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //Save the log: Upload this file to S3:
-                Engine.Api.Store(serialized, key, StoragePermissions.Public);
+                _api.Store(serialized, key, StoragePermissions.Public);
                 //Record the data usage:
-                Engine.Api.UpdateDailyLogUsed(job.UserId, job.AlgorithmId, remoteUrl, logLength, job.Channel, hitLimit);
+                _api.UpdateDailyLogUsed(job.UserId, job.AlgorithmId, remoteUrl, logLength, job.Channel, hitLimit);
             }
             catch (Exception err)
             {

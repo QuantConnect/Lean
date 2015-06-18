@@ -14,7 +14,7 @@
     // engine
     "local": true,
     "data-folder": "../../../Data/",
-	"language":"VisualBasic",
+    "language": "CSharp",
 
     // handlers
     "log-handler": "QuantConnect.Logging.CompositeLogHandler",
@@ -52,13 +52,22 @@
         // defines the 'backtesting' environment
         "backtesting": {
             "live-mode": false,
-            
+
             "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
             "result-handler": "QuantConnect.Lean.Engine.Results.ConsoleResultHandler",
             "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
             "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
             "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
-            
+        },
+
+        "desktop": {
+            "live-mode": false,
+
+            "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.DesktopResultHandler",
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
+            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
+            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
         },
 
         // defines the 'live-paper' environment

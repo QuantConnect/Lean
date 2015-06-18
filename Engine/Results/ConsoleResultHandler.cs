@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -132,7 +134,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// Initialize the result handler with this result packet.
         /// </summary>
         /// <param name="packet">Algorithm job packet for this result handler</param>
-        public void Initialize(AlgorithmNodePacket packet)
+        /// <param name="messagingHandler"></param>
+        /// <param name="api"></param>
+        /// <param name="dataFeed"></param>
+        /// <param name="setupHandler"></param>
+        public void Initialize(AlgorithmNodePacket packet, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler)
         {
             // we expect one of two types here, the backtest node packet or the live node packet
             var job = packet as BacktestNodePacket;

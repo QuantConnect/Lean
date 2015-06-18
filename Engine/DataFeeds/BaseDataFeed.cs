@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -103,7 +104,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Create an instance of the base datafeed.
         /// </summary>
-        public virtual void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job)
+        public virtual void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
             //Save the data subscriptions
             Subscriptions = algorithm.SubscriptionManager.Subscriptions;
@@ -128,7 +129,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _frontierTime[i] = algorithm.StartDate;
                 EndOfBridge[i] = false;
                 Bridge[i] = new ConcurrentQueue<List<BaseData>>();
-                SubscriptionReaderManagers[i] = new SubscriptionDataReader(Subscriptions[i], algorithm.Securities[Subscriptions[i].Symbol], DataFeedEndpoint.Database, algorithm.StartDate, algorithm.EndDate);
+                SubscriptionReaderManagers[i] = new SubscriptionDataReader(Subscriptions[i], algorithm.Securities[Subscriptions[i].Symbol], DataFeedEndpoint.Database, algorithm.StartDate, algorithm.EndDate, resultHandler);
             }
         }
 

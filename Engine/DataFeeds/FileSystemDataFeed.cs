@@ -21,6 +21,7 @@ using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 
@@ -109,7 +110,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public DateTime[] FillForwardFrontiers;
 
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
             Subscriptions = algorithm.SubscriptionManager.Subscriptions;
             _subscriptions = Subscriptions.Count;
@@ -133,7 +134,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 //Create a new instance in the dictionary:
                 Bridge[i] = new ConcurrentQueue<List<BaseData>>();
                 EndOfBridge[i] = false;
-                SubscriptionReaders[i] = new SubscriptionDataReader(Subscriptions[i], _algorithm.Securities[Subscriptions[i].Symbol], DataFeed, _algorithm.StartDate, _algorithm.EndDate);
+                SubscriptionReaders[i] = new SubscriptionDataReader(Subscriptions[i], _algorithm.Securities[Subscriptions[i].Symbol], DataFeed, _algorithm.StartDate, _algorithm.EndDate, resultHandler);
                 FillForwardFrontiers[i] = new DateTime();
             }
         }

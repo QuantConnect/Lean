@@ -16,6 +16,7 @@
 
 using System.ComponentModel.Composition;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
@@ -46,7 +47,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Initializes the transaction handler for the specified algorithm using the specified brokerage implementation
         /// </summary>
-        void Initialize(IAlgorithm algorithm, IBrokerage brokerage);
+        void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler);
 
         /// <summary>
         /// Primary thread entry point to launch the transaction thread.

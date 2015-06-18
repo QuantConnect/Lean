@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
@@ -32,7 +33,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="brokerage">The BacktestingBrokerage</param>
-        public override void Initialize(IAlgorithm algorithm, IBrokerage brokerage)
+        /// <param name="resultHandler"></param>
+        public override void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler)
         {
             if (!(brokerage is BacktestingBrokerage))
             {
@@ -41,7 +43,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             
             _brokerage = (BacktestingBrokerage) brokerage;
 
-            base.Initialize(algorithm, brokerage);
+            base.Initialize(algorithm, brokerage, resultHandler);
         }
 
         /// <summary>

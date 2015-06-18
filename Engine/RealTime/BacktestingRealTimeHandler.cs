@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
 using QuantConnect.Logging;
 
@@ -39,6 +40,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         //Algorithm and Handlers:
         private IAlgorithm _algorithm;
         private Dictionary<SecurityType, MarketToday> _today;
+        private IResultHandler _resultHandler;
 
         /// <summary>
         /// Realtime Moment.
@@ -88,13 +90,14 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Intializes the real time handler for the specified algorithm and job
         /// </summary>
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job) 
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api) 
         {
             //Initialize:
             _algorithm = algorithm;
             _events = new List<RealTimeEvent>();
             _job = job;
             _today = new Dictionary<SecurityType, MarketToday>();
+            _resultHandler =  resultHandler;
         }
 
         /// <summary>
@@ -124,7 +127,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                     }
                     catch (Exception err)
                     {
-                        Engine.ResultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
+                        _resultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
                         Log.Error("BacktestingRealTimeHandler.SetupEvents(): EOD: " + err.Message);
                     }
                 }));
@@ -140,7 +143,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 }
                 catch (Exception err)
                 {
-                    Engine.ResultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
+                    _resultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
                     Log.Error("BacktestingRealTimeHandler.SetupEvents.Trigger OnEndOfDay(): " + err.Message);
                 }
             }, true));

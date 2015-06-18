@@ -19,6 +19,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -129,7 +131,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// Initialize the result handler with this result packet.
         /// </summary>
         /// <param name="job">Algorithm job packet for this result handler</param>
-        public void Initialize(AlgorithmNodePacket job)
+        /// <param name="messagingHandler"></param>
+        /// <param name="api"></param>
+        /// <param name="dataFeed"></param>
+        /// <param name="setupHandler"></param>
+        public void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler)
         {
             //Redirect the log messages here:
             _job = job;

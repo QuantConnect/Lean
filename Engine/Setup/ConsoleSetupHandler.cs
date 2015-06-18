@@ -99,8 +99,9 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="algorithm">Existing algorithm instance</param>
         /// <param name="brokerage">New brokerage instance</param>
         /// <param name="baseJob">Backtesting job</param>
+        /// <param name="resultHandler"></param>
         /// <returns>Boolean true on successfully setting up the console.</returns>
-        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob)
+        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob, IResultHandler resultHandler)
         {
             var initializeComplete = false;
 
@@ -142,7 +143,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     //Call in the brokerage setup:
                     var setup = new BrokerageSetupHandler();
-                    setup.Setup(algorithm, out brokerage, baseJob);
+                    setup.Setup(algorithm, out brokerage, baseJob, resultHandler);
 
                     //Live Specific Parameters:
                     StartingDate = DateTime.Now;

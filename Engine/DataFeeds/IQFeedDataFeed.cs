@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -27,10 +28,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class IQFeedDataFeed : BaseDataFeed
     {
-        public override void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job)
+        public override void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
             // add IQFeed initialization logic here
-            base.Initialize(algorithm, job);
+            base.Initialize(algorithm, job, resultHandler);
         }
 
         public override List<BaseData> GetData(SubscriptionDataConfig subscription)

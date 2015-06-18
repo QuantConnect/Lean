@@ -22,6 +22,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 using Timer = System.Windows.Forms.Timer;
 
 namespace QuantConnect.Views.WinForms
@@ -43,11 +44,11 @@ namespace QuantConnect.Views.WinForms
         /// <summary>
         /// Launch the Lean Engine Primary Form:
         /// </summary>
-        /// <param name="resultsHandler">Accept a result handler to control the form</param>
-        public LeanEngineWinForm(IResultHandler resultsHandler)
+        /// <param name="engine">Accept the engine instance we just launched</param>
+        public LeanEngineWinForm(Engine engine)
         {
             //Setup the State:
-            _resultsHandler = resultsHandler;
+            _resultsHandler = engine.AlgorithmHandlers.Results;
 
             //Create Form:
             Text = "QuantConnect Lean Algorithmic Trading Engine: v" + Constants.Version;
@@ -101,30 +102,32 @@ namespace QuantConnect.Views.WinForms
             Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.DesktopResultHandler");
 
             //Start default backtest.
-            LaunchLean();
+            var engine = LaunchLean();
 
             //Start GUI
-            Application.Run(new LeanEngineWinForm(Engine.ResultHandler));
+            // steal the desktop result handler from the composer's instance
+            Application.Run(new LeanEngineWinForm(engine));
         }
-
 
         /// <summary>
         /// Launch the LEAN Engine in a separate thread.
         /// </summary>
-        private static void LaunchLean()
+        private static Engine LaunchLean()
         {
             //Launch the Lean Engine in another thread: this will run the algorithm specified above.
             // TODO > This should only be launched when clicking a backtest/trade live button provided in the UX.
+
+            var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
+            var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
+            var engine = new Engine(systemHandlers, algorithmHandlers, Config.GetBool("live-mode"));
             _leanEngineThread = new Thread(() =>
             {
-                Engine.Main(new string[] { });
+                engine.Run();
             });
             _leanEngineThread.Start();
 
-            //Suspend this thread a little to give the Engine time to load..
-            while (Engine.ResultHandler == null) Thread.Sleep(100);
+            return engine;
         }
-
 
         /// <summary>
         /// Primary polling thread for the logging and chart display.

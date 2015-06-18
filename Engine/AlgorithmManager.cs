@@ -16,9 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
 using System.Threading;
 using Fasterflect;
 using QuantConnect.Algorithm;
@@ -31,7 +28,6 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -40,7 +36,6 @@ namespace QuantConnect.Lean.Engine
     /// </summary>
     public class AlgorithmManager
     {
-
         private DateTime _previousTime;
         private AlgorithmStatus _algorithmState = AlgorithmStatus.Running;
         private readonly object _lock = new object();
@@ -85,6 +80,8 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public readonly Func<string> TimeLoopWithinLimits;
 
+        private readonly bool _liveMode;
+
         /// <summary>
         /// Quit state flag for the running algorithm. When true the user has requested the backtest stops through a Quit() method.
         /// </summary>
@@ -108,7 +105,7 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        public AlgorithmManager()
+        public AlgorithmManager(bool liveMode)
         {
             TimeLoopWithinLimits = () =>
             {
@@ -118,6 +115,7 @@ namespace QuantConnect.Lean.Engine
                 }
                 return null;
             };
+            _liveMode = liveMode;
         }
 
         /// <summary>
@@ -188,7 +186,7 @@ namespace QuantConnect.Lean.Engine
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Trace("AlgorithmManager.Run(): Begin DataStream - Start: " + algorithm.StartDate + " Stop: " + algorithm.EndDate);
-            var dataStream = new DataStream(feed);
+            var dataStream = new DataStream(feed, _liveMode);
             foreach (var newData in dataStream.GetData(algorithm.StartDate))
             {
                 // reset our timer on each loop
@@ -257,7 +255,7 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 // perform margin calls, in live mode we can also use realtime to emit these
-                if (time >= nextMarginCallTime || (Engine.LiveMode && nextMarginCallTime > DateTime.Now))
+                if (time >= nextMarginCallTime || (_liveMode && nextMarginCallTime > DateTime.Now))
                 {
                     // determine if there are possible margin call orders to be executed
                     bool issueMarginCallWarning;
@@ -524,7 +522,7 @@ namespace QuantConnect.Lean.Engine
             results.ProcessSynchronousEvents(forceProcess: true);
 
             //Liquidate Holdings for Calculations:
-            if (_algorithmState == AlgorithmStatus.Liquidated || !Engine.LiveMode)
+            if (_algorithmState == AlgorithmStatus.Liquidated || !_liveMode)
             {
                 // without this we can't liquidate equities since the exchange is 'technically' closed
                 var hackedFrontier = algorithm.Time == DateTime.MinValue ? DateTime.MinValue : algorithm.Time.AddMilliseconds(-1);

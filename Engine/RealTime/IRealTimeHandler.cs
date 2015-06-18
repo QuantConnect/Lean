@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.RealTime
@@ -63,7 +64,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Intializes the real time handler for the specified algorithm and job
         /// </summary>
-        void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job);
+        void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api);
 
         /// <summary>
         /// Main entry point to scan and trigger the realtime events.

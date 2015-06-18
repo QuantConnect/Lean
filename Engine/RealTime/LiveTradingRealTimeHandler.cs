@@ -20,6 +20,7 @@ using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 
@@ -40,6 +41,8 @@ namespace QuantConnect.Lean.Engine.RealTime
 
         //Algorithm and Handlers:
         private IAlgorithm _algorithm;
+        private IResultHandler _resultHandler;
+        private IApi _api;
 
         /// <summary>
         /// Current time.
@@ -88,12 +91,14 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Intializes the real time handler for the specified algorithm and job
         /// </summary>
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api)
         {
             //Initialize:
             _algorithm = algorithm;
             _events = new List<RealTimeEvent>();
             _today = new Dictionary<SecurityType, MarketToday>();
+            _resultHandler = resultHandler;
+            _api = api;
         }
 
         /// <summary>
@@ -207,7 +212,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                         }
                         catch (Exception err)
                         {
-                            Engine.ResultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
+                            _resultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
                             Log.Error("LiveTradingRealTimeHandler.SetupEvents.Trigger OnEndOfDay(): " + err.Message);
                         }
                     }, true));
@@ -227,7 +232,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                     }
                     catch (Exception err)
                     {
-                        Engine.ResultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
+                        _resultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
                         Log.Error("LiveTradingRealTimeHandler.SetupEvents.Trigger OnEndOfDay(): " + err.Message);
                     }
                 }, true));
@@ -252,7 +257,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                     //Setup storage
                     _today.Add(security.Type, new MarketToday());
                     //Refresh the market information
-                    _today[security.Type] = Engine.Api.MarketToday(date, security.Type);
+                    _today[security.Type] = _api.MarketToday(date, security.Type);
                     Log.Trace(
                         string.Format(
                             "LiveTradingRealTimeHandler.SetupEvents(): Daily Market Hours Setup for Security Type: {0} Start: {1} Stop: {2}",
