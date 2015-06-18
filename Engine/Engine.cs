@@ -226,11 +226,13 @@ namespace QuantConnect.Lean.Engine
                 var transactionHandlerTypeName = Config.Get("transaction-handler", "BacktestingTransactionHandler");
                 var realTimeHandlerTypeName = Config.Get("real-time-handler", "BacktestingRealTimeHandler");
                 var dataFeedHandlerTypeName = Config.Get("data-feed-handler", "FileSystemDataFeed");
+                var resultHandlerTypeName = Config.Get("result-handler", "ConsoleResultHandler");
                 Log.Trace("JOB HANDLERS: ");
                 Log.Trace("         Setup:        " + setupHandlerTypeName);
                 Log.Trace("         Transactions: " + transactionHandlerTypeName);
                 Log.Trace("         RealTime:     " + realTimeHandlerTypeName);
                 Log.Trace("         DataFeed:     " + dataFeedHandlerTypeName);
+                Log.Trace("         Results:      " + resultHandlerTypeName);
                     
 
                 //-> Initialize messaging system
@@ -240,7 +242,9 @@ namespace QuantConnect.Lean.Engine
                 SetupHandler = Composer.Instance.GetExportedValueByTypeName<ISetupHandler>(setupHandlerTypeName);
 
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
-                ResultHandler = GetResultHandler(job);
+                ResultHandler = Composer.Instance.GetExportedValueByTypeName<IResultHandler>(resultHandlerTypeName);
+                ResultHandler.Initialize(job);
+
                 threadResults = new Thread(ResultHandler.Run, 0) {Name = "Result Thread"};
                 threadResults.Start();
 
@@ -477,22 +481,6 @@ namespace QuantConnect.Lean.Engine
                 Console.Read();
             }
             Log.LogHandler.Dispose();
-        }
-
-
-        /// <summary>
-        /// Get an instance of the data feed handler we're requesting for this work.
-        /// </summary>
-        /// <param name="job">Algorithm Node Packet</param>
-        /// <returns>Class Matching IResultHandler Inteface</returns>
-        private static IResultHandler GetResultHandler(AlgorithmNodePacket job)
-        {
-            var resultHandler = Config.Get("result-handler", "ConsoleResultHandler");
-            var rh = Composer.Instance.GetExportedValueByTypeName<IResultHandler>(resultHandler);
-            
-            rh.Initialize(job);
-            Log.Trace("Engine.GetResultHandler(): Loaded and Initialized Result Handler: " + resultHandler + "  v" + Constants.Version);
-            return rh;
         }
     } // End Algorithm Node Core Thread
     
