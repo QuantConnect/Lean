@@ -30,7 +30,8 @@ namespace QuantConnect.Queues
     {
         // The type name of the QuantConnect.Brokerages.Paper.PaperBrokerage
         private const string PaperBrokerageTypeName = "PaperBrokerage";
-        private bool _liveMode = Config.GetBool("live-mode"); 
+        private bool _liveMode = Config.GetBool("live-mode");
+        private string _language = Config.Get("language", "CSharp"); 
         
         /// <summary>
         /// Physical location of Algorithm DLL.
@@ -40,7 +41,7 @@ namespace QuantConnect.Queues
             get
             {
                 // we expect this dll to be copied into the output directory
-                return "QuantConnect.Algorithm.CSharp.dll";
+                return "QuantConnect.Algorithm." + _language + ".dll";
             }
         }
 
@@ -59,6 +60,7 @@ namespace QuantConnect.Queues
         public AlgorithmNodePacket NextJob(out string location)
         {
             location = AlgorithmLocation;
+            Log.Trace("JobQueue.NextJob(): Selected " + location);
 
             //If this isn't a backtesting mode/request, attempt a live job.
             if (_liveMode)

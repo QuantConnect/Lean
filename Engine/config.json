@@ -6,6 +6,7 @@
     "local": "true",
     "live-mode": "false",
     "data-folder": "../../../Data/",
+	"language":"VisualBasic",
 
     // handlers
     "log-handler":  "QuantConnect.Logging.CompositeLogHandler",
