@@ -84,7 +84,7 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         /// <param name="job">The algorithm job</param>
         /// <returns>The ram size in MB</returns>
-        public int GetRamAllocation(AlgorithmNodePacket job)
+        private int GetRamAllocation(AlgorithmNodePacket job)
         {
             return (job.UserPlan == UserPlan.Free && !_isLocal) ? Math.Min(1024, MaximumRamAllocation) : MaximumRamAllocation;
         }
