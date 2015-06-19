@@ -51,7 +51,7 @@ namespace QuantConnect.Tests
             // run the algorithm in its own thread
             var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
             var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
-            var engine = new Lean.Engine.Engine(systemHandlers, algorithmHandlers, false);
+            var engine = new Lean.Engine.Engine(systemHandlers, algorithmHandlers, true, false);
             Task.Factory.StartNew(() =>
             {
                 engine.Run();

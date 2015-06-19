@@ -21,7 +21,6 @@ using System.Diagnostics;
 using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -57,6 +56,7 @@ namespace QuantConnect.Lean.Engine
         }
 
         private readonly bool _liveMode;
+        private readonly bool _isLocal;
         private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
 
         /// <summary>
@@ -77,6 +77,16 @@ namespace QuantConnect.Lean.Engine
                 Log.Trace("Engine.MaximumRamAllocation(): Allocated: " + allocation);
                 return allocation;
             }
+        }
+
+        /// <summary>
+        /// Returns the ram to allocate for the algorithm
+        /// </summary>
+        /// <param name="job">The algorithm job</param>
+        /// <returns>The ram size in MB</returns>
+        public int GetRamAllocation(AlgorithmNodePacket job)
+        {
+            return (job.UserPlan == UserPlan.Free && !_isLocal) ? Math.Min(1024, MaximumRamAllocation) : MaximumRamAllocation;
         }
 
         /// <summary>
@@ -135,7 +145,7 @@ namespace QuantConnect.Lean.Engine
             //Setup packeting, queue and controls system: These don't do much locally.
             leanEngineSystemHandlers.Initialize();
 
-            using (var engine = new Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode))
+            using (var engine = new Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, isLocal, liveMode))
             {
                 engine.Run();
             }
@@ -154,12 +164,14 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         /// <param name="systemHandlers">The system handlers for controlling acquisition of jobs, messaging, and api calls</param>
         /// <param name="algorithmHandlers">The algorithm handlers for managing algorithm initialization, data, results, transaction, and real time events</param>
-        /// <param name="liveMode">True when running in live mode, false otherwises</param>
-        public Engine(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, bool liveMode)
+        /// <param name="isLocal">True when local installation, false otherwise</param>
+        /// <param name="liveMode">True when running in live mode, false otherwise</param>
+        public Engine(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, bool isLocal, bool liveMode)
         {
-            _liveMode = liveMode;
             _systemHandlers = systemHandlers;
             _algorithmHandlers = algorithmHandlers;
+            _isLocal = isLocal;
+            _liveMode = liveMode;
         }
 
         /// <summary>
@@ -304,7 +316,7 @@ namespace QuantConnect.Lean.Engine
                             }
 
                             Log.Trace("Engine.Run(): Exiting Algorithm Manager");
-                        }, job.UserPlan == UserPlan.Free ? Math.Min(1024, MaximumRamAllocation) : MaximumRamAllocation);
+                        }, GetRamAllocation(job));
 
                         if (!complete)
                         {

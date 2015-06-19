@@ -121,7 +121,7 @@ namespace QuantConnect.Views.WinForms
 
             var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
             var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
-            var engine = new Engine(systemHandlers, algorithmHandlers, Config.GetBool("live-mode"));
+            var engine = new Engine(systemHandlers, algorithmHandlers, Config.GetBool("local"), Config.GetBool("live-mode"));
             _leanEngineThread = new Thread(() =>
             {
                 engine.Run();
