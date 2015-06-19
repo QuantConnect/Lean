@@ -1204,13 +1204,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// 
         public IEnumerable<Data.BaseData> GetNextTicks()
         {
-            var ticks = new List<Tick>();
-            Tick tick;
-
-            while (_ticks.TryDequeue(out tick))
-                ticks.Add(tick);
-
-            return ticks;
+            lock (_ticks)
+            {
+                var copy = _ticks.ToArray();
+                _ticks.Clear();
+                return copy;
+            }
         }
 
         /// <summary>
@@ -1306,6 +1305,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return;
             }
 
+            lock (_ticks)
+                if (tick.IsValid()) _ticks.Add(tick);
+
         }
 
         /// <summary>
@@ -1356,48 +1358,25 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     tick.Value = tick.AskPrice;
                     break;
-
-                case IB.TickType.Volume:
-
-                    bool bSend = true;
-                    int lastVolume;
-                    decimal lastPrice; 
-
-                    tick.TickType = TickType.Trade;
-
-                    if (!_lastVolumes.TryGetValue(symbol, out lastVolume))
-                    {
-                        bSend = false;
-                    }
-                    else if (e.Size <= lastVolume)
-                    {
-                        bSend = false;
-                    }
-                    else if (!_lastPrices.TryGetValue(symbol, out lastPrice))
-                    {
-                        bSend = false;
-                    }
-                    else
-                    {
-                        tick.Value = lastPrice;
-                    };
-
-                    if (bSend)
-                        tick.Quantity = AdjustQuantity(symbol.Item1, e.Size - lastVolume);
-
-                    if (e.Size > 0)
-                    {
-                        _lastVolumes[symbol] = e.Size;
-                    }
-
-                    break;
+                
                 
                 case IB.TickType.LastSize:
+                    tick.TickType = TickType.Trade;
+
+                    decimal lastPrice;
+                    _lastPrices.TryGetValue(symbol, out lastPrice);
+                    _lastVolumes[symbol] = tick.Quantity;
+
+                    tick.Value = lastPrice;
+                        
+                    break;
+
                 default:
                     return;
             }
+            lock (_ticks)
+                if (tick.IsValid()) _ticks.Add(tick);
 
-            _ticks.Enqueue(tick);
         }
 
         private ConcurrentDictionary<SymbolCacheKey, int> _subscribedSymbols = new ConcurrentDictionary<SymbolCacheKey, int>();
@@ -1408,7 +1387,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private ConcurrentDictionary<SymbolCacheKey, int> _lastBidSizes = new ConcurrentDictionary<SymbolCacheKey, int>();
         private ConcurrentDictionary<SymbolCacheKey, decimal> _lastAskPrices = new ConcurrentDictionary<SymbolCacheKey, decimal>();
         private ConcurrentDictionary<SymbolCacheKey, int> _lastAskSizes = new ConcurrentDictionary<SymbolCacheKey, int>();
-        private ConcurrentQueue<Tick> _ticks = new ConcurrentQueue<Tick>();
+        private List<Tick> _ticks = new List<Tick>();
 
 
         private static class AccountValueKeys

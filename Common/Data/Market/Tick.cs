@@ -311,6 +311,15 @@ namespace QuantConnect.Data.Market
             Quantity = Convert.ToInt32(volume);
         }
 
+        /// <summary>
+        /// Check if tick contains valid data (either a trade, or a bid or ask)
+        /// </summary>
+        public bool IsValid()
+        {
+            return (TickType == TickType.Trade && LastPrice > 0.0m && Quantity > 0) ||
+                   (TickType == TickType.Quote && AskPrice > 0.0m && Quantity > 0) ||
+                   (TickType == TickType.Quote && BidPrice > 0.0m && Quantity > 0);
+        }
 
         /// <summary>
         /// Clone implementation for tick class:
