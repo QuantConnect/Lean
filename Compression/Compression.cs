@@ -275,26 +275,22 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Unzip a local file and return its contents via streamreader.
+        /// Streams a local zip file using a streamreader.
         /// </summary>
         /// <param name="filename">Location of the original zip file</param>
         /// <returns>Stream reader of the first file contents in the zip file</returns>
         public static StreamReader Unzip(string filename)
         {
             StreamReader reader = null;
-            var ms = new MemoryStream();
             try
             {
                 if (File.Exists(filename))
                 {
                     try
                     {
-                        using (var zip1 = Ionic.Zip.ZipFile.Read(filename))
-                        {
-                            var e = zip1[0];
-                            e.Extract(ms); ms.Position = 0;
-                            reader = new StreamReader(ms);
-                        }
+                        var zip = new Ionic.Zip.ZipFile(filename);
+
+                        reader = new StreamReader(zip[0].OpenReader());
                     }
                     catch (Exception err)
                     {
