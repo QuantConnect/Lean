@@ -37,14 +37,14 @@ namespace QuantConnect.Algorithm.Python
             PythonEngine.Initialize();
             _gs = PythonEngine.AcquireLock();
 
-            const string s = @"../../../../tests";
-            Type RTClass = typeof(Runtime.Runtime);
+            //const string s = @"../../../../tests";
+            //Type RTClass = typeof(Runtime.Runtime);
 
-            /* pyStrPtr = PyString_FromString(s); */
-            MethodInfo PyString_FromString = RTClass.GetMethod("PyString_FromString", BindingFlags.NonPublic | BindingFlags.Static);
-            object[] funcArgs = new object[1];
-            funcArgs[0] = s;
-            IntPtr pyStrPtr = (IntPtr)PyString_FromString.Invoke(null, funcArgs);
+            ///* pyStrPtr = PyString_FromString(s); */
+            //MethodInfo PyString_FromString = RTClass.GetMethod("PyString_FromString", BindingFlags.NonPublic | BindingFlags.Static);
+            //object[] funcArgs = new object[1];
+            //funcArgs[0] = s;
+            //IntPtr pyStrPtr = (IntPtr)PyString_FromString.Invoke(null, funcArgs);
 
         }
 

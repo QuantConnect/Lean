@@ -132,6 +132,7 @@
     <Compile Include="Data\Market\Splits.cs" />
     <Compile Include="Data\SubscriptionDataSource.cs" />
     <Compile Include="Field.cs" />
+    <Compile Include="Market.cs" />
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
     <Compile Include="Orders\MarketOnCloseOrder.cs" />

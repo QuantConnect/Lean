@@ -333,8 +333,7 @@ namespace QuantConnect.Data.Market
             var securityTypePath = config.SecurityType.ToString().ToLower();
             var resolutionPath = config.Resolution.ToString().ToLower();
             var symbolPath = (string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol).ToLower();
-            var countryCode = config.Country.ToString().ToLower();
-            var liquiditySource = config.LiquiditySource.ToString().ToLower();
+            var market = config.Market.ToLower();
             var filename = date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
 
 
@@ -345,15 +344,7 @@ namespace QuantConnect.Data.Market
                 symbolPath = string.Empty;
             }
 
-            if (config.Country == CountryCode.None)
-            {
-                //No country are international or brokerage specific liquidity providers with certain spreads.
-                source = Path.Combine(Constants.DataFolder, securityTypePath, liquiditySource, resolutionPath, symbolPath, filename);
-            }
-            else
-            {
-                source = Path.Combine(Constants.DataFolder, securityTypePath, countryCode, resolutionPath, symbolPath, filename);
-            }
+            source = Path.Combine(Constants.DataFolder, securityTypePath, market, resolutionPath, symbolPath, filename);
 
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
         }

@@ -103,14 +103,9 @@ namespace QuantConnect.Data
         public string MappedSymbol;
 
         /// <summary>
-        /// Country code for the subscription
+        /// Set the market / scope of the symbol
         /// </summary>
-        public CountryCode Country = CountryCode.None;
-
-        /// <summary>
-        /// The liquidity provider source for the data.
-        /// </summary>
-        public LiquidityProviderDataSource LiquiditySource = LiquidityProviderDataSource.NotApplicable;
+        public string Market;
 
         /// <summary>
         /// Consolidators that are registred with this subscription

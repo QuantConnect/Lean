@@ -164,7 +164,7 @@ namespace QuantConnect.AlgorithmFactory
 
                 //Get the list of extention classes in the library: 
                 var types = GetExtendedTypeNames(assembly);
-                Log.Trace("Loader.CreateInstance(): Assembly types: " + string.Join(",", types));
+                Log.Debug("Loader.CreateInstance(): Assembly types: " + string.Join(",", types));
 
                 //No extensions, nothing to load.
                 if (types.Count == 0)

@@ -285,26 +285,12 @@ namespace QuantConnect.Data.Market
             string source;
             var symbol = string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol;
             var securityType = config.SecurityType.ToString().ToLower();
-            var countryCode = config.Country.ToString().ToLower();
+            var market = config.Market.ToLower();
             var resolution = config.Resolution.ToString().ToLower();
             var file = date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
 
-            if (config.SecurityType == SecurityType.Equity)
-            {
-                //Add in the country code for equities for internationalization support.
-                source = Path.Combine(Constants.DataFolder, securityType, countryCode, resolution, symbol.ToLower(), file);
-            }
-            else if (config.SecurityType == SecurityType.Forex || config.SecurityType == SecurityType.Cfd)
-            {
-                //FX, CFD's are brokerage/liquidity provider specific (eg. different brokerages have different spreads). 
-                var dataSource = config.LiquiditySource.ToString().ToLower();
-                source = Path.Combine(Constants.DataFolder, securityType, dataSource, resolution, symbol.ToLower(), file);
-            }
-            else
-            {
-                //All other asset types default here
-                source = Path.Combine(Constants.DataFolder, securityType, resolution, symbol.ToLower(), file);
-            }
+            //Add in the market for equities/cfd/forex for internationalization support.
+            source = Path.Combine(Constants.DataFolder, securityType, market, resolution, symbol.ToLower(), file);
 
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
         }

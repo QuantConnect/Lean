@@ -184,7 +184,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _isLiveMode = _feedEndpoint == DataFeedEndpoint.LiveTrading;
 
             // do we have factor tables?
-            _hasScaleFactors = FactorFile.HasScalingFactors(config.Symbol);
+            _hasScaleFactors = FactorFile.HasScalingFactors(config.Symbol, config.Market);
 
             //Save the type of data we'll be getting from the source.
             _feedEndpoint = feed;
@@ -221,8 +221,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (_hasScaleFactors)
                 {
-                    _factorFile = FactorFile.Read(config.Symbol);
-                    _mapFile = MapFile.Read(config.Symbol);
+                    _factorFile = FactorFile.Read(config.Symbol, config.Market);
+                    _mapFile = MapFile.Read(config.Symbol, config.Market);
                 }
             } 
             catch (Exception err) 

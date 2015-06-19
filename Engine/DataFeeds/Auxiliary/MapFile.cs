@@ -81,9 +81,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         /// <summary>
         /// Reads in an entire map file for the requested symbol from the DataFolder
         /// </summary>
-        public static MapFile Read(string symbol)
+        public static MapFile Read(string symbol, string market)
         {
-            return new MapFile(symbol, MapFileRow.Read(symbol));
+            return new MapFile(symbol, MapFileRow.Read(symbol, market));
         }
     }
 }
