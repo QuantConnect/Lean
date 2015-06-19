@@ -417,5 +417,16 @@ namespace QuantConnect.Securities
             _config.DataNormalizationMode = mode;
         }
 
+        /// <summary>
+        /// Sets the market / scope for this security
+        /// </summary>
+        public void SetMarket(string market)
+        {
+            if (string.IsNullOrWhiteSpace(market))
+                throw new ArgumentException("The market cannot be an empty string.");
+
+            _config.Market = market;
+        }
+
     } // End Security
 } // End QC Namespace
