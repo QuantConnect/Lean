@@ -665,6 +665,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // this provides a fail fast mechanism so we don't need to go into MoveNext via RefreshSource
             if (reader != null && reader.EndOfStream)
             {
+                reader.Close();
+                reader.Dispose();
                 reader = null;
             }
 
