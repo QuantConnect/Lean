@@ -31,7 +31,6 @@ namespace QuantConnect.Queues
         // The type name of the QuantConnect.Brokerages.Paper.PaperBrokerage
         private const string PaperBrokerageTypeName = "PaperBrokerage";
         private bool _liveMode = Config.GetBool("live-mode");
-        private string _language = Config.Get("language", "CSharp"); 
         
         /// <summary>
         /// Physical location of Algorithm DLL.
@@ -41,7 +40,7 @@ namespace QuantConnect.Queues
             get
             {
                 // we expect this dll to be copied into the output directory
-                return "QuantConnect.Algorithm." + _language + ".dll";
+                return Config.Get("algorithm-location", "QuantConnect.Algorithm.CSharp.dll"); 
             }
         }
 
