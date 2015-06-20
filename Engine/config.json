@@ -11,6 +11,8 @@
     // algorithm selector
     "algorithm-type-name": "BasicTemplateAlgorithm",
     "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
+	//"algorithm-location": "QuantConnect.Algorithm.FSharp.dll",
+	//"algorithm-location": "QuantConnect.Algorithm.VisualBasic.dll",
 
     // engine
     "local": true,
