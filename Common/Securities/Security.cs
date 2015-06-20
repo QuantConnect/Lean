@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Text.RegularExpressions;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities.Equity;
@@ -415,6 +416,20 @@ namespace QuantConnect.Securities
         public void SetDataNormalizationMode(DataNormalizationMode mode)
         {
             _config.DataNormalizationMode = mode;
+        }
+
+        /// <summary>
+        /// Sets the market / scope for this security
+        /// </summary>
+        public void SetMarket(string market)
+        {
+            if (string.IsNullOrWhiteSpace(market))
+                throw new ArgumentException("The market cannot be an empty string.");
+
+            if (!Regex.IsMatch(market, @"^[a-zA-Z]+$"))
+                throw new ArgumentException("The market must only contain letters A-Z.");
+
+            _config.Market = market;
         }
 
     } // End Security
