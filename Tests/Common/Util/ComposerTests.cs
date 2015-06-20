@@ -42,6 +42,17 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsInstanceOf(typeof (Export3), instance);
         }
 
+        [Test]
+        public void ResetsAndCreatesNewInstances()
+        {
+            var composer = Composer.Instance;
+            var export1 = composer.Single<IExport>(x => x.Id == 3);
+            Assert.IsNotNull(export1);
+            composer.Reset();
+            var export2 = composer.Single<IExport>(x => x.Id == 3);
+            Assert.AreNotEqual(export1, export2);
+        }
+
         [InheritedExport(typeof(IExport))]
         interface IExport
         {
