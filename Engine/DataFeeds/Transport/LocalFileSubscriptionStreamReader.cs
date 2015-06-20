@@ -15,6 +15,7 @@
 */
 
 using System.IO;
+using Ionic.Zip;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
@@ -24,6 +25,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     public class LocalFileSubscriptionStreamReader : IStreamReader
     {
         private readonly StreamReader _streamReader;
+        private readonly ZipFile _zipFile;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.
@@ -33,7 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         {
             // unzip if necessary
             _streamReader = source.GetExtension() == ".zip"
-                ? Compression.Unzip(source)
+                ? Compression.Unzip(source, out _zipFile)
                 : new StreamReader(source);
         }
 
@@ -80,6 +82,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             if (_streamReader != null)
             {
                 _streamReader.Dispose();
+            }
+            if (_zipFile != null)
+            {
+                _zipFile.Dispose();
             }
         }
     }
