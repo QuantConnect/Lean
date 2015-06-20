@@ -1,9 +1,8 @@
 language: csharp
 solution: QuantConnect.Lean.sln
 install:
-  - sudo ln -s /usr/lib/mono/4.5/vbnc.exe /usr/lib/mono/4.5/vbnc
   - nuget restore QuantConnect.Lean.sln
   - nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner
 script:
-  - xbuild /p:Configuration=Release QuantConnect.Lean.sln
+  - xbuild /p:Configuration=Release /p:VbcToolExe=vbnc.exe QuantConnect.Lean.sln
   - mono ./testrunner/NUnit.Runners.2.6.4/tools/nunit-console.exe ./Tests/bin/Release/QuantConnect.Tests.dll
