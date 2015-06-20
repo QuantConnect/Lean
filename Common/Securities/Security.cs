@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Text.RegularExpressions;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities.Equity;
@@ -424,6 +425,9 @@ namespace QuantConnect.Securities
         {
             if (string.IsNullOrWhiteSpace(market))
                 throw new ArgumentException("The market cannot be an empty string.");
+
+            if (!Regex.IsMatch(market, @"^[a-zA-Z]+$"))
+                throw new ArgumentException("The market must only contain letters A-Z.");
 
             _config.Market = market;
         }
