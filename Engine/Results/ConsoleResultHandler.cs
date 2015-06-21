@@ -242,12 +242,14 @@ namespace QuantConnect.Lean.Engine.Results
         public void Sample(string chartName, ChartType chartType, string seriesName, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
         {
             var chartFilename = Path.Combine(_chartDirectory, chartName + "-" + seriesName + ".csv");
-            using (var writer = new StreamWriter(File.Open(chartFilename, FileMode.Append)))
-            {
-                writer.WriteLine(time + "," + value);
-            }
+
             lock (_chartLock)
             {
+                using (var writer = new StreamWriter(File.Open(chartFilename, FileMode.Append)))
+                {
+                    writer.WriteLine(time + "," + value);
+                }
+
                 //Add a copy locally:
                 if (!Charts.ContainsKey(chartName))
                 {
