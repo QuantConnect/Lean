@@ -213,7 +213,8 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Automatically plots each indicator when a new value is available
         /// </summary>
-        public void PlotIndicator(string chart, params IndicatorBase<IndicatorDataPoint>[] indicators)
+        public void PlotIndicator<T>(string chart, params IndicatorBase<T>[] indicators)
+            where T : BaseData
         {
             foreach (var i in indicators)
             {
