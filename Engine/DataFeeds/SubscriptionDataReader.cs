@@ -63,7 +63,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Subscription Securities Access
         private Security _security;
 
-        /// true if we can find a scale factor file for the security of the form: ..\Lean\Data\equity\factor_files\{SYMBOL}.csv
+        /// true if we can find a scale factor file for the security of the form: ..\Lean\Data\equity\market\factor_files\{SYMBOL}.csv
         private bool _hasScaleFactors = false;
 
         // Subscription is for a QC type:

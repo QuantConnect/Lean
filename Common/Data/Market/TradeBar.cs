@@ -321,20 +321,12 @@ namespace QuantConnect.Data.Market
                 return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile);
             }
 
-            var dateFormat = "yyyyMMdd";
-            var dataType = TickType.Trade;
-            if (config.SecurityType == SecurityType.Forex)
-            {
-                dataType = TickType.Quote;
-                dateFormat = "yyMMdd";
-            }
-
-            string source;
+            var dataType = config.SecurityType == SecurityType.Forex ? TickType.Quote : TickType.Trade; 
             var securityTypePath = config.SecurityType.ToString().ToLower();
             var resolutionPath = config.Resolution.ToString().ToLower();
             var symbolPath = (string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol).ToLower();
             var market = config.Market.ToLower();
-            var filename = date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
+            var filename = date.ToString(DateFormat.EightCharacter) + "_" + dataType.ToString().ToLower() + ".zip";
 
 
             if (config.Resolution == Resolution.Hour || config.Resolution == Resolution.Daily)
@@ -344,7 +336,7 @@ namespace QuantConnect.Data.Market
                 symbolPath = string.Empty;
             }
 
-            source = Path.Combine(Constants.DataFolder, securityTypePath, market, resolutionPath, symbolPath, filename);
+            var source = Path.Combine(Constants.DataFolder, securityTypePath, market, resolutionPath, symbolPath, filename);
 
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
         }

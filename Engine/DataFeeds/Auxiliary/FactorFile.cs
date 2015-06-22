@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
 {
@@ -90,6 +91,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
             {
                 return true;
             }
+            Log.Trace("FactorFile.HasScalingFactors(): Factor file not found: " + symbol);
             return false;
         }
 

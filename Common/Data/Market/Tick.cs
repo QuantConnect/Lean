@@ -279,7 +279,6 @@ namespace QuantConnect.Data.Market
             if (config.SecurityType == SecurityType.Forex)
             {
                 dataType = TickType.Quote;
-                dateFormat = "yyMMdd";
             }
 
             string source;
