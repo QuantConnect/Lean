@@ -501,6 +501,9 @@ namespace QuantConnect.Lean.Engine
                 results.ProcessSynchronousEvents();
             } // End of ForEach DataStream
 
+            // stop timing the loops
+            _currentTimeStepTime = DateTime.MinValue;
+
             //Stream over:: Send the final packet and fire final events:
             Log.Trace("AlgorithmManager.Run(): Firing On End Of Algorithm...");
             try
