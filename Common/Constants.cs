@@ -23,12 +23,14 @@ namespace QuantConnect
     /// </summary>
     public static class Constants
     {
+        private static readonly string DataFolderPath = Config.Get("data-folder", @"../../../Data/");
+
         /// <summary>
         /// The root directory of the data folder for this application
         /// </summary>
         public static string DataFolder
         {
-            get { return Config.Get("data-folder", @"../../../Data/"); }
+            get { return DataFolderPath; }
         }
 
         /// <summary>
