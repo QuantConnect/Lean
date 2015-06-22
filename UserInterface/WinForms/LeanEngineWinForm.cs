@@ -96,7 +96,6 @@ namespace QuantConnect.Views.WinForms
             // lean directory we write a new config in the UX output directory.
             // TODO > Most of this should be configured through a helper form in the UX.
             Config.Set("algorithm-type-name", algorithm);
-            Config.Set("local", "true");
             Config.Set("live-mode", "false");
             Config.Set("messaging-handler", "QuantConnect.Messaging.Messaging");
             Config.Set("job-queue-handler", "QuantConnect.Queues.JobQueue");

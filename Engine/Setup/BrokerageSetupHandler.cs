@@ -96,7 +96,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 return names.Single(x => x.Contains(algorithmName));
             });
 
-            loader.TryLoadDebugInformation = !Config.GetBool("local");
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
             if (!complete) throw new Exception(error + " Try re-building algorithm.");
 

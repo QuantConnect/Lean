@@ -68,7 +68,6 @@ namespace QuantConnect.Lean.Engine
 
             //Initialize:
             string mode = "RELEASE";
-            var isLocal = Config.GetBool("local");
             var liveMode = Config.GetBool("live-mode");
 
             #if DEBUG 
@@ -154,15 +153,8 @@ namespace QuantConnect.Lean.Engine
 
                 //Attempt to clean up ram usage:
                 GC.Collect();
+                Log.LogHandler.Dispose();
             }
-
-            // Make the console window pause so we can read log output before exiting and killing the application completely
-            if (isLocal)
-            {
-                Log.Trace("Engine.Main(): Analysis Complete. Press any key to continue.");
-                Console.Read();
-            }
-            Log.LogHandler.Dispose();
         }
 
         /// <summary>

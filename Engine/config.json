@@ -11,11 +11,10 @@
     // algorithm selector
     "algorithm-type-name": "BasicTemplateAlgorithm",
     "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
-	//"algorithm-location": "QuantConnect.Algorithm.FSharp.dll",
-	//"algorithm-location": "QuantConnect.Algorithm.VisualBasic.dll",
+    //"algorithm-location": "QuantConnect.Algorithm.FSharp.dll",
+    //"algorithm-location": "QuantConnect.Algorithm.VisualBasic.dll",
 
     // engine
-    "local": true,
     "data-folder": "../../../Data/",
 
     // handlers
@@ -90,6 +89,10 @@
         // defines the 'live-tradier' environment
         "live-tradier": {
             "live-mode": true,
+
+            // this setting will save tradier access/refresh tokens to a tradier-tokens.txt file
+            // that can be read in next time, this makes it easier to start/stop a tradier algorithm
+            "tradier-save-tokens": true,
 
             // real brokerage implementations require the BrokerageTransactionHandler
             "live-mode-brokerage": "TradierBrokerage",

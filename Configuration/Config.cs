@@ -36,7 +36,6 @@ namespace QuantConnect.Configuration
                 return new JObject
                 {
                     {"algorithm-type-name", "BasicTemplateAlgorithm"},
-                    {"local", true},
                     {"live-mode", false},
                     {"data-folder", "../../../Data/"},
                     {"messaging-handler", "QuantConnect.Messaging.Messaging"},

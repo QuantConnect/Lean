@@ -30,11 +30,6 @@ namespace QuantConnect.AlgorithmFactory
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class Loader : MarshalByRefObject
     {
-        /// <summary>
-        /// Sets a flag indicating whether or not to look for a pdb or mdb file with the same name as the assembly to be loaded
-        /// </summary>
-        public bool TryLoadDebugInformation;
-
         // Defines the maximum amount of time we will allow for instantiating an instance of IAlgorithm
         private readonly TimeSpan _loaderTimeLimit;
 
@@ -124,22 +119,19 @@ namespace QuantConnect.AlgorithmFactory
 
             try
             {
-                // check for debug information if requested
                 byte[] debugInformationBytes = null;
-                if (TryLoadDebugInformation)
+                
+                // see if the pdb exists
+                var mdbFilename = assemblyPath + ".mdb";
+                var pdbFilename = assemblyPath.Substring(0, assemblyPath.Length - 4) + ".pdb";
+                if (File.Exists(pdbFilename))
                 {
-                    // see if the pdb exists
-                    var mdbFilename = assemblyPath + ".mdb";
-                    var pdbFilename = assemblyPath.Substring(0, assemblyPath.Length - 4) + ".pdb";
-                    if (File.Exists(pdbFilename))
-                    {
-                        debugInformationBytes = File.ReadAllBytes(pdbFilename);
-                    }
-                    // see if the mdb exists
-                    if (File.Exists(mdbFilename))
-                    {
-                        debugInformationBytes = File.ReadAllBytes(mdbFilename);
-                    }
+                    debugInformationBytes = File.ReadAllBytes(pdbFilename);
+                }
+                // see if the mdb exists
+                if (File.Exists(mdbFilename))
+                {
+                    debugInformationBytes = File.ReadAllBytes(mdbFilename);
                 }
 
                 //Load the assembly:
