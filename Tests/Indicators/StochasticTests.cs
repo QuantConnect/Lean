@@ -29,9 +29,18 @@ namespace QuantConnect.Tests.Indicators
             const double epsilon = 1e-3;
 
             TestHelper.TestIndicator(stochastics, "spy_with_stoch12k3.txt", "Stochastics 12 %K 3",
-            (ind, expected) => Assert.AreEqual(expected, (double)((Stochastic)ind).StochK.Current.Value, epsilon)
+                (ind, expected) => Assert.AreEqual(expected, (double) ((Stochastic) ind).StochK.Current.Value, epsilon)
+                );
+        }
 
-            );
+        [Test]
+        public void PrimaryOutputIsFastStochProperty()
+        {
+            var stochastics = new Stochastic("sto", 12, 3, 5);
+
+            TestHelper.TestIndicator(stochastics, "spy_with_stoch12k3.txt", "Stochastics 12 %K 3",
+                (ind, expected) => Assert.AreEqual((double) ((Stochastic) ind).FastStoch.Current.Value, ind.Current.Value)
+                );
         }
 
         [Test]
@@ -41,9 +50,30 @@ namespace QuantConnect.Tests.Indicators
 
             const double epsilon = 1e-3;
             TestHelper.TestIndicator(stochastics, "spy_with_stoch12k3.txt", "%D 5",
-                 (ind, expected) => Assert.AreEqual(expected, (double)((Stochastic)ind).StochD.Current.Value, epsilon)
-
+                (ind, expected) => Assert.AreEqual(expected, (double) ((Stochastic) ind).StochD.Current.Value, epsilon)
                 );
+        }
+
+        [Test]
+        public void ResetsProperly()
+        {
+            var stochastics = new Stochastic("sto", 12, 3, 5);
+
+            foreach (var bar in TestHelper.GetTradeBarStream("spy_with_stoch12k3.txt", false))
+            {
+                stochastics.Update(bar);
+            }
+            Assert.IsTrue(stochastics.IsReady);
+            Assert.IsTrue(stochastics.FastStoch.IsReady);
+            Assert.IsTrue(stochastics.StochK.IsReady);
+            Assert.IsTrue(stochastics.StochD.IsReady);
+
+            stochastics.Reset();
+
+            TestHelper.AssertIndicatorIsInDefaultState(stochastics);
+            TestHelper.AssertIndicatorIsInDefaultState(stochastics.FastStoch);
+            TestHelper.AssertIndicatorIsInDefaultState(stochastics.StochK);
+            TestHelper.AssertIndicatorIsInDefaultState(stochastics.StochD);
         }
     }
 }

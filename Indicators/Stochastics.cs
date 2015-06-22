@@ -25,6 +25,11 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class Stochastic : TradeBarIndicator
     {
+        private readonly IndicatorBase<IndicatorDataPoint> _maximum;
+        private readonly IndicatorBase<IndicatorDataPoint> _mininum;
+        private readonly IndicatorBase<IndicatorDataPoint> _sumFastK;
+        private readonly IndicatorBase<IndicatorDataPoint> _sumSlowK;
+
         /// <summary>
         /// Gets the value of the Fast Stochastics %K given Period.
         /// </summary>
@@ -41,26 +46,6 @@ namespace QuantConnect.Indicators
         public IndicatorBase<TradeBar> StochD { get; private set; }
 
         /// <summary>
-        /// Gets or sets the maximum of given period.
-        /// </summary>
-        private IndicatorBase<IndicatorDataPoint> Maximum { get; set; }
-
-        /// <summary>
-        /// Gets or sets the mininum of given period.
-        /// </summary>
-        private IndicatorBase<IndicatorDataPoint> Mininum { get; set; }
-
-        /// <summary>
-        /// Placeholder to calculate the sum of Fast %K.
-        /// </summary>
-        public IndicatorBase<IndicatorDataPoint> SumFastK { get; private set; }
-
-        /// <summary>
-        /// Placeholder to calculate the sum of Slow %K.
-        /// </summary>
-        public IndicatorBase<IndicatorDataPoint> SumSlowK { get; private set; }
-
-        /// <summary>
         /// Creates a new Stochastics Indicator from the specified periods.
         /// </summary>
         /// <param name="name">The name of this indicator.</param>
@@ -70,28 +55,39 @@ namespace QuantConnect.Indicators
         public Stochastic(string name, int period, int kPeriod, int dPeriod)
             : base(name)
         {
-            Maximum = new Maximum(name + "_Max", period);
-            Mininum = new Minimum(name + "_Min", period);
-            SumFastK = new Sum(name + "_SumFastK", kPeriod);
-            SumSlowK = new Sum(name + "_SumD", dPeriod);
+            _maximum = new Maximum(name + "_Max", period);
+            _mininum = new Minimum(name + "_Min", period);
+            _sumFastK = new Sum(name + "_SumFastK", kPeriod);
+            _sumSlowK = new Sum(name + "_SumD", dPeriod);
 
             FastStoch = new FunctionalIndicator<TradeBar>(name + "_FastStoch",
                 input => ComputeFastStoch(period, input),
-                fastStoch => Maximum.IsReady,
-                () => Maximum.Reset()
+                fastStoch => _maximum.IsReady,
+                () => _maximum.Reset()
                 );
 
             StochK = new FunctionalIndicator<TradeBar>(name + "_StochK",
                 input => ComputeStochK(period, kPeriod, input),
-                stochK => Maximum.IsReady,
-                () => Maximum.Reset()
+                stochK => _maximum.IsReady,
+                () => _maximum.Reset()
                 );
 
             StochD = new FunctionalIndicator<TradeBar>(name + "_StochD",
                 input => ComputeStochD(period, kPeriod, dPeriod),
-                stochD => Maximum.IsReady,
-                () => Maximum.Reset()
+                stochD => _maximum.IsReady,
+                () => _maximum.Reset()
                 );
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Stochastic"/> indicator from the specified inputs.
+        /// </summary>
+        /// <param name="period">The period given to calculate the Fast %K</param>
+        /// <param name="kPeriod">The K period given to calculated the Slow %K</param>
+        /// <param name="dPeriod">The D period given to calculated the Slow %D</param>
+        public Stochastic(int period, int kPeriod, int dPeriod)
+            : this("STO" + period, period, kPeriod, dPeriod)
+        {
         }
 
         /// <summary>
@@ -107,12 +103,12 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            Maximum.Update(input.Time, input.High);
-            Mininum.Update(input.Time, input.Low);
+            _maximum.Update(input.Time, input.High);
+            _mininum.Update(input.Time, input.Low);
             FastStoch.Update(input);
             StochK.Update(input);
             StochD.Update(input);
-            return StochK * 100;
+            return FastStoch;
         }
 
         /// <summary>
@@ -123,9 +119,9 @@ namespace QuantConnect.Indicators
         /// <returns>The Fast Stochastics %K value.</returns>
         private decimal ComputeFastStoch(int period, TradeBar input)
         {
-            var fastStoch = Maximum.Samples >= period ? (input.Close - Mininum) / (Maximum - Mininum) : new decimal(0.0);
-            SumFastK.Update(input.Time, fastStoch);
-            return fastStoch;
+            var fastStoch = _maximum.Samples >= period ? (input.Close - _mininum) / (_maximum - _mininum) : new decimal(0.0);
+            _sumFastK.Update(input.Time, fastStoch);
+            return fastStoch * 100;
         }
 
         /// <summary>
@@ -137,8 +133,8 @@ namespace QuantConnect.Indicators
         /// <returns>The Slow Stochastics %K value.</returns>
         private decimal ComputeStochK(int period, int constantK, TradeBar input)
         {
-            var stochK = Maximum.Samples >= (period + constantK - 1) ? SumFastK / constantK : new decimal(0.0);
-            SumSlowK.Update(input.Time, stochK);
+            var stochK = _maximum.Samples >= (period + constantK - 1) ? _sumFastK / constantK : new decimal(0.0);
+            _sumSlowK.Update(input.Time, stochK);
             return stochK * 100;
         }
 
@@ -151,7 +147,7 @@ namespace QuantConnect.Indicators
         /// <returns>The Slow Stochastics %D value.</returns>
         private decimal ComputeStochD(int period, int constantK, int constantD)
         {
-            var stochD = Maximum.Samples >= (period + constantK + constantD - 2) ? SumSlowK / constantD : new decimal(0.0);
+            var stochD = _maximum.Samples >= (period + constantK + constantD - 2) ? _sumSlowK / constantD : new decimal(0.0);
             return stochD * 100;
         }
         /// <summary>
@@ -162,8 +158,8 @@ namespace QuantConnect.Indicators
             FastStoch.Reset();
             StochK.Reset();
             StochD.Reset();
-            SumFastK.Reset();
-            SumSlowK.Reset();
+            _sumFastK.Reset();
+            _sumSlowK.Reset();
             base.Reset();
         }
     }
