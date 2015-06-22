@@ -72,7 +72,8 @@ namespace QuantConnect.Queues
                     Channel = Config.Get("job-channel"),
                     UserId = Config.GetInt("job-user-id"),
                     Version = Constants.Version,
-                    DeployId = Config.Get("algorithm-type-name")
+                    DeployId = Config.Get("algorithm-type-name"),
+                    RamAllocation = int.MaxValue
                 };
 
                 try
@@ -95,7 +96,8 @@ namespace QuantConnect.Queues
                 Type = PacketType.BacktestNode,
                 Algorithm = File.ReadAllBytes(AlgorithmLocation),
                 Version = Constants.Version,
-                BacktestId = Config.Get("algorithm-type-name")
+                BacktestId = Config.Get("algorithm-type-name"),
+                RamAllocation = int.MaxValue
             };
 
             return backtestJob;

@@ -54,7 +54,10 @@ namespace QuantConnect.Tests
             var engine = new Lean.Engine.Engine(systemHandlers, algorithmHandlers, false);
             Task.Factory.StartNew(() =>
             {
-                engine.Run();
+                string algorithmPath;
+                var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
+                engine.Run(job, algorithmPath);
+                systemHandlers.JobQueue.AcknowledgeJob(job);
             }).Wait();
 
             var consoleResultHandler = (ConsoleResultHandler)algorithmHandlers.Results;

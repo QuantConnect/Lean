@@ -107,6 +107,12 @@ namespace QuantConnect.Packets
         /// </summary>
         [JsonProperty(PropertyName = "sRequestSource")]
         public string RequestSource = "WebIDE";
+
+        /// <summary>
+        /// The maximum amount of RAM (in MB) this algorithm is allowed to utilize
+        /// </summary>
+        [JsonProperty(PropertyName = "iMaxRamAllocation")]
+        public int RamAllocation;
     } // End Node Packet:
 
 } // End of Namespace:

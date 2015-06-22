@@ -124,7 +124,10 @@ namespace QuantConnect.Views.WinForms
             var engine = new Engine(systemHandlers, algorithmHandlers, Config.GetBool("live-mode"));
             _leanEngineThread = new Thread(() =>
             {
-                engine.Run();
+                string algorithmPath;
+                var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
+                engine.Run(job, algorithmPath);
+                systemHandlers.JobQueue.AcknowledgeJob(job);
             });
             _leanEngineThread.Start();
 
