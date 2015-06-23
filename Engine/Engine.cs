@@ -416,6 +416,11 @@ namespace QuantConnect.Lean.Engine
                 //No matter what for live mode; make sure we've set algorithm status in the API for "not running" conditions:
                 if (_liveMode && algorithmManager.State != AlgorithmStatus.Running && algorithmManager.State != AlgorithmStatus.RuntimeError)
                     _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, algorithmManager.State);
+
+                _algorithmHandlers.Results.Exit();
+                _algorithmHandlers.DataFeed.Exit();
+                _algorithmHandlers.Transactions.Exit();
+                _algorithmHandlers.RealTime.Exit();
             }
         }
     } // End Algorithm Node Core Thread
