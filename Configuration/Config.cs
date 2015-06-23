@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Logging;
@@ -51,6 +52,32 @@ namespace QuantConnect.Configuration
 
             return JObject.Parse(File.ReadAllText(ConfigurationFileName));
         });
+
+        /// <summary>
+        /// Gets the currently selected environment. If sub-environments are defined,
+        /// they'll be returned as {env1}.{env2}
+        /// </summary>
+        /// <returns>The fully qualified currently selected environment</returns>
+        public static string GetEnvironment()
+        {
+            var environments = new List<string>();
+            JToken currentEnvironment = Settings.Value;
+            var env = currentEnvironment["environment"];
+            while (currentEnvironment != null && env != null)
+            {
+                var currentEnv = env.Value<string>();
+                environments.Add(currentEnv);
+                var moreEnvironments = currentEnvironment["environments"];
+                if (moreEnvironments == null)
+                {
+                    break;
+                }
+
+                currentEnvironment = moreEnvironments[currentEnv];
+                env = currentEnvironment["environment"];
+            }
+            return string.Join(".", environments);
+        }
         
         /// <summary>
         /// Get the matching config setting from the file searching for this key.
@@ -60,6 +87,9 @@ namespace QuantConnect.Configuration
         /// <returns>String value of the configuration setting or empty string if nothing found.</returns>
         public static string Get(string key, string defaultValue = "")
         {
+            // special case environment requests
+            if (key == "environment") return GetEnvironment();
+
             var token = GetToken(Settings.Value, key);
             if (token == null)
             {
@@ -70,7 +100,8 @@ namespace QuantConnect.Configuration
         }
 
         /// <summary>
-        /// Sets a configuration value. This is really only used to help testing
+        /// Sets a configuration value. This is really only used to help testing. The key heye can be
+        /// specified as {environment}.key to set a value on a specific environment
         /// </summary>
         /// <param name="key">The key to be set</param>
         /// <param name="value">The new value</param>
@@ -130,6 +161,9 @@ namespace QuantConnect.Configuration
         public static T GetValue<T>(string key, T defaultValue = default(T))
             where T : IConvertible
         {
+            // special case environment requests
+            if (key == "environment" && typeof (T) == typeof (string)) return (T) (object) GetEnvironment();
+
             var token = GetToken(Settings.Value, key);
             if (token == null)
             {

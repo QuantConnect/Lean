@@ -92,6 +92,18 @@ namespace QuantConnect.Lean.Engine
                 throw;
             }
 
+            //Setup packeting, queue and controls system: These don't do much locally.
+            leanEngineSystemHandlers.Initialize();
+
+            //-> Pull job from QuantConnect job queue, or, pull local build:
+            string assemblyPath;
+            var job = leanEngineSystemHandlers.JobQueue.NextJob(out assemblyPath);
+
+            if (job == null)
+            {
+                throw new Exception("Engine.Main(): Job was null.");
+            }
+
             LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
             try
             {
@@ -110,18 +122,6 @@ namespace QuantConnect.Lean.Engine
             Log.Trace("         RealTime:     " + leanEngineAlgorithmHandlers.RealTime.GetType().FullName);
             Log.Trace("         Results:      " + leanEngineAlgorithmHandlers.Results.GetType().FullName);
             Log.Trace("         Transactions: " + leanEngineAlgorithmHandlers.Transactions.GetType().FullName);
-
-            //Setup packeting, queue and controls system: These don't do much locally.
-            leanEngineSystemHandlers.Initialize();
-
-            //-> Pull job from QuantConnect job queue, or, pull local build:
-            string assemblyPath;
-            var job = leanEngineSystemHandlers.JobQueue.NextJob(out assemblyPath);
-
-            if (job == null)
-            {
-                throw new Exception("Engine.Main(): Job was null.");
-            }
 
             // if the job version doesn't match this instance version then we can't process it
             // we also don't want to reprocess redelivered live jobs

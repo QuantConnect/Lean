@@ -147,6 +147,10 @@ namespace QuantConnect.Lean.Engine
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
+            Results.Exit();
+            DataFeed.Exit();
+            Transactions.Exit();
+            RealTime.Exit();
             Setup.Dispose();
         }
     }
