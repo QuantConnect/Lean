@@ -76,7 +76,14 @@ namespace QuantConnect.Configuration
         /// <param name="value">The new value</param>
         public static void Set(string key, string value)
         {
-            Settings.Value[key] = value;
+            JToken environment = Settings.Value;
+            while (key.Contains("."))
+            {
+                var envName = key.Substring(0, key.IndexOf("."));
+                key = key.Substring(key.IndexOf(".") + 1);
+                environment = environment["environments"][envName];
+            }
+            environment[key] = value;
         }
 
         /// <summary>

@@ -87,6 +87,7 @@
     <Compile Include="Common\Util\VersionHelperTests.cs" />
     <Compile Include="Common\Util\WhoCalledMeTests.cs" />
     <Compile Include="Compression\CompressionTests.cs" />
+    <Compile Include="Configuration\ConfigTests.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />
     <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
     <Compile Include="Indicators\DonchianChannelTest.cs" />
@@ -156,7 +157,6 @@
   <ItemGroup>
     <Folder Include="Adapters\" />
     <Folder Include="API\" />
-    <Folder Include="Config\" />
     <Folder Include="Messaging\" />
     <Folder Include="Tasks\" />
   </ItemGroup>
