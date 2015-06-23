@@ -35,7 +35,7 @@ namespace QuantConnect.Lean.Engine
     /// The engine loads new tasks, create the algorithms and threads, and sends them 
     /// to Algorithm Manager to be executed. It is the primary operating loop.
     /// </summary>
-    public class Engine : IDisposable
+    public class Engine
     {
         private readonly LeanEngineSystemHandlers _systemHandlers;
         private readonly LeanEngineAlgorithmHandlers _algorithmHandlers;
@@ -140,10 +140,8 @@ namespace QuantConnect.Lean.Engine
 
             try
             {
-                using (var engine = new Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode))
-                {
-                    engine.Run(job, assemblyPath);
-                }
+                var engine = new Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
+                engine.Run(job, assemblyPath);
             }
             finally
             {
@@ -151,8 +149,9 @@ namespace QuantConnect.Lean.Engine
                 leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
                 Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
 
-                //Attempt to clean up ram usage:
-                GC.Collect();
+                // clean up resources
+                leanEngineSystemHandlers.Dispose();
+                leanEngineAlgorithmHandlers.Dispose();
                 Log.LogHandler.Dispose();
             }
         }
@@ -418,16 +417,6 @@ namespace QuantConnect.Lean.Engine
                 if (_liveMode && algorithmManager.State != AlgorithmStatus.Running && algorithmManager.State != AlgorithmStatus.RuntimeError)
                     _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, algorithmManager.State);
             }
-        }
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
-            _systemHandlers.Dispose();
-            _algorithmHandlers.Dispose();
         }
     } // End Algorithm Node Core Thread
 } // End Namespace
