@@ -17,7 +17,7 @@ using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
-namespace QuantConnect.Algorithm
+namespace QuantConnect
 {
     /// <summary>
     /// Provides static properties to be used as selectors with the indicator system
@@ -61,10 +61,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public static Func<BaseData, decimal> SevenBar
         {
-            get
-            {
-                return TradeBarPropertyOrValue(x => (2*x.Open + x.High + x.Low + 3*x.Close)/7m);
-            }
+            get { return TradeBarPropertyOrValue(x => (2*x.Open + x.High + x.Low + 3*x.Close)/7m); }
         }
 
         /// <summary>
