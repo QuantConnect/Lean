@@ -220,19 +220,18 @@ namespace QuantConnect
         /// <returns>True if tradeable date</returns>
         public static bool TradableDate(SecurityManager securities, DateTime day) 
         {
-            var tradeable = false;
             try 
             {
                 foreach (var security in securities.Values)
                 {
-                    if (security.Exchange.DateIsOpen(day)) tradeable = true;
+                    if (security.Exchange.IsOpenDuringBar(day.Date, day.Date.AddDays(1), security.IsExtendedMarketHours)) return true;
                 }
             } 
             catch (Exception err)
             {
                 Log.Error("Time.TradeableDate(): " + err.Message);
             }
-            return tradeable;
+            return false;
         }
 
 
