@@ -120,18 +120,23 @@ namespace QuantConnect.AlgorithmFactory
             try
             {
                 byte[] debugInformationBytes = null;
-                
-                // see if the pdb exists
-                var mdbFilename = assemblyPath + ".mdb";
-                var pdbFilename = assemblyPath.Substring(0, assemblyPath.Length - 4) + ".pdb";
-                if (File.Exists(pdbFilename))
+
+                // if the assembly is located in the base directory then don't bother loading the pdbs
+                // manually, they'll be loaded automatically by the .NET runtime.
+                if (new FileInfo(assemblyPath).DirectoryName == AppDomain.CurrentDomain.BaseDirectory)
                 {
-                    debugInformationBytes = File.ReadAllBytes(pdbFilename);
-                }
-                // see if the mdb exists
-                if (File.Exists(mdbFilename))
-                {
-                    debugInformationBytes = File.ReadAllBytes(mdbFilename);
+                    // see if the pdb exists
+                    var mdbFilename = assemblyPath + ".mdb";
+                    var pdbFilename = assemblyPath.Substring(0, assemblyPath.Length - 4) + ".pdb";
+                    if (File.Exists(pdbFilename))
+                    {
+                        debugInformationBytes = File.ReadAllBytes(pdbFilename);
+                    }
+                    // see if the mdb exists
+                    if (File.Exists(mdbFilename))
+                    {
+                        debugInformationBytes = File.ReadAllBytes(mdbFilename);
+                    }
                 }
 
                 //Load the assembly:
