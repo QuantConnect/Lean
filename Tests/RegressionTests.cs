@@ -74,5 +74,32 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$460.82"}
             });
         }
+
+        [Test]
+        public void RegressionAlgorithm()
+        {
+            AlgorithmRunner.RunLocalBacktest("RegressionAlgorithm", new Dictionary<string, string>
+            {
+                {"Total Trades", "2145"},
+                {"Average Win", "0.00%"},
+                {"Average Loss", "0.00%"},
+                {"Compounding Annual Return", "-3.361%"},
+                {"Drawdown", "0.000%"},
+                {"Expectancy", "-0.990"},
+                {"Net Profit", "-0.043%"},
+                {"Sharpe Ratio", "-28.984"},
+                {"Loss Rate", "100%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "1.65"},
+                {"Alpha", "-0.018"},
+                {"Beta", "0"},
+                {"Annual Standard Deviation", "0.001"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "-4.251"},
+                {"Tracking Error", "0.173"},
+                {"Treynor Ratio", "611.111"},
+                {"Total Fees", "$4292.00"}
+            });
+        }
     }
 }
