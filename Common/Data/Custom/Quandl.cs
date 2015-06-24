@@ -31,7 +31,7 @@ namespace QuantConnect.Data.Custom
         private static string _authCode = "";
 
         /// <summary>
-        /// Is the auth
+        /// Flag indicating whether or not the Quanl auth code has been set yet
         /// </summary>
         public static bool IsAuthCodeSet
         {
@@ -40,11 +40,28 @@ namespace QuantConnect.Data.Custom
         }
 
         /// <summary>
+        /// The end time of this data. Some data covers spans (trade bars) and as such we want
+        /// to know the entire time span covered
+        /// </summary>
+        public override DateTime EndTime
+        {
+            get { return Time + Period; }
+            set { Time = value - Period; }
+        }
+
+        /// <summary>
+        /// Gets a time span of one day
+        /// </summary>
+        public TimeSpan Period
+        {
+            get { return QuantConnect.Time.OneDay; }
+        }
+
+        /// <summary>
         /// Default quandl constructor uses Close as its value column
         /// </summary>
         public Quandl()
         {
-            base.EndTime = Time + TimeSpan.FromDays(1);
             _valueColumn = "Close";
         }
         
