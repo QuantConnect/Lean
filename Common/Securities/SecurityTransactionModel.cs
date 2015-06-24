@@ -48,8 +48,7 @@ namespace QuantConnect.Securities
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // make sure the exchange is open before filling
-            var currentBar = asset.GetLastData();
-            if (!asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, false)) return fill;
+            if (!IsExchangeOpen(asset)) return fill;
 
             try
             {
@@ -98,8 +97,7 @@ namespace QuantConnect.Securities
             var fill = new OrderEvent(order);
 
             // make sure the exchange is open before filling
-            var currentBar = asset.GetLastData();
-            if (!asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, false)) return fill;
+            if (!IsExchangeOpen(asset)) return fill;
 
             try
             {
@@ -329,7 +327,7 @@ namespace QuantConnect.Securities
 
                 // wait until market open
                 // make sure the exchange is open before filling
-                if (!asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, false)) return fill;
+                if (!IsExchangeOpen(asset)) return fill;
 
                 order.Price = asset.Open;
                 order.Status = OrderStatus.Filled;
@@ -467,6 +465,23 @@ namespace QuantConnect.Securities
                 minimumPrice = marketData.Value;
                 maximumPrice = marketData.Value;
             }
+        }
+
+        /// <summary>
+        /// Determines if the exchange is open using the current time of the asset
+        /// </summary>
+        private static bool IsExchangeOpen(Security asset)
+        {
+            if (!asset.Exchange.DateTimeIsOpen(asset.Time))
+            {
+                // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
+                var currentBar = asset.GetLastData();
+                if (!asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, false))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         /// <summary>
