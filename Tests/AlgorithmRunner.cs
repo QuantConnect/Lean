@@ -43,6 +43,7 @@ namespace QuantConnect.Tests
             // set the configuration up
             Config.Set("algorithm-type-name", algorithm);
             Config.Set("live-mode", "false");
+            Config.Set("environment", "");
             Config.Set("messaging-handler", "QuantConnect.Messaging.Messaging");
             Config.Set("job-queue-handler", "QuantConnect.Queues.JobQueue");
             Config.Set("api-handler", "QuantConnect.Api.Api");

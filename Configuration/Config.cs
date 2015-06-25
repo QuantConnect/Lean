@@ -190,14 +190,18 @@ namespace QuantConnect.Configuration
             var environmentSetting = settings.SelectToken("environment");
             if (environmentSetting != null)
             {
-                var environment = settings.SelectToken("environments." + environmentSetting.Value<string>());
-                var setting = environment.SelectToken(key);
-                if (setting != null)
+                var environmentSettingValue = environmentSetting.Value<string>();
+                if (!string.IsNullOrWhiteSpace(environmentSettingValue))
                 {
-                    current = setting;
+                    var environment = settings.SelectToken("environments." + environmentSettingValue);
+                    var setting = environment.SelectToken(key);
+                    if (setting != null)
+                    {
+                        current = setting;
+                    }
+                    // allows nesting of environments, live.tradier, live.interactive, ect...
+                    return GetToken(environment, key, current);
                 }
-                // allows nesting of environments, live.tradier, live.interactive, ect...
-                return GetToken(environment, key, current);
             }
             if (current == null)
             {
