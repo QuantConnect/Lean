@@ -300,6 +300,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // we've made it past all of our filters, we're withing the requested start/end of the subscription,
                 // we've satisfied user and market hour filters, so this data is good to go as current
                 Current = instance;
+                if (((TradeBar) (Current)).Period != Time.OneDay)
+                {
+                    
+                }
                 return true;
             }
             // keep looping, we control returning internally
@@ -327,22 +331,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return null;
             }
 
-            _source = _dataFactory.GetSource(_config, date, _isLiveMode);
-
-            // create our stream reader from our data source
-            _reader = CreateStreamReader(_source);
-
-            // if the created reader doesn't have any data, then advance to the next day to try again
-            if (!(_reader != null && !_reader.EndOfStream))
+            if (_config.Symbol == "SPY")
             {
-                // TODO: OnCreateStreamReaderError event
-                Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", _source.Source, _mappedSymbol, date.ToShortDateString()));
-                //Engine.ResultHandler.DebugMessage("We could not find the requested data. This may be an invalid data request, failed download of custom data, or a public holiday. Skipping date (" + date.ToShortDateString() + ").");
-                if (_isDynamicallyLoadedData)
+                
+            }
+
+            var newSource = _dataFactory.GetSource(_config, date, _isLiveMode);
+
+            if (_source != newSource && newSource.Source != "" || (_isLiveMode && _source.TransportMedium == SubscriptionTransportMedium.RemoteFile))
+            {
+                _source = newSource;
+
+                // create our stream reader from our data source
+                _reader = CreateStreamReader(_source);
+
+                // if the created reader doesn't have any data, then advance to the next day to try again
+                if (!(_reader != null && !_reader.EndOfStream))
                 {
-                    _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).", _source));
+                    // TODO: OnCreateStreamReaderError event
+                    Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.",_source.Source, _mappedSymbol, date.ToShortDateString()));
+                    if (_isDynamicallyLoadedData)
+                    {
+                        _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).",_source));
+                    }
+                    return ResolveReader();
                 }
-                return ResolveReader();
+            }
+            else if (!(_isLiveMode && _source.TransportMedium == SubscriptionTransportMedium.RemoteFile))
+            {
+                // if we didn't get a new source then we're done with this subscription
+                return null;
             }
 
             // we've finally found a reader with data!

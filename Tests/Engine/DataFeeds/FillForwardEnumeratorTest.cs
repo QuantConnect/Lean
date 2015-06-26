@@ -262,9 +262,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var data = new BaseData[]
             {
                 // thurs 6/25
-                new TradeBar{Value = 0, Time = reference, EndTime = reference.AddDays(1)},
+                new TradeBar{Value = 0, Time = reference, Period = Time.OneDay},
                 // fri 6/26
-                new TradeBar{Value = 1, Time = reference.AddDays(1), EndTime = reference.AddDays(2)},
+                new TradeBar{Value = 1, Time = reference.AddDays(1), Period = Time.OneDay},
             }.ToList();
             var enumerator = data.GetEnumerator();
 
@@ -326,6 +326,61 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             
+            Assert.IsFalse(fillForwardEnumerator.MoveNext());
+        }
+
+        [Test]
+        public void FillsForwardDailyMissingDays()
+        {
+            var reference = new DateTime(2015, 6, 25);
+            var data = new BaseData[]
+            {
+                // thurs 6/25
+                new TradeBar{Value = 0, Time = reference, Period = Time.OneDay},
+                // fri 6/26
+                new TradeBar{Value = 1, Time = reference.AddDays(5), Period = Time.OneDay},
+            }.ToList();
+            var enumerator = data.GetEnumerator();
+
+            var exchange = new EquityExchange();
+            bool isExtendedMarketHours = false;
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, TimeSpan.FromDays(1), isExtendedMarketHours, data.Last().EndTime.AddDays(1), Resolution.Daily.ToTimeSpan());
+
+            // 6/25
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(reference, fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.IsTrue(((TradeBar)fillForwardEnumerator.Current).Period == Time.OneDay);
+
+            // 6/26
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(reference.AddDays(1), fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
+            Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.IsTrue(((TradeBar)fillForwardEnumerator.Current).Period == Time.OneDay);
+
+            // 6/29
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(reference.AddDays(4), fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(0, fillForwardEnumerator.Current.Value);
+            Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.IsTrue(((TradeBar)fillForwardEnumerator.Current).Period == Time.OneDay);
+
+            // 6/30
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(reference.AddDays(5), fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.IsTrue(((TradeBar)fillForwardEnumerator.Current).Period == Time.OneDay);
+
+            // 7/1
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(reference.AddDays(6), fillForwardEnumerator.Current.Time);
+            Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
+            Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.IsTrue(((TradeBar)fillForwardEnumerator.Current).Period == Time.OneDay);
+
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
     }

@@ -208,10 +208,10 @@ namespace QuantConnect.Lean.Engine
             }
 
             //Waiting for data in the bridges:
-            while (!AllBridgesHaveData() && DateTime.UtcNow < timeout)
-            {
-                Thread.Sleep(1);
-            }
+            //while (!AllBridgesHaveData() && DateTime.UtcNow < timeout)
+            //{
+            //    Thread.Sleep(1);
+            //}
 
             //we want to verify that our data stream is never ahead of our data feed.
             //this acts as a virtual lock around the bridge so we can wait for the feed

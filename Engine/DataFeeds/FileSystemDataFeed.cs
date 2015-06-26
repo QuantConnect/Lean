@@ -217,22 +217,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // check for full bridges
                     var bridgeFullCount = 1;
-                    var bridgeZeroCount = 0;
-                    var active = GetActiveStreams();
 
                     //Pause here while bridges are full, but allow missing files to pass
                     int count = 0;
-                    while (bridgeFullCount > 0 && ((_subscriptions - active) == bridgeZeroCount) && !_exitTriggered)
+                    while (bridgeFullCount > 0 && !_exitTriggered)
                     {
                         bridgeFullCount = Bridge.Count(bridge => bridge.Count >= _bridgeMax);
-                        bridgeZeroCount = Bridge.Count(bridge => bridge.Count == 0);
                         if (count++ > 0)
                         {
                             Thread.Sleep(5);
                         }
                     }
                 }
-
+                LoadedDataFrontier = frontier;
                 frontier = newFrontier;
             }
 
@@ -242,15 +239,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Make sure all bridges empty before declaring "end of bridge":
             while (!EndOfBridges && !_exitTriggered)
             {
-                for (var i = 0; i < _subscriptions; i++)
+                foreach (var endOfBridge in EndOfBridge)
                 {
-                    //Nothing left in the bridge, mark it as finished
-                    if (Bridge[i].Count == 0)
+                    if (endOfBridge)
                     {
-                        EndOfBridge[i] = true;
+                        _endOfStreams = true;
+                        break;
                     }
                 }
-                if (GetActiveStreams() == 0) _endOfStreams = true;
                 Thread.Sleep(100);
             }
 
@@ -285,20 +281,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 t.Clear();
             }
-        }
-
-
-        /// <summary>
-        /// Get the number of active streams still EndOfBridge array.
-        /// </summary>
-        /// <returns>Count of the number of streams with data</returns>
-        private int GetActiveStreams()
-        {
-            //Get the number of active streams:
-            var activeStreams = (from stream in EndOfBridge
-                                 where stream == false
-                                 select stream).Count();
-            return activeStreams;
         }
 
 
