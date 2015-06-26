@@ -57,7 +57,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             set;
         }
 
-        BlockingCollection<TimeSlice> Data
+        ConcurrentQueue<TimeSlice> Data
         {
             get;
         }

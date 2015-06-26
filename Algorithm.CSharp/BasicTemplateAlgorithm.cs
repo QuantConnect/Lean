@@ -28,8 +28,8 @@ namespace QuantConnect.Algorithm.Examples
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
+            SetStartDate(2013, 01, 01);  //Set Start Date
+            SetEndDate(2014, 01, 01);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Second);
@@ -46,8 +46,6 @@ namespace QuantConnect.Algorithm.Examples
                 SetHoldings("SPY", 1);
                 Debug("Purchased Stock");
             }
-
-            //Console.WriteLine(Time);
         }
     }
 }

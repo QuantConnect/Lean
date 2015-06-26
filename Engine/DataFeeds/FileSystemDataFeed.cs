@@ -106,7 +106,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public bool[] EndOfBridge { get; set; }
 
-        public BlockingCollection<TimeSlice> Data { get; private set; } 
+        public ConcurrentQueue<TimeSlice> Data { get; private set; } 
 
         /// <summary>
         /// Frontiers for each fill forward high water mark
@@ -115,7 +115,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
-            Data =  new BlockingCollection<TimeSlice>();
+            Data =  new ConcurrentQueue<TimeSlice>();
 
             Subscriptions = algorithm.SubscriptionManager.Subscriptions;
             _subscriptions = Subscriptions.Count;
@@ -186,9 +186,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             
             frontier = frontier.AddTicks(1);
 
+            int maxTimeSliceCount = 5000000/_subscriptions;
+
             while (!_exitTriggered)
             {
-                var data = new List<BaseData>();
+                var data = new Dictionary<int, List<BaseData>>();
                 var earlyBirdTicks = long.MaxValue;
                 for (int i = 0; i < _subscriptions; i++)
                 {
@@ -197,11 +199,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // skip subscriptions that are finished
                         continue;
                     }
+                    var cache = new List<BaseData>();
+                    data[i] = cache;
 
                     var enumerator = SubscriptionReaders[i];
                     while (enumerator.Current.EndTime < frontier)
                     {
-                        data.Add(enumerator.Current);
+                        cache.Add(enumerator.Current);
                         if (!enumerator.MoveNext())
                         {
                             EndOfBridge[i] = true;
@@ -223,16 +227,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (newFrontier.Date != frontier.Date)
                 {
                     // yield while we have at least 1000 items in the collection
-                    while (Data.Count > 1000 && !_exitTriggered) { Thread.Yield(); }
+                    while (Data.Count > maxTimeSliceCount && !_exitTriggered) { Thread.Yield(); }
                 }
                 LoadedDataFrontier = frontier;
-                Data.Add(new TimeSlice(LoadedDataFrontier, data));
+                Data.Enqueue(new TimeSlice(LoadedDataFrontier, data));
                 frontier = newFrontier;
             }
 
             Log.Trace(DataFeed + ".Run(): Data Feed Completed.");
             LoadingComplete = true;
-            Data.CompleteAdding();
+            //Data.CompleteAdding();
 
             //Make sure all bridges empty before declaring "end of bridge":
             while (!EndOfBridges && !_exitTriggered)
@@ -335,9 +339,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class TimeSlice
     {
         public DateTime Time { get; private set; }
-        public IEnumerable<BaseData> Data { get; private set; }
+        public Dictionary<int, List<BaseData>> Data { get; private set; }
 
-        public TimeSlice(DateTime time, IReadOnlyList<BaseData> data)
+        public TimeSlice(DateTime time, Dictionary<int, List<BaseData>> data)
         {
             Time = time;
             Data = data;
