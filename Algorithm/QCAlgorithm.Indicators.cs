@@ -55,6 +55,15 @@ namespace QuantConnect.Algorithm
             return identity;
         }
 
+        public IchimokuKinkoHyo ICHIMOKU(string symbol, int tenkanPeriod, int kijunPeriod, int senkouAPeriod, int senkouBPeriod, int senkouADelayPeriod, int senkouBDelayPeriod, Resolution? resolution = null)
+        {
+            var name = CreateIndicatorName(symbol, string.Format("ICHIMOKU({0},{1})", tenkanPeriod, kijunPeriod), resolution);
+            var ichimoku = new IchimokuKinkoHyo(name, tenkanPeriod, kijunPeriod, senkouAPeriod, senkouBPeriod, senkouADelayPeriod, senkouBDelayPeriod);
+            RegisterIndicator(symbol, ichimoku, resolution);
+            return ichimoku;
+
+        }
+
         /// <summary>
         /// Creates a new AverageTrueRange indicator for the symbol. The indicator will be automatically
         /// updated on the given resolution.
