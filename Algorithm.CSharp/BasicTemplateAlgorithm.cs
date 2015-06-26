@@ -1,68 +1,53 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Algorithm;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
 using QuantConnect.Data.Market;
 
-namespace QuantConnect
+namespace QuantConnect.Algorithm.Examples
 {
-    /*
-    *   QuantConnect University: Helper Algorithm - Check there is always data:
-    *
-    */
-    public class AlwaysDataAlgorithm : QCAlgorithm
+    /// <summary>
+    /// Basic template algorithm simply initializes the date range and cash
+    /// </summary>
+    public class BasicTemplateAlgorithm : QCAlgorithm
     {
-        //Data Required 
-        List<string> _symbols = new List<string>() { "SPY", "AAPL", "IBM" };
-        List<string> _forexSymbols = new List<string>() { "EURUSD" };
-        TradeBars _bars = new TradeBars();
-
-        //Initialize the data and resolution you require for your strategy:
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
         public override void Initialize()
         {
-            //Start and End Date range for the backtest:
-            SetStartDate(2013, 1, 1);
-            SetEndDate(DateTime.Now.Date.AddDays(-1));
-
-            //Cash allocation
-            SetCash(25000);
-
-            //Add as many securities as you like. All the data will be passed into the event handler:
-            foreach (var symbol in _symbols)
-            {
-                AddSecurity(SecurityType.Equity, symbol, Resolution.Daily);
-            }
-
-            foreach (var symbol in _forexSymbols)
-            {
-                AddSecurity(SecurityType.Forex, symbol, Resolution.Daily);
-            }
-            _symbols.AddRange(_forexSymbols);
+            SetStartDate(2013, 10, 07);  //Set Start Date
+            SetEndDate(2013, 10, 11);    //Set End Date
+            SetCash(100000);             //Set Strategy Cash
+            // Find more symbols here: http://quantconnect.com/data
+            AddSecurity(SecurityType.Equity, "SPY", Resolution.Second);
         }
 
-        //Data Event Handler: New data arrives here. "TradeBars" type is a dictionary of strings so you can access it by symbol.
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
-            // UpdateBars(data);
-            // if (_bars.Count != _symbols.Count) return;
-
-            if (data.ContainsKey("AAPL"))
-                Log("AAPL: " + data["AAPL"].Time); // + " EURUSD: " + data["EURUSD"].Time);
-
-            if (!Portfolio.Invested) Buy("AAPL", 330);
-        }
-
-        //Update the global "_bars" object
-        private void UpdateBars(TradeBars data)
-        {
-            foreach (var bar in data.Values)
+            if (!Portfolio.Invested)
             {
-                if (!_bars.ContainsKey(bar.Symbol))
-                {
-                    _bars.Add(bar.Symbol, bar);
-                }
-                _bars[bar.Symbol] = bar;
+                SetHoldings("SPY", 1);
+                Debug("Purchased Stock");
             }
+
+            //Console.WriteLine(Time);
         }
     }
 }

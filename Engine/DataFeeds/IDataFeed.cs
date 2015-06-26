@@ -57,6 +57,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             set;
         }
 
+        BlockingCollection<TimeSlice> Data
+        {
+            get;
+        }
+
         /// <summary>
         /// Boolean flag indicating there is no more data in any of our subscriptions.
         /// </summary>

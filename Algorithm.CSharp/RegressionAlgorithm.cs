@@ -27,12 +27,13 @@ namespace QuantConnect.Algorithm.CSharp
         private StreamWriter writer;
         public override void Initialize()
         {
-            var file = "output/reg-no-ex.csv";
+            var file = "output/master/master-reg-no-ex.csv";
+            file = "output/reg-no-ex.csv";
             File.Delete(file);
             writer = File.AppendText(file);
 
             SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 07);
+            SetEndDate(2013, 10, 11);
 
             SetCash(10000000);
 

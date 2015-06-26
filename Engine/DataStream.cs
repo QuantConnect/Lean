@@ -21,6 +21,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -67,6 +68,19 @@ namespace QuantConnect.Lean.Engine
             var frontier = frontierOrigin;
             var nextEmitTime = DateTime.MinValue;
             var periods = _feed.Subscriptions.Select(x => x.Resolution.ToTimeSpan()).ToArray();
+
+            var subscriptionIndexBySymbol = _feed.Subscriptions.ToDictionary(x => x.Symbol, x => x.SubscriptionIndex);
+
+            foreach (var timeSlice in _feed.Data.GetConsumingEnumerable())
+            {
+                AlgorithmTime = timeSlice.Time;
+                yield return timeSlice.Data.Select(x => Tuple.Create(subscriptionIndexBySymbol[x.Symbol], x))
+                    .ToLookup(x => x.Item1, x => x.Item2)
+                    .ToDictionary();
+            }
+
+            yield break;
+
             //Wait for datafeeds to be ready, wait for first data to arrive:
             while (_feed.Bridge.Length != _subscriptions) Thread.Sleep(100);
 
@@ -90,14 +104,14 @@ namespace QuantConnect.Lean.Engine
                 {
                     //If there's data on the bridge, check to see if it's time to pull it off, if it's in the future
                     // we'll record the time as 'earlyBirdTicks' so we can fast forward the frontier time
-                    while (!_feed.Bridge[i].IsEmpty)
+                    //while (!_feed.Bridge[i].IsEmpty)
                     {
                         //Look at first item on list, leave it there until time passes this item.
                         List<BaseData> result;
                         if (!_feed.Bridge[i].TryPeek(out result))
                         {
                             // if there's no item skip to the next subscription
-                            break;
+                            continue;
                         }
 
                         DateTime endTime = result[0].EndTime;
@@ -109,7 +123,7 @@ namespace QuantConnect.Lean.Engine
                             {
                                 earlyBirdTicks = endTime.Ticks;
                             }
-                            break;
+                            continue;
                         }
                         if (result.Count > 0)
                         {

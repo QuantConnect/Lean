@@ -106,6 +106,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public bool[] EndOfBridge { get; set; }
 
+        public BlockingCollection<TimeSlice> Data { get; private set; } 
+
         /// <summary>
         /// Frontiers for each fill forward high water mark
         /// </summary>
@@ -113,6 +115,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
+            Data =  new BlockingCollection<TimeSlice>();
+
             Subscriptions = algorithm.SubscriptionManager.Subscriptions;
             _subscriptions = Subscriptions.Count;
 
@@ -174,9 +178,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Run()
         {
             // continue to loop over each subscription, enqueuing data in order
-            var frontier = new DateTime();
+            var frontier = SubscriptionReaders
+                .Where(x => x.Current != null)
+                .Select(x => x.Current.EndTime)
+                .DefaultIfEmpty(DateTime.MinValue)
+                .Min();
+            
+            frontier = frontier.AddTicks(1);
+
             while (!_exitTriggered)
             {
+                var data = new List<BaseData>();
                 var earlyBirdTicks = long.MaxValue;
                 for (int i = 0; i < _subscriptions; i++)
                 {
@@ -187,19 +199,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     var enumerator = SubscriptionReaders[i];
-                    var cache = new List<BaseData>();
                     while (enumerator.Current.EndTime < frontier)
                     {
-                        cache.Add(enumerator.Current);
+                        data.Add(enumerator.Current);
                         if (!enumerator.MoveNext())
                         {
                             EndOfBridge[i] = true;
                             break;
                         }
-                    }
-                    if (cache.Count != 0)
-                    {
-                        Bridge[i].Enqueue(cache);
                     }
 
                     // next data point time
@@ -215,26 +222,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var newFrontier = new DateTime(earlyBirdTicks + 1);
                 if (newFrontier.Date != frontier.Date)
                 {
-                    // check for full bridges
-                    var bridgeFullCount = 1;
-
-                    //Pause here while bridges are full, but allow missing files to pass
-                    int count = 0;
-                    while (bridgeFullCount > 0 && !_exitTriggered)
-                    {
-                        bridgeFullCount = Bridge.Count(bridge => bridge.Count >= _bridgeMax);
-                        if (count++ > 0)
-                        {
-                            Thread.Sleep(5);
-                        }
-                    }
+                    // yield while we have at least 1000 items in the collection
+                    while (Data.Count > 1000 && !_exitTriggered) { Thread.Yield(); }
                 }
                 LoadedDataFrontier = frontier;
+                Data.Add(new TimeSlice(LoadedDataFrontier, data));
                 frontier = newFrontier;
             }
 
             Log.Trace(DataFeed + ".Run(): Data Feed Completed.");
             LoadingComplete = true;
+            Data.CompleteAdding();
 
             //Make sure all bridges empty before declaring "end of bridge":
             while (!EndOfBridges && !_exitTriggered)
@@ -333,4 +331,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
     } // End FileSystem Local Feed Class:
+
+    public class TimeSlice
+    {
+        public DateTime Time { get; private set; }
+        public IEnumerable<BaseData> Data { get; private set; }
+
+        public TimeSlice(DateTime time, IReadOnlyList<BaseData> data)
+        {
+            Time = time;
+            Data = data;
+        }
+    }
 } // End Namespace

@@ -53,6 +53,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private List<decimal> _realtimePrices;
         private IDataQueueHandler _dataQueue;
 
+        public BlockingCollection<TimeSlice> Data { get { throw new NotImplementedException(); } }
+
         /// <summary>
         /// Subscription collection for data requested.
         /// </summary>

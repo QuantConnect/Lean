@@ -13,17 +13,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly DailyState _defaultState;
 
         private readonly DateTime _endTime;
-        private readonly TimeSpan _resolution;
+        private readonly TimeSpan _ffResolution;
         private readonly SecurityExchange _exchange;
         private readonly bool _isExtendedMarketHours;
         private readonly bool _isDailyData;
         private readonly IEnumerator<BaseData> _enumerator;
 
-        public FillForwardEnumerator(IEnumerator<BaseData> enumerator, SecurityExchange exchange, TimeSpan resolution, bool isExtendedMarketHours, DateTime endTime, TimeSpan dataResolution)
+        public FillForwardEnumerator(IEnumerator<BaseData> enumerator, SecurityExchange exchange, TimeSpan ffResolution, bool isExtendedMarketHours, DateTime endTime, TimeSpan dataResolution)
         {
             _enumerator = enumerator;
             _exchange = exchange;
-            _resolution = resolution;
+            _ffResolution = ffResolution;
             _isExtendedMarketHours = isExtendedMarketHours;
             _endTime = endTime;
             _isDailyData = dataResolution == Time.OneDay;
@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 throw new ArgumentOutOfRangeException("dataResolution", "Currently this implementation maxes out at daily resolution");
             }
-            _defaultState = _resolution == Time.OneDay ? DailyState.AfterMarketCheckMissingDay : DailyState.DailyEmit;
+            _defaultState = _ffResolution == Time.OneDay ? DailyState.AfterMarketCheckMissingDay : DailyState.DailyEmit;
             _dailyState = _defaultState;
         }
 
@@ -76,6 +76,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return true;
             }
 
+            if (previous.Symbol == "AIG" && previous.Time.TimeOfDay.TotalHours == 16)
+            {
+                
+            }
+
             if (RequiresFillForwardData(previous, _enumerator.Current, out fillForward, out endOfData))
             {
                 _isFillingForward = true;
@@ -118,7 +123,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // check to see if the gap between previous and next warrants fill forward behavior
-            if (next.Time - previous.Time <= _resolution)
+            if (next.Time - previous.Time <= _ffResolution)
             {
                 fillForward = null;
                 endOfData = false;
@@ -126,32 +131,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // check to see if the exchange is open at the next resolution
-            var barStartTime = previous.Time + _resolution;
-            var barEndTime = previous.EndTime + _resolution;
+            var barStartTime = previous.Time + _ffResolution;
+            var barEndTime = previous.EndTime + _ffResolution;
             
             // excluding daily, if we're expectd to emit next 'resolution' then do it
-            if (!_isDailyData && _exchange.IsOpenDuringBar(barStartTime, barEndTime, _isExtendedMarketHours))
+            if (_exchange.IsOpenDuringBar(barStartTime, barEndTime, _isExtendedMarketHours))
             {
                 fillForward = previous.Clone(true);
                 fillForward.Time = barStartTime;
                 endOfData = false;
                 return true;
             }
-            if (_isDailyData)
-            {
-                if (IsOpen(previous.Time + _resolution) || IsOpen(previous.Time + _resolution.Subtract(TimeSpan.FromTicks(1))))
-                {
-                    fillForward = previous.Clone(true);
-                    fillForward.Time = barStartTime;
-                    endOfData = false;
-                    return true;
-                }
-            }
             
             var exchangeOpenTimeOfDay = (_isExtendedMarketHours ? _exchange.ExtendedMarketOpen : _exchange.MarketOpen);
 
             // advance our time until the next date that is open, this is to skip over weekends/holidays and such
-            var nextOpenDate = (previous.Time + _resolution).Date;
+            var nextOpenDate = (previous.Time + _ffResolution).Date;
             while (nextOpenDate < previous.Time || !_exchange.DateIsOpen(nextOpenDate))
             {
                 nextOpenDate = nextOpenDate.AddDays(1);
@@ -167,7 +162,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // if we've made it here it's because we have a day gap, so fill forward at the exchange open time
-            var fillForwardBarStartTime = exchangeOpen.RoundUp(_resolution);
+            var fillForwardBarStartTime = exchangeOpen.RoundUp(_ffResolution);
 
             endOfData = false;
             if (next.Time <= fillForwardBarStartTime)
@@ -205,7 +200,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool DailyRequiresFillForwardData(BaseData previous, BaseData next, out BaseData fillForward, out bool endOfData)
         {
             // check to see if the gap between previous and next warrants fill forward behavior
-            if (next.Time - previous.Time <= _resolution)
+            if (next.Time - previous.Time <= _ffResolution)
             {
                 fillForward = null;
                 endOfData = false;
@@ -219,19 +214,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // handle first bar of day, 9:30-> 9:31
                     fillForward = previous.Clone(true);
-                    fillForward.Time = GetMarketOpen(previous.Time.Date).RoundUp(_resolution);
+                    fillForward.Time = GetMarketOpen(previous.Time.Date).RoundUp(_ffResolution);
                     endOfData = false;
-                    _dailyState = _resolution == Time.OneDay ? DailyState.DailyEmit : DailyState.MarketOpen;
+                    _dailyState = _ffResolution == Time.OneDay ? DailyState.DailyEmit : DailyState.MarketOpen;
                     return true;
 
                 case DailyState.MarketOpen:
                 case DailyState.ResolutionStep:
 
                     // we just issued a market open bar, so we need to take a single resolution step until the Time+_resolution is outside market hours
-                    if (_exchange.IsOpenDuringBar(previous.Time, previous.Time + _resolution, _isExtendedMarketHours))
+                    if (_exchange.IsOpenDuringBar(previous.Time, previous.Time + _ffResolution, _isExtendedMarketHours))
                     {
                         fillForward = previous.Clone(true);
-                        fillForward.Time = previous.Time + _resolution;
+                        fillForward.Time = previous.Time + _ffResolution;
                         endOfData = false;
                         _dailyState = DailyState.ResolutionStep;
                         return true;

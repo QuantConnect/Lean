@@ -89,6 +89,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public DateTime LoadedDataFrontier { get; private set; }
 
+        public BlockingCollection<TimeSlice> Data { get{throw new NotImplementedException();} }
+
         /// <summary>
         /// Signifying no more data across all bridges
         /// </summary>
