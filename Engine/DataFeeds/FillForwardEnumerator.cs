@@ -10,22 +10,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private bool _isFillingForward;
         private DailyState _dailyState;
-        private readonly DailyState _defaultState;
 
+        private readonly DailyState _defaultState;
         private readonly DateTime _endTime;
+        private readonly TimeSpan _dataResolution;
         private readonly TimeSpan _ffResolution;
         private readonly SecurityExchange _exchange;
         private readonly bool _isExtendedMarketHours;
         private readonly bool _isDailyData;
         private readonly IEnumerator<BaseData> _enumerator;
 
-        public FillForwardEnumerator(IEnumerator<BaseData> enumerator, SecurityExchange exchange, TimeSpan ffResolution, bool isExtendedMarketHours, DateTime endTime, TimeSpan dataResolution)
+        public FillForwardEnumerator(IEnumerator<BaseData> enumerator, 
+            SecurityExchange exchange, 
+            TimeSpan ffResolution, 
+            bool isExtendedMarketHours, 
+            DateTime endTime, 
+            TimeSpan dataResolution)
         {
             _enumerator = enumerator;
             _exchange = exchange;
             _ffResolution = ffResolution;
             _isExtendedMarketHours = isExtendedMarketHours;
             _endTime = endTime;
+            _dataResolution = dataResolution;
             _isDailyData = dataResolution == Time.OneDay;
             if (dataResolution > Time.OneDay)
             {
@@ -76,11 +83,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return true;
             }
 
-            if (previous.Symbol == "AIG" && previous.Time.TimeOfDay.TotalHours == 16)
-            {
-                
-            }
-
             if (RequiresFillForwardData(previous, _enumerator.Current, out fillForward, out endOfData))
             {
                 _isFillingForward = true;
@@ -111,7 +113,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private bool RequiresFillForwardData(BaseData previous, BaseData next, out BaseData fillForward, out bool endOfData)
         {
-            if (next.Time < previous.Time)
+            if (next.EndTime < previous.Time)
             {
                 throw new ArgumentException();
             }
@@ -135,7 +137,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var barEndTime = previous.EndTime + _ffResolution;
             
             // excluding daily, if we're expectd to emit next 'resolution' then do it
-            if (_exchange.IsOpenDuringBar(barStartTime, barEndTime, _isExtendedMarketHours))
+            if (_exchange.IsOpenDuringBar(previous.EndTime, barEndTime, _isExtendedMarketHours))
             {
                 fillForward = previous.Clone(true);
                 fillForward.Time = barStartTime;
@@ -162,10 +164,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // if we've made it here it's because we have a day gap, so fill forward at the exchange open time
-            var fillForwardBarStartTime = exchangeOpen.RoundUp(_ffResolution);
+            var fillForwardBarEndTime = exchangeOpen.RoundUp(_ffResolution);
 
             endOfData = false;
-            if (next.Time <= fillForwardBarStartTime)
+            if (next.EndTime <= fillForwardBarEndTime)
             {
                 fillForward = null;
                 return false;
@@ -175,7 +177,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (nextIsBehindCurrent)
             {
                 // advance the enumerator until we're ahead of current again
-                while (_enumerator.Current.Time < fillForwardBarStartTime)
+                while (_enumerator.Current.Time < fillForwardBarEndTime)
                 {
                     if (!_enumerator.MoveNext())
                     {
@@ -185,14 +187,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            if (_enumerator.Current != null && _enumerator.Current.Time <= fillForwardBarStartTime)
+            if (_enumerator.Current != null && _enumerator.Current.EndTime <= fillForwardBarEndTime)
             {
                 fillForward = null;
                 return false;
             }
 
             fillForward = (nextIsBehindCurrent ? next : previous).Clone(true);
-            fillForward.Time = fillForwardBarStartTime;
+            fillForward.Time = fillForwardBarEndTime - _dataResolution + _ffResolution;
+            fillForward.EndTime = fillForwardBarEndTime + _ffResolution;
 
             return true;
         }

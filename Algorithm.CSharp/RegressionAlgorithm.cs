@@ -59,6 +59,8 @@ namespace QuantConnect.Algorithm.CSharp
                 var symbol = kvp.Key;
                 var bar = kvp.Value;
 
+                writer.WriteLine(string.Join(",", bar.Symbol, bar.Time.ToString("o"), bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, bar.IsFillForward));
+
                 if (bar.Time.RoundDown(bar.Period) != bar.Time)
                 {
                     // only trade on new data
@@ -73,10 +75,6 @@ namespace QuantConnect.Algorithm.CSharp
                 else
                 {
                     MarketOrder(symbol, -holdings.Quantity);
-                }
-                //if (Time.Hour < 12)
-                {
-                    writer.WriteLine(string.Join(",", bar.Symbol, bar.Time.ToString("o"), bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, bar.IsFillForward));
                 }
             }
         }

@@ -288,7 +288,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     continue;
                 }
 
-                if (instance.Time < _periodStart) // TODO : this check should probably be using EndTime
+                if (instance.EndTime < _periodStart)
                 {
                     // keep readnig until we get a value on or after the start
                     Previous = instance;

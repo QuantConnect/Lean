@@ -24,7 +24,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -106,7 +105,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public bool[] EndOfBridge { get; set; }
 
-        public ConcurrentQueue<TimeSlice> Data { get; private set; } 
+        public ConcurrentQueue<TimeSlice> Data
+        {
+            get; private set;
+        } 
 
         /// <summary>
         /// Frontiers for each fill forward high water mark
@@ -204,7 +206,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var enumerator = SubscriptionReaders[i];
                     while (enumerator.Current.EndTime < frontier)
                     {
-                        cache.Add(enumerator.Current);
+                        // we want bars rounded using their subscription times, we make a clone
+                        // so we don't interfere with the enumerator's internal logic
+                        var clone = enumerator.Current.Clone(enumerator.Current.IsFillForward);
+                        clone.Time = clone.Time.RoundDown(Subscriptions[i].Increment);
+                        cache.Add(clone);
                         if (!enumerator.MoveNext())
                         {
                             EndOfBridge[i] = true;
