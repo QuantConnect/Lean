@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 
@@ -45,6 +46,11 @@ namespace QuantConnect
         /// One Second TimeSpan Period Constant
         /// </summary>
         public static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
+
+        /// <summary>
+        /// One Millisecond TimeSpan Period Constant
+        /// </summary>
+        public static readonly TimeSpan OneMillisecond = TimeSpan.FromMilliseconds(1);
 
         /// <summary>
         /// Live charting is sensitive to timezone so need to convert the local system time to a UTC and display in browser as UTC.
@@ -89,7 +95,7 @@ namespace QuantConnect
                 }
             }
         }
-        
+
         /// <summary>
         /// Create a C# DateTime from a UnixTimestamp
         /// </summary>
@@ -200,15 +206,34 @@ namespace QuantConnect
         /// <param name="from">Start date</param>
         /// <param name="thru">End date</param>
         /// <returns>Enumerable date range</returns>
-        public static IEnumerable<DateTime> EachTradeableDay(SecurityManager securities, DateTime from, DateTime thru) 
+        public static IEnumerable<DateTime> EachTradeableDay(SecurityManager securities, DateTime from, DateTime thru)
         {
-            for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1)) 
+            for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1))
             {
-                if (TradableDate(securities, day)) 
+                if (TradableDate(securities, day))
                 {
                     yield return day;
                 }
-            }   
+            }
+        }
+
+
+        /// <summary>
+        /// Define an enumerable date range of tradeable dates - skip the holidays and weekends when securities in this algorithm don't trade.
+        /// </summary>
+        /// <param name="security">The security to get tradeable dates for</param>
+        /// <param name="from">Start date</param>
+        /// <param name="thru">End date</param>
+        /// <returns>Enumerable date range</returns>
+        public static IEnumerable<DateTime> EachTradeableDay(Security security, DateTime from, DateTime thru)
+        {
+            for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1))
+            {
+                if (security.Exchange.DateIsOpen(day))
+                {
+                    yield return day;
+                }
+            }
         }
 
 
@@ -218,15 +243,15 @@ namespace QuantConnect
         /// <param name="securities">Security manager from the algorithm</param>
         /// <param name="day">DateTime to check if trade-able.</param>
         /// <returns>True if tradeable date</returns>
-        public static bool TradableDate(SecurityManager securities, DateTime day) 
+        public static bool TradableDate(SecurityManager securities, DateTime day)
         {
-            try 
+            try
             {
                 foreach (var security in securities.Values)
                 {
                     if (security.Exchange.IsOpenDuringBar(day.Date, day.Date.AddDays(1), security.IsExtendedMarketHours)) return true;
                 }
-            } 
+            }
             catch (Exception err)
             {
                 Log.Error("Time.TradeableDate(): " + err.Message);

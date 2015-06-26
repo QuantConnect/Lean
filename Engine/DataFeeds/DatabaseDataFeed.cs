@@ -37,15 +37,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class DatabaseDataFeed : IDataFeed
     {
         // Set types in public area to speed up:
-        private bool _endOfStreams = false;
-        private int _subscriptions = 0;
-        private int _bridgeMax = 500000;
-        private bool _exitTriggered = false;
+        private int _subscriptions;
+        private bool _exitTriggered;
         private MySqlConnection _connection;
-        private string _table = Config.Get("database-table");
 
         private DateTime[] _mySQLBridgeTime;
         private DateTime _endTime;
+        private SubscriptionDataReader[] _subscriptionReaderManagers;
 
         /// <summary>
         /// List of the subscription the algorithm has requested. Subscriptions contain the type, sourcing information and manage the enumeration of data.
@@ -59,22 +57,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public List<decimal> RealtimePrices { get; private set; }
 
         /// <summary>
-        /// Cross-threading queues so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
-        /// </summary>
-        public ConcurrentQueue<List<BaseData>>[] Bridge { get; set; }
-
-        /// <summary>
-        /// Stream created from the configuration settings.
-        /// </summary>
-        public SubscriptionDataReader[] SubscriptionReaderManagers { get; set; }
-
-        /// <summary>
-        /// Set the source of the data we're requesting for the type-readers to know where to get data from.
-        /// </summary>
-        /// <remarks>Live or Backtesting Datafeed</remarks>
-        public DataFeedEndpoint DataFeed { get; set; }
-
-        /// <summary>
         /// Flag indicating the hander thread is completely finished and ready to dispose.
         /// </summary>
         public bool IsActive { get; private set; }
@@ -85,27 +67,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool LoadingComplete { get; private set; }
 
         /// <summary>
-        /// Furthest point in time that the data has loaded into the bridges.
+        /// Cross-threading queue so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
         /// </summary>
-        public DateTime LoadedDataFrontier { get; private set; }
-
-        /// <summary>
-        /// Signifying no more data across all bridges
-        /// </summary>
-        public bool EndOfBridges
-        {
-            get
-            {
-                for (var i = 0; i < Bridge.Length; i++)
-                {
-                    if (Bridge[i].Count != 0 || EndOfBridge[i] != true || _endOfStreams != true)
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        }
+        public BlockingCollection<TimeSlice> Bridge { get; private set; }
 
         /// <summary>
         /// End of Stream for Each Bridge:
@@ -141,22 +105,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="resultHandler"></param>
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
+            Bridge = new BlockingCollection<TimeSlice>();
+
             //Save the data subscriptions
             Subscriptions = algorithm.SubscriptionManager.Subscriptions;
             _subscriptions = Subscriptions.Count;
 
             //Public Properties:
             IsActive = true;
-            DataFeed = DataFeedEndpoint.FileSystem;
-            Bridge = new ConcurrentQueue<List<BaseData>>[_subscriptions];
             EndOfBridge = new bool[_subscriptions];
-            SubscriptionReaderManagers = new SubscriptionDataReader[_subscriptions];
+            _subscriptionReaderManagers = new SubscriptionDataReader[_subscriptions];
             RealtimePrices = new List<decimal>(_subscriptions);
             _mySQLBridgeTime = new DateTime[_subscriptions];
 
             //Class Privates:
-            _endOfStreams = false;
-            _bridgeMax = _bridgeMax / _subscriptions; //Set the bridge maximum count:
             _endTime = algorithm.EndDate;
 
             //Initialize arrays:
@@ -164,8 +126,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 _mySQLBridgeTime[i] = algorithm.StartDate;
                 EndOfBridge[i] = false;
-                Bridge[i] = new ConcurrentQueue<List<BaseData>>();
-                SubscriptionReaderManagers[i] = new SubscriptionDataReader(Subscriptions[i], algorithm.Securities[Subscriptions[i].Symbol], DataFeedEndpoint.Database, algorithm.StartDate, algorithm.EndDate, resultHandler);
+                _subscriptionReaderManagers[i] = new SubscriptionDataReader(
+                    Subscriptions[i], 
+                    algorithm.Securities[Subscriptions[i].Symbol],
+                    DataFeedEndpoint.Database, 
+                    algorithm.StartDate, 
+                    algorithm.EndDate, 
+                    resultHandler,
+                    Time.EachTradeableDay(algorithm.Securities, algorithm.StartDate, algorithm.EndDate)
+                    );
             }
         }
 
@@ -175,48 +144,92 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <remarks>
         ///     Currently the MYSQL datafeed doesn't support fillforward but will just feed the data from dBase into algorithm.
+        ///     In the future we can write an IEnumerator{BaseData} for accessing the database
         /// </remarks>
         public void Run()
         {
             //Initialize MYSQL Connection:
             Connect();
-            
-            while (!_exitTriggered && IsActive && !EndOfBridges)
+
+            while (!_exitTriggered && IsActive)
             {
+                var frontierTicks = long.MaxValue;
+                var items = new SortedDictionary<DateTime, Dictionary<int, List<BaseData>>>();
+
+                if (Bridge.Count >= 10000)
+                {
+                    // gaurd against overflowing the bridge
+                    Thread.Sleep(5);
+                    continue;
+                }
+
                 for (var i = 0; i < Subscriptions.Count; i++)
                 {
+                    if (EndOfBridge[i])
+                    {
+                        // this subscription is done
+                        continue;
+                    }
+
                     //With each subscription; fetch the next increment of data from the queues:
                     var subscription = Subscriptions[i];
 
-                    if (Bridge[i].Count < 10000 && !EndOfBridge[i])
+                    //Fetch our data from mysql
+                    var data = Query(string.Format("SELECT * " + 
+                        "FROM equity_{0} " + 
+                        "WHERE time >= '{1}' " + 
+                        "AND time <= '{2}' " + 
+                        "ORDER BY time ASC LIMIT 100", subscription.Symbol, _mySQLBridgeTime[i].ToString("u"), _endTime.ToString("u")));
+
+                    //Comment out for live databases, where we should continue asking even if no data.
+                    if (data.Count == 0)
                     {
-                        ////Fetch our data from mysql
-                        var data = Query("SELECT * FROM equity_" + subscription.Symbol + " WHERE time >= '" + _mySQLBridgeTime[i].ToString("u") + "' AND time <= '" + _endTime.ToString("u") + "' ORDER BY time ASC LIMIT 100");
-
-                        //Comment out for live databases, where we should continue asking even if no data.
-                        if (data.Count == 0)
-                        {
-                            EndOfBridge[i] = true;
-                            _endOfStreams = true; // No more data, stop
-                            continue;
-                        } 
-
-                        var bars = GenerateBars(subscription.Symbol, data);
-
-                        ////Insert data into bridge, each list is time-grouped. Assume all different time-groups.
-                        foreach (var bar in bars)
-                        {
-                            Bridge[i].Enqueue(new List<BaseData>() { bar });
-                        }
-                        
-                        ////Record the furthest moment in time.
-                        _mySQLBridgeTime[i] = bars.Max(bar => bar.Time);
+                        EndOfBridge[i] = true;
+                        continue;
                     }
-                }
-                //Set the most backward moment in time we've loaded
-                LoadedDataFrontier = _mySQLBridgeTime.Min();
-            }
 
+                    // group and order the bars by the end time
+                    var bars = GenerateBars(subscription.Symbol, data);
+
+                    // load up our sorted dictionary of data to be put into the bridge
+                    foreach (var bar in bars)
+                    {
+                        Dictionary<int, List<BaseData>> dataDictionary;
+                        if (!items.TryGetValue(bar.EndTime, out dataDictionary))
+                        {
+                            dataDictionary = new Dictionary<int, List<BaseData>>();
+                            items[bar.EndTime] = dataDictionary;
+                        }
+
+                        List<BaseData> dataPoints;
+                        if (!dataDictionary.TryGetValue(i, out dataPoints))
+                        {
+                            dataPoints = new List<BaseData>();
+                            dataDictionary[i] = dataPoints;
+                        }
+
+                        dataPoints.Add(bar);
+                    }
+                        
+                    //Record the furthest moment in time.
+                    _mySQLBridgeTime[i] = bars.Max(bar => bar.Time);
+                    frontierTicks = Math.Min(frontierTicks, bars.Min(bar => bar.EndTime.Ticks));
+                }
+
+                if (frontierTicks == long.MaxValue)
+                {
+                    // we didn't get anything from the database so we're finished
+                    break;
+                }
+
+                var frontier = new DateTime(frontierTicks);
+                Dictionary<int, List<BaseData>> timeSlice;
+                if (items.TryGetValue(frontier, out timeSlice))
+                {
+                    Bridge.Add(new TimeSlice(frontier, timeSlice));
+                }
+            }
+            LoadingComplete = true;
             _connection.Close();
             IsActive = false;
         }
@@ -255,18 +268,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Exit()
         {
             _exitTriggered = true;
-            PurgeData();
-        }
-
-        /// <summary>
-        /// Loop over all the queues and clear them to fast-quit this thread and return to main.
-        /// </summary>
-        public void PurgeData()
-        {
-            foreach (var t in Bridge)
-            {
-                t.Clear();
-            }
+            Bridge.Dispose();
         }
 
         /// <summary>
@@ -292,7 +294,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _connection.Open();
 
                 //Place a pause here if want to display graph,
-                while (_connection.State != ConnectionState.Open) { Thread.Sleep(100); };
+                while (_connection.State != ConnectionState.Open) { Thread.Sleep(100); }
             }
             catch (Exception err)
             {

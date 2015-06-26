@@ -102,6 +102,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _security = security;
             _increment = config.Increment;
             _queue = new ConcurrentQueue<BaseData>();
+            if (config.Resolution == Resolution.Tick)
+            {
+                throw new ArgumentException("StreamStores are only for non-tick subscriptions");
+            }
         }
 
         /// <summary>
@@ -113,13 +117,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // if we're not within the configured market hours don't process the data
             if (!_security.Exchange.IsOpenDuringBar(data.Time, data.EndTime, _config.ExtendedMarketHours))
             {
-                return;
-            }
-
-            if (_config.Resolution == Resolution.Tick)
-            {
-                // just keep pumping them directly in
-                _queue.Enqueue(data);
                 return;
             }
 
@@ -171,24 +168,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             
             lock (_lock)
             {
-                switch (_type.Name)
+                if (_data == null)
                 {
-                    case "TradeBar":
-                        if (_data == null)
-                        {
-                            _data = new TradeBar(barStartTime, _config.Symbol, tick.LastPrice, tick.LastPrice, tick.LastPrice, tick.LastPrice, tick.Quantity, _config.Resolution.ToTimeSpan());
-                        }
-                        else
-                        {
-                            //Update the bar:
-                            _data.Update(tick.LastPrice, tick.Quantity, tick.BidPrice, tick.AskPrice);
-                        }
-                        break;
-
-                    //Each tick is a new data obj.
-                    case "Tick":
-                        _queue.Enqueue(tick);
-                        break;
+                    _data = new TradeBar(barStartTime, _config.Symbol, tick.LastPrice, tick.LastPrice, tick.LastPrice, tick.LastPrice, tick.Quantity, _config.Resolution.ToTimeSpan());
+                }
+                else
+                {
+                    //Update the bar:
+                    _data.Update(tick.LastPrice, tick.Quantity, tick.BidPrice, tick.AskPrice);
                 }
             }
         }
