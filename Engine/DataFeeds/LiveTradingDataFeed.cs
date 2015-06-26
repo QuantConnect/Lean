@@ -179,10 +179,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _isDynamicallyLoadedData.Add(algorithm.Securities[_subscriptions[i].Symbol].IsDynamicallyLoadedData);
 
                 //Subscription managers for downloading user data:
-                _subscriptionManagers[i] = new SubscriptionDataReader(_subscriptions[i], algorithm.Securities[_subscriptions[i].Symbol], DataFeedEndpoint.LiveTrading, DateTime.MinValue, DateTime.MaxValue, resultHandler);
+                _subscriptionManagers[i] = new SubscriptionDataReader(
+                    _subscriptions[i],
+                    algorithm.Securities[_subscriptions[i].Symbol],
+                    DataFeedEndpoint.LiveTrading,
+                    DateTime.MinValue,
+                    DateTime.MaxValue,
+                    resultHandler,
+                    Time.EachTradeableDay(algorithm.Securities, DateTime.Today, DateTime.MaxValue)
+                    );
 
-                //Set up the source file for today:
-                _subscriptionManagers[i].RefreshSource(DateTime.Now.Date);
+                // prime the pump
+                _subscriptionManagers[i].MoveNext();
 
                 _realtimePrices.Add(0);
             }
@@ -241,15 +249,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var onHour = onMinute && triggerTime.Minute == 0;
                 var onDay = onHour && triggerTime.Hour == 0;
 
-                if (triggerTime.Date != sourceDate)
-                {
-                    //Every day refresh the source file for the custom user data:
-                    for (int i = 0; i < Subscriptions.Count; i++)
-                    {
-                        _subscriptionManagers[i].RefreshSource(triggerTime.Date);
-                        sourceDate = triggerTime.Date;
-                    }
-                }
+                // the readers will no handle their own refresh source
+                //if (triggerTime.Date != sourceDate)
+                //{
+                //    //Every day refresh the source file for the custom user data:
+                //    for (int i = 0; i < Subscriptions.Count; i++)
+                //    {
+                //        _subscriptionManagers[i].RefreshSource(triggerTime.Date);
+                //        sourceDate = triggerTime.Date;
+                //    }
+                //}
 
                 // Determine if this subscription needs to be archived:
                 for (var i = 0; i < Subscriptions.Count; i++)

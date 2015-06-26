@@ -165,7 +165,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _mySQLBridgeTime[i] = algorithm.StartDate;
                 EndOfBridge[i] = false;
                 Bridge[i] = new ConcurrentQueue<List<BaseData>>();
-                SubscriptionReaderManagers[i] = new SubscriptionDataReader(Subscriptions[i], algorithm.Securities[Subscriptions[i].Symbol], DataFeedEndpoint.Database, algorithm.StartDate, algorithm.EndDate, resultHandler);
+                SubscriptionReaderManagers[i] = new SubscriptionDataReader(
+                    Subscriptions[i], 
+                    algorithm.Securities[Subscriptions[i].Symbol],
+                    DataFeedEndpoint.Database, 
+                    algorithm.StartDate, 
+                    algorithm.EndDate, 
+                    resultHandler,
+                    Time.EachTradeableDay(algorithm.Securities, algorithm.StartDate, algorithm.EndDate)
+                    );
             }
         }
 

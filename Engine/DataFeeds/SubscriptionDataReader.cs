@@ -103,6 +103,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         // true if we're in live mode, false otherwise
         private readonly bool _isLiveMode;
         private readonly IResultHandler _resultHandler;
+        private readonly IEnumerator<DateTime> _tradeableDates;
 
         /// <summary>
         /// Last read BaseData object from this type and source
@@ -145,14 +146,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public bool EndOfStream
         {
-            get 
-            {
-                return _endOfStream || _reader == null;
-            }
-            set
-            {
-                _endOfStream = value;
-            }
+            get; 
+            set;
         }
 
         /// <summary>
@@ -164,7 +159,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="periodStart">Start date for the data request/backtest</param>
         /// <param name="periodFinish">Finish date for the data request/backtest</param>
         /// <param name="resultHandler"></param>
-        public SubscriptionDataReader(SubscriptionDataConfig config, Security security, DataFeedEndpoint feed, DateTime periodStart, DateTime periodFinish, IResultHandler resultHandler)
+        /// <param name="tradeableDates">Defines the dates for which we'll request data, in order</param>
+        public SubscriptionDataReader(SubscriptionDataConfig config, Security security, DataFeedEndpoint feed, DateTime periodStart, DateTime periodFinish, IResultHandler resultHandler, IEnumerable<DateTime> tradeableDates)
         {
             //Save configuration of data-subscription:
             _config = config;
@@ -193,6 +189,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _objectActivator = ObjectActivator.GetActivator(config.Type);
 
             _resultHandler = resultHandler;
+            _tradeableDates = tradeableDates.GetEnumerator();
             if (_objectActivator == null)
             {
                 _resultHandler.ErrorMessage("Custom data type '" + config.Type.Name + "' missing parameterless constructor E.g. public " + config.Type.Name + "() { }");
@@ -230,14 +227,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Log.Error("SubscriptionDataReader(): Fetching Price/Map Factors: " + err.Message);
            }
         }
+        
+        #region New Implementation
 
-        /// <summary>
-        /// Try and create a new instance of the object and return it using the MoveNext enumeration pattern ("Current" public variable).
-        /// </summary>
-        /// <remarks>This is a highly called method and should be kept lean as possible.</remarks>
-        /// <returns>Boolean true on successful move next. Set Current public property.</returns>
-        public bool MoveNext() {
-
+        public bool MoveNext()
+        {
             // yield the aux data first
             if (AuxiliaryData.Count != 0)
             {
@@ -246,149 +240,199 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return true;
             }
 
-            BaseData instance = null;
-            var instanceMarketOpen = false;
-            //Log.Debug("SubscriptionDataReader.MoveNext(): Starting MoveNext...");
+            Previous = Current;
 
-            try
+            // get our reader, advancing to the next day if necessary
+            var reader = ResolveReader();
+            
+            // if we were unable to resolve a reader it's because we're out of tradeable dates
+            if (reader == null)
             {
-                //Calls this when no file, first "moveNext()" in refresh source.
-                if (_endOfStream || _reader == null || _reader.EndOfStream)
-                {
-                    if (_reader == null)
-                    {
-                        //Handle the 1% of time:: getReader failed e.g. missing day so skip day:
-                        Current = null;
-                    }
-                    else
-                    {
-                        //This is a MoveNext() after reading the last line of file:
-                        _lastBarOfStream = Current;
-                    }
-                    _endOfStream = true;
-                    return false;
-                }
-
-                //Log.Debug("SubscriptionDataReader.MoveNext(): Launching While-InstanceNotNull && not EOS: " + reader.EndOfStream);
-                //Keep looking until output's an instance:
-                while (instance == null && !_reader.EndOfStream)
-                {
-                    //Get the next string line from file, create instance of BaseData:
-                    var line = _reader.ReadLine();
-                    try
-                    {
-                        instance = _dataFactory.Reader(_config, line, _date, _isLiveMode);
-                    }
-                    catch (Exception err)
-                    {
-                        //Log.Debug("SubscriptionDataReader.MoveNext(): Error invoking instance: " + err.Message);
-                        _resultHandler.RuntimeError("Error invoking " + _config.Symbol + " data reader. Line: " + line + " Error: " + err.Message, err.StackTrace);
-                        _endOfStream = true;
-                        continue;
-                    }
-
-                    if (instance != null)
-                    {
-                        // we care if the market was open at any time over the bar
-                        instanceMarketOpen = Exchange.IsOpenDuringBar(instance.Time, instance.EndTime, false);
-                        
-                        //Apply custom user data filters:
-                        try
-                        {
-                            if (!_security.DataFilter.Filter(_security, instance))
-                            {
-                                instance = null;
-                                continue;
-                            }
-                        }
-                        catch (Exception err)
-                        {
-                            Log.Error("SubscriptionDataReader.MoveNext(): Error applying filter: " + err.Message);
-                            _resultHandler.RuntimeError("Runtime error applying data filter. Assuming filter pass: " + err.Message, err.StackTrace);
-                        }
-
-                        if (instance == null)
-                        {
-                            // REVIEW -- Is this condition heuristically possible?
-                            Log.Trace("SubscriptionDataReader.MoveNext(): Instance null, continuing...");
-                            continue;
-                        }
-
-
-                        //Check if we're in date range of the data request
-                        if (instance.Time < _periodStart)
-                        {
-                            _lastBarOutsideMarketHours = instance;
-                            instance = null;
-                            continue;
-                        }
-                        if (instance.Time > _periodFinish)
-                        {
-                            // we're done with data from this subscription, finalize the reader
-                            Current = null;
-                            _endOfStream = true;
-                            return false;
-                        }
-
-                        //Save bar for extended market hours (fill forward).
-                        if (!instanceMarketOpen)
-                        {
-                            _lastBarOutsideMarketHours = instance;
-                        }
-
-                        //However, if we only want market hours data, don't return yet: Discard and continue looping.
-                        if (!_config.ExtendedMarketHours && !instanceMarketOpen)
-                        {
-                            instance = null;
-                        }
-                    }
-                }
-
-                //Handle edge conditions: First Bar Read: 
-                // -> Use previous bar from yesterday if available
-                if (Current == null)
-                {
-                    //Handle first loop where not set yet:
-                    if (_lastBarOfStream == null)
-                    {
-                        //For first bar, fill forward from premarket data where possible
-                        _lastBarOfStream = _lastBarOutsideMarketHours ?? instance;
-                    }
-                    //If current not set yet, set Previous to yesterday/last bar read. 
-                    Previous = _lastBarOfStream;
-                }
-                else
-                {
-                    Previous = Current;
-                }
-
-                Current = instance;
-
-                //End of Stream: rewind reader to last
-                if (_reader.EndOfStream && instance == null)
-                {
-                    //Log.Debug("SubscriptionDataReader.MoveNext(): Reader EOS.");
-                    _endOfStream = true;
-
-                    if (_isFillForward && Previous != null)
-                    {
-                        //If instance == null, current is null, so clone previous to record the final sample:
-                        Current = Previous.Clone(true);
-                        //When market closes fastforward current bar to the last bar fill forwarded to close time.
-                        Current.Time = _security.Exchange.TimeOfDayClosed(Previous.Time);
-                        // Save the previous bar as last bar before next stream (for fill forwrd).
-                        _lastBarOfStream = Previous;
-                    }
-                    return false;
-                }
-                return true;
-            }
-            catch (Exception err)
-            {
-                Log.Error("SubscriptionDataReader.MoveNext(): " + err.Message);
+                EndOfStream = true;
                 return false;
             }
+
+            // loop until we find data that passes all of our filters
+            do
+            {
+                // if we've run out of data on our current reader then let's find the next one, this will advance our tradeable dates as well
+                if (reader.EndOfStream)
+                {
+                    reader = ResolveReader();
+                    // resolve reader will return null when we're finished with tradeable dates
+                    if (reader == null)
+                    {
+                        EndOfStream = true;
+                        return false;
+                    }
+                }
+
+                // read in a line and then parse it using the data factory
+                var line = reader.ReadLine();
+                BaseData instance = null;
+                try
+                {
+                    instance = _dataFactory.Reader(_config, line, _tradeableDates.Current, _isLiveMode);
+                }
+                catch (Exception err)
+                {
+                    // TODO: this should be an event, such as OnReaderError
+                    _resultHandler.RuntimeError("Error invoking " + _config.Symbol + " data reader. Line: " + line + " Error: " + err.Message, err.StackTrace);
+                }
+                if (instance == null)
+                {
+                    continue;
+                }
+
+                if (instance.Time < _periodStart) // TODO : this check should probably be using EndTime
+                {
+                    // keep readnig until we get a value on or after the start
+                    Previous = instance;
+                    continue;
+                }
+
+                if (instance.Time > _periodFinish)
+                {
+                    // stop reading when we get a value after the end
+                    EndOfStream = true;
+                    return false;
+                }
+
+                // apply extra filters such as market hours and user filters
+                try
+                {
+                    if (!_security.DataFilter.Filter(_security, instance))
+                    {
+                        // data has been filtered out by user code
+                        continue;
+                    }
+                }
+                catch (Exception err)
+                {
+                    // TODO : Eventually this type of filtering should be done later in the pipeline, after fill forward preferably (think of only wanting data at certain times of day, user may filter it out but fill forward will put it back in, but it will be a stale copy!)
+                    Log.Error("SubscriptionDataReader.MoveNext(): Error applying filter: " + err.Message);
+                    _resultHandler.RuntimeError("Runtime error applying data filter. Assuming filter pass: " + err.Message, err.StackTrace);
+                }
+
+                if (!Exchange.IsOpenDuringBar(instance.Time, instance.EndTime, _config.ExtendedMarketHours))
+                {
+                    // we're outside of market hours so we don't actually want to emit this data, but we've saved it off
+                    // as previous so the data feed can have a recent value for fill forward logic
+                    continue;
+                }
+
+                // we've made it past all of our filters, we're withing the requested start/end of the subscription,
+                // we've satisfied user and market hour filters, so this data is good to go as current
+                Current = instance;
+                return true;
+            }
+            // keep looping, we control returning internally
+            while (true);
         }
+
+        private IStreamReader ResolveReader()
+        {
+            // if we still have data to emit, keep using this one
+            if (_reader != null && !_reader.EndOfStream)
+            {
+                return _reader;
+            }
+
+            // if we're out of data and non-null, clean up old resources
+            if (_reader != null)
+            {
+                _reader.Dispose();
+            }
+
+            DateTime date;
+            // if don't have any more days to process then we're done
+            if (!TryGetNextDate(out date))
+            {
+                return null;
+            }
+
+            _source = _dataFactory.GetSource(_config, date, _isLiveMode);
+
+            // create our stream reader from our data source
+            _reader = CreateStreamReader(_source);
+
+            // if the created reader doesn't have any data, then advance to the next day to try again
+            if (!(_reader != null && !_reader.EndOfStream))
+            {
+                // TODO: OnCreateStreamReaderError event
+                Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", _source.Source, _mappedSymbol, date.ToShortDateString()));
+                //Engine.ResultHandler.DebugMessage("We could not find the requested data. This may be an invalid data request, failed download of custom data, or a public holiday. Skipping date (" + date.ToShortDateString() + ").");
+                if (_isDynamicallyLoadedData)
+                {
+                    _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).", _source));
+                }
+                return ResolveReader();
+            }
+
+            // we've finally found a reader with data!
+            return _reader;
+        }
+
+        private IStreamReader CreateStreamReader(SubscriptionDataSource subscriptionDataSource)
+        {
+            IStreamReader reader;
+            switch (subscriptionDataSource.TransportMedium)
+            {
+                case SubscriptionTransportMedium.LocalFile:
+                    reader = HandleLocalFileSource(subscriptionDataSource.Source);
+                    break;
+
+                case SubscriptionTransportMedium.RemoteFile:
+                    reader = HandleRemoteSourceFile(subscriptionDataSource.Source);
+                    break;
+
+                case SubscriptionTransportMedium.Rest:
+                    reader = new RestSubscriptionStreamReader(subscriptionDataSource.Source);
+                    break;
+
+                default:
+                    throw new InvalidEnumArgumentException("Unexpected SubscriptionTransportMedium specified: " + subscriptionDataSource.TransportMedium);
+            }
+            return reader;
+        }
+
+        private bool TryGetNextDate(out DateTime date)
+        {
+            while (_tradeableDates.MoveNext())
+            {
+                date = _tradeableDates.Current;
+                if (!_mapFile.HasData(date))
+                {
+                    continue;
+                }
+
+                // check for dividends and split for this security
+                CheckForDividend(date);
+                CheckForSplit(date);
+
+                // if we have factor files check to see if we need to update the scale factors
+                if (_hasScaleFactors)
+                {
+                    // check to see if the symbol was remapped
+                    _mappedSymbol = _mapFile.GetMappedSymbol(date);
+                    _config.MappedSymbol = _mappedSymbol;
+
+                    // update our price scaling factors in light of the normalization mode
+                    UpdateScaleFactors(date);
+                }
+
+                // if the exchange is open then we should look for data for this data
+                if (_security.Exchange.DateIsOpen(date))
+                {
+                    return true;
+                }
+            }
+
+            date = DateTime.MaxValue.Date;
+            return false;
+        }
+
+        #endregion
 
         /// <summary>
         /// For backwards adjusted data the price is adjusted by a scale factor which is a combination of splits and dividends. 
@@ -451,114 +495,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Reset() 
         {
             throw new NotImplementedException("Reset method not implemented. Assumes loop will only be used once.");
-        }
-
-
-        /// <summary>
-        /// Fetch and set the location of the data from the user's BaseData factory:
-        /// </summary>
-        /// <param name="date">Date of the source file.</param>
-        /// <returns>Boolean true on successfully retrieving the data</returns>
-        public bool RefreshSource(DateTime date)
-        {
-            //Update the source from the getSource method:
-            _date = date;
-
-            // if the map file is an empty instance this will always return true
-            if (!_mapFile.HasData(date))
-            {
-                // don't even bother checking the disk if the map files state we don't have ze dataz
-                return false;
-            }
-
-            // check for dividends and split for this security
-            CheckForDividend(date);
-            CheckForSplit(date);
-
-
-            //If we can find scale factor files on disk, use them. LiveTrading will aways use 1 by definition
-            if (_hasScaleFactors)
-            {
-                // check to see if the symbol was remapped
-                _mappedSymbol = _mapFile.GetMappedSymbol(date);
-                _config.MappedSymbol = _mappedSymbol;
-
-                // update our price scaling factors in light of the normalization mode
-                UpdateScaleFactors(date);
-            }
-
-            //Make sure this particular security is trading today:
-            if (!_security.Exchange.DateIsOpen(date))
-            {
-                _endOfStream = true;
-                return false;
-            }
-
-            //Choose the new source file, hide the QC source file locations, if we're returned null new up a default instance
-            var newSource = GetSource(date) ?? new SubscriptionDataSource("", SubscriptionTransportMedium.LocalFile);
-
-            //When stream over stop looping on this data.
-            if (newSource.Source == "") 
-            {
-                _endOfStream = true;
-                return false;
-            }
-
-            // if the source has changed refresh it, in some cases the source string may
-            // not actually change, such is the case with a live remote file, but we still want
-            // to re-fetch it, so make a special case for live remote file types, we'll assume
-            // local files aren't changing, instead they should point to a new file
-            if (_source != newSource && newSource.Source != "" || (_isLiveMode && _source.TransportMedium == SubscriptionTransportMedium.RemoteFile))
-            {
-                //If a new file, reset the EOS flag:
-                _endOfStream = false;
-                //Set the new source.
-                _source = newSource;
-                //Close out the last source file.
-                Dispose();
-
-                //Load the source:
-                try 
-                {
-                    //Log.Debug("SubscriptionDataReader.RefreshSource(): Created new reader for source: " + source);
-                    _reader = GetReader(_source);
-                } 
-                catch (Exception err) 
-                {
-                    Log.Error("SubscriptionDataReader.RefreshSource(): Failed to get reader: " + err.Message);
-                    //Engine.ResultHandler.DebugMessage("Failed to get a reader for the data source. There may be an error in your custom data source reader. Skipping date (" + date.ToShortDateString() + "). Err: " + err.Message);
-                    return false;
-                }
-
-                if (_reader == null)
-                {
-                    Log.Error("Failed to get StreamReader for data source(" + _source.Source + "), symbol(" + _mappedSymbol + "). Skipping date(" + date.ToShortDateString() + "). Reader is null.");
-                    //Engine.ResultHandler.DebugMessage("We could not find the requested data. This may be an invalid data request, failed download of custom data, or a public holiday. Skipping date (" + date.ToShortDateString() + ").");
-                    if (_isDynamicallyLoadedData)
-                    {
-                        _resultHandler.ErrorMessage("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source (" + _source + ").");
-                    }
-                    return false;
-                }
-
-                //Reset the public properties so we can explicitly set them with lastBar data.
-                Current = null;
-                Previous = null;
-
-                //99% of time, populate the first "Current". 1% of of time no source file (getReader fails), so
-                // method sets the Subscription properties as if no data.
-                try
-                {
-                    MoveNext();
-                }
-                catch (Exception err) 
-                {
-                    throw new Exception("SubscriptionDataReader.RefreshSource(): Could not MoveNext to init stream: " + _source + " " + err.Message + " >> " + err.StackTrace);
-                }
-            }
-
-            //Success:
-            return true;
         }
 
         /// <summary>
@@ -636,44 +572,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Using this source URL, download it to our cache and open a local reader.
-        /// </summary>
-        /// <param name="source">Source URL for the data:</param>
-        /// <returns>StreamReader for the data source</returns>
-        private IStreamReader GetReader(SubscriptionDataSource source)
-        {
-            IStreamReader reader;
-            switch (source.TransportMedium)
-            {
-                case SubscriptionTransportMedium.LocalFile:
-                    reader = HandleLocalFileSource(source.Source);
-                    break;
-
-                case SubscriptionTransportMedium.RemoteFile:
-                    reader = HandleRemoteSourceFile(source.Source);
-                    break;
-
-                case SubscriptionTransportMedium.Rest:
-                    reader = new RestSubscriptionStreamReader(source.Source);
-                    break;
-
-                default:
-                    throw new InvalidEnumArgumentException("Unexpected SubscriptionTransportMedium specified: " + source.TransportMedium);
-            }
-
-            // if the reader is already at end of stream, just set to null so we don't try to get data for today
-            // this provides a fail fast mechanism so we don't need to go into MoveNext via RefreshSource
-            if (reader != null && reader.EndOfStream)
-            {
-                reader.Close();
-                reader.Dispose();
-                reader = null;
-            }
-
-            return reader;
-        }
-
-        /// <summary>
         /// Dispose of the Stream Reader and close out the source stream and file connections.
         /// </summary>
         public void Dispose() 
@@ -688,31 +586,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 _web.Dispose();
             }
-        }
-
-        /// <summary>
-        /// Get the source URL string for this datetime from the users GetSource() method in BaseData.
-        /// </summary>
-        /// <param name="date">DateTime we're requesting.</param>
-        /// <returns>URL string of the source file</returns>
-        public SubscriptionDataSource GetSource(DateTime date)
-        {
-            //Invoke our instance of this method.
-            if (_dataFactory != null) 
-            {
-                try
-                {
-                    return _dataFactory.GetSource(_config, date, _isLiveMode);
-                }
-                catch (Exception err) 
-                {
-                    Log.Error("SubscriptionDataReader.GetSource(): " + err.Message);
-                    _resultHandler.ErrorMessage("Error getting string source location for custom data source: " + err.Message, err.StackTrace);
-                }
-            }
-
-            // return a default instance with an empty string source, this is an indication of failure
-            return new SubscriptionDataSource("", SubscriptionTransportMedium.LocalFile);
         }
 
         /// <summary>

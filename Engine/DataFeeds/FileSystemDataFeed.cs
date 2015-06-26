@@ -134,8 +134,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 //Create a new instance in the dictionary:
                 Bridge[i] = new ConcurrentQueue<List<BaseData>>();
                 EndOfBridge[i] = false;
-                SubscriptionReaders[i] = new SubscriptionDataReader(Subscriptions[i], _algorithm.Securities[Subscriptions[i].Symbol], DataFeed, _algorithm.StartDate, _algorithm.EndDate, resultHandler);
+                SubscriptionReaders[i] = new SubscriptionDataReader(
+                    Subscriptions[i],
+                    _algorithm.Securities[Subscriptions[i].Symbol],
+                    DataFeed,
+                    _algorithm.StartDate,
+                    _algorithm.EndDate,
+                    resultHandler,
+                    Time.EachTradeableDay(algorithm.Securities, algorithm.StartDate, algorithm.EndDate)
+                    );
                 FillForwardFrontiers[i] = new DateTime();
+
+                // prime the pump for iteration in Run
+                EndOfBridge[i] = !SubscriptionReaders[i].MoveNext();
             }
         }
 
@@ -158,21 +169,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var activeStreams = _subscriptions;
 
                 //Initialize the feeds to this date:
-                for (var i = 0; i < _subscriptions; i++) 
-                {
-                    //Don't refresh source when we know the market is closed for this security:
-                    var success = SubscriptionReaders[i].RefreshSource(date);
+                //for (var i = 0; i < _subscriptions; i++) 
+                //{
+                //    //Don't refresh source when we know the market is closed for this security:
+                //    var success = SubscriptionReaders[i].RefreshSource(date);
 
-                    //If we know the market is closed for security then can declare bridge closed.
-                    if (success) {
-                        EndOfBridge[i] = false;
-                    }
-                    else
-                    {
-                        ProcessMissingFileFillForward(SubscriptionReaders[i], i, tradeBarIncrements, date);
-                        EndOfBridge[i] = true;
-                    }
-                }
+                //    //If we know the market is closed for security then can declare bridge closed.
+                //    if (success) {
+                //        EndOfBridge[i] = false;
+                //    }
+                //    else
+                //    {
+                //        ProcessMissingFileFillForward(SubscriptionReaders[i], i, tradeBarIncrements, date);
+                //        EndOfBridge[i] = true;
+                //    }
+                //}
 
                 //Pause the DataFeed
                 var bridgeFullCount = 1;
