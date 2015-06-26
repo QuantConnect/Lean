@@ -147,28 +147,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Bridge[i] = new ConcurrentQueue<List<BaseData>>();
                 EndOfBridge[i] = false;
                 var security = _algorithm.Securities[Subscriptions[i].Symbol];
-                
-                SubscriptionReaders[i] = CreateEnumerator(Subscriptions[i], security, algorithm.StartDate, algorithm.EndDate, resultHandler, fillForwardResolution);
+
+                SubscriptionDataConfig config = Subscriptions[i];
+                DateTime start = algorithm.StartDate;
+                DateTime end = algorithm.EndDate;
+
+                var tradeableDates = Time.EachTradeableDay(security, start.Date, end.Date);
+                IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, security, DataFeedEndpoint.FileSystem, start, end, resultHandler, tradeableDates);
+
+                // optionally apply fill forward logic, but never for tick data
+                if (config.FillDataForward && config.Resolution != Resolution.Tick)
+                {
+                    enumerator = new FillForwardEnumerator(enumerator, security.Exchange, fillForwardResolution, security.IsExtendedMarketHours, end, config.Resolution.ToTimeSpan());
+                }
+
+                // finally apply exchange/user filters
+                SubscriptionReaders[i] = new SubscriptionFilterEnumerator(enumerator, security, end);
                 FillForwardFrontiers[i] = new DateTime();
 
                 // prime the pump for iteration in Run
                 EndOfBridge[i] = !SubscriptionReaders[i].MoveNext();
             }
-        }
-
-        private IEnumerator<BaseData> CreateEnumerator(SubscriptionDataConfig config, Security security, DateTime start, DateTime end, IResultHandler resultHandler, TimeSpan fillForwardResolution)
-        {
-            var tradeableDates = Time.EachTradeableDay(security, start.Date, end.Date);
-            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, security, DataFeedEndpoint.FileSystem, start, end, resultHandler, tradeableDates);
-
-            // optionally apply fill forward logic, but never for tick data
-            if (config.FillDataForward && config.Resolution != Resolution.Tick)
-            {
-                enumerator = new FillForwardEnumerator(enumerator, security.Exchange, fillForwardResolution, security.IsExtendedMarketHours, end, config.Resolution.ToTimeSpan());
-            }
-
-            // finally apply exchange/user filters
-            return new SubscriptionFilterEnumerator(enumerator, security, end);
         }
 
         /// <summary>
@@ -186,7 +185,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             
             frontier = frontier.AddTicks(1);
 
-            int maxTimeSliceCount = 5000000/_subscriptions;
+            int maxTimeSliceCount = 500000/_subscriptions;
 
             while (!_exitTriggered)
             {
@@ -226,8 +225,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var newFrontier = new DateTime(earlyBirdTicks + 1);
                 if (newFrontier.Date != frontier.Date)
                 {
-                    // yield while we have at least 1000 items in the collection
-                    while (Data.Count > maxTimeSliceCount && !_exitTriggered) { Thread.Yield(); }
+                    // yield while we have plenty of data (single core machines, you're welcome.)
+                    while (Data.Count > maxTimeSliceCount && !_exitTriggered)
+                    {
+                        Thread.Sleep(0);
+                    }
                 }
                 LoadedDataFrontier = frontier;
                 Data.Enqueue(new TimeSlice(LoadedDataFrontier, data));
@@ -236,7 +238,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             Log.Trace(DataFeed + ".Run(): Data Feed Completed.");
             LoadingComplete = true;
-            //Data.CompleteAdding();
 
             //Make sure all bridges empty before declaring "end of bridge":
             while (!EndOfBridges && !_exitTriggered)
@@ -283,55 +284,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 t.Clear();
             }
-        }
-
-
-        /// <summary>
-        /// Calculate the minimum increment to scan for data based on the data requested.
-        /// </summary>
-        /// <param name="includeTick">When true the subscriptions include a tick data source, meaning there is almost no increment.</param>
-        /// <returns>Timespan to jump the data source so it efficiently orders the results</returns>
-        private TimeSpan CalculateIncrement(bool includeTick)
-        {
-            var increment = TimeSpan.FromDays(1);
-            foreach (var config in Subscriptions)
-            {
-                switch (config.Resolution)
-                {
-                    //Hourly TradeBars:
-                    case Resolution.Hour:
-                        if (increment > TimeSpan.FromHours(1))
-                        {
-                            increment = TimeSpan.FromHours(1);
-                        }
-                        break;
-
-                    //Minutely TradeBars:
-                    case Resolution.Minute:
-                        if (increment > TimeSpan.FromMinutes(1))
-                        {
-                            increment = TimeSpan.FromMinutes(1);
-                        }
-                        break;
-
-                    //Secondly Bars:
-                    case Resolution.Second:
-                        if (increment > TimeSpan.FromSeconds(1))
-                        {
-                            increment = TimeSpan.FromSeconds(1);
-                        }
-                        break;
-
-                    //Ticks: No increment; just fire each data piece in as they happen.
-                    case Resolution.Tick:
-                        if (increment > TimeSpan.FromMilliseconds(1) && includeTick)
-                        {
-                            increment = new TimeSpan(0, 0, 0, 0, 1);
-                        }
-                        break;
-                }
-            }
-            return increment;
         }
 
     } // End FileSystem Local Feed Class:

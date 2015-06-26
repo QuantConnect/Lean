@@ -43,8 +43,8 @@ namespace QuantConnect.Algorithm.Examples
         {
             if (!Portfolio.Invested)
             {
+                Debug("Purchasing Stock");
                 SetHoldings("SPY", 1);
-                Debug("Purchased Stock");
             }
         }
     }

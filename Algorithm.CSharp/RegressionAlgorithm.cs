@@ -29,6 +29,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             var file = "output/master/master-reg-no-ex.csv";
             file = "output/reg-no-ex.csv";
+            var finfo = new FileInfo(file);
+            if (!finfo.Directory.Exists) Directory.CreateDirectory(finfo.DirectoryName);
             File.Delete(file);
             writer = File.AppendText(file);
 

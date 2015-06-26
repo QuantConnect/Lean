@@ -34,7 +34,6 @@ namespace QuantConnect.Lean.Engine
         private readonly IDataFeed _feed;
 
         //Count of bridges and subscriptions.
-        private int _subscriptions;
         private readonly bool _liveMode;
 
         /// <summary>
@@ -62,21 +61,28 @@ namespace QuantConnect.Lean.Engine
         public IEnumerable<Dictionary<int, List<BaseData>>> GetData(DateTime frontierOrigin)
         {
             //Initialize:
-            _subscriptions = _feed.Subscriptions.Count;
             AlgorithmTime = frontierOrigin;
+            var nextEmitTime = DateTime.UtcNow + Time.OneSecond;
 
-            while (!_feed.LoadingComplete && !_feed.Data.IsEmpty)
+            int count = 0;
+            while (!_feed.LoadingComplete)
             {
                 TimeSlice timeSlice;
                 while (_feed.Data.TryDequeue(out timeSlice))
                 {
+                    count ++;
                     AlgorithmTime = timeSlice.Time;
                     yield return timeSlice.Data;
                 }
 
-                // TODO : emit every second for live mode
+                if (_liveMode && DateTime.UtcNow > nextEmitTime)
+                {
+                    AlgorithmTime = DateTime.Now;
+                    nextEmitTime = DateTime.UtcNow + Time.OneSecond;
+                    yield return new Dictionary<int, List<BaseData>>();
+                }
             }
-
+            Log.Trace(string.Format("Data Stream Count: {0} algo time: {1} feed complete: {2} bridge count: {3}", count, AlgorithmTime, _feed.LoadingComplete, _feed.Data.Count));
             Log.Trace("DataStream.GetData(): All Streams Completed.");
         }
     }
