@@ -228,8 +228,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
            }
         }
         
-        #region New Implementation
-
         public bool MoveNext()
         {
             // yield the aux data first
@@ -279,6 +277,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // TODO: this should be an event, such as OnReaderError
                     _resultHandler.RuntimeError("Error invoking " + _config.Symbol + " data reader. Line: " + line + " Error: " + err.Message, err.StackTrace);
                 }
+
                 if (instance == null)
                 {
                     continue;
@@ -296,29 +295,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // stop reading when we get a value after the end
                     EndOfStream = true;
                     return false;
-                }
-
-                // apply extra filters such as market hours and user filters
-                try
-                {
-                    if (!_security.DataFilter.Filter(_security, instance))
-                    {
-                        // data has been filtered out by user code
-                        continue;
-                    }
-                }
-                catch (Exception err)
-                {
-                    // TODO : Eventually this type of filtering should be done later in the pipeline, after fill forward preferably (think of only wanting data at certain times of day, user may filter it out but fill forward will put it back in, but it will be a stale copy!)
-                    Log.Error("SubscriptionDataReader.MoveNext(): Error applying filter: " + err.Message);
-                    _resultHandler.RuntimeError("Runtime error applying data filter. Assuming filter pass: " + err.Message, err.StackTrace);
-                }
-
-                if (!Exchange.IsOpenDuringBar(instance.Time, instance.EndTime, _config.ExtendedMarketHours))
-                {
-                    // we're outside of market hours so we don't actually want to emit this data, but we've saved it off
-                    // as previous so the data feed can have a recent value for fill forward logic
-                    continue;
                 }
 
                 // we've made it past all of our filters, we're withing the requested start/end of the subscription,
@@ -432,8 +408,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return false;
         }
 
-        #endregion
-
         /// <summary>
         /// For backwards adjusted data the price is adjusted by a scale factor which is a combination of splits and dividends. 
         /// This backwards adjusted price is used by default and fed as the current price.
@@ -458,34 +432,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-        }
-
-        /// <summary>
-        /// Check if this time is open for this subscription.
-        /// </summary>
-        /// <param name="time">Date and time we're checking to see if the market is open</param>
-        /// <returns>Boolean true on market open</returns>
-        public bool IsMarketOpen(DateTime time) 
-        {
-            return _security.Exchange.DateTimeIsOpen(time);
-        }
-
-        /// <summary>
-        /// Gets the associated exchange for this data reader/security
-        /// </summary>
-        public SecurityExchange Exchange
-        {
-            get { return _security.Exchange; }
-        }
-
-        /// <summary>
-        /// Check if we're still in the extended market hours
-        /// </summary>
-        /// <param name="time">Time to scan</param>
-        /// <returns>True on extended market hours</returns>
-        public bool IsExtendedMarketOpen(DateTime time) 
-        {
-            return _security.Exchange.DateTimeIsExtendedOpen(time);
         }
 
         /// <summary>

@@ -137,12 +137,13 @@
     <Compile Include="DataFeeds\Auxiliary\FactorFileRow.cs" />
     <Compile Include="DataFeeds\Auxiliary\MapFile.cs" />
     <Compile Include="DataFeeds\Auxiliary\MapFileRow.cs" />
+    <Compile Include="DataFeeds\FillForwardEnumerator.cs" />
     <Compile Include="DataFeeds\LiveTradingDataFeed.cs" />
     <Compile Include="DataFeeds\DatabaseDataFeed.cs" />
     <Compile Include="DataFeeds\New\BaseDataSubscriptionFactory.cs" />
     <Compile Include="DataFeeds\New\ExchangeHoursFillForwardEnumerator.cs" />
     <Compile Include="DataFeeds\New\ExchangeSubscriptionFilter.cs" />
-    <Compile Include="DataFeeds\New\FillForwardEnumerator.cs" />
+    <Compile Include="DataFeeds\New\_FillForwardEnumerator.cs" />
     <Compile Include="DataFeeds\New\ISubscriptionFactory.cs" />
     <Compile Include="DataFeeds\New\ISubscriptionFilter.cs" />
     <Compile Include="DataFeeds\New\MissingSourceEventArgs.cs" />
@@ -155,6 +156,7 @@
     <Compile Include="DataFeeds\Queues\DataQueue.cs" />
     <Compile Include="DataFeeds\StreamStore.cs" />
     <Compile Include="DataFeeds\SubscriptionDataReader.cs" />
+    <Compile Include="DataFeeds\SubscriptionFilterEnumerator.cs" />
     <Compile Include="DataFeeds\Transport\IStreamReader.cs" />
     <Compile Include="DataFeeds\Transport\LocalFileSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\Transport\RemoteFileSubscriptionStreamReader.cs" />
