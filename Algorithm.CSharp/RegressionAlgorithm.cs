@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.IO;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -23,15 +24,20 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class RegressionAlgorithm : QCAlgorithm
     {
+        private StreamWriter writer;
         public override void Initialize()
         {
+            var file = "output/reg-no-ex.csv";
+            File.Delete(file);
+            writer = File.AppendText(file);
+
             SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 11);
-            
+            SetEndDate(2013, 10, 07);
+
             SetCash(10000000);
 
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Tick);
+            //AddSecurity(SecurityType.Equity, "SPY", Resolution.Tick);
             AddSecurity(SecurityType.Equity, "BAC", Resolution.Minute);
             AddSecurity(SecurityType.Equity, "AIG", Resolution.Hour);
             AddSecurity(SecurityType.Equity, "IBM", Resolution.Daily);
@@ -65,7 +71,16 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     MarketOrder(symbol, -holdings.Quantity);
                 }
+                //if (Time.Hour < 12)
+                {
+                    writer.WriteLine(string.Join(",", bar.Symbol, bar.Time.ToString("o"), bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, bar.IsFillForward));
+                }
             }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            writer.Dispose();
         }
     }
 }

@@ -230,12 +230,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         
         public bool MoveNext()
         {
-            // yield the aux data first
-            if (AuxiliaryData.Count != 0)
+            //// yield the aux data first
+            //if (AuxiliaryData.Count != 0)
+            //{
+            //    Previous = Current;
+            //    Current = AuxiliaryData.Dequeue();
+            //    return true;
+            //}
+
+            if (EndOfStream)
             {
-                Previous = Current;
-                Current = AuxiliaryData.Dequeue();
-                return true;
+                return false;
             }
 
             Previous = Current;
@@ -300,10 +305,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // we've made it past all of our filters, we're withing the requested start/end of the subscription,
                 // we've satisfied user and market hour filters, so this data is good to go as current
                 Current = instance;
-                if (((TradeBar) (Current)).Period != Time.OneDay)
-                {
-                    
-                }
                 return true;
             }
             // keep looping, we control returning internally
@@ -329,11 +330,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (!TryGetNextDate(out date))
             {
                 return null;
-            }
-
-            if (_config.Symbol == "SPY")
-            {
-                
             }
 
             var newSource = _dataFactory.GetSource(_config, date, _isLiveMode);

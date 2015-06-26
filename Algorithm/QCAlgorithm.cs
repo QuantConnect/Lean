@@ -410,6 +410,10 @@ namespace QuantConnect.Algorithm
             {
                 _time = frontier;
             }
+            else
+            {
+                Error(">>>TIME TRAVEL>>>");
+            }
         }
 
         /// <summary>

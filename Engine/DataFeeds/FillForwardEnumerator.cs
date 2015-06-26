@@ -44,7 +44,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool MoveNext()
         {
             var previous = Current;
-
             bool endOfData;
             BaseData fillForward;
             if (!_isFillingForward)
@@ -114,6 +113,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             if (_isDailyData)
             {
+                // daily is kind of special
                 return DailyRequiresFillForwardData(previous, next, out fillForward, out endOfData);
             }
 
