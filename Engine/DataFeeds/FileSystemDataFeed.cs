@@ -33,12 +33,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <remarks>Filesystem datafeeds are incredibly fast</remarks>
     public class FileSystemDataFeed : IDataFeed
     {
-        // Set types in public area to speed up:
         private IAlgorithm _algorithm;
-        private bool _endOfStreams;
         private int _subscriptions;
         private int _bridgeMax = 500000;
         private bool _exitTriggered;
+        private bool[] _endOfBridge;
 
         /// <summary>
         /// List of the subscription the algorithm has requested. Subscriptions contain the type, sourcing information and manage the enumeration of data.
@@ -52,17 +51,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public List<decimal> RealtimePrices { get; private set; } 
 
         /// <summary>
-        /// Cross-threading queues so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
-        /// </summary>
-        public ConcurrentQueue<List<BaseData>>[] Bridge { get; set; }
-
-        /// <summary>
-        /// Set the source of the data we're requesting for the type-readers to know where to get data from.
-        /// </summary>
-        /// <remarks>Live or Backtesting Datafeed</remarks>
-        public DataFeedEndpoint DataFeed { get; set; }
-
-        /// <summary>
         /// Flag indicating the hander thread is completely finished and ready to dispose.
         /// </summary>
         public bool IsActive { get; private set; }
@@ -73,38 +61,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool LoadingComplete { get; private set; }
 
         /// <summary>
-        /// Furthest point in time that the data has loaded into the bridges.
-        /// </summary>
-        public DateTime LoadedDataFrontier { get; private set; }
-
-        /// <summary>
         /// Stream created from the configuration settings.
         /// </summary>
         private IEnumerator<BaseData>[] SubscriptionReaders { get; set; }
 
         /// <summary>
-        /// Signifying no more data across all bridges
+        /// Cross-threading queue so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
         /// </summary>
-        public bool EndOfBridges 
-        {
-            get 
-            {
-                for (var i = 0; i < Bridge.Length; i++)
-                {
-                    if (Bridge[i].Count != 0 || EndOfBridge[i] != true || _endOfStreams != true)
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// End of Stream for Each Bridge:
-        /// </summary>
-        public bool[] EndOfBridge { get; set; }
-
         public ConcurrentQueue<TimeSlice> Data
         {
             get; private set;
@@ -123,17 +86,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _subscriptions = Subscriptions.Count;
 
             //Public Properties:
-            DataFeed = DataFeedEndpoint.FileSystem;
             IsActive = true;
-            Bridge = new ConcurrentQueue<List<BaseData>>[_subscriptions];
-            EndOfBridge = new bool[_subscriptions];
+            _endOfBridge = new bool[_subscriptions];
             SubscriptionReaders = new IEnumerator<BaseData>[_subscriptions];
             FillForwardFrontiers = new DateTime[_subscriptions];
             RealtimePrices = new List<decimal>(_subscriptions);
 
             //Class Privates:
             _algorithm = algorithm;
-            _endOfStreams = false;
             _bridgeMax = _bridgeMax / _subscriptions; //Set the bridge maximum count:
 
             // find the minimum resolution, ignoring ticks
@@ -145,9 +105,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             for (var i = 0; i < _subscriptions; i++)
             {
-                //Create a new instance in the dictionary:
-                Bridge[i] = new ConcurrentQueue<List<BaseData>>();
-                EndOfBridge[i] = false;
+                _endOfBridge[i] = false;
                 var security = _algorithm.Securities[Subscriptions[i].Symbol];
 
                 SubscriptionDataConfig config = Subscriptions[i];
@@ -168,7 +126,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 FillForwardFrontiers[i] = new DateTime();
 
                 // prime the pump for iteration in Run
-                EndOfBridge[i] = !SubscriptionReaders[i].MoveNext();
+                _endOfBridge[i] = !SubscriptionReaders[i].MoveNext();
             }
         }
 
@@ -178,33 +136,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <remarks>This is a hot-thread and should be kept extremely lean. Modify with caution.</remarks>
         public void Run()
         {
-            // continue to loop over each subscription, enqueuing data in order
             var frontier = SubscriptionReaders
                 .Where(x => x.Current != null)
                 .Select(x => x.Current.EndTime)
                 .DefaultIfEmpty(DateTime.MinValue)
                 .Min();
-            
-            frontier = frontier.AddTicks(1);
 
-            int maxTimeSliceCount = 500000/_subscriptions;
+            var maxTimeSliceCount = 500000/_subscriptions;
 
+            // continue to loop over each subscription, enqueuing data in order
             while (!_exitTriggered)
             {
                 var data = new Dictionary<int, List<BaseData>>();
                 var earlyBirdTicks = long.MaxValue;
                 for (int i = 0; i < _subscriptions; i++)
                 {
-                    if (EndOfBridge[i])
+                    if (_endOfBridge[i])
                     {
                         // skip subscriptions that are finished
                         continue;
                     }
+
                     var cache = new List<BaseData>();
                     data[i] = cache;
 
                     var enumerator = SubscriptionReaders[i];
-                    while (enumerator.Current.EndTime < frontier)
+                    while (enumerator.Current.EndTime <= frontier)
                     {
                         // we want bars rounded using their subscription times, we make a clone
                         // so we don't interfere with the enumerator's internal logic
@@ -213,7 +170,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         cache.Add(clone);
                         if (!enumerator.MoveNext())
                         {
-                            EndOfBridge[i] = true;
+                            _endOfBridge[i] = true;
                             break;
                         }
                     }
@@ -228,7 +185,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     break;
                 }
 
-                var newFrontier = new DateTime(earlyBirdTicks + 1);
+                var newFrontier = new DateTime(earlyBirdTicks);
                 if (newFrontier.Date != frontier.Date)
                 {
                     // yield while we have plenty of data (single core machines, you're welcome.)
@@ -237,27 +194,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         Thread.Sleep(0);
                     }
                 }
-                LoadedDataFrontier = frontier;
-                Data.Enqueue(new TimeSlice(LoadedDataFrontier, data));
+
+                // enqueue our next time slice and set the frontier for the next
+                Data.Enqueue(new TimeSlice(frontier, data));
                 frontier = newFrontier;
             }
 
-            Log.Trace(DataFeed + ".Run(): Data Feed Completed.");
+            Log.Trace("FileSystemDataFeed.Run(): Data Feed Completed.");
             LoadingComplete = true;
-
-            //Make sure all bridges empty before declaring "end of bridge":
-            while (!EndOfBridges && !_exitTriggered)
-            {
-                foreach (var endOfBridge in EndOfBridge)
-                {
-                    if (endOfBridge)
-                    {
-                        _endOfStreams = true;
-                        break;
-                    }
-                }
-                Thread.Sleep(100);
-            }
 
             //Close up all streams:
             for (var i = 0; i < Subscriptions.Count; i++)
@@ -265,11 +209,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 SubscriptionReaders[i].Dispose();
             }
 
-            Log.Trace(DataFeed + ".Run(): Ending Thread... ");
+            Log.Trace("FileSystemDataFeed.Run(): Ending Thread... ");
             IsActive = false;
         }
-
-
 
         /// <summary>
         /// Send an exit signal to the thread.
@@ -277,32 +219,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Exit()
         {
             _exitTriggered = true;
-            PurgeData();
-        }
-
-
-        /// <summary>
-        /// Loop over all the queues and clear them to fast-quit this thread and return to main.
-        /// </summary>
-        public void PurgeData()
-        {
-            foreach (var t in Bridge)
-            {
-                t.Clear();
-            }
-        }
-
-    } // End FileSystem Local Feed Class:
-
-    public class TimeSlice
-    {
-        public DateTime Time { get; private set; }
-        public Dictionary<int, List<BaseData>> Data { get; private set; }
-
-        public TimeSlice(DateTime time, Dictionary<int, List<BaseData>> data)
-        {
-            Time = time;
-            Data = data;
+            Data.Clear();
         }
     }
-} // End Namespace
+}
