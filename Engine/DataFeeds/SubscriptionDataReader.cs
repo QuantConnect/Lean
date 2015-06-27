@@ -194,14 +194,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
-            //// yield the aux data first
-            //if (AuxiliaryData.Count != 0)
-            //{
-            //    Previous = Current;
-            //    Current = AuxiliaryData.Dequeue();
-            //    return true;
-            //}
-
             if (_endOfStream)
             {
                 return false;
@@ -239,6 +231,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         _endOfStream = true;
                         return false;
                     }
+                }
+
+                if (_auxiliaryData.Count > 0)
+                {
+                    // check for any auxilliary data before reading a line
+                    Current = _auxiliaryData.Dequeue();
+                    return true;
                 }
 
                 // read in a line and then parse it using the data factory

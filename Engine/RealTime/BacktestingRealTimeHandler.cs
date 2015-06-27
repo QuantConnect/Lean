@@ -139,7 +139,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 try
                 {
                     _algorithm.OnEndOfDay();
-                    Log.Trace(string.Format("BacktestingRealTimeHandler: Fired On End of Day Event() for Day({0})", _time.ToShortDateString()));
+                    //Log.Trace(string.Format("BacktestingRealTimeHandler: Fired On End of Day Event() for Day({0})", _time.ToShortDateString()));
                 }
                 catch (Exception err)
                 {

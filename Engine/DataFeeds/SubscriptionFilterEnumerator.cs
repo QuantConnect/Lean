@@ -26,7 +26,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly ISecurityDataFilter _dataFilter;
 
         /// <summary>
-        /// Convenience method to wrap the enumerator and attach the data filter event to 
+        /// Convenience method to wrap the enumerator and attach the data filter event to log and alery users of errors
         /// </summary>
         /// <param name="resultHandler">Result handler reference used to send errors</param>
         /// <param name="enumerator">The source enumerator to be wrapped</param>
@@ -95,10 +95,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             while (_enumerator.MoveNext())
             {
+                var current = _enumerator.Current;
                 try
                 {
                     // execute user data filters
-                    if (!_dataFilter.Filter(_security, _enumerator.Current))
+                    if (current.DataType != MarketDataType.Auxiliary && !_dataFilter.Filter(_security, current))
                     {
                         continue;
                     }
@@ -110,18 +111,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // verify that the bar is within the exchange's market hours
-                if (!_exchange.IsOpenDuringBar(_enumerator.Current.Time, _enumerator.Current.EndTime, _security.IsExtendedMarketHours))
+                if (current.DataType != MarketDataType.Auxiliary && !_exchange.IsOpenDuringBar(current.Time, current.EndTime, _security.IsExtendedMarketHours))
                 {
                     continue;
                 }
 
                 // make sure we haven't passed the end
-                if (_enumerator.Current.Time > _endTime)
+                if (current.Time > _endTime)
                 {
                     return false;
                 }
 
-                Current = _enumerator.Current;
+                Current = current;
                 return true;
             }
 

@@ -28,7 +28,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class FillForwardEnumerator : IEnumerator<BaseData>
     {
+        private BaseData _previous;
         private bool _isFillingForward;
+        private bool _emittedAuxilliaryData;
         
         private readonly DateTime _endTime;
         private readonly TimeSpan _dataResolution;
@@ -94,6 +96,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
+            if (!_emittedAuxilliaryData)
+            {
+                _previous = Current;
+            }
+
             BaseData fillForward;
 
             if (!_isFillingForward)
@@ -102,7 +109,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (!_enumerator.MoveNext())
                 {
                     // check to see if we ran out of data before the end of the subscription
-                    if (Current == null || Current.EndTime >= _endTime)
+                    if (_previous == null || _previous.EndTime >= _endTime)
                     {
                         // we passed the end of subscription, we're finished
                         return false;
@@ -111,7 +118,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // we can fill forward the rest of this subscription if required
                     var endOfSubscription = Current.Clone(true);
                     endOfSubscription.Time = _endTime - _dataResolution;
-                    if (RequiresFillForwardData(Current, endOfSubscription, out fillForward))
+                    if (RequiresFillForwardData(_previous, endOfSubscription, out fillForward))
                     {
                         // don't mark as filling forward so we come back into this block, subscription is done
                         //_isFillingForward = true;
@@ -124,14 +131,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            if (Current == null)
+            if (_previous == null)
             {
                 // first data point we dutifully emit without modification
                 Current = _enumerator.Current;
                 return true;
             }
 
-            if (RequiresFillForwardData(Current, _enumerator.Current, out fillForward))
+            if (_enumerator.Current.DataType == MarketDataType.Auxiliary)
+            {
+                _emittedAuxilliaryData = true;
+                Current = _enumerator.Current;
+                return true;
+            }
+            
+            _emittedAuxilliaryData = false;
+            if (RequiresFillForwardData(_previous, _enumerator.Current, out fillForward))
             {
                 // we require fill forward day because the _enumerator.Current is too far in future
                 _isFillingForward = true;

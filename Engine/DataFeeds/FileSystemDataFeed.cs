@@ -106,11 +106,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             for (var i = 0; i < _subscriptions; i++)
             {
                 _endOfBridge[i] = false;
-                var security = _algorithm.Securities[Subscriptions[i].Symbol];
 
-                SubscriptionDataConfig config = Subscriptions[i];
-                DateTime start = algorithm.StartDate;
-                DateTime end = algorithm.EndDate;
+                var config = Subscriptions[i];
+                var start = algorithm.StartDate;
+                var end = algorithm.EndDate;
+                var security = _algorithm.Securities[Subscriptions[i].Symbol];
 
                 var tradeableDates = Time.EachTradeableDay(security, start.Date, end.Date);
                 IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, security, DataFeedEndpoint.FileSystem, start, end, resultHandler, tradeableDates);
@@ -122,7 +122,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // finally apply exchange/user filters
-                SubscriptionReaders[i] = new SubscriptionFilterEnumerator(enumerator, security, end);
+                SubscriptionReaders[i] = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, enumerator, security, end);
                 FillForwardFrontiers[i] = new DateTime();
 
                 // prime the pump for iteration in Run
@@ -147,8 +147,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // continue to loop over each subscription, enqueuing data in time order
             while (!_exitTriggered)
             {
-                var data = new Dictionary<int, List<BaseData>>();
                 var earlyBirdTicks = long.MaxValue;
+                var data = new Dictionary<int, List<BaseData>>();
+
                 for (int i = 0; i < _subscriptions; i++)
                 {
                     if (_endOfBridge[i])
