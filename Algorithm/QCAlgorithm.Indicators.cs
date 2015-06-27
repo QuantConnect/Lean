@@ -54,6 +54,27 @@ namespace QuantConnect.Algorithm
             RegisterIndicator(symbol, identity, resolution, selector);
             return identity;
         }
+        /// <summary>
+        /// Creates a new IchimokuKinkoHyo indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose ATR we want</param>
+        /// <param name="tenkanPeriod">The period to calculate the Tenkan-sen period</param>
+        /// <param name="kijunPeriod">The period to calculate the Kijun-sen period</param>
+        /// <param name="senkouAPeriod">The period to calculate the Tenkan-sen period</param>
+        /// <param name="senkouBPeriod">The period to calculate the Tenkan-sen period</param>
+        /// <param name="senkouADelayPeriod">The period to calculate the Tenkan-sen period</param>
+        /// <param name="senkouBDelayPeriod">The period to calculate the Tenkan-sen period</param>
+        /// <param name="resolution">The resolution</param>
+        /// <returns>A new IchimokuKinkoHyo indicator with the specified periods and delays</returns>
+        public IchimokuKinkoHyo ICHIMOKU(string symbol, int tenkanPeriod, int kijunPeriod, int senkouAPeriod, int senkouBPeriod, int senkouADelayPeriod, int senkouBDelayPeriod, Resolution? resolution = null)
+        {
+            var name = CreateIndicatorName(symbol, string.Format("ICHIMOKU({0},{1})", tenkanPeriod, kijunPeriod), resolution);
+            var ichimoku = new IchimokuKinkoHyo(name, tenkanPeriod, kijunPeriod, senkouAPeriod, senkouBPeriod, senkouADelayPeriod, senkouBDelayPeriod);
+            RegisterIndicator(symbol, ichimoku, resolution);
+            return ichimoku;
+
+        }
 
         /// <summary>
         /// Creates a new AverageTrueRange indicator for the symbol. The indicator will be automatically
