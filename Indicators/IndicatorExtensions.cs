@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Globalization;
 using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
@@ -61,6 +62,21 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the sum of the left and the constant
+        /// </summary>
+        /// <remarks>
+        /// value = left + constant
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="constant">The addend</param>
+        /// <returns>The sum of the left and right indicators</returns>
+        public static CompositeIndicator<IndicatorDataPoint> Plus(this IndicatorBase<IndicatorDataPoint> left, decimal constant)
+        {
+            var constantIndicator = new ConstantIndicator<IndicatorDataPoint>(constant.ToString(CultureInfo.InvariantCulture), constant);
+            return left.Plus(constantIndicator);
+        }
+
+        /// <summary>
         /// Creates a new CompositeIndicator such that the result will be the sum of the left and right
         /// </summary>
         /// <remarks>
@@ -87,6 +103,21 @@ namespace QuantConnect.Indicators
         public static CompositeIndicator<IndicatorDataPoint> Plus(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right, string name)
         {
             return new CompositeIndicator<IndicatorDataPoint>(name, left, right, (l, r) => l + r);
+        }
+
+        /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the difference of the left and constant
+        /// </summary>
+        /// <remarks>
+        /// value = left - constant
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="constant">The subtrahend</param>
+        /// <returns>The difference of the left and right indicators</returns>
+        public static CompositeIndicator<IndicatorDataPoint> Minus(this IndicatorBase<IndicatorDataPoint> left, decimal constant)
+        {
+            var constantIndicator = new ConstantIndicator<IndicatorDataPoint>(constant.ToString(CultureInfo.InvariantCulture), constant);
+            return left.Minus(constantIndicator);
         }
 
         /// <summary>
@@ -119,6 +150,21 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the ratio of the left to the constant
+        /// </summary>
+        /// <remarks>
+        /// value = left/constant
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="constant">The constant value denominator</param>
+        /// <returns>The ratio of the left to the right indicator</returns>
+        public static CompositeIndicator<IndicatorDataPoint> Over(this IndicatorBase<IndicatorDataPoint> left, decimal constant)
+        {
+            var constantIndicator = new ConstantIndicator<IndicatorDataPoint>(constant.ToString(CultureInfo.InvariantCulture), constant);
+            return left.Over(constantIndicator);
+        }
+
+        /// <summary>
         /// Creates a new CompositeIndicator such that the result will be the ratio of the left to the right
         /// </summary>
         /// <remarks>
@@ -145,6 +191,21 @@ namespace QuantConnect.Indicators
         public static CompositeIndicator<IndicatorDataPoint> Over(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right, string name)
         {
             return new CompositeIndicator<IndicatorDataPoint>(name, left, right, (l, r) => l / r);
+        }
+
+        /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the product of the left and the constant
+        /// </summary>
+        /// <remarks>
+        /// value = left*constant
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="constant">The constant value to multiple by</param>
+        /// <returns>The product of the left to the right indicators</returns>
+        public static CompositeIndicator<IndicatorDataPoint> Times(this IndicatorBase<IndicatorDataPoint> left, decimal constant)
+        {
+            var constantIndicator = new ConstantIndicator<IndicatorDataPoint>(constant.ToString(CultureInfo.InvariantCulture), constant);
+            return left.Times(constantIndicator);
         }
 
         /// <summary>

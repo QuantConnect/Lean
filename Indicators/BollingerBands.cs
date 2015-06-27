@@ -57,9 +57,8 @@ namespace QuantConnect.Indicators
             MovingAverageType = movingAverageType;
             StandardDeviation = new StandardDeviation(name + "_StandardDeviation", period);
             MiddleBand = movingAverageType.AsIndicator(name + "_MiddleBand", period);
-            var kConstant = new ConstantIndicator<IndicatorDataPoint>(k.ToString(), k);
-            LowerBand = MiddleBand.Minus(StandardDeviation.Times(kConstant), name + "_LowerBand");
-            UpperBand = MiddleBand.Plus(StandardDeviation.Times(kConstant), name + "_UpperBand");
+            LowerBand = MiddleBand.Minus(StandardDeviation.Times(k), name + "_LowerBand");
+            UpperBand = MiddleBand.Plus(StandardDeviation.Times(k), name + "_UpperBand");
         }
            
         /// <summary>
