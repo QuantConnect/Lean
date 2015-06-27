@@ -38,12 +38,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <remarks>The class accepts any subscription configuration and automatically makes it availble to enumerate</remarks>
     public class SubscriptionDataReader : IEnumerator<BaseData>
     {
-        /// Source string to create memory stream:
+        // Source string to create memory stream:
         private SubscriptionDataSource _source;
 
         private bool _endOfStream;
 
-        ///Date of this source file.
+        // Date of this source file.
         private DateTime _date = new DateTime();
 
         /// Internal stream reader for processing data line by line:
@@ -61,13 +61,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         // Subscription is for a QC type:
         private readonly bool _isDynamicallyLoadedData;
 
-        //Symbol Mapping:
+        // Symbol Mapping:
         private string _mappedSymbol = "";
 
-        /// Location of the datafeed - the type of this data.
+        // Location of the datafeed - the type of this data.
         private readonly DataFeedEndpoint _feedEndpoint;
 
-        ///Create a single instance to invoke all Type Methods:
+        // Create a single instance to invoke all Type Methods:
         private readonly BaseData _dataFactory;
 
         //Start finish times of the backtest:
@@ -87,6 +87,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         // true if we're in live mode, false otherwise
         private readonly bool _isLiveMode;
+
+        private BaseData _previous;
+        private readonly Queue<BaseData> _auxiliaryData;
         private readonly IResultHandler _resultHandler;
         private readonly IEnumerator<DateTime> _tradeableDates;
 
@@ -108,25 +111,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Provides a means of exposing extra data related to this subscription.
-        /// For now we expose dividend data for equities through here
-        /// </summary>
-        /// <remarks>
-        /// It is currently assumed that whomever is pumping data into here is handling the
-        /// time syncing issues. Dividends do this through the RefreshSource method
-        /// </remarks>
-        public Queue<BaseData> AuxiliaryData { get; private set; }
-
-        /// <summary>
-        /// Save an instance of the previous basedata we generated
-        /// </summary>
-        public BaseData Previous
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
         /// Subscription data reader takes a subscription request, loads the type, accepts the data source and enumerate on the results.
         /// </summary>
         /// <param name="config">Subscription configuration object</param>
@@ -141,7 +125,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Save configuration of data-subscription:
             _config = config;
 
-            AuxiliaryData = new Queue<BaseData>();
+            _auxiliaryData = new Queue<BaseData>();
 
             //Save Start and End Dates:
             _periodStart = periodStart;
@@ -200,7 +184,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Log.Error("SubscriptionDataReader(): Fetching Price/Map Factors: " + err.Message);
            }
         }
-        
+
+        /// <summary>
+        /// Advances the enumerator to the next element of the collection.
+        /// </summary>
+        /// <returns>
+        /// true if the enumerator was successfully advanced to the next element; false if the enumerator has passed the end of the collection.
+        /// </returns>
+        /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
             //// yield the aux data first
@@ -216,7 +207,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            Previous = Current;
+            _previous = Current;
 
             // get our reader, advancing to the next day if necessary
             var reader = ResolveReader();
@@ -271,7 +262,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (instance.EndTime < _periodStart)
                 {
                     // keep readnig until we get a value on or after the start
-                    Previous = instance;
+                    _previous = instance;
                     continue;
                 }
 
@@ -291,6 +282,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             while (true);
         }
 
+        /// <summary>
+        /// Resolves a stream reader to read data from a subscription source
+        /// </summary>
+        /// <returns>A stream reader used to read lines from a subscription source, null if the source was unable to be resolved into a reader</returns>
         private IStreamReader ResolveReader()
         {
             // if we still have data to emit, keep using this one
@@ -305,40 +300,38 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _reader.Dispose();
             }
 
-            DateTime date;
-            // if don't have any more days to process then we're done
-            if (!TryGetNextDate(out date))
+            do
             {
-                return null;
-            }
+                DateTime date;
+                if (!TryGetNextDate(out date))
+                {
+                    // if don't have any more days to process then we're done
+                    return null;
+                }
 
-            var newSource = _dataFactory.GetSource(_config, date, _isLiveMode);
+                var newSource = _dataFactory.GetSource(_config, date, _isLiveMode);
 
-            if (_source != newSource && newSource.Source != "" || (_isLiveMode && _source.TransportMedium == SubscriptionTransportMedium.RemoteFile))
-            {
-                _source = newSource;
+                if (_source != newSource && newSource.Source != "" || (_isLiveMode && _source.TransportMedium == SubscriptionTransportMedium.RemoteFile))
+                {
+                    _source = newSource;
 
-                // create our stream reader from our data source
-                _reader = CreateStreamReader(_source);
+                    // create our stream reader from our data source
+                    _reader = CreateStreamReader(_source);
+                }
+                else if (!(_isLiveMode && _source.TransportMedium == SubscriptionTransportMedium.RemoteFile))
+                {
+                    // if we didn't get a new source then we're done with this subscription
+                    return null;
+                }
 
                 // if the created reader doesn't have any data, then advance to the next day to try again
                 if (!(_reader != null && !_reader.EndOfStream))
                 {
-                    // TODO: OnCreateStreamReaderError event
-                    Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.",_source.Source, _mappedSymbol, date.ToShortDateString()));
-                    if (_isDynamicallyLoadedData)
-                    {
-                        _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).",_source));
-                    }
-                    return ResolveReader();
+                    OnCreateStreamReaderError(date, _source);
                 }
             }
-            else if (!(_isLiveMode && _source.TransportMedium == SubscriptionTransportMedium.RemoteFile))
-            {
-                // if we didn't get a new source then we're done with this subscription
-                return null;
-            }
-
+            while (!(_reader != null && !_reader.EndOfStream));
+            
             // we've finally found a reader with data!
             return _reader;
         }
@@ -366,10 +359,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return reader;
         }
 
+        /// <summary>
+        /// Gets called when we fail to create a stream reader with data
+        /// </summary>
+        /// <param name="date">The date that caused this</param>
+        /// <param name="subscriptionDataSource">The subscription source that caused this</param>
+        private void OnCreateStreamReaderError(DateTime date, SubscriptionDataSource subscriptionDataSource)
+        {
+            // TODO: OnCreateStreamReaderError event
+            Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", subscriptionDataSource.Source, _mappedSymbol, date.ToShortDateString()));
+            if (_isDynamicallyLoadedData)
+            {
+                _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).", subscriptionDataSource));
+            }
+        }
+
+        /// <summary>
+        /// Iterates the tradeable dates enumerator
+        /// </summary>
+        /// <param name="date">The next tradeable date</param>
+        /// <returns>True if we got a new date from the enumerator, false if it's exhausted, or in live mode if we're already at today</returns>
         private bool TryGetNextDate(out DateTime date)
         {
             if (_isLiveMode && _tradeableDates.Current > DateTime.Today)
             {
+                // special behavior for live mode, don't advance past today
                 date = _tradeableDates.Current;
                 return false;
             }
@@ -404,6 +418,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
+            // no more tradeable dates, we've exhausted the enumerator
             date = DateTime.MaxValue.Date;
             return false;
         }
@@ -452,7 +467,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 var close = GetRawClose();
                 var split = new Split(_config.Symbol, date, close, _splitFactor.Value);
-                AuxiliaryData.Enqueue(split);
+                _auxiliaryData.Enqueue(split);
                 _splitFactor = null;
             }
 
@@ -474,7 +489,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var dividend = new Dividend(_config.Symbol, date, close, _priceFactorRatio.Value);
                 // let the config know about it for normalization
                 _config.SumOfDividends += dividend.Distribution;
-                AuxiliaryData.Enqueue(dividend);
+                _auxiliaryData.Enqueue(dividend);
                 _priceFactorRatio = null;
             }
 
@@ -491,9 +506,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private decimal GetRawClose()
         {
-            if (Previous == null) return 0m;
+            if (_previous == null) return 0m;
 
-            var close = Previous.Value;
+            var close = _previous.Value;
 
             switch (_config.DataNormalizationMode)
             {

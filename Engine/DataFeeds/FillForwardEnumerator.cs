@@ -1,3 +1,19 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,94 +22,121 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
+    /// <summary>
+    /// The FillForwardEnumerator wraps an existing base data enumerator and inserts extra 'base data' instances
+    /// on a specified fill forward resolution
+    /// </summary>
     public class FillForwardEnumerator : IEnumerator<BaseData>
     {
         private bool _isFillingForward;
-        private DailyState _dailyState;
-
-        private readonly DailyState _defaultState;
+        
         private readonly DateTime _endTime;
         private readonly TimeSpan _dataResolution;
-        private readonly TimeSpan _ffResolution;
+        private readonly TimeSpan _fillForwardResolution;
         private readonly SecurityExchange _exchange;
         private readonly bool _isExtendedMarketHours;
-        private readonly bool _isDailyData;
         private readonly IEnumerator<BaseData> _enumerator;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FillForwardEnumerator"/> class
+        /// </summary>
+        /// <param name="enumerator">The source enumerator to be filled forward</param>
+        /// <param name="exchange">The exchange used to determine when to insert fill forward data</param>
+        /// <param name="fillForwardResolution">The resolution we'd like to receive data on</param>
+        /// <param name="isExtendedMarketHours">True to use the exchange's extended market hours, false to use the regular market hours</param>
+        /// <param name="endTime">The end time of the subscrition, once passing this date the enumerator will stop</param>
+        /// <param name="dataResolution">The source enumerator's data resolution</param>
         public FillForwardEnumerator(IEnumerator<BaseData> enumerator, 
             SecurityExchange exchange, 
-            TimeSpan ffResolution, 
+            TimeSpan fillForwardResolution, 
             bool isExtendedMarketHours, 
             DateTime endTime, 
             TimeSpan dataResolution)
         {
-            _enumerator = enumerator;
-            _exchange = exchange;
-            _ffResolution = ffResolution;
-            _isExtendedMarketHours = isExtendedMarketHours;
             _endTime = endTime;
+            _exchange = exchange;
+            _enumerator = enumerator;
             _dataResolution = dataResolution;
-            _isDailyData = dataResolution == Time.OneDay;
-            if (dataResolution > Time.OneDay)
-            {
-                throw new ArgumentOutOfRangeException("dataResolution", "Currently this implementation maxes out at daily resolution");
-            }
-            _defaultState = _ffResolution == Time.OneDay ? DailyState.AfterMarketCheckMissingDay : DailyState.DailyEmit;
-            _dailyState = _defaultState;
+            _fillForwardResolution = fillForwardResolution;
+            _isExtendedMarketHours = isExtendedMarketHours;
         }
 
+        /// <summary>
+        /// Gets the element in the collection at the current position of the enumerator.
+        /// </summary>
+        /// <returns>
+        /// The element in the collection at the current position of the enumerator.
+        /// </returns>
         public BaseData Current
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Gets the current element in the collection.
+        /// </summary>
+        /// <returns>
+        /// The current element in the collection.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        object IEnumerator.Current
+        {
+            get { return Current; }
+        }
+
+        /// <summary>
+        /// Advances the enumerator to the next element of the collection.
+        /// </summary>
+        /// <returns>
+        /// true if the enumerator was successfully advanced to the next element; false if the enumerator has passed the end of the collection.
+        /// </returns>
+        /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
-            var previous = Current;
-            bool endOfData;
             BaseData fillForward;
+
             if (!_isFillingForward)
             {
+                // if we're filling forward we don't need to move next since we haven't emitted _enumerator.Current yet
                 if (!_enumerator.MoveNext())
                 {
                     // check to see if we ran out of data before the end of the subscription
-                    if (previous != null && previous.EndTime < _endTime)
+                    if (Current == null || Current.EndTime >= _endTime)
                     {
-                        var endOfSubscription = previous.Clone(true);
-                        endOfSubscription.Time = _endTime;
-                        if (RequiresFillForwardData(previous, endOfSubscription, out fillForward, out endOfData))
-                        {
-                            // don't mark as filling forward so we come back into this block, subscription is done
-                            //_isFillingForward = true;
-                            Current = fillForward;
-                            return true;
-                        }
-                    
-                        Current = endOfSubscription;
+                        // we passed the end of subscription, we're finished
+                        return false;
+                    }
+
+                    // we can fill forward the rest of this subscription if required
+                    var endOfSubscription = Current.Clone(true);
+                    endOfSubscription.Time = _endTime - _dataResolution;
+                    if (RequiresFillForwardData(Current, endOfSubscription, out fillForward))
+                    {
+                        // don't mark as filling forward so we come back into this block, subscription is done
+                        //_isFillingForward = true;
+                        Current = fillForward;
                         return true;
                     }
-                    return false;
+                    
+                    Current = endOfSubscription;
+                    return true;
                 }
             }
 
-            if (previous == null)
+            if (Current == null)
             {
+                // first data point we dutifully emit without modification
                 Current = _enumerator.Current;
                 return true;
             }
 
-            if (RequiresFillForwardData(previous, _enumerator.Current, out fillForward, out endOfData))
+            if (RequiresFillForwardData(Current, _enumerator.Current, out fillForward))
             {
+                // we require fill forward day because the _enumerator.Current is too far in future
                 _isFillingForward = true;
                 Current = fillForward;
                 return true;
-            }
-
-            if (endOfData)
-            {
-                _isFillingForward = false;
-                return false;
             }
 
             _isFillingForward = false;
@@ -101,190 +144,82 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return true;
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
             _enumerator.Dispose();
         }
 
+        /// <summary>
+        /// Sets the enumerator to its initial position, which is before the first element in the collection.
+        /// </summary>
+        /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public void Reset()
         {
             _enumerator.Reset();
         }
 
-        private bool RequiresFillForwardData(BaseData previous, BaseData next, out BaseData fillForward, out bool endOfData)
+        /// <summary>
+        /// Determines whether or not fill forward is required, and if true, will produce the new fill forward data
+        /// </summary>
+        /// <param name="previous">The last piece of data emitted by this enumerator</param>
+        /// <param name="next">The next piece of data on the source enumerator</param>
+        /// <param name="fillForward">When this function returns true, this will have a non-null value, null when the function returns false</param>
+        /// <returns>True when a new fill forward piece of data was produced and should be emitted by this enumerator</returns>
+        private bool RequiresFillForwardData(BaseData previous, BaseData next, out BaseData fillForward)
         {
             if (next.EndTime < previous.Time)
             {
                 throw new ArgumentException();
             }
 
-            if (_isDailyData)
-            {
-                // daily is kind of special
-                return DailyRequiresFillForwardData(previous, next, out fillForward, out endOfData);
-            }
-
             // check to see if the gap between previous and next warrants fill forward behavior
-            if (next.Time - previous.Time <= _ffResolution)
+            if (next.Time - previous.Time <= _fillForwardResolution)
             {
                 fillForward = null;
-                endOfData = false;
                 return false;
             }
 
-            // check to see if the exchange is open at the next resolution
-            var barStartTime = previous.Time + _ffResolution;
-            var barEndTime = previous.EndTime + _ffResolution;
-            
-            // excluding daily, if we're expectd to emit next 'resolution' then do it
-            if (_exchange.IsOpenDuringBar(previous.EndTime, barEndTime, _isExtendedMarketHours))
+            // is the bar after previous in market hours?
+            var barAfterPreviousEndTime = previous.EndTime + _fillForwardResolution;
+            if (_exchange.IsOpenDuringBar(previous.EndTime, barAfterPreviousEndTime, _isExtendedMarketHours))
             {
                 fillForward = previous.Clone(true);
-                fillForward.Time = barStartTime;
-                endOfData = false;
+                fillForward.Time = previous.Time + _fillForwardResolution;
                 return true;
             }
-            
-            var exchangeOpenTimeOfDay = (_isExtendedMarketHours ? _exchange.ExtendedMarketOpen : _exchange.MarketOpen);
 
-            // advance our time until the next date that is open, this is to skip over weekends/holidays and such
-            var nextOpenDate = (previous.Time + _ffResolution).Date;
-            while (nextOpenDate < previous.Time || !_exchange.DateIsOpen(nextOpenDate))
+            var marketOpenNextDay = previous.EndTime.Date;
+            if (previous.EndTime > GetMarketOpen(marketOpenNextDay) - _fillForwardResolution)
             {
-                nextOpenDate = nextOpenDate.AddDays(1);
+                // after market hours on the same day, advance to the next emit time at market open
+                marketOpenNextDay = GetMarketOpen(GetNextOpenDateAfter(barAfterPreviousEndTime.Date)) + _fillForwardResolution;
+            }
+            else
+            {
+                // the previous was before market open on the day we want to emit
+                marketOpenNextDay = GetMarketOpen(marketOpenNextDay) + _fillForwardResolution;
             }
 
-            // if next.Time is at exchange opening of the next tradeable date, then we don't need fill forward
-            var exchangeOpen = nextOpenDate + exchangeOpenTimeOfDay;
-            if (next.Time == exchangeOpen)
+            if (marketOpenNextDay < next.EndTime)
             {
-                fillForward = null;
-                endOfData = false;
-                return false;
+                // if next is still in the future then we need to emit a fill forward for market open
+                fillForward = previous.Clone(true);
+                fillForward.Time = (marketOpenNextDay - _dataResolution).RoundDown(_fillForwardResolution);
+                return true;
             }
 
-            // if we've made it here it's because we have a day gap, so fill forward at the exchange open time
-            var fillForwardBarEndTime = exchangeOpen.RoundUp(_ffResolution);
-
-            endOfData = false;
-            if (next.EndTime <= fillForwardBarEndTime)
-            {
-                fillForward = null;
-                return false;
-            }
-
-            var nextIsBehindCurrent = exchangeOpen > next.EndTime;
-            if (nextIsBehindCurrent)
-            {
-                // advance the enumerator until we're ahead of current again
-                while (_enumerator.Current.Time < fillForwardBarEndTime)
-                {
-                    if (!_enumerator.MoveNext())
-                    {
-                        endOfData = true;
-                        break;
-                    }
-                }
-            }
-
-            if (_enumerator.Current != null && _enumerator.Current.EndTime <= fillForwardBarEndTime)
-            {
-                fillForward = null;
-                return false;
-            }
-
-            fillForward = (nextIsBehindCurrent ? next : previous).Clone(true);
-            fillForward.Time = fillForwardBarEndTime - _dataResolution + _ffResolution;
-            fillForward.EndTime = fillForwardBarEndTime + _ffResolution;
-
-            return true;
+            // the next is before the next fill forward time, so do nothing
+            fillForward = null;
+            return false;
         }
 
-        private bool DailyRequiresFillForwardData(BaseData previous, BaseData next, out BaseData fillForward, out bool endOfData)
-        {
-            // check to see if the gap between previous and next warrants fill forward behavior
-            if (next.Time - previous.Time <= _ffResolution)
-            {
-                fillForward = null;
-                endOfData = false;
-                return false;
-            }
-
-            switch (_dailyState)
-            {
-                // we just emitted a daily bar, either FF or normal, either way we need to now fill in during market hours
-                case DailyState.DailyEmit:
-
-                    // handle first bar of day, 9:30-> 9:31
-                    fillForward = previous.Clone(true);
-                    fillForward.Time = GetMarketOpen(previous.Time.Date).RoundUp(_ffResolution);
-                    endOfData = false;
-                    _dailyState = _ffResolution == Time.OneDay ? DailyState.DailyEmit : DailyState.MarketOpen;
-                    return true;
-
-                case DailyState.MarketOpen:
-                case DailyState.ResolutionStep:
-
-                    // we just issued a market open bar, so we need to take a single resolution step until the Time+_resolution is outside market hours
-                    if (_exchange.IsOpenDuringBar(previous.Time, previous.Time + _ffResolution, _isExtendedMarketHours))
-                    {
-                        fillForward = previous.Clone(true);
-                        fillForward.Time = previous.Time + _ffResolution;
-                        endOfData = false;
-                        _dailyState = DailyState.ResolutionStep;
-                        return true;
-                    }
-
-                    // after here the market is closed at the next 'resolution' step, so we're going to emit our 12:00 bar
-                    _dailyState = DailyState.DailyEmit;
-                    
-                    // if we weren't open at the next step, check for the next day
-                    //case DailyState.AfterMarketCheckMissingDay:
-                    var nextOpenDate1 = GetNextOpenDateAfter(previous.Time.Date);
-                    if (next.Time.Date != nextOpenDate1)
-                    {
-                        // the next piece of data skips a day, so FF the missing day
-                        fillForward = previous.Clone(true);
-                        fillForward.Time = nextOpenDate1;
-                        endOfData = false;
-                        return true;
-                    }
-
-                    // the next open date is the next piece of data, just emit that, no need for FF
-                    fillForward = null;
-                    endOfData = false;
-                    return false;
-
-                case DailyState.AfterMarketCheckMissingDay:
-
-                    // after here the market is closed at the next 'resolution' step, so we're going to emit our 12:00 bar
-                    _dailyState = _defaultState;
-
-                    var nextOpenDate2 = GetNextOpenDateAfter(previous.Time.Date);
-                    if (next.Time.Date != nextOpenDate2)
-                    {
-                        // the next piece of data skips a day, so FF the missing day
-                        fillForward = previous.Clone(true);
-                        fillForward.Time = nextOpenDate2;
-                        endOfData = false;
-                        return true;
-                    }
-
-                    // the next open date is the next piece of data, just emit that, no need for FF
-                    fillForward = null;
-                    endOfData = false;
-                    return false;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        object IEnumerator.Current
-        {
-            get { return Current; }
-        }
-
+        /// <summary>
+        /// Finds the next open date that follows the specified date, this functions expects a date, not a date time
+        /// </summary>
         private DateTime GetNextOpenDateAfter(DateTime date)
         {
             do
@@ -295,31 +230,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return date;
         }
 
-        private bool IsOpen(DateTime time)
-        {
-            if (_isExtendedMarketHours)
-            {
-                return _exchange.DateTimeIsExtendedOpen(time);
-            }
-            return _exchange.DateTimeIsOpen(time);
-        }
-
+        /// <summary>
+        /// Gets the market open for the specified date, this function expects a date, not a date time
+        /// Takes into consideration regular/extended market hours
+        /// </summary>
         private DateTime GetMarketOpen(DateTime date)
         {
             return date + (_isExtendedMarketHours ? _exchange.ExtendedMarketOpen : _exchange.MarketOpen);
-        }
-
-        private DateTime GetMarketClose(DateTime date)
-        {
-            return date + (_isExtendedMarketHours ? _exchange.ExtendedMarketClose : _exchange.MarketClose);
-        }
-
-        enum DailyState
-        {
-            DailyEmit,
-            MarketOpen,
-            ResolutionStep,
-            AfterMarketCheckMissingDay
         }
     }
 }

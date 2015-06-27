@@ -26,6 +26,7 @@ using QuantConnect.Logging;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -134,7 +135,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _bridge[i] = new ConcurrentQueue<List<BaseData>>();
 
                 //This is quantconnect data source, store here for speed/ease of access
-                _isDynamicallyLoadedData.Add(algorithm.Securities[_subscriptions[i].Symbol].IsDynamicallyLoadedData);
+                var security = algorithm.Securities[_subscriptions[i].Symbol];
+                _isDynamicallyLoadedData.Add(security.IsDynamicallyLoadedData);
 
                 // only make readers for custom data, live data will come through data queue handler
                 if (_isDynamicallyLoadedData[i])
@@ -142,15 +144,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     //Subscription managers for downloading user data:
                     // TODO: Update this when warmup comes in, we back up so we can get data that should have emitted at midnight today
                     var periodStart = DateTime.Today.AddDays(-7);
-                    _subscriptionManagers[i] = new SubscriptionDataReader(
+                    var subscriptionDataReader = new SubscriptionDataReader(
                         _subscriptions[i],
-                        algorithm.Securities[_subscriptions[i].Symbol],
+                        security,
                         DataFeedEndpoint.LiveTrading,
                         periodStart,
                         DateTime.MaxValue,
                         resultHandler,
                         Time.EachTradeableDay(algorithm.Securities, periodStart, DateTime.MaxValue)
                         );
+
+                    // wrap the subscription data reader with a filter enumerator
+                    _subscriptionManagers[i] = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, subscriptionDataReader, security, DateTime.MaxValue);
                 }
 
                 _realtimePrices.Add(0);
