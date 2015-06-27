@@ -186,8 +186,8 @@ namespace QuantConnect.Lean.Engine
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Trace("AlgorithmManager.Run(): Begin DataStream - Start: " + algorithm.StartDate + " Stop: " + algorithm.EndDate);
-            var dataStream = new DataStream(feed, _liveMode);
-            foreach (var newData in dataStream.GetData(algorithm.StartDate))
+            var dataStream = new DataStream(feed);
+            foreach (var newData in dataStream.GetData())
             {
                 // reset our timer on each loop
                 _currentTimeStepTime = DateTime.UtcNow;

@@ -68,7 +68,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Cross-threading queue so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
         /// </summary>
-        public ConcurrentQueue<TimeSlice> Data
+        public ConcurrentQueue<TimeSlice> Bridge
         {
             get; private set;
         } 
@@ -80,7 +80,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
-            Data =  new ConcurrentQueue<TimeSlice>();
+            Bridge =  new ConcurrentQueue<TimeSlice>();
 
             Subscriptions = algorithm.SubscriptionManager.Subscriptions;
             _subscriptions = Subscriptions.Count;
@@ -189,14 +189,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (newFrontier.Date != frontier.Date)
                 {
                     // yield while we have plenty of data (single core machines, you're welcome.)
-                    while (Data.Count > maxTimeSliceCount && !_exitTriggered)
+                    while (Bridge.Count > maxTimeSliceCount && !_exitTriggered)
                     {
                         Thread.Sleep(0);
                     }
                 }
 
                 // enqueue our next time slice and set the frontier for the next
-                Data.Enqueue(new TimeSlice(frontier, data));
+                Bridge.Enqueue(new TimeSlice(frontier, data));
                 frontier = newFrontier;
             }
 
@@ -219,7 +219,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Exit()
         {
             _exitTriggered = true;
-            Data.Clear();
+            Bridge.Clear();
         }
     }
 }

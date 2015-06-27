@@ -16,25 +16,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine
 {
     /// <summary>
-    /// Data stream class takes a datafeed hander and converts it into a synchronized enumerable data format for looping 
-    /// in the primary algorithm thread.
+    /// Manages dequeing data from a data feed.
     /// </summary>
     public class DataStream
     {
         private readonly IDataFeed _feed;
-
-        //Count of bridges and subscriptions.
-        private readonly bool _liveMode;
 
         /// <summary>
         /// The frontier time of the data stream
@@ -45,44 +38,28 @@ namespace QuantConnect.Lean.Engine
         /// Initializes a new <see cref="DataStream"/> for the specified data feed instance
         /// </summary>
         /// <param name="feed">The data feed to be streamed</param>
-        /// <param name="liveMode"></param>
-        public DataStream(IDataFeed feed, bool liveMode)
+        public DataStream(IDataFeed feed)
         {
             _feed = feed;
-            _liveMode = liveMode;
         }
 
         /// <summary>
         /// Process over the datafeed cross thread bridges to generate an enumerable sorted collection of the data, ready for a consumer
         /// to use and already synchronized in time.
         /// </summary>
-        /// <param name="frontierOrigin">Starting date for the data feed</param>
-        /// <returns></returns>
-        public IEnumerable<Dictionary<int, List<BaseData>>> GetData(DateTime frontierOrigin)
+        /// <returns>An enumerable that represents all the data coming from the initialized data feed since the start</returns>
+        public IEnumerable<Dictionary<int, List<BaseData>>> GetData()
         {
-            //Initialize:
-            AlgorithmTime = frontierOrigin;
-            var nextEmitTime = DateTime.UtcNow + Time.OneSecond;
-
-            int count = 0;
             while (!_feed.LoadingComplete)
             {
                 TimeSlice timeSlice;
-                while (_feed.Data.TryDequeue(out timeSlice))
+                while (_feed.Bridge.TryDequeue(out timeSlice))
                 {
-                    count ++;
                     AlgorithmTime = timeSlice.Time;
                     yield return timeSlice.Data;
                 }
-
-                if (_liveMode && DateTime.UtcNow > nextEmitTime)
-                {
-                    AlgorithmTime = DateTime.Now;
-                    nextEmitTime = DateTime.UtcNow + Time.OneSecond;
-                    yield return new Dictionary<int, List<BaseData>>();
-                }
             }
-            Log.Trace(string.Format("Data Stream Count: {0} algo time: {1} feed complete: {2} bridge count: {3}", count, AlgorithmTime, _feed.LoadingComplete, _feed.Data.Count));
+
             Log.Trace("DataStream.GetData(): All Streams Completed.");
         }
     }

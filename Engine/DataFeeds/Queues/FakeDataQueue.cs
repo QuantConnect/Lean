@@ -52,7 +52,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 foreach (var symbol in _symbols.SelectMany(x => x.Value))
                 {
                     // 50/50 repeating chance of emitting each symbol
-                    while (_random.NextDouble() > 0.5)
+                    while (_random.NextDouble() > 0.75)
                     {
                         _ticks.Enqueue(new Tick
                         {
@@ -60,7 +60,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                             Symbol = symbol,
                             Value = 10 + (decimal) Math.Abs(Math.Sin(DateTime.Now.TimeOfDay.TotalMinutes)),
                             TickType = TickType.Trade,
-                            Quantity = _random.Next(100, (int) _timer.Interval)
+                            Quantity = _random.Next(10, (int) _timer.Interval)
                         });
                     }
                 }
