@@ -144,7 +144,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var maxTimeSliceCount = 500000/_subscriptions;
 
-            // continue to loop over each subscription, enqueuing data in order
+            // continue to loop over each subscription, enqueuing data in time order
             while (!_exitTriggered)
             {
                 var data = new Dictionary<int, List<BaseData>>();

@@ -19,7 +19,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Net;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
@@ -42,32 +41,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Source string to create memory stream:
         private SubscriptionDataSource _source;
 
-        ///Default true to fillforward for this subscription, take the previous result and continue returning it till the next time barrier.
-        private bool _isFillForward = true;
+        private bool _endOfStream;
 
         ///Date of this source file.
         private DateTime _date = new DateTime();
 
-        ///End of stream from the reader
-        private bool _endOfStream = false;
-
         /// Internal stream reader for processing data line by line:
-        private IStreamReader _reader = null;
-
-        /// All streams done async via web protocols:
-        private WebClient _web = new WebClient();
+        private IStreamReader _reader;
 
         /// Configuration of the data-reader:
-        private SubscriptionDataConfig _config;
+        private readonly SubscriptionDataConfig _config;
 
         /// Subscription Securities Access
-        private Security _security;
+        private readonly Security _security;
 
         /// true if we can find a scale factor file for the security of the form: ..\Lean\Data\equity\market\factor_files\{SYMBOL}.csv
-        private bool _hasScaleFactors = false;
+        private readonly bool _hasScaleFactors;
 
         // Subscription is for a QC type:
-        private bool _isDynamicallyLoadedData = false;
+        private readonly bool _isDynamicallyLoadedData;
 
         //Symbol Mapping:
         private string _mappedSymbol = "";
@@ -75,15 +67,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Location of the datafeed - the type of this data.
         private readonly DataFeedEndpoint _feedEndpoint;
 
-        /// Object Activator - Fast create new instance of "Type":
-        private readonly Func<object[], object> _objectActivator;
-
         ///Create a single instance to invoke all Type Methods:
         private readonly BaseData _dataFactory;
-
-        /// Remember edge conditions as market enters/leaves open-closed.
-        private BaseData _lastBarOfStream;
-        private BaseData _lastBarOutsideMarketHours;
 
         //Start finish times of the backtest:
         private readonly DateTime _periodStart;
@@ -142,15 +127,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Source has been completed, load up next stream or stop asking for data.
-        /// </summary>
-        public bool EndOfStream
-        {
-            get; 
-            set;
-        }
-
-        /// <summary>
         /// Subscription data reader takes a subscription request, loads the type, accepts the data source and enumerate on the results.
         /// </summary>
         /// <param name="config">Subscription configuration object</param>
@@ -166,9 +142,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _config = config;
 
             AuxiliaryData = new Queue<BaseData>();
-
-            //Save access to fill foward flag:
-            _isFillForward = config.FillDataForward;
 
             //Save Start and End Dates:
             _periodStart = periodStart;
@@ -186,11 +159,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _feedEndpoint = feed;
 
             //Create the dynamic type-activators:
-            _objectActivator = ObjectActivator.GetActivator(config.Type);
+            var objectActivator = ObjectActivator.GetActivator(config.Type);
 
             _resultHandler = resultHandler;
             _tradeableDates = tradeableDates.GetEnumerator();
-            if (_objectActivator == null)
+            if (objectActivator == null)
             {
                 _resultHandler.ErrorMessage("Custom data type '" + config.Type.Name + "' missing parameterless constructor E.g. public " + config.Type.Name + "() { }");
                 _endOfStream = true;
@@ -198,7 +171,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             //Create an instance of the "Type":
-            var userObj = _objectActivator.Invoke(new object[] { });
+            var userObj = objectActivator.Invoke(new object[] { });
             _dataFactory = userObj as BaseData;
 
             //If its quandl set the access token in data factory:
@@ -238,7 +211,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //    return true;
             //}
 
-            if (EndOfStream)
+            if (_endOfStream)
             {
                 return false;
             }
@@ -251,7 +224,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // if we were unable to resolve a reader it's because we're out of tradeable dates
             if (reader == null)
             {
-                EndOfStream = true;
+                if (_isLiveMode)
+                {
+                    // HACK attack -- we don't want to block in live mode
+                    Current = null;
+                    return true;
+                }
+
+                _endOfStream = true;
                 return false;
             }
 
@@ -265,7 +245,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // resolve reader will return null when we're finished with tradeable dates
                     if (reader == null)
                     {
-                        EndOfStream = true;
+                        _endOfStream = true;
                         return false;
                     }
                 }
@@ -298,7 +278,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (instance.Time > _periodFinish)
                 {
                     // stop reading when we get a value after the end
-                    EndOfStream = true;
+                    _endOfStream = true;
                     return false;
                 }
 
@@ -388,6 +368,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private bool TryGetNextDate(out DateTime date)
         {
+            if (_isLiveMode && _tradeableDates.Current > DateTime.Today)
+            {
+                date = _tradeableDates.Current;
+                return false;
+            }
+
             while (_tradeableDates.MoveNext())
             {
                 date = _tradeableDates.Current;
@@ -540,11 +526,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 _reader.Close();
                 _reader.Dispose();
-            }
-
-            if (_web != null) 
-            {
-                _web.Dispose();
             }
         }
 

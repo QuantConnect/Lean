@@ -48,6 +48,11 @@ namespace QuantConnect
         public static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
 
         /// <summary>
+        /// One Millisecond TimeSpan Period Constant
+        /// </summary>
+        public static readonly TimeSpan OneMillisecond = TimeSpan.FromMilliseconds(1);
+
+        /// <summary>
         /// Live charting is sensitive to timezone so need to convert the local system time to a UTC and display in browser as UTC.
         /// </summary>
         public struct DateTimeWithZone
@@ -90,7 +95,7 @@ namespace QuantConnect
                 }
             }
         }
-        
+
         /// <summary>
         /// Create a C# DateTime from a UnixTimestamp
         /// </summary>
