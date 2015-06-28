@@ -56,7 +56,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Cross-threading queue so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
         /// </summary>
-        public ConcurrentQueue<TimeSlice> Bridge
+        public BlockingCollection<TimeSlice> Bridge
         {
             get; private set;
         }
@@ -106,7 +106,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Subscription Count:
             _subscriptions = algorithm.SubscriptionManager.Subscriptions;
 
-            Bridge = new ConcurrentQueue<TimeSlice>();
+            Bridge = new BlockingCollection<TimeSlice>();
 
             //Set Properties:
             _isActive = true;
@@ -244,7 +244,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
 
-                Bridge.Enqueue(new TimeSlice(triggerTime, items));
+                Bridge.Add(new TimeSlice(triggerTime, items));
             });
 
             //Start the realtime sampler above
@@ -320,7 +320,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                                 //If its not a tick, inject directly into bridge for this symbol:
                                 //Bridge[i].Enqueue(new List<BaseData> {point});
-                                Bridge.Enqueue(new TimeSlice(DateTime.Now, new Dictionary<int, List<BaseData>>
+                                Bridge.Add(new TimeSlice(DateTime.Now, new Dictionary<int, List<BaseData>>
                                 {
                                     {i, new List<BaseData> {point}}
                                 }));

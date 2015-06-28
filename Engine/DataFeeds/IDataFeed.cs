@@ -50,7 +50,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Cross-threading queue so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
         /// </summary>
-        ConcurrentQueue<TimeSlice> Bridge
+        BlockingCollection<TimeSlice> Bridge
         {
             get;
         }

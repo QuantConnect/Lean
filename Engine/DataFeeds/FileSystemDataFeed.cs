@@ -68,7 +68,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Cross-threading queue so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
         /// </summary>
-        public ConcurrentQueue<TimeSlice> Bridge
+        public BlockingCollection<TimeSlice> Bridge
         {
             get; private set;
         } 
@@ -80,8 +80,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
-            Bridge =  new ConcurrentQueue<TimeSlice>();
-
             Subscriptions = algorithm.SubscriptionManager.Subscriptions;
             _subscriptions = Subscriptions.Count;
 
@@ -95,6 +93,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Class Privates:
             _algorithm = algorithm;
             _bridgeMax = _bridgeMax / _subscriptions; //Set the bridge maximum count:
+
+            Bridge = new BlockingCollection<TimeSlice>(Math.Min(1000, _bridgeMax));
 
             // find the minimum resolution, ignoring ticks
             var fillForwardResolution = Subscriptions
@@ -142,8 +142,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 .DefaultIfEmpty(DateTime.MinValue)
                 .Min();
 
-            var maxTimeSliceCount = 500000/_subscriptions;
-
             // continue to loop over each subscription, enqueuing data in time order
             while (!_exitTriggered)
             {
@@ -187,22 +185,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 var newFrontier = new DateTime(earlyBirdTicks);
-                if (newFrontier.Date != frontier.Date)
-                {
-                    // yield while we have plenty of data (single core machines, you're welcome.)
-                    while (Bridge.Count > maxTimeSliceCount && !_exitTriggered)
-                    {
-                        Thread.Sleep(0);
-                    }
-                }
 
                 // enqueue our next time slice and set the frontier for the next
-                Bridge.Enqueue(new TimeSlice(frontier, data));
+                Bridge.Add(new TimeSlice(frontier, data));
                 frontier = newFrontier;
             }
 
             Log.Trace("FileSystemDataFeed.Run(): Data Feed Completed.");
             LoadingComplete = true;
+            Bridge.CompleteAdding();
 
             //Close up all streams:
             for (var i = 0; i < Subscriptions.Count; i++)
@@ -220,7 +211,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Exit()
         {
             _exitTriggered = true;
-            Bridge.Clear();
+            Bridge.Dispose();
         }
     }
 }

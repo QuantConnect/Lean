@@ -52,14 +52,13 @@ namespace QuantConnect.Lean.Engine
         {
             do
             {
-                TimeSlice timeSlice;
-                while (_feed.Bridge.TryDequeue(out timeSlice))
+                foreach (var timeSlice in _feed.Bridge.GetConsumingEnumerable())
                 {
                     AlgorithmTime = timeSlice.Time;
                     yield return timeSlice.Data;
                 }
-            }
-            while (!_feed.LoadingComplete && !_feed.Bridge.IsEmpty);
+            } 
+            while (!_feed.Bridge.IsCompleted);
 
             Log.Trace("DataStream.GetData(): All Streams Completed.");
         }
