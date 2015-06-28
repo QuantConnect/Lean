@@ -50,7 +50,7 @@ namespace QuantConnect.Lean.Engine
         /// <returns>An enumerable that represents all the data coming from the initialized data feed since the start</returns>
         public IEnumerable<Dictionary<int, List<BaseData>>> GetData()
         {
-            while (!_feed.LoadingComplete)
+            do
             {
                 TimeSlice timeSlice;
                 while (_feed.Bridge.TryDequeue(out timeSlice))
@@ -59,6 +59,7 @@ namespace QuantConnect.Lean.Engine
                     yield return timeSlice.Data;
                 }
             }
+            while (!_feed.LoadingComplete && !_feed.Bridge.IsEmpty);
 
             Log.Trace("DataStream.GetData(): All Streams Completed.");
         }

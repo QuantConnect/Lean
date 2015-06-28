@@ -180,9 +180,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     earlyBirdTicks = Math.Min(enumerator.Current.EndTime.Ticks, earlyBirdTicks);
                 }
 
-                // there's no more data to pull off, we're done
                 if (earlyBirdTicks == long.MaxValue)
                 {
+                    // there's no more data to pull off, we're done
                     break;
                 }
 

@@ -32,7 +32,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _isFillingForward;
         private bool _emittedAuxilliaryData;
         
-        private readonly DateTime _endTime;
+        private readonly DateTime _subscriptionEndTime;
         private readonly TimeSpan _dataResolution;
         private readonly TimeSpan _fillForwardResolution;
         private readonly SecurityExchange _exchange;
@@ -46,16 +46,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="exchange">The exchange used to determine when to insert fill forward data</param>
         /// <param name="fillForwardResolution">The resolution we'd like to receive data on</param>
         /// <param name="isExtendedMarketHours">True to use the exchange's extended market hours, false to use the regular market hours</param>
-        /// <param name="endTime">The end time of the subscrition, once passing this date the enumerator will stop</param>
+        /// <param name="subscriptionEndTime">The end time of the subscrition, once passing this date the enumerator will stop</param>
         /// <param name="dataResolution">The source enumerator's data resolution</param>
         public FillForwardEnumerator(IEnumerator<BaseData> enumerator, 
             SecurityExchange exchange, 
             TimeSpan fillForwardResolution, 
             bool isExtendedMarketHours, 
-            DateTime endTime, 
+            DateTime subscriptionEndTime, 
             TimeSpan dataResolution)
         {
-            _endTime = endTime;
+            _subscriptionEndTime = subscriptionEndTime;
             _exchange = exchange;
             _enumerator = enumerator;
             _dataResolution = dataResolution;
@@ -98,6 +98,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (!_emittedAuxilliaryData)
             {
+                // only set the _previous if the last item we emitted was NOT auxilliary data,
+                // since _previous is used for fill forward behavior
                 _previous = Current;
             }
 
@@ -109,7 +111,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (!_enumerator.MoveNext())
                 {
                     // check to see if we ran out of data before the end of the subscription
-                    if (_previous == null || _previous.EndTime >= _endTime)
+                    if (_previous == null || _previous.EndTime >= _subscriptionEndTime)
                     {
                         // we passed the end of subscription, we're finished
                         return false;
@@ -117,7 +119,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // we can fill forward the rest of this subscription if required
                     var endOfSubscription = Current.Clone(true);
-                    endOfSubscription.Time = _endTime - _dataResolution;
+                    endOfSubscription.Time = _subscriptionEndTime - _dataResolution;
                     if (RequiresFillForwardData(_previous, endOfSubscription, out fillForward))
                     {
                         // don't mark as filling forward so we come back into this block, subscription is done
@@ -148,7 +150,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _emittedAuxilliaryData = false;
             if (RequiresFillForwardData(_previous, _enumerator.Current, out fillForward))
             {
-                // we require fill forward day because the _enumerator.Current is too far in future
+                // we require fill forward data because the _enumerator.Current is too far in future
                 _isFillingForward = true;
                 Current = fillForward;
                 return true;
@@ -188,7 +190,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (next.EndTime < previous.Time)
             {
-                throw new ArgumentException();
+                throw new ArgumentException("FillForwardEnumerator received data out of order.");
             }
 
             // check to see if the gap between previous and next warrants fill forward behavior
@@ -202,28 +204,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var barAfterPreviousEndTime = previous.EndTime + _fillForwardResolution;
             if (_exchange.IsOpenDuringBar(previous.EndTime, barAfterPreviousEndTime, _isExtendedMarketHours))
             {
+                // this is the normal case where we had a whole in the middle of the day
                 fillForward = previous.Clone(true);
                 fillForward.Time = previous.Time + _fillForwardResolution;
                 return true;
             }
 
-            var marketOpenNextDay = previous.EndTime.Date;
-            if (previous.EndTime > GetMarketOpen(marketOpenNextDay) - _fillForwardResolution)
+            // we're trying compute the desired emit time and then we're going to compare to the next
+
+            var nextFillForwardTime = previous.EndTime.Date;
+            if (previous.EndTime > GetMarketOpen(nextFillForwardTime) - _fillForwardResolution)
             {
                 // after market hours on the same day, advance to the next emit time at market open
-                marketOpenNextDay = GetMarketOpen(GetNextOpenDateAfter(barAfterPreviousEndTime.Date)) + _fillForwardResolution;
+                nextFillForwardTime = GetMarketOpen(GetNextOpenDateAfter(barAfterPreviousEndTime.Date)) + _fillForwardResolution;
             }
             else
             {
-                // the previous was before market open on the day we want to emit
-                marketOpenNextDay = GetMarketOpen(marketOpenNextDay) + _fillForwardResolution;
+                // the previous was before market open on the day we want to emit, so we need to go
+                // to today's market open
+                nextFillForwardTime = GetMarketOpen(nextFillForwardTime) + _fillForwardResolution;
             }
 
-            if (marketOpenNextDay < next.EndTime)
+            if (nextFillForwardTime < next.EndTime)
             {
                 // if next is still in the future then we need to emit a fill forward for market open
                 fillForward = previous.Clone(true);
-                fillForward.Time = (marketOpenNextDay - _dataResolution).RoundDown(_fillForwardResolution);
+                fillForward.Time = (nextFillForwardTime - _dataResolution).RoundDown(_fillForwardResolution);
                 return true;
             }
 

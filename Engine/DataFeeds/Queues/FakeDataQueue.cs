@@ -37,6 +37,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         private readonly ConcurrentQueue<BaseData> _ticks; 
         private readonly Dictionary<SecurityType, List<string>> _symbols;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FakeDataQueue"/> class to randomly emit data for each symbol
+        /// </summary>
         public FakeDataQueue()
         {
             _ticks = new ConcurrentQueue<BaseData>();
@@ -66,7 +69,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 }
             };
         }
- 
+
+        /// <summary>
+        /// Get the next ticks from the live trading data queue
+        /// </summary>
+        /// <returns>IEnumerable list of ticks since the last update.</returns>
         public IEnumerable<BaseData> GetNextTicks()
         {
             BaseData tick;
@@ -77,6 +84,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             }
         }
 
+        /// <summary>
+        /// Adds the specified symbols to the subscription
+        /// </summary>
+        /// <param name="job">Job we're subscribing for:</param>
+        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
         public void Subscribe(LiveNodePacket job, IDictionary<SecurityType, List<string>> symbols)
         {
             foreach (var securityType in symbols)
@@ -91,6 +103,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             }
         }
 
+        /// <summary>
+        /// Removes the specified symbols to the subscription
+        /// </summary>
+        /// <param name="job">Job we're processing.</param>
+        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
         public void Unsubscribe(LiveNodePacket job, IDictionary<SecurityType, List<string>> symbols)
         {
             foreach (var securityType in symbols)

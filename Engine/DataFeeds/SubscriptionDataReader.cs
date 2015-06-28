@@ -221,6 +221,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // loop until we find data that passes all of our filters
             do
             {
+
+                if (_auxiliaryData.Count > 0)
+                {
+                    // check for any auxilliary data before reading a line
+                    Current = _auxiliaryData.Dequeue();
+                    return true;
+                }
+
                 // if we've run out of data on our current reader then let's find the next one, this will advance our tradeable dates as well
                 if (reader.EndOfStream)
                 {
@@ -231,13 +239,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         _endOfStream = true;
                         return false;
                     }
-                }
-
-                if (_auxiliaryData.Count > 0)
-                {
-                    // check for any auxilliary data before reading a line
-                    Current = _auxiliaryData.Dequeue();
-                    return true;
                 }
 
                 // read in a line and then parse it using the data factory
@@ -258,7 +259,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     continue;
                 }
 
-                if (instance.EndTime < _periodStart)
+                if (instance.EndTime <= _periodStart)
                 {
                     // keep readnig until we get a value on or after the start
                     _previous = instance;
@@ -320,6 +321,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 else if (!(_isLiveMode && _source.TransportMedium == SubscriptionTransportMedium.RemoteFile))
                 {
                     // if we didn't get a new source then we're done with this subscription
+                    // we're not in livemode/remote file but got the same exact source before,
+                    // but we've already exhausted that source, so we're done with this subscription
                     return null;
                 }
 
