@@ -107,6 +107,7 @@ namespace QuantConnect.Data.Market
         {
             Symbol = original.Symbol;
             Time = new DateTime(original.Time.Ticks);
+            Value = original.Value;
             BidPrice = original.BidPrice;
             AskPrice = original.AskPrice;
             Exchange = original.Exchange;
