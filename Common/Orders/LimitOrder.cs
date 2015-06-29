@@ -27,13 +27,56 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal LimitPrice;
 
-
         /// <summary>
         /// Value of the order at limit price if a limit order
         /// </summary>
         public override decimal Value
         {
             get { return Quantity*LimitPrice; }
+        }
+
+        /// <summary>
+        /// Create update request for pending orders. Null values will be ignored.
+        /// </summary>
+        public UpdateOrderRequest UpdateRequest(int? quantity = null, decimal? limitPrice = null, string tag = null)
+        {
+            return new UpdateOrderRequest
+            {
+                Id = Guid.NewGuid(),
+                OrderId = Id,
+                Created = DateTime.Now,
+                Quantity = quantity ?? Quantity,
+                LimitPrice = limitPrice ?? LimitPrice,
+                Tag = tag ?? Tag
+            };
+        }
+
+        /// <summary>
+        /// Apply changes after the update request is processed.
+        /// </summary>
+        public void ApplyUpdate(UpdateOrderRequest request)
+        {
+            Quantity = request.Quantity;
+            LimitPrice = request.LimitPrice;
+            Tag = request.Tag;
+        }
+
+        /// <summary>
+        /// Create submit request.
+        /// </summary>
+        public static SubmitOrderRequest SubmitRequest(string symbol, int quantity, decimal limitPrice, string tag, SecurityType securityType, decimal price = 0, DateTime? time = null)
+        {
+            return new SubmitOrderRequest
+            {
+                Id = Guid.NewGuid(),
+                Symbol = symbol,
+                Quantity = quantity,
+                Tag = tag,
+                SecurityType = securityType,
+                Created = time ?? DateTime.Now,
+                LimitPrice = limitPrice,
+                Type = OrderType.Limit
+            };
         }
 
         /// <summary>
@@ -66,6 +109,13 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// New limit order constructor
+        /// </summary>
+        /// <param name="request">Submit order request.</param>
+        public LimitOrder(SubmitOrderRequest request) :
+            this(request.Symbol, request.Quantity, request.LimitPrice, request.Created, request.Tag, request.SecurityType) { }
+
+        /// <summary>
         /// Returns a string that represents the current object.
         /// </summary>
         /// <returns>
@@ -75,6 +125,14 @@ namespace QuantConnect.Orders
         public override string ToString()
         {
             return string.Format("{0} order for {1} unit{2} of {3} at limit {4}", Type, Quantity, Quantity == 1 ? "" : "s", Symbol, LimitPrice);
+        }
+
+        /// <summary>
+        /// Copy order before submitting to broker for update.
+        /// </summary>
+        public override Order Copy()
+        {
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<LimitOrder>(Newtonsoft.Json.JsonConvert.SerializeObject(this));
         }
     }
 }

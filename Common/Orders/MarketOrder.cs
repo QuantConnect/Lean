@@ -42,6 +42,56 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Create update request for pending orders. Null values will be ignored.
+        /// </summary>
+        public UpdateOrderRequest UpdateRequest(int? quantity = null, string tag = null)
+        {
+            return new UpdateOrderRequest
+            {
+                Id = Guid.NewGuid(),
+                OrderId = Id,
+                Created = DateTime.Now,
+                Quantity = quantity ?? Quantity,
+                Tag = tag ?? Tag
+            };
+        }
+
+        /// <summary>
+        /// Apply changes after the update request is processed.
+        /// </summary>
+        public void ApplyUpdate(UpdateOrderRequest request)
+        {
+            Quantity = request.Quantity;
+            Tag = request.Tag;
+        }
+
+        /// <summary>
+        /// Create submit request.
+        /// </summary>
+        public static SubmitOrderRequest SubmitRequest(string symbol, int quantity, string tag, SecurityType securityType, decimal price = 0, DateTime? time = null)
+        {
+            return new SubmitOrderRequest
+            {
+                Id = Guid.NewGuid(),
+                Symbol = symbol,
+                Quantity = quantity,
+                Tag = tag,
+                SecurityType = securityType,
+                Created = time ?? DateTime.Now,
+                Price = price,
+                Type = OrderType.Market
+            };
+        }
+
+        /// <summary>
+        /// Copy order before submitting to broker for update.
+        /// </summary>
+        public override Order Copy()
+        {
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<LimitOrder>(Newtonsoft.Json.JsonConvert.SerializeObject(this));
+        }
+
+        /// <summary>
         /// New market order constructor
         /// </summary>
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
@@ -49,10 +99,17 @@ namespace QuantConnect.Orders
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public MarketOrder(string symbol, int quantity, DateTime time, string tag = "", SecurityType type = SecurityType.Base) :
+        public MarketOrder(string symbol, int quantity, DateTime time, string tag = "", SecurityType type = SecurityType.Base, decimal price = 0m) :
             base(symbol, quantity, OrderType.Market, time, 0, tag, type)
         {
         }
+
+        /// <summary>
+        /// Intiializes a new instance of the <see cref="MarketOrder"/> class.
+        /// </summary>
+        /// <param name="request">Submit order request.</param>
+        public MarketOrder(SubmitOrderRequest request)
+            : this(request.Symbol, request.Quantity, request.Created, request.Tag, request.SecurityType, request.Price) { }
     }
 
 } // End QC Namespace:

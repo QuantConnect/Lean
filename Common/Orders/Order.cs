@@ -186,6 +186,18 @@ namespace QuantConnect.Orders
             ContingentId = 0;
         }
 
+        public CancelOrderRequest CancelRequest()
+        {
+            return new CancelOrderRequest
+            {
+                Id = Guid.NewGuid(),
+                OrderId = Id,
+                Created = DateTime.Now
+            };
+        }
+
+        public abstract Order Copy();
+
         /// <summary>
         /// Returns a string that represents the current object.
         /// </summary>

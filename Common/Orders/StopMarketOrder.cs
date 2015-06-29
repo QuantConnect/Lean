@@ -36,6 +36,58 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Create update request for pending orders. Null values will be ignored.
+        /// </summary>
+        public UpdateOrderRequest UpdateRequest(int? quantity = null, decimal? stopPrice = null, string tag = null)
+        {
+            return new UpdateOrderRequest
+            {
+                Id = Guid.NewGuid(),
+                OrderId = Id,
+                Created = DateTime.Now,
+                Quantity = quantity ?? Quantity,
+                StopPrice = stopPrice ?? StopPrice,
+                Tag = tag ?? Tag
+            };
+        }
+
+        /// <summary>
+        /// Apply changes after the update request is processed.
+        /// </summary>
+        public void ApplyUpdate(UpdateOrderRequest request)
+        {
+            Quantity = request.Quantity;
+            StopPrice = request.StopPrice;
+            Tag = request.Tag;
+        }
+
+        /// <summary>
+        /// Create submit request.
+        /// </summary>
+        public static SubmitOrderRequest SubmitRequest(string symbol, int quantity, decimal stopPrice, string tag, SecurityType securityType, decimal price = 0, DateTime? time = null)
+        {
+            return new SubmitOrderRequest
+            {
+                Id = Guid.NewGuid(),
+                Symbol = symbol,
+                Quantity = quantity,
+                Tag = tag,
+                SecurityType = securityType,
+                Created = time ?? DateTime.Now,
+                StopPrice = stopPrice,
+                Type = OrderType.StopMarket
+            };
+        }
+
+        /// <summary>
+        /// Copy order before submitting to broker for update.
+        /// </summary>
+        public override Order Copy()
+        {
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<LimitOrder>(Newtonsoft.Json.JsonConvert.SerializeObject(this));
+        }
+
+        /// <summary>
         /// Default constructor for JSON Deserialization:
         /// </summary>
         public StopMarketOrder()
@@ -53,7 +105,7 @@ namespace QuantConnect.Orders
         /// <param name="stopPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
         public StopMarketOrder(string symbol, int quantity, decimal stopPrice, DateTime time, string tag = "", SecurityType type = SecurityType.Base) :
-            base(symbol, quantity, OrderType.StopMarket, time, 0, tag, type)
+            base(symbol, quantity, OrderType.StopMarket, time, stopPrice, tag, type)
         {
             StopPrice = stopPrice;
 
@@ -63,6 +115,13 @@ namespace QuantConnect.Orders
                 Tag = "Stop Price: " + stopPrice.ToString("C");
             }
         }
+
+        /// <summary>
+        /// Intiializes a new instance of the <see cref="StopMarketOrder"/> class.
+        /// </summary>
+        /// <param name="request">Submit order request.</param>
+        public StopMarketOrder(SubmitOrderRequest request) :
+            this(request.Symbol, request.Quantity, request.StopPrice, request.Created, request.Tag, request.SecurityType) { }
 
         /// <summary>
         /// Returns a string that represents the current object.

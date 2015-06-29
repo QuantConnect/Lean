@@ -33,6 +33,7 @@ namespace QuantConnect.Securities
         private const decimal _minimumOrderSize = 0;
         private const int _minimumOrderQuantity = 1;
         private ConcurrentQueue<Order> _orderQueue;
+        private ConcurrentQueue<OrderRequest> _orderRequestQueue;
         private ConcurrentDictionary<int, Order> _orders;
         private ConcurrentDictionary<int, List<OrderEvent>> _orderEvents;
         private Dictionary<DateTime, decimal> _transactionRecord;
@@ -87,6 +88,22 @@ namespace QuantConnect.Securities
             set 
             {
                 _orderQueue = value;
+            }
+        }
+
+        /// <summary>
+        /// Temporary storage for orders requests while waiting to process via transaction handler. Once processed, orders are updated at transaction manager.
+        /// </summary>
+        /// <seealso cref="Orders"/>
+        public ConcurrentQueue<OrderRequest> OrderRequestQueue
+        {
+            get
+            {
+                return _orderRequestQueue;
+            }
+            set
+            {
+                _orderRequestQueue = value;
             }
         }
 
@@ -163,7 +180,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="order">New order object to add to processing list</param>
         /// <returns>New unique, increasing orderid</returns>
-        public virtual int AddOrder(Order order) 
+        public virtual int _AddOrder(Order order) 
         {
             try
             {
@@ -178,6 +195,26 @@ namespace QuantConnect.Securities
                 Log.Error("Algorithm.Transaction.AddOrder(): " + err.Message);
             }
             return order.Id;
+        }
+
+        /// <summary>
+        /// Add submit order request to queue and return the unique order id or negative if an error.
+        /// </summary>
+        /// <param name="request">Submit order request to add to processing list</param>
+        /// <returns>New unique, increasing orderid</returns>
+        public virtual int SubmitOrder(SubmitOrderRequest request)
+        {
+            try
+            {
+                request.OrderId = _orderId++;
+                OrderRequestQueue.Enqueue(request);
+            }
+            catch (Exception err)
+            {
+                Log.Error("Algorithm.Transaction.SubmitOrder(): " + err.Message);
+            }
+
+            return request.OrderId;
         }
 
         /// <summary>
@@ -231,12 +268,67 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Update an order yet to be filled such as stop or limit orders.
+        /// </summary>
+        /// <param name="request">Update order request</param>
+        /// <remarks>Does not apply if the order is already fully filled</remarks>
+        /// <returns>
+        ///     Id of the order we modified or 
+        ///     -5 if the order was already filled or cancelled
+        ///     -6 if the order was not found in the cache
+        /// </returns>
+        public int UpdateOrder(UpdateOrderRequest request)
+        {
+            try
+            {
+                if (request.Quantity == 0)
+                    return -1;
+
+                Order order;
+
+                if (_orders.TryGetValue(request.OrderId, out order) == true)
+                {
+                    //-> If its already filled return false; can't be updated
+                    if (order.Status != OrderStatus.New && order.Status != OrderStatus.Submitted)
+                    {
+                        return -5;
+                    }
+
+                    request.Created = _securities[order.Symbol].Time;
+
+                    OrderRequestQueue.Enqueue(request);
+                }
+                else
+                {
+                    return -6;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error("Algorithm.Transactions.UpdateOrder(): " + err.Message);
+                return -7;
+            }
+            return 0;
+        }
+
+        /// <summary>
         /// Added alias for RemoveOrder - 
         /// </summary>
         /// <param name="orderId">Order id we wish to cancel</param>
         public virtual void CancelOrder(int orderId)
         {
-            RemoveOrder(orderId);
+            Order order;
+
+            if (_orders.TryGetValue(orderId, out order) == true)
+            {
+                if (order.Status != OrderStatus.Submitted && order.Status != OrderStatus.New)
+                {
+                    Log.Error("Security.TransactionManager.RemoveOutstandingOrder(): Order already filled");
+                    return;
+                }
+
+                OrderRequestQueue.Enqueue(order.CancelRequest());
+            }
         }
 
         /// <summary>

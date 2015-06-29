@@ -31,6 +31,55 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Create update request for pending orders. Null values will be ignored.
+        /// </summary>
+        public UpdateOrderRequest UpdateRequest(int? quantity = null, string tag = null)
+        {
+            return new UpdateOrderRequest
+            {
+                Id = Guid.NewGuid(),
+                OrderId = Id,
+                Created = DateTime.Now,
+                Quantity = quantity ?? Quantity,
+                Tag = tag ?? Tag
+            };
+        }
+
+        /// <summary>
+        /// Apply changes after the update request is processed.
+        /// </summary>
+        public void ApplyUpdate(UpdateOrderRequest request)
+        {
+            Quantity = request.Quantity;
+            Tag = request.Tag;
+        }
+
+        /// <summary>
+        /// Create submit request.
+        /// </summary>
+        public static SubmitOrderRequest SubmitRequest(string symbol, int quantity, string tag, SecurityType securityType, decimal price = 0, DateTime? time = null)
+        {
+            return new SubmitOrderRequest
+            {
+                Id = Guid.NewGuid(),
+                Symbol = symbol,
+                Quantity = quantity,
+                Tag = tag,
+                SecurityType = securityType,
+                Created = time ?? DateTime.Now,
+                Type = OrderType.MarketOnOpen
+            };
+        }
+
+        /// <summary>
+        /// Copy order before submitting to broker for update.
+        /// </summary>
+        public override Order Copy()
+        {
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<LimitOrder>(Newtonsoft.Json.JsonConvert.SerializeObject(this));
+        }
+
+        /// <summary>
         /// Intiializes a new instance of the <see cref="MarketOnOpenOrder"/> class.
         /// </summary>
         public MarketOnOpenOrder()
@@ -51,5 +100,12 @@ namespace QuantConnect.Orders
             : base(symbol, quantity, OrderType.MarketOnOpen, time, marketPrice, tag, type)
         {
         }
+
+        /// <summary>
+        /// Intiializes a new instance of the <see cref="MarketOnOpenOrder"/> class.
+        /// </summary>
+        /// <param name="request">Submit order request.</param>
+        public MarketOnOpenOrder(SubmitOrderRequest request)
+            : this(request.Symbol, request.SecurityType, request.Quantity, request.Created, request.Price, request.Tag) { }
     }
 }
