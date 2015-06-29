@@ -138,6 +138,9 @@ namespace QuantConnect.Securities
                 }
             }
 
+            // get the market from the first existing subscription
+            string market = subscriptions.Subscriptions[0].Market;
+
             // if we've made it here we didn't find a subscription, so we'll need to add one
             var currencyPairs = Forex.Forex.CurrencyPairs;
             var minimumResolution = subscriptions.Subscriptions.Min(x => x.Resolution);
@@ -150,6 +153,7 @@ namespace QuantConnect.Securities
                     _invertRealTimePrice = symbol == invert;
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
                     _config = subscriptions.Add(objectType, SecurityType.Forex, symbol, minimumResolution, true, false, isTradeBar, isTradeBar, true);
+                    _config.Market = market;
                     var security = new Forex.Forex(this, _config, 1m, false);
                     securities.Add(symbol, security);
                     Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol + " for cash " + this.Symbol + " currency feed");
