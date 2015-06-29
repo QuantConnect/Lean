@@ -10,7 +10,7 @@ Lean C# Algorithmic Trading Engine
 
 ## Introduction ##
 
-Lean Engine is an open-source fully managed C# algorithmic trading engine built for desktop and cloud usage. It was designed in Mono and operates in Windows and Linux.
+Lean Engine is an open-source fully managed C# algorithmic trading engine built for desktop and cloud usage. It was designed in Mono and operates in Windows, Linux and Mac platforms. The community has contributed additional connectors to F#, Visual Basic and Java.
 
 Lean drives the web based backtesting platform [QuantConnect][4].
 
