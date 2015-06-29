@@ -138,8 +138,10 @@ namespace QuantConnect.Securities
                 }
             }
 
-            // get the market from the first existing subscription
-            string market = subscriptions.Subscriptions[0].Market;
+            // get the market from the first Forex subscription
+            string market = (from config in subscriptions.Subscriptions
+                             where config.SecurityType == SecurityType.Forex
+                             select config.Market).FirstOrDefault() ?? subscriptions.Subscriptions[0].Market;
 
             // if we've made it here we didn't find a subscription, so we'll need to add one
             var currencyPairs = Forex.Forex.CurrencyPairs;
