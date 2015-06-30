@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Lean.Engine", "Engine\QuantConnect.Lean.Engine.csproj", "{12156F46-D07E-4E3D-AD2B-7409E82AB62F}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -48,6 +48,13 @@ EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "QuantConnect.Algorithm.VisualBasic", "Algorithm.VisualBasic\QuantConnect.Algorithm.VisualBasic.vbproj", "{AF8F124B-B441-4AA7-92B7-CEA72BDB4118}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Algorithm.Python", "Algorithm.Python\QuantConnect.Algorithm.Python.csproj", "{48289996-CE56-4EDF-B451-4A2B1519EBC3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Algorithm.Java", "Algorithm.Java\QuantConnect.Algorithm.Java.csproj", "{61097E9E-EB20-4677-B394-CE0682B9D610}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{93A63A28-9326-4E26-9930-0FDBC26B9A91}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\packages.config = .nuget\packages.config
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -304,6 +311,18 @@ Global
 		{48289996-CE56-4EDF-B451-4A2B1519EBC3}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{48289996-CE56-4EDF-B451-4A2B1519EBC3}.Release|x64.ActiveCfg = Release|Any CPU
 		{48289996-CE56-4EDF-B451-4A2B1519EBC3}.Release|x86.ActiveCfg = Release|Any CPU
+		{61097E9E-EB20-4677-B394-CE0682B9D610}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61097E9E-EB20-4677-B394-CE0682B9D610}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61097E9E-EB20-4677-B394-CE0682B9D610}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{61097E9E-EB20-4677-B394-CE0682B9D610}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{61097E9E-EB20-4677-B394-CE0682B9D610}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{61097E9E-EB20-4677-B394-CE0682B9D610}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{61097E9E-EB20-4677-B394-CE0682B9D610}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61097E9E-EB20-4677-B394-CE0682B9D610}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61097E9E-EB20-4677-B394-CE0682B9D610}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{61097E9E-EB20-4677-B394-CE0682B9D610}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{61097E9E-EB20-4677-B394-CE0682B9D610}.Release|x64.ActiveCfg = Release|Any CPU
+		{61097E9E-EB20-4677-B394-CE0682B9D610}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
