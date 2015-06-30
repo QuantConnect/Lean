@@ -2,6 +2,9 @@
 Jared Broad (@jaredbroad) & Craig Stevenson (@craig-stevenson)
 This is the Java-C# Interop project for connecting LEAN and Java Algorithms. Points to follow:
 
+NOTE: Because Java project requires Java to be installed; we've removed it as a build dependendancy of LEAN. You'll need to make 
+sure your QuantConnect.Algorithm.Java.dll is copied to the Lean/bin/Debug (or Release) directory.
+
 =====
 WINDOWS:
  
