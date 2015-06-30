@@ -14,8 +14,10 @@
 */
 
 using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using System.Runtime.Serialization;
+using System.Collections.Generic;
 using QuantConnect.Securities.Forex;
 
 namespace QuantConnect
@@ -151,21 +153,37 @@ namespace QuantConnect
     /// <summary>
     /// Multilanguage support enum: which language is this project for the interop bridge converter.
     /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum Language
     {
         /// <summary>
         /// C# Language Project
         /// </summary>
+        [EnumMember(Value = "C#")]
         CSharp,
+
+        /// <summary>
+        /// FSharp Project
+        /// </summary>
+        [EnumMember(Value = "F#")]
+        FSharp,
+
+        /// <summary>
+        /// Visual Basic Project
+        /// </summary>
+        [EnumMember(Value = "VB")]
+        VisualBasic,
 
         /// <summary>
         /// Java Language Project
         /// </summary>
+        [EnumMember(Value = "Ja")]
         Java,
 
         /// <summary>
         /// Python Language Project
         /// </summary>
+        [EnumMember(Value = "Py")]
         Python
     }
 

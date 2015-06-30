@@ -5,7 +5,7 @@
 [assembly: AssemblyCopyright("Copyright ©  2015")]
 [assembly: AssemblyCompany("QuantConnect")]
 [assembly: AssemblyTrademark("QuantConnect")]
-[assembly: AssemblyVersion("2.1.1.41")]
+[assembly: AssemblyVersion("2.1.2.00")]
 #if DEBUG
     [assembly: AssemblyConfiguration("Debug")]
 #else
