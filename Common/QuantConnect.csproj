@@ -140,6 +140,8 @@
     <Compile Include="Orders\MarketOnCloseOrder.cs" />
     <Compile Include="Orders\MarketOnOpenOrder.cs" />
     <Compile Include="Orders\OrderRequest.cs" />
+    <Compile Include="Orders\OrderResponse.cs" />
+    <Compile Include="Orders\OrderResponseTypes.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />
     <Compile Include="Orders\StopMarketOrder.cs" />
     <Compile Include="Orders\LimitOrder.cs" />

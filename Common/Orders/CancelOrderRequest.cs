@@ -24,18 +24,12 @@ namespace QuantConnect.Orders
         OrderRequest
     {
         /// <summary>
-        /// Request id.
+        /// Cancel request description
         /// </summary>
-        public Guid Id;
-
-        /// <summary>
-        /// Id of the order to cancel.
-        /// </summary>
-        public int OrderId;
-
-        /// <summary>
-        /// Request created time.
-        /// </summary>
-        public DateTime Created;
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return string.Format("[{0}] Request to cancel order [{1}]", Id, OrderId);
+        }
     }
 }

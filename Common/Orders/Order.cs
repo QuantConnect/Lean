@@ -142,15 +142,15 @@ namespace QuantConnect.Orders
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
         /// <param name="type">Type of the security order</param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
-        /// <param name="order">Order type (market, limit or stoploss order)</param>
+        /// <param name="orderType">Order type (market, limit or stoploss order)</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="price">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        protected Order(string symbol, int quantity, OrderType order, DateTime time, decimal price = 0, string tag = "", SecurityType type = SecurityType.Base)
+        protected Order(string symbol, int quantity, OrderType orderType, DateTime time, decimal price = 0, string tag = "", SecurityType type = SecurityType.Base)
         {
             Time = time;
             Price = price;
-            Type = order;
+            Type = orderType;
             Quantity = quantity;
             Symbol = symbol;
             Status = OrderStatus.None;
@@ -159,6 +159,24 @@ namespace QuantConnect.Orders
             Duration = OrderDuration.GTC;
             BrokerId = new List<long>();
             ContingentId = 0;
+        }
+
+        /// <summary>
+        /// New order constructor
+        /// </summary>
+        /// <param name="request">Submit order request</param>
+        protected Order(SubmitOrderRequest request)
+            : this(
+            request.Symbol,
+            request.Quantity,
+            request.Type,
+            request.Created,
+            request.Price,
+            request.Tag,
+            request.SecurityType) 
+        {
+
+                Id = request.OrderId;
         }
 
         /// <summary>
@@ -230,7 +248,12 @@ namespace QuantConnect.Orders
         /// Apply update to the order.
         /// </summary>
         /// <param name="request"></param>
-        public abstract void ApplyUpdate(UpdateOrderRequest request);
+        public virtual void ApplyUpdate(UpdateOrderRequest request)
+        {
+            this.Time = request.Created;
+            Quantity = request.Quantity;
+            Tag = request.Tag;
+        }
 
         /// <summary>
         /// Copy order for update operations and messaging.

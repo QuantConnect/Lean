@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 
@@ -32,12 +33,12 @@ namespace QuantConnect.Securities
         private readonly SecurityManager _securities;
         private const decimal _minimumOrderSize = 0;
         private const int _minimumOrderQuantity = 1;
-        private ConcurrentQueue<Order> _orderQueue;
         private ConcurrentQueue<OrderRequest> _orderRequestQueue;
         private ConcurrentDictionary<int, Order> _orders;
         private ConcurrentDictionary<int, List<OrderEvent>> _orderEvents;
         private Dictionary<DateTime, decimal> _transactionRecord;
-        
+        private Dictionary<Guid, TaskCompletionSource<OrderResponse>> _orderResponseCompletions;
+
         /// <summary>
         /// Initialise the transaction manager for holding and processing orders.
         /// </summary>
@@ -49,9 +50,6 @@ namespace QuantConnect.Securities
             //Initialise the Order Cache -- Its a mirror of the TransactionHandler.
             _orders = new ConcurrentDictionary<int, Order>();
 
-            //Temporary Holding Queue of Orders to be Processed.
-            _orderQueue = new ConcurrentQueue<Order>();
-
             // Internal order events storage.
             _orderEvents = new ConcurrentDictionary<int, List<OrderEvent>>();
 
@@ -59,22 +57,8 @@ namespace QuantConnect.Securities
             _transactionRecord = new Dictionary<DateTime, decimal>();
 
             _orderRequestQueue = new ConcurrentQueue<OrderRequest>();
-        }
 
-        /// <summary>
-        /// Queue for holding all orders sent for processing.
-        /// </summary>
-        /// <remarks>Potentially for long term algorithms this will be a memory hog. Should consider dequeuing orders after a 1 day timeout</remarks>
-        public ConcurrentDictionary<int, Order> _Orders 
-        {
-            get 
-            {
-                return _orders;
-            }
-            set
-            {
-                _orders = value;
-            }
+            _orderResponseCompletions = new Dictionary<Guid, TaskCompletionSource<OrderResponse>>();
         }
 
         /// <summary>
@@ -83,22 +67,6 @@ namespace QuantConnect.Securities
         public int CachedOrderCount
         {
             get { return _orders.Count; }
-        }
-
-        /// <summary>
-        /// Temporary storage for orders while waiting to process via transaction handler. Once processed they are added to the primary order queue.
-        /// </summary>
-        /// <seealso cref="Orders"/>
-        public ConcurrentQueue<Order> OrderQueue
-        {
-            get
-            {
-                return _orderQueue;
-            }
-            set 
-            {
-                _orderQueue = value;
-            }
         }
 
         /// <summary>
@@ -186,159 +154,121 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Add an order to collection and return the unique order id or negative if an error.
+        /// Main entry for order requests. All requests are guaranteed a response.
         /// </summary>
-        /// <param name="order">New order object to add to processing list</param>
-        /// <returns>New unique, increasing orderid</returns>
-        public virtual int _AddOrder(Order order) 
+        /// <param name="request">Order request</param>
+        /// <returns></returns>
+        public Task<OrderResponse> ProcessOrderRequest(OrderRequest request)
         {
-            try
+            var taskCompletion = new TaskCompletionSource<OrderResponse>();
+
+            var response = new OrderResponse(request);
+
+            if (request is UpdateOrderRequest)
             {
-                //Ensure its flagged as a new order for the transaction handler.
-                order.Id = _orderId++;
-                order.Status = OrderStatus.New;
-                //Add the order to the cache to monitor
-                OrderQueue.Enqueue(order);
+                var updateRequest = (UpdateOrderRequest)request;
+
+                var order = GetOrderById(updateRequest.OrderId);
+
+                if (order == null)
+                {
+                    response.Error(OrderResponseErrorCode.UnableToFindOrder);
+                }
+                else if (updateRequest.Quantity == 0)
+                {
+                    response.Error(OrderResponseErrorCode.OrderQuantityZero);
+                }
+                else
+                {
+                    updateRequest.Created = _securities[order.Symbol].Time;
+                }
+
             }
-            catch (Exception err)
+            else if (request is SubmitOrderRequest)
             {
-                Log.Error("Algorithm.Transaction.AddOrder(): " + err.Message);
+                var submitRequest = (SubmitOrderRequest)request;
+
+                if (submitRequest.Quantity == 0)
+                {
+                    response.Error(OrderResponseErrorCode.OrderQuantityZero);
+                }
+                else
+                {
+                    submitRequest.OrderId = _orderId++;
+                    submitRequest.Created = _securities[submitRequest.Symbol].Time;
+                }
             }
-            return order.Id;
+            else if (request is CancelOrderRequest)
+            {
+                var order = GetOrderById(request.OrderId);
+
+                if (order == null)
+                {
+                    response.Error(OrderResponseErrorCode.UnableToFindOrder);
+                }
+                else if (order.Status.IsOpen() == false)
+                {
+                    response.Error(OrderResponseErrorCode.InvalidOrderStatus);
+                }
+                else
+                {
+                    request.Created = _securities[order.Symbol].Time;
+                }
+            }
+            else
+            {
+                response.Error(OrderResponseErrorCode.UnsupportedRequestType);
+            }
+
+            if (response.Type == OrderResponseType.Error)
+            {
+                taskCompletion.TrySetResult(response);
+                return taskCompletion.Task;
+            }
+
+            _orderResponseCompletions[request.Id] = taskCompletion;
+
+            OrderRequestQueue.Enqueue(request);
+
+            return taskCompletion.Task;
         }
 
         /// <summary>
         /// Add submit order request to queue and return the unique order id or negative if an error.
         /// </summary>
         /// <param name="request">Submit order request to add to processing list</param>
-        /// <returns>New unique, increasing orderid</returns>
-        public virtual int SubmitOrder(SubmitOrderRequest request)
+        /// <returns>OrderResponse. Check ErrorCode for details.</returns>
+        public OrderResponse SubmitOrder(SubmitOrderRequest request)
         {
-            try
-            {
-                request.OrderId = _orderId++;
-                OrderRequestQueue.Enqueue(request);
-            }
-            catch (Exception err)
-            {
-                Log.Error("Algorithm.Transaction.SubmitOrder(): " + err.Message);
-            }
-
-            return request.OrderId;
+            return ProcessOrderRequest(request).Result;
         }
 
         /// <summary>
         /// Update an order yet to be filled such as stop or limit orders.
         /// </summary>
-        /// <param name="order">Order to Update</param>
+        /// <param name="request">Order to Update</param>
         /// <remarks>Does not apply if the order is already fully filled</remarks>
         /// <returns>
-        ///     Id of the order we modified or 
-        ///     -5 if the order was already filled or cancelled
-        ///     -6 if the order was not found in the cache
+        ///     OrderResponse. Check ErrorCode for details.
         /// </returns>
-        public int UpdateOrder(Order order)
+        public OrderResponse UpdateOrder(UpdateOrderRequest request)
         {
-            try
-            {
-                //Update the order from the behaviour
-                var id = order.Id;
-                order.Time = _securities[order.Symbol].Time;
-
-                //Validate order:
-                if (order.Quantity == 0) return -1;
-
-                if (_orders.ContainsKey(id))
-                {
-                    //-> If its already filled return false; can't be updated
-                    if (_orders[id].Status == OrderStatus.Filled || _orders[id].Status == OrderStatus.Canceled)
-                    {
-                        return -5;
-                    }
-
-                    //Flag the order to be resubmitted.
-                    order.Status = OrderStatus.Update;
-                    _orders[id] = order;
-
-                    //Send the order to transaction handler for update to be processed.
-                    OrderQueue.Enqueue(order);
-                } 
-                else 
-                {
-                    //-> Its not in the orders cache, shouldn't get here
-                    return -6;
-                }
-            } 
-            catch (Exception err) 
-            {
-                Log.Error("Algorithm.Transactions.UpdateOrder(): " + err.Message);
-                return -7;
-            }
-            return 0;
+            return ProcessOrderRequest(request).Result;
         }
 
         /// <summary>
-        /// Update an order yet to be filled such as stop or limit orders.
-        /// </summary>
-        /// <param name="request">Update order request</param>
-        /// <remarks>Does not apply if the order is already fully filled</remarks>
-        /// <returns>
-        ///     Id of the order we modified or 
-        ///     -5 if the order was already filled or cancelled
-        ///     -6 if the order was not found in the cache
-        /// </returns>
-        public int UpdateOrder(UpdateOrderRequest request)
-        {
-            try
-            {
-                if (request.Quantity == 0)
-                    return -1;
-
-                Order order;
-
-                if (_orders.TryGetValue(request.OrderId, out order) == true)
-                {
-                    //-> If its already filled return false; can't be updated
-                    if (order.Status != OrderStatus.New && order.Status != OrderStatus.Submitted)
-                    {
-                        return -5;
-                    }
-
-                    request.Created = _securities[order.Symbol].Time;
-
-                    OrderRequestQueue.Enqueue(request);
-                }
-                else
-                {
-                    return -6;
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error("Algorithm.Transactions.UpdateOrder(): " + err.Message);
-                return -7;
-            }
-            return 0;
-        }
-
-        /// <summary>
-        /// Added alias for RemoveOrder - 
+        /// Cancel Order
         /// </summary>
         /// <param name="orderId">Order id we wish to cancel</param>
-        public virtual void CancelOrder(int orderId)
+        public OrderResponse CancelOrder(int orderId)
         {
-            Order order;
-
-            if (_orders.TryGetValue(orderId, out order) == true)
+            var request = new CancelOrderRequest
             {
-                if (order.Status != OrderStatus.Submitted && order.Status != OrderStatus.New)
-                {
-                    Log.Error("Security.TransactionManager.RemoveOutstandingOrder(): Order already filled");
-                    return;
-                }
+                Id = Guid.NewGuid(),
+                OrderId = orderId
+            };
 
-                OrderRequestQueue.Enqueue(order.CancelRequest());
-            }
+            return ProcessOrderRequest(request).Result;
         }
 
         /// <summary>
@@ -358,9 +288,29 @@ namespace QuantConnect.Securities
             }
         }
 
+        /// <summary>
+        /// Process order updates from the engine.
+        /// </summary>
+        /// <param name="update">updated order</param>
         public void Process(Order update)
         {
-            throw new NotImplementedException();
+            _orders[update.Id] = update;
+        }
+
+        /// <summary>
+        /// Process order responses from the engine
+        /// </summary>
+        /// <param name="response"></param>
+        public void Process(OrderResponse response)
+        {
+            TaskCompletionSource<OrderResponse> taskCompletion;
+
+            if (_orderResponseCompletions.TryGetValue(response.Id, out taskCompletion) == true)
+            {
+                _orderResponseCompletions.Remove(response.Id);
+
+                taskCompletion.TrySetResult(response);
+            }
         }
 
         /// <summary>
@@ -399,12 +349,7 @@ namespace QuantConnect.Securities
         {
             try
             {
-                // first check the order queue
-                var order = OrderQueue.FirstOrDefault(x => x.Id == orderId);
-                if (order != null)
-                {
-                    return order;
-                }
+                Order order;
                 // then check permanent storage
                 if (_orders.TryGetValue(orderId, out order))
                 {
@@ -427,13 +372,6 @@ namespace QuantConnect.Securities
         {
             try
             {
-                // first check the order queue since orders are moved from OrderQueue to Orders
-                var order = OrderQueue.FirstOrDefault(x => x.BrokerId.Contains(brokerageId));
-                if (order != null)
-                {
-                    return order;
-                }
-
                 return _orders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
             }
             catch (Exception err)

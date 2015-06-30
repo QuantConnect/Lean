@@ -22,5 +22,10 @@ namespace QuantConnect.Orders
     /// </summary>
     public class OrderRequest
     {
+        public Guid Id;
+
+        public int OrderId;
+
+        public DateTime Created;
     }
 }

@@ -97,9 +97,9 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
-        /// Property indicating the transaction handler is currently processing an order and the algorithm should wait (syncrhonous order processing).
+        /// Property indicating the transaction handler is currently processing events and the algorithm should wait (syncrhonous order processing).
         /// </summary>
-        bool ProcessingOrder
+        bool ProcessingEvents
         {
             get;
             set;
@@ -243,13 +243,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Margin call event handler. This method is called right before the margin call orders are placed in the market.
         /// </summary>
-        /// <param name="orders">The orders to be executed to bring this algorithm within margin limits</param>
-        void OnMarginCall(List<Order> orders);
-
-        /// <summary>
-        /// Margin call event handler. This method is called right before the margin call orders are placed in the market.
-        /// </summary>
-        /// <param name="orders">The orders to be executed to bring this algorithm within margin limits</param>
+        /// <param name="orderRequests">The order submit requests to be executed to bring this algorithm within margin limits</param>
         void OnMarginCall(List<SubmitOrderRequest> orderRequests);
 
         /// <summary>

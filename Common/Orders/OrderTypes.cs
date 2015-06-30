@@ -51,6 +51,45 @@ namespace QuantConnect.Orders
         MarketOnClose
     }
 
+    /// <summary>
+    /// OrderType extensions.
+    /// </summary>
+    public static class OrderTypeEx
+    {
+        /// <summary>
+        /// Test for market types
+        /// </summary>
+        /// <param name="source">Order type</param>
+        /// <returns>True if a market type</returns>
+        public static bool IsMarket(this OrderType source)
+        {
+            return source == OrderType.Market
+                || source == OrderType.MarketOnClose
+                || source == OrderType.MarketOnOpen;
+        }
+
+        /// <summary>
+        /// Test for limit types
+        /// </summary>
+        /// <param name="source">Order type</param>
+        /// <returns>True if a limit type</returns>
+        public static bool IsLimit(this OrderType source)
+        {
+            return source == OrderType.Limit
+                || source == OrderType.StopLimit;
+        }
+
+        /// <summary>
+        /// Test for stop types
+        /// </summary>
+        /// <param name="source">Order type</param>
+        /// <returns>True if a stop type</returns>
+        public static bool IsStop(this OrderType source)
+        {
+            return source == OrderType.StopMarket
+                || source == OrderType.StopLimit;
+        }
+    }
 
     /// <summary>
     /// Order duration in market
@@ -104,11 +143,6 @@ namespace QuantConnect.Orders
         New,
 
         /// <summary>
-        /// Order flagged for updating the inmarket order.
-        /// </summary>
-        Update,
-
-        /// <summary>
         /// Order submitted to the market
         /// </summary>
         Submitted,
@@ -137,6 +171,37 @@ namespace QuantConnect.Orders
         /// Order invalidated before it hit the market (e.g. insufficient capital)..
         /// </summary>
         Invalid
+    }
+
+
+    /// <summary>
+    /// OrderStatus extensions
+    /// </summary>
+    public static class OrderStatusEx
+    {
+        /// <summary>
+        /// Test for open orders
+        /// </summary>
+        /// <param name="source">Order status</param>
+        /// <returns>True if open status</returns>
+        public static bool IsOpen(this OrderStatus source)
+        {
+            return source == OrderStatus.New
+                || source == OrderStatus.Submitted;
+        }
+
+        /// <summary>
+        /// Test for completed orders
+        /// </summary>
+        /// <param name="source">Order status</param>
+        /// <returns>True if completed status</returns>
+        public static bool IsCompleted(this OrderStatus source)
+        {
+            return source == OrderStatus.Canceled
+                || source == OrderStatus.Filled
+                || source == OrderStatus.Invalid
+                || source == OrderStatus.PartiallyFilled;
+        }
     }
 
 } // End QC Namespace:

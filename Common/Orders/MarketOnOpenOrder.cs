@@ -46,15 +46,6 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Apply changes after the update request is processed.
-        /// </summary>
-        public override void ApplyUpdate(UpdateOrderRequest request)
-        {
-            Quantity = request.Quantity;
-            Tag = request.Tag;
-        }
-
-        /// <summary>
         /// Create submit request.
         /// </summary>
         public static SubmitOrderRequest SubmitRequest(string symbol, int quantity, string tag, SecurityType securityType, decimal price = 0, DateTime? time = null)
@@ -109,6 +100,6 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="request">Submit order request.</param>
         public MarketOnOpenOrder(SubmitOrderRequest request)
-            : this(request.Symbol, request.SecurityType, request.Quantity, request.Created, request.Price, request.Tag) { }
+            : base(request) { }
     }
 }

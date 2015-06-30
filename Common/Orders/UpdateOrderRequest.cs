@@ -24,16 +24,6 @@ namespace QuantConnect.Orders
         OrderRequest
     {
         /// <summary>
-        /// Request ID.
-        /// </summary>
-        public Guid Id;
-
-        /// <summary>
-        /// Order ID.
-        /// </summary>
-        public int OrderId;
-
-        /// <summary>
         /// Limit Price of the Limit and StopLimit Orders.
         /// </summary>
         public decimal LimitPrice;
@@ -44,11 +34,6 @@ namespace QuantConnect.Orders
         public decimal StopPrice;
 
         /// <summary>
-        /// Time the request was created.
-        /// </summary>
-        public DateTime Created;
-
-        /// <summary>
         /// Number of shares to execute.
         /// </summary>
         public int Quantity;
@@ -57,5 +42,14 @@ namespace QuantConnect.Orders
         /// Tag the order with some custom data
         /// </summary>
         public string Tag;
+
+        /// <summary>
+        /// Update request description
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return string.Format("[{0}] Request to update order [{1}] Quantity: {2} LimitPrice: {3} StopPrice: {4} Tag: {5}", Id, OrderId, Quantity, LimitPrice, StopPrice, Tag);
+        }
     }
 }

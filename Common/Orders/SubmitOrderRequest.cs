@@ -24,16 +24,6 @@ namespace QuantConnect.Orders
         OrderRequest
     {
         /// <summary>
-        /// Request ID.
-        /// </summary>
-        public Guid Id;
-
-        /// <summary>
-        /// Order ID.
-        /// </summary>
-        public int OrderId;
-
-        /// <summary>
         /// Order id to process before processing this order.
         /// </summary>
         public int ContingentId;
@@ -59,11 +49,6 @@ namespace QuantConnect.Orders
         public decimal StopPrice;
 
         /// <summary>
-        /// Time the request was created.
-        /// </summary>
-        public DateTime Created;
-
-        /// <summary>
         /// Number of shares to execute.
         /// </summary>
         public int Quantity;
@@ -87,6 +72,19 @@ namespace QuantConnect.Orders
         /// The symbol's security type
         /// </summary>
         public SecurityType SecurityType;
+
+        /// <summary>
+        /// Submit request description.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return string.Format("[{0}] Request to submit {1} order for {2} unit{3} of {4}", Id, Type, Quantity, Quantity == 1 ? "" : "s", Symbol)
+                + (Type.IsStop() ? string.Format(" at stop price {0}", StopPrice) : "")
+                + (Type == OrderType.StopLimit ? " and" : "")
+                + (Type.IsLimit() ? string.Format(" at limit price {0}", LimitPrice) : "")
+                + string.Format(" Tag: {0}", Tag);
+        }
 
     }
 }

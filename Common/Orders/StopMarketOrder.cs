@@ -56,9 +56,9 @@ namespace QuantConnect.Orders
         /// </summary>
         public override void ApplyUpdate(UpdateOrderRequest request)
         {
-            Quantity = request.Quantity;
+            base.ApplyUpdate(request);
+
             StopPrice = request.StopPrice;
-            Tag = request.Tag;
         }
 
         /// <summary>
@@ -125,7 +125,16 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="request">Submit order request.</param>
         public StopMarketOrder(SubmitOrderRequest request) :
-            this(request.Symbol, request.Quantity, request.StopPrice, request.Created, request.Tag, request.SecurityType) { }
+            base(request)
+        {
+            StopPrice = request.StopPrice;
+
+            if (Tag == "")
+            {
+                //Default tag values to display stop price in GUI.
+                Tag = "Stop Price: " + StopPrice.ToString("C");
+            }
+        }
 
         /// <summary>
         /// Returns a string that represents the current object.

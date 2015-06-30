@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Wait semaphore to signal the algoritm is currently processing a synchronous order.
         /// </summary>
-        public bool ProcessingOrder
+        public bool ProcessingEvents
         {
             get { return _processingOrder; }
             set { _processingOrder = value; }
@@ -194,17 +194,17 @@ namespace QuantConnect.Algorithm
             var submitRequest = QuantConnect.Orders.MarketOrder.SubmitRequest(symbol, quantity, tag, security.Type, price: security.Price, time: security.Time);
 
             //Add the order and create a new order Id.
-            var orderId = Transactions.SubmitOrder(submitRequest);
+            var response = Transactions.SubmitOrder(submitRequest);
 
             //Wait for the order event to process, only if the exchange is open
             if (!asynchronous)
             {
                 //Wait for the market order to fill.
                 //This is processed in a parallel thread.
-                Transactions.WaitForOrder(orderId);
+                Transactions.WaitForOrder(response.OrderId);
             }
 
-            return orderId;
+            return response.OrderId;
         }
 
         /// <summary>
@@ -225,7 +225,7 @@ namespace QuantConnect.Algorithm
             var security = Securities[symbol];
             var order = QuantConnect.Orders.MarketOnOpenOrder.SubmitRequest(symbol, quantity, tag, security.Type, time: Time, price: security.Price);
 
-            return Transactions.SubmitOrder(order);
+            return Transactions.SubmitOrder(order).OrderId;
         }
 
         /// <summary>
@@ -246,7 +246,7 @@ namespace QuantConnect.Algorithm
             var security = Securities[symbol];
             var order = QuantConnect.Orders.MarketOnCloseOrder.SubmitRequest(symbol, quantity, tag, security.Type, time: Time, price: security.Price);
 
-            return Transactions.SubmitOrder(order);
+            return Transactions.SubmitOrder(order).OrderId;
         }
 
         /// <summary>
@@ -268,7 +268,7 @@ namespace QuantConnect.Algorithm
             var order = QuantConnect.Orders.LimitOrder.SubmitRequest(symbol, quantity, limitPrice, tag, Securities[symbol].Type, time: Time);
 
             //Add the order and create a new order Id.
-            return Transactions.SubmitOrder(order);
+            return Transactions.SubmitOrder(order).OrderId;
         }
 
         /// <summary>
@@ -290,7 +290,7 @@ namespace QuantConnect.Algorithm
             var order = QuantConnect.Orders.StopMarketOrder.SubmitRequest(symbol, quantity, stopPrice, tag, Securities[symbol].Type, time: Time);
 
             //Add the order and create a new order Id.
-            return Transactions.SubmitOrder(order);
+            return Transactions.SubmitOrder(order).OrderId;
         }
 
         /// <summary>
@@ -313,7 +313,7 @@ namespace QuantConnect.Algorithm
             var order = QuantConnect.Orders.StopLimitOrder.SubmitRequest(symbol, quantity, stopPrice, limitPrice, tag, Securities[symbol].Type, time: Time);
 
             //Add the order and create a new order Id.
-            return Transactions.SubmitOrder(order);
+            return Transactions.SubmitOrder(order).OrderId;
         }
 
         /// <summary>

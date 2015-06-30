@@ -56,9 +56,9 @@ namespace QuantConnect.Orders
         /// </summary>
         public override void ApplyUpdate(UpdateOrderRequest request)
         {
-            Quantity = request.Quantity;
+            base.ApplyUpdate(request);
+
             LimitPrice = request.LimitPrice;
-            Tag = request.Tag;
         }
 
         /// <summary>
@@ -113,7 +113,16 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="request">Submit order request.</param>
         public LimitOrder(SubmitOrderRequest request) :
-            this(request.Symbol, request.Quantity, request.LimitPrice, request.Created, request.Tag, request.SecurityType) { }
+            base(request)
+        {
+            LimitPrice = request.LimitPrice;
+
+            if (Tag == "")
+            {
+                //Default tag values to display limit price in GUI.
+                Tag = "Limit Price: " + LimitPrice.ToString("C");
+            }
+        }
 
         /// <summary>
         /// Returns a string that represents the current object.

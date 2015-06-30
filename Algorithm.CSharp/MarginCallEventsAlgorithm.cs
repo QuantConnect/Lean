@@ -32,8 +32,8 @@ namespace QuantConnect.Algorithm.Examples
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 01);  //Set Start Date
-            SetEndDate(2013, 12, 11);    //Set End Date
+            SetStartDate(2013, 10, 07);  //Set Start Date
+            SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Second);
@@ -52,22 +52,6 @@ namespace QuantConnect.Algorithm.Examples
             {
                 Liquidate();
                 SetHoldings("SPY", 1);
-            }
-        }
-
-        /// <summary>
-        /// Margin call event handler. This method is called right before the margin call orders are placed in the market.
-        /// </summary>
-        /// <param name="orders">The orders to be executed to bring this algorithm within margin limits</param>
-        public override void OnMarginCall(List<Order> orders)
-        {
-            // this code gets called BEFORE the orders are placed, so we can try to liquidate some of our positions
-            // before we get the margin call orders executed. We could also modify these orders by changing their
-            // quantities
-            foreach (var order in orders)
-            {
-                // liquidate an extra 10% each time we get a margin call to give us more padding
-                order.Quantity = (int)(Math.Sign(order.Quantity) * order.AbsoluteQuantity * 1.1m);
             }
         }
 

@@ -57,15 +57,6 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Apply changes after the update request is processed.
-        /// </summary>
-        public override void ApplyUpdate(UpdateOrderRequest request)
-        {
-            Quantity = request.Quantity;
-            Tag = request.Tag;
-        }
-
-        /// <summary>
         /// Create submit request.
         /// </summary>
         public static SubmitOrderRequest SubmitRequest(string symbol, int quantity, string tag, SecurityType securityType, decimal price = 0, DateTime? time = null)
@@ -102,6 +93,7 @@ namespace QuantConnect.Orders
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
+        /// <param name="price">Estimated fill price</param>
         public MarketOrder(string symbol, int quantity, DateTime time, string tag = "", SecurityType type = SecurityType.Base, decimal price = 0m) :
             base(symbol, quantity, OrderType.Market, time, 0, tag, type)
         {
@@ -112,7 +104,7 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="request">Submit order request.</param>
         public MarketOrder(SubmitOrderRequest request)
-            : this(request.Symbol, request.Quantity, request.Created, request.Tag, request.SecurityType, request.Price) { }
+            : base(request) { }
     }
 
 } // End QC Namespace:

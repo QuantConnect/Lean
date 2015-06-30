@@ -125,13 +125,13 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            if (order.Status == OrderStatus.Update)
+            if (order.Status == OrderStatus.Submitted)
             {
                 _pending[order.Id] = order;
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
 
                 // fire off the event that says this order has been updated
-                var updated = new OrderEvent(order) {Status = OrderStatus.Update};
+                var updated = new OrderEvent(order) {Status = OrderStatus.Submitted};
                 OnOrderEvent(updated);
 
                 return true;
@@ -243,14 +243,14 @@ namespace QuantConnect.Brokerages.Backtesting
                     catch (Exception err)
                     {
                         Log.Error("BacktestingBrokerage.Scan(): " + err.Message);
-                        _algorithm.Error(string.Format("Order Error: id: {0}, Transaction model failed to fill for order type: {1} with error: {2}", order.Id, order.Type, err.Message));
+                        _algorithm.Error(string.Format("BackTestingBrokerage.Scan(): Order Error: id: {0}, Transaction model failed to fill for order type: {1} with error: {2}", order.Id, order.Type, err.Message));
                     }
                 }
                 else
                 {
                     //Flag order as invalid and push off queue:
                     order.Status = OrderStatus.Invalid;
-                    _algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
+                    _algorithm.Error(string.Format("BackTestingBrokerage.Scan(): Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
                 }
 
                 // change in status or a new fill

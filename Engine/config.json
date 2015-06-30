@@ -9,7 +9,7 @@
     "environment": "backtesting",
 
     // algorithm selector
-    "algorithm-type-name": "BasicTemplateAlgorithm",
+    "algorithm-type-name": "OrderOperationsAlgorithm",
     "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
     //"algorithm-location": "QuantConnect.Algorithm.FSharp.dll",
     //"algorithm-location": "QuantConnect.Algorithm.VisualBasic.dll",
