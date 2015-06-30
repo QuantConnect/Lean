@@ -140,14 +140,6 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
-        /// Accessor for Filled Orders:
-        /// </summary>
-        ConcurrentDictionary<int, Order> Orders
-        {
-            get;
-        }
-
-        /// <summary>
         /// Run Backtest Mode for the algorithm: Automatic, Parallel or Series.
         /// </summary>
         RunMode RunMode

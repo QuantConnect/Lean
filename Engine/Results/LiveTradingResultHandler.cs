@@ -279,7 +279,7 @@ namespace QuantConnect.Lean.Engine.Results
             Dictionary<int, Order> deltaOrders;
 
             //Error checks if the algorithm & threads have not loaded yet, or are closing down.
-            if (_algorithm == null || _algorithm.Transactions == null || _algorithm.Transactions.Orders == null || !_algorithm.GetLocked())
+            if (_algorithm == null || _algorithm.Transactions == null || !_algorithm.GetLocked())
             {
                 Log.Error("LiveTradingResultHandler.Update(): Algorithm not yet initialized.");
                 return;
@@ -374,7 +374,7 @@ namespace QuantConnect.Lean.Engine.Results
                         lock (_chartLock)
                         {
                             var chartComplete = new Dictionary<string, Chart>(Charts);
-                            var orders = new Dictionary<int, Order>(_algorithm.Transactions.Orders);
+                            var orders = _algorithm.Transactions.GetOrders().ToDictionary(o => o.Id);
                             var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, orders, _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
                             StoreResult(complete);
                         }

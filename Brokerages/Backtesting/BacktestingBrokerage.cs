@@ -43,7 +43,6 @@ namespace QuantConnect.Brokerages.Backtesting
             : base("Backtesting Brokerage")
         {
             _algorithm = algorithm;
-            _orders = _algorithm.Transactions.Orders;
             _pending = new ConcurrentDictionary<int, Order>();
         }
 
@@ -56,7 +55,6 @@ namespace QuantConnect.Brokerages.Backtesting
             : base(name)
         {
             _algorithm = algorithm;
-            _orders = _algorithm.Transactions.Orders;
             _pending = new ConcurrentDictionary<int, Order>();
         }
 
@@ -77,12 +75,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>The open orders returned from IB</returns>
         public override List<Order> GetOpenOrders()
         {
-            return (from order in _orders
-                    where order.Value.Status != OrderStatus.Filled &&
-                          order.Value.Status != OrderStatus.Canceled &&
-                          order.Value.Status != OrderStatus.Invalid
-                    orderby order.Value.Id
-                    select order.Value).ToList();
+            return _algorithm.Transactions.GetOpenOrders();
         }
 
         /// <summary>

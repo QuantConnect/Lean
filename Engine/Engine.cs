@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -328,7 +329,7 @@ namespace QuantConnect.Lean.Engine
                     try
                     {
                         var charts = new Dictionary<string, Chart>(_algorithmHandlers.Results.Charts);
-                        var orders = new Dictionary<int, Order>(algorithm.Transactions.Orders);
+                        var orders = algorithm.Transactions.GetOrders().ToDictionary(o => o.Id);
                         var holdings = new Dictionary<string, Holding>();
                         var statistics = new Dictionary<string, string>();
                         var banner = new Dictionary<string, string>();

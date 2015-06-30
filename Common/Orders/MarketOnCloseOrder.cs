@@ -48,7 +48,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Apply changes after the update request is processed.
         /// </summary>
-        public void ApplyUpdate(UpdateOrderRequest request)
+        public override void ApplyUpdate(UpdateOrderRequest request)
         {
             Quantity = request.Quantity;
             Tag = request.Tag;
@@ -76,9 +76,11 @@ namespace QuantConnect.Orders
         /// </summary>
         public override Order Copy()
         {
-            return Newtonsoft.Json.JsonConvert.DeserializeObject<LimitOrder>(Newtonsoft.Json.JsonConvert.SerializeObject(this));
-        }
+            var target = new MarketOnCloseOrder();
+            CopyTo(target);
 
+            return target;
+        }
         /// <summary>
         /// Intiializes a new instance of the <see cref="MarketOnCloseOrder"/> class.
         /// </summary>

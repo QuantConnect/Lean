@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm.Examples
 
         public override void OnOrderEvent(OrderEvent fill)
         {
-            var order = Orders[fill.OrderId];
+            var order = Transactions.GetOrderById(fill.OrderId);
             Console.WriteLine(Time + " - " + order.Type + " - " + fill.Status + ":: " + fill);
         }
     }

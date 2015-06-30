@@ -43,14 +43,6 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Accessor for filled orders dictionary
-        /// </summary>
-        public ConcurrentDictionary<int, Order> Orders
-        {
-            get { return Transactions.Orders; }
-        }
-
-        /// <summary>
         /// Buy Stock (Alias of Order)
         /// </summary>
         /// <param name="symbol">string Symbol of the asset to trade</param>
@@ -199,26 +191,17 @@ namespace QuantConnect.Algorithm
                 return error;
             }
 
-            var order = new MarketOrder(symbol, quantity, Time, tag, security.Type);
-
-            //Set the rough price of the order for buying power calculations
-            order.Price = security.Price;
+            var submitRequest = QuantConnect.Orders.MarketOrder.SubmitRequest(symbol, quantity, tag, security.Type, price: security.Price, time: security.Time);
 
             //Add the order and create a new order Id.
-            var orderId = Transactions.AddOrder(order);
+            var orderId = Transactions.SubmitOrder(submitRequest);
 
             //Wait for the order event to process, only if the exchange is open
             if (!asynchronous)
             {
                 //Wait for the market order to fill.
                 //This is processed in a parallel thread.
-                while (!Transactions.Orders.ContainsKey(orderId) ||
-                       (Transactions.Orders[orderId].Status != OrderStatus.Filled &&
-                        Transactions.Orders[orderId].Status != OrderStatus.Invalid &&
-                        Transactions.Orders[orderId].Status != OrderStatus.Canceled) || _processingOrder)
-                {
-                    Thread.Sleep(1);
-                }
+                Transactions.WaitForOrder(orderId);
             }
 
             return orderId;
@@ -240,9 +223,9 @@ namespace QuantConnect.Algorithm
             }
 
             var security = Securities[symbol];
-            var order = new MarketOnOpenOrder(symbol, security.Type, quantity, Time, security.Price, tag);
+            var order = QuantConnect.Orders.MarketOnOpenOrder.SubmitRequest(symbol, quantity, tag, security.Type, time: Time, price: security.Price);
 
-            return Transactions.AddOrder(order);
+            return Transactions.SubmitOrder(order);
         }
 
         /// <summary>
@@ -261,9 +244,9 @@ namespace QuantConnect.Algorithm
             }
 
             var security = Securities[symbol];
-            var order = new MarketOnCloseOrder(symbol, security.Type, quantity, Time, security.Price, tag);
+            var order = QuantConnect.Orders.MarketOnCloseOrder.SubmitRequest(symbol, quantity, tag, security.Type, time: Time, price: security.Price);
 
-            return Transactions.AddOrder(order);
+            return Transactions.SubmitOrder(order);
         }
 
         /// <summary>
@@ -282,10 +265,10 @@ namespace QuantConnect.Algorithm
                 return error;
             }
 
-            var order = new LimitOrder(symbol, quantity, limitPrice, Time, tag, Securities[symbol].Type);
+            var order = QuantConnect.Orders.LimitOrder.SubmitRequest(symbol, quantity, limitPrice, tag, Securities[symbol].Type, time: Time);
 
             //Add the order and create a new order Id.
-            return Transactions.AddOrder(order);
+            return Transactions.SubmitOrder(order);
         }
 
         /// <summary>
@@ -304,10 +287,10 @@ namespace QuantConnect.Algorithm
                 return error;
             }
 
-            var order = new StopMarketOrder(symbol, quantity, stopPrice, Time, tag, Securities[symbol].Type);
+            var order = QuantConnect.Orders.StopMarketOrder.SubmitRequest(symbol, quantity, stopPrice, tag, Securities[symbol].Type, time: Time);
 
             //Add the order and create a new order Id.
-            return Transactions.AddOrder(order);
+            return Transactions.SubmitOrder(order);
         }
 
         /// <summary>
@@ -327,10 +310,10 @@ namespace QuantConnect.Algorithm
                 return error;
             }
 
-            var order = new StopLimitOrder(symbol, quantity, stopPrice, limitPrice, Time, tag, Securities[symbol].Type);
+            var order = QuantConnect.Orders.StopLimitOrder.SubmitRequest(symbol, quantity, stopPrice, limitPrice, tag, Securities[symbol].Type, time: Time);
 
             //Add the order and create a new order Id.
-            return Transactions.AddOrder(order);
+            return Transactions.SubmitOrder(order);
         }
 
         /// <summary>
@@ -404,7 +387,7 @@ namespace QuantConnect.Algorithm
             }
 
             //We've already processed too many orders: max 100 per day or the memory usage explodes
-            if (Orders.Count > _maxOrders)
+            if (Transactions.CachedOrderCount > _maxOrders)
             {
                 Error(string.Format("You have exceeded maximum number of orders ({0}), for unlimited orders upgrade your account.", _maxOrders));
                 _quit = true;

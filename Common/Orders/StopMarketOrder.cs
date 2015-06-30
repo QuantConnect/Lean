@@ -54,7 +54,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Apply changes after the update request is processed.
         /// </summary>
-        public void ApplyUpdate(UpdateOrderRequest request)
+        public override void ApplyUpdate(UpdateOrderRequest request)
         {
             Quantity = request.Quantity;
             StopPrice = request.StopPrice;
@@ -84,7 +84,11 @@ namespace QuantConnect.Orders
         /// </summary>
         public override Order Copy()
         {
-            return Newtonsoft.Json.JsonConvert.DeserializeObject<LimitOrder>(Newtonsoft.Json.JsonConvert.SerializeObject(this));
+            var target = new StopMarketOrder();
+            CopyTo(target);
+            target.StopPrice = StopPrice;
+
+            return target;
         }
 
         /// <summary>

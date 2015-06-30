@@ -57,13 +57,15 @@ namespace QuantConnect.Securities
 
             //Interal storage for transaction records:
             _transactionRecord = new Dictionary<DateTime, decimal>();
+
+            _orderRequestQueue = new ConcurrentQueue<OrderRequest>();
         }
 
         /// <summary>
         /// Queue for holding all orders sent for processing.
         /// </summary>
         /// <remarks>Potentially for long term algorithms this will be a memory hog. Should consider dequeuing orders after a 1 day timeout</remarks>
-        public ConcurrentDictionary<int, Order> Orders 
+        public ConcurrentDictionary<int, Order> _Orders 
         {
             get 
             {
@@ -73,6 +75,14 @@ namespace QuantConnect.Securities
             {
                 _orders = value;
             }
+        }
+
+        /// <summary>
+        /// Count of currently cached orders.
+        /// </summary>
+        public int CachedOrderCount
+        {
+            get { return _orders.Count; }
         }
 
         /// <summary>
@@ -332,40 +342,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Remove this order from outstanding queue: user is requesting a cancel.
-        /// </summary>
-        /// <param name="orderId">Specific order id to remove</param>
-        public virtual void RemoveOrder(int orderId) 
-        {
-            try
-            {
-                //Error check
-                if (!Orders.ContainsKey(orderId)) 
-                {
-                    Log.Error("Security.TransactionManager.RemoveOutstandingOrder(): Cannot find this id.");
-                    return;
-                }
-
-                var order = Orders[orderId];
-                if (order.Status != OrderStatus.Submitted && order.Type != OrderType.Market) 
-                {
-                    Log.Error("Security.TransactionManager.RemoveOutstandingOrder(): Order already filled");
-                    return;
-                }
-
-                //Update the status of the order
-                order.Status = OrderStatus.Canceled;
-
-                //Send back to queue to be reprocessed with new status
-                OrderQueue.Enqueue(order);
-            }
-            catch (Exception err)
-            {
-                Log.Error("TransactionManager.RemoveOrder(): " + err.Message);
-            }
-        }
-
-        /// <summary>
         /// Wait for a specific order to be either Filled, Invalid or Canceled
         /// </summary>
         /// <param name="orderId">The id of the order to wait for</param>
@@ -373,13 +349,18 @@ namespace QuantConnect.Securities
         {
             //Wait for the market order to fill.
             //This is processed in a parallel thread.
-            while (!Orders.ContainsKey(orderId) ||
-                   (Orders[orderId].Status != OrderStatus.Filled &&
-                    Orders[orderId].Status != OrderStatus.Invalid &&
-                    Orders[orderId].Status != OrderStatus.Canceled))
+            while (!_orders.ContainsKey(orderId) ||
+                   (_orders[orderId].Status != OrderStatus.Filled &&
+                    _orders[orderId].Status != OrderStatus.Invalid &&
+                    _orders[orderId].Status != OrderStatus.Canceled))
             {
                 Thread.Sleep(1);
             }
+        }
+
+        public void Process(Order update)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -388,12 +369,25 @@ namespace QuantConnect.Securities
         /// <returns>List of open orders.</returns>
         public List<Order> GetOpenOrders()
         {
-            var openOrders = (from order in Orders.Values
+            var openOrders = (from order in _orders.Values
                 where (order.Status == OrderStatus.Submitted ||
                        order.Status == OrderStatus.New)
                 select order).ToList();
 
             return openOrders;
+        }
+
+        /// <summary>
+        /// Get a list of all open orders.
+        /// </summary>
+        /// <returns>List of open orders.</returns>
+        public List<Order> GetOrders(Predicate<Order> filter = null)
+        {
+            var result = (from order in _orders.Values
+                              where filter == null || filter(order) == true
+                              select order).ToList();
+
+            return result;
         } 
 
         /// <summary>
@@ -412,7 +406,7 @@ namespace QuantConnect.Securities
                     return order;
                 }
                 // then check permanent storage
-                if (Orders.TryGetValue(orderId, out order))
+                if (_orders.TryGetValue(orderId, out order))
                 {
                     return order;
                 }
@@ -440,7 +434,7 @@ namespace QuantConnect.Securities
                     return order;
                 }
 
-                return Orders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
+                return _orders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
             }
             catch (Exception err)
             {

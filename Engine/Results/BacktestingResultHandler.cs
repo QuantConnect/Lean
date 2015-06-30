@@ -300,11 +300,10 @@ namespace QuantConnect.Lean.Engine.Results
 
                 try
                 {
-                    deltaOrders = (from order in Algorithm.Transactions.Orders
-                        where order.Value.Time.Date >= _lastUpdate && order.Value.Status == OrderStatus.Filled
-                        select order).ToDictionary(t => t.Key, t => t.Value);
+                    deltaOrders = Algorithm.Transactions.GetOrders(o => o.Time.Date >= _lastUpdate && o.Status == OrderStatus.Filled)
+                        .ToDictionary(o => o.Id);
                 }
-                catch (Exception err) 
+                catch (Exception err)
                 {
                     Log.Error("BacktestingResultHandler().Update(): Transactions: " + err.Message);
                 }
@@ -339,7 +338,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (progress > 0.999m) progress = 0.999m;
 
                 //1. Cloud Upload -> Upload the whole packet to S3  Immediately:
-                var completeResult = new BacktestResult(Charts, Algorithm.Transactions.Orders, Algorithm.Transactions.TransactionRecord, new Dictionary<string, string>());
+                var completeResult = new BacktestResult(Charts, Algorithm.Transactions.GetOrders().ToDictionary(o => o.Id), Algorithm.Transactions.TransactionRecord, new Dictionary<string, string>());
                 var complete = new BacktestResultPacket(_job, completeResult, progress);
 
                 if (DateTime.Now > _nextS3Update)
