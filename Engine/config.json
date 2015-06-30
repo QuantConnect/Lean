@@ -54,6 +54,14 @@
     "tradier-refresh-token": "",
     "tradier-issued-at": "",
     "trader-lifespan": "",
+        
+    // oanda configuration
+    "oanda-account-id" : "" ,
+    "oanda-access-token" : "" ,
+    "oanda-refresh-token" : "" ,
+    "oanda-tokens-issued-at" : "" ,
+    "oanda-lifespan" : "" ,
+    "oanda-environment" : "sandbox",
 
     "environments": {
 

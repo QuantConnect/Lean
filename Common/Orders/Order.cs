@@ -135,6 +135,7 @@ namespace QuantConnect.Orders
             Duration = OrderDuration.GTC;
             BrokerId = new List<long>();
             ContingentId = 0;
+            DurationValue = DateTime.MaxValue;
         }
 
         /// <summary>
@@ -157,6 +158,7 @@ namespace QuantConnect.Orders
             Duration = OrderDuration.GTC;
             BrokerId = new List<long>();
             ContingentId = 0;
+            DurationValue = DateTime.MaxValue;
         }
 
         /// <summary>
@@ -179,6 +181,7 @@ namespace QuantConnect.Orders
             Duration = OrderDuration.GTC;
             BrokerId = new List<long>();
             ContingentId = 0;
+            DurationValue = DateTime.MaxValue;
         }
 
         /// <summary>
@@ -257,22 +260,22 @@ namespace QuantConnect.Orders
             switch (request.OrderType)
             {
                 case OrderType.Market:
-                    order =  new MarketOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.SecurityType);
+                    order = new MarketOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.SecurityType);
                     break;
                 case OrderType.Limit:
-                    order =  new LimitOrder(request.Symbol, request.Quantity, request.LimitPrice, request.Time, request.Tag, request.SecurityType);
+                    order = new LimitOrder(request.Symbol, request.Quantity, request.LimitPrice, request.Time, request.Tag, request.SecurityType);
                     break;
                 case OrderType.StopMarket:
-                    order =  new StopMarketOrder(request.Symbol, request.Quantity, request.StopPrice, request.Time, request.Tag, request.SecurityType);
+                    order = new StopMarketOrder(request.Symbol, request.Quantity, request.StopPrice, request.Time, request.Tag, request.SecurityType);
                     break;
                 case OrderType.StopLimit:
-                    order =  new StopLimitOrder(request.Symbol, request.Quantity, request.StopPrice, request.LimitPrice, request.Time, request.Tag, request.SecurityType);
+                    order = new StopLimitOrder(request.Symbol, request.Quantity, request.StopPrice, request.LimitPrice, request.Time, request.Tag, request.SecurityType);
                     break;
                 case OrderType.MarketOnOpen:
-                    order =  new MarketOnOpenOrder(request.Symbol, request.SecurityType, request.Quantity, request.Time, request.Tag);
+                    order = new MarketOnOpenOrder(request.Symbol, request.SecurityType, request.Quantity, request.Time, request.Tag);
                     break;
                 case OrderType.MarketOnClose:
-                    order =  new MarketOnCloseOrder(request.Symbol, request.SecurityType, request.Quantity, request.Time, request.Tag);
+                    order = new MarketOnCloseOrder(request.Symbol, request.SecurityType, request.Quantity, request.Time, request.Tag);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -285,5 +288,9 @@ namespace QuantConnect.Orders
             }
             return order;
         }
+        /// <summary>
+        /// Order Expiry on a specific UTC time.
+        /// </summary>
+        public DateTime DurationValue;
     }
 }
