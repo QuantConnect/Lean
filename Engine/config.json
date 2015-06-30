@@ -35,7 +35,7 @@
     "ib-controller-dir": "C:\\IBController",
 
     // tradier configuration
-    "qc-user-id": "",
+    "qc-user-id": "123456",
     "tradier-account-id": "",
     "tradier-access-token": "",
     "tradier-refresh-token": "",
@@ -47,6 +47,14 @@
     "database-user": "root",
     "database-password": "",
     "database-name": "lean",
+        
+    // oanda configuration
+	"oanda-account-id": "621396",
+    "oanda-access-token": "73eba38ad5b44778f9a0c0fec1a66ed1-44f47f052c897b3e1e7f24196bbc071f",
+    "oanda-refresh-token": "73eba38ad5b44778f9a0c0fec1a66ed1-44f47f052c897b3e1e7f24196bbc071f",
+    "oanda-tokens-issued-at": "2015-06-15 12:00:00",
+    "oanda-lifespan": "100000",
+    "oanda-environment": "sandbox",
 
     "environments": {
 

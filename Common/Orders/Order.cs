@@ -197,5 +197,10 @@ namespace QuantConnect.Orders
         {
             return string.Format("{0} order for {1} unit{3} of {2}", Type, Quantity, Symbol, Quantity == 1 ? "" : "s");
         }
+        
+        /// <summary>
+        /// Order Expiry on a specific UTC time.
+        /// </summary>
+        public DateTime DurationValue;
     }
 }
