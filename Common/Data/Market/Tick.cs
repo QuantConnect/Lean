@@ -100,7 +100,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Cloner constructor for fill formward engine implementation. Clone the original tick into this new tick:
+        /// Cloner constructor for fill forward engine implementation. Clone the original tick into this new tick:
         /// </summary>
         /// <param name="original">Original tick we're cloning</param>
         public Tick(Tick original) 
@@ -130,7 +130,7 @@ namespace QuantConnect.Data.Market
             DataType = MarketDataType.Tick;
             Time = time;
             Symbol = symbol;
-            Value = bid + (ask - bid) / 2;
+            Value = (bid + ask) / 2;
             TickType = TickType.Quote;
             BidPrice = bid;
             AskPrice = ask;
@@ -167,7 +167,7 @@ namespace QuantConnect.Data.Market
             DataType = MarketDataType.Tick;
             Symbol = symbol;
             Time = DateTime.ParseExact(csv[0], DateFormat.Forex, CultureInfo.InvariantCulture);
-            Value = BidPrice + (AskPrice - BidPrice) / 2;
+            Value = (BidPrice + AskPrice) / 2;
             TickType = TickType.Quote;
             BidPrice = Convert.ToDecimal(csv[1], CultureInfo.InvariantCulture);
             AskPrice = Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture);
@@ -230,7 +230,7 @@ namespace QuantConnect.Data.Market
                         Time = date.Date.AddMilliseconds(Convert.ToInt64(csv[0]));
                         BidPrice = csv[1].ToDecimal();
                         AskPrice = csv[2].ToDecimal();
-                        Value = BidPrice + (AskPrice - BidPrice) / 2;
+                        Value = (BidPrice + AskPrice) / 2;
                         break;
                 }
             }
@@ -282,7 +282,6 @@ namespace QuantConnect.Data.Market
                 dataType = TickType.Quote;
             }
 
-            string source;
             var symbol = string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol;
             var securityType = config.SecurityType.ToString().ToLower();
             var market = config.Market.ToLower();
@@ -290,7 +289,7 @@ namespace QuantConnect.Data.Market
             var file = date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
 
             //Add in the market for equities/cfd/forex for internationalization support.
-            source = Path.Combine(Constants.DataFolder, securityType, market, resolution, symbol.ToLower(), file);
+            var source = Path.Combine(Constants.DataFolder, securityType, market, resolution, symbol.ToLower(), file);
 
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
         }
