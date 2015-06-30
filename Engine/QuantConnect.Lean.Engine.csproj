@@ -196,6 +196,10 @@
       <Project>{af8f124b-b441-4aa7-92b7-cea72bdb4118}</Project>
       <Name>QuantConnect.Algorithm.VisualBasic</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Algorithm.Java\QuantConnect.Algorithm.Java.csproj">
+      <Project>{61097e9e-eb20-4677-b394-ce0682b9d610}</Project>
+      <Name>QuantConnect.Algorithm.Java</Name>
+    </ProjectReference>
     <ProjectReference Include="..\AlgorithmFactory\QuantConnect.AlgorithmFactory.csproj">
       <Project>{e99d056a-b6fb-48d2-9f7c-683c54cebbf9}</Project>
       <Name>QuantConnect.AlgorithmFactory</Name>
