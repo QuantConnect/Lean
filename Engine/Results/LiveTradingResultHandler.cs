@@ -371,13 +371,14 @@ namespace QuantConnect.Lean.Engine.Results
                     {
                         Log.Trace("LiveTradingResultHandler.Update(): Pre-store result");
                         _nextChartsUpdate = DateTime.Now.AddMinutes(1);
+                        Dictionary<string, Chart> chartComplete;
                         lock (_chartLock)
                         {
-                            var chartComplete = new Dictionary<string, Chart>(Charts);
-                            var orders = new Dictionary<int, Order>(_algorithm.Transactions.Orders);
-                            var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, orders, _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
-                            StoreResult(complete);
+                            chartComplete = new Dictionary<string, Chart>(Charts);
                         }
+                        var orders = new Dictionary<int, Order>(_algorithm.Transactions.Orders);
+                        var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, orders, _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
+                        StoreResult(complete);
                         Log.Trace("LiveTradingResultHandler.Update(): End-store result");
                     }
 
