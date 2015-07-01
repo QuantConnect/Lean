@@ -12,6 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
+using System;
+using System.Collections.Generic;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Securities
@@ -19,8 +22,13 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Represents a type capable of fetching Order instances by its QC order id or by a brokerage id
     /// </summary>
-    public interface IOrderMapping
+    public interface IOrderProvider
     {
+        /// <summary>
+        /// Gets the current number of orders that have been processed
+        /// </summary>
+        int OrdersCount { get; }
+
         /// <summary>
         /// Get the order by its id
         /// </summary>
@@ -34,5 +42,12 @@ namespace QuantConnect.Securities
         /// <param name="brokerageId">The brokerage id to fetch</param>
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
         Order GetOrderByBrokerageId(int brokerageId);
+
+        /// <summary>
+        /// Gets all orders matching the specified filter
+        /// </summary>
+        /// <param name="filter">Delegate used to filter the orders</param>
+        /// <returns>All open orders this order provider currently holds</returns>
+        IEnumerable<Order> GetOrders(Func<Order, bool> filter);
     }
 }

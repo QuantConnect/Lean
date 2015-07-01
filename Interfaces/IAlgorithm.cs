@@ -97,15 +97,6 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
-        /// Property indicating the transaction handler is currently processing an order and the algorithm should wait (syncrhonous order processing).
-        /// </summary>
-        bool ProcessingOrder
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Current date/time.
         /// </summary>
         DateTime Time
@@ -135,14 +126,6 @@ namespace QuantConnect.Interfaces
         /// AlgorithmId for the backtest
         /// </summary>
         string AlgorithmId
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Accessor for Filled Orders:
-        /// </summary>
-        ConcurrentDictionary<int, Order> Orders
         {
             get;
         }

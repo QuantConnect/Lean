@@ -25,6 +25,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Setup;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
 using QuantConnect.Orders;
@@ -75,6 +76,7 @@ namespace QuantConnect.Lean.Engine.Results
         private IApi _api;
         private IDataFeed _dataFeed;
         private ISetupHandler _setupHandler;
+        private ITransactionHandler _transactionHandler;
 
         /// <summary>
         /// Live packet messaging queue. Queue the messages here and send when the result queue is ready.
@@ -172,12 +174,14 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="api"></param>
         /// <param name="dataFeed"></param>
         /// <param name="setupHandler"></param>
-        public void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler)
+        /// <param name="transactionHandler"></param>
+        public void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler, ITransactionHandler transactionHandler)
         {
             _api = api;
             _dataFeed = dataFeed;
             _messagingHandler = messagingHandler;
             _setupHandler = setupHandler;
+            _transactionHandler = transactionHandler;
             _job = (LiveNodePacket)job;
             if (_job == null) throw new Exception("LiveResultHandler.Constructor(): Submitted Job type invalid."); 
             _deployId = _job.DeployId;
@@ -279,7 +283,7 @@ namespace QuantConnect.Lean.Engine.Results
             Dictionary<int, Order> deltaOrders;
 
             //Error checks if the algorithm & threads have not loaded yet, or are closing down.
-            if (_algorithm == null || _algorithm.Transactions == null || _algorithm.Transactions.Orders == null || !_algorithm.GetLocked())
+            if (_algorithm == null || _algorithm.Transactions == null || _transactionHandler.Orders == null || !_algorithm.GetLocked())
             {
                 Log.Error("LiveTradingResultHandler.Update(): Algorithm not yet initialized.");
                 return;
@@ -376,7 +380,7 @@ namespace QuantConnect.Lean.Engine.Results
                         {
                             chartComplete = new Dictionary<string, Chart>(Charts);
                         }
-                        var orders = new Dictionary<int, Order>(_algorithm.Transactions.Orders);
+                        var orders = new Dictionary<int, Order>(_transactionHandler.Orders);
                         var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, orders, _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
                         StoreResult(complete);
                         Log.Trace("LiveTradingResultHandler.Update(): End-store result");

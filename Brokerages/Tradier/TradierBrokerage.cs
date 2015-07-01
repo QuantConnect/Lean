@@ -67,7 +67,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         //Endpoints:
         private const string RequestEndpoint = @"https://api.tradier.com/v1/";
-        private readonly IOrderMapping _orderMapping;
+        private readonly IOrderProvider _orderProvider;
         private readonly IHoldingsProvider _holdingsProvider;
 
         private readonly object _fillLock = new object();
@@ -122,10 +122,10 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Create a new Tradier Object:
         /// </summary>
-        public TradierBrokerage(IOrderMapping orderMapping, IHoldingsProvider holdingsProvider, long accountID)
+        public TradierBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider, long accountID)
             : base("Tradier Brokerage")
         {
-            _orderMapping = orderMapping;
+            _orderProvider = orderProvider;
             _holdingsProvider = holdingsProvider;
             _accountID = accountID;
 
@@ -891,7 +891,7 @@ namespace QuantConnect.Brokerages.Tradier
             var cachedOpenOrder = _cachedOpenOrdersByTradierOrderID.FirstOrDefault(x => x.Value.Symbol == order.Symbol).Value;
             if (cachedOpenOrder != null)
             {
-                var qcOrder = _orderMapping.GetOrderByBrokerageId((int) cachedOpenOrder.Id);
+                var qcOrder = _orderProvider.GetOrderByBrokerageId((int) cachedOpenOrder.Id);
                 if (qcOrder == null)
                 {
                     // clean up our mess, this should never be encountered.
@@ -1299,7 +1299,7 @@ namespace QuantConnect.Brokerages.Tradier
                             var localUnknownTradierOrderIDs = _unknownTradierOrderIDs.ToHashSet();
                             _unknownTradierOrderIDs.Clear();
                             Log.Trace("TradierBrokerage.CheckForFills(): Verifying missing brokerage IDs: " + string.Join(",", localUnknownTradierOrderIDs));
-                            var orders = localUnknownTradierOrderIDs.Select(x => _orderMapping.GetOrderByBrokerageId((int) x)).Where(x => x != null);
+                            var orders = localUnknownTradierOrderIDs.Select(x => _orderProvider.GetOrderByBrokerageId((int) x)).Where(x => x != null);
                             var stillUnknownOrderIDs = localUnknownTradierOrderIDs.Where(x => !orders.Any(y => y.BrokerId.Contains(x))).ToList();
                             if (stillUnknownOrderIDs.Count > 0)
                             {
@@ -1355,7 +1355,7 @@ namespace QuantConnect.Brokerages.Tradier
             if (updatedOrder.RemainingQuantity != cachedOrder.RemainingQuantity 
              || ConvertStatus(updatedOrder.Status) != ConvertStatus(cachedOrder.Status))
             {
-                var qcOrder = _orderMapping.GetOrderByBrokerageId((int)updatedOrder.Id);
+                var qcOrder = _orderProvider.GetOrderByBrokerageId((int)updatedOrder.Id);
                 var fill = new OrderEvent(qcOrder, "Tradier Fill Event")
                 {
                     Status = ConvertStatus(updatedOrder.Status),
@@ -1512,7 +1512,7 @@ namespace QuantConnect.Brokerages.Tradier
             qcOrder.BrokerId.Add(order.Id);
             //qcOrder.ContingentId =
             qcOrder.Duration = ConvertDuration(order.Duration);
-            var orderByBrokerageId = _orderMapping.GetOrderByBrokerageId((int) order.Id);
+            var orderByBrokerageId = _orderProvider.GetOrderByBrokerageId((int) order.Id);
             if (orderByBrokerageId != null)
             {
                 qcOrder.Id = orderByBrokerageId.Id;
