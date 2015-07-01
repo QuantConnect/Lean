@@ -123,13 +123,23 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public bool Ready
         {
-            get { return _orderRequestQueue.Count == 0 
-                && _orderEventQueue.Count == 0
-                && _securityEventQueue.Count == 0
-                && _accountEventQueue.Count == 0
-                && !_algorithm.ProcessingEvents; }
+            get
+            {
+                return HasPendingItems == false
+                    && !_algorithm.ProcessingEvents;
+            }
         }
 
+        public bool HasPendingItems
+        {
+            get
+            {
+                return _orderRequestQueue.Count > 0
+                    || _orderEventQueue.Count > 0
+                    || _securityEventQueue.Count > 0
+                    || _accountEventQueue.Count > 0;
+            }
+        }
         /// <summary>
         /// Primary thread entry point to launch the transaction thread.
         /// </summary>
@@ -139,12 +149,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 // if it's empty just sleep this thread for a little bit
 
-                _algorithm.ProcessingEvents = true;
+                bool notIdle = false;
 
-                bool notIdle = ProcessAccountEvents();
-                notIdle |= ProcessSecurityEvents();
-                notIdle |= ProcessOrderEvents();
-                notIdle |= ProcessOrderRequests();
+                if (HasPendingItems)
+                {
+                    _algorithm.ProcessingEvents = true;
+
+                    notIdle = ProcessAccountEvents();
+                    notIdle |= ProcessSecurityEvents();
+                    notIdle |= ProcessOrderEvents();
+                    notIdle |= ProcessOrderRequests();
+                }
 
                 if (notIdle == false)
                 {
