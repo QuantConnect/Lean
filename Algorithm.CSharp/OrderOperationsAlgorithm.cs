@@ -43,26 +43,38 @@ namespace QuantConnect.Algorithm.Examples
         /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
+            
             if (!Portfolio.Invested)
             {
                 SetHoldings(_symbol, 1);
 
-                // Must fail due to insufficient bying power
-                var bigOrderId = ProcessAndLog(QuantConnect.Orders.MarketOrder.SubmitRequest(_symbol, - 3000, "Big Order", Securities[_symbol].Type, Securities[_symbol].Price));
+                if (Transactions.CachedOrderCount == 1)
+                {
+                    // Must fail due to insufficient bying power
+                    var bigOrderId = ProcessAndLog(QuantConnect.Orders.MarketOrder.SubmitRequest(_symbol, -3000, "Big Order", Securities[_symbol].Type, Securities[_symbol].Price));
 
-                var bigOrder = Transactions.GetOrderById(bigOrderId);
+                    var bigOrder = Transactions.GetOrderById(bigOrderId);
 
-                // Must fail due to invalid order status
-                ProcessAndLog(((QuantConnect.Orders.MarketOrder)bigOrder).UpdateRequest(-100));
+                    // Must fail due to invalid order status
+                    ProcessAndLog(((QuantConnect.Orders.MarketOrder)bigOrder).UpdateRequest(-100));
+                }
 
                 var takeProfitLimitOrderId = ProcessAndLog(QuantConnect.Orders.LimitOrder.SubmitRequest(_symbol, -Securities[_symbol].Holdings.Quantity, Securities[_symbol].Price + 10m, "Take Profit", Securities[_symbol].Type));
                 var takeProfitLimitOrder = Transactions.GetOrderById(takeProfitLimitOrderId);
-                ProcessAndLog(((QuantConnect.Orders.LimitOrder)takeProfitLimitOrder).UpdateRequest(limitPrice: Securities[_symbol].Price + 0.1m));
+                ProcessAndLog(((QuantConnect.Orders.LimitOrder)takeProfitLimitOrder).UpdateRequest(limitPrice: Securities[_symbol].Price + 1m));
+                var stopLossStopMarketOrderId = ProcessAndLog(QuantConnect.Orders.StopMarketOrder.SubmitRequest(_symbol, -Securities[_symbol].Holdings.Quantity, Securities[_symbol].Price - 1m, "Stop Loss", Securities[_symbol].Type));
 
-                Transactions.WaitForOrder(takeProfitLimitOrderId);
+                // an imitation of OCO
+                Transactions.GetFinalOrderAsync(takeProfitLimitOrderId).ContinueWith(t => { if (t.Result.Status == OrderStatus.Filled) Log(CancelOrder(stopLossStopMarketOrderId)); });
+                Transactions.GetFinalOrderAsync(stopLossStopMarketOrderId).ContinueWith(t => { if (t.Result.Status == OrderStatus.Filled) Log(CancelOrder(takeProfitLimitOrderId)); });
+
+                UpdateOrder((QuantConnect.Orders.StopMarketOrder)Transactions.GetOrderById(stopLossStopMarketOrderId), stopPrice: Securities[_symbol].Price - 0.9m);
             }
+        }
 
-
+        private void Log(OrderResponse response)
+        {
+            Console.WriteLine(response);
         }
 
         private int ProcessAndLog(OrderRequest request)

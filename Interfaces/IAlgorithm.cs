@@ -379,7 +379,7 @@ namespace QuantConnect.Interfaces
         /// <param name="asynchronous">Don't wait for the response, just submit order and move on.</param>
         /// <param name="tag">Custom data for this order</param>
         /// <returns>Integer Order ID.</returns>
-        int Order(string symbol, int quantity, bool asynchronous = false, string tag = "");
+        OrderResponse Order(string symbol, int quantity, bool asynchronous = false, string tag = "");
 
         /// <summary>
         /// Liquidate your portfolio holdings:

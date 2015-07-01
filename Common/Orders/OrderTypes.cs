@@ -191,7 +191,7 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Test for completed orders
+        /// Test for Canceled, Filled, Invalid or PartiallyFilled orders.
         /// </summary>
         /// <param name="source">Order status</param>
         /// <returns>True if completed status</returns>
@@ -201,6 +201,18 @@ namespace QuantConnect.Orders
                 || source == OrderStatus.Filled
                 || source == OrderStatus.Invalid
                 || source == OrderStatus.PartiallyFilled;
+        }
+
+        /// <summary>
+        /// Test for Canceled, Filled, or Invalid orders.
+        /// </summary>
+        /// <param name="source">Order status</param>
+        /// <returns>True if completed status</returns>
+        public static bool IsFinal(this OrderStatus source)
+        {
+            return source == OrderStatus.Canceled
+                || source == OrderStatus.Filled
+                || source == OrderStatus.Invalid;
         }
     }
 

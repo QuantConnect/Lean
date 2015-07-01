@@ -92,6 +92,43 @@ namespace QuantConnect.Orders
         /// <summary>
         /// This type of request is unsupported
         /// </summary>
-        UnsupportedRequestType
+        UnsupportedRequestType,
+        /// <summary>
+        /// Unknown error during pre order request validation
+        /// </summary>
+        PreOrderChecksError,
+        /// <summary>
+        /// Security is missing. Probably did not subscribe.
+        /// </summary>
+        MissingSecurity,
+        /// <summary>
+        /// Some order types require open exchange
+        /// </summary>
+        ExchangeNotOpen,
+        /// <summary>
+        /// Zero security price is probably due to bad data
+        /// </summary>
+        SecurityPriceZero,
+        /// <summary>
+        /// Need both currencies in cashbook to trade a pair
+        /// </summary>
+        ForexBaseAndQuoteCurrenciesRequired,
+        /// <summary>
+        /// Need conversion rate to account currency
+        /// </summary>
+        ForexConversionRateZero,
+        /// <summary>
+        /// Should not attempt trading without at least one data point
+        /// </summary>
+        SecurityHasNoData,
+        /// <summary>
+        /// Transaction manager's cache is full
+        /// </summary>
+        ExceededMaximumOrders,
+        /// <summary>
+        /// Need 11 minute buffer before exchange close
+        /// </summary>
+        MarketOnCloseOrderTooLate
+
     }
 }

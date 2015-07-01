@@ -47,6 +47,10 @@ namespace QuantConnect.Orders
         /// </summary>
         public string ErrorMessage;
 
+        /// <summary>
+        /// New OrderResponse Constructor
+        /// </summary>
+        public OrderResponse() { }
 
         /// <summary>
         /// New OrderResponse constructor
@@ -56,6 +60,24 @@ namespace QuantConnect.Orders
         {
             this.Id = request.Id;
             this.OrderId = request.OrderId;
+        }
+
+        /// <summary>
+        /// Shortcut method for error check
+        /// </summary>
+        /// <returns></returns>
+        public bool IsError()
+        {
+            return Type == OrderResponseType.Error;
+        }
+
+        /// <summary>
+        /// Shortcut method for success check
+        /// </summary>
+        /// <returns></returns>
+        public bool IsProcessed()
+        {
+            return Type == OrderResponseType.Processed;
         }
 
         /// <summary>

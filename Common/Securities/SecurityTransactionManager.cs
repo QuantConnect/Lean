@@ -38,6 +38,7 @@ namespace QuantConnect.Securities
         private ConcurrentDictionary<int, List<OrderEvent>> _orderEvents;
         private Dictionary<DateTime, decimal> _transactionRecord;
         private Dictionary<Guid, TaskCompletionSource<OrderResponse>> _orderResponseCompletions;
+        private ConcurrentDictionary<TaskCompletionSource<Order>, Predicate<Order>> _orderCompletions;
 
         /// <summary>
         /// Initialise the transaction manager for holding and processing orders.
@@ -59,6 +60,8 @@ namespace QuantConnect.Securities
             _orderRequestQueue = new ConcurrentQueue<OrderRequest>();
 
             _orderResponseCompletions = new Dictionary<Guid, TaskCompletionSource<OrderResponse>>();
+
+            _orderCompletions = new ConcurrentDictionary<TaskCompletionSource<Order>, Predicate<Order>>();
         }
 
         /// <summary>
@@ -289,12 +292,90 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Wait for certain conditions on an order
+        /// </summary>
+        /// <param name="filter">Order predicate</param>
+        /// <returns>Task that results in order or null if filter throws exception</returns>
+        public Task<Order> GetOrderAsync(Predicate<Order> filter)
+        {
+            var orderCompletion = new TaskCompletionSource<Order>();
+
+            _orderCompletions[orderCompletion] = filter;
+
+            ScanOrderCompletions();
+
+            return orderCompletion.Task;
+        }
+
+        /// <summary>
+        /// Wait for order to reach final state.
+        /// </summary>
+        /// <param name="orderId"></param>
+        /// <returns></returns>
+        public Task<Order> GetFinalOrderAsync(int orderId)
+        {
+            return GetOrderAsync(o => o.Id == orderId && o.Status.IsFinal());
+        }
+
+        /// <summary>
+        /// Wait for order to reach completed state.
+        /// </summary>
+        /// <param name="orderId"></param>
+        /// <returns></returns>
+        public Task<Order> GetCompletedlOrderAsync(int orderId)
+        {
+            return GetOrderAsync(o => o.Id == orderId && o.Status.IsCompleted());
+        }
+
+        private void ScanOrderCompletions(Order searchOrder = null)
+        {
+            foreach (var pair in _orderCompletions.ToList())
+            {
+                try
+                {
+                    Order order = null;
+
+                    if (searchOrder != null)
+                    {
+                        if (pair.Value(searchOrder))
+                        {
+                            order = searchOrder;
+                        }
+                    }
+                    else
+                    {
+                        order =_orders.Values.FirstOrDefault(o => pair.Value(o));
+                    }
+
+                    if (order != null)
+                    {
+                        Predicate<Order> predicate;
+
+                        _orderCompletions.TryRemove(pair.Key, out predicate);
+
+                        pair.Key.TrySetResult(order);
+                    }
+                }
+                catch
+                {
+                    Predicate<Order> predicate;
+
+                    _orderCompletions.TryRemove(pair.Key, out predicate);
+
+                    pair.Key.TrySetResult(null);
+                }
+            }
+        }
+
+        /// <summary>
         /// Process order updates from the engine.
         /// </summary>
         /// <param name="update">updated order</param>
         public void Process(Order update)
         {
             _orders[update.Id] = update;
+
+            ScanOrderCompletions(update);
         }
 
         /// <summary>
