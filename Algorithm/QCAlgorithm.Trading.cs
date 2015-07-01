@@ -186,12 +186,12 @@ namespace QuantConnect.Algorithm
 
             //Initalize the Market order parameters:
             var validationResponse = PreOrderChecks(symbol, quantity, OrderType.MarketOnOpen);
-            if (!validationResponse.IsProcessed())
+            if (!validationResponse.IsProcessed)
             {
                 return validationResponse;
             }
 
-            var submitRequest = QuantConnect.Orders.MarketOrder.SubmitRequest(symbol, quantity, tag, security.Type, price: security.Price, time: security.Time);
+            var submitRequest = QuantConnect.Orders.MarketOrder.CreateSubmitRequest(security.Type, symbol, quantity, Time, price: security.Price, tag: tag);
 
             //Add the order and create a new order Id.
             var response = Transactions.SubmitOrder(submitRequest);
@@ -217,13 +217,13 @@ namespace QuantConnect.Algorithm
         public OrderResponse MarketOnOpenOrder(string symbol, int quantity, string tag = "")
         {
             var response = PreOrderChecks(symbol, quantity, OrderType.MarketOnOpen);
-            if (!response.IsProcessed())
+            if (!response.IsProcessed)
             {
                 return response;
             }
 
             var security = Securities[symbol];
-            var request = QuantConnect.Orders.MarketOnOpenOrder.SubmitRequest(symbol, quantity, tag, security.Type, time: Time, price: security.Price);
+            var request = QuantConnect.Orders.MarketOnOpenOrder.CreateSubmitRequest(security.Type, symbol, quantity, Time, price: security.Price, tag: tag);
 
             return Transactions.SubmitOrder(request);
         }
@@ -238,13 +238,13 @@ namespace QuantConnect.Algorithm
         public OrderResponse MarketOnCloseOrder(string symbol, int quantity, string tag = "")
         {
             var response = PreOrderChecks(symbol, quantity, OrderType.MarketOnClose);
-            if (!response.IsProcessed())
+            if (!response.IsProcessed)
             {
                 return response;
             }
 
             var security = Securities[symbol];
-            var request = QuantConnect.Orders.MarketOnCloseOrder.SubmitRequest(symbol, quantity, tag, security.Type, time: Time, price: security.Price);
+            var request = QuantConnect.Orders.MarketOnCloseOrder.CreateSubmitRequest(security.Type, symbol, quantity, Time, price: security.Price, tag: tag);
 
             return Transactions.SubmitOrder(request);
         }
@@ -260,12 +260,13 @@ namespace QuantConnect.Algorithm
         public OrderResponse LimitOrder(string symbol, int quantity, decimal limitPrice, string tag = "")
         {
             var response = PreOrderChecks(symbol, quantity, OrderType.Limit);
-            if (!response.IsProcessed())
+            if (!response.IsProcessed)
             {
                 return response;
             }
 
-            var request = QuantConnect.Orders.LimitOrder.SubmitRequest(symbol, quantity, limitPrice, tag, Securities[symbol].Type, time: Time);
+            var security = Securities[symbol];
+            var request = QuantConnect.Orders.LimitOrder.CreateSubmitRequest(security.Type, symbol, quantity, Time, limitPrice, tag: tag);
 
             //Add the order and create a new order Id.
             return Transactions.SubmitOrder(request);
@@ -282,12 +283,13 @@ namespace QuantConnect.Algorithm
         public OrderResponse StopMarketOrder(string symbol, int quantity, decimal stopPrice, string tag = "")
         {
             var response = PreOrderChecks(symbol, quantity, OrderType.StopMarket);
-            if (!response.IsProcessed())
+            if (!response.IsProcessed)
             {
                 return response;
             }
 
-            var request = QuantConnect.Orders.StopMarketOrder.SubmitRequest(symbol, quantity, stopPrice, tag, Securities[symbol].Type, time: Time);
+            var security = Securities[symbol];
+            var request = QuantConnect.Orders.StopMarketOrder.CreateSubmitRequest(security.Type, symbol, quantity, Time, stopPrice, tag: tag);
 
             //Add the order and create a new order Id.
             return Transactions.SubmitOrder(request);
@@ -305,12 +307,13 @@ namespace QuantConnect.Algorithm
         public OrderResponse StopLimitOrder(string symbol, int quantity, decimal stopPrice, decimal limitPrice, string tag = "")
         {
             var response = PreOrderChecks(symbol, quantity, OrderType.StopLimit);
-            if (!response.IsProcessed())
+            if (!response.IsProcessed)
             {
                 return response;
             }
 
-            var request = QuantConnect.Orders.StopLimitOrder.SubmitRequest(symbol, quantity, stopPrice, limitPrice, tag, Securities[symbol].Type, time: Time);
+            var security = Securities[symbol];
+            var request = QuantConnect.Orders.StopLimitOrder.CreateSubmitRequest(security.Type, symbol, quantity, Time, stopPrice, limitPrice, tag: tag);
 
             //Add the order and create a new order Id.
             return Transactions.SubmitOrder(request);
@@ -441,32 +444,32 @@ namespace QuantConnect.Algorithm
 
         public OrderResponse UpdateOrder(MarketOrder order, int? quantity = null, string tag = null)
         {
-            return Transactions.UpdateOrder(order.UpdateRequest(quantity, tag));
+            return Transactions.UpdateOrder(order.CreateUpdateRequest(quantity, tag));
         }
 
         public OrderResponse UpdateOrder(MarketOnOpenOrder order, int? quantity = null, string tag = null)
         {
-            return Transactions.UpdateOrder(order.UpdateRequest(quantity, tag));
+            return Transactions.UpdateOrder(order.CreateUpdateRequest(quantity, tag));
         }
 
         public OrderResponse UpdateOrder(MarketOnCloseOrder order, int? quantity = null, string tag = null)
         {
-            return Transactions.UpdateOrder(order.UpdateRequest(quantity, tag));
+            return Transactions.UpdateOrder(order.CreateUpdateRequest(quantity, tag));
         }
 
-        public OrderResponse UpdateOrder(LimitOrder order, int? quantity = null, decimal? limitPrice = null, string tag = null)
+        public OrderResponse UpdateOrder(LimitOrder order, decimal? limitPrice = null, int? quantity = null, string tag = null)
         {
-            return Transactions.UpdateOrder(order.UpdateRequest(quantity, limitPrice, tag));
+            return Transactions.UpdateOrder(order.CreateUpdateRequest(quantity, limitPrice, tag));
         }
 
-        public OrderResponse UpdateOrder(StopLimitOrder order, int? quantity = null, decimal? stopPrice = null, decimal? limitPrice = null, string tag = null)
+        public OrderResponse UpdateOrder(StopLimitOrder order, decimal? stopPrice = null, decimal? limitPrice = null, int? quantity = null, string tag = null)
         {
-            return Transactions.UpdateOrder(order.UpdateRequest(quantity, stopPrice, limitPrice, tag));
+            return Transactions.UpdateOrder(order.CreateUpdateRequest(quantity, stopPrice, limitPrice, tag));
         }
 
-        public OrderResponse UpdateOrder(StopMarketOrder order, int? quantity = null, decimal? stopPrice = null, string tag = null)
+        public OrderResponse UpdateOrder(StopMarketOrder order, decimal? stopPrice = null, int? quantity = null, string tag = null)
         {
-            return Transactions.UpdateOrder(order.UpdateRequest(quantity, stopPrice, tag));
+            return Transactions.UpdateOrder(order.CreateUpdateRequest(quantity, stopPrice, tag));
         }
 
         /// <summary>
@@ -496,7 +499,11 @@ namespace QuantConnect.Algorithm
                 }
 
                 //Liquidate at market price.
-                orderIdList.Add(Order(symbol, quantity).OrderId);
+                var orderResponse = Order(symbol, quantity);
+                if (orderResponse.IsProcessed)
+                {
+                    orderIdList.Add(orderResponse.OrderId);
+                }
             }
 
             return orderIdList;

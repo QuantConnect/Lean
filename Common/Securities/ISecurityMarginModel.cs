@@ -71,16 +71,6 @@ namespace QuantConnect.Securities
         /// <param name="netLiquidationValue">The net liquidation value for the entire account</param>
         /// <param name="totalMargin">The totl margin used by the account in units of base currency</param>
         /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
-        Order GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin);
-
-        /// <summary>
-        /// Generates a new order for the specified security taking into account the total margin
-        /// used by the account. Returns null when no margin call is to be issued.
-        /// </summary>
-        /// <param name="security">The security to generate a margin call order for</param>
-        /// <param name="netLiquidationValue">The net liquidation value for the entire account</param>
-        /// <param name="totalMargin">The totl margin used by the account in units of base currency</param>
-        /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
         SubmitOrderRequest GenerateMarginCallSubmitOrderRequest(Security security, decimal netLiquidationValue, decimal totalMargin);
     }
 }

@@ -66,18 +66,18 @@ namespace QuantConnect.Orders
         /// Shortcut method for error check
         /// </summary>
         /// <returns></returns>
-        public bool IsError()
+        public bool IsError
         {
-            return Type == OrderResponseType.Error;
+            get { return Type == OrderResponseType.Error; }
         }
 
         /// <summary>
         /// Shortcut method for success check
         /// </summary>
         /// <returns></returns>
-        public bool IsProcessed()
+        public bool IsProcessed
         {
-            return Type == OrderResponseType.Processed;
+            get { return Type == OrderResponseType.Processed; }
         }
 
         /// <summary>
@@ -109,6 +109,16 @@ namespace QuantConnect.Orders
         public override string ToString()
         {
             return string.Format("[{0}] Response for order [{1}] Type: {2} ErrorCode: {3} ErrorMessage: {4}", Id, OrderId, Type, ErrorCode, ErrorMessage);
+        }
+
+        public static implicit operator int(OrderResponse response)
+        {
+            if (response.Type == OrderResponseType.Processed)
+            {
+                return response.OrderId;
+            }
+
+            return (int)response.ErrorCode;
         }
     }
 }

@@ -308,21 +308,11 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Wait for order to reach final state.
-        /// </summary>
-        /// <param name="orderId"></param>
-        /// <returns></returns>
-        public Task<Order> GetFinalOrderAsync(int orderId)
-        {
-            return GetOrderAsync(o => o.Id == orderId && o.Status.IsFinal());
-        }
-
-        /// <summary>
         /// Wait for order to reach completed state.
         /// </summary>
         /// <param name="orderId"></param>
         /// <returns></returns>
-        public Task<Order> GetCompletedlOrderAsync(int orderId)
+        public Task<Order> GetCompletedOrderAsync(int orderId)
         {
             return GetOrderAsync(o => o.Id == orderId && o.Status.IsCompleted());
         }
@@ -360,9 +350,12 @@ namespace QuantConnect.Securities
                 {
                     Predicate<Order> predicate;
 
-                    _orderCompletions.TryRemove(pair.Key, out predicate);
+                    if (pair.Key != null)
+                    {
+                        _orderCompletions.TryRemove(pair.Key, out predicate);
 
-                    pair.Key.TrySetResult(null);
+                        pair.Key.TrySetResult(null);
+                    }
                 }
             }
         }

@@ -208,7 +208,7 @@ namespace QuantConnect.Orders
         /// Create cancel request.
         /// </summary>
         /// <returns></returns>
-        public CancelOrderRequest CancelRequest()
+        public CancelOrderRequest CreateCancelRequest()
         {
             return new CancelOrderRequest
             {
@@ -259,7 +259,7 @@ namespace QuantConnect.Orders
         /// Copy order for update operations and messaging.
         /// </summary>
         /// <returns></returns>
-        public abstract Order Copy();
+        public abstract Order Clone();
 
         /// <summary>
         /// Base copy method.

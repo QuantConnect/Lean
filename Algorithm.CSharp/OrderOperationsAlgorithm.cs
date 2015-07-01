@@ -24,6 +24,7 @@ namespace QuantConnect.Algorithm.Examples
     public class OrderOperationsAlgorithm : QCAlgorithm
     {
         private string _symbol = "SPY";
+        private Order submittedMarketOrder;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -43,32 +44,59 @@ namespace QuantConnect.Algorithm.Examples
         /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public void OnData(TradeBars data)
         {
-            
+            var security = Securities[_symbol];
+
             if (!Portfolio.Invested)
             {
+                submittedMarketOrder = null;
+
                 SetHoldings(_symbol, 1);
 
-                if (Transactions.CachedOrderCount == 1)
+                if (submittedMarketOrder != null)
                 {
-                    // Must fail due to insufficient bying power
-                    var bigOrderId = ProcessAndLog(QuantConnect.Orders.MarketOrder.SubmitRequest(_symbol, -3000, "Big Order", Securities[_symbol].Type, Securities[_symbol].Price));
+                    if (Transactions.CachedOrderCount == 1)
+                    {
 
-                    var bigOrder = Transactions.GetOrderById(bigOrderId);
+                        Transactions.GetCompletedOrderAsync(1).ContinueWith(t =>
+                        {
+                            var bigOrderId = ProcessAndLog(QuantConnect.Orders.MarketOrder.CreateSubmitRequest(security.Type, security.Symbol, -3000, security.Time, tag: "Big Order", price: security.Price));
 
-                    // Must fail due to invalid order status
-                    ProcessAndLog(((QuantConnect.Orders.MarketOrder)bigOrder).UpdateRequest(-100));
+                            var bigOrder = Transactions.GetOrderById(bigOrderId);
+
+                            // Must fail due to invalid order status
+                            ProcessAndLog(((QuantConnect.Orders.MarketOrder)bigOrder).CreateUpdateRequest(-100));
+                        });
+
+                    }
+
+                    Transactions.GetCompletedOrderAsync(submittedMarketOrder.Id).ContinueWith(entry =>
+                    {
+                        var takeProfitLimitOrderId = ProcessAndLog(QuantConnect.Orders.LimitOrder.CreateSubmitRequest(security.Type, security.Symbol, -security.Holdings.Quantity, security.Time, security.Price + 10m, tag: "Take Profit"));
+
+                        Transactions.GetOrderAsync(o => o.Id == takeProfitLimitOrderId).ContinueWith(takeProfitLimitOrderTask =>
+                        {
+                            var takeProfitLimitOrder = takeProfitLimitOrderTask.Result;
+
+                            ProcessAndLog(((QuantConnect.Orders.LimitOrder)takeProfitLimitOrder).CreateUpdateRequest(limitPrice: Securities[_symbol].Price + 1m));
+                            var stopLossStopMarketOrderId = ProcessAndLog(QuantConnect.Orders.StopMarketOrder.CreateSubmitRequest(security.Type, security.Symbol, -security.Holdings.Quantity, security.Time, security.Price - 1m, tag: "Stop Loss"));
+
+                            // an imitation of OCO
+                            Transactions.GetCompletedOrderAsync(takeProfitLimitOrderId).ContinueWith(t => { if (t.Result.Status == OrderStatus.Filled) Log(CancelOrder(stopLossStopMarketOrderId)); });
+                            Transactions.GetCompletedOrderAsync(stopLossStopMarketOrderId).ContinueWith(t => { if (t.Result.Status == OrderStatus.Filled) Log(CancelOrder(takeProfitLimitOrderId)); });
+
+                            Transactions.GetOrderAsync(o => o.Id == stopLossStopMarketOrderId).ContinueWith(slOrderTask =>
+                            {
+                                var stopLossStopmarketOrder = slOrderTask.Result;
+
+                                UpdateOrder((QuantConnect.Orders.StopMarketOrder)stopLossStopmarketOrder, stopPrice: Securities[_symbol].Price - 0.9m);
+
+                            });
+
+                        });
+
+                    });
                 }
 
-                var takeProfitLimitOrderId = ProcessAndLog(QuantConnect.Orders.LimitOrder.SubmitRequest(_symbol, -Securities[_symbol].Holdings.Quantity, Securities[_symbol].Price + 10m, "Take Profit", Securities[_symbol].Type));
-                var takeProfitLimitOrder = Transactions.GetOrderById(takeProfitLimitOrderId);
-                ProcessAndLog(((QuantConnect.Orders.LimitOrder)takeProfitLimitOrder).UpdateRequest(limitPrice: Securities[_symbol].Price + 1m));
-                var stopLossStopMarketOrderId = ProcessAndLog(QuantConnect.Orders.StopMarketOrder.SubmitRequest(_symbol, -Securities[_symbol].Holdings.Quantity, Securities[_symbol].Price - 1m, "Stop Loss", Securities[_symbol].Type));
-
-                // an imitation of OCO
-                Transactions.GetFinalOrderAsync(takeProfitLimitOrderId).ContinueWith(t => { if (t.Result.Status == OrderStatus.Filled) Log(CancelOrder(stopLossStopMarketOrderId)); });
-                Transactions.GetFinalOrderAsync(stopLossStopMarketOrderId).ContinueWith(t => { if (t.Result.Status == OrderStatus.Filled) Log(CancelOrder(takeProfitLimitOrderId)); });
-
-                UpdateOrder((QuantConnect.Orders.StopMarketOrder)Transactions.GetOrderById(stopLossStopMarketOrderId), stopPrice: Securities[_symbol].Price - 0.9m);
             }
         }
 
@@ -91,6 +119,10 @@ namespace QuantConnect.Algorithm.Examples
         public override void OnOrderEvent(OrderEvent fill)
         {
             var order = Transactions.GetOrderById(fill.OrderId);
+
+            if (order != null && order.Type.IsMarket() && order.Status == OrderStatus.Submitted)
+                submittedMarketOrder = order;
+
             Console.WriteLine(Time + " - " + order.Type + " - " + fill.Status + ":: " + fill);
         }
     }

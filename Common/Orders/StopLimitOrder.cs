@@ -48,7 +48,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Create update request for pending orders. Null values will be ignored.
         /// </summary>
-        public UpdateOrderRequest UpdateRequest(int? quantity = null, decimal? stopPrice = null, decimal? limitPrice = null, string tag = null)
+        public UpdateOrderRequest CreateUpdateRequest(int? quantity = null, decimal? stopPrice = null, decimal? limitPrice = null, string tag = null)
         {
             return new UpdateOrderRequest
             {
@@ -76,7 +76,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Create submit request.
         /// </summary>
-        public static SubmitOrderRequest SubmitRequest(string symbol, int quantity, decimal stopPrice, decimal limitPrice, string tag, SecurityType securityType, decimal price = 0, DateTime? time = null)
+        public static SubmitOrderRequest CreateSubmitRequest(SecurityType securityType, string symbol, int quantity, DateTime time, decimal stopPrice, decimal limitPrice, string tag = null)
         {
             return new SubmitOrderRequest
             {
@@ -85,7 +85,7 @@ namespace QuantConnect.Orders
                 Quantity = quantity,
                 Tag = tag,
                 SecurityType = securityType,
-                Created = time ?? DateTime.Now,
+                Created = time,
                 StopPrice = stopPrice,
                 LimitPrice = limitPrice,
                 Type = OrderType.StopLimit
@@ -95,7 +95,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Copy order before submitting to broker for update.
         /// </summary>
-        public override Order Copy()
+        public override Order Clone()
         {
             var target = new StopLimitOrder();
             CopyTo(target);
@@ -125,7 +125,7 @@ namespace QuantConnect.Orders
         /// <param name="stopPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
         public StopLimitOrder(string symbol, int quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag = "", SecurityType type = SecurityType.Base) :
-            base(symbol, quantity, OrderType.StopLimit, time, limitPrice, tag, type)
+            base(symbol, quantity, OrderType.StopLimit, time, 0, tag, type)
         {
             StopPrice = stopPrice;
             LimitPrice = limitPrice;

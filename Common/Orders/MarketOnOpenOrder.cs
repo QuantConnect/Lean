@@ -33,7 +33,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Create update request for pending orders. Null values will be ignored.
         /// </summary>
-        public UpdateOrderRequest UpdateRequest(int? quantity = null, string tag = null)
+        public UpdateOrderRequest CreateUpdateRequest(int? quantity = null, string tag = null)
         {
             return new UpdateOrderRequest
             {
@@ -48,7 +48,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Create submit request.
         /// </summary>
-        public static SubmitOrderRequest SubmitRequest(string symbol, int quantity, string tag, SecurityType securityType, decimal price = 0, DateTime? time = null)
+        public static SubmitOrderRequest CreateSubmitRequest(SecurityType securityType, string symbol, int quantity, DateTime time, decimal price = 0, string tag = null)
         {
             return new SubmitOrderRequest
             {
@@ -57,7 +57,7 @@ namespace QuantConnect.Orders
                 Quantity = quantity,
                 Tag = tag,
                 SecurityType = securityType,
-                Created = time ?? DateTime.Now,
+                Created = time,
                 Type = OrderType.MarketOnOpen
             };
         }
@@ -65,7 +65,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Copy order before submitting to broker for update.
         /// </summary>
-        public override Order Copy()
+        public override Order Clone()
         {
             var target = new MarketOnOpenOrder();
             CopyTo(target);

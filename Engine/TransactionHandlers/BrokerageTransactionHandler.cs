@@ -134,10 +134,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             get
             {
-                return _orderRequestQueue.Count > 0
-                    || _orderEventQueue.Count > 0
-                    || _securityEventQueue.Count > 0
-                    || _accountEventQueue.Count > 0;
+                return !(_orderRequestQueue.IsEmpty
+                     && _orderEventQueue.IsEmpty
+                     && _securityEventQueue.IsEmpty
+                     && _accountEventQueue.IsEmpty);
             }
         }
         /// <summary>
@@ -149,19 +149,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 // if it's empty just sleep this thread for a little bit
 
-                bool notIdle = false;
+                bool working = false;
 
                 if (HasPendingItems)
                 {
                     _algorithm.ProcessingEvents = true;
 
-                    notIdle = ProcessAccountEvents();
-                    notIdle |= ProcessSecurityEvents();
-                    notIdle |= ProcessOrderEvents();
-                    notIdle |= ProcessOrderRequests();
+                    working = ProcessAccountEvents();
+                    working |= ProcessSecurityEvents();
+                    working |= ProcessOrderEvents();
+                    working |= ProcessOrderRequests();
                 }
 
-                if (notIdle == false)
+                if (working == false)
                 {
                     _algorithm.ProcessingEvents = false;
 
@@ -318,9 +318,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 var clientOrder = _algorithm.Transactions.GetOrderById(id);
 
-                if (order != null)
+                if (clientOrder != null)
                 {
-                    order = clientOrder.Copy();
+                    order = clientOrder.Clone();
                     _orders[id] = order;
                 }
             }
@@ -334,7 +334,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <param name="order"></param>
         private void SendOrder(Order order)
         {
-            _algorithm.Transactions.Process(order.Copy());
+            _algorithm.Transactions.Process(order.Clone());
         }
 
         /// <summary>
@@ -408,7 +408,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (order != null)
             {
                 response.Error(OrderResponseErrorCode.OrderAlreadyExists, String.Format("Cannot process submit request because order with id [{0}] already exists", request.OrderId));
-                _algorithm.Error("BrokerageTransactionHandler.HandleNewOrder(): " + response.ErrorMessage);
+                _algorithm.Error(response.ErrorMessage);
                 return;
             }
 
@@ -423,7 +423,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 order.Status = OrderStatus.Invalid;
 
                 response.Error(OrderResponseErrorCode.InsufficientBuyingPower, string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
-                _algorithm.Error("BrokerageTransactionHandler.HandleNewOrder(): " + response.ErrorMessage);
+                _algorithm.Error(response.ErrorMessage);
             }
             else
             {
@@ -436,7 +436,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrder", "BrokerageModel declared unable to submit order: " + order.Id);
 
                     response.Error(OrderResponseErrorCode.BrokerageModelRefusedToSubmitOrder, "OrderID:" + message);
-                    _algorithm.Error("BrokerageTransactionHandler.HandleNewOrder(): " + response.ErrorMessage);
+                    _algorithm.Error(response.ErrorMessage);
                 }
                 else if (_brokerage.PlaceOrder(order))
                 {
@@ -449,7 +449,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     order.Status = OrderStatus.Invalid;
 
                     response.Error(OrderResponseErrorCode.BrokerageFailedToSubmitOrder, "Brokerage failed to place order: " + order.Id);
-                    _algorithm.Error("BrokerageTransactionHandler.HandleNewOrder(): " + response.ErrorMessage);
+                    _algorithm.Error(response.ErrorMessage);
                 }
             }
 
@@ -475,13 +475,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
             else
             {
-                var updatedOrder = order.Copy();
+                var updatedOrder = order.Clone();
                 updatedOrder.ApplyUpdate(request);
 
                 if (!_algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, updatedOrder))
                 {
                     response.Error(OrderResponseErrorCode.InsufficientBuyingPower, string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
-                    _algorithm.Error("BrokerageTransactionHandler.HandleUpdatedOrder(): " + response.ErrorMessage);
+                    _algorithm.Error(response.ErrorMessage);
                 }
                 else if (CanUpdateOrder(updatedOrder) == false)
                 {
