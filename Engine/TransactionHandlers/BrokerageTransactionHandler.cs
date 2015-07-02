@@ -188,7 +188,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>All open orders this order provider currently holds</returns>
         public IEnumerable<Order> GetOrders(Func<Order, bool> filter)
         {
-            return _orders.Select(x => x.Value).Where(filter);
+            if (filter != null)
+            {
+                return _orders.Select(x => x.Value).Where(filter);
+            }
+            return _orders.Select(x => x.Value);
         }
 
         /// <summary>

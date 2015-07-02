@@ -44,10 +44,11 @@ namespace QuantConnect.Securities
         Order GetOrderByBrokerageId(int brokerageId);
 
         /// <summary>
-        /// Gets all orders matching the specified filter
+        /// Gets all orders matching the specified filter. Specifying null will return an enumerable
+        /// of all orders.
         /// </summary>
         /// <param name="filter">Delegate used to filter the orders</param>
         /// <returns>All open orders this order provider currently holds</returns>
-        IEnumerable<Order> GetOrders(Func<Order, bool> filter);
+        IEnumerable<Order> GetOrders(Func<Order, bool> filter = null);
     }
 }
