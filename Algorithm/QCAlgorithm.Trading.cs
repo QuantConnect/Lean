@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private bool _processingOrder = false;
+        private long _processingEvents = 0;
         private int _maxOrders = 10000;
 
         /// <summary>
@@ -38,8 +38,8 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public bool ProcessingEvents
         {
-            get { return _processingOrder; }
-            set { _processingOrder = value; }
+            get { return Interlocked.Read(ref _processingEvents) == 1; }
+            set { Interlocked.Exchange(ref _processingEvents, value ? 1 : 0); }
         }
 
         /// <summary>
