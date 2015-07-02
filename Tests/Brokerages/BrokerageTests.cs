@@ -424,7 +424,7 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="expectedStatus">The status to wait for</param>
         /// <param name="secondsTimeout">Maximum amount of time to wait for <paramref name="expectedStatus"/></param>
         /// <returns>The same order that was submitted.</returns>
-        protected Order PlaceOrderWaitForStatus(Order order, OrderStatus expectedStatus = OrderStatus.Filled, double secondsTimeout = 10.0)
+        protected Order PlaceOrderWaitForStatus(Order order, OrderStatus expectedStatus = OrderStatus.Filled, double secondsTimeout = 10.0, bool allowFailedSubmission = false)
         {
             var requiredStatusEvent = new ManualResetEvent(false);
             var desiredStatusEvent = new ManualResetEvent(false);
@@ -451,7 +451,7 @@ namespace QuantConnect.Tests.Brokerages
             Brokerage.OrderStatusChanged += brokerageOnOrderStatusChanged;
             
             OrderMapping.Add(order);
-            if (!Brokerage.PlaceOrder(order))
+            if (!Brokerage.PlaceOrder(order) && !allowFailedSubmission)
             {
                 Assert.Fail("Brokerage failed to place the order: " + order);
             }

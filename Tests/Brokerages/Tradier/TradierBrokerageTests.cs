@@ -121,5 +121,14 @@ namespace QuantConnect.Tests.Brokerages.Tradier
 
             Assert.IsTrue(orderFilledOrCanceled);
         }
+
+        [Test, Ignore("This test exists to manually verify how rejected orders are handled when we don't receive an order ID back from Tradier.")]
+        public void ShortXnga()
+        {
+            PlaceOrderWaitForStatus(new MarketOrder("ZNGA", -1, DateTime.Now, type: SecurityType.Equity), OrderStatus.Invalid, allowFailedSubmission: true);
+
+            // wait for output to be generated
+            System.Threading.Thread.Sleep(60*1000);
+        }
     }
 }
