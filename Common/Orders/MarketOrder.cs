@@ -59,7 +59,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Create submit request.
         /// </summary>
-        public static SubmitOrderRequest CreateSubmitRequest(SecurityType securityType, string symbol, int quantity, DateTime time, decimal price = 0, string tag = null)
+        public static SubmitOrderRequest CreateSubmitRequest(SecurityType securityType, string symbol, int quantity, DateTime time, string tag = null)
         {
             return new SubmitOrderRequest
             {
