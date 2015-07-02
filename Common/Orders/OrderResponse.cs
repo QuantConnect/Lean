@@ -58,17 +58,8 @@ namespace QuantConnect.Orders
         /// <param name="request">Order request to process</param>
         public OrderResponse(OrderRequest request)
         {
-            if (request == null)
-            {
-                this.Type = OrderResponseType.Error;
-                this.ErrorCode = OrderResponseErrorCode.InvalidRequest;
-                this.ErrorMessage = "Request is null";
-            }
-            else
-            {
-                this.Id = request.Id;
-                this.OrderId = request.OrderId;
-            }
+            this.Id = request.Id;
+            this.OrderId = request.OrderId;
         }
 
         /// <summary>
