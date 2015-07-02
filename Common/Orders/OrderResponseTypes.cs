@@ -128,7 +128,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Need 11 minute buffer before exchange close
         /// </summary>
-        MarketOnCloseOrderTooLate               = -21
+        MarketOnCloseOrderTooLate               = -21,
+        /// <summary>
+        /// Request is invalid or null
+        /// </summary>
+        InvalidRequest                          = -22
 
     }
 }

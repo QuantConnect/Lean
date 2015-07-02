@@ -160,70 +160,74 @@ namespace QuantConnect.Securities
         /// Main entry for order requests. All requests are guaranteed a response.
         /// </summary>
         /// <param name="request">Order request</param>
-        /// <returns></returns>
+        /// <returns>Order response. Check error for details.</returns>
         public Task<OrderResponse> ProcessOrderRequest(OrderRequest request)
         {
             var taskCompletion = new TaskCompletionSource<OrderResponse>();
 
             var response = new OrderResponse(request);
 
-            if (request is UpdateOrderRequest)
+            if (response.IsError == false)
             {
-                var updateRequest = (UpdateOrderRequest)request;
-
-                var order = GetOrderById(updateRequest.OrderId);
-
-                if (order == null)
+                if (request is UpdateOrderRequest)
                 {
-                    response.Error(OrderResponseErrorCode.UnableToFindOrder);
+                    var updateRequest = (UpdateOrderRequest)request;
+
+                    var order = GetOrderById(updateRequest.OrderId);
+
+                    if (order == null)
+                    {
+                        response.Error(OrderResponseErrorCode.UnableToFindOrder);
+                    }
+                    else if (updateRequest.Quantity == 0)
+                    {
+                        response.Error(OrderResponseErrorCode.OrderQuantityZero);
+                    }
+                    else
+                    {
+                        updateRequest.Created = _securities[order.Symbol].Time;
+                    }
+
                 }
-                else if (updateRequest.Quantity == 0)
+                else if (request is SubmitOrderRequest)
                 {
-                    response.Error(OrderResponseErrorCode.OrderQuantityZero);
+                    var submitRequest = (SubmitOrderRequest)request;
+
+                    if (submitRequest.Quantity == 0)
+                    {
+                        response.Error(OrderResponseErrorCode.OrderQuantityZero);
+                    }
+                    else
+                    {
+                        submitRequest.OrderId = _orderId++;
+                        submitRequest.Created = _securities[submitRequest.Symbol].Time;
+                    }
+                }
+                else if (request is CancelOrderRequest)
+                {
+                    var order = GetOrderById(request.OrderId);
+
+                    if (order == null)
+                    {
+                        response.Error(OrderResponseErrorCode.UnableToFindOrder);
+                    }
+                    else if (order.Status.IsOpen() == false)
+                    {
+                        response.Error(OrderResponseErrorCode.InvalidOrderStatus);
+                    }
+                    else
+                    {
+                        request.Created = _securities[order.Symbol].Time;
+                    }
                 }
                 else
                 {
-                    updateRequest.Created = _securities[order.Symbol].Time;
+                    response.Error(OrderResponseErrorCode.UnsupportedRequestType);
                 }
 
             }
-            else if (request is SubmitOrderRequest)
-            {
-                var submitRequest = (SubmitOrderRequest)request;
 
-                if (submitRequest.Quantity == 0)
-                {
-                    response.Error(OrderResponseErrorCode.OrderQuantityZero);
-                }
-                else
-                {
-                    submitRequest.OrderId = _orderId++;
-                    submitRequest.Created = _securities[submitRequest.Symbol].Time;
-                }
-            }
-            else if (request is CancelOrderRequest)
-            {
-                var order = GetOrderById(request.OrderId);
-
-                if (order == null)
-                {
-                    response.Error(OrderResponseErrorCode.UnableToFindOrder);
-                }
-                else if (order.Status.IsOpen() == false)
-                {
-                    response.Error(OrderResponseErrorCode.InvalidOrderStatus);
-                }
-                else
-                {
-                    request.Created = _securities[order.Symbol].Time;
-                }
-            }
-            else
-            {
-                response.Error(OrderResponseErrorCode.UnsupportedRequestType);
-            }
-
-            if (response.Type == OrderResponseType.Error)
+            if (response.IsError)
             {
                 taskCompletion.TrySetResult(response);
                 return taskCompletion.Task;
@@ -319,7 +323,7 @@ namespace QuantConnect.Securities
 
         private void ScanOrderCompletions(Order searchOrder = null)
         {
-            foreach (var pair in _orderCompletions.ToList())
+            foreach (var completionPair in _orderCompletions.ToList())
             {
                 try
                 {
@@ -327,34 +331,34 @@ namespace QuantConnect.Securities
 
                     if (searchOrder != null)
                     {
-                        if (pair.Value(searchOrder))
+                        if (completionPair.Value(searchOrder))
                         {
                             order = searchOrder;
                         }
                     }
                     else
                     {
-                        order =_orders.Values.FirstOrDefault(o => pair.Value(o));
+                        order = _orders.Where(orderPair => completionPair.Value(orderPair.Value)).Select(orderPair => orderPair.Value).FirstOrDefault();
                     }
 
                     if (order != null)
                     {
                         Predicate<Order> predicate;
 
-                        _orderCompletions.TryRemove(pair.Key, out predicate);
+                        _orderCompletions.TryRemove(completionPair.Key, out predicate);
 
-                        pair.Key.TrySetResult(order);
+                        completionPair.Key.TrySetResult(order);
                     }
                 }
                 catch
                 {
                     Predicate<Order> predicate;
 
-                    if (pair.Key != null)
+                    if (completionPair.Key != null)
                     {
-                        _orderCompletions.TryRemove(pair.Key, out predicate);
+                        _orderCompletions.TryRemove(completionPair.Key, out predicate);
 
-                        pair.Key.TrySetResult(null);
+                        completionPair.Key.TrySetResult(null);
                     }
                 }
             }
@@ -393,23 +397,24 @@ namespace QuantConnect.Securities
         /// <returns>List of open orders.</returns>
         public List<Order> GetOpenOrders()
         {
-            var openOrders = (from order in _orders.Values
-                where (order.Status == OrderStatus.Submitted ||
-                       order.Status == OrderStatus.New)
-                select order).ToList();
+            var openOrders = (from pair in _orders
+                where (pair.Value.Status == OrderStatus.Submitted ||
+                       pair.Value.Status == OrderStatus.New)
+                select pair.Value).ToList();
 
             return openOrders;
         }
 
         /// <summary>
-        /// Get a list of all open orders.
+        /// Get a list of orders that match the filter, or all if filter is null
         /// </summary>
+        /// <param name="filter">Order predicate</param>
         /// <returns>List of open orders.</returns>
         public List<Order> GetOrders(Predicate<Order> filter = null)
         {
-            var result = (from order in _orders.Values
-                              where filter == null || filter(order) == true
-                              select order).ToList();
+            var result = (from pair in _orders
+                              where filter == null || filter(pair.Value) == true
+                              select pair.Value).ToList();
 
             return result;
         } 

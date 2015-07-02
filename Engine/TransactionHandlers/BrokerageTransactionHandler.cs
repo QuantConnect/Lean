@@ -628,7 +628,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
         }
 
-
         private bool ProcessAccountEvents()
         {
             int remainingCount = _accountEventQueue.Count;
