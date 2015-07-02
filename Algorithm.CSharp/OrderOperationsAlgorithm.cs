@@ -54,49 +54,11 @@ namespace QuantConnect.Algorithm.Examples
 
                 if (submittedMarketOrder != null)
                 {
-                    if (Transactions.CachedOrderCount == 1)
-                    {
-
-                        Transactions.GetCompletedOrderAsync(1).ContinueWith(t =>
-                        {
-                            var bigOrderId = ProcessAndLog(QuantConnect.Orders.MarketOrder.CreateSubmitRequest(security.Type, security.Symbol, -3000, security.Time, tag: "Big Order", price: security.Price));
-
-                            var bigOrder = Transactions.GetOrderById(bigOrderId);
-
-                            // Must fail due to invalid order status
-                            ProcessAndLog(((QuantConnect.Orders.MarketOrder)bigOrder).CreateUpdateRequest(-100));
-                        });
-
-                    }
-
-                    Transactions.GetCompletedOrderAsync(submittedMarketOrder.Id).ContinueWith(entry =>
-                    {
-                        var takeProfitLimitOrderId = ProcessAndLog(QuantConnect.Orders.LimitOrder.CreateSubmitRequest(security.Type, security.Symbol, -security.Holdings.Quantity, security.Time, security.Price + 10m, tag: "Take Profit"));
-
-                        Transactions.GetOrderAsync(o => o.Id == takeProfitLimitOrderId).ContinueWith(takeProfitLimitOrderTask =>
-                        {
-                            var takeProfitLimitOrder = takeProfitLimitOrderTask.Result;
-
-                            ProcessAndLog(((QuantConnect.Orders.LimitOrder)takeProfitLimitOrder).CreateUpdateRequest(limitPrice: Securities[_symbol].Price + 1m));
-                            var stopLossStopMarketOrderId = ProcessAndLog(QuantConnect.Orders.StopMarketOrder.CreateSubmitRequest(security.Type, security.Symbol, -security.Holdings.Quantity, security.Time, security.Price - 1m, tag: "Stop Loss"));
-
-                            // an imitation of OCO
-                            Transactions.GetCompletedOrderAsync(takeProfitLimitOrderId).ContinueWith(t => { if (t.Result.Status == OrderStatus.Filled) Log(CancelOrder(stopLossStopMarketOrderId)); });
-                            Transactions.GetCompletedOrderAsync(stopLossStopMarketOrderId).ContinueWith(t => { if (t.Result.Status == OrderStatus.Filled) Log(CancelOrder(takeProfitLimitOrderId)); });
-
-                            Transactions.GetOrderAsync(o => o.Id == stopLossStopMarketOrderId).ContinueWith(slOrderTask =>
-                            {
-                                var stopLossStopmarketOrder = slOrderTask.Result;
-
-                                UpdateOrder((QuantConnect.Orders.StopMarketOrder)stopLossStopmarketOrder, stopPrice: Securities[_symbol].Price - 0.9m);
-
-                            });
-
-                        });
-
-                    });
+                    var takeProfitLimitOrderId = ProcessAndLog(QuantConnect.Orders.LimitOrder.CreateSubmitRequest(security.Type, security.Symbol, -submittedMarketOrder.Quantity, security.Time, security.Price + 0.5m, tag: "Take Profit"));
+                    var stopLossStopMarketOrderId = ProcessAndLog(QuantConnect.Orders.StopMarketOrder.CreateSubmitRequest(security.Type, security.Symbol, -submittedMarketOrder.Quantity, security.Time, security.Price - 0.5m, tag: "Stop Loss"));
+                    Transactions.GetCompletedOrderAsync(takeProfitLimitOrderId).ContinueWith(t => { if (t.Result.Status == OrderStatus.Filled) Log(CancelOrder(stopLossStopMarketOrderId)); });
+                    Transactions.GetCompletedOrderAsync(stopLossStopMarketOrderId).ContinueWith(t => { if (t.Result.Status == OrderStatus.Filled) Log(CancelOrder(takeProfitLimitOrderId)); });
                 }
-
             }
         }
 

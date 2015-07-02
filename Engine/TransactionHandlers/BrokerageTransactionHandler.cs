@@ -83,19 +83,20 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _lastSyncTimeTicks = DateTime.Now.Ticks;
 
             _brokerage = brokerage;
+
             _brokerage.OrderStatusChanged += (sender, fill) =>
             {
-                Process(fill);
+                _orderEventQueue.Enqueue(fill);
             };
 
             _brokerage.SecurityHoldingUpdated += (sender, holding) =>
             {
-                Process(holding);
+                _securityEventQueue.Enqueue(holding);
             };
 
             _brokerage.AccountChanged += (sender, account) =>
             {
-                Process(account);
+                _accountEventQueue.Enqueue(account);
             };
 
             IsActive = true;
@@ -734,21 +735,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private DateTime LastSyncDate
         {
             get { return new DateTime(Interlocked.Read(ref _lastSyncTimeTicks)).Date; }
-        }
-
-        private void Process(OrderEvent update)
-        {
-            _orderEventQueue.Enqueue(update);
-        }
-
-        private void Process(SecurityEvent update)
-        {
-            _securityEventQueue.Enqueue(update);
-        }
-
-        private void Process(AccountEvent update)
-        {
-            _accountEventQueue.Enqueue(update);
         }
     }
 }
