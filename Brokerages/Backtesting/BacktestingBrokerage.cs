@@ -243,14 +243,14 @@ namespace QuantConnect.Brokerages.Backtesting
                     catch (Exception err)
                     {
                         Log.Error("BacktestingBrokerage.Scan(): " + err.Message);
-                        _algorithm.Error(string.Format("BackTestingBrokerage.Scan(): Order Error: id: {0}, Transaction model failed to fill for order type: {1} with error: {2}", order.Id, order.Type, err.Message));
+                        _algorithm.Error(string.Format("Order Error: id: {0}, Transaction model failed to fill for order type: {1} with error: {2}", order.Id, order.Type, err.Message));
                     }
                 }
                 else
                 {
                     //Flag order as invalid and push off queue:
                     order.Status = OrderStatus.Invalid;
-                    _algorithm.Error(string.Format("BackTestingBrokerage.Scan(): Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
+                    _algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
                 }
 
                 // change in status or a new fill
