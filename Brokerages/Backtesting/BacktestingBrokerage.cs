@@ -287,6 +287,14 @@ namespace QuantConnect.Brokerages.Backtesting
                 {
                     _pending.TryRemove(order.Id, out order);
                 }
+                else
+                {
+                    // if we didn't fill then we need to continue to scan
+                    lock (_needsScanLock)
+                    {
+                        _needsScan = true;
+                    }
+                }
             }
         }
 
