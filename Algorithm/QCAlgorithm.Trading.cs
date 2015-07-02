@@ -191,7 +191,7 @@ namespace QuantConnect.Algorithm
                 return validationResponse;
             }
 
-            var submitRequest = QuantConnect.Orders.MarketOrder.CreateSubmitRequest(security.Type, symbol, quantity, Time, price: security.Price, tag: tag);
+            var submitRequest = QuantConnect.Orders.MarketOrder.CreateSubmitRequest(security.Type, symbol, quantity, Time, tag: tag);
 
             //Add the order and create a new order Id.
             var response = Transactions.SubmitOrder(submitRequest);
@@ -223,7 +223,7 @@ namespace QuantConnect.Algorithm
             }
 
             var security = Securities[symbol];
-            var request = QuantConnect.Orders.MarketOnOpenOrder.CreateSubmitRequest(security.Type, symbol, quantity, Time, price: security.Price, tag: tag);
+            var request = QuantConnect.Orders.MarketOnOpenOrder.CreateSubmitRequest(security.Type, symbol, quantity, Time, tag: tag);
 
             return Transactions.SubmitOrder(request);
         }
@@ -244,7 +244,7 @@ namespace QuantConnect.Algorithm
             }
 
             var security = Securities[symbol];
-            var request = QuantConnect.Orders.MarketOnCloseOrder.CreateSubmitRequest(security.Type, symbol, quantity, Time, price: security.Price, tag: tag);
+            var request = QuantConnect.Orders.MarketOnCloseOrder.CreateSubmitRequest(security.Type, symbol, quantity, Time, tag: tag);
 
             return Transactions.SubmitOrder(request);
         }
