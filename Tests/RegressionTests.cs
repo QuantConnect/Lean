@@ -49,6 +49,33 @@ namespace QuantConnect.Tests
         }
 
         [Test]
+        public void LimitFillRegressionAlgorithm()
+        {
+            AlgorithmRunner.RunLocalBacktest("LimitFillRegressionAlgorithm", new Dictionary<string, string>
+            {
+                {"Total Trades", "17"},
+                {"Average Win", "0.02%"},
+                {"Average Loss", "-0.01%"},
+                {"Compounding Annual Return", "9.034%"},
+                {"Drawdown", "0.200%"},
+                {"Expectancy", "0.450"},
+                {"Net Profit", "0.101%"},
+                {"Sharpe Ratio", "1.714"},
+                {"Loss Rate", "35%"},
+                {"Win Rate", "65%"},
+                {"Profit-Loss Ratio", "1.24"},
+                {"Alpha", "-0.081"},
+                {"Beta", "0.154"},
+                {"Annual Standard Deviation", "0.03"},
+                {"Annual Variance", "0.001"},
+                {"Information Ratio", "-4.982"},
+                {"Tracking Error", "0.162"},
+                {"Treynor Ratio", "0.335"},
+                {"Total Fees", "$36.00"}
+            });
+        }
+
+        [Test]
         public void BasicTemplateFillForwardAlgorithm()
         {
             AlgorithmRunner.RunLocalBacktest("BasicTemplateFillForwardAlgorithm", new Dictionary<string, string>
