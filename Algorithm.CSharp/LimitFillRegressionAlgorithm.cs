@@ -14,7 +14,7 @@
 */
 
 using System;
-using QuantConnect.Data.Market;
+using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -39,13 +39,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">TradeBars IDictionary object with your stock data</param>
-        public void OnData(TradeBars data)
+        public override void OnData(Slice data)
         {
             if (Time.TimeOfDay.Ticks%QuantConnect.Time.OneHour.Ticks == 0)
             {
                 bool goLong = Time < StartDate + TimeSpan.FromTicks((EndDate - StartDate).Ticks/2);
                 int negative = goLong ? 1 : -1;
-                LimitOrder("SPY", negative*10, Securities["SPY"].Price);
+                LimitOrder("SPY", negative*10, data["SPY"].Price);
             }
         }
     }

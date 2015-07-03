@@ -12,9 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using QuantConnect.Data.Market;
 
-namespace QuantConnect.Algorithm.Examples
+using QuantConnect.Data;
+
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Basic template algorithm simply initializes the date range and cash
@@ -36,8 +37,8 @@ namespace QuantConnect.Algorithm.Examples
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">TradeBars IDictionary object with your stock data</param>
-        public void OnData(TradeBars data)
+        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice data)
         {
             if (!Portfolio.Invested)
             {
