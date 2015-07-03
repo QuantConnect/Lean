@@ -32,50 +32,52 @@ namespace QuantConnect.Tests
     {
         public static void RunLocalBacktest(string algorithm, Dictionary<string, string> expectedStatistics)
         {
-            Log.LogHandler = new CompositeLogHandler(new ILogHandler[]
-            {
-                new ConsoleLogHandler(),
-                new FileLogHandler("regression.log")
-            });
-
-            var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
-            var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
             var statistics = new Dictionary<string, string>();
 
             try
             {
-                Console.WriteLine("Running " + algorithm + "...");
-
-                // set the configuration up
-                Config.Set("algorithm-type-name", algorithm);
-                Config.Set("live-mode", "false");
-                Config.Set("environment", "");
-                Config.Set("messaging-handler", "QuantConnect.Messaging.Messaging");
-                Config.Set("job-queue-handler", "QuantConnect.Queues.JobQueue");
-                Config.Set("api-handler", "QuantConnect.Api.Api");
-
-                // run the algorithm in its own thread
-
-                var engine = new Lean.Engine.Engine(systemHandlers, algorithmHandlers, false);
-                Task.Factory.StartNew(() =>
+                using (Log.LogHandler = new CompositeLogHandler(new ILogHandler[]
                 {
-                    string algorithmPath;
-                    var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
-                    engine.Run(job, algorithmPath);
-                }).Wait();
+                    new ConsoleLogHandler(),
+                    new FileLogHandler("regression.log")
+                }))
+                using (var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance))
+                using (var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance))
+                {
 
-                var consoleResultHandler = (ConsoleResultHandler)algorithmHandlers.Results;
-                statistics = consoleResultHandler.FinalStatistics;
+
+                    Console.WriteLine("Running " + algorithm + "...");
+
+                    // set the configuration up
+                    Config.Set("algorithm-type-name", algorithm);
+                    Config.Set("live-mode", "false");
+                    Config.Set("environment", "");
+                    Config.Set("messaging-handler", "QuantConnect.Messaging.Messaging");
+                    Config.Set("job-queue-handler", "QuantConnect.Queues.JobQueue");
+                    Config.Set("api-handler", "QuantConnect.Api.Api");
+
+                    // run the algorithm in its own thread
+
+                    var engine = new Lean.Engine.Engine(systemHandlers, algorithmHandlers, false);
+                    Task.Factory.StartNew(() =>
+                    {
+                        string algorithmPath;
+                        var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
+                        engine.Run(job, algorithmPath);
+                    }).Wait();
+
+                    var consoleResultHandler = (ConsoleResultHandler)algorithmHandlers.Results;
+                    statistics = consoleResultHandler.FinalStatistics;
+                }
             }
-            finally
+            catch (Exception ex)
             {
-                Log.LogHandler.Dispose();
-                systemHandlers.Dispose();
-                algorithmHandlers.Dispose();
+                Log.LogHandler.Error("{0} {1}", ex.Message, ex.StackTrace);
             }
 
             foreach (var stat in expectedStatistics)
             {
+                Assert.AreEqual(true, statistics.ContainsKey(stat.Key), "Missing key: " + stat.Key);
                 Assert.AreEqual(stat.Value, statistics[stat.Key], "Failed on " + stat.Key);
             }
         }
