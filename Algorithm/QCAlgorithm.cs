@@ -317,6 +317,7 @@ namespace QuantConnect.Algorithm
                 
                 var method = GetType().GetMethods()
                     .Where(x => x.Name == "OnData")
+                    .Where(x => x.DeclaringType != typeof(QCAlgorithm))
                     .Where(x => x.GetParameters().Length == 1)
                     .FirstOrDefault(x => x.GetParameters()[0].ParameterType == typeof (Slice));
 
