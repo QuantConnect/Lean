@@ -22,6 +22,7 @@ using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 
@@ -96,9 +97,10 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="algorithm">Existing algorithm instance</param>
         /// <param name="brokerage">New brokerage instance</param>
         /// <param name="baseJob">Backtesting job</param>
-        /// <param name="resultHandler"></param>
+        /// <param name="resultHandler">The configured result handler</param>
+        /// <param name="transactionHandler">The configuration transaction handler</param>
         /// <returns>Boolean true on successfully setting up the console.</returns>
-        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob, IResultHandler resultHandler)
+        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob, IResultHandler resultHandler, ITransactionHandler transactionHandler)
         {
             var initializeComplete = false;
 
@@ -151,6 +153,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
             // set the transaction models base on the requested brokerage properties
             SetupHandler.UpdateTransactionModels(algorithm, algorithm.BrokerageModel);
+            algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
             return initializeComplete;
         }

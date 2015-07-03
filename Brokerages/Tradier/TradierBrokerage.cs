@@ -67,7 +67,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         //Endpoints:
         private const string RequestEndpoint = @"https://api.tradier.com/v1/";
-        private readonly IOrderMapping _orderMapping;
+        private readonly IOrderProvider _orderProvider;
         private readonly IHoldingsProvider _holdingsProvider;
 
         private readonly object _fillLock = new object();
@@ -80,6 +80,8 @@ namespace QuantConnect.Brokerages.Tradier
         private readonly ConcurrentDictionary<long, ContingentOrderQueue> _contingentOrdersByQCOrderID = new ConcurrentDictionary<long, ContingentOrderQueue>();
         // this is used to block reentrance when handling contingent orders
         private readonly HashSet<long> _contingentReentranceGuardByQCOrderID = new HashSet<long>();
+        private readonly HashSet<long> _unknownTradierOrderIDs = new HashSet<long>(); 
+        private readonly FixedSizeHashQueue<long> _verifiedUnknownTradierOrderIDs = new FixedSizeHashQueue<long>(1000); 
 
         /// <summary>
         /// Event fired when our session has been refreshed/tokens updated
@@ -120,10 +122,10 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Create a new Tradier Object:
         /// </summary>
-        public TradierBrokerage(IOrderMapping orderMapping, IHoldingsProvider holdingsProvider, long accountID)
+        public TradierBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider, long accountID)
             : base("Tradier Brokerage")
         {
-            _orderMapping = orderMapping;
+            _orderProvider = orderProvider;
             _holdingsProvider = holdingsProvider;
             _accountID = accountID;
 
@@ -889,7 +891,7 @@ namespace QuantConnect.Brokerages.Tradier
             var cachedOpenOrder = _cachedOpenOrdersByTradierOrderID.FirstOrDefault(x => x.Value.Symbol == order.Symbol).Value;
             if (cachedOpenOrder != null)
             {
-                var qcOrder = _orderMapping.GetOrderByBrokerageId((int) cachedOpenOrder.Id);
+                var qcOrder = _orderProvider.GetOrderByBrokerageId((int) cachedOpenOrder.Id);
                 if (qcOrder == null)
                 {
                     // clean up our mess, this should never be encountered.
@@ -921,7 +923,13 @@ namespace QuantConnect.Brokerages.Tradier
             if (order.Type == OrderType.MarketOnClose && DateTime.Now < DateTime.Today.Add(new TimeSpan(12+3, 59, 40))) // stop this behavior at 3:59:40
             {
                 // just recall this PlaceOrder function so it can go through the normal path
-                var t = new Timer(state => PlaceOrder(order));
+                Timer t = null;
+                t = new Timer(state =>
+                {
+                    PlaceOrder(order);
+                    // be sure to dispose of this
+                    t.Dispose();
+                });
 
                 // Figure how much time until 3:59:45
                 var now = DateTime.Now;
@@ -1139,7 +1147,7 @@ namespace QuantConnect.Brokerages.Tradier
                 );
 
             // if no errors, add to our open orders collection
-            if (response.Errors.Errors.IsNullOrEmpty())
+            if (response != null && response.Errors.Errors.IsNullOrEmpty())
             {
                 // send the submitted event
                 OnOrderEvent(new OrderEvent(order.QCOrder){Status = OrderStatus.Submitted});
@@ -1170,16 +1178,43 @@ namespace QuantConnect.Brokerages.Tradier
             }
             else
             {
-                // invalidate the order
+                // invalidate the order, bad request
                 OnOrderEvent(new OrderEvent(order.QCOrder) {Status = OrderStatus.Invalid});
 
-                var message = "Order " + order.QCOrder.Id + ": " + string.Join(Environment.NewLine, response.Errors.Errors);
-                if (string.IsNullOrEmpty(order.QCOrder.Tag))
+                string message = _previousRequestRaw;
+                if (response != null && response.Errors != null && !response.Errors.Errors.IsNullOrEmpty())
                 {
-                    order.QCOrder.Tag = message;
+                    message = "Order " + order.QCOrder.Id + ": " + string.Join(Environment.NewLine, response.Errors.Errors);
+                    if (string.IsNullOrEmpty(order.QCOrder.Tag))
+                    {
+                        order.QCOrder.Tag = message;
+                    }
                 }
+
                 // send this error through to the console
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderError", message));
+
+                // if we weren't given a broker ID, make an async request to fetch it and set the broker ID property on the qc order
+                if (response == null || response.Order == null || response.Order.Id == 0)
+                {
+                    Task.Run(() =>
+                    {
+                        var orders = GetIntradayAndPendingOrders()
+                            .Where(x => x.Status == TradierOrderStatus.Rejected)
+                            .Where(x => DateTime.UtcNow - x.TransactionDate < TimeSpan.FromSeconds(2));
+
+                        var recentOrder = orders.OrderByDescending(x => x.TransactionDate).FirstOrDefault(x => x.Symbol == order.Symbol && x.Quantity == order.Quantity && x.Direction == order.Direction && x.Type == order.Type);
+                        if (recentOrder == null)
+                        {
+                            // without this we're going to corrupt the algorithm state
+                            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "OrderError", "Unable to resolve rejected Tradier order id for QC order: " + order.QCOrder.Id));
+                            return;
+                        }
+
+                        order.QCOrder.BrokerId.Add(recentOrder.Id);
+                        Log.Trace("TradierBrokerage.TradierPlaceOrder(): Successfully resolved missing order ID: " + recentOrder.Id);
+                    });
+                }
             }
 
             return response;
@@ -1245,11 +1280,57 @@ namespace QuantConnect.Brokerages.Tradier
                 }
 
                 // if we get order updates for orders we're unaware of we need to bail, this can corrupt the algorithm state
-                var unknownOrderIDs = updatedOrders.Where(IsUnknownOrderID).ToList();
-                if (unknownOrderIDs.Count != 0)
+                var unknownOrderIDs = updatedOrders.Where(IsUnknownOrderID).ToHashSet(x => x.Key);
+                unknownOrderIDs.ExceptWith(_verifiedUnknownTradierOrderIDs);
+                var fireTask = unknownOrderIDs.Count != 0 && _unknownTradierOrderIDs.Count == 0;
+                foreach (var unknownOrderID in unknownOrderIDs)
                 {
-                    var ids = string.Join(", ", unknownOrderIDs.Select(x => x.Key));
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "UnknownOrder", "Received unknown Tradier order id(s): " + ids));
+                    _unknownTradierOrderIDs.Add(unknownOrderID);
+                }
+
+                if (fireTask)
+                {
+                    // wait a second and then check the order provider to see if we have these broker IDs, maybe they came in later (ex, symbol denied for short trading)
+                    Task.Delay(TimeSpan.FromSeconds(2)).ContinueWith(t =>
+                    {
+                        try
+                        {
+                            // verify we don't have them in the order provider
+                            var localUnknownTradierOrderIDs = _unknownTradierOrderIDs.ToHashSet();
+                            _unknownTradierOrderIDs.Clear();
+                            Log.Trace("TradierBrokerage.CheckForFills(): Verifying missing brokerage IDs: " + string.Join(",", localUnknownTradierOrderIDs));
+                            var orders = localUnknownTradierOrderIDs.Select(x => _orderProvider.GetOrderByBrokerageId((int) x)).Where(x => x != null);
+                            var stillUnknownOrderIDs = localUnknownTradierOrderIDs.Where(x => !orders.Any(y => y.BrokerId.Contains(x))).ToList();
+                            if (stillUnknownOrderIDs.Count > 0)
+                            {
+                                // fetch all rejected intraday orders within the last minute, we're going to exclude rejected orders from the error condition
+                                var recentOrders = GetIntradayAndPendingOrders().Where(x => x.Status == TradierOrderStatus.Rejected)
+                                    .Where(x => DateTime.UtcNow - x.TransactionDate < TimeSpan.FromMinutes(1)).ToHashSet(x => x.Id);
+
+                                // remove recently rejected orders, sometimes we'll get updates for these but we've already marked them as rejected
+                                stillUnknownOrderIDs.RemoveAll(x => recentOrders.Contains(x));
+
+                                if (stillUnknownOrderIDs.Count > 0)
+                                {
+                                    // if we still have unknown IDs then we've gotta bail on the algorithm
+                                    var ids = string.Join(", ", stillUnknownOrderIDs);
+                                    Log.Error("TradierBrokerage.CheckForFills(): Unable to verify all missing brokerage IDs: " + ids);
+                                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "UnknownOrder", "Received unknown Tradier order id(s): " + ids));
+                                    return;
+                                }
+                            }
+                            foreach (var unknownTradierOrderID in localUnknownTradierOrderIDs)
+                            {
+                                // add these to the verified list so we don't check them again
+                                _verifiedUnknownTradierOrderIDs.Add(unknownTradierOrderID);
+                            }
+                            Log.Trace("TradierBrokerage.CheckForFills(): Verified all missing brokerage IDs.");
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e);
+                        }
+                    });
                 }
             }
             finally
@@ -1274,7 +1355,7 @@ namespace QuantConnect.Brokerages.Tradier
             if (updatedOrder.RemainingQuantity != cachedOrder.RemainingQuantity 
              || ConvertStatus(updatedOrder.Status) != ConvertStatus(cachedOrder.Status))
             {
-                var qcOrder = _orderMapping.GetOrderByBrokerageId((int)updatedOrder.Id);
+                var qcOrder = _orderProvider.GetOrderByBrokerageId((int)updatedOrder.Id);
                 var fill = new OrderEvent(qcOrder, "Tradier Fill Event")
                 {
                     Status = ConvertStatus(updatedOrder.Status),
@@ -1431,7 +1512,7 @@ namespace QuantConnect.Brokerages.Tradier
             qcOrder.BrokerId.Add(order.Id);
             //qcOrder.ContingentId =
             qcOrder.Duration = ConvertDuration(order.Duration);
-            var orderByBrokerageId = _orderMapping.GetOrderByBrokerageId((int) order.Id);
+            var orderByBrokerageId = _orderProvider.GetOrderByBrokerageId((int) order.Id);
             if (orderByBrokerageId != null)
             {
                 qcOrder.Id = orderByBrokerageId.Id;

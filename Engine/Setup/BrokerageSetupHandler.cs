@@ -22,6 +22,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
@@ -108,9 +109,10 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="algorithm">Algorithm instance</param>
         /// <param name="brokerage">New brokerage output instance</param>
         /// <param name="job">Algorithm job task</param>
-        /// <param name="resultHandler"></param>
+        /// <param name="resultHandler">The configured result handler</param>
+        /// <param name="transactionHandler">The configurated transaction handler</param>
         /// <returns>True on successfully setting up the algorithm state, or false on error.</returns>
-        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler)
+        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler, ITransactionHandler transactionHandler)
         {
             _algorithm = algorithm;
             brokerage = default(IBrokerage);
@@ -211,6 +213,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 // set the transaction models base on the brokerage properties
                 SetupHandler.UpdateTransactionModels(algorithm, algorithm.BrokerageModel);
+                algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
                 try
                 {
@@ -257,7 +260,7 @@ namespace QuantConnect.Lean.Engine.Setup
                         // be sure to assign order IDs such that we increment from the SecurityTransactionManager to avoid ID collisions
                         Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol + " - " + order.Quantity);
                         order.Id = algorithm.Transactions.GetIncrementOrderId();
-                        algorithm.Transactions.Process(order);
+                        transactionHandler.Orders.AddOrUpdate(order.Id, order, (i, o) => order);
                     }
                 }
                 catch (Exception err)

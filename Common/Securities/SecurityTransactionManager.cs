@@ -22,20 +22,21 @@ using System.Threading.Tasks;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 
-namespace QuantConnect.Securities 
+namespace QuantConnect.Securities
 {
     /// <summary>
     /// Algorithm Transactions Manager - Recording Transactions
     /// </summary>
-    public class SecurityTransactionManager : IOrderMapping
+    public class SecurityTransactionManager : IOrderProvider
     {
         private int _orderId = 1;
         private readonly SecurityManager _securities;
         private const decimal _minimumOrderSize = 0;
         private const int _minimumOrderQuantity = 1;
+
+        private IOrderProcessor _orderProcessor;
         private ConcurrentQueue<OrderRequest> _orderRequestQueue;
-        private ConcurrentDictionary<int, Order> _orders;
-        private ConcurrentDictionary<int, List<OrderEvent>> _orderEvents;
+
         private Dictionary<DateTime, decimal> _transactionRecord;
         private Dictionary<Guid, TaskCompletionSource<OrderResponse>> _orderResponseCompletions;
 
@@ -47,60 +48,12 @@ namespace QuantConnect.Securities
             //Private reference for processing transactions
             _securities = security;
 
-            //Initialise the Order Cache -- Its a mirror of the TransactionHandler.
-            _orders = new ConcurrentDictionary<int, Order>();
-
-            // Internal order events storage.
-            _orderEvents = new ConcurrentDictionary<int, List<OrderEvent>>();
-
             //Interal storage for transaction records:
             _transactionRecord = new Dictionary<DateTime, decimal>();
 
             _orderRequestQueue = new ConcurrentQueue<OrderRequest>();
 
             _orderResponseCompletions = new Dictionary<Guid, TaskCompletionSource<OrderResponse>>();
-        }
-
-        /// <summary>
-        /// Count of currently cached orders.
-        /// </summary>
-        public int CachedOrderCount
-        {
-            get { return _orders.Count; }
-        }
-
-        /// <summary>
-        /// Temporary storage for orders requests while waiting to process via transaction handler. Once processed, orders are updated at transaction manager.
-        /// </summary>
-        /// <seealso cref="Orders"/>
-        public ConcurrentQueue<OrderRequest> OrderRequestQueue
-        {
-            get
-            {
-                return _orderRequestQueue;
-            }
-            set
-            {
-                _orderRequestQueue = value;
-            }
-        }
-
-        /// <summary>
-        /// Order event storage - a list of the order events attached to each order
-        /// </summary>
-        /// <remarks>Seems like a huge memory hog and may be removed, leaving OrderEvents to be disposable classes with no track record.</remarks>
-        /// <seealso cref="Orders"/>
-        /// <seealso cref="OrderQueue"/>
-        public ConcurrentDictionary<int, List<OrderEvent>> OrderEvents
-        {
-            get
-            {
-                return _orderEvents;
-            }
-            set 
-            {
-                _orderEvents = value;
-            }
         }
 
         /// <summary>
@@ -122,9 +75,9 @@ namespace QuantConnect.Securities
         /// Configurable minimum order value to ignore bad orders, or orders with unrealistic sizes
         /// </summary>
         /// <remarks>Default minimum order size is $0 value</remarks>
-        public decimal MinimumOrderSize 
+        public decimal MinimumOrderSize
         {
-            get 
+            get
             {
                 return _minimumOrderSize;
             }
@@ -134,9 +87,9 @@ namespace QuantConnect.Securities
         /// Configurable minimum order size to ignore bad orders, or orders with unrealistic sizes
         /// </summary>
         /// <remarks>Default minimum order size is 0 shares</remarks>
-        public int MinimumOrderQuantity 
+        public int MinimumOrderQuantity
         {
-            get 
+            get
             {
                 return _minimumOrderQuantity;
             }
@@ -150,6 +103,22 @@ namespace QuantConnect.Securities
             get
             {
                 return _orderId;
+            }
+        }
+
+        /// <summary>
+        /// Temporary storage for orders requests while waiting to process via transaction handler. Once processed, orders are updated at transaction manager.
+        /// </summary>
+        /// <seealso cref="Orders"/>
+        public ConcurrentQueue<OrderRequest> OrderRequestQueue
+        {
+            get
+            {
+                return _orderRequestQueue;
+            }
+            set
+            {
+                _orderRequestQueue = value;
             }
         }
 
@@ -232,7 +201,7 @@ namespace QuantConnect.Securities
 
             _orderResponseCompletions[request.Id] = taskCompletion;
 
-            OrderRequestQueue.Enqueue(request);
+            _orderRequestQueue.Enqueue(request);
 
             return taskCompletion.Task;
         }
@@ -281,25 +250,24 @@ namespace QuantConnect.Securities
         /// <param name="orderId">The id of the order to wait for</param>
         public void WaitForOrder(int orderId)
         {
-            //Wait for the market order to fill.
-            //This is processed in a parallel thread.
-            while (!_orders.ContainsKey(orderId) ||
-                   (_orders[orderId].Status != OrderStatus.Filled &&
-                    _orders[orderId].Status != OrderStatus.Invalid &&
-                    _orders[orderId].Status != OrderStatus.Canceled))
+            // wait for the processor to finish processing his orders
+            while (true)
             {
-                Thread.Sleep(1);
+                var order = GetOrderById(orderId);
+                if (order == null || !Completed(order))
+                {
+                    Thread.Sleep(1);
+                }
+                else
+                {
+                    break;
+                }
             }
+
+            // wait for the processor to finish processing the order
+            _orderProcessor.ProcessingCompletedEvent.Wait();
         }
 
-        /// <summary>
-        /// Process order updates from the engine.
-        /// </summary>
-        /// <param name="update">updated order</param>
-        public void Process(Order update)
-        {
-            _orders[update.Id] = update;
-        }
 
         /// <summary>
         /// Process order responses from the engine
@@ -323,27 +291,16 @@ namespace QuantConnect.Securities
         /// <returns>List of open orders.</returns>
         public List<Order> GetOpenOrders()
         {
-            var openOrders = (from pair in _orders
-                where (pair.Value.Status == OrderStatus.Submitted ||
-                       pair.Value.Status == OrderStatus.New)
-                select pair.Value).ToList();
-
-            return openOrders;
+            return _orderProcessor.GetOrders(x => x.Status == OrderStatus.Submitted || x.Status == OrderStatus.New).ToList();
         }
 
         /// <summary>
-        /// Get a list of orders that match the filter, or all if filter is null
+        /// Gets the current number of orders that have been processed
         /// </summary>
-        /// <param name="filter">Order predicate</param>
-        /// <returns>List of open orders.</returns>
-        public List<Order> GetOrders(Predicate<Order> filter = null)
+        public int OrdersCount
         {
-            var result = (from pair in _orders
-                              where filter == null || filter(pair.Value) == true
-                              select pair.Value).ToList();
-
-            return result;
-        } 
+            get { return _orderProcessor.OrdersCount; }
+        }
 
         /// <summary>
         /// Get the order by its id
@@ -352,20 +309,7 @@ namespace QuantConnect.Securities
         /// <returns>The order with the specified id, or null if no match is found</returns>
         public Order GetOrderById(int orderId)
         {
-            try
-            {
-                Order order;
-                // then check permanent storage
-                if (_orders.TryGetValue(orderId, out order))
-                {
-                    return order;
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error("TransactionManager.GetOrderById(): " + err.Message);
-            }
-            return null;
+            return _orderProcessor.GetOrderById(orderId);
         }
 
         /// <summary>
@@ -375,15 +319,17 @@ namespace QuantConnect.Securities
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
         public Order GetOrderByBrokerageId(int brokerageId)
         {
-            try
-            {
-                return _orders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
-            }
-            catch (Exception err)
-            {
-                Log.Error("TransactionManager.GetOrderByBrokerageId(): " + err.Message);
-                return null;
-            }
+            return _orderProcessor.GetOrderByBrokerageId(brokerageId);
+        }
+
+        /// <summary>
+        /// Gets all orders matching the specified filter
+        /// </summary>
+        /// <param name="filter">Delegate used to filter the orders</param>
+        /// <returns>All open orders this order provider currently holds</returns>
+        public IEnumerable<Order> GetOrders(Func<Order, bool> filter)
+        {
+            return _orderProcessor.GetOrders(filter);
         }
 
         /// <summary>
@@ -395,7 +341,7 @@ namespace QuantConnect.Securities
         public bool GetSufficientCapitalForOrder(SecurityPortfolioManager portfolio, Order order)
         {
             var security = _securities[order.Symbol];
-            
+
             var freeMargin = security.MarginModel.GetMarginRemaining(portfolio, security, order.Direction);
             var initialMarginRequiredForOrder = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
             if (Math.Abs(initialMarginRequiredForOrder) > freeMargin)
@@ -414,5 +360,22 @@ namespace QuantConnect.Securities
         {
             return _orderId++;
         }
-    } // End Algorithm Transaction Filling Classes
-} // End QC Namespace
+
+        /// <summary>
+        /// Sets the <see cref="IOrderProvider"/> used for fetching orders for the algorithm
+        /// </summary>
+        /// <param name="orderProvider">The <see cref="IOrderProvider"/> to be used to manage fetching orders</param>
+        public void SetOrderProcessor(IOrderProcessor orderProvider)
+        {
+            _orderProcessor = orderProvider;
+        }
+
+        /// <summary>
+        /// Returns true when the specified order is in a completed state
+        /// </summary>
+        private static bool Completed(Order order)
+        {
+            return order.Status == OrderStatus.Filled || order.Status == OrderStatus.Invalid || order.Status == OrderStatus.Canceled;
+        }
+    }
+}

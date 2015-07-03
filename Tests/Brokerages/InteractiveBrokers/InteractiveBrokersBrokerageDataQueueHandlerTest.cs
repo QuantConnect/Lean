@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             InteractiveBrokersGatewayRunner.StartFromConfiguration();
             
-            var ib = new InteractiveBrokersBrokerage(new OrderMapping());
+            var ib = new InteractiveBrokersBrokerage(new OrderProvider());
             ib.Connect();
 
             ib.Subscribe(null, new Dictionary<SecurityType, List<string>>

@@ -160,8 +160,9 @@
     <Compile Include="Securities\Forex\ForexMarginModel.cs" />
     <Compile Include="Securities\Forex\ForexPortfolioModel.cs" />
     <Compile Include="Securities\IHoldingsProvider.cs" />
+    <Compile Include="Securities\IOrderProcessor.cs" />
     <Compile Include="Securities\ISecurityMarginModel.cs" />
-    <Compile Include="Securities\IOrderMapping.cs" />
+    <Compile Include="Securities\IOrderProvider.cs" />
     <Compile Include="Securities\ISecurityPortfolioModel.cs" />
     <Compile Include="Securities\MarginCallModel.cs" />
     <Compile Include="Securities\SecurityPortfolioModel.cs" />

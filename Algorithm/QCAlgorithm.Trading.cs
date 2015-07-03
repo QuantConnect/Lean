@@ -25,22 +25,12 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private long _processingEvents = 0;
         private int _maxOrders = 10000;
 
         /// <summary>
         /// Transaction Manager - Process transaction fills and order management.
         /// </summary>
         public SecurityTransactionManager Transactions { get; set; }
-
-        /// <summary>
-        /// Wait semaphore to signal the algoritm is currently processing a synchronous order.
-        /// </summary>
-        public bool ProcessingEvents
-        {
-            get { return Interlocked.Read(ref _processingEvents) == 1; }
-            set { Interlocked.Exchange(ref _processingEvents, value ? 1 : 0); }
-        }
 
         /// <summary>
         /// Buy Stock (Alias of Order)
@@ -327,7 +317,7 @@ namespace QuantConnect.Algorithm
         private OrderResponse PreOrderChecks(string symbol, int quantity, OrderType type)
         {
             var response = new OrderResponse
-            {
+        {
                 Type = OrderResponseType.Error,
                 ErrorCode = OrderResponseErrorCode.PreOrderChecksError,
                 ErrorMessage = "Unknown error"
@@ -404,7 +394,7 @@ namespace QuantConnect.Algorithm
             }
 
             //We've already processed too many orders: max 100 per day or the memory usage explodes
-            if (Transactions.CachedOrderCount > _maxOrders)
+            if (Transactions.OrdersCount > _maxOrders)
             {
                 response.Error(OrderResponseErrorCode.ExceededMaximumOrders, string.Format("You have exceeded maximum number of orders ({0}), for unlimited orders upgrade your account.", _maxOrders));
                 Error(response.ErrorMessage);
@@ -460,12 +450,12 @@ namespace QuantConnect.Algorithm
         public OrderResponse UpdateOrder(LimitOrder order, decimal? limitPrice = null, int? quantity = null, string tag = null)
         {
             return Transactions.UpdateOrder(order.CreateUpdateRequest(quantity, limitPrice, tag));
-        }
+                }
 
         public OrderResponse UpdateOrder(StopLimitOrder order, decimal? stopPrice = null, decimal? limitPrice = null, int? quantity = null, string tag = null)
         {
             return Transactions.UpdateOrder(order.CreateUpdateRequest(quantity, stopPrice, limitPrice, tag));
-        }
+            }
 
         public OrderResponse UpdateOrder(StopMarketOrder order, decimal? stopPrice = null, int? quantity = null, string tag = null)
         {

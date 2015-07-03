@@ -97,15 +97,6 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
-        /// Property indicating the transaction handler is currently processing events and the algorithm should wait (syncrhonous order processing).
-        /// </summary>
-        bool ProcessingEvents
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Current date/time.
         /// </summary>
         DateTime Time

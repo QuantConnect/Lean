@@ -14,7 +14,6 @@
  *
 */
 
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -49,38 +48,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Cross-threading queues so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
+        /// Cross-threading queue so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
         /// </summary>
-        ConcurrentQueue<List<BaseData>>[] Bridge
+        BlockingCollection<TimeSlice> Bridge
         {
             get;
-            set;
-        }
-
-        /// <summary>
-        /// Boolean flag indicating there is no more data in any of our subscriptions.
-        /// </summary>
-        bool EndOfBridges
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Array of boolean flags indicating the data status for each queue/subscription we're tracking.
-        /// </summary>
-        bool[] EndOfBridge
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Set the source of the data we're requesting for the type-readers to know where to get data from.
-        /// </summary>
-        /// <remarks>Live or Backtesting Datafeed</remarks>
-        DataFeedEndpoint DataFeed
-        {
-            get;
-            set;
         }
 
         /// <summary>
@@ -90,11 +62,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             get;
         }
-
-        /// <summary>
-        /// The most advanced moment in time for which the data feed has completed loading data
-        /// </summary>
-        DateTime LoadedDataFrontier { get; }
 
         /// <summary>
         /// Data has completely loaded and we don't expect any more.
@@ -118,10 +85,5 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// External controller calls to signal a terminate of the thread.
         /// </summary>
         void Exit();
-
-        /// <summary>
-        /// Purge all remaining data in the thread.
-        /// </summary>
-        void PurgeData();
     }
 }

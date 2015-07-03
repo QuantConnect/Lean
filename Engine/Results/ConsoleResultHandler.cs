@@ -17,11 +17,13 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Setup;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -44,10 +46,11 @@ namespace QuantConnect.Lean.Engine.Results
         //Sampling Periods:
         private DateTime _nextSample;
         private TimeSpan _resamplePeriod;
-        private TimeSpan _notificationPeriod;
+        private readonly TimeSpan _notificationPeriod;
         private string _chartDirectory;
+        private readonly Dictionary<string, List<string>> _equityResults;
 
-        public Dictionary<string, string> FinalStatistics { get; private set; } 
+        public Dictionary<string, string> FinalStatistics { get; private set; }
 
         /// <summary>
         /// Messaging to store notification messages for processing.
@@ -128,6 +131,7 @@ namespace QuantConnect.Lean.Engine.Results
             _chartLock = new Object();
             _isActive = true;
             _notificationPeriod = TimeSpan.FromSeconds(5);
+            _equityResults = new Dictionary<string, List<string>>();
         }
 
         /// <summary>
@@ -138,7 +142,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="api"></param>
         /// <param name="dataFeed"></param>
         /// <param name="setupHandler"></param>
-        public void Initialize(AlgorithmNodePacket packet, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler)
+        /// <param name="transactionHandler"></param>
+        public void Initialize(AlgorithmNodePacket packet, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler, ITransactionHandler transactionHandler)
         {
             // we expect one of two types here, the backtest node packet or the live node packet
             var job = packet as BacktestNodePacket;
@@ -157,7 +162,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
             _resamplePeriod = _algorithmNode.ComputeSampleEquityPeriod();
 
-            var time = DateTime.Now.ToString("yyyy-mm-dd-hh-mm");
+            var time = DateTime.Now.ToString("yyyy-MM-dd-HH-mm");
             _chartDirectory = Path.Combine("../../../Charts/", packet.AlgorithmId, time);
             if (Directory.Exists(_chartDirectory))
             {
@@ -179,11 +184,18 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 Thread.Sleep(100);
 
-                if (DateTime.Now > _updateTime)
+                var now = DateTime.UtcNow;
+                if (now > _updateTime)
                 {
-                    _updateTime = DateTime.Now.AddSeconds(5);
+                    _updateTime = now.AddSeconds(5);
                     _algorithmNode.LogAlgorithmStatus(_lastSampledTimed);
                 }
+            }
+
+            // Write Equity and EquityPerformance files in charts directory
+            foreach (var fileName in _equityResults.Keys)
+            {
+                File.WriteAllLines(fileName, _equityResults[fileName]);
             }
 
             Log.Trace("ConsoleResultHandler: Ending Thread...");
@@ -245,10 +257,14 @@ namespace QuantConnect.Lean.Engine.Results
 
             lock (_chartLock)
             {
-                using (var writer = new StreamWriter(File.Open(chartFilename, FileMode.Append)))
+                // Add line to list in dictionary, will be written to file at the end
+                List<string> rows;
+                if (!_equityResults.TryGetValue(chartFilename, out rows))
                 {
-                    writer.WriteLine(time + "," + value);
+                    rows = new List<string>();
+                    _equityResults[chartFilename] = rows;
                 }
+                rows.Add(time + "," + value.ToString("F2", CultureInfo.InvariantCulture));
 
                 //Add a copy locally:
                 if (!Charts.ContainsKey(chartName))

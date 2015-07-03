@@ -198,7 +198,7 @@ namespace QuantConnect.Lean.Engine
                 _systemHandlers.Notify.SetChannel(job.Channel);
 
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
-                _algorithmHandlers.Results.Initialize(job, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.DataFeed, _algorithmHandlers.Setup);
+                _algorithmHandlers.Results.Initialize(job, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.DataFeed, _algorithmHandlers.Setup, _algorithmHandlers.Transactions);
 
                 threadResults = new Thread(_algorithmHandlers.Results.Run, 0) {Name = "Result Thread"};
                 threadResults.Start();
@@ -210,7 +210,7 @@ namespace QuantConnect.Lean.Engine
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath);
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
-                    initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, out brokerage, job, _algorithmHandlers.Results);
+                    initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, out brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions);
 
                     //If there are any reasons it failed, pass these back to the IDE.
                     if (!initializeComplete || algorithm.ErrorMessages.Count > 0 || _algorithmHandlers.Setup.Errors.Count > 0)
@@ -329,7 +329,7 @@ namespace QuantConnect.Lean.Engine
                     try
                     {
                         var charts = new Dictionary<string, Chart>(_algorithmHandlers.Results.Charts);
-                        var orders = algorithm.Transactions.GetOrders().ToDictionary(o => o.Id);
+                        var orders = new Dictionary<int, Order>(_algorithmHandlers.Transactions.Orders);
                         var holdings = new Dictionary<string, Holding>();
                         var statistics = new Dictionary<string, string>();
                         var banner = new Dictionary<string, string>();

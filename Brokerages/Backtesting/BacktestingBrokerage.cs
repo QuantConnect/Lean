@@ -29,11 +29,11 @@ namespace QuantConnect.Brokerages.Backtesting
     /// </summary>
     public class BacktestingBrokerage : Brokerage
     {
+        private bool _needsScan;
         // this is the algorithm under test
         private readonly IAlgorithm _algorithm;
-        // this is the orders dictionary reference from the algorithm for convenence
-        private readonly ConcurrentDictionary<int, Order> _orders;
         private readonly ConcurrentDictionary<int, Order> _pending;
+        private readonly object _needsScanLock = new object();
 
         /// <summary>
         /// Creates a new BacktestingBrokerage for the specified algorithm
@@ -106,7 +106,11 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (order.Status == OrderStatus.New)
             {
-                _pending[order.Id] = order;
+                lock(_needsScanLock)
+                {
+                    _needsScan = true;
+                    _pending[order.Id] = order;
+                }
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
 
                 // fire off the event that says this order has been submitted
@@ -127,7 +131,11 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (order.Status == OrderStatus.Submitted)
             {
-                _pending[order.Id] = order;
+                lock (_needsScanLock)
+                {
+                    _needsScan = true;
+                    _pending[order.Id] = order;
+                }
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
 
                 // fire off the event that says this order has been updated
@@ -166,10 +174,15 @@ namespace QuantConnect.Brokerages.Backtesting
         /// </summary>
         public void Scan()
         {
-            // there's usually nothing in here
-            if (_pending.Count == 0)
+            lock (_needsScanLock)
             {
-                return;
+                // there's usually nothing in here
+                if (!_needsScan)
+                {
+                    return;
+                }
+
+                _needsScan = false;
             }
 
             //2. NOW ALL ORDERS IN ORDER DICTIONARY::> 
@@ -263,6 +276,14 @@ namespace QuantConnect.Brokerages.Backtesting
                 if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.Invalid || order.Status == OrderStatus.Canceled)
                 {
                     _pending.TryRemove(order.Id, out order);
+                }
+                else
+                {
+                    // if we didn't fill then we need to continue to scan
+                    lock (_needsScanLock)
+                    {
+                        _needsScan = true;
+                    }
                 }
             }
         }

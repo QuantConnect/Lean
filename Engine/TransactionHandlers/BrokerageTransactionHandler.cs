@@ -52,17 +52,28 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private ConcurrentDictionary<int, Order> _orders;
 
+        private IResultHandler _resultHandler;
+        private ManualResetEventSlim _processingCompletedEvent;
+
         private ConcurrentQueue<OrderEvent> _orderEventQueue;
         private ConcurrentQueue<SecurityEvent> _securityEventQueue;
         private ConcurrentQueue<AccountEvent> _accountEventQueue;
         private ConcurrentQueue<OrderRequest> _orderRequestQueue;
         /// <summary>
-        /// OrderEvents is an orderid indexed collection of events attached to each order. Because an order might be filled in 
-        /// multiple legs it is important to keep a record of each event.
+        /// Gets the permanent storage for all orders
         /// </summary>
-        private ConcurrentDictionary<int, List<OrderEvent>> _orderEvents;
+        public ConcurrentDictionary<int, Order> Orders
+        {
+            get { return _orders; }
+        }
 
-        private IResultHandler _resultHandler;
+        /// <summary>
+        /// Gets the current number of orders that have been processed
+        /// </summary>
+        public int OrdersCount
+        {
+            get { return _orders.Count; }
+        }
 
         /// <summary>
         /// Creates a new BrokerageTransactionHandler to process orders using the specified brokerage implementation
@@ -105,12 +116,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // also save off the various order data structures locally
             _orders = new ConcurrentDictionary<int, Order>();
-            _orderEvents = algorithm.Transactions.OrderEvents;
             _orderEventQueue = new ConcurrentQueue<OrderEvent>();
             _securityEventQueue = new ConcurrentQueue<SecurityEvent>();
             _orderRequestQueue = algorithm.Transactions.OrderRequestQueue;
             _accountEventQueue = new ConcurrentQueue<AccountEvent>();
 
+
+            _processingCompletedEvent = new ManualResetEventSlim(true);
         }
 
         /// <summary>
@@ -120,17 +132,64 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         public bool IsActive { get; private set; }
 
         /// <summary>
-        /// Boolean flag signalling the handler is ready and all orders have been processed.
+        /// Reset event that signals when this order processor is not busy processing orders
         /// </summary>
-        public bool Ready
+        public ManualResetEventSlim ProcessingCompletedEvent
         {
-            get
-            {
-                return HasPendingItems == false
-                    && !_algorithm.ProcessingEvents;
-            }
+            get { return _processingCompletedEvent; }
         }
 
+        /// <summary>
+        /// Adds the specified order to be processed
+        /// </summary>
+        /// <param name="order">The order to be processed</param>
+        public void Process(Order order)
+        {
+
+        }
+
+        /// <summary>
+        /// Get the order by its id
+        /// </summary>
+        /// <param name="orderId">Order id to fetch</param>
+        /// <returns>The order with the specified id, or null if no match is found</returns>
+        public Order GetOrderById(int orderId)
+        {
+            Order order = null;
+
+            _orders.TryGetValue(orderId, out order);
+
+            return order;
+        }
+
+        /// <summary>
+        /// Gets the order by its brokerage id
+        /// </summary>
+        /// <param name="brokerageId">The brokerage id to fetch</param>
+        /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
+        public Order GetOrderByBrokerageId(int brokerageId)
+        {
+            return _orders.Where(x => x.Value.BrokerId.Contains(brokerageId)).Select(p => p.Value).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Gets all orders matching the specified filter
+        /// </summary>
+        /// <param name="filter">Delegate used to filter the orders</param>
+        /// <returns>All open orders this order provider currently holds</returns>
+        public IEnumerable<Order> GetOrders(Func<Order, bool> filter)
+        {
+            if (filter != null)
+            {
+                return _orders.Select(x => x.Value).Where(filter);
+            }
+
+            return _orders.Select(x => x.Value);
+        }
+
+        /// <summary>
+        /// Check that all queues are empty
+        /// </summary>
         public bool HasPendingItems
         {
             get
@@ -148,14 +207,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             while (!_exitTriggered)
             {
-                // if it's empty just sleep this thread for a little bit
+                _processingCompletedEvent.Reset();
 
                 bool working = false;
 
                 if (HasPendingItems)
                 {
-                    _algorithm.ProcessingEvents = true;
-
                     working = ProcessAccountEvents();
                     working |= ProcessSecurityEvents();
                     working |= ProcessOrderEvents();
@@ -164,7 +221,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 if (working == false)
                 {
-                    _algorithm.ProcessingEvents = false;
+                    _processingCompletedEvent.Set();
 
                     Thread.Sleep(1);
                     continue;
@@ -195,11 +252,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // in backtesting we need to wait for orders to be removed from the queue and finished processing
             if (!_algorithm.LiveMode)
             {
-                // spin wait until the queue has finished processing
-                while (!Ready)
+                var spinWait = new SpinWait();
+                while (HasPendingItems)
                 {
-                    Thread.Sleep(1);
+                    // spin wait until the queue is empty
+                    spinWait.SpinOnce();
                 }
+                // now wait for completed processing to signal
+                _processingCompletedEvent.Wait();
                 return;
             }
 
@@ -309,33 +369,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         public void Exit()
         {
             _exitTriggered = true;
-        }
-
-        private Order GetOrderById(int id)
-        {
-            Order order = null;
-
-            if (_orders.TryGetValue(id, out order) == false)
-            {
-                var clientOrder = _algorithm.Transactions.GetOrderById(id);
-
-                if (clientOrder != null)
-                {
-                    order = clientOrder.Clone();
-                    _orders[id] = order;
-                }
-            }
-
-            return order;
-        }
-
-        /// <summary>
-        /// Send order update to transaction manager.
-        /// </summary>
-        /// <param name="order"></param>
-        private void SendOrder(Order order)
-        {
-            _algorithm.Transactions.Process(order.Clone());
         }
 
         /// <summary>
@@ -453,9 +486,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     _algorithm.Error(response.ErrorMessage);
                 }
             }
-
-
-            SendOrder(order);
         }
 
         /// <summary>
@@ -498,7 +528,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     response.Processed();
 
                     _orders[updatedOrder.Id] = updatedOrder;
-                    SendOrder(updatedOrder);
                 }
             }
         }
@@ -542,8 +571,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     {
                         response.Processed();
                     }
-
-                    SendOrder(order);
                 }
                 else
                 {
@@ -561,7 +588,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             int remainingCount = _orderEventQueue.Count;
 
-            if (remainingCount == 0) 
+            if (remainingCount == 0)
                 return false;
 
             while (remainingCount-- > 0)
@@ -596,8 +623,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // set the status of our order object based on the fill event
             order.Status = fill.Status;
-
-            SendOrder(order);
 
             // save that the order event took place, we're initializing the list with a capacity of 2 to reduce number of mallocs
             //these hog memory

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -12,27 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
+using System.Threading;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Represents a type capable of fetching Order instances by its QC order id or by a brokerage id
+    /// Represents a type capable of processing orders
     /// </summary>
-    public interface IOrderMapping
+    public interface IOrderProcessor : IOrderProvider
     {
         /// <summary>
-        /// Get the order by its id
+        /// Reset event that signals when this order processor is not busy processing orders
         /// </summary>
-        /// <param name="orderId">Order id to fetch</param>
-        /// <returns>The order with the specified id, or null if no match is found</returns>
-        Order GetOrderById(int orderId);
+        ManualResetEventSlim ProcessingCompletedEvent { get; }
 
         /// <summary>
-        /// Gets the order by its brokerage id
+        /// Adds the specified order to be processed
         /// </summary>
-        /// <param name="brokerageId">The brokerage id to fetch</param>
-        /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        Order GetOrderByBrokerageId(int brokerageId);
+        /// <param name="order">The order to be processed</param>
+        void Process(Order order);
     }
 }
