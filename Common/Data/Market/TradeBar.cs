@@ -338,7 +338,7 @@ namespace QuantConnect.Data.Market
 
             var source = Path.Combine(Constants.DataFolder, securityTypePath, market, resolutionPath, symbolPath, filename);
 
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
         public override BaseData Clone()

@@ -14,28 +14,22 @@
  *
 */
 
-using System;
+using System.Collections.Generic;
+using QuantConnect.Data;
 
-namespace QuantConnect.Lean.Engine.DataFeeds.Transport
+namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Defines a transport mechanism for data from its source into various reader methods
+    /// Represents a type responsible for accepting an input <see cref="SubscriptionDataSource"/>
+    /// and returning an enumerable of the source's <see cref="BaseData"/>
     /// </summary>
-    public interface IStreamReader : IDisposable
+    public interface ISubscriptionFactory
     {
         /// <summary>
-        /// Gets the transport medium of this stream reader
+        /// Reads the specified <paramref name="source"/>
         /// </summary>
-        SubscriptionTransportMedium TransportMedium { get; }
-
-        /// <summary>
-        /// Gets whether or not there's more data to be read in the stream
-        /// </summary>
-        bool EndOfStream { get; }
-        
-        /// <summary>
-        /// Gets the next line/batch of content from the stream 
-        /// </summary>
-        string ReadLine();
+        /// <param name="source">The source to be read</param>
+        /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
+        IEnumerable<BaseData> Read(SubscriptionDataSource source);
     }
 }

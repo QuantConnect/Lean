@@ -11,31 +11,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using System;
-
-namespace QuantConnect.Lean.Engine.DataFeeds.Transport
+namespace QuantConnect.Data
 {
     /// <summary>
-    /// Defines a transport mechanism for data from its source into various reader methods
+    /// Specifies the format of data in a subscription
     /// </summary>
-    public interface IStreamReader : IDisposable
+    public enum FileFormat
     {
         /// <summary>
-        /// Gets the transport medium of this stream reader
+        /// Comma separated values
         /// </summary>
-        SubscriptionTransportMedium TransportMedium { get; }
+        Csv,
 
         /// <summary>
-        /// Gets whether or not there's more data to be read in the stream
+        /// Binary file data
         /// </summary>
-        bool EndOfStream { get; }
-        
-        /// <summary>
-        /// Gets the next line/batch of content from the stream 
-        /// </summary>
-        string ReadLine();
+        Binary
     }
 }

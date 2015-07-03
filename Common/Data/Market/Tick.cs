@@ -291,7 +291,7 @@ namespace QuantConnect.Data.Market
             //Add in the market for equities/cfd/forex for internationalization support.
             var source = Path.Combine(Constants.DataFolder, securityType, market, resolution, symbol.ToLower(), file);
 
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
 

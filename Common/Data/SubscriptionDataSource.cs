@@ -28,6 +28,11 @@ namespace QuantConnect.Data
         public readonly string Source;
 
         /// <summary>
+        /// Identifies the format of the data within the source
+        /// </summary>
+        public readonly FileFormat Format;
+
+        /// <summary>
         /// Identifies the transport medium used to access the data, such as a local or remote file, or a polling rest API
         /// </summary>
         public readonly SubscriptionTransportMedium TransportMedium;
@@ -40,6 +45,20 @@ namespace QuantConnect.Data
         public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium)
         {
             Source = source;
+            Format = FileFormat.Csv;
+            TransportMedium = transportMedium;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SubscriptionDataSource"/> class.
+        /// </summary>
+        /// <param name="source">The subscription's data source location</param>
+        /// <param name="format">The format of the data within the source</param>
+        /// <param name="transportMedium">The transport medium to be used to retrieve the subscription's data from the source</param>
+        public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium, FileFormat format)
+        {
+            Source = source;
+            Format = format;
             TransportMedium = transportMedium;
         }
 
@@ -107,6 +126,18 @@ namespace QuantConnect.Data
         public static bool operator !=(SubscriptionDataSource left, SubscriptionDataSource right)
         {
             return !Equals(left, right);
+        }
+
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            return string.Format("{0}: {1} {2}", TransportMedium, Format, Source);
         }
     }
 }
