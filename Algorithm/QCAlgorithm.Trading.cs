@@ -25,30 +25,12 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private bool _processingOrder = false;
         private int _maxOrders = 10000;
 
         /// <summary>
         /// Transaction Manager - Process transaction fills and order management.
         /// </summary>
         public SecurityTransactionManager Transactions { get; set; }
-
-        /// <summary>
-        /// Wait semaphore to signal the algoritm is currently processing a synchronous order.
-        /// </summary>
-        public bool ProcessingOrder
-        {
-            get { return _processingOrder; }
-            set { _processingOrder = value; }
-        }
-
-        /// <summary>
-        /// Accessor for filled orders dictionary
-        /// </summary>
-        public ConcurrentDictionary<int, Order> Orders
-        {
-            get { return Transactions.Orders; }
-        }
 
         /// <summary>
         /// Buy Stock (Alias of Order)
@@ -210,15 +192,7 @@ namespace QuantConnect.Algorithm
             //Wait for the order event to process, only if the exchange is open
             if (!asynchronous)
             {
-                //Wait for the market order to fill.
-                //This is processed in a parallel thread.
-                while (!Transactions.Orders.ContainsKey(orderId) ||
-                       (Transactions.Orders[orderId].Status != OrderStatus.Filled &&
-                        Transactions.Orders[orderId].Status != OrderStatus.Invalid &&
-                        Transactions.Orders[orderId].Status != OrderStatus.Canceled) || _processingOrder)
-                {
-                    Thread.Sleep(1);
-                }
+                Transactions.WaitForOrder(orderId);
             }
 
             return orderId;
@@ -404,7 +378,7 @@ namespace QuantConnect.Algorithm
             }
 
             //We've already processed too many orders: max 100 per day or the memory usage explodes
-            if (Orders.Count > _maxOrders)
+            if (Transactions.OrdersCount > _maxOrders)
             {
                 Error(string.Format("You have exceeded maximum number of orders ({0}), for unlimited orders upgrade your account.", _maxOrders));
                 _quit = true;

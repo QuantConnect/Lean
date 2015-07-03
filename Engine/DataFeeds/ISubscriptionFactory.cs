@@ -11,28 +11,25 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
-using QuantConnect.Orders;
 
-namespace QuantConnect.Securities
+using System.Collections.Generic;
+using QuantConnect.Data;
+
+namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Represents a type capable of fetching Order instances by its QC order id or by a brokerage id
+    /// Represents a type responsible for accepting an input <see cref="SubscriptionDataSource"/>
+    /// and returning an enumerable of the source's <see cref="BaseData"/>
     /// </summary>
-    public interface IOrderMapping
+    public interface ISubscriptionFactory
     {
         /// <summary>
-        /// Get the order by its id
+        /// Reads the specified <paramref name="source"/>
         /// </summary>
-        /// <param name="orderId">Order id to fetch</param>
-        /// <returns>The order with the specified id, or null if no match is found</returns>
-        Order GetOrderById(int orderId);
-
-        /// <summary>
-        /// Gets the order by its brokerage id
-        /// </summary>
-        /// <param name="brokerageId">The brokerage id to fetch</param>
-        /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        Order GetOrderByBrokerageId(int brokerageId);
+        /// <param name="source">The source to be read</param>
+        /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
+        IEnumerable<BaseData> Read(SubscriptionDataSource source);
     }
 }

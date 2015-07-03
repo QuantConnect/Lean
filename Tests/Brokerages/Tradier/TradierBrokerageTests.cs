@@ -33,10 +33,10 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         /// Creates the brokerage under test
         /// </summary>
         /// <returns>A connected brokerage instance</returns>
-        protected override IBrokerage CreateBrokerage(IOrderMapping orderMapping, IHoldingsProvider holdingsProvider)
+        protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider)
         {
             var accountID = TradierBrokerageFactory.Configuration.AccountID;
-            var tradier = new TradierBrokerage(orderMapping, holdingsProvider, accountID);
+            var tradier = new TradierBrokerage(orderProvider, holdingsProvider, accountID);
 
             var qcUserID = TradierBrokerageFactory.Configuration.QuantConnectUserID;
             var tokens = TradierBrokerageFactory.GetTokens();
@@ -120,6 +120,15 @@ namespace QuantConnect.Tests.Brokerages.Tradier
             Brokerage.OrderStatusChanged -= brokerageOnOrderStatusChanged;
 
             Assert.IsTrue(orderFilledOrCanceled);
+        }
+
+        [Test, Ignore("This test exists to manually verify how rejected orders are handled when we don't receive an order ID back from Tradier.")]
+        public void ShortZnga()
+        {
+            PlaceOrderWaitForStatus(new MarketOrder("ZNGA", -1, DateTime.Now, type: SecurityType.Equity), OrderStatus.Invalid, allowFailedSubmission: true);
+
+            // wait for output to be generated
+            System.Threading.Thread.Sleep(20*1000);
         }
     }
 }

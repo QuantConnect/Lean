@@ -17,7 +17,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -30,11 +29,9 @@ namespace QuantConnect.Brokerages.Backtesting
     /// </summary>
     public class BacktestingBrokerage : Brokerage
     {
-        private bool _needsScan = false;
+        private bool _needsScan;
         // this is the algorithm under test
         private readonly IAlgorithm _algorithm;
-        // this is the orders dictionary reference from the algorithm for convenence
-        private readonly ConcurrentDictionary<int, Order> _orders;
         private readonly ConcurrentDictionary<int, Order> _pending;
         private readonly object _needsScanLock = new object();
 
@@ -46,7 +43,6 @@ namespace QuantConnect.Brokerages.Backtesting
             : base("Backtesting Brokerage")
         {
             _algorithm = algorithm;
-            _orders = _algorithm.Transactions.Orders;
             _pending = new ConcurrentDictionary<int, Order>();
         }
 
@@ -59,7 +55,6 @@ namespace QuantConnect.Brokerages.Backtesting
             : base(name)
         {
             _algorithm = algorithm;
-            _orders = _algorithm.Transactions.Orders;
             _pending = new ConcurrentDictionary<int, Order>();
         }
 
@@ -80,12 +75,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>The open orders returned from IB</returns>
         public override List<Order> GetOpenOrders()
         {
-            return (from order in _orders
-                    where order.Value.Status != OrderStatus.Filled &&
-                          order.Value.Status != OrderStatus.Canceled &&
-                          order.Value.Status != OrderStatus.Invalid
-                    orderby order.Value.Id
-                    select order.Value).ToList();
+            return _algorithm.Transactions.GetOpenOrders();
         }
 
         /// <summary>
@@ -286,6 +276,14 @@ namespace QuantConnect.Brokerages.Backtesting
                 if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.Invalid || order.Status == OrderStatus.Canceled)
                 {
                     _pending.TryRemove(order.Id, out order);
+                }
+                else
+                {
+                    // if we didn't fill then we need to continue to scan
+                    lock (_needsScanLock)
+                    {
+                        _needsScan = true;
+                    }
                 }
             }
         }

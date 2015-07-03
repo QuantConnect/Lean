@@ -13,6 +13,8 @@
  * limitations under the License.
  *
 */
+
+using System.Collections;
 using System.Collections.Generic;
 
 namespace QuantConnect.Util
@@ -20,7 +22,7 @@ namespace QuantConnect.Util
     /// <summary>
     /// Provides an implementation of an add-only fixed length, unique queue system
     /// </summary>
-    public class FixedSizeHashQueue<T>
+    public class FixedSizeHashQueue<T> : IEnumerable<T>
     {
         private readonly int _size;
         private readonly Queue<T> _queue; 
@@ -85,6 +87,30 @@ namespace QuantConnect.Util
         public bool Contains(T item)
         {
             return _hash.Contains(item);
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>1</filterpriority>
+        public IEnumerator<T> GetEnumerator()
+        {
+            return _queue.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.IEnumerator"/> object that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

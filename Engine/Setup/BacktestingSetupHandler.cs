@@ -22,6 +22,7 @@ using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 
@@ -128,9 +129,10 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="algorithm">Algorithm instance</param>
         /// <param name="brokerage">Brokerage instance</param>
         /// <param name="baseJob">Algorithm job</param>
-        /// <param name="resultHandler"></param>
+        /// <param name="resultHandler">The configured result handler</param>
+        /// <param name="transactionHandler">The configurated transaction handler</param>
         /// <returns>Boolean true on successfully initializing the algorithm</returns>
-        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob, IResultHandler resultHandler)
+        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob, IResultHandler resultHandler, ITransactionHandler transactionHandler)
         {
             var job = baseJob as BacktestNodePacket;
             if (job == null)
@@ -185,6 +187,7 @@ namespace QuantConnect.Lean.Engine.Setup
             brokerage = new BacktestingBrokerage(algorithm);
 
             SetupHandler.UpdateTransactionModels(algorithm, algorithm.BrokerageModel);
+            algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
             //Calculate the max runtime for the strategy
             _maxRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager.Count);

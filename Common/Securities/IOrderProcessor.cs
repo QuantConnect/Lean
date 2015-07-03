@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -11,31 +11,27 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using System;
+using System.Threading;
+using QuantConnect.Orders;
 
-namespace QuantConnect.Lean.Engine.DataFeeds.Transport
+namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Defines a transport mechanism for data from its source into various reader methods
+    /// Represents a type capable of processing orders
     /// </summary>
-    public interface IStreamReader : IDisposable
+    public interface IOrderProcessor : IOrderProvider
     {
         /// <summary>
-        /// Gets the transport medium of this stream reader
+        /// Reset event that signals when this order processor is not busy processing orders
         /// </summary>
-        SubscriptionTransportMedium TransportMedium { get; }
+        ManualResetEventSlim ProcessingCompletedEvent { get; }
 
         /// <summary>
-        /// Gets whether or not there's more data to be read in the stream
+        /// Adds the specified order to be processed
         /// </summary>
-        bool EndOfStream { get; }
-        
-        /// <summary>
-        /// Gets the next line/batch of content from the stream 
-        /// </summary>
-        string ReadLine();
+        /// <param name="order">The order to be processed</param>
+        void Process(Order order);
     }
 }

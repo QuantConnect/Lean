@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -11,31 +11,42 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
 using System;
 
-namespace QuantConnect.Lean.Engine.DataFeeds.Transport
+namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Defines a transport mechanism for data from its source into various reader methods
+    /// Event arguments for the <see cref="BaseDataSubscriptionFactory.ReaderError"/> event.
     /// </summary>
-    public interface IStreamReader : IDisposable
+    public sealed class ReaderErrorEventArgs : EventArgs
     {
         /// <summary>
-        /// Gets the transport medium of this stream reader
+        /// Gets the line that caused the error
         /// </summary>
-        SubscriptionTransportMedium TransportMedium { get; }
+        public string Line
+        {
+            get; private set;
+        }
 
         /// <summary>
-        /// Gets whether or not there's more data to be read in the stream
+        /// Gets the exception that was caught
         /// </summary>
-        bool EndOfStream { get; }
-        
+        public Exception Exception
+        {
+            get; private set;
+        }
+
         /// <summary>
-        /// Gets the next line/batch of content from the stream 
+        /// Initializes a new instance of the <see cref="ReaderErrorEventArgs"/> class
         /// </summary>
-        string ReadLine();
+        /// <param name="line">The line that caused the error</param>
+        /// <param name="exception">The exception that was caught during the read</param>
+        public ReaderErrorEventArgs(string line, Exception exception)
+        {
+            Line = line;
+            Exception = exception;
+        }
     }
 }

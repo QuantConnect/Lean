@@ -14,9 +14,12 @@
  *
 */
 
+using System.Collections.Concurrent;
 using System.ComponentModel.Composition;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
@@ -25,7 +28,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// The pass this information back to the algorithm portfolio and ensure the cash and portfolio are synchronized.
     /// </summary>
     [InheritedExport(typeof(ITransactionHandler))]
-    public interface ITransactionHandler
+    public interface ITransactionHandler : IOrderProcessor
     {
         /// <summary>
         /// Boolean flag indicating the thread is busy. 
@@ -37,9 +40,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Boolean flag signalling the handler is ready and all orders have been processed.
+        /// Gets the permanent storage for all orders
         /// </summary>
-        bool Ready
+        ConcurrentDictionary<int, Order> Orders
         {
             get;
         }
