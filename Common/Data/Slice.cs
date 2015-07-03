@@ -173,7 +173,7 @@ namespace QuantConnect.Data
             Lazy<object> dictionary;
             if (!_dataByType.TryGetValue(typeof(T), out dictionary))
             {
-                dictionary = new Lazy<object>(() => new DataDictionary<T>(_data.Value.Values.OfType<T>(), x => x.Symbol));
+                dictionary = new Lazy<object>(() => new DataDictionary<T>(_data.Value.Values.Select(x => x.GetData()).OfType<T>(), x => x.Symbol));
                 _dataByType[typeof (T)] = dictionary;
             }
             return (DataDictionary<T>) dictionary.Value;
@@ -269,7 +269,7 @@ namespace QuantConnect.Data
         {
             if (ticks != null) return ticks;
             ticks = new Ticks(Time);
-            foreach (var listTicks in _data.Value.Values.OfType<List<Tick>>().Where(x => x.Count != 0))
+            foreach (var listTicks in _data.Value.Values.Select(x => x.GetData()).OfType<List<Tick>>().Where(x => x.Count != 0))
             {
                 ticks[listTicks[0].Symbol] = listTicks;
             }
@@ -283,7 +283,7 @@ namespace QuantConnect.Data
         {
             if (tradeBars != null) return tradeBars;
             tradeBars = new TradeBars(Time);
-            foreach (var bar in _data.Value.Values.OfType<TradeBar>())
+            foreach (var bar in _data.Value.Values.Select(x => x.GetData()).OfType<TradeBar>())
             {
                 tradeBars[bar.Symbol] = bar;
             }
