@@ -118,7 +118,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _orders = new ConcurrentDictionary<int, Order>();
             _orderEventQueue = new ConcurrentQueue<OrderEvent>();
             _securityEventQueue = new ConcurrentQueue<SecurityEvent>();
-            _orderRequestQueue = algorithm.Transactions.OrderRequestQueue;
+            _orderRequestQueue = new ConcurrentQueue<OrderRequest>();
             _accountEventQueue = new ConcurrentQueue<AccountEvent>();
 
 
@@ -143,9 +143,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// Adds the specified order to be processed
         /// </summary>
         /// <param name="order">The order to be processed</param>
-        public void Process(Order order)
+        public void Process(OrderRequest orderRequest)
         {
-
+            _orderRequestQueue.Enqueue(orderRequest);
         }
 
         /// <summary>

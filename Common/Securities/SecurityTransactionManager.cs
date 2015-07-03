@@ -35,7 +35,6 @@ namespace QuantConnect.Securities
         private const int _minimumOrderQuantity = 1;
 
         private IOrderProcessor _orderProcessor;
-        private ConcurrentQueue<OrderRequest> _orderRequestQueue;
 
         private Dictionary<DateTime, decimal> _transactionRecord;
         private Dictionary<Guid, TaskCompletionSource<OrderResponse>> _orderResponseCompletions;
@@ -50,8 +49,6 @@ namespace QuantConnect.Securities
 
             //Interal storage for transaction records:
             _transactionRecord = new Dictionary<DateTime, decimal>();
-
-            _orderRequestQueue = new ConcurrentQueue<OrderRequest>();
 
             _orderResponseCompletions = new Dictionary<Guid, TaskCompletionSource<OrderResponse>>();
         }
@@ -103,22 +100,6 @@ namespace QuantConnect.Securities
             get
             {
                 return _orderId;
-            }
-        }
-
-        /// <summary>
-        /// Temporary storage for orders requests while waiting to process via transaction handler. Once processed, orders are updated at transaction manager.
-        /// </summary>
-        /// <seealso cref="Orders"/>
-        public ConcurrentQueue<OrderRequest> OrderRequestQueue
-        {
-            get
-            {
-                return _orderRequestQueue;
-            }
-            set
-            {
-                _orderRequestQueue = value;
             }
         }
 
@@ -201,7 +182,7 @@ namespace QuantConnect.Securities
 
             _orderResponseCompletions[request.Id] = taskCompletion;
 
-            _orderRequestQueue.Enqueue(request);
+            _orderProcessor.Process(request);
 
             return taskCompletion.Task;
         }

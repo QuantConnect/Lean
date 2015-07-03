@@ -29,9 +29,9 @@ namespace QuantConnect.Securities
         ManualResetEventSlim ProcessingCompletedEvent { get; }
 
         /// <summary>
-        /// Adds the specified order to be processed
+        /// Adds an order request 
         /// </summary>
-        /// <param name="order">The order to be processed</param>
-        void Process(Order order);
+        /// <param name="orderRequest">The order request to be processed</param>
+        void Process(OrderRequest orderRequest);
     }
 }
