@@ -38,38 +38,46 @@ namespace QuantConnect.Tests
                 new FileLogHandler("regression.log")
             });
 
-            Console.WriteLine("Running " + algorithm + "...");
-
-            // set the configuration up
-            Config.Set("algorithm-type-name", algorithm);
-            Config.Set("live-mode", "false");
-            Config.Set("environment", "");
-            Config.Set("messaging-handler", "QuantConnect.Messaging.Messaging");
-            Config.Set("job-queue-handler", "QuantConnect.Queues.JobQueue");
-            Config.Set("api-handler", "QuantConnect.Api.Api");
-
-            // run the algorithm in its own thread
             var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
             var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
-            var engine = new Lean.Engine.Engine(systemHandlers, algorithmHandlers, false);
-            Task.Factory.StartNew(() =>
-            {
-                string algorithmPath;
-                var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
-                engine.Run(job, algorithmPath);
-                systemHandlers.JobQueue.AcknowledgeJob(job);
-            }).Wait();
+            var statistics = new Dictionary<string, string>();
 
-            var consoleResultHandler = (ConsoleResultHandler)algorithmHandlers.Results;
-            var statistics = consoleResultHandler.FinalStatistics;
+            try
+            {
+                Console.WriteLine("Running " + algorithm + "...");
+
+                // set the configuration up
+                Config.Set("algorithm-type-name", algorithm);
+                Config.Set("live-mode", "false");
+                Config.Set("environment", "");
+                Config.Set("messaging-handler", "QuantConnect.Messaging.Messaging");
+                Config.Set("job-queue-handler", "QuantConnect.Queues.JobQueue");
+                Config.Set("api-handler", "QuantConnect.Api.Api");
+
+                // run the algorithm in its own thread
+
+                var engine = new Lean.Engine.Engine(systemHandlers, algorithmHandlers, false);
+                Task.Factory.StartNew(() =>
+                {
+                    string algorithmPath;
+                    var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
+                    engine.Run(job, algorithmPath);
+                }).Wait();
+
+                var consoleResultHandler = (ConsoleResultHandler)algorithmHandlers.Results;
+                statistics = consoleResultHandler.FinalStatistics;
+            }
+            finally
+            {
+                Log.LogHandler.Dispose();
+                systemHandlers.Dispose();
+                algorithmHandlers.Dispose();
+            }
 
             foreach (var stat in expectedStatistics)
             {
                 Assert.AreEqual(stat.Value, statistics[stat.Key], "Failed on " + stat.Key);
             }
-
-            systemHandlers.Dispose();
-            algorithmHandlers.Dispose();
         }
     }
 }
