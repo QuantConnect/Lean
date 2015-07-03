@@ -16,10 +16,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Fasterflect;
 using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -146,20 +148,18 @@ namespace QuantConnect.Lean.Engine
 
             //Create the method accessors to push generic types into algorithm: Find all OnData events:
 
-            // Algorithm 1.0 data accessors
-            var hasOnTradeBar = AddMethodInvoker<Dictionary<string, TradeBar>>(algorithm, methodInvokers, "OnTradeBar");
-            var hasOnTick = AddMethodInvoker<Dictionary<string, List<Tick>>>(algorithm, methodInvokers, "OnTick");
-
             // Algorithm 2.0 data accessors
             var hasOnDataTradeBars = AddMethodInvoker<TradeBars>(algorithm, methodInvokers);
             var hasOnDataTicks = AddMethodInvoker<Ticks>(algorithm, methodInvokers);
 
-            // determine what mode we're in
-            var backwardsCompatibilityMode = !hasOnDataTradeBars && !hasOnDataTicks;
-
             // dividend and split events
             var hasOnDataDividends = AddMethodInvoker<Dividends>(algorithm, methodInvokers);
             var hasOnDataSplits = AddMethodInvoker<Splits>(algorithm, methodInvokers);
+
+            // Algorithm 3.0 data accessors
+            var hasOnDataSlice = algorithm.GetType().GetMethods()
+                .Where(x => x.Name == "OnData" && x.GetParameters().Length == 1 && x.GetParameters()[0].ParameterType == typeof (Slice))
+                .FirstOrDefault(x => x.DeclaringType == algorithm.GetType()) != null;
 
             //Go through the subscription types and create invokers to trigger the event handlers for each custom type:
             foreach (var config in feed.Subscriptions) 
@@ -174,13 +174,16 @@ namespace QuantConnect.Lean.Engine
                     if (methodInvokers.ContainsKey(config.Type)) continue;
 
                     //If we couldnt find the event handler, let the user know we can't fire that event.
-                    if (genericMethod == null)
+                    if (genericMethod == null && !hasOnDataSlice)
                     {
                         algorithm.RunTimeError = new Exception("Data event handler not found, please create a function matching this template: public void OnData(" + config.Type.Name + " data) {  }");
                         _algorithmState = AlgorithmStatus.RuntimeError;
                         return;
                     }
-                    methodInvokers.Add(config.Type, genericMethod.DelegateForCallMethod());
+                    if (genericMethod != null)
+                    {
+                        methodInvokers.Add(config.Type, genericMethod.DelegateForCallMethod());
+                    }
                 }
             }
 
@@ -257,7 +260,8 @@ namespace QuantConnect.Lean.Engine
                 if (algorithm.RunTimeError != null)
                 {
                     _algorithmState = AlgorithmStatus.RuntimeError;
-                    Log.Trace(string.Format("AlgorithmManager.Run(): Algorithm encountered a runtime error at {0}. Error: {1}", timeSlice.Time, algorithm.RunTimeError));
+                    Log.Trace(string.Format("AlgorithmManager.Run(): Algorithm encountered a runtime error at {0}. Error: {1}", timeSlice.Time,
+                        algorithm.RunTimeError));
                     break;
                 }
 
@@ -308,8 +312,6 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 //Trigger the data events: Invoke the types we have data for:
-                var oldBars = new Dictionary<string, TradeBar>();
-                var oldTicks = new Dictionary<string, List<Tick>>();
                 var newBars = new TradeBars(time);
                 var newTicks = new Ticks(time);
                 var newDividends = new Dividends(time);
@@ -387,14 +389,7 @@ namespace QuantConnect.Lean.Engine
                             var bar = dataPoint as TradeBar;
                             if (bar != null)
                             {
-                                if (backwardsCompatibilityMode)
-                                {
-                                    oldBars[bar.Symbol] = bar;
-                                }
-                                else
-                                {
-                                    newBars[bar.Symbol] = bar;
-                                }
+                                newBars[bar.Symbol] = bar;
                                 continue;
                             }
                         }
@@ -405,26 +400,13 @@ namespace QuantConnect.Lean.Engine
                             var tick = dataPoint as Tick;
                             if (tick != null)
                             {
-                                if (backwardsCompatibilityMode)
+                                List<Tick> ticks;
+                                if (!newTicks.TryGetValue(tick.Symbol, out ticks))
                                 {
-                                    List<Tick> ticks;
-                                    if (!oldTicks.TryGetValue(tick.Symbol, out ticks))
-                                    {
-                                        ticks = new List<Tick>(3);
-                                        oldTicks.Add(tick.Symbol, ticks);
-                                    }
-                                    ticks.Add(tick);
+                                    ticks = new List<Tick>(3);
+                                    newTicks.Add(tick.Symbol, ticks);
                                 }
-                                else
-                                {
-                                    List<Tick> ticks;
-                                    if (!newTicks.TryGetValue(tick.Symbol, out ticks))
-                                    {
-                                        ticks = new List<Tick>(3);
-                                        newTicks.Add(tick.Symbol, ticks);
-                                    }
-                                    ticks.Add(tick);
-                                }
+                                ticks.Add(tick);
                                 continue;
                             }
                         }
@@ -435,7 +417,11 @@ namespace QuantConnect.Lean.Engine
                         //Send data into the generic algorithm event handlers
                         try
                         {
-                            methodInvokers[config.Type](algorithm, dataPoint);
+                            MethodInvoker methodInvoker;
+                            if (methodInvokers.TryGetValue(config.Type, out methodInvoker))
+                            {
+                                methodInvoker(algorithm, dataPoint);
+                            }
                         }
                         catch (Exception err)
                         {
@@ -468,36 +454,28 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 //After we've fired all other events in this second, fire the pricing events:
-                if (backwardsCompatibilityMode)
+                try
                 {
-                    try
-                    {
-                        if (hasOnTradeBar && oldBars.Count > 0) methodInvokers[typeof (Dictionary<string, TradeBar>)](algorithm, oldBars);
-                        if (hasOnTick && oldTicks.Count > 0) methodInvokers[typeof (Dictionary<string, List<Tick>>)](algorithm, oldTicks);
-                    }
-                    catch (Exception err)
-                    {
-                        algorithm.RunTimeError = err;
-                        _algorithmState = AlgorithmStatus.RuntimeError;
-                        Log.Error("AlgorithmManager.Run(): RuntimeError: Backwards Compatibility Mode: " + err.Message + " STACK >>> " + err.StackTrace);
-                        return;
-                    }
+                    if (hasOnDataTradeBars && newBars.Count > 0) methodInvokers[typeof (TradeBars)](algorithm, newBars);
+                    if (hasOnDataTicks && newTicks.Count > 0) methodInvokers[typeof (Ticks)](algorithm, newTicks);
                 }
-                else
+                catch (Exception err)
                 {
-                    try
-                    {
-                        if (hasOnDataTradeBars && newBars.Count > 0) methodInvokers[typeof (TradeBars)](algorithm, newBars);
-                        if (hasOnDataTicks && newTicks.Count > 0) methodInvokers[typeof (Ticks)](algorithm, newTicks);
-                    }
-                    catch (Exception err)
-                    {
-                        algorithm.RunTimeError = err;
-                        _algorithmState = AlgorithmStatus.RuntimeError;
-                        Log.Error("AlgorithmManager.Run(): RuntimeError: New Style Mode: " + err.Message + " STACK >>> " + err.StackTrace);
-                        return;
-                    }
+                    algorithm.RunTimeError = err;
+                    _algorithmState = AlgorithmStatus.RuntimeError;
+                    Log.Error("AlgorithmManager.Run(): RuntimeError: New Style Mode: " + err.Message + " STACK >>> " + err.StackTrace);
+                    return;
                 }
+
+                // EVENT HANDLER v3.0 -- all data in a single event
+                var slice = new Slice(time, newData.Values.SelectMany(x => x),
+                    newBars.Count == 0 ? null : newBars,
+                    newTicks.Count == 0 ? null : newTicks,
+                    newSplits.Count == 0 ? null : newSplits,
+                    newDividends.Count == 0 ? null : newDividends
+                    );
+
+                algorithm.OnData(slice);
 
                 //If its the historical/paper trading models, wait until market orders have been "filled"
                 // Manually trigger the event handler to prevent thread switch.
@@ -508,7 +486,7 @@ namespace QuantConnect.Lean.Engine
 
                 // Process any required events of the results handler such as sampling assets, equity, or stock prices.
                 results.ProcessSynchronousEvents();
-            } // End of ForEach DataStream
+            } // End of ForEach feed.Bridge.GetConsumingEnumerable
 
             // stop timing the loops
             _currentTimeStepTime = DateTime.MinValue;

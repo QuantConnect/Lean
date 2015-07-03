@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -50,6 +52,10 @@ namespace QuantConnect.Algorithm
         private string _previousDebugMessage = "";
         private string _previousErrorMessage = "";
         private bool _sentNoDataError = false;
+
+        // used for calling through to void OnData(Slice) if no override specified
+        private bool _checkedForOnDataSlice;
+        private Action<Slice> _onDataSlice;
 
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
@@ -289,27 +295,47 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Event handler for TradeBar data subscriptions packets. This method was deprecated June 2014 and replaced with OnData(TradeBars data)
+        /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
         /// </summary>
-        /// <param name="data">Dictionary of MarketData Objects</param>
-        /// <obsolete>This method is obsolete, please use 'void OnData(TradeBars data)' instead</obsolete>
-        [Obsolete("'override void OnTradeBar' method is obsolete, please use 'void OnData(TradeBars data)' instead")]
-        public virtual void OnTradeBar(Dictionary<string, TradeBar> data)
+        /// <code>
+        /// TradeBars bars = slice.Bars;
+        /// Ticks ticks = slice.Ticks;
+        /// TradeBar spy = slice["SPY"];
+        /// List{Tick} aaplTicks = slice["AAPL"]
+        /// Quandl oil = slice["OIL"]
+        /// dynamic anySymbol = slice[symbol];
+        /// DataDictionary{Quandl} allQuandlData = slice.Get{Quand}
+        /// Quandl oil = slice.Get{Quandl}("OIL")
+        /// </code>
+        /// <param name="slice">The current slice of data keyed by symbol string</param>
+        public virtual void OnData(Slice slice)
         {
-            //Algorithm Implementation
-            //throw new NotImplementedException("OnTradeBar has been made obsolete. Please use OnData(TradeBars data) instead.");
-        }
+            // as a default implementation, let's look for and call OnData(Slice) just in case a user forgot to use the override keyword
+            if (!_checkedForOnDataSlice)
+            {
+                _checkedForOnDataSlice = true;
+                
+                var method = GetType().GetMethods()
+                    .Where(x => x.Name == "OnData")
+                    .Where(x => x.GetParameters().Length == 1)
+                    .FirstOrDefault(x => x.GetParameters()[0].ParameterType == typeof (Slice));
 
-        /// <summary>
-        /// Event handler for Tick data subscriptions. This method was deprecated June 2014 and replaced with OnData(Ticks data).
-        /// </summary>
-        /// <param name="data">Ticks arriving at the same moment come in a list. Because the "tick" data is actually list ordered within a second, you can get lots of ticks at once.</param>
-        /// <obsolete>This method is obsolete, please use 'void OnData(Ticks data)' instead</obsolete>
-        [Obsolete("'override void OnTick' method is obsolete, please use 'void OnData(Ticks data)' instead")]
-        public virtual void OnTick(Dictionary<string, List<Tick>> data)
-        {
-            //Algorithm Implementation
-            //throw new NotImplementedException("OnTick has been made obsolete. Please use OnData(Ticks data) instead.");
+                if (method == null)
+                {
+                    return;
+                }
+
+                var self = Expression.Constant(this);
+                var parameter = Expression.Parameter(typeof (Slice), "data");
+                var call = Expression.Call(self, method, parameter);
+                var lambda = Expression.Lambda<Action<Slice>>(call, parameter);
+                _onDataSlice = lambda.Compile();
+            }
+            // if we have it, then invoke it
+            if (_onDataSlice != null)
+            {
+                _onDataSlice(slice);
+            }
         }
 
         // <summary>
@@ -331,7 +357,7 @@ namespace QuantConnect.Algorithm
         //}
 
         // <summary>
-        // Event - v2.0 SPLIT EVENT HANDLER: (Pattern) Basic template for user to override when requesting tick data.
+        // Event - v2.0 SPLIT EVENT HANDLER: (Pattern) Basic template for user to override when inspecting split data.
         // </summary>
         // <param name="data">IDictionary of Splits Data Keyed by Symbol String</param>
         //public void OnData(Splits data)
@@ -340,7 +366,7 @@ namespace QuantConnect.Algorithm
         //}
 
         // <summary>
-        // Event - v2.0 DIVIDEND EVENT HANDLER: (Pattern) Basic template for user to override when requesting tick data.
+        // Event - v2.0 DIVIDEND EVENT HANDLER: (Pattern) Basic template for user to override when inspecting dividend data
         // </summary>
         // <param name="data">IDictionary of Dividend Data Keyed by Symbol String</param>
         //public void OnData(Dividends data)

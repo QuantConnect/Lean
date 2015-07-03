@@ -99,7 +99,7 @@ namespace QuantConnect.Data
             if (!_storage.TryGetValue(name, out value))
             {
                 // let the user know the property name that we couldn't find
-                throw new Exception("Property with name '" + name + "' does not exist.");
+                throw new Exception("Property with name '" + name + "' does not exist. Properties: Time, Symbol, Value " + string.Join(", ", _storage.Keys));
             }
 
             return value;

@@ -17,14 +17,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds.Auxiliary;
-using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
@@ -43,8 +40,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private bool _endOfStream;
 
-        /// Internal stream reader for processing data line by line:
-        private IStreamReader _reader;
+        private IEnumerator<BaseData> _subscriptionFactoryEnumerator;
 
         /// Configuration of the data-reader:
         private readonly SubscriptionDataConfig _config;
@@ -179,7 +175,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             catch (Exception err) 
             {
                 Log.Error("SubscriptionDataReader(): Fetching Price/Map Factors: " + err.Message);
-           }
+            }
+
+            // initialize the enumerator
+            _subscriptionFactoryEnumerator = ResolveDataEnumerator();
         }
 
         /// <summary>
@@ -198,12 +197,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _previous = Current;
 
-            // get our reader, advancing to the next day if necessary
-            var reader = ResolveReader();
-            
-            // if we were unable to resolve a reader it's because we're out of tradeable dates
-            if (reader == null)
+            if (_subscriptionFactoryEnumerator == null)
             {
+                // in live mode the trade able dates will eventually advance to the next
                 if (_isLiveMode)
                 {
                     // HACK attack -- we don't want to block in live mode
@@ -215,10 +211,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            // loop until we find data that passes all of our filters
             do
             {
-
                 if (_auxiliaryData.Count > 0)
                 {
                     // check for any auxilliary data before reading a line
@@ -226,82 +220,54 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return true;
                 }
 
-                // if we've run out of data on our current reader then let's find the next one, this will advance our tradeable dates as well
-                if (reader.EndOfStream)
+                // keep enumerating until we find something that is within our time frame
+                while (_subscriptionFactoryEnumerator.MoveNext())
                 {
-                    reader = ResolveReader();
-                    // resolve reader will return null when we're finished with tradeable dates
-                    if (reader == null)
+                    var instance = _subscriptionFactoryEnumerator.Current;
+                    if (instance == null)
                     {
+                        // keep reading until we get valid data
+                        continue;
+                    }
+
+                    if (instance.EndTime <= _periodStart)
+                    {
+                        // keep reading until we get a value on or after the start
+                        _previous = instance;
+                        continue;
+                    }
+
+                    if (instance.Time > _periodFinish)
+                    {
+                        // stop reading when we get a value after the end
                         _endOfStream = true;
                         return false;
                     }
-                }
 
-                if (_auxiliaryData.Count > 0)
-                {
-                    // check for any auxilliary data before reading a line
-                    Current = _auxiliaryData.Dequeue();
+                    // we've made it past all of our filters, we're withing the requested start/end of the subscription,
+                    // we've satisfied user and market hour filters, so this data is good to go as current
+                    Current = instance;
                     return true;
                 }
 
-                // read in a line and then parse it using the data factory
-                var line = reader.ReadLine();
-                BaseData instance = null;
-                try
-                {
-                    instance = _dataFactory.Reader(_config, line, _tradeableDates.Current, _isLiveMode);
-                }
-                catch (Exception err)
-                {
-                    // TODO: this should be an event, such as OnReaderError
-                    _resultHandler.RuntimeError("Error invoking " + _config.Symbol + " data reader. Line: " + line + " Error: " + err.Message, err.StackTrace);
-                }
-
-                if (instance == null)
-                {
-                    continue;
-                }
-
-                if (instance.EndTime <= _periodStart)
-                {
-                    // keep readnig until we get a value on or after the start
-                    _previous = instance;
-                    continue;
-                }
-
-                if (instance.Time > _periodFinish)
-                {
-                    // stop reading when we get a value after the end
-                    _endOfStream = true;
-                    return false;
-                }
-
-                // we've made it past all of our filters, we're withing the requested start/end of the subscription,
-                // we've satisfied user and market hour filters, so this data is good to go as current
-                Current = instance;
-                return true;
+                // we've ended the enumerator, time to refresh
+                _subscriptionFactoryEnumerator = ResolveDataEnumerator();
             }
-            // keep looping, we control returning internally
-            while (true);
+            while (_subscriptionFactoryEnumerator != null);
+
+            _endOfStream = true;
+            return false;
         }
 
         /// <summary>
-        /// Resolves a stream reader to read data from a subscription source
+        /// Resolves the next enumerator to be used in <see cref="MoveNext"/>
         /// </summary>
-        /// <returns>A stream reader used to read lines from a subscription source, null if the source was unable to be resolved into a reader</returns>
-        private IStreamReader ResolveReader()
+        private IEnumerator<BaseData> ResolveDataEnumerator()
         {
-            // if we still have data to emit, keep using this one
-            if (_reader != null && !_reader.EndOfStream)
+            if (_subscriptionFactoryEnumerator != null)
             {
-                return _reader;
-            }
-
-            // if we're out of data and non-null, clean up old resources
-            if (_reader != null)
-            {
-                _reader.Dispose();
+                // clean up old resources
+                _subscriptionFactoryEnumerator.Dispose();
             }
 
             do
@@ -309,75 +275,91 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 DateTime date;
                 if (!TryGetNextDate(out date))
                 {
-                    // if don't have any more days to process then we're done
+                    // if we run out of dates then we're finished with this subscription
                     return null;
                 }
 
+                // fetch the new source
                 var newSource = _dataFactory.GetSource(_config, date, _isLiveMode);
 
+                // if the source has changed or we're in live mode and it's a remote file download
                 if (_source != newSource && newSource.Source != "" || (_isLiveMode && _source.TransportMedium == SubscriptionTransportMedium.RemoteFile))
                 {
+                    // save off for comparison next time
                     _source = newSource;
-
-                    // create our stream reader from our data source
-                    _reader = CreateStreamReader(_source);
+                    var subscriptionFactory = CreateSubscriptionFactory(newSource);
+                    return subscriptionFactory.Read(newSource).GetEnumerator();
                 }
-                else if (!(_isLiveMode && _source.TransportMedium == SubscriptionTransportMedium.RemoteFile))
+                if (!(_isLiveMode && _source.TransportMedium == SubscriptionTransportMedium.RemoteFile))
                 {
                     // if we didn't get a new source then we're done with this subscription
                     // we're not in livemode/remote file but got the same exact source before,
                     // but we've already exhausted that source, so we're done with this subscription
                     return null;
                 }
-
-                // if the created reader doesn't have any data, then advance to the next day to try again
-                if (!(_reader != null && !_reader.EndOfStream))
-                {
-                    OnCreateStreamReaderError(date, _source);
-                }
             }
-            while (!(_reader != null && !_reader.EndOfStream));
-            
-            // we've finally found a reader with data!
-            return _reader;
+            while (true);
         }
 
-        private IStreamReader CreateStreamReader(SubscriptionDataSource subscriptionDataSource)
+        private ISubscriptionFactory CreateSubscriptionFactory(SubscriptionDataSource source)
         {
-            IStreamReader reader;
-            switch (subscriptionDataSource.TransportMedium)
+            switch (source.Format)
             {
-                case SubscriptionTransportMedium.LocalFile:
-                    reader = HandleLocalFileSource(subscriptionDataSource.Source);
-                    break;
+                case FileFormat.Csv:
+                    return HandleCsvFileFormat(source);
 
-                case SubscriptionTransportMedium.RemoteFile:
-                    reader = HandleRemoteSourceFile(subscriptionDataSource.Source);
-                    break;
-
-                case SubscriptionTransportMedium.Rest:
-                    reader = new RestSubscriptionStreamReader(subscriptionDataSource.Source);
-                    break;
-
+                case FileFormat.Binary:
+                    throw new NotSupportedException("Binary file format is not supported");
+                
                 default:
-                    throw new InvalidEnumArgumentException("Unexpected SubscriptionTransportMedium specified: " + subscriptionDataSource.TransportMedium);
+                    throw new ArgumentOutOfRangeException();
             }
-            return reader;
         }
 
-        /// <summary>
-        /// Gets called when we fail to create a stream reader with data
-        /// </summary>
-        /// <param name="date">The date that caused this</param>
-        /// <param name="subscriptionDataSource">The subscription source that caused this</param>
-        private void OnCreateStreamReaderError(DateTime date, SubscriptionDataSource subscriptionDataSource)
+        private ISubscriptionFactory HandleCsvFileFormat(SubscriptionDataSource source)
         {
-            // TODO: OnCreateStreamReaderError event
-            Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", subscriptionDataSource.Source, _mappedSymbol, date.ToShortDateString()));
-            if (_isDynamicallyLoadedData)
+            var factory = new BaseDataSubscriptionFactory(_config, _tradeableDates.Current, _isLiveMode);
+
+            // handle missing files
+            factory.InvalidSource += (sender, args) =>
             {
-                _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).", subscriptionDataSource));
-            }
+                switch (args.Source.TransportMedium)
+                {
+                    case SubscriptionTransportMedium.LocalFile:
+                        // the local uri doesn't exist, write an error and return null so we we don't try to get data for today
+                        Log.Trace(string.Format("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: {0}", source));
+                        _resultHandler.SamplePerformance(_tradeableDates.Current, 0);
+                        break;
+
+                    case SubscriptionTransportMedium.RemoteFile:
+                        _resultHandler.ErrorMessage(string.Format("Error downloading custom data source file, skipped: {0} Error: {1}", source, args.Exception.Message), args.Exception.StackTrace);
+                        _resultHandler.SamplePerformance(_tradeableDates.Current.Date, 0);
+                        break;
+
+                    case SubscriptionTransportMedium.Rest:
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            };
+
+            // handle empty files/instantiation errors
+            factory.CreateStreamReaderError += (sender, args) =>
+            {
+                Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));
+                if (_isDynamicallyLoadedData)
+                {
+                    _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).", args.Source.Source));
+                }
+            };
+
+            // handle parser errors
+            factory.ReaderError += (sender, args) =>
+            {
+                _resultHandler.RuntimeError(string.Format("Error invoking {0} data reader. Line: {1} Error: {2}", _config.Symbol, args.Line, args.Exception.Message), args.Exception.StackTrace);
+            };
+            return factory;
         }
 
         /// <summary>
@@ -543,52 +525,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Dispose() 
         { 
-            if (_reader != null) 
+            if (_subscriptionFactoryEnumerator != null) 
             {
-                _reader.Close();
-                _reader.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// Opens up an IStreamReader for a local file source
-        /// </summary>
-        private IStreamReader HandleLocalFileSource(string source)
-        {
-            if (!File.Exists(source))
-            {
-                // the local uri doesn't exist, write an error and return null so we we don't try to get data for today
-                Log.Trace("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: " + source);
-                _resultHandler.SamplePerformance(_tradeableDates.Current, 0);
-                return null;
-            }
-
-            // handles zip or text files
-            return new LocalFileSubscriptionStreamReader(source);
-        }
-
-        /// <summary>
-        /// Opens up an IStreamReader for a remote file source
-        /// </summary>
-        private IStreamReader HandleRemoteSourceFile(string source)
-        {
-            // clean old files out of the cache
-            if (!Directory.Exists(Constants.Cache)) Directory.CreateDirectory(Constants.Cache);
-            foreach (var file in Directory.EnumerateFiles(Constants.Cache))
-            {
-                if (File.GetCreationTime(file) < DateTime.Now.AddHours(-24)) File.Delete(file);
-            }
-
-            try
-            {
-                // this will fire up a web client in order to download the 'source' file to the cache
-                return new RemoteFileSubscriptionStreamReader(source, Constants.Cache);
-            }
-            catch (Exception err)
-            {
-                _resultHandler.ErrorMessage("Error downloading custom data source file, skipped: " + source + " Err: " + err.Message, err.StackTrace);
-                _resultHandler.SamplePerformance(_tradeableDates.Current.Date, 0);
-                return null;
+                _subscriptionFactoryEnumerator.Dispose();
             }
         }
     }
