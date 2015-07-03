@@ -34,6 +34,8 @@ namespace QuantConnect.Tests
         {
             var statistics = new Dictionary<string, string>();
 
+            Composer.Instance.Reset();
+
             try
             {
                 using (Log.LogHandler = new CompositeLogHandler(new ILogHandler[]
