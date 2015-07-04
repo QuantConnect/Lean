@@ -402,7 +402,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
                 finally
                 {
-                    _algorithm.OnOrderResponse(response);
+                    try
+                    {
+                        _algorithm.OnOrderResponse(response);
+                    }
+                    catch (Exception err)
+                    {
+                        _algorithm.Error("Order Response Handler Error: " + err.Message);
+                    }
                 }
             }
 
