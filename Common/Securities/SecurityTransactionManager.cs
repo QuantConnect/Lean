@@ -37,7 +37,6 @@ namespace QuantConnect.Securities
         private IOrderProcessor _orderProcessor;
 
         private Dictionary<DateTime, decimal> _transactionRecord;
-        private Dictionary<Guid, TaskCompletionSource<OrderResponse>> _orderResponseCompletions;
 
         /// <summary>
         /// Initialise the transaction manager for holding and processing orders.
@@ -49,8 +48,6 @@ namespace QuantConnect.Securities
 
             //Interal storage for transaction records:
             _transactionRecord = new Dictionary<DateTime, decimal>();
-
-            _orderResponseCompletions = new Dictionary<Guid, TaskCompletionSource<OrderResponse>>();
         }
 
         /// <summary>
@@ -147,6 +144,7 @@ namespace QuantConnect.Securities
                     else
                     {
                         submitRequest.OrderId = _orderId++;
+                        response.OrderId = submitRequest.OrderId;
                         submitRequest.Created = _securities[submitRequest.Symbol].Time;
                     }
                 }
@@ -176,15 +174,14 @@ namespace QuantConnect.Securities
 
             if (response.IsError)
             {
-                taskCompletion.TrySetResult(response);
-                return taskCompletion.Task.Result;
+                return response;
             }
 
-            _orderResponseCompletions[request.Id] = taskCompletion;
+            response.Processing();
 
             _orderProcessor.Process(request);
 
-            return taskCompletion.Task.Result;
+            return response;
         }
 
         /// <summary>
@@ -247,23 +244,6 @@ namespace QuantConnect.Securities
 
             // wait for the processor to finish processing the order
             _orderProcessor.ProcessingCompletedEvent.Wait();
-        }
-
-
-        /// <summary>
-        /// Process order responses from the engine
-        /// </summary>
-        /// <param name="response"></param>
-        public void Process(OrderResponse response)
-        {
-            TaskCompletionSource<OrderResponse> taskCompletion;
-
-            if (_orderResponseCompletions.TryGetValue(response.Id, out taskCompletion) == true)
-            {
-                _orderResponseCompletions.Remove(response.Id);
-
-                taskCompletion.TrySetResult(response);
-            }
         }
 
         /// <summary>

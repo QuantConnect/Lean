@@ -427,6 +427,16 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Order response handler. Transaction manager updates from order request processing are passed to this method.
+        /// </summary>
+        /// <param name="orderResponse">Order request processing details.</param>
+        /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
+        public virtual void OnOrderResponse(OrderResponse orderResponse)
+        {
+
+        }
+
+        /// <summary>
         /// Update the interal algorithm time frontier.
         /// </summary>
         /// <remarks>For internal use only to advance time.</remarks>

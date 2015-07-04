@@ -72,15 +72,6 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Shortcut method for success check
-        /// </summary>
-        /// <returns></returns>
-        public bool IsProcessed
-        {
-            get { return Type == OrderResponseType.Processed; }
-        }
-
-        /// <summary>
         /// Set response to error state
         /// </summary>
         /// <param name="errorCode">Error code</param>
@@ -90,6 +81,16 @@ namespace QuantConnect.Orders
             this.Type = OrderResponseType.Error;
             this.ErrorCode = errorCode;
             this.ErrorMessage = errorMessage;
+        }
+
+        /// <summary>
+        /// Set response to processing state
+        /// </summary>
+        public void Processing()
+        {
+            this.Type = OrderResponseType.Processing;
+            this.ErrorCode = OrderResponseErrorCode.None;
+            this.ErrorMessage = "";
         }
 
         /// <summary>
@@ -113,12 +114,12 @@ namespace QuantConnect.Orders
 
         public static implicit operator int(OrderResponse response)
         {
-            if (response.Type == OrderResponseType.Processed)
+            if (response.IsError)
             {
-                return response.OrderId;
+                return (int)response.ErrorCode;
             }
 
-            return (int)response.ErrorCode;
+            return response.OrderId;
         }
     }
 }

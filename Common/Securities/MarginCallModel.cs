@@ -63,8 +63,11 @@ namespace QuantConnect.Securities
             foreach (var order in orderedByLosers)
             {
                 var response = Portfolio.Transactions.SubmitOrder(order);
-                Portfolio.Transactions.WaitForOrder(response.OrderId);
-                executedOrders.Add(Portfolio.Transactions.GetOrderById(response.OrderId));
+                if (!response.IsError)
+                {
+                    Portfolio.Transactions.WaitForOrder(response.OrderId);
+                    executedOrders.Add(Portfolio.Transactions.GetOrderById(response.OrderId));
+                }
 
                 // if our margin used is back under the portfolio value then we can stop liquidating
                 if (Portfolio.MarginRemaining >= 0)

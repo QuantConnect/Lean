@@ -254,6 +254,13 @@ namespace QuantConnect.Interfaces
         void OnOrderEvent(OrderEvent newEvent);
 
         /// <summary>
+        /// EXPERTS ONLY:: [-!-Async Code-!-]
+        /// Order response handler. Transaction manager updates from order request processing are passed to this method.
+        /// </summary>
+        /// <param name="orderResponse">Order request processing details.</param>
+        void OnOrderResponse(OrderResponse orderResponse);
+
+        /// <summary>
         /// Set the DateTime Frontier: This is the master time and is
         /// </summary>
         /// <param name="time"></param>

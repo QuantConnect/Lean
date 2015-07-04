@@ -27,11 +27,15 @@ namespace QuantConnect.Orders
         /// </summary>
         None,
         /// <summary>
-        /// Success
+        /// Transaction manager is processing the request
+        /// </summary>
+        Processing,
+        /// <summary>
+        /// Transaction manager processed the request
         /// </summary>
         Processed,
         /// <summary>
-        /// Failure
+        /// Error during submission or processing
         /// </summary>
         Error
     }

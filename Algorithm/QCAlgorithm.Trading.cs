@@ -176,7 +176,7 @@ namespace QuantConnect.Algorithm
 
             //Initalize the Market order parameters:
             var validationResponse = PreOrderChecks(symbol, quantity, OrderType.MarketOnOpen);
-            if (!validationResponse.IsProcessed)
+            if (validationResponse.IsError)
             {
                 return validationResponse;
             }
@@ -207,7 +207,7 @@ namespace QuantConnect.Algorithm
         public OrderResponse MarketOnOpenOrder(string symbol, int quantity, string tag = "")
         {
             var response = PreOrderChecks(symbol, quantity, OrderType.MarketOnOpen);
-            if (!response.IsProcessed)
+            if (response.IsError)
             {
                 return response;
             }
@@ -228,7 +228,7 @@ namespace QuantConnect.Algorithm
         public OrderResponse MarketOnCloseOrder(string symbol, int quantity, string tag = "")
         {
             var response = PreOrderChecks(symbol, quantity, OrderType.MarketOnClose);
-            if (!response.IsProcessed)
+            if (response.IsError)
             {
                 return response;
             }
@@ -250,7 +250,7 @@ namespace QuantConnect.Algorithm
         public OrderResponse LimitOrder(string symbol, int quantity, decimal limitPrice, string tag = "")
         {
             var response = PreOrderChecks(symbol, quantity, OrderType.Limit);
-            if (!response.IsProcessed)
+            if (response.IsError)
             {
                 return response;
             }
@@ -273,7 +273,7 @@ namespace QuantConnect.Algorithm
         public OrderResponse StopMarketOrder(string symbol, int quantity, decimal stopPrice, string tag = "")
         {
             var response = PreOrderChecks(symbol, quantity, OrderType.StopMarket);
-            if (!response.IsProcessed)
+            if (response.IsError)
             {
                 return response;
             }
@@ -297,7 +297,7 @@ namespace QuantConnect.Algorithm
         public OrderResponse StopLimitOrder(string symbol, int quantity, decimal stopPrice, decimal limitPrice, string tag = "")
         {
             var response = PreOrderChecks(symbol, quantity, OrderType.StopLimit);
-            if (!response.IsProcessed)
+            if (response.IsError)
             {
                 return response;
             }
@@ -490,7 +490,7 @@ namespace QuantConnect.Algorithm
 
                 //Liquidate at market price.
                 var orderResponse = Order(symbol, quantity);
-                if (orderResponse.IsProcessed)
+                if (!orderResponse.IsError)
                 {
                     orderIdList.Add(orderResponse.OrderId);
                 }

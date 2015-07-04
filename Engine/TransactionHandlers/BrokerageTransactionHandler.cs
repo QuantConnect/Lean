@@ -402,7 +402,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
                 finally
                 {
-                    _algorithm.Transactions.Process(response);
+                    _algorithm.OnOrderResponse(response);
                 }
             }
 
