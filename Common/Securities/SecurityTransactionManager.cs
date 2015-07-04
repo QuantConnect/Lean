@@ -108,7 +108,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="request">Order request</param>
         /// <returns>Order response. Check error for details.</returns>
-        public Task<OrderResponse> ProcessOrderRequest(OrderRequest request)
+        public OrderResponse ProcessOrderRequest(OrderRequest request)
         {
             var taskCompletion = new TaskCompletionSource<OrderResponse>();
 
@@ -177,14 +177,14 @@ namespace QuantConnect.Securities
             if (response.IsError)
             {
                 taskCompletion.TrySetResult(response);
-                return taskCompletion.Task;
+                return taskCompletion.Task.Result;
             }
 
             _orderResponseCompletions[request.Id] = taskCompletion;
 
             _orderProcessor.Process(request);
 
-            return taskCompletion.Task;
+            return taskCompletion.Task.Result;
         }
 
         /// <summary>
@@ -194,7 +194,7 @@ namespace QuantConnect.Securities
         /// <returns>OrderResponse. Check ErrorCode for details.</returns>
         public OrderResponse SubmitOrder(SubmitOrderRequest request)
         {
-            return ProcessOrderRequest(request).Result;
+            return ProcessOrderRequest(request);
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace QuantConnect.Securities
         /// </returns>
         public OrderResponse UpdateOrder(UpdateOrderRequest request)
         {
-            return ProcessOrderRequest(request).Result;
+            return ProcessOrderRequest(request);
         }
 
         /// <summary>
@@ -222,7 +222,7 @@ namespace QuantConnect.Securities
                 OrderId = orderId
             };
 
-            return ProcessOrderRequest(request).Result;
+            return ProcessOrderRequest(request);
         }
 
         /// <summary>
