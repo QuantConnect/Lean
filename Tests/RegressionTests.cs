@@ -76,6 +76,33 @@ namespace QuantConnect.Tests
         }
 
         [Test]
+        public void UpdateOrderAlgorithm()
+        {
+            AlgorithmRunner.RunLocalBacktest("UpdateOrderAlgorithm", new Dictionary<string, string>
+            {
+                {"Total Trades", "1"},
+                {"Average Win", "0.13%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "11.807%"},
+                {"Drawdown", "0.000%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "0.131%"},
+                {"Sharpe Ratio", "7.099"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "100%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0.025"},
+                {"Beta", "0.047"},
+                {"Annual Standard Deviation", "0.009"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "-4.349"},
+                {"Tracking Error", "0.183"},
+                {"Treynor Ratio", "1.396"},
+                {"Total Fees", "$6.00"}
+            });
+        }
+
+        [Test]
         public void BasicTemplateFillForwardAlgorithm()
         {
             AlgorithmRunner.RunLocalBacktest("BasicTemplateFillForwardAlgorithm", new Dictionary<string, string>
