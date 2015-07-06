@@ -161,8 +161,8 @@ namespace QuantConnect.Interfaces
         /// </summary>
         Exception RunTimeError
         {
-            get;
-            set;
+            get; 
+            set; 
         }
 
         /// <summary>
@@ -223,8 +223,8 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Margin call event handler. This method is called right before the margin call orders are placed in the market.
         /// </summary>
-        /// <param name="orders">The orders to be executed to bring this algorithm within margin limits</param>
-        void OnMarginCall(List<Order> orders);
+        /// <param name="orderRequests">The order submit requests to be executed to bring this algorithm within margin limits</param>
+        void OnMarginCall(List<SubmitOrderRequest> orderRequests);
 
         /// <summary>
         /// Margin call warning event handler. This method is called when Portoflio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue
@@ -252,6 +252,13 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="newEvent">Event information</param>
         void OnOrderEvent(OrderEvent newEvent);
+
+        /// <summary>
+        /// EXPERTS ONLY:: [-!-Async Code-!-]
+        /// Order response handler. Transaction manager updates from order request processing are passed to this method.
+        /// </summary>
+        /// <param name="orderResponse">Order request processing details.</param>
+        void OnOrderResponse(OrderResponse orderResponse);
 
         /// <summary>
         /// Set the DateTime Frontier: This is the master time and is
@@ -308,6 +315,16 @@ namespace QuantConnect.Interfaces
         void SetCash(string symbol, decimal startingCash, decimal conversionRate);
 
         /// <summary>
+        /// Send an order to the transaction manager.
+        /// </summary>
+        /// <param name="symbol">Symbol we want to purchase</param>
+        /// <param name="quantity">Quantity to buy, + is long, - short.</param>
+        /// <param name="asynchronous">Don't wait for the response, just submit order and move on.</param>
+        /// <param name="tag">Custom data for this order</param>
+        /// <returns>OrderResponse. Check Type and ErrorCode for details.</returns>
+        OrderResponse Order(string symbol, int quantity, bool asynchronous = false, string tag = "");
+
+        /// <summary>
         /// Liquidate your portfolio holdings:
         /// </summary>
         /// <param name="symbolToLiquidate">Specific asset to liquidate, defaults to all.</param>
@@ -340,5 +357,5 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <returns>Boolean quit flag</returns>
         bool GetQuit();
-    }
+}
 }

@@ -101,13 +101,13 @@ namespace QuantConnect.Algorithm.Examples
 
                     if (Convert.ToDouble(data.Open) >= highestNifty)
                     {
-                        int code = Order("NIFTY", quantity - Portfolio["NIFTY"].Quantity);
-                        Debug("LONG " + code + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + data.Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
+                        var response = Order("NIFTY", quantity - Portfolio["NIFTY"].Quantity);
+                        Debug("LONG " + response.OrderId + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + data.Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
                     }
                     else if (Convert.ToDouble(data.Open) <= lowestNifty)
                     {
-                        int code = Order("NIFTY", -quantity - Portfolio["NIFTY"].Quantity);
-                        Debug("SHORT " + code + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + data.Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
+                        var response = Order("NIFTY", -quantity - Portfolio["NIFTY"].Quantity);
+                        Debug("SHORT " + response.OrderId + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + data.Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
                     }
                 }
             }

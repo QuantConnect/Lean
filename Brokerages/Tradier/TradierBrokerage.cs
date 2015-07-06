@@ -1605,7 +1605,6 @@ namespace QuantConnect.Brokerages.Tradier
                 case OrderStatus.New:
                     return TradierOrderStatus.Pending;
 
-                case OrderStatus.Update:
                 case OrderStatus.Submitted:
                     return TradierOrderStatus.Submitted;
                     

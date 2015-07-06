@@ -47,12 +47,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         // pulled directly from the algorithm
 
         /// <summary>
-        /// OrderQueue holds the newly updated orders from the user algorithm waiting to be processed. Once
-        /// orders are processed they are moved into the Orders queue awaiting the brokerage response.
-        /// </summary>
-        private ConcurrentQueue<Order> _orderQueue;
-
-        /// <summary>
         /// The orders queue holds orders which are sent to exchange, partially filled, completely filled or cancelled.
         /// Once the transaction thread has worked on them they get put here while witing for fill updates.
         /// </summary>
@@ -60,6 +54,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private IResultHandler _resultHandler;
         private ManualResetEventSlim _processingCompletedEvent;
+
+        private ConcurrentQueue<OrderRequest> _orderRequestQueue;
+
+        private ConcurrentDictionary<int, bool> _cancelSubmitOrderIdLookup;
 
         /// <summary>
         /// Gets the permanent storage for all orders
@@ -96,6 +94,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _lastSyncTimeTicks = DateTime.Now.Ticks;
 
             _brokerage = brokerage;
+
             _brokerage.OrderStatusChanged += (sender, fill) =>
             {
                 HandleOrderEvent(fill);
@@ -117,7 +116,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // also save off the various order data structures locally
             _orders = new ConcurrentDictionary<int, Order>();
-            _orderQueue = new ConcurrentQueue<Order>();
+
+            _orderRequestQueue = new ConcurrentQueue<OrderRequest>();
+
+            _cancelSubmitOrderIdLookup = new ConcurrentDictionary<int, bool>();
 
             _processingCompletedEvent = new ManualResetEventSlim(true);
         }
@@ -140,9 +142,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// Adds the specified order to be processed
         /// </summary>
         /// <param name="order">The order to be processed</param>
-        public void Process(Order order)
+        public void Process(OrderRequest orderRequest)
         {
-            _orderQueue.Enqueue(order);
+            _orderRequestQueue.Enqueue(orderRequest);
         }
 
         /// <summary>
@@ -152,14 +154,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>The order with the specified id, or null if no match is found</returns>
         public Order GetOrderById(int orderId)
         {
-            // first check the order queue
-            var order = _orderQueue.FirstOrDefault(x => x.Id == orderId);
-            if (order == null)
-            {
-                // we couldn't find it in the queue, now check the dictionary
-                // we need to do it in this order since items move from the queue to the dictionary
-                _orders.TryGetValue(orderId, out order);
-            }
+            Order order = null;
+
+            _orders.TryGetValue(orderId, out order);
+
             return order;
         }
 
@@ -170,15 +168,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
         public Order GetOrderByBrokerageId(int brokerageId)
         {
-            // first check the order queue
-            var order = _orderQueue.FirstOrDefault(x => x.BrokerId.Contains(brokerageId));
-            if (order == null)
-            {
-                // we couldn't find it in the queue, now check the dictionary
-                // we need to do it in this order since items move from the queue to the dictionary
-                order = _orders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
-            }
-            return order;
+            return _orders.Where(x => x.Value.BrokerId.Contains(brokerageId)).Select(p => p.Value).FirstOrDefault();
         }
 
         /// <summary>
@@ -192,7 +182,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 return _orders.Select(x => x.Value).Where(filter);
             }
+
             return _orders.Select(x => x.Value);
+        }
+
+        /// <summary>
+        /// Check that all queues are empty
+        /// </summary>
+        public bool HasPendingItems
+        {
+            get
+            {
+                return !_orderRequestQueue.IsEmpty;
+            }
         }
 
         /// <summary>
@@ -204,52 +206,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 _processingCompletedEvent.Reset();
 
-                Order order;
-                if (!_orderQueue.TryDequeue(out order))
+                bool working = false;
+
+                if (HasPendingItems)
+                {
+                    working = ProcessOrderRequests();
+                }
+
+                if (working == false)
                 {
                     _processingCompletedEvent.Set();
 
-                    // if it's empty just sleep this thread for a little bit
                     Thread.Sleep(1);
                     continue;
-                }
-
-                // we should never encounter a hold order direction, since it is the uninitialized state
-                if (order.Direction == OrderDirection.Hold)
-                {
-                    Log.Error("BrokerageTransactionHandler.Run(): Encountered OrderDirection.Hold in OrderID: " + order.Id);
-                    
-                    // move all orders into permanent storage
-                    if (!_orders.TryAdd(order.Id, order))
-                    {
-                        Log.Error("BrokerageTransactionHandler.Run(): Unable to add order to permanent storage. OrderID: " + order.Id + " Status: " + order.Status);
-                    }
-                    continue;
-                }
-
-                // process the order properly depending on it's current status
-                switch (order.Status)
-                {
-                    case OrderStatus.New:
-                        HandleNewOrder(order); 
-                        break;
-
-                    case OrderStatus.Update:
-                        HandleUpdatedOrder(order);
-                        break;
-
-                    case OrderStatus.Canceled:
-                        HandleCancelledOrder(order);
-                        break;
-
-                    // we should not see orders with this status in the order queue
-                    case OrderStatus.None:
-                    case OrderStatus.Invalid:
-                    case OrderStatus.PartiallyFilled:
-                    case OrderStatus.Filled:
-                    case OrderStatus.Submitted:
-                        Log.Error("BrokerageTransactionHandler.Run(): Invalid order status found in order queue. OrderID: " + order.Id + " Status: " + order.Status);
-                        break;
                 }
 
                 ProcessAsynchronousEvents();
@@ -278,7 +247,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!_algorithm.LiveMode)
             {
                 var spinWait = new SpinWait();
-                while (!_orderQueue.IsEmpty)
+                while (HasPendingItems)
                 {
                     // spin wait until the queue is empty
                     spinWait.SpinOnce();
@@ -397,21 +366,134 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
+        /// Attempt to cancel submit request before it is processed
+        /// </summary>
+        /// <param name="orderId"></param>
+        /// <returns></returns>
+        public bool TryCancelSubmitRequest(int orderId)
+        {
+            _cancelSubmitOrderIdLookup[orderId] = true;
+
+            var result = _orderRequestQueue.Any(r => r is SubmitOrderRequest && r.OrderId == orderId);
+
+            if (result == false)
+            {
+                bool flag;
+
+                _cancelSubmitOrderIdLookup.TryRemove(orderId, out flag);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Process Order Request Queue
+        /// </summary>
+        /// <returns></returns>
+        private bool ProcessOrderRequests()
+        {
+            int remainingCount = _orderRequestQueue.Count;
+
+            if (remainingCount == 0)
+                return false;
+
+            while (remainingCount-- > 0)
+            {
+                OrderRequest orderRequest;
+
+                if (_orderRequestQueue.TryDequeue(out orderRequest) == false)
+                    break;
+
+                var response = new OrderResponse(orderRequest);
+                response.Error(OrderResponseErrorCode.ProcessingError, "Processing did not complete");
+
+                try
+                {
+                    HandleOrderRequest(orderRequest, response);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                }
+                finally
+                {
+                    try
+                    {
+                        _algorithm.OnOrderResponse(response);
+                    }
+                    catch (Exception err)
+                    {
+                        _algorithm.Error("Order Response Handler Error: " + err.Message);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Process an order request
+        /// </summary>
+        /// <param name="request">Order request</param>
+        /// <param name="response">Order response</param>
+        private void HandleOrderRequest(OrderRequest request, OrderResponse response)
+        {
+
+            if (request is SubmitOrderRequest)
+            {
+                HandleNewOrder((SubmitOrderRequest)request, response);
+            }
+            else if (request is UpdateOrderRequest)
+            {
+                HandleUpdatedOrder((UpdateOrderRequest)request, response);
+            }
+            else if (request is CancelOrderRequest)
+            {
+                HandleCancelledOrder((CancelOrderRequest)request, response);
+            }
+        }
+
+        /// <summary>
         /// New order handler
         /// </summary>
-        /// <param name="order">The new order</param>
-        private void HandleNewOrder(Order order)
+        /// <param name="request">Submit order request</param>
+        private void HandleNewOrder(SubmitOrderRequest request, OrderResponse response)
         {
-            if (_orders.TryAdd(order.Id, order))
-            {
-                // check to see if we have enough money to place the order
-                if (!_algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order))
-                {
-                    order.Status = OrderStatus.Invalid;
-                    _algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
-                    return;
-                }
+            var order = GetOrderById(request.OrderId);
 
+            if (order != null)
+            {
+                response.Error(OrderResponseErrorCode.OrderAlreadyExists, String.Format("Cannot process submit request because order with id [{0}] already exists", request.OrderId));
+                _algorithm.Error(response.ErrorMessage);
+                return;
+            }
+
+            order = Order.Create(request);
+            order.Status = OrderStatus.New;
+
+            _orders[order.Id] = order;
+
+            bool flag;
+
+            if (_cancelSubmitOrderIdLookup.TryRemove(request.OrderId, out flag) == true)
+            {
+                order.Status = OrderStatus.Canceled;
+
+                response.Error(OrderResponseErrorCode.RequestCanceled, "Submit request canceled");
+
+                return;
+            }
+
+            // check to see if we have enough money to place the order
+            if (!_algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order))
+            {
+                order.Status = OrderStatus.Invalid;
+
+                response.Error(OrderResponseErrorCode.InsufficientBuyingPower, string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
+                _algorithm.Error(response.ErrorMessage);
+            }
+            else
+            {
                 // verify that our current brokerage can actually take the order
                 BrokerageMessageEvent message;
                 if (!_algorithm.LiveMode && !_algorithm.BrokerageModel.CanSubmitOrder(_algorithm.Securities[order.Symbol], order, out message))
@@ -419,46 +501,67 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     // if we couldn't actually process the order, mark it as invalid and bail
                     order.Status = OrderStatus.Invalid;
                     if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrder", "BrokerageModel declared unable to submit order: " + order.Id);
-                    _algorithm.Error("OrderID: " + message);
-                    return;
-                }
 
-                // set the order status based on whether or not we successfully submitted the order to the market
-                if (_brokerage.PlaceOrder(order))
+                    response.Error(OrderResponseErrorCode.BrokerageModelRefusedToSubmitOrder, "OrderID:" + message);
+                    _algorithm.Error(response.ErrorMessage);
+                }
+                else if (_brokerage.PlaceOrder(order))
                 {
+                    response.Processed();
+
                     order.Status = OrderStatus.Submitted;
                 }
                 else
                 {
                     order.Status = OrderStatus.Invalid;
-                    _algorithm.Error("Brokerage failed to place order: " + order.Id);
+
+                    response.Error(OrderResponseErrorCode.BrokerageFailedToSubmitOrder, "Brokerage failed to place order: " + order.Id);
+                    _algorithm.Error(response.ErrorMessage);
                 }
-            }
-            else
-            {
-                Log.Error("BrokerageTransactionHandler.HandleNewOrder(): Unable to add new order, order not processed.");
             }
         }
 
         /// <summary>
         /// Update order handler
         /// </summary>
-        /// <param name="order">The updated order</param>
-        private void HandleUpdatedOrder(Order order)
+        /// <param name="request">The update order request</param>
+        private void HandleUpdatedOrder(UpdateOrderRequest request, OrderResponse response)
         {
-            Order queued;
-            if (_orders.TryGetValue(order.Id, out queued) && CanUpdateOrder(queued)) // cant update filled or canceled orders
+            Order order = GetOrderById(request.OrderId);
+
+            if (order == null)
             {
-                _orders[order.Id] = order;
-                if (!_brokerage.UpdateOrder(order))
-                {
-                    // we failed to update the order for some reason
-                    order.Status = OrderStatus.Invalid;
-                }
+                response.Error(OrderResponseErrorCode.UnableToFindOrder, String.Format("Missing order [{0}]", request.OrderId));
+            }
+            else if (order.Status != OrderStatus.Submitted)
+            {
+                response.Error(OrderResponseErrorCode.InvalidOrderStatus, String.Format("Invalid order status: {0}", order.Status));
             }
             else
             {
-                Log.Error("BrokerageTransactionHandler.HandleUpdatedOrder(): Unable to update order with ID " + order.Id + ".");
+                var updatedOrder = order.Clone();
+                updatedOrder.ApplyUpdate(request);
+
+                if (!_algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, updatedOrder))
+                {
+                    response.Error(OrderResponseErrorCode.InsufficientBuyingPower, string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
+                    _algorithm.Error(response.ErrorMessage);
+                }
+                else if (CanUpdateOrder(updatedOrder) == false)
+                {
+                    response.Error(OrderResponseErrorCode.BrokerageHandlerRefusedToUpdateOrder, "Unable to update order with ID " + order.Id + ".");
+                    Log.Error("BrokerageTransactionHandler.HandleUpdatedOrder(): " + response.ErrorMessage);
+                }
+                else if (!_brokerage.UpdateOrder(updatedOrder))
+                {
+                    response.Error(OrderResponseErrorCode.BrokerageFailedToUpdateOrder);
+                }
+                else
+                {
+                    response.Processed();
+
+                    _orders[updatedOrder.Id] = updatedOrder;
+                }
             }
         }
 
@@ -478,30 +581,46 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Cancel order handler
         /// </summary>
-        /// <param name="order">The cancelled order</param>
-        private void HandleCancelledOrder(Order order)
+        /// <param name="request">Cancel order request</param>
+        private void HandleCancelledOrder(CancelOrderRequest request, OrderResponse response)
         {
-            Order queued;
-            if (_orders.TryGetValue(order.Id, out queued) && (queued.Status == OrderStatus.Submitted)) //partially filled?
+            Order order = GetOrderById(request.OrderId);
+            if (order != null)
             {
-                _orders[order.Id] = order;
 
-                if (!_brokerage.CancelOrder(order))
+                if (order.Status == OrderStatus.Submitted) //partially filled?
                 {
-                    // we failed to cancel the order for some reason
-                    order.Status = OrderStatus.Invalid;
+                    order.Status = OrderStatus.Canceled;
+
+                    if (!_brokerage.CancelOrder(order))
+                    {
+                        // we failed to cancel the order for some reason
+
+                        response.Error(OrderResponseErrorCode.BrokerageFailedToCancelOrder);
+
+                        order.Status = OrderStatus.Invalid;
+                    }
+                    else
+                    {
+                        response.Processed();
+                    }
+                }
+                else
+                {
+                    response.Error(OrderResponseErrorCode.InvalidOrderStatus, String.Format("Cannot cancel order [{0}] with status: {1}", order.Id, order.Status));
+                    Log.Error("BrokerageTransactionHandler.HandleCancelledOrder(): Unable to cancel order with ID " + order.Id + ".");
                 }
             }
             else
             {
-                Log.Error("BrokerageTransactionHandler.HandleCancelledOrder(): Unable to cancel order with ID " + order.Id + ".");
+                response.Error(OrderResponseErrorCode.UnableToFindOrder, String.Format("Missing order [{0}]", request.OrderId));
             }
         }
 
         private void HandleOrderEvent(OrderEvent fill)
         {
             // update the order status
-            var order = _algorithm.Transactions.GetOrderById(fill.OrderId);
+            var order = GetOrderById(fill.OrderId);
             if (order == null)
             {
                 Log.Error("BrokerageTransactionHandler.HandleOrderEvnt(): Unable to locate Order with id " + fill.OrderId);

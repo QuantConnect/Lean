@@ -18,10 +18,11 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 
-namespace QuantConnect.Securities 
+namespace QuantConnect.Securities
 {
     /// <summary>
     /// Algorithm Transactions Manager - Recording Transactions
@@ -34,8 +35,9 @@ namespace QuantConnect.Securities
         private const int _minimumOrderQuantity = 1;
 
         private IOrderProcessor _orderProcessor;
+
         private Dictionary<DateTime, decimal> _transactionRecord;
-        
+
         /// <summary>
         /// Initialise the transaction manager for holding and processing orders.
         /// </summary>
@@ -67,9 +69,9 @@ namespace QuantConnect.Securities
         /// Configurable minimum order value to ignore bad orders, or orders with unrealistic sizes
         /// </summary>
         /// <remarks>Default minimum order size is $0 value</remarks>
-        public decimal MinimumOrderSize 
+        public decimal MinimumOrderSize
         {
-            get 
+            get
             {
                 return _minimumOrderSize;
             }
@@ -79,9 +81,9 @@ namespace QuantConnect.Securities
         /// Configurable minimum order size to ignore bad orders, or orders with unrealistic sizes
         /// </summary>
         /// <remarks>Default minimum order size is 0 shares</remarks>
-        public int MinimumOrderQuantity 
+        public int MinimumOrderQuantity
         {
-            get 
+            get
             {
                 return _minimumOrderQuantity;
             }
@@ -99,119 +101,132 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Add an order to collection and return the unique order id or negative if an error.
+        /// Main entry for order requests. All requests are guaranteed a response.
         /// </summary>
-        /// <param name="order">New order object to add to processing list</param>
-        /// <returns>New unique, increasing orderid</returns>
-        public virtual int AddOrder(Order order) 
+        /// <param name="request">Order request</param>
+        /// <returns>Order response. Check error for details.</returns>
+        public OrderResponse ProcessOrderRequest(OrderRequest request)
         {
-            try
-            {
-                //Ensure its flagged as a new order for the transaction handler.
-                order.Id = _orderId++;
-                order.Status = OrderStatus.New;
+            var taskCompletion = new TaskCompletionSource<OrderResponse>();
 
-                // send the order to be processed
-                _orderProcessor.Process(order);
-            }
-            catch (Exception err)
+            var response = new OrderResponse(request);
+
+            if (response.IsError == false)
             {
-                Log.Error("Algorithm.Transaction.AddOrder(): " + err.Message);
+                if (request is UpdateOrderRequest)
+                {
+                    var updateRequest = (UpdateOrderRequest)request;
+
+                    var order = GetOrderById(updateRequest.OrderId);
+
+                    if (order == null)
+                    {
+                        response.Error(OrderResponseErrorCode.UnableToFindOrder);
+                    }
+                    else if (updateRequest.Quantity == 0)
+                    {
+                        response.Error(OrderResponseErrorCode.OrderQuantityZero);
+                    }
+                    else
+                    {
+                        updateRequest.Created = _securities[order.Symbol].Time;
+                    }
+
+                }
+                else if (request is SubmitOrderRequest)
+                {
+                    var submitRequest = (SubmitOrderRequest)request;
+
+                    if (submitRequest.Quantity == 0)
+                    {
+                        response.Error(OrderResponseErrorCode.OrderQuantityZero);
+                    }
+                    else
+                    {
+                        submitRequest.OrderId = _orderId++;
+                        response.OrderId = submitRequest.OrderId;
+                        submitRequest.Created = _securities[submitRequest.Symbol].Time;
+                    }
+                }
+                else if (request is CancelOrderRequest)
+                {
+                    if (_orderProcessor.TryCancelSubmitRequest(request.OrderId))
+                    {
+                        response.Processed();
+                    }
+                    else
+                    {
+                        var order = GetOrderById(request.OrderId);
+
+                        if (order == null)
+                        {
+                            response.Error(OrderResponseErrorCode.UnableToFindOrder);
+                        }
+                        else if (order.Status.IsOpen() == false)
+                        {
+                            response.Error(OrderResponseErrorCode.InvalidOrderStatus);
+                        }
+                        else
+                        {
+                            request.Created = _securities[order.Symbol].Time;
+                        }
+                    }
+                }
+                else
+                {
+                    response.Error(OrderResponseErrorCode.UnsupportedRequestType);
+                }
+
             }
-            return order.Id;
+
+            if (response.IsError || response.Type == OrderResponseType.Processed)
+            {
+                return response;
+            }
+
+            response.Processing();
+
+            _orderProcessor.Process(request);
+
+            return response;
+        }
+
+        /// <summary>
+        /// Add submit order request to queue and return the unique order id or negative if an error.
+        /// </summary>
+        /// <param name="request">Submit order request to add to processing list</param>
+        /// <returns>OrderResponse. Check ErrorCode for details.</returns>
+        public OrderResponse SubmitOrder(SubmitOrderRequest request)
+        {
+            return ProcessOrderRequest(request);
         }
 
         /// <summary>
         /// Update an order yet to be filled such as stop or limit orders.
         /// </summary>
-        /// <param name="order">Order to Update</param>
+        /// <param name="request">Order to Update</param>
         /// <remarks>Does not apply if the order is already fully filled</remarks>
         /// <returns>
-        ///     Id of the order we modified or 
-        ///     -5 if the order was already filled or cancelled
-        ///     -6 if the order was not found in the cache
+        ///     OrderResponse. Check ErrorCode for details.
         /// </returns>
-        public int UpdateOrder(Order order)
+        public OrderResponse UpdateOrder(UpdateOrderRequest request)
         {
-            try
-            {
-                //Update the order from the behaviour
-                var id = order.Id;
-                order.Time = _securities[order.Symbol].Time;
-
-                //Validate order:
-                if (order.Quantity == 0) return -1;
-
-                var cachedOrder = GetOrderById(id);
-                if (cachedOrder != null)
-                {
-                    //-> If its already filled return false; can't be updated
-                    if (cachedOrder.Status == OrderStatus.Filled || cachedOrder.Status == OrderStatus.Canceled)
-                    {
-                        return -5;
-                    }
-
-                    //Flag the order to be resubmitted.
-                    order.Status = OrderStatus.Update;
-
-                    // send the order to be processed
-                    _orderProcessor.Process(order);
-                } 
-                else 
-                {
-                    //-> Its not in the orders cache, shouldn't get here
-                    return -6;
-                }
-            } 
-            catch (Exception err) 
-            {
-                Log.Error("Algorithm.Transactions.UpdateOrder(): " + err.Message);
-                return -7;
-            }
-            return 0;
+            return ProcessOrderRequest(request);
         }
 
         /// <summary>
-        /// Added alias for RemoveOrder - 
+        /// Cancel Order
         /// </summary>
         /// <param name="orderId">Order id we wish to cancel</param>
-        public virtual void CancelOrder(int orderId)
+        public OrderResponse CancelOrder(int orderId)
         {
-            RemoveOrder(orderId);
-        }
-
-        /// <summary>
-        /// Remove this order from outstanding queue: user is requesting a cancel.
-        /// </summary>
-        /// <param name="orderId">Specific order id to remove</param>
-        public virtual void RemoveOrder(int orderId) 
-        {
-            try
+            var request = new CancelOrderRequest
             {
-                //Error check
-                var order = GetOrderById(orderId);
-                if (order == null) 
-                {
-                    Log.Error("Security.TransactionManager.RemoveOutstandingOrder(): Cannot find this id.");
-                    return;
-                }
+                Id = Guid.NewGuid(),
+                OrderId = orderId
+            };
 
-                if (order.Status != OrderStatus.Submitted && order.Type != OrderType.Market) 
-                {
-                    Log.Error("Security.TransactionManager.RemoveOutstandingOrder(): Order already filled");
-                    return;
-                }
-
-                //Update the status of the order
-                order.Status = OrderStatus.Canceled;
-
-                // send the order to be processed
-                _orderProcessor.Process(order);
-            }
-            catch (Exception err)
-            {
-                Log.Error("TransactionManager.RemoveOrder(): " + err.Message);
-            }
+            return ProcessOrderRequest(request);
         }
 
         /// <summary>
@@ -221,7 +236,7 @@ namespace QuantConnect.Securities
         public void WaitForOrder(int orderId)
         {
             // wait for the processor to finish processing his orders
-            while(true)
+            while (true)
             {
                 var order = GetOrderById(orderId);
                 if (order == null || !Completed(order))
@@ -294,7 +309,7 @@ namespace QuantConnect.Securities
         public bool GetSufficientCapitalForOrder(SecurityPortfolioManager portfolio, Order order)
         {
             var security = _securities[order.Symbol];
-            
+
             var freeMargin = security.MarginModel.GetMarginRemaining(portfolio, security, order.Direction);
             var initialMarginRequiredForOrder = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
             if (Math.Abs(initialMarginRequiredForOrder) > freeMargin)

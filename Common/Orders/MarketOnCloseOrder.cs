@@ -31,6 +31,48 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Create update request for pending orders. Null values will be ignored.
+        /// </summary>
+        public UpdateOrderRequest CreateUpdateRequest(int? quantity = null, string tag = null)
+        {
+            return new UpdateOrderRequest
+            {
+                Id = Guid.NewGuid(),
+                OrderId = Id,
+                Created = DateTime.Now,
+                Quantity = quantity ?? Quantity,
+                Tag = tag ?? Tag
+            };
+        }
+
+        /// <summary>
+        /// Create submit request.
+        /// </summary>
+        public static SubmitOrderRequest CreateSubmitRequest(SecurityType securityType, string symbol, int quantity, DateTime time, string tag = null)
+        {
+            return new SubmitOrderRequest
+            {
+                Id = Guid.NewGuid(),
+                Symbol = symbol,
+                Quantity = quantity,
+                Tag = tag,
+                SecurityType = securityType,
+                Created = time,
+                Type = OrderType.MarketOnClose
+            };
+        }
+
+        /// <summary>
+        /// Copy order before submitting to broker for update.
+        /// </summary>
+        public override Order Clone()
+        {
+            var target = new MarketOnCloseOrder();
+            CopyTo(target);
+
+            return target;
+        }
+        /// <summary>
         /// Intiializes a new instance of the <see cref="MarketOnCloseOrder"/> class.
         /// </summary>
         public MarketOnCloseOrder()
@@ -51,5 +93,12 @@ namespace QuantConnect.Orders
             : base(symbol, quantity, OrderType.MarketOnClose, time, marketPrice, tag, type)
         {
         }
+
+        /// <summary>
+        /// Intiializes a new instance of the <see cref="MarketOnCloseOrder"/> class.
+        /// </summary>
+        /// <param name="request">Submit order request.</param>
+        public MarketOnCloseOrder(SubmitOrderRequest request)
+            : base(request) { }
     }
 }

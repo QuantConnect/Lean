@@ -58,16 +58,16 @@ namespace QuantConnect.Algorithm.Examples
         /// <summary>
         /// Margin call event handler. This method is called right before the margin call orders are placed in the market.
         /// </summary>
-        /// <param name="orders">The orders to be executed to bring this algorithm within margin limits</param>
-        public override void OnMarginCall(List<Order> orders)
+        /// <param name="orderRequests">The submit order requests to be executed to bring this algorithm within margin limits</param>
+        public override void OnMarginCall(List<SubmitOrderRequest> orderRequests)
         {
             // this code gets called BEFORE the orders are placed, so we can try to liquidate some of our positions
             // before we get the margin call orders executed. We could also modify these orders by changing their
             // quantities
-            foreach (var order in orders)
+            foreach (var request in orderRequests)
             {
                 // liquidate an extra 10% each time we get a margin call to give us more padding
-                order.Quantity = (int)(Math.Sign(order.Quantity) * order.AbsoluteQuantity * 1.1m);
+                request.Quantity = (int)(request.Quantity * 1.1m);
             }
         }
 

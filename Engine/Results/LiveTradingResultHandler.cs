@@ -381,8 +381,8 @@ namespace QuantConnect.Lean.Engine.Results
                             chartComplete = new Dictionary<string, Chart>(Charts);
                         }
                         var orders = new Dictionary<int, Order>(_transactionHandler.Orders);
-                        var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, orders, _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
-                        StoreResult(complete);
+                            var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, orders, _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
+                            StoreResult(complete);
                         Log.Trace("LiveTradingResultHandler.Update(): End-store result");
                     }
 

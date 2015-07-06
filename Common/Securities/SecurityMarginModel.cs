@@ -170,12 +170,12 @@ namespace QuantConnect.Securities
         /// <param name="netLiquidationValue">The net liquidation value for the entire account</param>
         /// <param name="totalMargin">The total margin used by the account in units of base currency</param>
         /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
-        public virtual Order GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin)
+        public virtual SubmitOrderRequest GenerateMarginCallSubmitOrderRequest(Security security, decimal netLiquidationValue, decimal totalMargin)
         {
             // leave a buffer in default implementation
             const decimal marginBuffer = 0.10m;
 
-            if (totalMargin <= netLiquidationValue*(1 + marginBuffer))
+            if (totalMargin <= netLiquidationValue * (1 + marginBuffer))
             {
                 return null;
             }
@@ -187,9 +187,9 @@ namespace QuantConnect.Securities
 
             // compute the value we need to liquidate in order to get within margin requirements
             decimal delta = totalMargin - netLiquidationValue;
-            
+
             // compute the number of shares required for the order, rounding up
-            int quantity = (int) (Math.Round(delta/security.Price, MidpointRounding.AwayFromZero) / MaintenanceMarginRequirement);
+            int quantity = (int)(Math.Round(delta / security.Price, MidpointRounding.AwayFromZero) / MaintenanceMarginRequirement);
 
             // don't try and liquidate more share than we currently hold, minimum value of 1, maximum value for absolute quantity
             quantity = Math.Max(1, Math.Min((int)security.Holdings.AbsoluteQuantity, quantity));
@@ -199,7 +199,7 @@ namespace QuantConnect.Securities
                 quantity *= -1;
             }
 
-            return new MarketOrder(security.Symbol, quantity, security.Time, "Margin Call", security.Type);
+            return MarketOrder.CreateSubmitRequest(security.Type, security.Symbol, quantity, security.Time, tag: "Margin Call");
         }
     }
 }

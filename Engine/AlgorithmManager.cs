@@ -270,13 +270,13 @@ namespace QuantConnect.Lean.Engine
                 {
                     // determine if there are possible margin call orders to be executed
                     bool issueMarginCallWarning;
-                    var marginCallOrders = algorithm.Portfolio.ScanForMarginCall(out issueMarginCallWarning);
-                    if (marginCallOrders.Count != 0)
+                    var marginCallSubmitOrderRequests = algorithm.Portfolio.ScanForMarginCall(out issueMarginCallWarning);
+                    if (marginCallSubmitOrderRequests.Count != 0)
                     {
                         try
                         {
                             // tell the algorithm we're about to issue the margin call
-                            algorithm.OnMarginCall(marginCallOrders);
+                            algorithm.OnMarginCall(marginCallSubmitOrderRequests);
                         }
                         catch (Exception err)
                         {
@@ -287,7 +287,7 @@ namespace QuantConnect.Lean.Engine
                         }
 
                         // execute the margin call orders
-                        var executedOrders = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
+                        var executedOrders = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallSubmitOrderRequests);
                         foreach (var order in executedOrders)
                         {
                             algorithm.Error(string.Format("{0} - Executed MarginCallOrder: {1} - Quantity: {2} @ {3}", algorithm.Time, order.Symbol, order.Quantity, order.Price));
@@ -505,6 +505,8 @@ namespace QuantConnect.Lean.Engine
                 return;
             }
 
+            transactions.ProcessSynchronousEvents();
+
             // Process any required events of the results handler such as sampling assets, equity, or stock prices.
             results.ProcessSynchronousEvents(forceProcess: true);
 
@@ -521,6 +523,11 @@ namespace QuantConnect.Lean.Engine
 
                 Log.Trace("AlgorithmManager.Run(): Liquidating algorithm holdings...");
                 algorithm.Liquidate();
+
+                // wait for backtester to process liquidation events
+                transactions.ProcessSynchronousEvents();
+                results.ProcessSynchronousEvents(forceProcess: true);
+
                 results.LogMessage("Algorithm Liquidated");
                 results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Liquidated);
             }

@@ -46,6 +46,67 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Create update request for pending orders. Null values will be ignored.
+        /// </summary>
+        public UpdateOrderRequest CreateUpdateRequest(int? quantity = null, decimal? stopPrice = null, decimal? limitPrice = null, string tag = null)
+        {
+            return new UpdateOrderRequest
+            {
+                Id = Guid.NewGuid(),
+                OrderId = Id,
+                Created = DateTime.Now,
+                Quantity = quantity ?? Quantity,
+                LimitPrice = limitPrice ?? LimitPrice,
+                StopPrice = stopPrice ?? StopPrice,
+                Tag = tag ?? Tag
+            };
+        }
+
+        /// <summary>
+        /// Apply changes after the update request is processed.
+        /// </summary>
+        public override void ApplyUpdate(UpdateOrderRequest request)
+        {
+            base.ApplyUpdate(request);
+
+            LimitPrice = request.LimitPrice;
+            StopPrice = request.StopPrice;
+        }
+
+        /// <summary>
+        /// Create submit request.
+        /// </summary>
+        public static SubmitOrderRequest CreateSubmitRequest(SecurityType securityType, string symbol, int quantity, DateTime time, decimal stopPrice, decimal limitPrice, string tag = null)
+        {
+            return new SubmitOrderRequest
+            {
+                Id = Guid.NewGuid(),
+                Symbol = symbol,
+                Quantity = quantity,
+                Tag = tag,
+                SecurityType = securityType,
+                Created = time,
+                StopPrice = stopPrice,
+                LimitPrice = limitPrice,
+                Type = OrderType.StopLimit
+            };
+        }
+
+        /// <summary>
+        /// Copy order before submitting to broker for update.
+        /// </summary>
+        public override Order Clone()
+        {
+            var target = new StopLimitOrder();
+            CopyTo(target);
+            target.StopPrice = StopPrice;
+            target.LimitPrice = LimitPrice;
+            target.StopTriggered = StopTriggered;
+
+            return target;
+        }
+
+        /// <summary>
         /// Default constructor for JSON Deserialization:
         /// </summary>
         public StopLimitOrder()
@@ -73,6 +134,23 @@ namespace QuantConnect.Orders
             {
                 //Default tag values to display stop price in GUI.
                 Tag = "Stop Price: " + stopPrice.ToString("C") + " Limit Price: " + limitPrice.ToString("C");
+            }
+        }
+
+        /// <summary>
+        /// Intiializes a new instance of the <see cref="StopLimitOrder"/> class.
+        /// </summary>
+        /// <param name="request">Submit order request.</param>
+        public StopLimitOrder(SubmitOrderRequest request) :
+            base(request)
+        {
+            StopPrice = request.StopPrice;
+            LimitPrice = request.LimitPrice;
+
+            if (Tag == "")
+            {
+                //Default tag values to display stop price in GUI.
+                Tag = "Stop Price: " + StopPrice.ToString("C") + " Limit Price: " + LimitPrice.ToString("C");
             }
         }
 

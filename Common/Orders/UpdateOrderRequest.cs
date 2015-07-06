@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,32 +13,43 @@
  * limitations under the License.
 */
 
-using System.Threading;
-using QuantConnect.Orders;
+using System;
 
-namespace QuantConnect.Securities
+namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Represents a type capable of processing orders
+    /// Request to update pending orders.
     /// </summary>
-    public interface IOrderProcessor : IOrderProvider
+    public class UpdateOrderRequest :
+        OrderRequest
     {
         /// <summary>
-        /// Reset event that signals when this order processor is not busy processing orders
+        /// Limit Price of the Limit and StopLimit Orders.
         /// </summary>
-        ManualResetEventSlim ProcessingCompletedEvent { get; }
+        public decimal LimitPrice;
 
         /// <summary>
-        /// Adds an order request 
+        /// Stop Price of the StopLimit and StopMarket Orders.
         /// </summary>
-        /// <param name="orderRequest">The order request to be processed</param>
-        void Process(OrderRequest orderRequest);
+        public decimal StopPrice;
 
         /// <summary>
-        /// Attempts to remove submit request from request queue
+        /// Number of shares to execute.
         /// </summary>
-        /// <param name="orderId">OrderId of submit request</param>
-        /// <returns>True if cancel succeeded</returns>
-        bool TryCancelSubmitRequest(int orderId);
+        public int Quantity;
+
+        /// <summary>
+        /// Tag the order with some custom data
+        /// </summary>
+        public string Tag;
+
+        /// <summary>
+        /// Update request description
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return string.Format("[{0}] Request to update order [{1}] Quantity: {2} LimitPrice: {3} StopPrice: {4} Tag: {5}", Id, OrderId, Quantity, LimitPrice, StopPrice, Tag);
+        }
     }
 }

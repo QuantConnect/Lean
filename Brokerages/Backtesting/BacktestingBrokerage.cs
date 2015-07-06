@@ -129,7 +129,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            if (order.Status == OrderStatus.Update)
+            if (order.Status == OrderStatus.Submitted)
             {
                 lock (_needsScanLock)
                 {
@@ -139,7 +139,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
 
                 // fire off the event that says this order has been updated
-                var updated = new OrderEvent(order) {Status = OrderStatus.Update};
+                var updated = new OrderEvent(order) {Status = OrderStatus.Submitted};
                 OnOrderEvent(updated);
 
                 return true;

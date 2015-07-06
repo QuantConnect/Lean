@@ -142,15 +142,15 @@ namespace QuantConnect.Orders
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
         /// <param name="type">Type of the security order</param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
-        /// <param name="order">Order type (market, limit or stoploss order)</param>
+        /// <param name="orderType">Order type (market, limit or stoploss order)</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="price">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        protected Order(string symbol, int quantity, OrderType order, DateTime time, decimal price = 0, string tag = "", SecurityType type = SecurityType.Base)
+        protected Order(string symbol, int quantity, OrderType orderType, DateTime time, decimal price = 0, string tag = "", SecurityType type = SecurityType.Base)
         {
             Time = time;
             Price = price;
-            Type = order;
+            Type = orderType;
             Quantity = quantity;
             Symbol = symbol;
             Status = OrderStatus.None;
@@ -159,6 +159,24 @@ namespace QuantConnect.Orders
             Duration = OrderDuration.GTC;
             BrokerId = new List<long>();
             ContingentId = 0;
+        }
+
+        /// <summary>
+        /// New order constructor
+        /// </summary>
+        /// <param name="request">Submit order request</param>
+        protected Order(SubmitOrderRequest request)
+            : this(
+            request.Symbol,
+            request.Quantity,
+            request.Type,
+            request.Created,
+            request.Price,
+            request.Tag,
+            request.SecurityType) 
+        {
+
+                Id = request.OrderId;
         }
 
         /// <summary>
@@ -184,6 +202,83 @@ namespace QuantConnect.Orders
             Duration = OrderDuration.GTC;
             BrokerId = new List<long>();
             ContingentId = 0;
+        }
+
+        /// <summary>
+        /// Create cancel request.
+        /// </summary>
+        /// <returns></returns>
+        public CancelOrderRequest CreateCancelRequest()
+        {
+            return new CancelOrderRequest
+            {
+                Id = Guid.NewGuid(),
+                OrderId = Id,
+                Created = DateTime.Now
+            };
+        }
+
+        /// <summary>
+        /// Factory method to create a new order from submit request.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static Order Create(SubmitOrderRequest source)
+        {
+            switch (source.Type)
+            {
+                case OrderType.Limit:
+                    return new LimitOrder(source);
+                case OrderType.Market:
+                    return new MarketOrder(source);
+                case OrderType.MarketOnClose:
+                    return new MarketOnCloseOrder(source);
+                case OrderType.MarketOnOpen:
+                    return new MarketOnOpenOrder(source);
+                case OrderType.StopLimit:
+                    return new StopLimitOrder(source);
+                case OrderType.StopMarket:
+                    return new StopMarketOrder(source);
+                default:
+                    throw new NotSupportedException(string.Format("{0} OrderType is not supported.", source.Type));
+            }
+        }
+
+        /// <summary>
+        /// Apply update to the order.
+        /// </summary>
+        /// <param name="request"></param>
+        public virtual void ApplyUpdate(UpdateOrderRequest request)
+        {
+            this.Time = request.Created;
+            Quantity = request.Quantity;
+            Tag = request.Tag;
+        }
+
+        /// <summary>
+        /// Copy order for update operations and messaging.
+        /// </summary>
+        /// <returns></returns>
+        public abstract Order Clone();
+
+        /// <summary>
+        /// Base copy method.
+        /// </summary>
+        /// <param name="target"></param>
+        protected void CopyTo(Order target)
+        {
+            target.BrokerId = new List<long>(BrokerId);
+            target.ContingentId = ContingentId;
+            target.Duration = Duration;
+            target.Id = Id;
+            target.Price = Price;
+            target.Quantity = Quantity;
+            target.SecurityType = SecurityType;
+            target.Status = Status;
+            target.Symbol = Symbol;
+            target.Tag = Tag;
+            target.Time = Time;
+            target.Type = Type;
         }
 
         /// <summary>

@@ -378,8 +378,8 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Margin call event handler. This method is called right before the margin call orders are placed in the market.
         /// </summary>
-        /// <param name="orders">The orders to be executed to bring this algorithm within margin limits</param>
-        public virtual void OnMarginCall(List<Order> orders)
+        /// <param name="orderRequests">The submit order requests to be executed to bring this algorithm within margin limits</param>
+        public virtual void OnMarginCall(List<SubmitOrderRequest> orderRequests)
         {
         }
 
@@ -424,6 +424,16 @@ namespace QuantConnect.Algorithm
         public virtual void OnOrderEvent(OrderEvent orderEvent)
         {
    
+        }
+
+        /// <summary>
+        /// Order response handler. Transaction manager updates from order request processing are passed to this method.
+        /// </summary>
+        /// <param name="orderResponse">Order request processing details.</param>
+        /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
+        public virtual void OnOrderResponse(OrderResponse orderResponse)
+        {
+
         }
 
         /// <summary>
