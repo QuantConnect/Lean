@@ -150,19 +150,26 @@ namespace QuantConnect.Securities
                 }
                 else if (request is CancelOrderRequest)
                 {
-                    var order = GetOrderById(request.OrderId);
-
-                    if (order == null)
+                    if (_orderProcessor.TryCancelSubmitRequest(request.OrderId))
                     {
-                        response.Error(OrderResponseErrorCode.UnableToFindOrder);
-                    }
-                    else if (order.Status.IsOpen() == false)
-                    {
-                        response.Error(OrderResponseErrorCode.InvalidOrderStatus);
+                        response.Processed();
                     }
                     else
                     {
-                        request.Created = _securities[order.Symbol].Time;
+                        var order = GetOrderById(request.OrderId);
+
+                        if (order == null)
+                        {
+                            response.Error(OrderResponseErrorCode.UnableToFindOrder);
+                        }
+                        else if (order.Status.IsOpen() == false)
+                        {
+                            response.Error(OrderResponseErrorCode.InvalidOrderStatus);
+                        }
+                        else
+                        {
+                            request.Created = _securities[order.Symbol].Time;
+                        }
                     }
                 }
                 else
@@ -172,7 +179,7 @@ namespace QuantConnect.Securities
 
             }
 
-            if (response.IsError)
+            if (response.IsError || response.Type == OrderResponseType.Processed)
             {
                 return response;
             }

@@ -33,5 +33,12 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="orderRequest">The order request to be processed</param>
         void Process(OrderRequest orderRequest);
+
+        /// <summary>
+        /// Attempts to remove submit request from request queue
+        /// </summary>
+        /// <param name="orderId">OrderId of submit request</param>
+        /// <returns>True if cancel succeeded</returns>
+        bool TryCancelSubmitRequest(int orderId);
     }
 }

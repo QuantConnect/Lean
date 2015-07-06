@@ -56,6 +56,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private ManualResetEventSlim _processingCompletedEvent;
 
         private ConcurrentQueue<OrderRequest> _orderRequestQueue;
+
+        private ConcurrentDictionary<int, bool> _cancelSubmitOrderIdLookup;
+
         /// <summary>
         /// Gets the permanent storage for all orders
         /// </summary>
@@ -115,6 +118,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _orders = new ConcurrentDictionary<int, Order>();
 
             _orderRequestQueue = new ConcurrentQueue<OrderRequest>();
+
+            _cancelSubmitOrderIdLookup = new ConcurrentDictionary<int, bool>();
 
             _processingCompletedEvent = new ManualResetEventSlim(true);
         }
@@ -361,6 +366,27 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
+        /// Attempt to cancel submit request before it is processed
+        /// </summary>
+        /// <param name="orderId"></param>
+        /// <returns></returns>
+        public bool TryCancelSubmitRequest(int orderId)
+        {
+            _cancelSubmitOrderIdLookup[orderId] = true;
+
+            var result = _orderRequestQueue.Any(r => r is SubmitOrderRequest && r.OrderId == orderId);
+
+            if (result == false)
+            {
+                bool flag;
+
+                _cancelSubmitOrderIdLookup.TryRemove(orderId, out flag);
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Process Order Request Queue
         /// </summary>
         /// <returns></returns>
@@ -446,6 +472,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             order.Status = OrderStatus.New;
 
             _orders[order.Id] = order;
+
+            bool flag;
+
+            if (_cancelSubmitOrderIdLookup.TryRemove(request.OrderId, out flag) == true)
+            {
+                order.Status = OrderStatus.Canceled;
+
+                response.Error(OrderResponseErrorCode.RequestCanceled, "Submit request canceled");
+
+                return;
+            }
 
             // check to see if we have enough money to place the order
             if (!_algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order))

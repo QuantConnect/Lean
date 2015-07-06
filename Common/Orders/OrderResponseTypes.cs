@@ -136,7 +136,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Request is invalid or null
         /// </summary>
-        InvalidRequest                          = -22
+        InvalidRequest                          = -22,
+        /// <summary>
+        /// Request was canceled by user
+        /// </summary>
+        RequestCanceled                         = -23
 
     }
 }
