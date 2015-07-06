@@ -75,8 +75,9 @@ namespace QuantConnect.Lean.Engine.Setup
         /// force it to find that one
         /// </summary>
         /// <param name="assemblyPath">Physical path of the algorithm dll.</param>
+        /// <param name="language">Language of the assembly.</param>
         /// <returns>Algorithm instance</returns>
-        public IAlgorithm CreateAlgorithmInstance(string assemblyPath)
+        public IAlgorithm CreateAlgorithmInstance(string assemblyPath, Language language)
         {
             string error;
             IAlgorithm algorithm;
@@ -84,7 +85,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
             // don't force load times to be fast here since we're running locally, this allows us to debug
             // and step through some code that may take us longer than the default 10 seconds
-            var loader = new Loader(TimeSpan.FromHours(1), names => names.Single(name => MatchTypeName(name, algorithmName)));
+            var loader = new Loader(language, TimeSpan.FromHours(1), names => names.Single(name => MatchTypeName(name, algorithmName)));
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
             if (!complete) throw new Exception(error + ": try re-building algorithm.");
 

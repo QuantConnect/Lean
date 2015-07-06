@@ -97,7 +97,8 @@ namespace QuantConnect.Queues
                 Algorithm = File.ReadAllBytes(AlgorithmLocation),
                 Version = Constants.Version,
                 BacktestId = Config.Get("algorithm-type-name"),
-                RamAllocation = int.MaxValue
+                RamAllocation = int.MaxValue,
+                Language = (Language)Enum.Parse(typeof(Language), Config.Get("algorithm-language"))
             };
 
             return backtestJob;

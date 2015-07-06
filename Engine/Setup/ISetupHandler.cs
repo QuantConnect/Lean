@@ -75,8 +75,9 @@ namespace QuantConnect.Lean.Engine.Setup
         /// Create a new instance of an algorithm from a physical dll path.
         /// </summary>
         /// <param name="assemblyPath">The path to the assembly's location</param>
+        /// <param name="language">Language of the assembly.</param>
         /// <returns>A new instance of IAlgorithm, or throws an exception if there was an error</returns>
-        IAlgorithm CreateAlgorithmInstance(string assemblyPath);
+        IAlgorithm CreateAlgorithmInstance(string assemblyPath, Language language);
 
         /// <summary>
         /// Primary entry point to setup a new algorithm

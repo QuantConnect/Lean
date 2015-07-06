@@ -78,13 +78,13 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         /// <param name="assemblyPath">The path to the assembly's location</param>
         /// <returns>A new instance of IAlgorithm, or throws an exception if there was an error</returns>
-        public IAlgorithm CreateAlgorithmInstance(string assemblyPath)
+        public IAlgorithm CreateAlgorithmInstance(string assemblyPath, Language language)
         {
             string error;
             IAlgorithm algorithm;
 
             // limit load times to 10 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(TimeSpan.FromSeconds(10), names =>
+            var loader = new Loader(language, TimeSpan.FromSeconds(15), names =>
             {
                 // if there's only one use that guy
                 if (names.Count == 1)

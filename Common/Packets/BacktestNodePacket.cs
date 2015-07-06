@@ -82,6 +82,7 @@ namespace QuantConnect.Packets
             ProjectId = projectId;
             UserPlan = userPlan;
             Name = name;
+            Language = Language.CSharp;
         }
     }
 }

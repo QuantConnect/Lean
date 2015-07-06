@@ -207,7 +207,7 @@ namespace QuantConnect.Lean.Engine
                 try
                 {
                     // Save algorithm to cache, load algorithm instance:
-                    algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath);
+                    algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
                     initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, out brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions);

@@ -44,6 +44,7 @@
 *Data/*
 *Docker/*
 */Docker/*
+*Algorithm.Python/Lib/*
 */[Ee]xtensions/*
 !**/Libraries/*
 

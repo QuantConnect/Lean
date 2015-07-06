@@ -109,15 +109,16 @@ namespace QuantConnect.Lean.Engine.Setup
         /// instantiation to take less than 10 seconds
         /// </summary>
         /// <param name="assemblyPath">Physical location of the assembly.</param>
+        /// <param name="language">Language of the DLL</param>
         /// <returns>Algorithm instance.</returns>
-        public IAlgorithm CreateAlgorithmInstance(string assemblyPath)
+        public IAlgorithm CreateAlgorithmInstance(string assemblyPath, Language language)
         {
             string error;
             IAlgorithm algorithm;
 
             // limit load times to 10 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(TimeSpan.FromSeconds(10), names => names.SingleOrDefault());
-            bool complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
+            var loader = new Loader(language, TimeSpan.FromSeconds(15), names => names.SingleOrDefault());
+            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
             if (!complete) throw new Exception(error + " Try re-building algorithm.");
 
             return algorithm;

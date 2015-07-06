@@ -8,9 +8,15 @@
 
     "environment": "backtesting",
 
-    // algorithm selector
+    // algorithm class selector
     "algorithm-type-name": "BasicTemplateAlgorithm",
-    "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
+
+    // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
+    "algorithm-language":"Python", 
+	
+    //Physical DLL location
+    "algorithm-location": "QuantConnect.Algorithm.Python.dll",
+    //"algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
     //"algorithm-location": "QuantConnect.Algorithm.FSharp.dll",
     //"algorithm-location": "QuantConnect.Algorithm.VisualBasic.dll",
     //"algorithm-location": "QuantConnect.Algorithm.Java.dll",
