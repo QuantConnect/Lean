@@ -55,9 +55,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private IResultHandler _resultHandler;
         private ManualResetEventSlim _processingCompletedEvent;
 
-        private ConcurrentQueue<OrderEvent> _orderEventQueue;
-        private ConcurrentQueue<SecurityEvent> _securityEventQueue;
-        private ConcurrentQueue<AccountEvent> _accountEventQueue;
         private ConcurrentQueue<OrderRequest> _orderRequestQueue;
         /// <summary>
         /// Gets the permanent storage for all orders
@@ -97,17 +94,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             _brokerage.OrderStatusChanged += (sender, fill) =>
             {
-                _orderEventQueue.Enqueue(fill);
+                HandleOrderEvent(fill);
             };
 
             _brokerage.SecurityHoldingUpdated += (sender, holding) =>
             {
-                _securityEventQueue.Enqueue(holding);
+                HandleSecurityHoldingUpdated(holding);
             };
 
             _brokerage.AccountChanged += (sender, account) =>
             {
-                _accountEventQueue.Enqueue(account);
+                HandleAccountChanged(account);
             };
 
             IsActive = true;
@@ -116,11 +113,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // also save off the various order data structures locally
             _orders = new ConcurrentDictionary<int, Order>();
-            _orderEventQueue = new ConcurrentQueue<OrderEvent>();
-            _securityEventQueue = new ConcurrentQueue<SecurityEvent>();
-            _orderRequestQueue = new ConcurrentQueue<OrderRequest>();
-            _accountEventQueue = new ConcurrentQueue<AccountEvent>();
 
+            _orderRequestQueue = new ConcurrentQueue<OrderRequest>();
 
             _processingCompletedEvent = new ManualResetEventSlim(true);
         }
@@ -194,12 +188,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             get
             {
-                return !(_orderRequestQueue.IsEmpty
-                     && _orderEventQueue.IsEmpty
-                     && _securityEventQueue.IsEmpty
-                     && _accountEventQueue.IsEmpty);
+                return !_orderRequestQueue.IsEmpty;
             }
         }
+
         /// <summary>
         /// Primary thread entry point to launch the transaction thread.
         /// </summary>
@@ -213,10 +205,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 if (HasPendingItems)
                 {
-                    working = ProcessAccountEvents();
-                    working |= ProcessSecurityEvents();
-                    working |= ProcessOrderEvents();
-                    working |= ProcessOrderRequests();
+                    working = ProcessOrderRequests();
                 }
 
                 if (working == false)
@@ -591,33 +580,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
         }
 
-        private bool ProcessOrderEvents()
-        {
-            int remainingCount = _orderEventQueue.Count;
-
-            if (remainingCount == 0)
-                return false;
-
-            while (remainingCount-- > 0)
-            {
-                OrderEvent orderEvent;
-
-                if (_orderEventQueue.TryDequeue(out orderEvent) == false)
-                    break;
-
-                try
-                {
-                    HandleOrderEvent(orderEvent);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex);
-                }
-            }
-
-            return true;
-        }
-
         private void HandleOrderEvent(OrderEvent fill)
         {
             // update the order status
@@ -660,33 +622,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
         }
 
-        private bool ProcessAccountEvents()
-        {
-            int remainingCount = _accountEventQueue.Count;
-
-            if (remainingCount == 0)
-                return false;
-
-            while (remainingCount-- > 0)
-            {
-                AccountEvent accountEvent;
-
-                if (_accountEventQueue.TryDequeue(out accountEvent) == false)
-                    break;
-
-                try
-                {
-                    HandleAccountChanged(accountEvent);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex);
-                }
-            }
-
-            return true;
-        }
-
         /// <summary>
         /// Brokerages can send account updates, this include cash balance updates. Since it is of
         /// utmost important to always have an accurate picture of reality, we'll trust this information
@@ -704,33 +639,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // we don't actually want to do this, this data can be delayed
             // override the current cash value to we're always gauranted to be in sync with the brokerage's push updates
             //_algorithm.Portfolio.CashBook[account.CurrencySymbol].Quantity = account.CashBalance;
-        }
-
-        private bool ProcessSecurityEvents()
-        {
-            int remainingCount = _securityEventQueue.Count;
-
-            if (remainingCount == 0)
-                return false;
-
-            while (remainingCount-- > 0)
-            {
-                SecurityEvent securityEvent;
-
-                if (_securityEventQueue.TryDequeue(out securityEvent) == false)
-                    break;
-
-                try
-                {
-                    HandleSecurityHoldingUpdated(securityEvent);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex);
-                }
-            }
-
-            return true;
         }
 
         /// <summary>
