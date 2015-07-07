@@ -76,13 +76,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         }
 
         /// <summary>
-        /// This stream reader doesn't require closing
-        /// </summary>
-        public void Close()
-        {
-        }
-
-        /// <summary>
         /// This stream reader doesn't require disposal
         /// </summary>
         public void Dispose()

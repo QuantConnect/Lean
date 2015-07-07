@@ -14,12 +14,14 @@
  *
 */
 
+using System;
+
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
     /// <summary>
     /// Defines a transport mechanism for data from its source into various reader methods
     /// </summary>
-    public interface IStreamReader
+    public interface IStreamReader : IDisposable
     {
         /// <summary>
         /// Gets the transport medium of this stream reader
@@ -35,15 +37,5 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// Gets the next line/batch of content from the stream 
         /// </summary>
         string ReadLine();
-
-        /// <summary>
-        /// Closes the stream
-        /// </summary>
-        void Close();
-
-        /// <summary>
-        /// Disposes of the stream
-        /// </summary>
-        void Dispose();
     }
 }

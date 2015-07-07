@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     /// </summary>
     public class LocalFileSubscriptionStreamReader : IStreamReader
     {
-        private readonly StreamReader _streamReader;
+        private StreamReader _streamReader;
         private readonly ZipFile _zipFile;
 
         /// <summary>
@@ -64,17 +64,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         }
 
         /// <summary>
-        /// Closes the stream
-        /// </summary>
-        public void Close()
-        {
-            if (_streamReader != null)
-            {
-                _streamReader.Close();
-            }
-        }
-
-        /// <summary>
         /// Disposes of the stream
         /// </summary>
         public void Dispose()
@@ -82,6 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             if (_streamReader != null)
             {
                 _streamReader.Dispose();
+                _streamReader = null;
             }
             if (_zipFile != null)
             {

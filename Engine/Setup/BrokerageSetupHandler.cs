@@ -22,6 +22,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
@@ -77,13 +78,13 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         /// <param name="assemblyPath">The path to the assembly's location</param>
         /// <returns>A new instance of IAlgorithm, or throws an exception if there was an error</returns>
-        public IAlgorithm CreateAlgorithmInstance(string assemblyPath)
+        public IAlgorithm CreateAlgorithmInstance(string assemblyPath, Language language)
         {
             string error;
             IAlgorithm algorithm;
 
             // limit load times to 10 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(TimeSpan.FromSeconds(10), names =>
+            var loader = new Loader(language, TimeSpan.FromSeconds(15), names =>
             {
                 // if there's only one use that guy
                 if (names.Count == 1)
@@ -108,9 +109,10 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="algorithm">Algorithm instance</param>
         /// <param name="brokerage">New brokerage output instance</param>
         /// <param name="job">Algorithm job task</param>
-        /// <param name="resultHandler"></param>
+        /// <param name="resultHandler">The configured result handler</param>
+        /// <param name="transactionHandler">The configurated transaction handler</param>
         /// <returns>True on successfully setting up the algorithm state, or false on error.</returns>
-        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler)
+        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler, ITransactionHandler transactionHandler)
         {
             _algorithm = algorithm;
             brokerage = default(IBrokerage);
@@ -211,6 +213,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 // set the transaction models base on the brokerage properties
                 SetupHandler.UpdateTransactionModels(algorithm, algorithm.BrokerageModel);
+                algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
                 try
                 {
@@ -257,7 +260,7 @@ namespace QuantConnect.Lean.Engine.Setup
                         // be sure to assign order IDs such that we increment from the SecurityTransactionManager to avoid ID collisions
                         Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol + " - " + order.Quantity);
                         order.Id = algorithm.Transactions.GetIncrementOrderId();
-                        algorithm.Orders.AddOrUpdate(order.Id, order, (i, o) => order);
+                        transactionHandler.Orders.AddOrUpdate(order.Id, order, (i, o) => order);
                     }
                 }
                 catch (Exception err)

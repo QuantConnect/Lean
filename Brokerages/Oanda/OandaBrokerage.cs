@@ -59,7 +59,7 @@ namespace QuantConnect.Brokerages.Oanda
         private readonly IHoldingsProvider _holdingsProvider;
 
         //This should correlate to the Orders list in Oanda.
-        private readonly IOrderMapping _orderMapping;
+        private readonly IOrderProvider _orderProvider;
 
         /// <summary>
         /// The QC User id, used for refreshing the session
@@ -92,10 +92,10 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="orderMapping">The order mapping.</param>
         /// <param name="holdingsProvider">The holdings provider.</param>
         /// <param name="accountId">The account identifier.</param>
-        public OandaBrokerage(IOrderMapping orderMapping, IHoldingsProvider holdingsProvider, int accountId)
+        public OandaBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider, int accountId)
             : base("Oanda Brokerage")
         {
-            _orderMapping = orderMapping;
+            _orderProvider = orderProvider;
             _holdingsProvider = holdingsProvider;
             AccountId = accountId;
             _instrumentSecurityTypeMap = MapInstrumentToSecurityType(GetInstrumentsAsync().Result);

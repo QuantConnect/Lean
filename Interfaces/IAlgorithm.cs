@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
@@ -37,7 +36,6 @@ namespace QuantConnect.Interfaces
         SubscriptionManager SubscriptionManager
         {
             get;
-            set;
         }
 
         /// <summary>
@@ -48,7 +46,6 @@ namespace QuantConnect.Interfaces
         SecurityManager Securities
         {
             get;
-            set;
         }
 
         /// <summary>
@@ -59,7 +56,6 @@ namespace QuantConnect.Interfaces
         SecurityPortfolioManager Portfolio
         {
             get;
-            set;
         }
 
         /// <summary>
@@ -69,13 +65,15 @@ namespace QuantConnect.Interfaces
         SecurityTransactionManager Transactions
         {
             get;
-            set;
         }
 
         /// <summary>
         /// Gets the brokerage model used to emulate a real brokerage
         /// </summary>
-        IBrokerageModel BrokerageModel { get; }
+        IBrokerageModel BrokerageModel
+        {
+            get;
+        }
 
         /// <summary>
         /// Notification manager for storing and processing live event messages
@@ -83,7 +81,6 @@ namespace QuantConnect.Interfaces
         NotificationManager Notify
         {
             get;
-            set;
         }
 
         /// <summary>
@@ -93,16 +90,6 @@ namespace QuantConnect.Interfaces
         string Name
         {
             get;
-            set;
-        }
-
-        /// <summary>
-        /// Property indicating the transaction handler is currently processing an order and the algorithm should wait (syncrhonous order processing).
-        /// </summary>
-        bool ProcessingOrder
-        {
-            get;
-            set;
         }
 
         /// <summary>
@@ -116,8 +103,6 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Algorithm start date for backtesting, set by the SetStartDate methods.
         /// </summary>
-        /// <seealso cref="SetStartDate(DateTime)"/>
-        /// <seealso cref="SetStartDate(int,int,int)"/>
         DateTime StartDate
         {
             get;
@@ -140,22 +125,6 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
-        /// Accessor for Filled Orders:
-        /// </summary>
-        ConcurrentDictionary<int, Order> Orders
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Run Backtest Mode for the algorithm: Automatic, Parallel or Series.
-        /// </summary>
-        RunMode RunMode
-        {
-            get;
-        }
-
-        /// <summary>
         /// Algorithm is running on a live server.
         /// </summary>
         bool LiveMode
@@ -169,7 +138,6 @@ namespace QuantConnect.Interfaces
         List<string> DebugMessages
         {
             get;
-            set;
         }
 
         /// <summary>
@@ -178,7 +146,6 @@ namespace QuantConnect.Interfaces
         List<string> ErrorMessages
         {
             get;
-            set;
         }
 
         /// <summary>
@@ -187,7 +154,6 @@ namespace QuantConnect.Interfaces
         List<string> LogMessages
         {
             get;
-            set;
         }
 
         /// <summary>
@@ -195,8 +161,8 @@ namespace QuantConnect.Interfaces
         /// </summary>
         Exception RunTimeError
         {
-            get; 
-            set; 
+            get;
+            set;
         }
 
         /// <summary>
@@ -229,6 +195,12 @@ namespace QuantConnect.Interfaces
         // </summary>
         //void OnData(Ticks ticks);
         //void OnData(TradeBars tradebars);
+
+        /// <summary>
+        /// v3.0 Handler for all data types
+        /// </summary>
+        /// <param name="slice">The current slice of data</param>
+        void OnData(Slice slice);
 
         /// <summary>
         /// Send debug message
@@ -288,35 +260,6 @@ namespace QuantConnect.Interfaces
         void SetDateTime(DateTime time);
 
         /// <summary>
-        /// Set the run mode of the algorithm: series, parallel or automatic.
-        /// </summary>
-        /// <param name="mode">Run mode to select, default automatic</param>
-        /// <obsolete>The set runmode method is now obsolete and all algorithms are run in series mode.</obsolete>
-        void SetRunMode(RunMode mode = RunMode.Automatic);
-
-        /// <summary>
-        /// Set the start date of the backtest period. This must be within available data.
-        /// </summary>
-        void SetStartDate(int year, int month, int day);
-
-        /// <summary>
-        /// Alias for SetStartDate() which accepts DateTime Class
-        /// </summary>
-        /// <param name="start">DateTime Object to Start the Algorithm</param>
-        void SetStartDate(DateTime start);
-
-        /// <summary>
-        /// Set the end Backtest date for the algorithm. This must be within available data.
-        /// </summary>
-        void SetEndDate(int year, int month, int day);
-
-        /// <summary>
-        /// Alias for SetStartDate() which accepts DateTime Object
-        /// </summary>
-        /// <param name="end">DateTime End Date for Analysis</param>
-        void SetEndDate(DateTime end);
-
-        /// <summary>
         /// Set the algorithm Id for this backtest or live run. This can be used to identify the order and equity records.
         /// </summary>
         /// <param name="algorithmId">unique 32 character identifier for backtest or live server</param>
@@ -340,12 +283,6 @@ namespace QuantConnect.Interfaces
         List<Chart> GetChartUpdates(bool clearChartData = false);
 
         /// <summary>
-        /// Add a chart to the internal algorithm list.
-        /// </summary>
-        /// <param name="chart">Chart object to add</param>
-        void AddChart(Chart chart);
-
-        /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm
         /// </summary>
         /// <param name="securityType">SecurityType Enum: Equity, Commodity, FOREX or Future</param>
@@ -355,15 +292,6 @@ namespace QuantConnect.Interfaces
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
         void AddSecurity(SecurityType securityType, string symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours);
-
-        /// <summary>
-        /// AddData-typeparam name="T"- a new user defined data source, requiring only the minimum config options:
-        /// </summary>
-        /// <param name="symbol">Key/Symbol for data</param>
-        /// <param name="resolution">Resolution of the data</param>
-        /// <param name="isTradeBar">Set to true if this data has Open, High, Low, and Close properties</param>
-        /// <param name="hasVolume">Set to true if this data has a Volume property</param>
-        void AddData<T>(string symbol, Resolution resolution = Resolution.Second, bool isTradeBar = false, bool hasVolume = false);
 
         /// <summary>
         /// Set the starting capital for the strategy
@@ -380,35 +308,11 @@ namespace QuantConnect.Interfaces
         void SetCash(string symbol, decimal startingCash, decimal conversionRate);
 
         /// <summary>
-        /// Send an order to the transaction manager.
-        /// </summary>
-        /// <param name="symbol">Symbol we want to purchase</param>
-        /// <param name="quantity">Quantity to buy, + is long, - short.</param>
-        /// <param name="asynchronous">Don't wait for the response, just submit order and move on.</param>
-        /// <param name="tag">Custom data for this order</param>
-        /// <returns>Integer Order ID.</returns>
-        int Order(string symbol, int quantity, bool asynchronous = false, string tag = "");
-
-        /// <summary>
         /// Liquidate your portfolio holdings:
         /// </summary>
         /// <param name="symbolToLiquidate">Specific asset to liquidate, defaults to all.</param>
         /// <returns>list of order ids</returns>
         List<int> Liquidate(string symbolToLiquidate = "");
-
-        /// <summary>
-        /// Terminate the algorithm on exiting the current event processor.
-        /// If have holdings at the end of the algorithm/day they will be liquidated at market prices.
-        /// If running a series analysis this command skips the current day (and doesn't liquidate).
-        /// </summary>
-        /// <param name="message">Exit message</param>
-        void Quit(string message = "");
-
-        /// <summary>
-        /// Set the quit flag true / false.
-        /// </summary>
-        /// <param name="quit">When true quits the algorithm event loop for this day</param>
-        void SetQuit(bool quit);
 
         /// <summary>
         /// Set live mode state of the algorithm run: Public setter for the algorithm property LiveMode.
@@ -432,16 +336,9 @@ namespace QuantConnect.Interfaces
         void SetAssetLimits(int minuteLimit = 50, int secondLimit = 10, int tickLimit = 5);
 
         /// <summary>
-        /// Set a runtime statistic for your algorithm- these are displayed on the IDE during live runmode.
-        /// </summary>
-        /// <param name="name">Key name for the statistic</param>
-        /// <param name="value">String value for statistic</param>
-        void SetRuntimeStatistic(string name, string value);
-
-        /// <summary>
         /// Get the quit flag state.
         /// </summary>
         /// <returns>Boolean quit flag</returns>
         bool GetQuit();
-}
+    }
 }

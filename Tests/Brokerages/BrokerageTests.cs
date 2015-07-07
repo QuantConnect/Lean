@@ -16,7 +16,7 @@ namespace QuantConnect.Tests.Brokerages
         // various parameters required from derived types
 
         private IBrokerage _brokerage;
-        private OrderMapping _orderMapping;
+        private OrderProvider _orderProvider;
         private HoldingsProvider _holdingsProvider;
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("");
             // we want to regenerate these for each test
             _brokerage = null;
-            _orderMapping = null;
+            _orderProvider = null;
             _holdingsProvider = null;
             Thread.Sleep(1000);
             CancelOpenOrders();
@@ -98,7 +98,7 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("- INITIALIZING BROKERAGE -");
             Log.Trace("");
 
-            var brokerage = CreateBrokerage(OrderMapping, HoldingsProvider);
+            var brokerage = CreateBrokerage(OrderProvider, HoldingsProvider);
             brokerage.Connect();
 
             if (!brokerage.IsConnected)
@@ -111,7 +111,7 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("");
             foreach (var openOrder in brokerage.GetOpenOrders())
             {
-                OrderMapping.Add(openOrder);
+                OrderProvider.Add(openOrder);
             }
 
             Log.Trace("");
@@ -153,16 +153,16 @@ namespace QuantConnect.Tests.Brokerages
                     Log.Trace("--HOLDINGS: " + _holdingsProvider[args.Symbol]);
 
                     // update order mapping
-                    var order = _orderMapping.GetOrderById(args.OrderId);
+                    var order = _orderProvider.GetOrderById(args.OrderId);
                     order.Status = args.Status;
                 }
             };
             return brokerage;
         }
 
-        public OrderMapping OrderMapping 
+        public OrderProvider OrderProvider 
         {
-            get { return _orderMapping ?? (_orderMapping = new OrderMapping()); }
+            get { return _orderProvider ?? (_orderProvider = new OrderProvider()); }
         }
 
         public HoldingsProvider HoldingsProvider
@@ -174,7 +174,7 @@ namespace QuantConnect.Tests.Brokerages
         /// Creates the brokerage under test and connects it
         /// </summary>
         /// <returns>A connected brokerage instance</returns>
-        protected abstract IBrokerage CreateBrokerage(IOrderMapping orderMapping, IHoldingsProvider holdingsProvider);
+        protected abstract IBrokerage CreateBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider);
 
         /// <summary>
         /// Disposes of the brokerage and any external resources started in order to create it
@@ -200,7 +200,7 @@ namespace QuantConnect.Tests.Brokerages
 
                 Log.Trace("Liquidating: " + holding);
                 var order = new MarketOrder(holding.Symbol, (int)-holding.Quantity, DateTime.Now, type: holding.Type);
-                _orderMapping.Add(order);
+                _orderProvider.Add(order);
                 PlaceOrderWaitForStatus(order, OrderStatus.Filled);
             }
         }
@@ -418,13 +418,13 @@ namespace QuantConnect.Tests.Brokerages
 
         /// <summary>
         /// Places the specified order with the brokerage and wait until we get the <paramref name="expectedStatus"/> back via an OrderStatusChanged event.
-        /// This function handles adding the order to the <see cref="IOrderMapping"/> instance as well as incrementing the order ID.
+        /// This function handles adding the order to the <see cref="IOrderProvider"/> instance as well as incrementing the order ID.
         /// </summary>
         /// <param name="order">The order to be submitted</param>
         /// <param name="expectedStatus">The status to wait for</param>
         /// <param name="secondsTimeout">Maximum amount of time to wait for <paramref name="expectedStatus"/></param>
         /// <returns>The same order that was submitted.</returns>
-        protected Order PlaceOrderWaitForStatus(Order order, OrderStatus expectedStatus = OrderStatus.Filled, double secondsTimeout = 10.0)
+        protected Order PlaceOrderWaitForStatus(Order order, OrderStatus expectedStatus = OrderStatus.Filled, double secondsTimeout = 10.0, bool allowFailedSubmission = false)
         {
             var requiredStatusEvent = new ManualResetEvent(false);
             var desiredStatusEvent = new ManualResetEvent(false);
@@ -450,8 +450,8 @@ namespace QuantConnect.Tests.Brokerages
 
             Brokerage.OrderStatusChanged += brokerageOnOrderStatusChanged;
             
-            OrderMapping.Add(order);
-            if (!Brokerage.PlaceOrder(order))
+            OrderProvider.Add(order);
+            if (!Brokerage.PlaceOrder(order) && !allowFailedSubmission)
             {
                 Assert.Fail("Brokerage failed to place the order: " + order);
             }

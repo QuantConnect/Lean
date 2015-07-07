@@ -23,6 +23,7 @@ using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Setup;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -71,6 +72,7 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextSample;
         private IMessagingHandler _messagingHandler;
         private IApi _api;
+        private ITransactionHandler _transactionHandler;
 
         private const double _samples = 4000;
         private const double _minimumSamplePeriod = 4;
@@ -189,10 +191,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="api">The api instance used for handling logs</param>
         /// <param name="dataFeed"></param>
         /// <param name="setupHandler"></param>
-        public void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler)
+        /// <param name="transactionHandler"></param>
+        public void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler, ITransactionHandler transactionHandler)
         {
             _api = api;
             _messagingHandler = messagingHandler;
+            _transactionHandler = transactionHandler;
             _job = (BacktestNodePacket)job;
             if (_job == null) throw new Exception("BacktestingResultHandler.Constructor(): Submitted Job type invalid.");
             _compileId = _job.CompileId;
@@ -300,7 +304,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                 try
                 {
-                    deltaOrders = (from order in Algorithm.Transactions.Orders
+                    deltaOrders = (from order in _transactionHandler.Orders
                         where order.Value.Time.Date >= _lastUpdate && order.Value.Status == OrderStatus.Filled
                         select order).ToDictionary(t => t.Key, t => t.Value);
                 }
@@ -339,7 +343,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (progress > 0.999m) progress = 0.999m;
 
                 //1. Cloud Upload -> Upload the whole packet to S3  Immediately:
-                var completeResult = new BacktestResult(Charts, Algorithm.Transactions.Orders, Algorithm.Transactions.TransactionRecord, new Dictionary<string, string>());
+                var completeResult = new BacktestResult(Charts, _transactionHandler.Orders, Algorithm.Transactions.TransactionRecord, new Dictionary<string, string>());
                 var complete = new BacktestResultPacket(_job, completeResult, progress);
 
                 if (DateTime.Now > _nextS3Update)

@@ -116,7 +116,6 @@ namespace QuantConnect.Data.Custom
             return data;
         }
 
-
         /// <summary>
         /// Quandl Source Locator: Using the Quandl V1 API automatically set the URL for the dataset.
         /// </summary>
@@ -130,7 +129,6 @@ namespace QuantConnect.Data.Custom
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
         }
 
-        
         /// <summary>
         /// Set the auth code for the quandl set to the QuantConnect auth code.
         /// </summary>
@@ -141,5 +139,4 @@ namespace QuantConnect.Data.Custom
             IsAuthCodeSet = true;
         }
     }
-
-} // End QC Namespace
+}

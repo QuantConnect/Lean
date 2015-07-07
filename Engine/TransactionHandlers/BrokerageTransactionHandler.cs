@@ -58,13 +58,24 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private ConcurrentDictionary<int, Order> _orders;
 
-        /// <summary>
-        /// OrderEvents is an orderid indexed collection of events attached to each order. Because an order might be filled in 
-        /// multiple legs it is important to keep a record of each event.
-        /// </summary>
-        private ConcurrentDictionary<int, List<OrderEvent>> _orderEvents;
-
         private IResultHandler _resultHandler;
+        private ManualResetEventSlim _processingCompletedEvent;
+
+        /// <summary>
+        /// Gets the permanent storage for all orders
+        /// </summary>
+        public ConcurrentDictionary<int, Order> Orders
+        {
+            get { return _orders; }
+        }
+
+        /// <summary>
+        /// Gets the current number of orders that have been processed
+        /// </summary>
+        public int OrdersCount
+        {
+            get { return _orders.Count; }
+        }
 
         /// <summary>
         /// Creates a new BrokerageTransactionHandler to process orders using the specified brokerage implementation
@@ -105,9 +116,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _algorithm = algorithm;
 
             // also save off the various order data structures locally
-            _orders = algorithm.Transactions.Orders;
-            _orderEvents = algorithm.Transactions.OrderEvents;
-            _orderQueue = algorithm.Transactions.OrderQueue;
+            _orders = new ConcurrentDictionary<int, Order>();
+            _orderQueue = new ConcurrentQueue<Order>();
+
+            _processingCompletedEvent = new ManualResetEventSlim(true);
         }
 
         /// <summary>
@@ -117,11 +129,70 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         public bool IsActive { get; private set; }
 
         /// <summary>
-        /// Boolean flag signalling the handler is ready and all orders have been processed.
+        /// Reset event that signals when this order processor is not busy processing orders
         /// </summary>
-        public bool Ready
+        public ManualResetEventSlim ProcessingCompletedEvent
         {
-            get { return _orderQueue.Count == 0 && !_algorithm.ProcessingOrder; }
+            get { return _processingCompletedEvent; }
+        }
+
+        /// <summary>
+        /// Adds the specified order to be processed
+        /// </summary>
+        /// <param name="order">The order to be processed</param>
+        public void Process(Order order)
+        {
+            _orderQueue.Enqueue(order);
+        }
+
+        /// <summary>
+        /// Get the order by its id
+        /// </summary>
+        /// <param name="orderId">Order id to fetch</param>
+        /// <returns>The order with the specified id, or null if no match is found</returns>
+        public Order GetOrderById(int orderId)
+        {
+            // first check the order queue
+            var order = _orderQueue.FirstOrDefault(x => x.Id == orderId);
+            if (order == null)
+            {
+                // we couldn't find it in the queue, now check the dictionary
+                // we need to do it in this order since items move from the queue to the dictionary
+                _orders.TryGetValue(orderId, out order);
+            }
+            return order;
+        }
+
+        /// <summary>
+        /// Gets the order by its brokerage id
+        /// </summary>
+        /// <param name="brokerageId">The brokerage id to fetch</param>
+        /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
+        public Order GetOrderByBrokerageId(int brokerageId)
+        {
+            // first check the order queue
+            var order = _orderQueue.FirstOrDefault(x => x.BrokerId.Contains(brokerageId));
+            if (order == null)
+            {
+                // we couldn't find it in the queue, now check the dictionary
+                // we need to do it in this order since items move from the queue to the dictionary
+                order = _orders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
+            }
+            return order;
+        }
+
+        /// <summary>
+        /// Gets all orders matching the specified filter
+        /// </summary>
+        /// <param name="filter">Delegate used to filter the orders</param>
+        /// <returns>All open orders this order provider currently holds</returns>
+        public IEnumerable<Order> GetOrders(Func<Order, bool> filter)
+        {
+            if (filter != null)
+            {
+                return _orders.Select(x => x.Value).Where(filter);
+            }
+            return _orders.Select(x => x.Value);
         }
 
         /// <summary>
@@ -131,17 +202,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             while (!_exitTriggered)
             {
-                // if it's empty just sleep this thread for a little bit
+                _processingCompletedEvent.Reset();
 
                 Order order;
                 if (!_orderQueue.TryDequeue(out order))
                 {
-                    _algorithm.ProcessingOrder = false;
+                    _processingCompletedEvent.Set();
+
+                    // if it's empty just sleep this thread for a little bit
                     Thread.Sleep(1);
                     continue;
                 }
-
-                _algorithm.ProcessingOrder = true;
 
                 // we should never encounter a hold order direction, since it is the uninitialized state
                 if (order.Direction == OrderDirection.Hold)
@@ -206,11 +277,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // in backtesting we need to wait for orders to be removed from the queue and finished processing
             if (!_algorithm.LiveMode)
             {
-                // spin wait until the queue has finished processing
-                while (!Ready)
+                var spinWait = new SpinWait();
+                while (!_orderQueue.IsEmpty)
                 {
-                    Thread.Sleep(1);
+                    // spin wait until the queue is empty
+                    spinWait.SpinOnce();
                 }
+                // now wait for completed processing to signal
+                _processingCompletedEvent.Wait();
                 return;
             }
 

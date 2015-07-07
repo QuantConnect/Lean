@@ -18,9 +18,9 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         ///     Creates the brokerage under test and connects it
         /// </summary>
         /// <returns>A connected brokerage instance</returns>
-        protected override IBrokerage CreateBrokerage(IOrderMapping orderMapping, IHoldingsProvider holdingsProvider)
+        protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider)
         {
-            var oandaBrokerage = new OandaBrokerage(orderMapping, holdingsProvider, 0);
+            var oandaBrokerage = new OandaBrokerage(orderProvider, holdingsProvider, 0);
             var tokens = OandaBrokerageFactory.GetTokens();
 
             var requestString = EndpointResolver.ResolveEndpoint(Environment.Sandbox, Server.Account) + "accounts";
