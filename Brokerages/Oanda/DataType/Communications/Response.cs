@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Brokerages.Oanda.Framework;
 
-namespace OANDARestLibrary.TradeLibrary.DataTypes.Communications
+namespace QuantConnect.Brokerages.Oanda.DataType.Communications
 {
 	public class Response
 	{

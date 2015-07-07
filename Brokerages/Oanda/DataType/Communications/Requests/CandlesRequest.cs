@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using QuantConnect.Brokerages.Oanda;
 using QuantConnect.Brokerages.Oanda.DataType;
+using QuantConnect.Brokerages.Oanda.DataType.Communications.Requests;
 
 namespace OANDARestLibrary.TradeLibrary.DataTypes.Communications.Requests
 {

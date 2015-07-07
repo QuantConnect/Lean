@@ -1,5 +1,6 @@
 ﻿using OANDARestLibrary.TradeLibrary.DataTypes;
 using OANDARestLibrary.TradeLibrary.DataTypes.Communications;
+using QuantConnect.Brokerages.Oanda.DataType.Communications;
 
 namespace QuantConnect.Brokerages.Oanda.DataType
 {

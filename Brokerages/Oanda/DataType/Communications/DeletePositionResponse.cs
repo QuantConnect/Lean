@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using OANDARestLibrary.TradeLibrary.DataTypes.Communications;
 
-namespace OANDARestLibrary.TradeLibrary.DataTypes.Communications
+namespace QuantConnect.Brokerages.Oanda.DataType.Communications
 {
 	public class DeletePositionResponse : Response
 	{

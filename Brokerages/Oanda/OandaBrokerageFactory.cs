@@ -149,8 +149,8 @@ namespace QuantConnect.Brokerages.Oanda
 
             return new TokenResponse
             {
-                AccessToken = "73eba38ad5b44778f9a0c0fec1a66ed1-44f47f052c897b3e1e7f24196bbc071f",
-                RefreshToken = "73eba38ad5b44778f9a0c0fec1a66ed1-44f47f052c897b3e1e7f24196bbc071f",
+                AccessToken = Config.Get("oanda-access-token"),
+                RefreshToken = Config.Get("oanda-refresh-token"),
                 IssuedAt = DateTime.Now,
                 ExpiresIn = 100000
             };

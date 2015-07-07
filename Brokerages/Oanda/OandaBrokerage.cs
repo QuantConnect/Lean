@@ -6,12 +6,14 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Runtime.Serialization.Json;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using Newtonsoft.Json;
-using OANDARestLibrary.TradeLibrary.DataTypes.Communications;
 using QuantConnect.Brokerages.Oanda.DataType;
+using QuantConnect.Brokerages.Oanda.DataType.Communications;
 using QuantConnect.Brokerages.Oanda.Framework;
 using QuantConnect.Brokerages.Oanda.Session;
 using QuantConnect.Brokerages.Tradier;
@@ -41,6 +43,8 @@ namespace QuantConnect.Brokerages.Oanda
 
         private readonly object _fillLock = new object();
         
+        private readonly Dictionary<string, SecurityType> _instrumentSecurityTypeMap;
+
         /// <summary>
         /// Gets the oanda environment.
         /// </summary>
@@ -50,7 +54,11 @@ namespace QuantConnect.Brokerages.Oanda
         public static Environment OandaEnvironment { get; private set; }
 
         private readonly object _lockAccessCredentials = new object();
+
+        //This should correlate to the Trades/Positions list in Oanda.
         private readonly IHoldingsProvider _holdingsProvider;
+
+        //This should correlate to the Orders list in Oanda.
         private readonly IOrderMapping _orderMapping;
 
         /// <summary>
@@ -90,6 +98,7 @@ namespace QuantConnect.Brokerages.Oanda
             _orderMapping = orderMapping;
             _holdingsProvider = holdingsProvider;
             AccountId = accountId;
+            _instrumentSecurityTypeMap = MapInstrumentToSecurityType(GetInstrumentsAsync().Result);
         }
 
         /// <summary>
@@ -107,8 +116,8 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The open orders returned from Oanda</returns>
         public override List<Order> GetOpenOrders()
         {
-            var orders = new List<Order>();
-            return orders;
+            var orderList = GetOrderListAsync().Result.Select(ConvertOrder).ToList();
+            return orderList;
         }
 
         /// <summary>
@@ -131,8 +140,7 @@ namespace QuantConnect.Brokerages.Oanda
             return new Holding
             {
                 Symbol = position.instrument,
-                //TODO fix after the cfd implementation
-                Type = SecurityType.Forex,
+                Type = _instrumentSecurityTypeMap[position.instrument],
                 AveragePrice = (decimal)position.avgPrice,
                 ConversionRate = 1.0m,
                 CurrencySymbol = "$",
@@ -160,7 +168,46 @@ namespace QuantConnect.Brokerages.Oanda
             }
             return cash;
         }
+        
+        private static string GetCommaSeparatedList(IEnumerable<string> items)
+        {
+            var result = new StringBuilder();
+            foreach (var item in items)
+            {
+                result.Append(item + ",");
+            }
+            return result.ToString().Trim(',');
+        }
 
+
+        private Dictionary<string, SecurityType> MapInstrumentToSecurityType(List<Instrument> instruments)
+        {
+            var result = new Dictionary<string, SecurityType>();
+            foreach (var instrument in instruments)
+            {
+                var isForex = Regex.IsMatch(instrument.instrument, "[A-Z]{3}_[A-Z]{3}") && Regex.IsMatch(instrument.displayName, "[A-Z]{3}/[A-Z]{3}");
+                result.Add(instrument.instrument, isForex ? SecurityType.Forex : SecurityType.Cfd);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the list of available tradable instruments/products from Oanda
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<Instrument>> GetInstrumentsAsync(List<string> instrumentNames = null)
+        {
+            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Rates) + "instruments?accountId=" + AccountId;
+            if (instrumentNames != null)
+            {
+                var instrumentsParam = GetCommaSeparatedList(instrumentNames);
+                requestString += "&instruments=" + Uri.EscapeDataString(instrumentsParam);
+            }
+            var instrumentResponse = await MakeRequestAsync<InstrumentsResponse>(requestString);
+            var instruments = new List<Instrument>();
+            instruments.AddRange(instrumentResponse.instruments);
+            return instruments;
+        }
 
         /// <summary>
         /// Secondary (internal) request handler. differs from primary in that parameters are placed in the body instead of the request string
@@ -174,7 +221,7 @@ namespace QuantConnect.Brokerages.Oanda
         {
             // Create the body
             var requestBody = CreateParamString(requestParams);
-            HttpWebRequest request = WebRequest.CreateHttp(requestString);
+            var request = WebRequest.CreateHttp(requestString);
             request.Headers[HttpRequestHeader.Authorization] = "Bearer " + AccessToken;
             request.Method = method;
             request.ContentType = "application/x-www-form-urlencoded";
@@ -188,7 +235,7 @@ namespace QuantConnect.Brokerages.Oanda
             // Handle the response
             try
             {
-                using (WebResponse response = await request.GetResponseAsync())
+                using (var response = await request.GetResponseAsync())
                 {
                     var serializer = new DataContractJsonSerializer(typeof(T));
                     return (T)serializer.ReadObject(response.GetResponseStream());
@@ -212,9 +259,6 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            // TODO
-            // before doing anything, verify only one outstanding order per symbol
-
             var requestParams = new Dictionary<string, string>
             {
                 {"instrument", order.Symbol},
@@ -286,20 +330,98 @@ namespace QuantConnect.Brokerages.Oanda
 
             Log.Trace(string.Format("OandaBrokerage.PlaceOrder(): {0} to {1} {2} units of {3}", order.Type, order.Direction, order.Quantity, order.Symbol));
 
-            
-            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders";
 
-            var result = PostOrderAsync(requestParams, requestString);
-            
-            OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Submitted });
+            var priorOrderPositions = GetTradeListAsync(requestParams).Result;
 
-            //OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Filled });
+            var postOrderResponse = PostOrderAsync(requestParams).Result;
+
+            if (postOrderResponse != null)
+            {
+                OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Submitted });
+            } 
+            else
+            {
+                return false;
+            }
+
+            // we need to determine if there was an existing order and wheter we closed it with market orders.
+
+            if (order.Type == OrderType.Market && order.Direction == OrderDirection.Buy)
+            {
+                //assume that we are opening a new buy market order
+                if (postOrderResponse.tradeOpened != null && postOrderResponse.tradeOpened.id > 0)
+                {
+                    var tradeOpenedId = postOrderResponse.tradeOpened.id;
+                    requestParams = new Dictionary<string, string>();
+                    var tradeListResponse = GetTradeListAsync(requestParams).Result;
+                    if (tradeListResponse.trades.Any(trade => trade.id == tradeOpenedId))
+                    {
+                        OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Filled });
+                    }
+                }
+
+                if (postOrderResponse.tradesClosed != null)
+                {
+                    var tradePositionClosedIds = postOrderResponse.tradesClosed.Select(tradesClosed => tradesClosed.id).ToList();
+                    var priorOrderPositionIds = priorOrderPositions.trades.Select(previousTrade => previousTrade.id).ToList();
+                    var verifyClosedOrder = tradePositionClosedIds.Intersect(priorOrderPositionIds).Count() == tradePositionClosedIds.Count();
+                    if (verifyClosedOrder)
+                    {
+                        OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Filled });
+                    }
+                }
+            }
+
+            if (order.Type == OrderType.Market && order.Direction == OrderDirection.Sell)
+            {                
+                //assume that we are opening a new buy market order
+                if (postOrderResponse.tradeOpened != null && postOrderResponse.tradeOpened.id > 0)
+                {
+                    var tradeOpenedId = postOrderResponse.tradeOpened.id;
+                    requestParams = new Dictionary<string, string>();
+                    var tradeListResponse = GetTradeListAsync(requestParams).Result;
+                    if (tradeListResponse.trades.Any(trade => trade.id == tradeOpenedId))
+                    {
+                        OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Filled });
+                    }
+                }
+
+                if (postOrderResponse.tradesClosed != null)
+                {
+                    var tradePositionClosedIds = postOrderResponse.tradesClosed.Select(tradesClosed => tradesClosed.id).ToList();
+                    var priorOrderPositionIds = priorOrderPositions.trades.Select(previousTrade => previousTrade.id).ToList();
+                    var verifyClosedOrder = tradePositionClosedIds.Intersect(priorOrderPositionIds).Count() == tradePositionClosedIds.Count();
+                    if (verifyClosedOrder)
+                    {
+                        OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Filled });   
+                    }
+                }
+            }
             return true;
         }
 
+
+       // public TradesResponseAsync
+
+        /// <summary>
+        /// Retrieves the list of open trades belonging to the account
+        /// </summary>
+        /// <param name="account">the account to retrieve the list for</param>
+        /// <param name="requestParams">optional additional parameters for the request (name, value pairs)</param>
+        /// <returns>List of TradeData objects (or empty list, if no trades)</returns>
+        //public static async Task<List<TradeData>> GetTradeListAsync(int account, Dictionary<string, string> requestParams = null)
+        //{
+        //    var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + account + "/trades";
+        //    var tradeResponse = await MakeRequestAsync<TradesResponse>(requestString, "GET", requestParams);
+
+        //    var trades = new List<TradeData>();
+        //    trades.AddRange(tradeResponse.trades);
+
+        //    return trades;
+        //}
         
         /// <summary>
-        /// Checks for fill events by polling FetchOrders for pending orders and diffing against the last orders seen
+        /// Checks for fill events by registering to the event session to receive events.
         /// </summary>
         private void CheckForFills()
         {
@@ -325,15 +447,41 @@ namespace QuantConnect.Brokerages.Oanda
             Console.Out.Write("---- On Event Received ----");
             Console.Out.Write(data.transaction);
         }
+
+        /// <summary>
+        /// Obtain the active open Trade List from Oanda.
+        /// </summary>
+        /// <param name="requestParams"></param>
+        /// <returns></returns>
+        public async Task<TradesResponse> GetTradeListAsync(Dictionary<string, string> requestParams = null)
+        {
+            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/trades";
+            return await MakeRequestAsync<TradesResponse>(requestString, "GET", requestParams);
+        }
+
         /// <summary>
         /// Posts an order on the given account with the given parameters
         /// </summary>
-        /// <param name="account">the account to post on</param>
         /// <param name="requestParams">the parameters to use in the request</param>
         /// <returns>PostOrderResponse with details of the results (throws if if fails)</returns>
-        public async Task<PostOrderResponse> PostOrderAsync(Dictionary<string, string> requestParams, string requestString)
+        public async Task<PostOrderResponse> PostOrderAsync(Dictionary<string, string> requestParams)
         {
+            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders";
             return await MakeRequestWithBody<PostOrderResponse>("POST", requestParams, requestString);
+        }
+
+        /// <summary>
+        /// Retrieves the list of open orders belonging to the account
+        /// </summary>
+        /// <param name="requestParams">optional additional parameters for the request (name, value pairs)</param>
+        /// <returns>List of Order objects (or empty list, if no orders)</returns>
+        public async Task<List<DataType.Order>> GetOrderListAsync(Dictionary<string, string> requestParams = null)
+        {
+            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders";
+            var ordersResponse = await MakeRequestAsync<OrdersResponse>(requestString, "GET", requestParams);
+            var orders = new List<DataType.Order>();
+            orders.AddRange(ordersResponse.orders);
+            return orders;
         }
 
         /// <summary>
@@ -499,49 +647,64 @@ namespace QuantConnect.Brokerages.Oanda
             }
         }
 
-
         /// <summary>
-		/// Primary (internal) request handler
-		/// </summary>
-		/// <typeparam name="T">The response type</typeparam>
-		/// <param name="requestString">the request to make</param>
-		/// <param name="method">method for the request (defaults to GET)</param>
-		/// <param name="requestParams">optional parameters (note that if provided, it's assumed the requestString doesn't contain any)</param>
-		/// <returns>response via type T</returns>
-		public async Task<T> MakeRequestAsync<T>(string requestString, string method = "GET", Dictionary<string, string> requestParams=null)
+        /// Primary (internal) request handler
+        /// </summary>
+        /// <typeparam name="T">The response type</typeparam>
+        /// <param name="requestString">the request to make</param>
+        /// <param name="method">method for the request (defaults to GET)</param>
+        /// <param name="requestParams">optional parameters (note that if provided, it's assumed the requestString doesn't contain any)</param>
+        /// <returns>response via type T</returns>
+        public async Task<T> MakeRequestAsync<T>(string requestString, string method = "GET", Dictionary<string, string> requestParams = null)
         {
-			if (requestParams != null && requestParams.Count > 0)
-			{
-				var parameters = CreateParamString(requestParams);
-				requestString = requestString + "?" + parameters;
-			}
-			var request = WebRequest.CreateHttp(requestString);
+            if (requestParams != null && requestParams.Count > 0)
+            {
+                var parameters = CreateParamString(requestParams);
+                requestString = requestString + "?" + parameters;
+            }
+            var request = WebRequest.CreateHttp(requestString);
             request.Headers[HttpRequestHeader.Authorization] = "Bearer " + AccessToken;
-			request.Headers[HttpRequestHeader.AcceptEncoding] = "gzip, deflate";
-			request.Method = method;
+            request.Headers[HttpRequestHeader.AcceptEncoding] = "gzip, deflate";
+            request.Method = method;
 
-	        try
-	        {
-				using (var response = await request.GetResponseAsync())
-				{
-					var serializer = new DataContractJsonSerializer(typeof(T));
-					var stream = GetResponseStream(response);
-					return (T)serializer.ReadObject(stream);
-				}
-			}
-			catch (WebException ex)
-			{
-				var stream = GetResponseStream(ex.Response);
-				var reader = new StreamReader(stream);
-				var result = reader.ReadToEnd();
-				throw new Exception(result);
-			}
+            try
+            {
+                using (var response = await request.GetResponseAsync())
+                {
+                    var serializer = new DataContractJsonSerializer(typeof(T));
+                    var stream = GetResponseStream(response);
+                    return (T)serializer.ReadObject(stream);
+                }
+            }
+            catch (WebException ex)
+            {
+                var stream = GetResponseStream(ex.Response);
+                var reader = new StreamReader(stream);
+                var result = reader.ReadToEnd();
+                throw new Exception(result);
+            }
         }
 
         private List<Position> GetPositions()
         {
-            var result = GetPositionsAsync(AccountId).Result;
-            return result;
+            using (var task = GetPositionsAsync(AccountId))
+            {
+                task.Wait();
+                var result = task.Result;
+                return result;
+            }
+            //var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account);
+
+            //var request = new RestRequest("accounts/{accountId}/positions");
+            //request.AddUrlSegment("accountId", AccountId.ToString());
+
+            //RestClient client = new RestClient(requestString);
+
+            //client.AddDefaultHeader("Accept", "application/json");
+            //client.AddDefaultHeader("Authorization", "Bearer " + AccessToken);
+
+            //var raw = client.Execute(request);
+            //return new List<Position>();
         }
 
         /// <summary>
@@ -600,6 +763,65 @@ namespace QuantConnect.Brokerages.Oanda
                     throw new ArgumentException("Unexpected or unexpected Oanda Environment: " + environment);
             }
 
+        }
+        
+        /// <summary>
+        /// Converts the specified tradier order into a qc order.
+        /// The 'task' will have a value if we needed to issue a rest call for the stop price, otherwise it will be null
+        /// </summary>
+        protected Order ConvertOrder(DataType.Order order)
+        {
+            Order qcOrder;
+            switch (order.type)
+            {
+                case "limit":
+                    qcOrder = new LimitOrder();
+                    if (order.side == "buy")
+                    {
+                        ((LimitOrder)qcOrder).LimitPrice = Convert.ToDecimal(order.lowerBound);
+                    }
+
+                    if (order.side == "sell")
+                    {
+                        ((LimitOrder)qcOrder).LimitPrice = Convert.ToDecimal(order.upperBound);
+                    }
+
+                    break;
+                case "stop":
+                    qcOrder = new StopLimitOrder();
+                    if (order.side == "buy")
+                    {
+                        ((StopLimitOrder)qcOrder).LimitPrice = Convert.ToDecimal(order.lowerBound);
+                    }
+
+                    if (order.side == "sell")
+                    {
+                        ((StopLimitOrder)qcOrder).LimitPrice = Convert.ToDecimal(order.upperBound);
+                    }
+                    break;
+                case "marketIfTouched":
+                    //when market reaches the price sell at market.
+                    qcOrder = new StopMarketOrder { Price = Convert.ToDecimal(order.price), StopPrice = Convert.ToDecimal(order.price)};
+                    break;
+                case "market":
+                    qcOrder = new MarketOrder();
+                    break;
+
+                default:
+                    throw new NotImplementedException("The Oanda order type " + order.type + " is not implemented.");
+            }
+            qcOrder.Symbol = order.instrument;
+            qcOrder.Quantity = order.units;
+            qcOrder.SecurityType = _instrumentSecurityTypeMap[order.instrument];
+
+            //TODO need further thought on how to translate this to QC, typically any open order 
+            qcOrder.Status = OrderStatus.None;
+            qcOrder.BrokerId.Add(order.id);
+            qcOrder.Duration = OrderDuration.Specific;
+            qcOrder.DurationValue = XmlConvert.ToDateTime(order.expiry, XmlDateTimeSerializationMode.Utc);
+            qcOrder.Time = XmlConvert.ToDateTime(order.time, XmlDateTimeSerializationMode.Utc);
+            
+            return qcOrder;
         }
     }
 }

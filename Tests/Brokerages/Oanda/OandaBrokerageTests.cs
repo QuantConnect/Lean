@@ -1,8 +1,9 @@
 ﻿using System;
+using System.IO;
 using Newtonsoft.Json;
 using NUnit.Framework;
-using OANDARestLibrary.TradeLibrary.DataTypes.Communications;
 using QuantConnect.Brokerages.Oanda;
+using QuantConnect.Brokerages.Oanda.DataType.Communications;
 using QuantConnect.Brokerages.Oanda.Framework;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
@@ -14,7 +15,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
     public class OandaBrokerageTests : BrokerageTests
     {
         /// <summary>
-        /// Creates the brokerage under test and connects it
+        ///     Creates the brokerage under test and connects it
         /// </summary>
         /// <returns>A connected brokerage instance</returns>
         protected override IBrokerage CreateBrokerage(IOrderMapping orderMapping, IHoldingsProvider holdingsProvider)
@@ -22,29 +23,32 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             var oandaBrokerage = new OandaBrokerage(orderMapping, holdingsProvider, 0);
             var tokens = OandaBrokerageFactory.GetTokens();
 
-            var requestString = EndpointResolver.ResolveEndpoint(Environment.Practice, Server.Account) + "accounts";
-            using(var task = oandaBrokerage.MakeRequestAsync<AccountResponse>(requestString, "POST"))
+            var requestString = EndpointResolver.ResolveEndpoint(Environment.Sandbox, Server.Account) + "accounts";
+            using (var task = oandaBrokerage.MakeRequestAsync<AccountResponse>(requestString, "POST"))
             {
                 task.Wait();
                 var accountResponse = task.Result;
                 oandaBrokerage.SetAccountId(accountResponse.accountId);
-                var qcUserId = OandaBrokerageFactory.Configuration.QuantConnectUserId;
-                oandaBrokerage.SetTokens(qcUserId, tokens.AccessToken, tokens.RefreshToken, tokens.IssuedAt, TimeSpan.FromSeconds(tokens.ExpiresIn));
-                oandaBrokerage.SetEnvironment(OandaBrokerageFactory.Configuration.Environment);
-
+                oandaBrokerage.SetEnvironment("sandbox");
             }
+
+            var qcUserId = OandaBrokerageFactory.Configuration.QuantConnectUserId;
+            oandaBrokerage.SetTokens(qcUserId, tokens.AccessToken, tokens.RefreshToken, tokens.IssuedAt,
+                TimeSpan.FromSeconds(tokens.ExpiresIn));
             
             // keep the tokens up to date in the event of a refresh
-            oandaBrokerage.SessionRefreshed += (sender, args) =>
-            {
-                System.IO.File.WriteAllText(OandaBrokerageFactory.TokensFile, JsonConvert.SerializeObject(args, Formatting.Indented));
-            };
+            oandaBrokerage.SessionRefreshed +=
+                (sender, args) =>
+                {
+                    File.WriteAllText(OandaBrokerageFactory.TokensFile,
+                        JsonConvert.SerializeObject(args, Formatting.Indented));
+                };
 
             return oandaBrokerage;
         }
 
         /// <summary>
-        /// Gets the symbol to be traded, must be shortable
+        ///     Gets the symbol to be traded, must be shortable
         /// </summary>
         protected override string Symbol
         {
@@ -52,7 +56,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Gets the security type associated with the <see cref="BrokerageTests.Symbol"/>
+        ///     Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
         /// </summary>
         protected override SecurityType SecurityType
         {
@@ -60,7 +64,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Gets a high price for the specified symbol so a limit sell won't fill
+        ///     Gets a high price for the specified symbol so a limit sell won't fill
         /// </summary>
         protected override decimal HighPrice
         {
@@ -68,7 +72,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Gets a low price for the specified symbol so a limit buy won't fill
+        ///     Gets a low price for the specified symbol so a limit buy won't fill
         /// </summary>
         protected override decimal LowPrice
         {
@@ -76,11 +80,11 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Gets the current market price of the specified security
+        ///     Gets the current market price of the specified security
         /// </summary>
         protected override decimal GetAskPrice(string symbol, SecurityType securityType)
         {
-            var oanda = (OandaBrokerage)Brokerage;
+            var oanda = (OandaBrokerage) Brokerage;
             return new decimal(0.0);
         }
     }

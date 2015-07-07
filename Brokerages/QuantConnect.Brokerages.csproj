@@ -76,10 +76,8 @@
     <Compile Include="Oanda\DataType\Communications\AccountResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\AccountsResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\CandlesResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\CommitmentsOfTradersResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\DeletePositionResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\DeleteTradeResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\HistoricalPositionRatioResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\InstrumentsResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\OrdersResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\PositionsResponse.cs" />
@@ -92,7 +90,6 @@
     <Compile Include="Oanda\DataType\Communications\Requests\Request.cs" />
     <Compile Include="Oanda\DataType\Communications\Response.cs" />
     <Compile Include="Oanda\DataType\Communications\SessionResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\SpreadsResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\TradesResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\TransactionsResponse.cs" />
     <Compile Include="Oanda\DataType\Event.cs" />

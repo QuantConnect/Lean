@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
-using QuantConnect.Brokerages.Oanda;
 
-namespace OANDARestLibrary.TradeLibrary.DataTypes.Communications.Requests
+namespace QuantConnect.Brokerages.Oanda.DataType.Communications.Requests
 {
 	public interface ISmartProperty
 	{

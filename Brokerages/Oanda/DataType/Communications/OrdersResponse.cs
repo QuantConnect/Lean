@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using QuantConnect.Brokerages.Oanda.DataType;
 
-namespace OANDARestLibrary.TradeLibrary.DataTypes.Communications
+namespace QuantConnect.Brokerages.Oanda.DataType.Communications
 {
     public class OrdersResponse
     {

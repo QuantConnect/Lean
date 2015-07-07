@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using QuantConnect.Brokerages.Oanda.DataType;
-
-namespace OANDARestLibrary.TradeLibrary.DataTypes.Communications.Requests
+﻿namespace QuantConnect.Brokerages.Oanda.DataType.Communications.Requests
 {
 	public class OrderPostRequest
 	{

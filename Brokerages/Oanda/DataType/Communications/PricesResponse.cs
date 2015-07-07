@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using QuantConnect.Brokerages.Oanda.DataType;
+﻿using System.Collections.Generic;
 
-namespace OANDARestLibrary.TradeLibrary.DataTypes.Communications
+namespace QuantConnect.Brokerages.Oanda.DataType.Communications
 {
     public class PricesResponse
     {

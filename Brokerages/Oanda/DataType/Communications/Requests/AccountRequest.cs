@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using QuantConnect.Brokerages.Oanda;
+using QuantConnect.Brokerages.Oanda.DataType.Communications.Requests;
 
 namespace OANDARestLibrary.TradeLibrary.DataTypes.Communications.Requests
 {

@@ -68,6 +68,12 @@ namespace QuantConnect.Orders
         /// </summary>
         Day
         */
+
+        /// <summary>
+        /// Order valid until specific type.
+        /// </summary>
+        Specific
+        
     }
 
 
