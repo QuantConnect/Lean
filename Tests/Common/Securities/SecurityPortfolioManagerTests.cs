@@ -260,7 +260,7 @@ namespace QuantConnect.Tests.Common.Securities
             marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
             Assert.AreNotEqual(0, marginCallOrders.Count);
             Assert.AreEqual(-security.Holdings.Quantity, marginCallOrders[0].Quantity); // we bought twice
-            Assert.GreaterOrEqual(-portfolio.MarginRemaining, marginCallOrders[0].Price * marginCallOrders[0].Quantity);
+            Assert.GreaterOrEqual(-portfolio.MarginRemaining, security.Price * marginCallOrders[0].Quantity);
         }
 
         [Test]

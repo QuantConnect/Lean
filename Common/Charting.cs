@@ -216,38 +216,14 @@ namespace QuantConnect
         public ChartPoint(DateTime time, decimal value) 
         {
             x = Convert.ToInt64(Time.DateTimeToUnixTimeStamp(time.ToUniversalTime()));
-            y = Round(value);
+            y = value.SmartRounding();
         }
 
         ///Cloner Constructor:
         public ChartPoint(ChartPoint point) 
         {
             x = point.x;
-            y = Round(point.y);
-        }
-
-        /// <summary>
-        /// Convert the chart points to 5sf.
-        /// </summary>
-        private static decimal Round(decimal input)
-        {
-            input = Normalize(input);
-
-            // any larger numbers we still want some decimal places
-            if (input > 1000)
-            {
-                return Math.Round(input, 4);
-            }
-
-            // this is good for forex and other small numbers
-            var d = (double) input;
-            return (decimal) d.RoundToSignificantDigits(7);
-        }
-
-        private static decimal Normalize(decimal input)
-        {
-            // http://stackoverflow.com/a/7983330/1582922
-            return input / 1.000000000000000000000000000000000m;
+            y = point.y.SmartRounding();
         }
 
         /// <summary>

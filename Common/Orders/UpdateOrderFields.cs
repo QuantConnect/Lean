@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,26 +13,31 @@
  * limitations under the License.
 */
 
-using System.Threading;
-using QuantConnect.Orders;
-
-namespace QuantConnect.Securities
+namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Represents a type capable of processing orders
+    /// Specifies the data in an order to be updated
     /// </summary>
-    public interface IOrderProcessor : IOrderProvider
+    public class UpdateOrderFields
     {
         /// <summary>
-        /// Reset event that signals when this order processor is not busy processing orders
+        /// Specify to update the quantity of the order
         /// </summary>
-        ManualResetEventSlim ProcessingCompletedEvent { get; }
+        public int? Quantity { get; set; }
 
         /// <summary>
-        /// Adds the specified order to be processed
+        /// Specify to update the limit price of the order
         /// </summary>
-        /// <param name="request">The <see cref="OrderRequest"/> to be processed</param>
-        /// <returns>The <see cref="OrderTicket"/> for the corresponding <see cref="OrderRequest.OrderId"/></returns>
-        OrderTicket Process(OrderRequest request);
+        public decimal? LimitPrice { get; set; }
+
+        /// <summary>
+        /// Specify to update the stop price of the order
+        /// </summary>
+        public decimal? StopPrice { get; set; }
+
+        /// <summary>
+        /// Specify to update the order's tag
+        /// </summary>
+        public string Tag { get; set; }
     }
 }

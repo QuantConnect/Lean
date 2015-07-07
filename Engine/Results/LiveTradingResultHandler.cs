@@ -1054,16 +1054,28 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send out the debug messages:
-            _algorithm.DebugMessages.ForEach(x => DebugMessage(x));
+            var debugMessage = _algorithm.DebugMessages.ToList();
             _algorithm.DebugMessages.Clear();
+            foreach (var source in debugMessage)
+            {
+                DebugMessage(source);
+            }
 
             //Send out the error messages:
-            _algorithm.ErrorMessages.ForEach(x => ErrorMessage(x));
+            var errorMessage = _algorithm.ErrorMessages.ToList();
             _algorithm.ErrorMessages.Clear();
+            foreach (var source in errorMessage)
+            {
+                ErrorMessage(source);
+            }
 
             //Send out the log messages:
-            _algorithm.LogMessages.ForEach(x => LogMessage(x));
+            var logMessage = _algorithm.LogMessages.ToList();
             _algorithm.LogMessages.Clear();
+            foreach (var source in logMessage)
+            {
+                LogMessage(source);
+            }
 
             //Set the running statistics:
             foreach (var pair in _algorithm.RuntimeStatistics)

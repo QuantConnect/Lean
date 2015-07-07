@@ -76,9 +76,9 @@ namespace QuantConnect.Tests
         }
 
         [Test]
-        public void UpdateOrderAlgorithm()
+        public void UpdateOrderRegressionAlgorithm()
         {
-            AlgorithmRunner.RunLocalBacktest("UpdateOrderAlgorithm", new Dictionary<string, string>
+            AlgorithmRunner.RunLocalBacktest("UpdateOrderRegressionAlgorithm", new Dictionary<string, string>
             {
                 {"Total Trades", "1"},
                 {"Average Win", "0.13%"},

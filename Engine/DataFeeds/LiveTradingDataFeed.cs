@@ -98,11 +98,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
+            _cancellationTokenSource = new CancellationTokenSource();
+
             //Subscription Count:
             _subscriptions = algorithm.SubscriptionManager.Subscriptions;
 
             Bridge = new BlockingCollection<TimeSlice>();
-            _cancellationTokenSource = new CancellationTokenSource();
 
             //Set Properties:
             _isActive = true;
@@ -209,7 +210,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var items = new Dictionary<int, List<BaseData>>();
                 for (var i = 0; i < Subscriptions.Count; i++)
                 {
-                    // stream stores are only created for tick data and this timer thread is used
+                    // stream stores are only created for non-tick data and this timer thread is used
                     // soley for dequeuing from the stream stores, this index, i, would be null
                     if (Subscriptions[i].Resolution == Resolution.Tick) continue;
 

@@ -139,6 +139,31 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides global smart rounding, numbers larger than 1000 will round to 4 decimal places,
+        /// while numbers smaller will round to 7 significant digits
+        /// </summary>
+        public static decimal SmartRounding(this decimal input)
+        {
+            input = Normalize(input);
+
+            // any larger numbers we still want some decimal places
+            if (input > 1000)
+            {
+                return Math.Round(input, 4);
+            }
+
+            // this is good for forex and other small numbers
+            var d = (double)input;
+            return (decimal)d.RoundToSignificantDigits(7);
+        }
+
+        private static decimal Normalize(decimal input)
+        {
+            // http://stackoverflow.com/a/7983330/1582922
+            return input / 1.000000000000000000000000000000000m;
+        }
+
+        /// <summary>
         /// Extension method for faster string to decimal conversion. 
         /// </summary>
         /// <param name="str">String to be converted to decimal value</param>

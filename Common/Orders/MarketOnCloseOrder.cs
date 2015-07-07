@@ -45,10 +45,9 @@ namespace QuantConnect.Orders
         /// <param name="type">The security type of the symbol</param>
         /// <param name="quantity">The number of units to order</param>
         /// <param name="time">The current time</param>
-        /// <param name="marketPrice">The current market price of the security, used to estimate the value of the order</param>
         /// <param name="tag">A user defined tag for the order</param>
-        public MarketOnCloseOrder(string symbol, SecurityType type, int quantity, DateTime time, decimal marketPrice = 0m, string tag = "")
-            : base(symbol, quantity, OrderType.MarketOnClose, time, marketPrice, tag, type)
+        public MarketOnCloseOrder(string symbol, SecurityType type, int quantity, DateTime time, string tag = "")
+            : base(symbol, quantity, OrderType.MarketOnClose, time, tag, type)
         {
         }
     }

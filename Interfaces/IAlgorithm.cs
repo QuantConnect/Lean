@@ -240,8 +240,8 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Margin call event handler. This method is called right before the margin call orders are placed in the market.
         /// </summary>
-        /// <param name="orders">The orders to be executed to bring this algorithm within margin limits</param>
-        void OnMarginCall(List<Order> orders);
+        /// <param name="requests">The orders to be executed to bring this algorithm within margin limits</param>
+        void OnMarginCall(List<SubmitOrderRequest> requests);
 
         /// <summary>
         /// Margin call warning event handler. This method is called when Portoflio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue

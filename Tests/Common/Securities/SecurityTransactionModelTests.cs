@@ -248,7 +248,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var reference = new DateTime(2015, 06, 05, 9, 0, 0); // before market open
             var model = new SecurityTransactionModel();
-            var order = new MarketOnOpenOrder(Symbol, SecurityType.Equity, 100, reference, 1m);
+            var order = new MarketOnOpenOrder(Symbol, SecurityType.Equity, 100, reference);
             var config = CreateTradeBarConfig(Symbol);
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1)
             {
@@ -281,7 +281,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var reference = new DateTime(2015, 06, 05, 15, 0, 0); // before market close
             var model = new SecurityTransactionModel();
-            var order = new MarketOnCloseOrder(Symbol, SecurityType.Equity, 100, reference, 1m);
+            var order = new MarketOnCloseOrder(Symbol, SecurityType.Equity, 100, reference);
             var config = CreateTradeBarConfig(Symbol);
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1)
             {

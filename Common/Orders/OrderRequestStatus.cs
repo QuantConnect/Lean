@@ -13,26 +13,31 @@
  * limitations under the License.
 */
 
-using System.Threading;
-using QuantConnect.Orders;
-
-namespace QuantConnect.Securities
+namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Represents a type capable of processing orders
+    /// Specifies the status of a request
     /// </summary>
-    public interface IOrderProcessor : IOrderProvider
+    public enum OrderRequestStatus
     {
         /// <summary>
-        /// Reset event that signals when this order processor is not busy processing orders
+        /// This is an unprocessed request
         /// </summary>
-        ManualResetEventSlim ProcessingCompletedEvent { get; }
+        Unprocessed,
 
         /// <summary>
-        /// Adds the specified order to be processed
+        /// This request is partially processed
         /// </summary>
-        /// <param name="request">The <see cref="OrderRequest"/> to be processed</param>
-        /// <returns>The <see cref="OrderTicket"/> for the corresponding <see cref="OrderRequest.OrderId"/></returns>
-        OrderTicket Process(OrderRequest request);
+        Processing,
+
+        /// <summary>
+        /// This request has been completely processed
+        /// </summary>
+        Processed,
+
+        /// <summary>
+        /// This request encountered an error
+        /// </summary>
+        Error
     }
 }

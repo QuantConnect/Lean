@@ -39,6 +39,15 @@ namespace QuantConnect.Securities
         private int _tickLimit = 30;
         private int _tickMemory = 34;
         private decimal _maxRamEstimate = 1024;
+        private DateTime _time;
+
+        /// <summary>
+        /// Gets the most recent time this manager was updated
+        /// </summary>
+        public DateTime Time
+        {
+            get { return _time; }
+        }
 
         /// <summary>
         /// Initialise the algorithm security manager with two empty dictionaries
@@ -279,8 +288,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="time">Time Frontier</param>
         /// <param name="data">Data packets to update</param>
-        public void Update(DateTime time, Dictionary<int, List<BaseData>> data) 
+        public void Update(DateTime time, Dictionary<int, List<BaseData>> data)
         {
+            _time = time;
             try 
             {
                 //If its market data, look for the matching security symbol and update it:

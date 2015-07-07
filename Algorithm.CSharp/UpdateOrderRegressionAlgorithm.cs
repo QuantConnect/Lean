@@ -21,9 +21,9 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic template algorithm simply initializes the date range and cash
+    /// Provides a regression baseline
     /// </summary>
-    public class UpdateOrderAlgorithm : QCAlgorithm
+    public class UpdateOrderRegressionAlgorithm : QCAlgorithm
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Second);
         }
 
-        private int orderID;
+        private OrderTicket ticket;
 
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -47,19 +47,19 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Time.TimeOfDay.TotalHours == 10)
             {
-                orderID = LimitOrder("SPY", 10, .98m * data.Bars["SPY"].Low);
+                ticket = LimitOrder("SPY", 10, .98m * data.Bars["SPY"].Low);
             }
+
             if (Time.TimeOfDay.TotalHours == 11)
             {
-                var order = (LimitOrder)Transactions.GetOrderById(orderID);
-                order.LimitPrice = data.Bars["SPY"].Low;
-                Transactions.UpdateOrder(order);
+                ticket.Update(new UpdateOrderFields {LimitPrice = data.Bars["SPY"].Low});
             }
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             Console.WriteLine(Time + " - " + orderEvent);
+            Console.WriteLine();
         }
     }
 }
