@@ -18,25 +18,24 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 using Ionic.Zip;
 using Newtonsoft.Json;
-using OANDARestLibrary;
-using OANDARestLibrary.TradeLibrary.DataTypes;
-using OANDARestLibrary.TradeLibrary.DataTypes.Communications.Requests;
 using QuantConnect.ToolBox;
+using SevenZip;
 
-namespace QuantConnect.OandaDownloader
+namespace QuantConnect.DukascopyDownloader
 {
     class Program
     {
         private const string ConfigFileName = "config.json";
         private const string InstrumentsFileName = "instruments.txt";
         private const string EndOfLine = "\r\n";
+        private const int DukascopyTickLength = 20;
 
         private static ConfigSettings _settings;
-        private static Dictionary<string, LeanInstrument>  _instruments;
+        private static Dictionary<string, LeanInstrument> _instruments;
 
         /// <summary>
         /// Primary entry point to the program
@@ -44,9 +43,9 @@ namespace QuantConnect.OandaDownloader
         static void Main(string[] args)
         {
             // Startup doc screen
-            Console.WriteLine("QuantConnect.ToolBox: Oanda Downloader: ");
+            Console.WriteLine("QuantConnect.ToolBox: Dukascopy Downloader: ");
             Console.WriteLine("==============================================");
-            Console.WriteLine("The Oanda downloader retrieves historical data from the Oanda servers");
+            Console.WriteLine("The Dukascopy downloader retrieves historical data from the Dukascopy servers");
             Console.WriteLine("and saves files in the LEAN Algorithmic Trading Engine Data Format.");
             Console.WriteLine("Settings are loaded from the config.json file.");
             Console.WriteLine();
@@ -63,14 +62,11 @@ namespace QuantConnect.OandaDownloader
             // Read configuration 
             if (!LoadConfiguration()) Environment.Exit(0);
 
-            // Set Oanda account credentials
-            Credentials.SetCredentials(EEnvironment.Practice, _settings.AccessToken, _settings.AccountId);
-
             try
             {
                 foreach (var symbol in _settings.InstrumentList)
                 {
-                    RunProcess(symbol, _settings.StartDate, _settings.EndDate, _settings.BarsPerRequest, _settings.OutputFormat).Wait();
+                    RunProcess(symbol, _settings.StartDate, _settings.EndDate, _settings.OutputFormat);
                 }
 
                 Console.WriteLine("Process completed.");
@@ -102,13 +98,14 @@ namespace QuantConnect.OandaDownloader
             foreach (var line in lines)
             {
                 var tokens = line.Split(',');
-                if (tokens.Length >= 3)
+                if (tokens.Length >= 4)
                 {
                     _instruments.Add(tokens[0], new LeanInstrument
                     {
                         Symbol = tokens[0],
                         Name = tokens[1],
-                        Type = (InstrumentType)Enum.Parse(typeof(InstrumentType), tokens[2])
+                        Type = (InstrumentType)Enum.Parse(typeof(InstrumentType), tokens[2]),
+                        PointValue = Convert.ToInt32(tokens[3])
                     });
                 }
             }
@@ -139,18 +136,6 @@ namespace QuantConnect.OandaDownloader
         /// <returns></returns>
         private static bool ValidateConfiguration()
         {
-            if (string.IsNullOrWhiteSpace(_settings.AccessToken))
-            {
-                Console.WriteLine("The access token is required.");
-                return false;
-            }
-
-            if (_settings.AccountId == 0)
-            {
-                Console.WriteLine("The account id is required.");
-                return false;
-            }
-
             if (string.IsNullOrWhiteSpace(_settings.OutputFolder))
             {
                 Console.WriteLine("The Lean data folder is required.");
@@ -178,7 +163,7 @@ namespace QuantConnect.OandaDownloader
         }
 
         /// <summary>
-        /// Downloads historical bars from Oanda servers and saves them in the requested output format
+        /// Downloads historical bars from Dukascopy servers and saves them in the requested output format
         /// </summary>
         /// <param name="symbol"></param>
         /// <param name="fromDate"></param>
@@ -186,151 +171,45 @@ namespace QuantConnect.OandaDownloader
         /// <param name="barsPerRequest"></param>
         /// <param name="outputFormat"></param>
         /// <returns></returns>
-        public static async Task RunProcess(string symbol, DateTime fromDate, DateTime toDate, int barsPerRequest, string outputFormat)
+        public static void RunProcess(string symbol, DateTime fromDate, DateTime toDate, string outputFormat)
         {
             Console.WriteLine("Symbol: {0}, from {1} to {2}", symbol, fromDate.ToString("yyyy-MM-dd"), toDate.ToString("yyyy-MM-dd"));
 
-            var barsTotalInPeriod = new List<Candle>();
-            var barsToSave = new List<Candle>();
+            var hourlyBars = new List<LeanBar>();
 
-            // set the starting date/time
+            // set the starting date
             DateTime date = fromDate;
-            DateTime startDateTime = date;
-            string dateString = date.ToString("yyyy-MM-dd");
 
             // loop until last date
-            while (startDateTime <= toDate.AddDays(1))
+            while (date <= toDate)
             {
-                string start = startDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
-
-                // request blocks of N bars with a starting date/time
-                var bars = await DownloadBars(symbol, start, barsPerRequest);
-                if (bars.Count == 0)
-                    break;
-
-                var groupedBars = GroupBarsByDate(bars);
-
-                if (groupedBars.Count > 1)
+                // request all ticks for a specific date
+                try
                 {
-                    // we received more than one day, so we save the completed days and continue
-                    while (groupedBars.Count > 1)
+                    var ticks = DownloadTicks(symbol, date);
+                    if (ticks.Count > 0)
                     {
-                        var currentDate = groupedBars.Keys.First();
-                        if (currentDate > toDate)
-                            break;
+                        SaveBars(ticks, symbol, date, outputFormat);
 
-                        // update the current date
-                        date = currentDate;
-                        dateString = date.ToString("yyyy-MM-dd");
-
-                        barsToSave.AddRange(groupedBars[currentDate]);
-
-                        SaveBars(barsToSave, symbol, dateString, outputFormat);
-                        barsTotalInPeriod.AddRange(barsToSave);
-
-                        barsToSave.Clear();
-
-                        // remove the completed date 
-                        groupedBars.Remove(currentDate);
-                    }
-
-                    // update the current date
-                    date = groupedBars.Keys.First();
-                    dateString = date.ToString("yyyy-MM-dd");
-
-                    if (date <= toDate)
-                    {
-                        barsToSave.AddRange(groupedBars[date]);
+                        // Aggregate ticks to hourly bars
+                        hourlyBars.AddRange(AggregateTicks(ticks, new TimeSpan(1, 0, 0)));
                     }
                 }
-                else
+                catch (Exception e)
                 {
-                    var currentDate = groupedBars.Keys.First();
-                    if (currentDate > toDate)
-                        break;
-
-                    // update the current date
-                    date = currentDate;
-                    dateString = date.ToString("yyyy-MM-dd");
-
-                    barsToSave.AddRange(groupedBars[date]);
+                    Console.WriteLine(e.Message);
                 }
 
-                // calculate the next request datetime (next 5-sec bar time)
-                startDateTime = GetDateTimeFromString(bars[bars.Count - 1].time).AddSeconds(5);
+                date = date.AddDays(1);
             }
 
-            if (barsToSave.Count > 0)
+            if (hourlyBars.Count > 0)
             {
-                SaveBars(barsToSave, symbol, dateString, outputFormat);
-                barsTotalInPeriod.AddRange(barsToSave);
-            }
+                SaveHourlyBars(hourlyBars, symbol);
 
-            // Aggregate bars to hourly bars
-            var hourlyBars = AggregateBars(barsTotalInPeriod, new TimeSpan(1, 0, 0));
-            SaveHourlyBars(hourlyBars, symbol);
-
-            // Aggregate second bars to one single daily bar
-            var dailyBars = AggregateBars(barsTotalInPeriod, new TimeSpan(1, 0, 0, 0));
-            SaveDailyBars(dailyBars, symbol);
-        }
-
-        /// <summary>
-        /// Groups a list of bars into a dictionary keyed by date
-        /// </summary>
-        /// <param name="bars"></param>
-        /// <returns></returns>
-        private static SortedDictionary<DateTime, List<Candle>> GroupBarsByDate(List<Candle> bars)
-        {
-            var groupedBars = new SortedDictionary<DateTime, List<Candle>>();
-
-            foreach (var bar in bars)
-            {
-                var date = GetDateTimeFromString(bar.time).Date;
-
-                if (!groupedBars.ContainsKey(date))
-                    groupedBars[date] = new List<Candle>();
-
-                groupedBars[date].Add(bar);
-            }
-
-            return groupedBars;
-        }
-
-        /// <summary>
-        /// Returns a DateTime from an RFC3339 string (with microsecond resolution)
-        /// </summary>
-        /// <param name="time"></param>
-        private static DateTime GetDateTimeFromString(string time)
-        {
-            return DateTime.ParseExact(time, "yyyy-MM-dd'T'HH:mm:ss.000000'Z'", CultureInfo.InvariantCulture);
-        }
-
-        /// <summary>
-        /// Saves a list of downloaded bars in the requested output format
-        /// </summary>
-        /// <param name="bars"></param>
-        /// <param name="symbol"></param>
-        /// <param name="date"></param>
-        /// <param name="outputFormat"></param>
-        private static void SaveBars(List<Candle> bars, string symbol, string date, string outputFormat)
-        {
-            switch (outputFormat)
-            {
-                // zipped CSV format
-                case "lean":
-                    {
-                        // Write 5-second resolution bars to zip file
-                        SaveSecondBars(bars, symbol, date);
-
-                        // Aggregate to 1-minute resolution + write zip file
-                        var barsMinute = AggregateBars(bars, new TimeSpan(0, 1, 0));
-                        SaveMinuteBars(barsMinute, symbol, date);
-                    }
-                    break;
-
-                default:
-                    throw new NotSupportedException("Unsupported output format.");
+                // Aggregate second bars to one single daily bar
+                var dailyBars = AggregateBars(hourlyBars, new TimeSpan(1, 0, 0, 0));
+                SaveDailyBars(dailyBars, symbol);
             }
         }
 
@@ -350,15 +229,15 @@ namespace QuantConnect.OandaDownloader
                     row.Open.ToString(CultureInfo.InvariantCulture),
                     row.High.ToString(CultureInfo.InvariantCulture),
                     row.Low.ToString(CultureInfo.InvariantCulture),
-                    row.Close.ToString(CultureInfo.InvariantCulture), 
+                    row.Close.ToString(CultureInfo.InvariantCulture),
                     row.TickVolume));
             }
 
-            // File path: /Lean/Data/forex/oanda/daily/eurusd.zip -> eurusd.csv
+            // File path: /Lean/Data/forex/dukascopy/daily/eurusd.zip -> eurusd.csv
             var path = Path.Combine(
                 _settings.OutputFolder,
                 _instruments[symbol].Type.ToString().ToLower(),
-                "oanda",
+                "dukascopy",
                 "hour");
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 
@@ -387,15 +266,15 @@ namespace QuantConnect.OandaDownloader
                     row.Open.ToString(CultureInfo.InvariantCulture),
                     row.High.ToString(CultureInfo.InvariantCulture),
                     row.Low.ToString(CultureInfo.InvariantCulture),
-                    row.Close.ToString(CultureInfo.InvariantCulture), 
+                    row.Close.ToString(CultureInfo.InvariantCulture),
                     row.TickVolume));
             }
 
-            // File path: /Lean/Data/forex/oanda/daily/eurusd.zip -> eurusd.csv
+            // File path: /Lean/Data/forex/dukascopy/daily/eurusd.zip -> eurusd.csv
             var path = Path.Combine(
                 _settings.OutputFolder,
                 _instruments[symbol].Type.ToString().ToLower(),
-                "oanda",
+                "dukascopy",
                 "daily");
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 
@@ -409,12 +288,67 @@ namespace QuantConnect.OandaDownloader
         }
 
         /// <summary>
+        /// Aggregates a list of bars at the requested resolution
+        /// </summary>
+        /// <param name="bars"></param>
+        /// <param name="resolution"></param>
+        /// <returns></returns>
+        private static List<LeanBar> AggregateBars(List<LeanBar> bars, TimeSpan resolution)
+        {
+            return
+                (from b in bars
+                 group b by b.Time.RoundDown(resolution)
+                     into g
+                     select new LeanBar
+                     {
+                         Time = g.Key,
+                         Open = g.First().Open,
+                         High = g.Max(b => b.High),
+                         Low = g.Min(b => b.Low),
+                         Close = g.Last().Close,
+                         TickVolume = g.Sum(b => b.TickVolume)
+                     }).ToList();
+        }
+
+        /// <summary>
+        /// Saves a list of downloaded ticks in the requested output format
+        /// </summary>
+        /// <param name="ticks"></param>
+        /// <param name="symbol"></param>
+        /// <param name="date"></param>
+        /// <param name="outputFormat"></param>
+        private static void SaveBars(List<DukascopyTick> ticks, string symbol, DateTime date, string outputFormat)
+        {
+            switch (outputFormat)
+            {
+                // zipped CSV format
+                case "lean":
+                    {
+                        // Write ticks to zip file
+                        SaveTicks(ticks, symbol, date);
+
+                        // Write 1-second resolution bars to zip file
+                        var barsSecond = AggregateTicks(ticks, new TimeSpan(0, 0, 1));
+                        SaveSecondBars(barsSecond, symbol, date);
+
+                        // Aggregate to 1-minute resolution + write zip file
+                        var barsMinute = AggregateTicks(ticks, new TimeSpan(0, 1, 0));
+                        SaveMinuteBars(barsMinute, symbol, date);
+                    }
+                    break;
+
+                default:
+                    throw new NotSupportedException("Unsupported output format.");
+            }
+        }
+
+        /// <summary>
         /// Saves a list of bars in 1-minute resolution in Lean format (zipped CSV)
         /// </summary>
         /// <param name="minuteBars"></param>
         /// <param name="symbol"></param>
         /// <param name="date"></param>
-        private static void SaveMinuteBars(List<LeanBar> minuteBars, string symbol, string date)
+        private static void SaveMinuteBars(List<LeanBar> minuteBars, string symbol, DateTime date)
         {
             var sb = new StringBuilder();
             foreach (var row in minuteBars)
@@ -426,58 +360,115 @@ namespace QuantConnect.OandaDownloader
                     row.Open.ToString(CultureInfo.InvariantCulture),
                     row.High.ToString(CultureInfo.InvariantCulture),
                     row.Low.ToString(CultureInfo.InvariantCulture),
-                    row.Close.ToString(CultureInfo.InvariantCulture), 
+                    row.Close.ToString(CultureInfo.InvariantCulture),
                     row.TickVolume));
             }
 
-            // File path: /Lean/Data/forex/oanda/minute/eurusd/yyyymmdd_quote.zip -> yyyymmdd_eurusd_minute_quote.csv
+            // File path: /Lean/Data/forex/dukascopy/minute/eurusd/yyyymmdd_quote.zip -> yyyymmdd_eurusd_minute_quote.csv
             var path = Path.Combine(
                 _settings.OutputFolder,
                 _instruments[symbol].Type.ToString().ToLower(),
-                "oanda",
+                "dukascopy",
                 "minute",
                 symbol.Replace("_", "").ToLower());
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 
-            var zipFileName = Path.Combine(path, string.Format("{0}_quote.zip", date.Replace("-", "")));
-            var entryName = string.Format("{0}_{1}_minute_quote.csv", date.Replace("-", ""), symbol.Replace("_", "").ToLower());
+            var zipFileName = Path.Combine(path, string.Format("{0}_quote.zip", date.ToString("yyyyMMdd")));
+            var entryName = string.Format("{0}_{1}_minute_quote.csv", date.ToString("yyyyMMdd"), symbol.Replace("_", "").ToLower());
 
             WriteZipFile(zipFileName, entryName, sb);
         }
 
         /// <summary>
-        /// Saves a list of bars in 5-second resolution in Lean format (zipped CSV)
+        /// Saves a list of bars in 1-second resolution in Lean format (zipped CSV)
         /// </summary>
         /// <param name="secondBars"></param>
         /// <param name="symbol"></param>
         /// <param name="date"></param>
-        private static void SaveSecondBars(List<Candle> secondBars, string symbol, string date)
+        private static void SaveSecondBars(List<LeanBar> secondBars, string symbol, DateTime date)
         {
             var sb = new StringBuilder();
             foreach (var row in secondBars)
             {
                 // convert datetime to millis
-                var timestamp = (int)GetDateTimeFromString(row.time).TimeOfDay.TotalMilliseconds;
+                var timestamp = (int)row.Time.TimeOfDay.TotalMilliseconds;
 
-                sb.AppendLine(string.Join(",", timestamp, 
-                    row.openMid.ToString(CultureInfo.InvariantCulture),
-                    row.highMid.ToString(CultureInfo.InvariantCulture),
-                    row.lowMid.ToString(CultureInfo.InvariantCulture),
-                    row.closeMid.ToString(CultureInfo.InvariantCulture), 
-                    row.volume));
+                sb.AppendLine(string.Join(",", timestamp,
+                    row.Open.ToString(CultureInfo.InvariantCulture),
+                    row.High.ToString(CultureInfo.InvariantCulture),
+                    row.Low.ToString(CultureInfo.InvariantCulture),
+                    row.Close.ToString(CultureInfo.InvariantCulture),
+                    row.TickVolume));
             }
 
-            // File path: /Lean/Data/forex/oanda/second/eurusd/yyyymmdd_quote.zip -> yyyymmdd_eurusd_second_quote.csv
+            // File path: /Lean/Data/forex/dukascopy/second/eurusd/yyyymmdd_quote.zip -> yyyymmdd_eurusd_second_quote.csv
             var path = Path.Combine(
                 _settings.OutputFolder,
                 _instruments[symbol].Type.ToString().ToLower(),
-                "oanda",
+                "dukascopy",
                 "second",
                 symbol.Replace("_", "").ToLower());
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 
-            var zipFileName = Path.Combine(path, string.Format("{0}_quote.zip", date.Replace("-", "")));
-            var entryName = string.Format("{0}_{1}_second_quote.csv", date.Replace("-", ""), symbol.Replace("_", "").ToLower());
+            var zipFileName = Path.Combine(path, string.Format("{0}_quote.zip", date.ToString("yyyyMMdd")));
+            var entryName = string.Format("{0}_{1}_second_quote.csv", date.ToString("yyyyMMdd"), symbol.Replace("_", "").ToLower());
+
+            WriteZipFile(zipFileName, entryName, sb);
+        }
+
+        /// <summary>
+        /// Aggregates a list of ticks at the requested resolution
+        /// </summary>
+        /// <param name="ticks"></param>
+        /// <param name="resolution"></param>
+        /// <returns></returns>
+        private static List<LeanBar> AggregateTicks(List<DukascopyTick> ticks, TimeSpan resolution)
+        {
+            return
+                (from t in ticks
+                 group t by t.Time.RoundDown(resolution)
+                     into g
+                     select new LeanBar
+                     {
+                         Time = g.Key,
+                         Open = g.First().MidPrice,
+                         High = g.Max(t => t.MidPrice),
+                         Low = g.Min(t => t.MidPrice),
+                         Close = g.Last().MidPrice,
+                         TickVolume = g.Count()
+                     }).ToList();
+        }
+
+        /// <summary>
+        /// Saves a list of downloaded ticks in Lean format (zipped CSV)
+        /// </summary>
+        /// <param name="ticks"></param>
+        /// <param name="symbol"></param>
+        /// <param name="date"></param>
+        private static void SaveTicks(List<DukascopyTick> ticks, string symbol, DateTime date)
+        {
+            var sb = new StringBuilder();
+            foreach (var row in ticks)
+            {
+                // convert datetime to millis
+                var timestamp = (int)row.Time.TimeOfDay.TotalMilliseconds;
+
+                sb.AppendLine(string.Join(",", timestamp, 
+                    row.BidPrice.ToString(CultureInfo.InvariantCulture),
+                    row.AskPrice.ToString(CultureInfo.InvariantCulture)));
+            }
+
+            // File path: /Lean/Data/forex/dukascopy/tick/eurusd/yyyymmdd_quote.zip -> yyyymmdd_eurusd_tick_quote.csv
+            var path = Path.Combine(
+                _settings.OutputFolder,
+                _instruments[symbol].Type.ToString().ToLower(),
+                "dukascopy",
+                "tick",
+                symbol.Replace("_", "").ToLower());
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+
+            var zipFileName = Path.Combine(path, string.Format("{0}_quote.zip", date.ToString("yyyyMMdd")));
+            var entryName = string.Format("{0}_{1}_tick_quote.csv", date.ToString("yyyyMMdd"), symbol.Replace("_", "").ToLower());
 
             WriteZipFile(zipFileName, entryName, sb);
         }
@@ -559,62 +550,104 @@ namespace QuantConnect.OandaDownloader
         }
 
         /// <summary>
-        /// Aggregates a list of 5-second bars at the requested resolution
+        /// Downloads all ticks for the specified date
         /// </summary>
-        /// <param name="bars"></param>
-        /// <param name="resolution"></param>
+        /// <param name="symbol"></param>
+        /// <param name="date"></param>
         /// <returns></returns>
-        private static List<LeanBar> AggregateBars(List<Candle> bars, TimeSpan resolution)
+        private static List<DukascopyTick> DownloadTicks(string symbol, DateTime date)
         {
-            return
-                (from b in bars
-                group b by GetDateTimeFromString(b.time).RoundDown(resolution)
-                into g
-                select new LeanBar
+            var ticks = new List<DukascopyTick>();
+
+            var pointValue = _instruments[symbol].PointValue;
+
+            for (int hour = 0; hour < 24; hour++)
+            {
+                var timeOffset = hour * 3600000;
+
+                var url = string.Format(@"http://www.dukascopy.com/datafeed/{0}/{1:D4}/{2:D2}/{3:D2}/{4:D2}h_ticks.bi5", 
+                    symbol, date.Year, date.Month - 1, date.Day, hour);
+
+                if (_settings.EnableTrace)
                 {
-                    Time = g.Key,
-                    Open = g.First().openMid,
-                    High = g.Max(b => b.highMid),
-                    Low = g.Min(b => b.lowMid),
-                    Close = g.Last().closeMid,
-                    TickVolume = g.Sum(b => b.volume)
-                }).ToList();
+                    Console.WriteLine(url);
+                }
+
+                using (var client = new WebClient())
+                {
+                    var bytes = client.DownloadData(url);
+                    if (bytes.Length > 0)
+                    {
+                        AppendTicksToList(ticks, bytes, date, timeOffset, pointValue);
+                    }
+                }
+            }
+
+            return ticks;
         }
 
         /// <summary>
-        /// Downloads a block of 5-second bars from a starting datetime
+        /// Reads ticks from a Dukascopy binary buffer into a list
         /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="start"></param>
-        /// <param name="barsPerRequest"></param>
-        /// <returns></returns>
-        private static async Task<List<Candle>> DownloadBars(string symbol, string start, int barsPerRequest)
+        /// <param name="ticks"></param>
+        /// <param name="bytesBi5"></param>
+        /// <param name="date"></param>
+        /// <param name="timeOffset"></param>
+        /// <param name="pointValue"></param>
+        private static unsafe void AppendTicksToList(List<DukascopyTick> ticks, byte[] bytesBi5, DateTime date, int timeOffset, double pointValue)
         {
-            if (_settings.EnableTrace)
+            using (var inStream = new MemoryStream(bytesBi5))
             {
-                Console.WriteLine("Requesting {0} bars for {1} from {2}", barsPerRequest, symbol, start);
+                using (var outStream = new MemoryStream())
+                {
+                    SevenZipExtractor.DecompressStream(inStream, outStream, (int) inStream.Length, null);
+
+                    byte[] bytes = outStream.GetBuffer();
+                    int count = bytes.Length / DukascopyTickLength;
+
+                    // Numbers are big-endian
+                    // ii1 = milliseconds within the hour
+                    // ii2 = AskPrice * point value
+                    // ii3 = BidPrice * point value
+                    // ff1 = AskVolume (not used)
+                    // ff2 = BidVolume (not used)
+
+                    fixed (byte* pBuffer = &bytes[0])
+                    {
+                        uint* p = (uint*)pBuffer;
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            ReverseBytes(p); uint time = *p++;
+                            ReverseBytes(p); uint ask = *p++;
+                            ReverseBytes(p); uint bid = *p++;
+                            p++; p++;
+
+                            if (bid > 0 && ask > 0)
+                            {
+                                ticks.Add(new DukascopyTick
+                                {
+                                    Time = date.AddMilliseconds(timeOffset + time),
+                                    BidPrice = bid / pointValue,
+                                    AskPrice = ask / pointValue,
+                                    MidPrice = (bid + ask) / (2 * pointValue)
+                                });
+                            }
+                        }
+                    }
+                }
             }
-
-            var request = new CandlesRequest
-            {
-                instrument = symbol,
-                granularity = EGranularity.S5,
-                candleFormat = ECandleFormat.midpoint,
-                count = barsPerRequest,
-                start = Uri.EscapeDataString(start)
-            };
-            var bars = await Rest.GetCandlesAsync(request);
-
-            if (_settings.EnableTrace)
-            {
-                if (bars.Count > 0)
-                    Console.WriteLine("Received {0} bars: {1} to {2}", bars.Count, bars[0].time, bars[bars.Count - 1].time);
-                else
-                    Console.WriteLine("Received 0 bars");
-            }
-
-            return bars;
         }
+
+        /// <summary>
+        /// Converts a 32-bit unsigned integer from big-endian to little-endian (and vice-versa)
+        /// </summary>
+        /// <param name="p"></param>
+        private static unsafe void ReverseBytes(uint* p)
+        {
+            *p = (*p & 0x000000FF) << 24 | (*p & 0x0000FF00) << 8 | (*p & 0x00FF0000) >> 8 | (*p & 0xFF000000) >> 24;
+        }
+
 
     }
 }

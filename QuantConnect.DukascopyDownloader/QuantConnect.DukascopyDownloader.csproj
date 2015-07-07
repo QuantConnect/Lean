@@ -4,14 +4,13 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{53571A91-B351-4ACA-842A-FB16E7782A50}</ProjectGuid>
+    <ProjectGuid>{6D72FCA6-CBFA-4BDB-93BD-261AE143C4AF}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>QuantConnect.OandaDownloader</RootNamespace>
-    <AssemblyName>QuantConnect.OandaDownloader</AssemblyName>
+    <RootNamespace>QuantConnect.DukascopyDownloader</RootNamespace>
+    <AssemblyName>QuantConnect.DukascopyDownloader</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <NuGetPackageImportStamp>8354f8e3</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -23,6 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -33,6 +33,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ionic.Zip, Version=1.9.3.0, Culture=neutral, processorArchitecture=MSIL">
@@ -43,11 +44,12 @@
       <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="SevenZipSharp, Version=0.64.3890.29348, Culture=neutral, PublicKeyToken=20de82c62b055c88, processorArchitecture=MSIL">
+      <HintPath>..\packages\SevenZipSharp.0.64\lib\SevenZipSharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Net" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Net.Http.WebRequest" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -56,14 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigSettings.cs" />
-    <Compile Include="OandaRestLibrary\Credentials.cs" />
-    <Compile Include="OandaRestLibrary\Rest.cs" />
-    <Compile Include="OandaRestLibrary\TradeLibrary\Candle.cs" />
-    <Compile Include="OandaRestLibrary\TradeLibrary\Communications\CandlesResponse.cs" />
-    <Compile Include="OandaRestLibrary\TradeLibrary\Communications\InstrumentsResponse.cs" />
-    <Compile Include="OandaRestLibrary\TradeLibrary\Communications\Requests\CandlesRequest.cs" />
-    <Compile Include="OandaRestLibrary\TradeLibrary\Communications\Requests\Request.cs" />
-    <Compile Include="OandaRestLibrary\TradeLibrary\Instrument.cs" />
+    <Compile Include="DukascopyTick.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -81,7 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\QuantConnect.ToolBox\QuantConnect.ToolBox.csproj">
-      <Project>{ac9a142c-b485-44d7-91ff-015c22c43d05}</Project>
+      <Project>{AC9A142C-B485-44D7-91FF-015C22C43D05}</Project>
       <Name>QuantConnect.ToolBox</Name>
     </ProjectReference>
   </ItemGroup>
