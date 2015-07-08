@@ -244,6 +244,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         return false;
                     }
 
+                    // this happens when a single file has multiple days worth of data,
+                    // we still want to advance our tradeable dates enumerator
+                    if (instance.EndTime.Date > _tradeableDates.Current)
+                    {
+                        DateTime date;
+                        TryGetNextDate(out date);
+
+                        // we produce auxiliary data on date changes, so check for the data
+                        if (_auxiliaryData.Count > 0)
+                        {
+                            // check for any auxilliary data before reading a line
+                            Current = _auxiliaryData.Dequeue();
+                            return true;
+                        }
+                    }
+
                     // we've made it past all of our filters, we're withing the requested start/end of the subscription,
                     // we've satisfied user and market hour filters, so this data is good to go as current
                     Current = instance;
@@ -380,6 +396,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 date = _tradeableDates.Current;
                 if (!_mapFile.HasData(date))
+                {
+                    continue;
+                }
+
+                // don't do other checks if we haven't goten data for this date yet
+                if (_previous != null && _previous.EndTime > _tradeableDates.Current)
                 {
                     continue;
                 }

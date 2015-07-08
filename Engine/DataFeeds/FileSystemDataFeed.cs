@@ -207,6 +207,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // never go backwards in time, so take the max between early birds and the current frontier
                     frontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks));
                 }
+
+                Bridge.CompleteAdding();
             }
             catch (Exception err)
             {
@@ -216,11 +218,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 Log.Trace("FileSystemDataFeed.Run(): Data Feed Completed at " + frontier);
                 LoadingComplete = true;
-                if (!_cancellationTokenSource.IsCancellationRequested)
-                {
-                    // if we've already disposed the collection then don't mark it as completed adding, it's gone!
-                    Bridge.CompleteAdding();
-                }
 
                 //Close up all streams:
                 for (var i = 0; i < Subscriptions.Count; i++)
