@@ -27,17 +27,18 @@ namespace QuantConnect.Tests.Common.Securities.Equity
     [TestFixture]
     public class EquityTransactionModelTests
     {
+        private static readonly DateTime Noon = new DateTime(2014, 6, 24, 12, 0, 0);
         private const string Symbol = "SPY";
 
         [Test]
         public void PerformsMarketFillBuy()
         {
             var model = new EquityTransactionModel();
-            var order = new MarketOrder(Symbol, 100, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
+            var order = new MarketOrder(Symbol, 100, Noon, type: SecurityType.Equity);
+            var config = CreateTradeBarConfig(Symbol);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101.123m));
+            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101.123m));
 
             var fill = model.MarketFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
@@ -49,11 +50,11 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         public void PerformsMarketFillSell()
         {
             var model = new EquityTransactionModel();
-            var order = new MarketOrder(Symbol, -100, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
+            var order = new MarketOrder(Symbol, -100, Noon, type: SecurityType.Equity);
+            var config = CreateTradeBarConfig(Symbol);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101.123m));
+            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101.123m));
 
             var fill = model.MarketFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
@@ -66,10 +67,10 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         public void PerformsLimitFillBuy()
         {
             var model = new EquityTransactionModel();
-            var order = new LimitOrder(Symbol, 100, 101.5m, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 102m));
+            var order = new LimitOrder(Symbol, 100, 101.5m, Noon, type: SecurityType.Equity);
+            var config = CreateTradeBarConfig(Symbol);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 102m));
 
             var fill = model.LimitFill(security, order);
 
@@ -78,7 +79,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new TradeBar(DateTime.Now, Symbol, 102m, 103m, 101m, 102.3m, 100));
+            security.SetMarketPrice(Noon, new TradeBar(Noon, Symbol, 102m, 103m, 101m, 102.3m, 100));
 
             fill = model.LimitFill(security, order);
 
@@ -93,10 +94,10 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         public void PerformsLimitFillSell()
         {
             var model = new EquityTransactionModel();
-            var order = new LimitOrder(Symbol, -100, 101.5m, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101m));
+            var order = new LimitOrder(Symbol, -100, 101.5m, Noon, type: SecurityType.Equity);
+            var config = CreateTradeBarConfig(Symbol);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101m));
 
             var fill = model.LimitFill(security, order);
 
@@ -105,7 +106,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new TradeBar(DateTime.Now, Symbol, 102m, 103m, 101m, 102.3m, 100));
+            security.SetMarketPrice(Noon, new TradeBar(Noon, Symbol, 102m, 103m, 101m, 102.3m, 100));
 
             fill = model.LimitFill(security, order);
 
@@ -120,10 +121,10 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         public void PerformsStopLimitFillBuy()
         {
             var model = new EquityTransactionModel();
-            var order = new StopLimitOrder(Symbol, 100, 101.5m, 101.75m, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 100m));
+            var order = new StopLimitOrder(Symbol, 100, 101.5m, 101.75m, Noon, type: SecurityType.Equity);
+            var config = CreateTradeBarConfig(Symbol);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 100m));
 
             var fill = model.StopLimitFill(security, order);
 
@@ -132,7 +133,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 102m));
+            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 102m));
 
             fill = model.StopLimitFill(security, order);
 
@@ -141,7 +142,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101.66m));
+            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101.66m));
 
             fill = model.StopLimitFill(security, order);
 
@@ -156,10 +157,10 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         public void PerformsStopLimitFillSell()
         {
             var model = new EquityTransactionModel();
-            var order = new StopLimitOrder(Symbol, -100, 101.75m, 101.50m, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 102m));
+            var order = new StopLimitOrder(Symbol, -100, 101.75m, 101.50m, Noon, type: SecurityType.Equity);
+            var config = CreateTradeBarConfig(Symbol);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 102m));
 
             var fill = model.StopLimitFill(security, order);
 
@@ -168,7 +169,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101m));
+            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101m));
 
             fill = model.StopLimitFill(security, order);
 
@@ -177,7 +178,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101.66m));
+            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101.66m));
 
             fill = model.StopLimitFill(security, order);
 
@@ -192,10 +193,10 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         public void PerformsStopMarketFillBuy()
         {
             var model = new EquityTransactionModel();
-            var order = new StopMarketOrder(Symbol, 100, 101.5m, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101m));
+            var order = new StopMarketOrder(Symbol, 100, 101.5m, Noon, type: SecurityType.Equity);
+            var config = CreateTradeBarConfig(Symbol);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101m));
 
             var fill = model.StopMarketFill(security, order);
 
@@ -204,7 +205,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 102.5m));
+            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 102.5m));
 
             fill = model.StopMarketFill(security, order);
 
@@ -219,10 +220,10 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         public void PerformsStopMarketFillSell()
         {
             var model = new EquityTransactionModel();
-            var order = new StopMarketOrder(Symbol, -100, 101.5m, DateTime.Now, type: SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 102m));
+            var order = new StopMarketOrder(Symbol, -100, 101.5m, Noon, type: SecurityType.Equity);
+            var config = CreateTradeBarConfig(Symbol);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 102m));
 
             var fill = model.StopMarketFill(security, order);
 
@@ -231,7 +232,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101m));
+            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101m));
 
             fill = model.StopMarketFill(security, order);
 
@@ -240,6 +241,10 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             Assert.AreEqual(Math.Min(security.Price, order.StopPrice), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
             Assert.AreEqual(OrderStatus.Filled, order.Status);
+        }
+        private SubscriptionDataConfig CreateTradeBarConfig(string symbol)
+        {
+            return new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, symbol, Resolution.Minute, "usa", TimeZones.NewYork, true, true, true, true, false, 0);
         }
     }
 }

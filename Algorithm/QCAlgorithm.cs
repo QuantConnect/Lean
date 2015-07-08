@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using NodaTime;
+using NodaTime.TimeZones;
 using System.Linq;
 using System.Linq.Expressions;
 using QuantConnect.Brokerages;
@@ -36,7 +38,9 @@ namespace QuantConnect.Algorithm
     /// </summary>
     public partial class QCAlgorithm : MarshalByRefObject, IAlgorithm
     {
-        private DateTime _time;
+        private readonly TimeKeeper _timeKeeper;
+        private LocalTimeKeeper _localTimeKeeper;
+
         private DateTime _startDate;   //Default start and end dates.
         private DateTime _endDate;     //Default end to yesterday
         private RunMode _runMode = RunMode.Series;
@@ -53,6 +57,8 @@ namespace QuantConnect.Algorithm
         private string _previousErrorMessage = "";
         private bool _sentNoDataError = false;
 
+        private readonly SecurityExchangeHoursProvider _exchangeHoursProvider;
+
         // used for calling through to void OnData(Slice) if no override specified
         private bool _checkedForOnDataSlice;
         private Action<Slice> _onDataSlice;
@@ -67,10 +73,19 @@ namespace QuantConnect.Algorithm
             //- Note - ideally these wouldn't be here, but because of the DLL we need to make the classes shared across 
             //  the Worker & Algorithm, limiting ability to do anything else.
 
-            //Initialise Data Manager 
-            SubscriptionManager = new SubscriptionManager();
+            //Initialise Start and End Dates:
+            _startDate = new DateTime(1998, 01, 01);
+            _endDate = DateTime.Now.AddDays(-1);
 
-            Securities = new SecurityManager();
+            // intialize our time keeper with only new york
+            _timeKeeper = new TimeKeeper(_startDate, new[] { TimeZones.NewYork });
+            // set our local time zone
+            _localTimeKeeper = _timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
+
+            //Initialise Data Manager 
+            SubscriptionManager = new SubscriptionManager(_timeKeeper);
+
+            Securities = new SecurityManager(_timeKeeper);
             Transactions = new SecurityTransactionManager(Securities);
             Portfolio = new SecurityPortfolioManager(Securities, Transactions);
             BrokerageModel = new DefaultBrokerageModel();
@@ -82,9 +97,8 @@ namespace QuantConnect.Algorithm
             //Initialise to unlocked:
             _locked = false;
 
-            //Initialise Start and End Dates:
-            _startDate = new DateTime(1998, 01, 01);
-            _endDate = DateTime.Now.AddDays(-1);
+            // get exchange hours loaded from the market-hours-database.csv in /Data/market-hours
+            _exchangeHoursProvider = SecurityExchangeHoursProvider.FromDataFolder();
         }
 
         /// <summary>
@@ -150,15 +164,29 @@ namespace QuantConnect.Algorithm
 
 
         /// <summary>
-        /// Read-only value for current time frontier of the algorithm and event horizon. 
+        /// Read-only value for current time frontier of the algorithm in terms of the <see cref="TimeZone"/>
         /// </summary>
         /// <remarks>During backtesting this is primarily sourced from the data feed. During live trading the time is updated from the system clock.</remarks>
-        public DateTime Time 
+        public DateTime Time
         {
-            get 
-            {
-                return _time;
-            }
+            get { return _localTimeKeeper.LocalTime; }
+        }
+
+        /// <summary>
+        /// Current date/time in UTC.
+        /// </summary>
+        public DateTime UtcTime
+        {
+            get { return _timeKeeper.UtcTime; }
+        }
+
+        /// <summary>
+        /// Gets the time zone used for the <see cref="Time"/> property. The default value
+        /// is <see cref="TimeZones.NewYork"/>
+        /// </summary>
+        public DateTimeZone TimeZone
+        {
+            get {  return _localTimeKeeper.TimeZone; }
         }
 
         /// <summary>
@@ -427,16 +455,48 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Update the interal algorithm time frontier.
+        /// Update the internal algorithm time frontier.
         /// </summary>
         /// <remarks>For internal use only to advance time.</remarks>
         /// <param name="frontier">Current datetime.</param>
         public void SetDateTime(DateTime frontier) 
         {
-            if (frontier > _time)
+            _timeKeeper.SetUtcDateTime(frontier);
+        }
+
+        /// <summary>
+        /// Sets the time zone of the <see cref="Time"/> property in the algorithm
+        /// </summary>
+        /// <param name="timeZone">The desired time zone</param>
+        public void SetTimeZone(string timeZone)
+        {
+            DateTimeZone tz;
+            try
             {
-                _time = frontier;
+                tz = DateTimeZoneProviders.Tzdb[timeZone];
             }
+            catch (DateTimeZoneNotFoundException)
+            {
+                throw new ArgumentException(string.Format("TimeZone with id '{0}' was not found. For a complete list of time zones please visit: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones", timeZone));
+            }
+
+            SetTimeZone(tz);
+        }
+
+        /// <summary>
+        /// Sets the time zone of the <see cref="Time"/> property in the algorithm
+        /// </summary>
+        /// <param name="timeZone">The desired time zone</param>
+        public void SetTimeZone(DateTimeZone timeZone)
+        {
+            if (_locked)
+            {
+                throw new Exception("Algorithm.SetTimeZone(): Cannot change time zone after algorithm running.");
+            }
+
+            if (timeZone == null) throw new ArgumentNullException("timeZone");
+            _timeKeeper.AddTimeZone(timeZone);
+            _localTimeKeeper = _timeKeeper.GetLocalTimeKeeper(timeZone);
         }
 
         /// <summary>
@@ -743,6 +803,21 @@ namespace QuantConnect.Algorithm
         /// <remarks> AddSecurity(SecurityType securityType, string symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours)</remarks>
         public void AddSecurity(SecurityType securityType, string symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours) 
         {
+            AddSecurity(securityType, symbol, resolution, null, fillDataForward, leverage, extendedMarketHours);
+        }
+            
+        /// <summary>
+        /// Set a required SecurityType-symbol and resolution for algorithm
+        /// </summary>
+        /// <param name="securityType">SecurityType Enum: Equity, Commodity, FOREX or Future</param>
+        /// <param name="symbol">Symbol Representation of the MarketType, e.g. AAPL</param>
+        /// <param name="resolution">Resolution of the MarketType required: MarketData, Second or Minute</param>
+        /// <param name="market">The market the requested security belongs to, such as 'usa' or 'fxcm'</param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice.</param>
+        /// <param name="leverage">leverage for this security</param>
+        /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
+        public void AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
+        {
             try
             {
                 if (_locked)
@@ -765,14 +840,23 @@ namespace QuantConnect.Algorithm
                     }
                 }
 
+                if (market == null)
+                {
+                    // set default values
+                    if (securityType == SecurityType.Forex) market = "fxcm";
+                    else if (securityType == SecurityType.Equity) market = "usa";
+                    else market = "usa";
+                }
+
                 //Add the symbol to Data Manager -- generate unified data streams for algorithm events
-                var config = SubscriptionManager.Add(securityType, symbol, resolution, fillDataForward, extendedMarketHours);
+                var exchangeHours = _exchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
+                var config = SubscriptionManager.Add(securityType, symbol, resolution, market, exchangeHours.TimeZone, fillDataForward, extendedMarketHours);
 
                 Security security;
                 switch (config.SecurityType)
                 {
                     case SecurityType.Equity:
-                        security = new Equity(config, leverage, false);
+                        security = new Equity(exchangeHours, config, leverage, false);
                         break;
 
                     case SecurityType.Forex:
@@ -790,12 +874,12 @@ namespace QuantConnect.Algorithm
                             // since we have none it's safe to say the conversion is zero
                             Portfolio.CashBook.Add(quoteCurrency, 0, 0);
                         }
-                        security = new Forex(Portfolio.CashBook[quoteCurrency], config, leverage, false);
+                        security = new Forex(exchangeHours, Portfolio.CashBook[quoteCurrency], config, leverage, false);
                         break;
 
                     default:
                     case SecurityType.Base:
-                        security = new Security(config, leverage, false);
+                        security = new Security(exchangeHours, config, leverage, false);
                         break;
                 }
 
@@ -857,10 +941,12 @@ namespace QuantConnect.Algorithm
             symbol = symbol.ToUpper();
 
             //Add this to the data-feed subscriptions
-            var config = SubscriptionManager.Add(typeof(T), SecurityType.Base, symbol, resolution, fillDataForward, extendedMarketHours: true, isTradeBar: isTradeBar, hasVolume: hasVolume);
+            var config = SubscriptionManager.Add(typeof(T), SecurityType.Base, symbol, resolution, "usa", TimeZones.NewYork, fillDataForward, true, isTradeBar, hasVolume, false);
+
+            var exchangeHours = _exchangeHoursProvider.GetExchangeHours(config);
 
             //Add this new generic data as a tradeable security: 
-            var security = new Security(config, leverage,  true);
+            var security = new Security(exchangeHours, config, leverage, true);
             Securities.Add(symbol, security);
         }
 

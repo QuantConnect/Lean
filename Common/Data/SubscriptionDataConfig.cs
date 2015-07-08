@@ -17,6 +17,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
+using NodaTime;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Securities;
 
@@ -103,9 +105,14 @@ namespace QuantConnect.Data
         public string MappedSymbol;
 
         /// <summary>
-        /// Set the market / scope of the symbol
+        /// Gets the market / scope of the symbol
         /// </summary>
-        public string Market;
+        public readonly string Market;
+
+        /// <summary>
+        /// Gets the time zone for this subscription
+        /// </summary>
+        public readonly DateTimeZone TimeZone;
 
         /// <summary>
         /// Consolidators that are registred with this subscription
@@ -119,6 +126,8 @@ namespace QuantConnect.Data
         /// <param name="securityType">SecurityType Enum Set Equity/FOREX/Futures etc.</param>
         /// <param name="symbol">Symbol of the asset we're requesting</param>
         /// <param name="resolution">Resolution of the asset we're requesting</param>
+        /// <param name="market">The market this subscription comes from</param>
+        /// <param name="timeZone">The time zone the raw data is time stamped in</param>
         /// <param name="fillForward">Fill in gaps with historical data</param>
         /// <param name="extendedHours">Equities only - send in data from 4am - 8pm</param>
         /// <param name="isTradeBar">Set to true if the objectType has Open, High, Low, and Close properties defines, does not need to directly derive from the TradeBar class
@@ -131,11 +140,13 @@ namespace QuantConnect.Data
             SecurityType securityType, 
             string symbol, 
             Resolution resolution, 
+            string market, 
+            DateTimeZone timeZone,
             bool fillForward, 
-            bool extendedHours, 
-            bool isTradeBar, 
-            bool hasVolume, 
-            bool isInternalFeed, 
+            bool extendedHours,
+            bool isTradeBar,
+            bool hasVolume,
+            bool isInternalFeed,
             int subscriptionIndex)
         {
             Type = objectType;
@@ -150,7 +161,19 @@ namespace QuantConnect.Data
             MappedSymbol = symbol;
             IsInternalFeed = isInternalFeed;
             SubscriptionIndex = subscriptionIndex;
+            Market = market;
+            TimeZone = timeZone;
             Consolidators = new List<IDataConsolidator>();
+
+            // verify the market string contains letters a-Z
+            if (string.IsNullOrWhiteSpace(market))
+            {
+                throw new ArgumentException("The market cannot be an empty string.");
+            }
+            if (!Regex.IsMatch(market, @"^[a-zA-Z]+$"))
+            {
+                throw new ArgumentException("The market must only contain letters A-Z.");
+            }
 
             switch (resolution)
             {

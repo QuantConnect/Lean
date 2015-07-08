@@ -98,6 +98,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\NodaTime.1.3.1\lib\net35-Client\NodaTime.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.configuration" />
@@ -135,6 +139,7 @@
     <Compile Include="Data\Slice.cs" />
     <Compile Include="Data\SubscriptionDataSource.cs" />
     <Compile Include="Field.cs" />
+    <Compile Include="LocalTimeKeeper.cs" />
     <Compile Include="Market.cs" />
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
@@ -153,6 +158,9 @@
     <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
     <Compile Include="Securities\Equity\EquityMarginModel.cs" />
     <Compile Include="Securities\Equity\EquityPortfolioModel.cs" />
+    <Compile Include="Securities\LocalMarketHours.cs" />
+    <Compile Include="Securities\SecurityExchangeHours.cs" />
+    <Compile Include="Securities\SecurityExchangeHoursProvider.cs" />
     <Compile Include="Securities\Forex\ForexMarginModel.cs" />
     <Compile Include="Securities\Forex\ForexPortfolioModel.cs" />
     <Compile Include="Securities\IHoldingsProvider.cs" />
@@ -228,6 +236,9 @@
     <Compile Include="Realtime.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TimeKeeper.cs" />
+    <Compile Include="TimeZoneOffsetProvider.cs" />
+    <Compile Include="TimeZones.cs" />
     <Compile Include="Util\Composer.cs" />
     <Compile Include="Util\ExpressionBuilder.cs" />
     <Compile Include="Util\FixedSizeQueue.cs" />

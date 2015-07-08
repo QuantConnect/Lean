@@ -27,14 +27,21 @@ namespace QuantConnect.Tests.Common.Securities.Forex
     public class ForexTransactionModelTests
     {
         private const string Symbol = "USDJPY";
-
+        private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, string symbol)
+        {
+            if (type == SecurityType.Equity)
+                return new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, symbol, Resolution.Minute, "usa", TimeZones.NewYork, true, true, true, true, true, 0);
+            if (type == SecurityType.Forex)
+                return new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Forex, symbol, Resolution.Minute, "fxcm", TimeZones.NewYork, true, true, true, true, true, 2);
+            throw new NotImplementedException(type.ToString());
+        }
         [Test]
         public void PerformsMarketFillBuy()
         {
             var model = new ForexTransactionModel();
             var order = new MarketOrder(Symbol, 100, DateTime.Now, type: SecurityType.Forex);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Forex, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
+            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
+            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
 
             security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101.123m));
 
@@ -52,8 +59,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             var model = new ForexTransactionModel();
             var order = new MarketOrder(Symbol, -100, DateTime.Now, type: SecurityType.Forex);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Forex, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
+            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
+            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
 
             security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101.123m));
 
@@ -72,8 +79,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             var model = new ForexTransactionModel();
             var order = new LimitOrder(Symbol, 100, 101.5m, DateTime.Now, type: SecurityType.Forex);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Forex, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
+            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
+            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
             security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 102m));
 
             var fill = model.LimitFill(security, order);
@@ -99,8 +106,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             var model = new ForexTransactionModel();
             var order = new LimitOrder(Symbol, -100, 101.5m, DateTime.Now, type: SecurityType.Forex);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Forex, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
+            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
+            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
             security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101m));
 
             var fill = model.LimitFill(security, order);
@@ -126,8 +133,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             var model = new ForexTransactionModel();
             var order = new StopLimitOrder(Symbol, 100, 101.5m, 101.75m, DateTime.Now, type: SecurityType.Forex);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Forex, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
+            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
+            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
             security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 100m));
 
             var fill = model.StopLimitFill(security, order);
@@ -162,8 +169,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             var model = new ForexTransactionModel();
             var order = new StopLimitOrder(Symbol, -100, 101.75m, 101.50m, DateTime.Now, type: SecurityType.Forex);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Forex, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
+            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
+            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
             security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 102m));
 
             var fill = model.StopLimitFill(security, order);
@@ -198,8 +205,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             var model = new ForexTransactionModel();
             var order = new StopMarketOrder(Symbol, 100, 101.5m, DateTime.Now, type: SecurityType.Forex);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Forex, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
+            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
+            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
             security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 101m));
 
             var fill = model.StopMarketFill(security, order);
@@ -227,8 +234,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             var model = new ForexTransactionModel();
             var order = new StopMarketOrder(Symbol, -100, 101.5m, DateTime.Now, type: SecurityType.Forex);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Forex, Symbol, Resolution.Minute, true, true, true, true, false, 0);
-            var security = new Security(config, 1);
+            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
+            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
             security.SetMarketPrice(DateTime.Now, new IndicatorDataPoint(Symbol, DateTime.Now, 102m));
 
             var fill = model.StopMarketFill(security, order);

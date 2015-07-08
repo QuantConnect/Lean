@@ -204,14 +204,14 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false) 
+        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false) 
         {
             _config = config;
             _symbol = config.Symbol;
             _isDynamicallyLoadedData = isDynamicallyLoadedData;
 
             Cache = new SecurityCache();
-            Exchange = new SecurityExchange();
+            Exchange = new SecurityExchange(exchangeHours);
             DataFilter = new SecurityDataFilter();
             PortfolioModel = new SecurityPortfolioModel();
             TransactionModel = new SecurityTransactionModel();
@@ -417,20 +417,5 @@ namespace QuantConnect.Securities
         {
             _config.DataNormalizationMode = mode;
         }
-
-        /// <summary>
-        /// Sets the market / scope for this security
-        /// </summary>
-        public void SetMarket(string market)
-        {
-            if (string.IsNullOrWhiteSpace(market))
-                throw new ArgumentException("The market cannot be an empty string.");
-
-            if (!Regex.IsMatch(market, @"^[a-zA-Z]+$"))
-                throw new ArgumentException("The market must only contain letters A-Z.");
-
-            _config.Market = market;
-        }
-
-    } // End Security
-} // End QC Namespace
+    }
+}

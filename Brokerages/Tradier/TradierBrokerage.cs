@@ -49,7 +49,8 @@ namespace QuantConnect.Brokerages.Tradier
         private readonly long _accountID;
 
         // we're reusing the equity exchange here to grab typical exchange hours
-        private static readonly EquityExchange Exchange = new EquityExchange();
+        private static readonly EquityExchange Exchange =
+            new EquityExchange(SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours("usa", null, SecurityType.Equity));
         
         //Access and Refresh Tokens:
         private string _previousResponseRaw = "";

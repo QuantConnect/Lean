@@ -26,7 +26,8 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class TradierBrokerageModel : IBrokerageModel
     {
-        private static readonly EquityExchange EquityExchange = new EquityExchange();
+        private static readonly EquityExchange EquityExchange = 
+            new EquityExchange(SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours("usa", null, SecurityType.Equity));
 
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account

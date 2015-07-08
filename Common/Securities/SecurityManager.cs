@@ -28,8 +28,10 @@ namespace QuantConnect.Securities
     /// <remarks>Implements IDictionary for the index searching of securities by symbol</remarks>
     public class SecurityManager : IDictionary<string, Security> 
     {
+        private readonly TimeKeeper _timeKeeper;
+
         //Internal dictionary implementation:
-        private IDictionary<string, Security> _securityManager;
+        private readonly IDictionary<string, Security> _securityManager;
         private int _minuteLimit = 500;
         private int _minuteMemory = 2;
         private int _secondLimit = 100;
@@ -41,9 +43,11 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Initialise the algorithm security manager with two empty dictionaries
         /// </summary>
-        public SecurityManager()
+        /// <param name="timeKeeper"></param>
+        public SecurityManager(TimeKeeper timeKeeper)
         {
-            _securityManager = new Dictionary<string, Security>(); 
+            _timeKeeper = timeKeeper;
+            _securityManager = new Dictionary<string, Security>();
         }
 
         /// <summary>
@@ -297,7 +301,9 @@ namespace QuantConnect.Securities
                             break;
                         }
                     }
-                    security.SetMarketPrice(time, dataPoint);
+
+                    var localTimeKeeper = _timeKeeper.GetLocalTimeKeeper(security.SubscriptionDataConfig.TimeZone);
+                    security.SetMarketPrice(localTimeKeeper.LocalTime, dataPoint);
                 }
             }
             catch (Exception err) 

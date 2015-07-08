@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -120,7 +121,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Setup Base Algorithm:
                     algorithm.Initialize();
                     //Add currency data feeds that weren't explicity added in Initialize
-                    algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager);
+                    algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager, SecurityExchangeHoursProvider.FromDataFolder());
 
                     //Construct the backtest job packet:
                     backtestJob.PeriodStart = algorithm.StartDate;

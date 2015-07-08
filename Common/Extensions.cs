@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
 using System.Timers;
+using NodaTime;
 
 namespace QuantConnect 
 {
@@ -296,6 +297,29 @@ namespace QuantConnect
                 return time;
             }
             return new DateTime(((time.Ticks + d.Ticks - 1) / d.Ticks) * d.Ticks);
+        }
+
+        /// <summary>
+        /// Converts the specified time to an instant using the time zone
+        /// </summary>
+        /// <param name="time">The time in the time zone</param>
+        /// <param name="timeZone">The time zone the time is measured in</param>
+        /// <returns>An instant that represents the exact moment on the timeline</returns>
+        public static Instant ToInstant(this DateTime time, DateTimeZone timeZone)
+        {
+            return timeZone.AtStrictly(LocalDateTime.FromDateTime(time)).ToInstant();
+        }
+
+        /// <summary>
+        /// Converts the specified time from the <paramref name="from"/> time zone to the <paramref name="to"/> time zone
+        /// </summary>
+        /// <param name="time">The time to be converted in terms of the <paramref name="from"/> time zone</param>
+        /// <param name="from">The time zone the specified <paramref name="time"/> is in</param>
+        /// <param name="to">The time zone to be converted to</param>
+        /// <returns>The time in terms of the to time zone</returns>
+        public static DateTime ConvertTo(this DateTime time, DateTimeZone from, DateTimeZone to)
+        {
+            return from.AtStrictly(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
         }
 
         /// <summary>

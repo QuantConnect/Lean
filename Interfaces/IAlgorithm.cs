@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using NodaTime;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Notifications;
@@ -93,9 +94,25 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
-        /// Current date/time.
+        /// Current date/time in the algorithm's local time zone
         /// </summary>
         DateTime Time
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the time zone of the algorithm
+        /// </summary>
+        DateTimeZone TimeZone
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Current date/time in UTC.
+        /// </summary>
+        DateTime UtcTime
         {
             get;
         }
@@ -288,10 +305,11 @@ namespace QuantConnect.Interfaces
         /// <param name="securityType">SecurityType Enum: Equity, Commodity, FOREX or Future</param>
         /// <param name="symbol">Symbol Representation of the MarketType, e.g. AAPL</param>
         /// <param name="resolution">Resolution of the MarketType required: MarketData, Second or Minute</param>
+        /// <param name="market">The market the requested security belongs to, such as 'usa' or 'fxcm'</param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
-        void AddSecurity(SecurityType securityType, string symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours);
+        void AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours);
 
         /// <summary>
         /// Set the starting capital for the strategy
