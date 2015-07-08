@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.QuantQuote", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.OandaDownloader", "QuantConnect.OandaDownloader\QuantConnect.OandaDownloader.csproj", "{53571A91-B351-4ACA-842A-FB16E7782A50}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.DukascopyDownloader", "QuantConnect.DukascopyDownloader\QuantConnect.DukascopyDownloader.csproj", "{6D72FCA6-CBFA-4BDB-93BD-261AE143C4AF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{53571A91-B351-4ACA-842A-FB16E7782A50}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53571A91-B351-4ACA-842A-FB16E7782A50}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53571A91-B351-4ACA-842A-FB16E7782A50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D72FCA6-CBFA-4BDB-93BD-261AE143C4AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D72FCA6-CBFA-4BDB-93BD-261AE143C4AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D72FCA6-CBFA-4BDB-93BD-261AE143C4AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D72FCA6-CBFA-4BDB-93BD-261AE143C4AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
