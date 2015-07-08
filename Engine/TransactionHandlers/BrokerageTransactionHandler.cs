@@ -339,29 +339,40 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Sync cash balance");
 
-                var balances = _brokerage.GetCashBalance();
-                if (balances.Count > 0)
+                var balances = new List<Cash>();
+                try
                 {
-                    // if we were returned our balances, update everything and flip our flag as having performed sync today
-                    foreach (var balance in balances)
-                    {
-                        Cash cash;
-                        if (_algorithm.Portfolio.CashBook.TryGetValue(balance.Symbol, out cash))
-                        {
-                            // compare in dollars
-                            var delta = cash.Quantity - balance.Quantity;
-                            if (Math.Abs(delta) > _algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol))
-                            {
-                                // log the delta between 
-                                Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): {0} Delta: {1}", balance.Symbol,
-                                    delta.ToString("0.00"));
-                            }
-                        }
-                        _algorithm.Portfolio.SetCash(balance.Symbol, balance.Quantity, balance.ConversionRate);
-                    }
-
-                    _syncedLiveBrokerageCashToday = true;
+                    balances = _brokerage.GetCashBalance();
                 }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                }
+
+                if (balances.Count == 0)
+                {
+                    return;
+                }
+                
+                // if we were returned our balances, update everything and flip our flag as having performed sync today
+                foreach (var balance in balances)
+                {
+                    Cash cash;
+                    if (_algorithm.Portfolio.CashBook.TryGetValue(balance.Symbol, out cash))
+                    {
+                        // compare in dollars
+                        var delta = cash.Quantity - balance.Quantity;
+                        if (Math.Abs(delta) > _algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol))
+                        {
+                            // log the delta between 
+                            Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): {0} Delta: {1}", balance.Symbol,
+                                delta.ToString("0.00"));
+                        }
+                    }
+                    _algorithm.Portfolio.SetCash(balance.Symbol, balance.Quantity, balance.ConversionRate);
+                }
+
+                _syncedLiveBrokerageCashToday = true;
             }
             finally
             {
@@ -424,7 +435,18 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
 
                 // set the order status based on whether or not we successfully submitted the order to the market
-                if (_brokerage.PlaceOrder(order))
+                bool orderPlaced;
+                try
+                {
+                    orderPlaced = _brokerage.PlaceOrder(order);
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    orderPlaced = false;
+                }
+
+                if (orderPlaced)
                 {
                     order.Status = OrderStatus.Submitted;
                 }
@@ -450,7 +472,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (_orders.TryGetValue(order.Id, out queued) && CanUpdateOrder(queued)) // cant update filled or canceled orders
             {
                 _orders[order.Id] = order;
-                if (!_brokerage.UpdateOrder(order))
+                
+                bool orderUpdated;
+                try
+                {
+                    orderUpdated = _brokerage.UpdateOrder(order);
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    orderUpdated = false;
+                }
+
+                if (!orderUpdated)
                 {
                     // we failed to update the order for some reason
                     order.Status = OrderStatus.Invalid;
@@ -486,7 +520,18 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 _orders[order.Id] = order;
 
-                if (!_brokerage.CancelOrder(order))
+                bool orderCanceled;
+                try
+                {
+                    orderCanceled = _brokerage.CancelOrder(order);
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    orderCanceled = false;
+                }
+
+                if (!orderCanceled)
                 {
                     // we failed to cancel the order for some reason
                     order.Status = OrderStatus.Invalid;
