@@ -23,7 +23,9 @@ The QuantQuote converter ports an extracted QuantQuote order to QuantConnect dat
 
 Download data directly from the Oanda database using your personal access token. The downloader will save the information to your FX directory.
 
- 
+ ## Dukascopy Downloader ##
+
+Download data from Dukascopy website and convert it into LEAN engine format. Save the data to your personal LEAN data directory.
 
   [1]: https://lean.quantconnect.com "Lean Open Source Home Page"
   [2]: https://lean.quantconnect.com/docs "Lean Documentation"
