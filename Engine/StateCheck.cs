@@ -32,7 +32,7 @@ namespace QuantConnect.Lean.Engine
         public class Ping
         {
             // set to true to break while loop in Run()
-            private static volatile bool _exitTriggered;
+            private ManualResetEventSlim _exitEvent;
 
             private readonly AlgorithmManager _algorithmManager;
             private readonly IApi _api;
@@ -40,19 +40,19 @@ namespace QuantConnect.Lean.Engine
 
             public Ping(AlgorithmManager algorithmManager, IApi api, IResultHandler resultHandler)
             {
-                _algorithmManager = algorithmManager;
                 _api = api;
                 _resultHandler = resultHandler;
+                _algorithmManager = algorithmManager;
+                _exitEvent = new ManualResetEventSlim(false);
             }
 
             /// DB Ping Run Method:
             public void Run()
             {
-                while (!_exitTriggered)
+                while (!_exitEvent.Wait(500))
                 {
                     try
                     {
-                        Thread.Sleep(500);
                         if (_algorithmManager.AlgorithmId != "" && _algorithmManager.QuitState == false)
                         {
                             //Get the state from the central server:
@@ -79,9 +79,9 @@ namespace QuantConnect.Lean.Engine
             /// <summary>
             /// Send an exit signal to the thread
             /// </summary>
-            public static void Exit()
+            public void Exit()
             {
-                _exitTriggered = true;
+                _exitEvent.Set();
             }
         }
     }
