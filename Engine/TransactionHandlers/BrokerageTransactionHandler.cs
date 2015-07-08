@@ -188,6 +188,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>All open orders this order provider currently holds</returns>
         public IEnumerable<Order> GetOrders(Func<Order, bool> filter)
         {
+            if (_orders == null)
+            {
+                // this is the case when we haven't initialize yet, backtesting brokerage
+                // will end up calling this through the transaction manager
+                return Enumerable.Empty<Order>();
+            }
+            
             if (filter != null)
             {
                 return _orders.Select(x => x.Value).Where(filter);
