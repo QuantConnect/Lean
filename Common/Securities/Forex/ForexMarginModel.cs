@@ -100,7 +100,7 @@ namespace QuantConnect.Securities.Forex
                 quantity *= -1;
             }
 
-            return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, security.Price, 0, 0, security.Time, "Margin Call");
+            return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0, security.Time, "Margin Call");
         }
     }
 }
