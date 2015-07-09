@@ -245,7 +245,7 @@
     <Compile Include="Securities\SecurityTransactionManager.cs" />
     <Compile Include="OS.cs" />
     <Compile Include="Statistics\Statistics.cs" />
-    <Compile Include="Realtime.cs" />
+    <Compile Include="RealTimeSynchronizedTimer.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TimeKeeper.cs" />

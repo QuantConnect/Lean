@@ -199,12 +199,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // This thread converts data into bars "on" the second - assuring the bars are close as 
             // possible to a second unit tradebar (starting at 0 milliseconds).
-            var realtime = new RealTimeSynchronizedTimer(TimeSpan.FromSeconds(1), triggerTime =>
+            var realtime = new RealTimeSynchronizedTimer(TimeSpan.FromSeconds(1), utcTriggerTime =>
             {
                 // determine if we're on even time boundaries for data emit
-                var onMinute = triggerTime.Second == 0;
-                var onHour = onMinute && triggerTime.Minute == 0;
-                var onDay = onHour && triggerTime.Hour == 0;
+                var onMinute = utcTriggerTime.Second == 0;
+                var onHour = onMinute && utcTriggerTime.Minute == 0;
+                var onDay = onHour && utcTriggerTime.Hour == 0;
 
                 // Determine if this subscription needs to be archived:
                 var items = new Dictionary<int, List<BaseData>>();
@@ -233,7 +233,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     if (triggerArchive)
                     {
-                        _streamStores[i].TriggerArchive(triggerTime, _subscriptions[i].FillDataForward);
+                        _streamStores[i].TriggerArchive(utcTriggerTime, _subscriptions[i].FillDataForward);
 
                         BaseData data;
                         var dataPoints = new List<BaseData>();
@@ -247,7 +247,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 // don't try to add if we're already cancelling
                 if (_cancellationTokenSource.IsCancellationRequested) return;
-                Bridge.Add(new TimeSlice(triggerTime, items));
+                Bridge.Add(new TimeSlice(utcTriggerTime, items));
             });
 
             //Start the realtime sampler above
@@ -497,7 +497,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             // don't try to add if we're already cancelling
             if (_cancellationTokenSource.IsCancellationRequested) return;
-            Bridge.Add(new TimeSlice(tick.EndTime, new Dictionary<int, List<BaseData>>
+            Bridge.Add(new TimeSlice(tick.EndTime.ConvertToUtc(Subscriptions[i].TimeZone), new Dictionary<int, List<BaseData>>
             {
                 {i, new List<BaseData> {tick}}
             }));

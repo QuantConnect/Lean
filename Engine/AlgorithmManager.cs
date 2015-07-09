@@ -260,8 +260,7 @@ namespace QuantConnect.Lean.Engine
                 if (algorithm.RunTimeError != null)
                 {
                     _algorithmState = AlgorithmStatus.RuntimeError;
-                    Log.Trace(string.Format("AlgorithmManager.Run(): Algorithm encountered a runtime error at {0}. Error: {1}", timeSlice.Time,
-                        algorithm.RunTimeError));
+                    Log.Trace(string.Format("AlgorithmManager.Run(): Algorithm encountered a runtime error at {0}. Error: {1}", timeSlice.Time, algorithm.RunTimeError));
                     break;
                 }
 

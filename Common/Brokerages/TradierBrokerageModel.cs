@@ -77,8 +77,10 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
         public bool CanExecuteOrder(Security security, Order order)
         {
+            EquityExchange.SetLocalDateTimeFrontier(security.Exchange.LocalTime);
+
             // tradier doesn't support after hours trading
-            var timeOfDay = security.Time.TimeOfDay;
+            var timeOfDay = security.LocalTime.TimeOfDay;
             if (timeOfDay < EquityExchange.MarketOpen || timeOfDay > EquityExchange.MarketClose)
             {
                 return false;

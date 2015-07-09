@@ -163,7 +163,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     offsetProviders[i] = new TimeZoneOffsetProvider(Subscriptions[i].TimeZone, _algorithm.StartDate.AddDays(-1), _algorithm.EndDate.AddDays(1));
                     
                     // compute the initial frontier time
-                    var currentEndTimeUtc = SubscriptionReaders[i].Current.EndTime.ConvertTo(Subscriptions[i].TimeZone, DateTimeZone.Utc);
+                    var currentEndTimeUtc = SubscriptionReaders[i].Current.EndTime.ConvertToUtc(Subscriptions[i].TimeZone);
                     var endTime = SubscriptionReaders[i].Current.EndTime.Ticks - offsetProviders[i].GetOffsetTicks(currentEndTimeUtc); 
                     if (endTime < frontier.Ticks)
                     {

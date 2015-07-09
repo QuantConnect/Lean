@@ -112,7 +112,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return string.Format("{0}: Order: ({1}) - {2} Status: {3}", Time, OrderId, Tag, Status);
+            return string.Format("{0} UTC: Order: ({1}) - {2} Status: {3}", Time, OrderId, Tag, Status);
         }
     }
 }

@@ -50,7 +50,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return string.Format("{0}: Cancel Order: ({1}) - {2}", Time, OrderId, Tag) + " Status: " + Status;
+            return string.Format("{0} UTC: Cancel Order: ({1}) - {2}", Time, OrderId, Tag) + " Status: " + Status;
         }
     }
 }

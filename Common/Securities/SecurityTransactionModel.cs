@@ -317,10 +317,11 @@ namespace QuantConnect.Securities
                 // ASUR  | | |      [order]        | | | | | | |
                 //  SPY  | | | | | | | | | | | | | | | | | | | |
                 var currentBar = asset.GetLastData();
-                if (order.Time >= currentBar.EndTime) return fill;
+                var localOrderTime = order.Time.ConvertTo(TimeZones.Utc, asset.Exchange.TimeZone);
+                if (localOrderTime >= currentBar.EndTime) return fill;
 
                 // if the MOO was submitted during market the previous day, wait for a day to turn over
-                if (asset.Exchange.DateTimeIsOpen(order.Time) && order.Time.Date == asset.Time.Date)
+                if (asset.Exchange.DateTimeIsOpen(localOrderTime) && localOrderTime.Date == asset.LocalTime.Date)
                 {
                     return fill;
                 }
@@ -472,7 +473,7 @@ namespace QuantConnect.Securities
         /// </summary>
         private static bool IsExchangeOpen(Security asset)
         {
-            if (!asset.Exchange.DateTimeIsOpen(asset.Time))
+            if (!asset.Exchange.DateTimeIsOpen(asset.LocalTime))
             {
                 // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
                 var currentBar = asset.GetLastData();

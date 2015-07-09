@@ -121,7 +121,7 @@ namespace QuantConnect.Orders
         {
             // create a proxy order object to steal his to string method
             var proxy = Order.CreateOrder(this);
-            return string.Format("{0}: Submit Order: ({1}) - {2} {3}", Time, OrderId, proxy, Tag) + " Status: " + Status;
+            return string.Format("{0} UTC: Submit Order: ({1}) - {2} {3}", Time, OrderId, proxy, Tag) + " Status: " + Status;
         }
     }
 }

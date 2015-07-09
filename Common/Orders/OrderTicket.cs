@@ -267,9 +267,10 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Submits a new request to cancel this order
         /// </summary>
-        public OrderResponse Cancel()
+        public OrderResponse Cancel(string tag = null)
         {
-            _transactionManager.CancelOrder(OrderId);
+            var request = new CancelOrderRequest(_transactionManager.Time, OrderId, tag);
+            _transactionManager.ProcessRequest(request);
             return CancelRequest.Response;
         }
 
@@ -380,7 +381,7 @@ namespace QuantConnect.Orders
         private int ResponseCount()
         {
             return (_submitRequest.Response == OrderResponse.Unprocessed ? 0 : 1) 
-                 + (_cancelRequest.Response == OrderResponse.Unprocessed ? 0 : 1)
+                 + (_cancelRequest == null || _cancelRequest.Response == OrderResponse.Unprocessed ? 0 : 1)
                  + _updateRequests.Count(x => x.Response != OrderResponse.Unprocessed);
         }
 

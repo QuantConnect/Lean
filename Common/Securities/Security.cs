@@ -245,11 +245,11 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Local time for this market 
         /// </summary>
-        public virtual DateTime Time 
+        public virtual DateTime LocalTime
         {
-            get 
+            get
             {
-                return Exchange.Time;
+                return Exchange.LocalTime;
             }
         }
 
@@ -393,7 +393,7 @@ namespace QuantConnect.Securities
         public void SetMarketPrice(DateTime frontier, BaseData data) 
         { 
             //Update the Exchange/Timer:
-            Exchange.SetDateTimeFrontier(frontier);
+            Exchange.SetLocalDateTimeFrontier(frontier);
 
             //Add new point to cache:
             if (data == null) return;

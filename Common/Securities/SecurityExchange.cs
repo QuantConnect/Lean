@@ -25,7 +25,7 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityExchange 
     {
-        private DateTime _frontier;
+        private DateTime _localFrontier;
         private SecurityExchangeHours _exchangeHours;
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public TimeSpan MarketOpen
         {
-            get { return _exchangeHours.GetMarketHours(_frontier).MarketOpen; }
+            get { return _exchangeHours.GetMarketHours(_localFrontier).MarketOpen; }
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public TimeSpan MarketClose
         {
-            get { return _exchangeHours.GetMarketHours(_frontier).MarketClose; }
+            get { return _exchangeHours.GetMarketHours(_localFrontier).MarketClose; }
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public TimeSpan ExtendedMarketOpen
         {
-            get { return _exchangeHours.GetMarketHours(_frontier).ExtendedMarketOpen; }
+            get { return _exchangeHours.GetMarketHours(_localFrontier).ExtendedMarketOpen; }
         }
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public TimeSpan ExtendedMarketClose
         {
-            get { return _exchangeHours.GetMarketHours(_frontier).ExtendedMarketClose; }
+            get { return _exchangeHours.GetMarketHours(_localFrontier).ExtendedMarketClose; }
         }
 
         /// <summary>
@@ -88,9 +88,9 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Time from the most recent data
         /// </summary>
-        public DateTime Time
+        public DateTime LocalTime
         {
-            get { return _frontier; }
+            get { return _localFrontier; }
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public bool ExchangeOpen
         {
-            get { return _exchangeHours.IsOpen(_frontier, false); }
+            get { return _exchangeHours.IsOpen(_localFrontier, false); }
         }
 
         /// <summary>
@@ -112,12 +112,12 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Set the current datetime:
+        /// Set the current datetime in terms of the exchange's local time zone
         /// </summary>
-        /// <param name="newTime">Most recent data tick</param>
-        public void SetDateTimeFrontier(DateTime newTime) 
+        /// <param name="newLocalTime">Most recent data tick</param>
+        public void SetLocalDateTimeFrontier(DateTime newLocalTime) 
         {
-            _frontier = newTime;
+            _localFrontier = newLocalTime;
         }
 
         /// <summary>
