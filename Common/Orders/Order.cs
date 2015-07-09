@@ -113,6 +113,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Value of the order at limit price if a limit order, or market price if a market order.
         /// </summary>
+        [Obsolete("Value property has been made obsolete. Use GetValue(currentMarketPrice) instead.")]
         public abstract decimal Value 
         { 
             get; 
@@ -183,6 +184,14 @@ namespace QuantConnect.Orders
             BrokerId = new List<long>();
             ContingentId = 0;
         }
+
+        /// <summary>
+        /// Gets the value of this order at the given market price.
+        /// NOTE: Some order types derive value from other parameters, such as limit prices
+        /// </summary>
+        /// <param name="currentMarketPrice">The current market price of the security</param>
+        /// <returns>The value of this order given the current market price</returns>
+        public abstract decimal GetValue(decimal currentMarketPrice);
 
         /// <summary>
         /// Modifies the state of this order to match the update request

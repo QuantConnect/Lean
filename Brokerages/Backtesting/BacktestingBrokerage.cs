@@ -279,7 +279,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 {
                     //Flag order as invalid and push off queue:
                     order.Status = OrderStatus.Invalid;
-                    _algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.Value));
+                    _algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.GetValue(security.Price).SmartRounding()));
                 }
 
                 // change in status or a new fill

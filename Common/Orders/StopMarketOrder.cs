@@ -65,6 +65,16 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Gets the value of this order at the given market price.
+        /// </summary>
+        /// <param name="currentMarketPrice">The current market price of the security</param>
+        /// <returns>The value of this order given the current market price</returns>
+        public override decimal GetValue(decimal currentMarketPrice)
+        {
+            return Quantity*StopPrice;
+        }
+
+        /// <summary>
         /// Modifies the state of this order to match the update request
         /// </summary>
         /// <param name="request">The request to update this order object</param>

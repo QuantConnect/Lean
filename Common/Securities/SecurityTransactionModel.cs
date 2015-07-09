@@ -442,7 +442,7 @@ namespace QuantConnect.Securities
                 return 0m;
             }
 
-            return GetOrderFee(order.Quantity, order.Value/order.Quantity);
+            return GetOrderFee(order.Quantity, order.GetValue(security.Price) / order.Quantity);
         }
 
         /// <summary>

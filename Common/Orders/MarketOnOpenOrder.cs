@@ -50,5 +50,15 @@ namespace QuantConnect.Orders
             : base(symbol, quantity, OrderType.MarketOnOpen, time, tag, type)
         {
         }
+
+        /// <summary>
+        /// Gets the value of this order at the given market price.
+        /// </summary>
+        /// <param name="currentMarketPrice">The current market price of the security</param>
+        /// <returns>The value of this order given the current market price</returns>
+        public override decimal GetValue(decimal currentMarketPrice)
+        {
+            return Quantity*currentMarketPrice;
+        }
     }
 }
