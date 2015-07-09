@@ -110,11 +110,6 @@ namespace QuantConnect.Orders
         New,
 
         /// <summary>
-        /// Order flagged for updating the inmarket order.
-        /// </summary>
-        Update,
-
-        /// <summary>
         /// Order submitted to the market
         /// </summary>
         Submitted,

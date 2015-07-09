@@ -29,6 +29,10 @@ namespace QuantConnect.Brokerages.Backtesting
     /// </summary>
     public class BacktestingBrokerage : Brokerage
     {
+        // flag used to indicate whether or not we need to scan for
+        // fills, this is purely a performance concern is ConcurrentDictionary.IsEmpty
+        // is not exactly the fastest operation and Scan gets called at least twice per
+        // time loop
         private bool _needsScan;
         // this is the algorithm under test
         private readonly IAlgorithm _algorithm;
@@ -106,11 +110,12 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             if (order.Status == OrderStatus.New)
             {
-                lock(_needsScanLock)
+                lock (_needsScanLock)
                 {
                     _needsScan = true;
                     _pending[order.Id] = order;
                 }
+
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
 
                 // fire off the event that says this order has been submitted
@@ -129,22 +134,29 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            if (order.Status == OrderStatus.Update)
+            if (true)
             {
+                Order pending;
+                if (!_pending.TryGetValue(order.Id, out pending))
+                {
+                    // can't update something that isn't there
+                    return false;
+                }
+
                 lock (_needsScanLock)
                 {
                     _needsScan = true;
                     _pending[order.Id] = order;
                 }
+
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
 
                 // fire off the event that says this order has been updated
-                var updated = new OrderEvent(order) {Status = OrderStatus.Update};
+                var updated = new OrderEvent(order) {Status = OrderStatus.Submitted};
                 OnOrderEvent(updated);
 
                 return true;
             }
-            return false;
         }
 
         /// <summary>
@@ -154,19 +166,20 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            if (order.Status == OrderStatus.Canceled)
+            Order pending;
+            if (!_pending.TryRemove(order.Id, out pending))
             {
-                Order pending;
-                _pending.TryRemove(order.Id, out pending);
-                if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
-
-                // fire off the event that says this order has been canceled
-                var canceled = new OrderEvent(order) {Status = OrderStatus.Canceled};
-                OnOrderEvent(canceled);
-
-                return true;
+                // can't cancel something that isn't there
+                return false;
             }
-            return false;
+
+            if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
+
+            // fire off the event that says this order has been canceled
+            var canceled = new OrderEvent(order) {Status = OrderStatus.Canceled};
+            OnOrderEvent(canceled);
+
+            return true;
         }
 
         /// <summary>
@@ -210,7 +223,10 @@ namespace QuantConnect.Brokerages.Backtesting
                 {
                     continue;
                 }
-                
+
+                // update the the price to the current market price for the sufficient capital calculation
+                order.Price = security.Price;
+
                 // verify sure we have enough cash to perform the fill
                 var sufficientBuyingPower = _algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order);
 

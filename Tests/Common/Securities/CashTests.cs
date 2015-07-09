@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -75,11 +76,11 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal conversionRate = 1 / 100m;
             var cash = new Cash("JPY", quantity, conversionRate);
 
-            var subscriptions = new SubscriptionManager();
-            var abcConfig = subscriptions.Add(SecurityType.Equity, "ABC", Resolution.Minute);
-            var securities = new SecurityManager();
-            securities.Add("ABC", new Security(abcConfig, 1m));
-            cash.EnsureCurrencyDataFeed(securities, subscriptions);
+            var subscriptions = new SubscriptionManager(TimeKeeper);
+            var abcConfig = subscriptions.Add(SecurityType.Equity, "ABC", Resolution.Minute, "fxcm", TimeZones.NewYork);
+            var securities = new SecurityManager(TimeKeeper);
+            securities.Add("ABC", new Security(SecurityExchangeHours.AlwaysOpen, abcConfig, 1m));
+            cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
             Assert.AreEqual(1, subscriptions.Subscriptions.Count(x => x.Symbol == "USDJPY"));
             Assert.AreEqual(1, securities.Values.Count(x => x.Symbol == "USDJPY"));
         }
@@ -92,9 +93,9 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal conversionRate = 1 / 100m;
             var cash = new Cash("JPY", quantity, conversionRate);
 
-            var securities = new SecurityManager();
-            var subscriptions = new SubscriptionManager();
-            cash.EnsureCurrencyDataFeed(securities, subscriptions);
+            var securities = new SecurityManager(TimeKeeper);
+            var subscriptions = new SubscriptionManager(TimeKeeper);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
         }
 
         [Test]
@@ -105,12 +106,12 @@ namespace QuantConnect.Tests.Common.Securities
             const Resolution minimumResolution = Resolution.Second;
             var cash = new Cash("JPY", quantity, conversionRate);
 
-            var subscriptions = new SubscriptionManager();
-            var securities = new SecurityManager();
-            securities.Add("ABC", new Security(subscriptions.Add(SecurityType.Equity, "ABC", Resolution.Minute), 1m));
-            securities.Add("BCD", new Security(subscriptions.Add(SecurityType.Equity, "BCD", minimumResolution), 1m));
+            var subscriptions = new SubscriptionManager(TimeKeeper);
+            var securities = new SecurityManager(TimeKeeper);
+            securities.Add("ABC", new Security(SecurityExchangeHours.AlwaysOpen, subscriptions.Add(SecurityType.Equity, "ABC", Resolution.Minute, "usa", TimeZones.NewYork), 1m));
+            securities.Add("BCD", new Security(SecurityExchangeHours.AlwaysOpen, subscriptions.Add(SecurityType.Forex, "BCD", minimumResolution, "fxcm", TimeZones.NewYork), 1m));
 
-            cash.EnsureCurrencyDataFeed(securities, subscriptions);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
             Assert.AreEqual(minimumResolution, subscriptions.Subscriptions.Single(x => x.Symbol == "USDJPY").Resolution);
         }
 
@@ -121,11 +122,11 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal conversionRate = 1 / 100m;
             var cash = new Cash("JPY", quantity, conversionRate);
 
-            var subscriptions = new SubscriptionManager();
-            var securities = new SecurityManager();
-            securities.Add("ABC", new Security(subscriptions.Add(SecurityType.Forex, "ABC", Resolution.Minute), 1m));
+            var subscriptions = new SubscriptionManager(TimeKeeper);
+            var securities = new SecurityManager(TimeKeeper);
+            securities.Add("ABC", new Security(SecurityExchangeHours.AlwaysOpen, subscriptions.Add(SecurityType.Forex, "ABC", Resolution.Minute, "fxcm", TimeZones.NewYork), 1m));
 
-            cash.EnsureCurrencyDataFeed(securities, subscriptions);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
             var config = subscriptions.Subscriptions.Single(x => x.Symbol == "USDJPY");
             Assert.IsTrue(config.IsInternalFeed);
         }
@@ -137,11 +138,11 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal conversionRate = 1 / 100m;
             var cash = new Cash("JPY", quantity, conversionRate);
 
-            var subscriptions = new SubscriptionManager();
-            var securities = new SecurityManager();
-            securities.Add("USDJPY", new Security(subscriptions.Add(SecurityType.Forex, "USDJPY", Resolution.Minute), 1m));
+            var subscriptions = new SubscriptionManager(TimeKeeper);
+            var securities = new SecurityManager(TimeKeeper);
+            securities.Add("USDJPY", new Security(SecurityExchangeHours.AlwaysOpen, subscriptions.Add(SecurityType.Forex, "USDJPY", Resolution.Minute, "fxcm", TimeZones.NewYork), 1m));
 
-            cash.EnsureCurrencyDataFeed(securities, subscriptions);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
             var config = subscriptions.Subscriptions.Single(x => x.Symbol == "USDJPY");
             Assert.IsFalse(config.IsInternalFeed);
         }
@@ -153,12 +154,12 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal conversionRate = 1 / 100m;
             var cash = new Cash("JPY", quantity, conversionRate);
 
-            var subscriptions = new SubscriptionManager();
-            var securities = new SecurityManager();
-            securities.Add("USDJPY", new Security(subscriptions.Add(SecurityType.Forex, "USDJPY", Resolution.Minute), 1m));
+            var subscriptions = new SubscriptionManager(TimeKeeper);
+            var securities = new SecurityManager(TimeKeeper);
+            securities.Add("USDJPY", new Security(SecurityExchangeHours.AlwaysOpen, subscriptions.Add(SecurityType.Forex, "USDJPY", Resolution.Minute, "fxcm", TimeZones.NewYork), 1m));
 
             // we need to get subscription index
-            cash.EnsureCurrencyDataFeed(securities, subscriptions);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
 
             var last = 120m;
             var data = new Dictionary<int, List<BaseData>>();
@@ -180,12 +181,12 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal conversionRate = 1 / 100m;
             var cash = new Cash("GBP", quantity, conversionRate);
 
-            var subscriptions = new SubscriptionManager();
-            var securities = new SecurityManager();
-            securities.Add("GBPUSD", new Security(subscriptions.Add(SecurityType.Forex, "GBPUSD", Resolution.Minute), 1m));
+            var subscriptions = new SubscriptionManager(TimeKeeper);
+            var securities = new SecurityManager(TimeKeeper);
+            securities.Add("GBPUSD", new Security(SecurityExchangeHours.AlwaysOpen, subscriptions.Add(SecurityType.Forex, "GBPUSD", Resolution.Minute, "fxcm", TimeZones.NewYork), 1m));
 
             // we need to get subscription index
-            cash.EnsureCurrencyDataFeed(securities, subscriptions);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
 
             var last = 1.5m;
             var data = new Dictionary<int, List<BaseData>>();
@@ -198,6 +199,11 @@ namespace QuantConnect.Tests.Common.Securities
 
             // jpy is inverted, so compare on the inverse
             Assert.AreEqual(last, cash.ConversionRate);
+        }
+
+        private static TimeKeeper TimeKeeper
+        {
+            get { return new TimeKeeper(DateTime.Now, new[] { TimeZones.NewYork }); }
         }
     }
 }

@@ -44,7 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool[] _endOfBridge;
         private IAlgorithm _algorithm;
         private readonly object _lock = new object();
-        private bool _exitTriggered;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private List<string> _symbols = new List<string>();
         private Dictionary<int, StreamStore> _streamStores = new Dictionary<int, StreamStore>();
         private List<decimal> _realtimePrices;
@@ -98,6 +98,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
+            _cancellationTokenSource = new CancellationTokenSource();
+
             //Subscription Count:
             _subscriptions = algorithm.SubscriptionManager.Subscriptions;
 
@@ -208,7 +210,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var items = new Dictionary<int, List<BaseData>>();
                 for (var i = 0; i < Subscriptions.Count; i++)
                 {
-                    // stream stores are only created for tick data and this timer thread is used
+                    // stream stores are only created for non-tick data and this timer thread is used
                     // soley for dequeuing from the stream stores, this index, i, would be null
                     if (Subscriptions[i].Resolution == Resolution.Tick) continue;
 
@@ -243,13 +245,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
 
+                // don't try to add if we're already cancelling
+                if (_cancellationTokenSource.IsCancellationRequested) return;
                 Bridge.Add(new TimeSlice(triggerTime, items));
             });
 
             //Start the realtime sampler above
             realtime.Start();
 
-            while (!_exitTriggered && !_endOfBridges)
+            while (!_cancellationTokenSource.IsCancellationRequested && !_endOfBridges)
             {
                 // main work of this class is done in the realtime and stream store consumer threads
                 Thread.Sleep(1000);
@@ -332,7 +336,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
-                    if (_exitTriggered) return;
+                    if (_cancellationTokenSource.IsCancellationRequested) return;
                     if (ticksCount == 0) Thread.Sleep(5);
                 }
             });
@@ -422,7 +426,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
-                    if (_exitTriggered) return;
+                    if (_cancellationTokenSource.IsCancellationRequested) return;
                     Thread.Sleep(10);
                 }
             });
@@ -444,9 +448,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Task.WaitAll(tasks);
 
             //Once we're here the tasks have died, signal 
-            if (!_exitTriggered) _endOfBridges = true;
+            if (!_cancellationTokenSource.IsCancellationRequested) _endOfBridges = true;
 
-            Log.Trace(string.Format("LiveTradingDataFeed.Stream(): Stream Task Completed. Exit Signal: {0}", _exitTriggered));
+            Log.Trace(string.Format("LiveTradingDataFeed.Stream(): Stream Task Completed. Exit Signal: {0}", _cancellationTokenSource.IsCancellationRequested));
         }
 
         /// <summary>
@@ -464,7 +468,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // work with the LiveDataQueue default LEAN implemetation that just throws on every method.
                     _dataQueue.Unsubscribe(_job, symbols);
                 }
-                _exitTriggered = true;
+                _cancellationTokenSource.Cancel();
                 Bridge.Dispose();
             }
         }
@@ -491,6 +495,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private void AddSingleItemToBridge(BaseData tick, int i)
         {
+            // don't try to add if we're already cancelling
+            if (_cancellationTokenSource.IsCancellationRequested) return;
             Bridge.Add(new TimeSlice(tick.EndTime, new Dictionary<int, List<BaseData>>
             {
                 {i, new List<BaseData> {tick}}

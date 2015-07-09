@@ -28,8 +28,10 @@ namespace QuantConnect.Securities
     /// <remarks>Implements IDictionary for the index searching of securities by symbol</remarks>
     public class SecurityManager : IDictionary<string, Security> 
     {
+        private readonly TimeKeeper _timeKeeper;
+
         //Internal dictionary implementation:
-        private IDictionary<string, Security> _securityManager;
+        private readonly IDictionary<string, Security> _securityManager;
         private int _minuteLimit = 500;
         private int _minuteMemory = 2;
         private int _secondLimit = 100;
@@ -37,13 +39,24 @@ namespace QuantConnect.Securities
         private int _tickLimit = 30;
         private int _tickMemory = 34;
         private decimal _maxRamEstimate = 1024;
+        private DateTime _time;
+
+        /// <summary>
+        /// Gets the most recent time this manager was updated
+        /// </summary>
+        public DateTime Time
+        {
+            get { return _time; }
+        }
 
         /// <summary>
         /// Initialise the algorithm security manager with two empty dictionaries
         /// </summary>
-        public SecurityManager()
+        /// <param name="timeKeeper"></param>
+        public SecurityManager(TimeKeeper timeKeeper)
         {
-            _securityManager = new Dictionary<string, Security>(); 
+            _timeKeeper = timeKeeper;
+            _securityManager = new Dictionary<string, Security>();
         }
 
         /// <summary>
@@ -275,8 +288,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="time">Time Frontier</param>
         /// <param name="data">Data packets to update</param>
-        public void Update(DateTime time, Dictionary<int, List<BaseData>> data) 
+        public void Update(DateTime time, Dictionary<int, List<BaseData>> data)
         {
+            _time = time;
             try 
             {
                 //If its market data, look for the matching security symbol and update it:
@@ -297,7 +311,9 @@ namespace QuantConnect.Securities
                             break;
                         }
                     }
-                    security.SetMarketPrice(time, dataPoint);
+
+                    var localTimeKeeper = _timeKeeper.GetLocalTimeKeeper(security.SubscriptionDataConfig.TimeZone);
+                    security.SetMarketPrice(localTimeKeeper.LocalTime, dataPoint);
                 }
             }
             catch (Exception err) 

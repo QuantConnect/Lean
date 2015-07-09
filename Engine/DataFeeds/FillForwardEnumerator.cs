@@ -210,24 +210,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return true;
             }
 
-            // This next if/else block's entire job is to locate the market open time following previous.EndTime
-            // we'll then add the ff resolution to that time to produce the nextFillForwardTime, which is the time
-            // we need to emit our next piece of data at
-
-            DateTime nextFillForwardTime;
-            var frontierDate = previous.EndTime.Date;
-            if (previous.EndTime > GetMarketOpen(frontierDate) - _fillForwardResolution)
-            {
-                // after market hours on the same day, advance to the next emit time at market open
-                nextFillForwardTime = GetMarketOpen(GetNextOpenDateAfter(frontierDate)) + _fillForwardResolution;
-            }
-            else
-            {
-                // find the next market open time, we use -1 here because the GetNextOpenDataAfter will start with +1, so if frontierDate
-                // is already open, the frontierDate will be returned, but if frontierDate is say, saturday at midnight (daily case),
-                // then we'll need to zoom forward to monday at market open
-                nextFillForwardTime = GetMarketOpen(GetNextOpenDateAfter(frontierDate.Date.AddDays(-1))) + _fillForwardResolution;
-            }
+            // find the next fill forward time after the next market open
+            var nextFillForwardTime = _exchange.Hours.GetNextMarketOpen(previous.EndTime, _isExtendedMarketHours) + _fillForwardResolution;
 
             if (_dataResolution == Time.OneDay)
             {
@@ -264,15 +248,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             while (!_exchange.DateIsOpen(date));
             return date;
-        }
-
-        /// <summary>
-        /// Gets the market open for the specified date, this function expects a date, not a date time
-        /// Takes into consideration regular/extended market hours
-        /// </summary>
-        private DateTime GetMarketOpen(DateTime date)
-        {
-            return date + (_isExtendedMarketHours ? _exchange.ExtendedMarketOpen : _exchange.MarketOpen);
         }
     }
 }

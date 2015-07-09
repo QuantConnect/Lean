@@ -48,23 +48,23 @@ namespace QuantConnect.Securities
         /// <param name="generatedMarginCallOrders">These are the margin call orders that were generated
         /// by individual security margin models.</param>
         /// <returns>The list of orders that were actually executed</returns>
-        public virtual List<Order> ExecuteMarginCall(IEnumerable<Order> generatedMarginCallOrders)
+        public virtual List<OrderTicket> ExecuteMarginCall(IEnumerable<SubmitOrderRequest> generatedMarginCallOrders)
         {
             // if our margin used is back under the portfolio value then we can stop liquidating
             if (Portfolio.MarginRemaining >= 0)
             {
-                return new List<Order>();
+                return new List<OrderTicket>();
             }
 
             // order by losers first
-            var executedOrders = new List<Order>();
+            var executedOrders = new List<OrderTicket>();
             var ordersWithSecurities = generatedMarginCallOrders.ToDictionary(x => x, x => Portfolio[x.Symbol]);
             var orderedByLosers = ordersWithSecurities.OrderBy(x => x.Value.UnrealizedProfit).Select(x => x.Key);
-            foreach (var order in orderedByLosers)
+            foreach (var request in orderedByLosers)
             {
-                Portfolio.Transactions.AddOrder(order);
-                Portfolio.Transactions.WaitForOrder(order.Id);
-                executedOrders.Add(order);
+                var ticket = Portfolio.Transactions.AddOrder(request);
+                Portfolio.Transactions.WaitForOrder(request.OrderId);
+                executedOrders.Add(ticket);
 
                 // if our margin used is back under the portfolio value then we can stop liquidating
                 if (Portfolio.MarginRemaining >= 0)

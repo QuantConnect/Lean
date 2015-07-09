@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Setup
@@ -282,7 +283,7 @@ namespace QuantConnect.Lean.Engine.Setup
                         {
                             Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol);
                             // for items not directly requested set leverage to 1 and at the min resolution
-                            algorithm.AddSecurity(holding.Type, holding.Symbol, minResolution.Value, true, 1.0m, false);
+                            algorithm.AddSecurity(holding.Type, holding.Symbol, minResolution.Value, null, true, 1.0m, false);
                         }
                         algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int) holding.Quantity);
                         algorithm.Securities[holding.Symbol].SetMarketPrice(DateTime.Now, new TradeBar
@@ -306,7 +307,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
 
                 // call this after we've initialized everything from the brokerage since we may have added some holdings/currencies
-                algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager);
+                algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager, SecurityExchangeHoursProvider.FromDataFolder());
 
                 //Set the starting portfolio value for the strategy to calculate performance:
                 StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
