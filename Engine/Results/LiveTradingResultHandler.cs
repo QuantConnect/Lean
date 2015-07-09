@@ -1038,7 +1038,7 @@ namespace QuantConnect.Lean.Engine.Results
                         else
                         {
                             // we haven't gotten data yet so just spoof a tick to push through the system to start with
-                            security.SetMarketPrice(DateTime.Now, new Tick(DateTime.Now, subscription.Symbol, price, price));
+                            security.SetMarketPrice(new Tick(DateTime.Now, subscription.Symbol, price, price));
                         }
 
                         //Sample Asset Pricing:

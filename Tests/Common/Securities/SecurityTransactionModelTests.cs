@@ -28,6 +28,7 @@ namespace QuantConnect.Tests.Common.Securities
     public class SecurityTransactionModelTests
     {
         private static readonly DateTime Noon = new DateTime(2014, 6, 24, 12, 0, 0);
+        private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
         private const string Symbol = "SPY";
 
         [Test]
@@ -37,8 +38,8 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new MarketOrder(Symbol, 100, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbol);
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
-
-            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101.123m));
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101.123m));
 
             var fill = model.MarketFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
@@ -53,8 +54,8 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new MarketOrder(Symbol, -100, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbol);
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
-
-            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101.123m));
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101.123m));
 
             var fill = model.MarketFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
@@ -70,7 +71,8 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new LimitOrder(Symbol, 100, 101.5m, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbol);
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
-            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 102m));
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 102m));
 
             var fill = model.LimitFill(security, order);
 
@@ -79,7 +81,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(Noon, new TradeBar(Noon, Symbol, 102m, 103m, 101m, 102.3m, 100));
+            security.SetMarketPrice(new TradeBar(Noon, Symbol, 102m, 103m, 101m, 102.3m, 100));
 
             fill = model.LimitFill(security, order);
 
@@ -97,7 +99,8 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new LimitOrder(Symbol, -100, 101.5m, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbol);
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
-            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101m));
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101m));
 
             var fill = model.LimitFill(security, order);
 
@@ -106,7 +109,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(Noon, new TradeBar(Noon, Symbol, 102m, 103m, 101m, 102.3m, 100));
+            security.SetMarketPrice(new TradeBar(Noon, Symbol, 102m, 103m, 101m, 102.3m, 100));
 
             fill = model.LimitFill(security, order);
 
@@ -124,7 +127,8 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new StopLimitOrder(Symbol, 100, 101.5m, 101.75m, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbol);
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
-            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 100m));
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 100m));
 
             var fill = model.StopLimitFill(security, order);
 
@@ -133,7 +137,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 102m));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 102m));
 
             fill = model.StopLimitFill(security, order);
 
@@ -142,7 +146,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101.66m));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101.66m));
 
             fill = model.StopLimitFill(security, order);
 
@@ -160,7 +164,8 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new StopLimitOrder(Symbol, -100, 101.75m, 101.50m, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbol);
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
-            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 102m));
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 102m));
 
             var fill = model.StopLimitFill(security, order);
 
@@ -169,7 +174,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101m));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101m));
 
             fill = model.StopLimitFill(security, order);
 
@@ -178,7 +183,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101.66m));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101.66m));
 
             fill = model.StopLimitFill(security, order);
 
@@ -196,7 +201,8 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new StopMarketOrder(Symbol, 100, 101.5m, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbol);
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
-            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101m));
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101m));
 
             var fill = model.StopMarketFill(security, order);
 
@@ -205,7 +211,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 102.5m));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 102.5m));
 
             fill = model.StopMarketFill(security, order);
 
@@ -223,7 +229,8 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new StopMarketOrder(Symbol, -100, 101.5m, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbol);
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
-            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 102m));
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 102m));
 
             var fill = model.StopMarketFill(security, order);
 
@@ -232,7 +239,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.AreEqual(OrderStatus.None, order.Status);
 
-            security.SetMarketPrice(Noon, new IndicatorDataPoint(Symbol, Noon, 101m));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101m));
 
             fill = model.StopMarketFill(security, order);
 
@@ -250,26 +257,27 @@ namespace QuantConnect.Tests.Common.Securities
             var model = new SecurityTransactionModel();
             var order = new MarketOnOpenOrder(Symbol, SecurityType.Equity, 100, reference);
             var config = CreateTradeBarConfig(Symbol);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1)
-            {
-                Exchange = new EquityExchange(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours())
-            };
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             var time = reference;
-            security.SetMarketPrice(time, new TradeBar(time, Symbol, 1m, 2m, 0.5m, 1.33m, 100));
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            security.SetMarketPrice(new TradeBar(time, Symbol, 1m, 2m, 0.5m, 1.33m, 100));
 
             var fill = model.MarketOnOpenFill(security, order);
             Assert.AreEqual(0, fill.FillQuantity);
             
             // market opens after 30min, so this is just before market open
             time = reference.AddMinutes(29);
-            security.SetMarketPrice(time, new TradeBar(time, Symbol, 1.33m, 2.75m, 1.15m, 1.45m, 100));
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            security.SetMarketPrice(new TradeBar(time, Symbol, 1.33m, 2.75m, 1.15m, 1.45m, 100));
 
             fill = model.MarketOnOpenFill(security, order);
             Assert.AreEqual(0, fill.FillQuantity);
 
             // market opens after 30min
             time = reference.AddMinutes(30);
-            security.SetMarketPrice(time, new TradeBar(time, Symbol, 1.45m, 2.0m, 1.1m, 1.40m, 100));
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            security.SetMarketPrice(new TradeBar(time, Symbol, 1.45m, 2.0m, 1.1m, 1.40m, 100));
 
             fill = model.MarketOnOpenFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
@@ -283,33 +291,27 @@ namespace QuantConnect.Tests.Common.Securities
             var model = new SecurityTransactionModel();
             var order = new MarketOnCloseOrder(Symbol, SecurityType.Equity, 100, reference);
             var config = CreateTradeBarConfig(Symbol);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1)
-            {
-                Exchange = new EquityExchange(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours())
-            };
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             var time = reference;
-            security.SetMarketPrice(time, new TradeBar(time, Symbol, 1m, 2m, 0.5m, 1.33m, 100));
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            security.SetMarketPrice(new TradeBar(time, Symbol, 1m, 2m, 0.5m, 1.33m, 100));
 
             var fill = model.MarketOnCloseFill(security, order);
             Assert.AreEqual(0, fill.FillQuantity);
 
             // market closes after 60min, so this is just before market Close
             time = reference.AddMinutes(59);
-            security.SetMarketPrice(time, new TradeBar(time, Symbol, 1.33m, 2.75m, 1.15m, 1.45m, 100));
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            security.SetMarketPrice(new TradeBar(time, Symbol, 1.33m, 2.75m, 1.15m, 1.45m, 100));
 
             fill = model.MarketOnCloseFill(security, order);
             Assert.AreEqual(0, fill.FillQuantity);
 
             // market closes
             time = reference.AddMinutes(60);
-            security.SetMarketPrice(time, new TradeBar(time, Symbol, 1.45m, 2.0m, 1.1m, 1.40m, 100));
-
-            while (security.Exchange.ExchangeOpen)
-            {
-                time += TimeSpan.FromTicks(1);
-                security.SetMarketPrice(time, null);
-            }
-            Console.WriteLine("Time: " + time);
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+            security.SetMarketPrice(new TradeBar(time, Symbol, 1.45m, 2.0m, 1.1m, 1.40m, 100));
 
             fill = model.MarketOnCloseFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);

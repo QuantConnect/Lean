@@ -286,7 +286,7 @@ namespace QuantConnect.Lean.Engine.Setup
                             algorithm.AddSecurity(holding.Type, holding.Symbol, minResolution.Value, null, true, 1.0m, false);
                         }
                         algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int) holding.Quantity);
-                        algorithm.Securities[holding.Symbol].SetMarketPrice(DateTime.Now, new TradeBar
+                        algorithm.Securities[holding.Symbol].SetMarketPrice(new TradeBar
                         {
                             Time = DateTime.Now,
                             Open = holding.MarketPrice,

@@ -513,7 +513,11 @@ namespace QuantConnect.Lean.Engine
                 // without this we can't liquidate equities since the exchange is 'technically' closed
                 var hackedFrontier = algorithm.UtcTime == DateTime.MinValue ? DateTime.MinValue : algorithm.UtcTime.AddMilliseconds(-1);
                 algorithm.SetDateTime(hackedFrontier);
-                algorithm.Securities.Update(hackedFrontier, new Dictionary<int, List<BaseData>>());
+                foreach (var security in algorithm.Securities.Values)
+                {
+                    // this is purely to set the exchange times, not sexy
+                    security.SetMarketPrice(security.GetLastData());
+                }
 
                 Log.Trace("AlgorithmManager.Run(): Liquidating algorithm holdings...");
                 algorithm.Liquidate();

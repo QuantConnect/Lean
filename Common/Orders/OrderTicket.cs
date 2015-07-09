@@ -260,7 +260,7 @@ namespace QuantConnect.Orders
         /// <returns>The <see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse Update(UpdateOrderFields fields)
         {
-            _transactionManager.UpdateOrder(new UpdateOrderRequest(_transactionManager.Time, SubmitRequest.OrderId, fields));
+            _transactionManager.UpdateOrder(new UpdateOrderRequest(_transactionManager.UtcTime, SubmitRequest.OrderId, fields));
             return _updateRequests.Last().Response;
         }
 
@@ -269,7 +269,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public OrderResponse Cancel(string tag = null)
         {
-            var request = new CancelOrderRequest(_transactionManager.Time, OrderId, tag);
+            var request = new CancelOrderRequest(_transactionManager.UtcTime, OrderId, tag);
             _transactionManager.ProcessRequest(request);
             return CancelRequest.Response;
         }

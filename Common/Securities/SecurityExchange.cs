@@ -221,7 +221,7 @@ namespace QuantConnect.Securities
                 {
                     marketHours[day] = LocalMarketHours.ClosedAllDay(day);
                 }
-                else if (marketOpen == TimeSpan.Zero && marketClose == QuantConnect.Time.OneDay)
+                else if (marketOpen == TimeSpan.Zero && marketClose == Time.OneDay)
                 {
                     marketHours[day] = LocalMarketHours.OpenAllDay(day);
                 }
