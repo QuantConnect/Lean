@@ -237,15 +237,15 @@ namespace QuantConnect.Lean.Engine
 
                 //Update algorithm state after capturing performance from previous day
 
+                //Set the algorithm and real time handler's time
+                algorithm.SetDateTime(time);
+                realtime.SetTime(time);
+
                 //On each time step push the real time prices to the cashbook so we can have updated conversion rates
                 algorithm.Portfolio.CashBook.Update(newData);
 
                 //Update the securities properties: first before calling user code to avoid issues with data
                 algorithm.Securities.Update(time, newData);
-
-                //Set the algorithm and real time handler's time
-                algorithm.SetDateTime(time);
-                realtime.SetTime(time);
 
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
