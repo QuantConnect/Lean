@@ -146,7 +146,7 @@ namespace QuantConnect
                     try
                     {
                         string[] data = line.Split(',');
-                        coin.Time = DateTime.Parse(data[0]);
+                        coin.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture);
                         coin.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
                         coin.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
                         coin.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);

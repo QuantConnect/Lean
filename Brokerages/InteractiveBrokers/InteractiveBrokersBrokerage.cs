@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -718,7 +719,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // we want to capture if the user's cash changes so we can reflect it in the algorithm
                 if (e.Key == AccountValueKeys.NetLiquidationByCurrency && e.Currency != "BASE")
                 {
-                    var cashBalance = decimal.Parse(e.Value);
+                    var cashBalance = decimal.Parse(e.Value, CultureInfo.InvariantCulture);
                     _cashBalances.AddOrUpdate(e.Currency, cashBalance);
                     OnAccountChanged(new AccountEvent(e.Currency, cashBalance));
                 }

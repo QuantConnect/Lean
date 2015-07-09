@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using NodaTime;
@@ -241,7 +242,7 @@ namespace QuantConnect.Securities
                 foreach (var line in File.ReadLines(file).Where(x => !x.StartsWith("#")).Skip(1))
                 {
                     var csv = line.Split(',');
-                    dates.Add(new DateTime(int.Parse(csv[0]), int.Parse(csv[1]), int.Parse(csv[2])));
+                    dates.Add(new DateTime(int.Parse(csv[0], CultureInfo.InvariantCulture), int.Parse(csv[1], CultureInfo.InvariantCulture), int.Parse(csv[2], CultureInfo.InvariantCulture)));
                 }
                 holidays[market] = dates;
             }
@@ -250,7 +251,7 @@ namespace QuantConnect.Securities
 
         private static TimeSpan ParseHoursToTimeSpan(string ex_open)
         {
-            return TimeSpan.FromHours(double.Parse(ex_open));
+            return TimeSpan.FromHours(double.Parse(ex_open, CultureInfo.InvariantCulture));
         }
 
         class Key : IEquatable<Key>

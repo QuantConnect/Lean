@@ -19,6 +19,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Timers;
 using NodaTime;
 
@@ -478,11 +479,11 @@ namespace QuantConnect
             }
             if (typeof (IConvertible).IsAssignableFrom(conversionType))
             {
-                return (T) Convert.ChangeType(value, conversionType);
+                return (T)Convert.ChangeType(value, conversionType, CultureInfo.InvariantCulture);
             }
             if (typeof (TimeSpan) == conversionType)
             {
-                return (T) (object) TimeSpan.Parse(value);
+                return (T)(object)TimeSpan.Parse(value, CultureInfo.InvariantCulture);
             }
 
             throw new ArgumentException("Extensions.ConvertTo is unable to convert to type: " + typeof (T).Name);
