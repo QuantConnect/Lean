@@ -237,7 +237,7 @@ namespace QuantConnect.Securities
             foreach (var file in Directory.EnumerateFiles(directory, "holidays-*.csv"))
             {
                 var dates = new List<DateTime>();
-                var market = file.Replace("holidays-", string.Empty).Replace(".csv", string.Empty);
+                var market = Path.GetFileNameWithoutExtension(file).Replace("holidays-", string.Empty);
                 foreach (var line in File.ReadLines(file).Where(x => !x.StartsWith("#")).Skip(1))
                 {
                     var csv = line.Split(',');
