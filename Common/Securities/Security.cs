@@ -373,9 +373,6 @@ namespace QuantConnect.Securities
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Get the last price update set to the security.
         /// </summary>
