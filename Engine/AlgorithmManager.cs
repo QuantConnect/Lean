@@ -516,7 +516,8 @@ namespace QuantConnect.Lean.Engine
                 foreach (var security in algorithm.Securities.Values)
                 {
                     // this is purely to set the exchange times, not sexy
-                    security.SetMarketPrice(security.GetLastData());
+                    var beforeMarketClose = (security.Exchange.LocalTime.Date + security.Exchange.MarketClose).AddMilliseconds(-1);
+                    security.Exchange.SetLocalDateTimeFrontier(beforeMarketClose);
                 }
 
                 Log.Trace("AlgorithmManager.Run(): Liquidating algorithm holdings...");
