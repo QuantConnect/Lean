@@ -551,7 +551,7 @@ namespace QuantConnect.Algorithm
 
             // compute the margin required for a single share
             int quantity = 1;
-            var marketOrder = new MarketOrder(symbol, quantity, Time, type: security.Type) { Price = security.Price };
+            var marketOrder = new MarketOrder(symbol, quantity, Time, type: security.Type);
             var marginRequiredForSingleShare = security.MarginModel.GetInitialMarginRequiredForOrder(security, marketOrder);
 
             // we can't do anything if we don't have data yet

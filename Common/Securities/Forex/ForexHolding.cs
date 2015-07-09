@@ -77,7 +77,7 @@ namespace QuantConnect.Securities.Forex
             if (AbsoluteQuantity > 0)
             {
                 // this is in the account currency
-                var marketOrder = new MarketOrder(_forex.Symbol, -Quantity, _forex.LocalTime.ConvertToUtc(_forex.Exchange.TimeZone), type:_forex.Type){Price = Price};
+                var marketOrder = new MarketOrder(_forex.Symbol, -Quantity, _forex.LocalTime.ConvertToUtc(_forex.Exchange.TimeZone), type:_forex.Type);
                 orderFee = _forex.TransactionModel.GetOrderFee(_forex, marketOrder);
             }
 

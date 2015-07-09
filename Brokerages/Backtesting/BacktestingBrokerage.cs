@@ -224,9 +224,6 @@ namespace QuantConnect.Brokerages.Backtesting
                     continue;
                 }
 
-                // update the the price to the current market price for the sufficient capital calculation
-                order.Price = security.Price;
-
                 // verify sure we have enough cash to perform the fill
                 var sufficientBuyingPower = _algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order);
 

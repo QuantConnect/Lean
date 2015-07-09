@@ -106,7 +106,8 @@ namespace QuantConnect.Securities
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
             var orderFees = security.TransactionModel.GetOrderFee(security, order);
 
-            return order.Price*order.AbsoluteQuantity*InitialMarginRequirement + orderFees;
+            var price = order.Status == OrderStatus.Filled ? order.Price : security.Price;
+            return order.GetValue(price)*InitialMarginRequirement + orderFees;
         }
 
         /// <summary>

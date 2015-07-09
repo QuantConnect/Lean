@@ -133,7 +133,8 @@ namespace QuantConnect.Securities.Forex
             var forex = (Forex) security;
 
             // get the total order value in the account currency
-            var totalOrderValue = order.GetValue(security.Price)*forex.QuoteCurrency.ConversionRate;
+            var price = order.Status == OrderStatus.Filled ? order.Price : security.Price;
+            var totalOrderValue = order.GetValue(price)*forex.QuoteCurrency.ConversionRate;
             var fee = _commissionRate*totalOrderValue;
             return Math.Max(_minimumOrderFee, fee);
         }

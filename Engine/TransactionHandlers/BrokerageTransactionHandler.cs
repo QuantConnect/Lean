@@ -541,7 +541,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!_algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order))
             {
                 order.Status = OrderStatus.Invalid;
-                var response = OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.GetValue(_algorithm.Securities[order.Symbol].Price).SmartRounding()));
+                var response = OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.GetValue(order.Price).SmartRounding()));
                 _algorithm.Error(response.ErrorMessage);
                 return response;
             }
