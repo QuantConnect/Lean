@@ -141,11 +141,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var subscriptionDataReader = new SubscriptionDataReader(
                         _subscriptions[i],
                         security,
-                        DataFeedEndpoint.LiveTrading,
                         periodStart,
                         DateTime.MaxValue,
                         resultHandler,
-                        Time.EachTradeableDay(algorithm.Securities, periodStart, DateTime.MaxValue)
+                        Time.EachTradeableDay(algorithm.Securities, periodStart, DateTime.MaxValue), 
+                        true
                         );
 
                     // wrap the subscription data reader with a filter enumerator
@@ -370,6 +370,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     // true success defined as if we got a non-null value
                                     if (_subscriptionManagers[i].Current == null)
                                     {
+                                        Log.Trace("LiveTradingDataFeed.Custom(): Current == null");
                                         // we failed to get new data for this guy, try again next second
                                         update[i] = DateTime.Now.Add(Time.OneSecond);
                                         continue;
@@ -405,6 +406,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     }
                                     else
                                     {
+                                        Log.Trace("LiveTradingDataFeed.Custom(): Add to stream store.");
                                         _streamStores[i].Update(data); //Update bar builder.
                                         _realtimePrices[i] = data.Value; //Update realtime price value.
                                         needsMoveNext[i] = true;

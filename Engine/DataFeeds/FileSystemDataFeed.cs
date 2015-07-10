@@ -119,7 +119,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var security = _algorithm.Securities[Subscriptions[i].Symbol];
 
                 var tradeableDates = Time.EachTradeableDay(security, start.Date, end.Date);
-                IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, security, DataFeedEndpoint.FileSystem, start, end, resultHandler, tradeableDates);
+                IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, security, start, end, resultHandler, tradeableDates, false);
 
                 // optionally apply fill forward logic, but never for tick data
                 if (config.FillDataForward && config.Resolution != Resolution.Tick)

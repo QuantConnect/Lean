@@ -129,12 +129,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 EndOfBridge[i] = false;
                 _subscriptionReaderManagers[i] = new SubscriptionDataReader(
                     Subscriptions[i], 
-                    algorithm.Securities[Subscriptions[i].Symbol],
-                    DataFeedEndpoint.Database, 
+                    algorithm.Securities[Subscriptions[i].Symbol], 
                     algorithm.StartDate, 
                     algorithm.EndDate, 
                     resultHandler,
-                    Time.EachTradeableDay(algorithm.Securities, algorithm.StartDate, algorithm.EndDate)
+                    Time.EachTradeableDay(algorithm.Securities, algorithm.StartDate, algorithm.EndDate), 
+                    job is LiveNodePacket
                     );
             }
         }
