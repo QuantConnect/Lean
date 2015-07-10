@@ -307,6 +307,7 @@ namespace QuantConnect.Lean.Engine.Results
                     //For charting convert to UTC
                     foreach (var order in deltaOrders)
                     {
+                        order.Value.Price = order.Value.Price.SmartRounding();
                         order.Value.Time = order.Value.Time.ToUniversalTime();
                     }
 
