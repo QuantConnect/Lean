@@ -36,7 +36,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private bool _exitTriggered;
         private IAlgorithm _algorithm;
         private IBrokerage _brokerage;
-        private bool _syncedLiveBrokerageCashToday = false;
+        private bool _syncedLiveBrokerageCashToday;
 
         // this value is used for determining how confident we are in our cash balance update
         private long _lastFillTimeTicks;
@@ -540,7 +540,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!_algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order))
             {
                 order.Status = OrderStatus.Invalid;
-                var response = OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.GetValue(order.Price).SmartRounding()));
+                var security = _algorithm.Securities[order.Symbol];
+                var response = OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.GetValue(security.Price).SmartRounding()));
                 _algorithm.Error(response.ErrorMessage);
                 return response;
             }

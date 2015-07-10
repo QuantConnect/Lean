@@ -442,7 +442,7 @@ namespace QuantConnect.Securities
                 return 0m;
             }
 
-            var price = order.Status == OrderStatus.Filled ? order.Price : security.Price;
+            var price = order.Status.IsFill() ? order.Price : security.Price;
             return GetOrderFee(order.Quantity, order.GetValue(price) / order.Quantity);
         }
 
