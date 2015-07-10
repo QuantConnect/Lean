@@ -80,11 +80,6 @@ namespace QuantConnect.Data
         public readonly bool IsInternalFeed;
 
         /// <summary>
-        /// The subscription index from the SubscriptionManager
-        /// </summary>
-        public readonly int SubscriptionIndex;
-
-        /// <summary>
         /// The sum of dividends accrued in this subscription, used for scaling total return prices
         /// </summary>
         public decimal SumOfDividends;
@@ -135,7 +130,6 @@ namespace QuantConnect.Data
         /// <param name="hasVolume">Set to true if the objectType has a Volume property defined. This is used for the DynamicDataConsolidator</param>
         /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
         /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
-        /// <param name="subscriptionIndex">The subscription index from the SubscriptionManager, this MUST equal the subscription's index or all hell will break loose!</param>
         public SubscriptionDataConfig(Type objectType, 
             SecurityType securityType, 
             string symbol, 
@@ -146,8 +140,7 @@ namespace QuantConnect.Data
             bool extendedHours,
             bool isTradeBar,
             bool hasVolume,
-            bool isInternalFeed,
-            int subscriptionIndex)
+            bool isInternalFeed)
         {
             Type = objectType;
             SecurityType = securityType;
@@ -160,7 +153,6 @@ namespace QuantConnect.Data
             PriceScaleFactor = 1;
             MappedSymbol = symbol;
             IsInternalFeed = isInternalFeed;
-            SubscriptionIndex = subscriptionIndex;
             Market = market;
             TimeZone = timeZone;
             Consolidators = new HashSet<IDataConsolidator>();

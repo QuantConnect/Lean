@@ -19,12 +19,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -37,6 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IAlgorithm _algorithm;
         private int _subscriptions;
         private bool[] _endOfBridge;
+        private List<Security> _securities;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
@@ -80,20 +81,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
-            _cancellationTokenSource = new CancellationTokenSource();
-            Subscriptions = algorithm.SubscriptionManager.Subscriptions;
-            _subscriptions = Subscriptions.Count;
-
-            //Public Properties:
-            IsActive = true;
-            _endOfBridge = new bool[_subscriptions];
-            SubscriptionReaders = new IEnumerator<BaseData>[_subscriptions];
-            FillForwardFrontiers = new DateTime[_subscriptions];
-            RealtimePrices = new List<decimal>(_subscriptions);
-
-            //Class Privates:
             _algorithm = algorithm;
+            _subscriptions = algorithm.SubscriptionManager.Subscriptions.Count;
+            _endOfBridge = new bool[_subscriptions];
+            _cancellationTokenSource = new CancellationTokenSource();
+            _securities = new List<Security>(algorithm.Securities.Values);
 
+            IsActive = true;
+            RealtimePrices = new List<decimal>(_subscriptions);
+            FillForwardFrontiers = new DateTime[_subscriptions];
+            Subscriptions = algorithm.SubscriptionManager.Subscriptions;
+            SubscriptionReaders = new IEnumerator<BaseData>[_subscriptions];
+
+            
             // find the minimum resolution, ignoring ticks
             var fillForwardResolution = Subscriptions
                 .Where(x => x.Resolution != Resolution.Tick)
@@ -186,7 +186,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {
                     var earlyBirdTicks = long.MaxValue;
-                    var data = new Dictionary<int, List<BaseData>>();
+                    var data = new List<KeyValuePair<Security, List<BaseData>>>();
 
                     for (int i = 0; i < _subscriptions; i++)
                     {
@@ -196,8 +196,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             continue;
                         }
 
-                        var cache = new List<BaseData>();
-                        data[i] = cache;
+                        var cache = new KeyValuePair<Security, List<BaseData>>(_securities[i], new List<BaseData>());
+                        data.Add(cache);
 
                         var enumerator = SubscriptionReaders[i];
                         var currentOffsetTicks = offsetProviders[i].GetOffsetTicks(frontier);
@@ -207,7 +207,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // so we don't interfere with the enumerator's internal logic
                             var clone = enumerator.Current.Clone(enumerator.Current.IsFillForward);
                             clone.Time = clone.Time.RoundDown(Subscriptions[i].Increment);
-                            cache.Add(clone);
+                            cache.Value.Add(clone);
                             if (!enumerator.MoveNext())
                             {
                                 Log.Trace("FileSystemDataFeed.Run(): Finished subscription: " + Subscriptions[i].Symbol);
@@ -226,7 +226,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // enqueue our next time slice and set the frontier for the next
-                    Bridge.Add(new TimeSlice(frontier, data), _cancellationTokenSource.Token);
+                    Bridge.Add(TimeSlice.Create(_algorithm, frontier, data), _cancellationTokenSource.Token);
 
                     // never go backwards in time, so take the max between early birds and the current frontier
                     frontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);

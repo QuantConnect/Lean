@@ -54,18 +54,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Update the current conversion rate for each cash type
-        /// </summary>
-        /// <param name="data">The new, current data</param>
-        public void Update(Dictionary<int, List<BaseData>> data)
-        {
-            foreach (var cash in _currencies.Values)
-            {
-                cash.Update(data);
-            }
-        }
-
-        /// <summary>
         /// Adds a new cash of the specified symbol and quantity
         /// </summary>
         /// <param name="symbol">The symbol used to reference the new cash</param>

@@ -102,7 +102,7 @@ namespace QuantConnect.Data
             }
             
             //Create:
-            var newConfig = new SubscriptionDataConfig(dataType, security, symbol, resolution, market, timeZone, fillDataForward, extendedMarketHours, isTradeBar, hasVolume, isInternalFeed, Subscriptions.Count);
+            var newConfig = new SubscriptionDataConfig(dataType, security, symbol, resolution, market, timeZone, fillDataForward, extendedMarketHours, isTradeBar, hasVolume, isInternalFeed);
 
             //Add to subscription list: make sure we don't have his symbol:
             Subscriptions.Add(newConfig);

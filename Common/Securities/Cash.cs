@@ -28,7 +28,11 @@ namespace QuantConnect.Securities
     {
         private bool _isBaseCurrency;
         private bool _invertRealTimePrice;
-        private SubscriptionDataConfig _config;
+
+        /// <summary>
+        /// Gets the symbol of the security required to provide conversion rates.
+        /// </summary>
+        public string SecuritySymbol { get; private set; }
 
         /// <summary>
         /// Gets the symbol used to represent this cash
@@ -71,27 +75,18 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Update the current conversion rate
+        /// Updates this cash object with the specified data
         /// </summary>
-        /// <param name="data">The list of real time prices directly from the data feed</param>
-        public void Update(Dictionary<int, List<BaseData>> data)
+        /// <param name="data">The new data for this cash object</param>
+        public void Update(BaseData data)
         {
-            // conversions for base currencies are always identity
             if (_isBaseCurrency) return;
-
-            List<BaseData> realTimePrice;
-            if (!data.TryGetValue(_config.SubscriptionIndex, out realTimePrice) || realTimePrice.Count == 0)
-            {
-                // if we don't have data we can't do anything
-                return;
-            }
-
-            decimal rate = realTimePrice[realTimePrice.Count - 1].Value;
+            
+            var rate = data.Value;
             if (_invertRealTimePrice)
             {
                 rate = 1/rate;
             }
-
             ConversionRate = rate;
         }
 
@@ -106,6 +101,7 @@ namespace QuantConnect.Securities
         {
             if (Symbol == CashBook.AccountCurrency)
             {
+                SecuritySymbol = string.Empty;
                 _isBaseCurrency = true;
                 ConversionRate = 1.0m;
                 return;
@@ -119,21 +115,16 @@ namespace QuantConnect.Securities
             // we require a subscription that converts this into the base currency
             string normal = Symbol + CashBook.AccountCurrency;
             string invert = CashBook.AccountCurrency + Symbol;
-            for (int i = 0; i < subscriptions.Subscriptions.Count; i++)
+            foreach (var config in subscriptions.Subscriptions.Where(config => config.SecurityType == SecurityType.Forex))
             {
-                var config = subscriptions.Subscriptions[i];
-                if (config.SecurityType != SecurityType.Forex)
-                {
-                    continue;
-                }
                 if (config.Symbol == normal)
                 {
-                    _config = config;
+                    SecuritySymbol = config.Symbol;
                     return;
                 }
                 if (config.Symbol == invert)
                 {
-                    _config = config;
+                    SecuritySymbol = config.Symbol;
                     _invertRealTimePrice = true;
                     return;
                 }
@@ -156,10 +147,10 @@ namespace QuantConnect.Securities
                     _invertRealTimePrice = symbol == invert;
                     var exchangeHours = exchangeHoursProvider.GetExchangeHours(market, symbol, SecurityType.Forex);
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
-                    _config = subscriptions.Add(objectType, SecurityType.Forex, symbol, minimumResolution, market, exchangeHours.TimeZone, true, false, isTradeBar, isTradeBar, true);
-                    var security = new Forex.Forex(this, _config, 1m, false);
+                    var config = subscriptions.Add(objectType, SecurityType.Forex, symbol, minimumResolution, market, exchangeHours.TimeZone, true, false, isTradeBar, isTradeBar, true);
+                    var security = new Forex.Forex(this, config, 1m);
                     securities.Add(symbol, security);
-                    Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol + " for cash " + this.Symbol + " currency feed");
+                    Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol + " for cash " + Symbol + " currency feed");
                     return;
                 }
             }

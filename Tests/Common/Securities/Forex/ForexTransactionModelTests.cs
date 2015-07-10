@@ -30,9 +30,9 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, string symbol)
         {
             if (type == SecurityType.Equity)
-                return new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, symbol, Resolution.Minute, "usa", TimeZones.NewYork, true, true, true, true, true, 0);
+                return new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, symbol, Resolution.Minute, "usa", TimeZones.NewYork, true, true, true, true, true);
             if (type == SecurityType.Forex)
-                return new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Forex, symbol, Resolution.Minute, "fxcm", TimeZones.NewYork, true, true, true, true, true, 2);
+                return new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Forex, symbol, Resolution.Minute, "fxcm", TimeZones.NewYork, true, true, true, true, true);
             throw new NotImplementedException(type.ToString());
         }
         private static readonly TimeKeeper TimeKeeper = new TimeKeeper(DateTime.UtcNow, new[] { TimeZones.NewYork });

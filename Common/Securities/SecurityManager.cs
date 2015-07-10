@@ -284,43 +284,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Update the security properties/online functions with new data/price packets.
-        /// </summary>
-        /// <param name="time">Time Frontier</param>
-        /// <param name="data">Data packets to update</param>
-        public void Update(DateTime time, Dictionary<int, List<BaseData>> data)
-        {
-            try 
-            {
-                //If its market data, look for the matching security symbol and update it:
-                foreach (var security in _securityManager.Values)
-                {
-                    BaseData dataPoint = null;
-                    List<BaseData> dataPoints;
-                    if (data.TryGetValue(security.SubscriptionDataConfig.SubscriptionIndex, out dataPoints) && dataPoints.Count != 0)
-                    {
-                        // ignore aux data when doing data update, we trust the latest data more
-                        for (int i = dataPoints.Count - 1; i > -1; i--)
-                        {
-                            if (dataPoints[i].DataType == MarketDataType.Auxiliary)
-                            {
-                                continue;
-                            }
-                            dataPoint = dataPoints[i];
-                            break;
-                        }
-                    }
-
-                    security.SetMarketPrice(dataPoint);
-                }
-            }
-            catch (Exception err) 
-            {
-                Log.Error("Algorithm.Market.Update(): " + err.Message);
-            }
-        }
-
-        /// <summary>
         /// Verifies that we can add more securities
         /// </summary>
         /// <param name="resolution">The new resolution to be added</param>

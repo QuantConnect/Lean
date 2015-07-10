@@ -26,6 +26,7 @@ using QuantConnect.Logging;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -43,6 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _isActive;
         private bool[] _endOfBridge;
         private IAlgorithm _algorithm;
+        private List<Security> _securities; 
         private readonly object _lock = new object();
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private List<string> _symbols = new List<string>();
@@ -98,30 +100,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
-            _cancellationTokenSource = new CancellationTokenSource();
-
-            //Subscription Count:
-            _subscriptions = algorithm.SubscriptionManager.Subscriptions;
-
-            Bridge = new BlockingCollection<TimeSlice>();
-
-            //Set Properties:
-            _isActive = true;
-            _endOfBridge = new bool[Subscriptions.Count];
-            _subscriptionManagers = new IEnumerator<BaseData>[Subscriptions.Count];
-            _realtimePrices = new List<decimal>();
-
-            //Set the source of the live data:
-            _dataQueue = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Configuration.Config.Get("data-queue-handler", "LiveDataQueue"));
-
-            //Class Privates:
-            _algorithm = algorithm;
             if (!(job is LiveNodePacket))
             {
                 throw new ArgumentException("The LiveTradingDataFeed requires a LiveNodePacket.");
             }
+            _job = (LiveNodePacket)job;
 
-            _job = (LiveNodePacket) job;
+            _isActive = true;
+            _algorithm = algorithm;
+            _realtimePrices = new List<decimal>();
+            _endOfBridge = new bool[Subscriptions.Count];
+            _cancellationTokenSource = new CancellationTokenSource();
+            _subscriptions = algorithm.SubscriptionManager.Subscriptions;
+            _securities = new List<Security>(algorithm.Securities.Values);
+            _subscriptionManagers = new IEnumerator<BaseData>[Subscriptions.Count];
+            _dataQueue = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Configuration.Config.Get("data-queue-handler", "LiveDataQueue"));
+
+            Bridge = new BlockingCollection<TimeSlice>();
 
             //Setup the arrays:
             for (var i = 0; i < Subscriptions.Count; i++)
@@ -208,7 +203,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var onDay = onHour && utcTriggerTime.Hour == 0;
 
                 // Determine if this subscription needs to be archived:
-                var items = new Dictionary<int, List<BaseData>>();
+                var items = new List<KeyValuePair<Security, List<BaseData>>>();
                 for (var i = 0; i < Subscriptions.Count; i++)
                 {
                     // stream stores are only created for non-tick data and this timer thread is used
@@ -242,13 +237,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             dataPoints.Add(data);
                         }
-                        items[i] = dataPoints;
+                        items.Add(new KeyValuePair<Security, List<BaseData>>(_securities[i], dataPoints));
                     }
                 }
 
                 // don't try to add if we're already cancelling
                 if (_cancellationTokenSource.IsCancellationRequested) return;
-                Bridge.Add(new TimeSlice(utcTriggerTime, items));
+                Bridge.Add(TimeSlice.Create(_algorithm, utcTriggerTime, items));
             });
 
             //Start the realtime sampler above
@@ -500,9 +495,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             // don't try to add if we're already cancelling
             if (_cancellationTokenSource.IsCancellationRequested) return;
-            Bridge.Add(new TimeSlice(tick.EndTime.ConvertToUtc(Subscriptions[i].TimeZone), new Dictionary<int, List<BaseData>>
+            Bridge.Add(TimeSlice.Create(_algorithm, tick.EndTime.ConvertToUtc(Subscriptions[i].TimeZone), new List<KeyValuePair<Security, List<BaseData>>>
             {
-                {i, new List<BaseData> {tick}}
+                new KeyValuePair<Security, List<BaseData>>(_securities[i], new List<BaseData> {tick})
             }));
         }
     }
