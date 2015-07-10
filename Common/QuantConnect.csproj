@@ -128,6 +128,10 @@
     <Compile Include="Data\Consolidators\TickConsolidator.cs" />
     <Compile Include="Data\Consolidators\TradeBarConsolidatorBase.cs" />
     <Compile Include="Data\FileFormat.cs" />
+    <Compile Include="Data\Fundamental\CoarseFundamental.cs" />
+    <Compile Include="Data\Fundamental\FuncUniverse.cs" />
+    <Compile Include="Data\Fundamental\IUniverse.cs" />
+    <Compile Include="Data\Fundamental\SecurityChanges.cs" />
     <Compile Include="Data\Market\DataDictionary.cs" />
     <Compile Include="Data\Market\Delisting.cs" />
     <Compile Include="Data\Market\Delistings.cs" />
@@ -140,6 +144,7 @@
     <Compile Include="Data\Market\Splits.cs" />
     <Compile Include="Data\Slice.cs" />
     <Compile Include="Data\SubscriptionDataSource.cs" />
+    <Compile Include="Data\SubscriptionSettings.cs" />
     <Compile Include="Field.cs" />
     <Compile Include="LocalTimeKeeper.cs" />
     <Compile Include="Market.cs" />
@@ -254,6 +259,7 @@
     <Compile Include="TimeUpdatedEventArgs.cs" />
     <Compile Include="TimeZoneOffsetProvider.cs" />
     <Compile Include="TimeZones.cs" />
+    <Compile Include="Util\BusyBlockingCollection.cs" />
     <Compile Include="Util\Composer.cs" />
     <Compile Include="Util\ExpressionBuilder.cs" />
     <Compile Include="Util\FixedSizeQueue.cs" />

@@ -75,5 +75,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
                     );
             }
         }
+
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            return Date + ": " + PriceScaleFactor.ToString("0.0000");
+        }
     }
 }

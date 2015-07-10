@@ -33,6 +33,14 @@ namespace QuantConnect
         private readonly Queue<long> _discontinuities;
 
         /// <summary>
+        /// Gets the time zone this instances provides offsets for
+        /// </summary>
+        public DateTimeZone TimeZone
+        {
+            get { return _timeZone; }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="TimeZoneOffsetProvider"/> class
         /// </summary>
         /// <param name="timeZone">The time zone to provide offsets for</param>
@@ -75,7 +83,7 @@ namespace QuantConnect
             {
                 // grab the next discontinuity
                 _nextDiscontinuity = _discontinuities.Count == 0 
-                    ? DateTime.MaxValue.Ticks 
+                    ? DateTime.MaxValue.Ticks
                     : _discontinuities.Dequeue();
 
                 // get the offset just before the next discontinuity
@@ -84,6 +92,17 @@ namespace QuantConnect
             }
 
             return _currentOffsetTicks;
+        }
+
+        /// <summary>
+        /// Converts the specified <paramref name="utcTime"/> using the offset resolved from
+        /// a call to <see cref="GetOffsetTicks"/>
+        /// </summary>
+        /// <param name="utcTime">The time to convert from utc</param>
+        /// <returns>The same instant in time represented in the <see cref="TimeZone"/></returns>
+        public DateTime ConvertFromUtc(DateTime utcTime)
+        {
+            return new DateTime(utcTime.Ticks + GetOffsetTicks(utcTime));
         }
     }
 }

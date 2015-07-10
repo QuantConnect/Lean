@@ -16,10 +16,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -69,25 +73,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public List<KeyValuePair<Security, List<BaseData>>> CustomData { get; private set; }
 
         /// <summary>
+        /// Gets the changes to the data subscriptions as a result of universe selection
+        /// </summary>
+        public SecurityChanges SecurityChanges { get; set; }
+
+        /// <summary>
         /// Initializes a new <see cref="TimeSlice"/> containing the specified data
         /// </summary>
-        public TimeSlice(DateTime time,
-            int dataPointCount,
-            Slice slice,
-            List<KeyValuePair<Security, List<BaseData>>> data,
-            List<KeyValuePair<Cash, BaseData>> cashBookUpdateData,
-            List<KeyValuePair<Security, BaseData>> securitiesUpdateData,
-            List<KeyValuePair<SubscriptionDataConfig, List<BaseData>>> consolidatorUpdateData,
-            List<KeyValuePair<Security, List<BaseData>>> customData)
+        public TimeSlice(DateTime time, int dataPointCount, Slice slice, List<KeyValuePair<Security, List<BaseData>>> data, List<KeyValuePair<Cash, BaseData>> cashBookUpdateData, List<KeyValuePair<Security, BaseData>> securitiesUpdateData, List<KeyValuePair<SubscriptionDataConfig, List<BaseData>>> consolidatorUpdateData, List<KeyValuePair<Security, List<BaseData>>> customData, SecurityChanges securityChanges)
         {
             Time = time;
             Data = data;
-            DataPointCount = dataPointCount;
             Slice = slice;
+            CustomData = customData;
+            DataPointCount = dataPointCount;
             CashBookUpdateData = cashBookUpdateData;
             SecuritiesUpdateData = securitiesUpdateData;
             ConsolidatorUpdateData = consolidatorUpdateData;
-            CustomData = customData;
+            SecurityChanges = securityChanges;
         }
 
         /// <summary>
@@ -96,51 +99,120 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="algorithm">The algorithm we're creating <see cref="TimeSlice"/> instances for</param>
         /// <param name="utcDateTime">The UTC frontier date time</param>
         /// <param name="data">The data in this <see cref="TimeSlice"/></param>
+        /// <param name="changes">The new changes that are seen in this time slice as a result of universe selection</param>
         /// <returns>A new <see cref="TimeSlice"/> containing the specified data</returns>
-        public static TimeSlice Create(IAlgorithm algorithm, DateTime utcDateTime, List<KeyValuePair<Security, List<BaseData>>> data)
+        public static TimeSlice Create(IAlgorithm algorithm, DateTime utcDateTime, List<KeyValuePair<Security, List<BaseData>>> data, SecurityChanges changes)
         {
-            var cash = new List<KeyValuePair<Cash, BaseData>>();
-
-            // build up the cash update dictionary
-            foreach (var kvp in algorithm.Portfolio.CashBook)
-            {
-                var updates = data.FirstOrDefault(x => x.Key.Symbol == kvp.Value.SecuritySymbol).Value;
-                if (updates != null)
-                {
-                    var lastNonAux = updates.LastOrDefault(x => x.DataType != MarketDataType.Auxiliary);
-                    if (lastNonAux != null)
-                    {
-                        cash.Add(new KeyValuePair<Cash, BaseData>(kvp.Value, lastNonAux));
-                    }
-                }
-            }
-
             int count = 0;
             var security = new List<KeyValuePair<Security, BaseData>>();
             var custom = new List<KeyValuePair<Security, List<BaseData>>>();
             var consolidator = new List<KeyValuePair<SubscriptionDataConfig, List<BaseData>>>();
-            foreach (var kvp in data)
-            {
-                count += kvp.Value.Count;
-                consolidator.Add(new KeyValuePair<SubscriptionDataConfig, List<BaseData>>(
-                    kvp.Key.SubscriptionDataConfig,
-                    kvp.Value.Where(x => x.DataType != MarketDataType.Auxiliary).ToList())
-                    );
+            var allDataForAlgorithm = new List<BaseData>(data.Count);
+            var cash = new List<KeyValuePair<Cash, BaseData>>(algorithm.Portfolio.CashBook.Count);
 
-                var update = kvp.Value.LastOrDefault(x => x.DataType != MarketDataType.Auxiliary);
-                if (update != null)
-                {
-                    security.Add(new KeyValuePair<Security, BaseData>(kvp.Key, update));
-                }
-                if (kvp.Key.IsDynamicallyLoadedData)
-                {
-                    custom.Add(new KeyValuePair<Security, List<BaseData>>(kvp.Key, kvp.Value));
-                }
+            var cashSecurities = new HashSet<string>();
+            foreach (var cashItem in algorithm.Portfolio.CashBook.Values)
+            {
+                cashSecurities.Add(cashItem.SecuritySymbol);
             }
 
-            var slice = new Slice(utcDateTime.ConvertTo(TimeZones.Utc, algorithm.TimeZone), data.Where(x => !x.Key.SubscriptionDataConfig.IsInternalFeed).SelectMany(x => x.Value));
+            Split split;
+            Dividend dividend;
+            Delisting delisting;
 
-            return new TimeSlice(utcDateTime, count, slice, data, cash, security, consolidator, custom);
+            var algorithmTime = utcDateTime.ConvertFromUtc(algorithm.TimeZone);
+            var tradeBars = new TradeBars(algorithmTime);
+            var ticks = new Ticks(algorithmTime);
+            var splits = new Splits(algorithmTime);
+            var dividends = new Dividends(algorithmTime);
+            var delistings = new Delistings(algorithmTime);
+
+            foreach (var kvp in data)
+            {
+                var list = kvp.Value;
+                var symbol = kvp.Key.Symbol;
+                
+                // keep count of all data points
+                count += list.Count;
+
+                BaseData update = null;
+                var consolidatorUpdate = new List<BaseData>(list.Count);
+                for (int i = list.Count - 1; i > -1; i--)
+                {
+                    var baseData = list[i];
+                    if (!kvp.Key.SubscriptionDataConfig.IsInternalFeed)
+                    {
+                        // this is all the data that goes into the algorithm
+                        allDataForAlgorithm.Add(baseData);
+                    }
+                    if (kvp.Key.IsDynamicallyLoadedData)
+                    {
+                        // this is all the custom data
+                        custom.Add(kvp);
+                    }
+                    if (baseData.DataType != MarketDataType.Auxiliary)
+                    {
+                        // populate ticks and tradebars dictionaries with no aux data
+                        if (baseData.DataType == MarketDataType.Tick)
+                        {
+                            List<Tick> ticksList;
+                            if (!ticks.TryGetValue(symbol, out ticksList))
+                            {
+                                ticksList = new List<Tick> {(Tick) baseData};
+                                ticks[symbol] = ticksList;
+                            }
+                            ticksList.Add((Tick) baseData);
+                        }
+                        else if (baseData.DataType == MarketDataType.TradeBar)
+                        {
+                            tradeBars[symbol] = (TradeBar) baseData;
+                        }
+
+                        // this is data used to update consolidators
+                        consolidatorUpdate.Add(baseData);
+                        if (update == null)
+                        {
+                            // this is the data used set market prices
+                            update = baseData;
+                        }
+                    }
+                    // include checks for various aux types so we don't have to construct the dictionaries in Slice
+                    else if ((delisting = baseData as Delisting) != null)
+                    {
+                        delistings[symbol] = delisting;
+                    }
+                    else if ((dividend = baseData as Dividend) != null)
+                    {
+                        dividends[symbol] = dividend;
+                    }
+                    else if ((split = baseData as Split) != null)
+                    {
+                        splits[symbol] = split;
+                    }
+                }
+
+                // check for 'cash securities' if we found valid update data for this symbol
+                // and we need this data to update cash conversion rates, long term we should
+                // have Cash hold onto it's security, then he can update himself, or rather, just
+                // patch through calls to conversion rate to compue it on the fly using Security.Price
+                if (update != null && cashSecurities.Contains(kvp.Key.Symbol))
+                {
+                    foreach (var cashKvp in algorithm.Portfolio.CashBook)
+                    {
+                        if (cashKvp.Value.SecuritySymbol == kvp.Key.Symbol)
+                        {
+                            cash.Add(new KeyValuePair<Cash, BaseData>(cashKvp.Value, update));
+                        }
+                    }
+                }
+
+                security.Add(new KeyValuePair<Security, BaseData>(kvp.Key, update));
+                consolidator.Add(new KeyValuePair<SubscriptionDataConfig, List<BaseData>>(kvp.Key.SubscriptionDataConfig, consolidatorUpdate));
+            }
+
+            var slice = new Slice(utcDateTime.ConvertFromUtc(algorithm.TimeZone), allDataForAlgorithm, tradeBars, ticks, splits, dividends, delistings);
+
+            return new TimeSlice(utcDateTime, count, slice, data, cash, security, consolidator, custom, changes);
         }
     }
 }

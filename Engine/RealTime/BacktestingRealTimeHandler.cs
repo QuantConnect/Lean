@@ -99,7 +99,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         public void SetTime(DateTime time)
         {
             // poke each event to see if it has fired, be sure to invoke these in time order
-            foreach (var scheduledEvent in _scheduledEvents.OrderBy(x => x.Value.NextEventUtcTime))
+            foreach (var scheduledEvent in _scheduledEvents)//.OrderBy(x => x.Value.NextEventUtcTime))
             {
                 scheduledEvent.Value.Scan(time);
             }

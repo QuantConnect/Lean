@@ -191,13 +191,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         _factorFile = FactorFile.Read(config.Symbol, config.Market);
                     }
                 }
-            } 
+            }
             catch (Exception err) 
             {
                 Log.Error("SubscriptionDataReader(): Fetching Price/Map Factors: " + err.Message);
             }
 
-            // initialize the enumerator
             _subscriptionFactoryEnumerator = ResolveDataEnumerator();
         }
 
@@ -262,7 +261,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         continue;
                     }
 
-                    if (instance.EndTime <= _periodStart)
+                    if (instance.EndTime < _periodStart)
                     {
                         // keep reading until we get a value on or after the start
                         _previous = instance;

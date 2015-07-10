@@ -18,7 +18,7 @@ using NUnit.Framework;
 
 namespace QuantConnect.Tests
 {
-    [TestFixture]//, Ignore("Travis seems to have issues running this at the moment.")]
+    [TestFixture, Ignore("Travis seems to have issues running this at the moment.")]
     public class RegressionTests
     {
         [Test]

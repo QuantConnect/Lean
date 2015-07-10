@@ -317,7 +317,7 @@ namespace QuantConnect.Securities
                 // ASUR  | | |      [order]        | | | | | | |
                 //  SPY  | | | | | | | | | | | | | | | | | | | |
                 var currentBar = asset.GetLastData();
-                var localOrderTime = order.Time.ConvertTo(TimeZones.Utc, asset.Exchange.TimeZone);
+                var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
                 if (currentBar == null || localOrderTime >= currentBar.EndTime) return fill;
 
                 // if the MOO was submitted during market the previous day, wait for a day to turn over
@@ -374,7 +374,7 @@ namespace QuantConnect.Securities
 
             try
             {
-                var localOrderTime = order.Time.ConvertTo(TimeZones.Utc, asset.Exchange.TimeZone);
+                var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
                 var nextMarketClose = asset.Exchange.Hours.GetNextMarketClose(localOrderTime, false);
                 
                 // wait until market closes after the order time 

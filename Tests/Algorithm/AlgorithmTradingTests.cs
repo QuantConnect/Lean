@@ -110,7 +110,7 @@ namespace QuantConnect.Tests.Algorithm
             Security msft;
             var algo = GetAlgorithm(out msft);
             //Set price to $25
-            Update(msft, 2);
+            Update(msft, 25);
             //75% cash spent on 3000 MSFT shares.
             algo.Portfolio.SetCash(25000);
             algo.Portfolio["MSFT"].SetHoldings(25, 3000);
@@ -125,7 +125,7 @@ namespace QuantConnect.Tests.Algorithm
             Security msft;
             var algo = GetAlgorithm(out msft, 10000);
             //Set price to $25
-            Update(msft, 2);
+            Update(msft, 25);
             //75% cash spent on 3000 MSFT shares.
             algo.Portfolio.SetCash(25000);
             algo.Portfolio["MSFT"].SetHoldings(25, 3000);
@@ -253,7 +253,7 @@ namespace QuantConnect.Tests.Algorithm
             Security msft;
             var algo = GetAlgorithm(out msft, 10000);
             //Set price to $25
-            Update(msft, 2);
+            Update(msft, 25);
             //Sold -2000 MSFT shares, +50k cash
             algo.Portfolio.SetCash(150000);
             algo.Portfolio["MSFT"].SetHoldings(25, -2000);

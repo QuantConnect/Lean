@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
-using QuantConnect.Securities.Forex;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Examples
 {
@@ -26,63 +26,70 @@ namespace QuantConnect.Algorithm.Examples
     /// </summary>
     public class StressSymbolsAlgorithm : QCAlgorithm
     {
-        public const int TickSymbolsToRun = 5;
-        public const int SecondSymbolsToRun = 7;
-        public const int MinuteSymbolsToRun = 10;
+        public const int TickSymbolsToRun = 0;
+        public const int SecondSymbolsToRun = 0;
+        public const int MinuteSymbolsToRun = 0;
+        public const int HourSymbolsToRun = 0;
+        public const int DailySymbolsToRun = 1000;
 
         /// <summary>
         /// Add Hundreds of Stock and Forex Symbol
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2014, 01, 01);
-            SetEndDate(2014, 02, 01);
+            SetStartDate(2001, 10, 07);
+            SetEndDate(2010, 10, 11);
             SetCash(250000);
 
-            var allSymbols = StockSymbols.Concat(ForexSymbols).ToList();
-            var symbolsUsed = new HashSet<string>();
-
-            int totalSymbols = TickSymbolsToRun + SecondSymbolsToRun + MinuteSymbolsToRun;
-
-            for (int i = 0; i < totalSymbols; i++)
+            var allSymbols = StressSymbols.StockSymbols.ToList();//.Concat(ForexSymbols).ToList();
+            if (TickSymbolsToRun + SecondSymbolsToRun + HourSymbolsToRun + DailySymbolsToRun > allSymbols.Count)
             {
-                Resolution resolution = Resolution.Tick;
-                if (i >= TickSymbolsToRun && i < TickSymbolsToRun + SecondSymbolsToRun)
-                {
-                    resolution = Resolution.Second;
-                }
-                else if (i >= TickSymbolsToRun + SecondSymbolsToRun)
-                {
-                    resolution = Resolution.Minute;
-                }
-
-                string nextSymbol;
-                do
-                {
-                    nextSymbol = GetRandomItem(allSymbols);
-                }
-                while (!symbolsUsed.Add(nextSymbol));
-
-                SecurityType type = SecurityType.Equity;
-                if (ForexSymbols.Contains(nextSymbol))
-                {
-                    type = SecurityType.Forex;
-                }
-
-                AddSecurity(type, nextSymbol, resolution);
-                Debug("Added " + nextSymbol + " at " + resolution);
+                throw new Exception("Too many symbols, all symbols: " + allSymbols.Count);
             }
 
-            int ticks = SubscriptionManager.Subscriptions.Count(x => x.Resolution == Resolution.Tick);
-            int seconds = SubscriptionManager.Subscriptions.Count(x => x.Resolution == Resolution.Second);
-            int minutes = SubscriptionManager.Subscriptions.Count(x => x.Resolution == Resolution.Minute);
-            Debug(string.Format("Ticks {0} Seconds {1} Minutes {2}", ticks, seconds, minutes));
+
+            var hash = new HashSet<string> {"DNY", "MLNK"};
+            var ticks = GetRandomSymbols(allSymbols, hash, TickSymbolsToRun).ToList();
+            var seconds = GetRandomSymbols(allSymbols, hash, SecondSymbolsToRun).ToList();
+            var minutes = GetRandomSymbols(allSymbols, hash, MinuteSymbolsToRun).ToList();
+            var hours = GetRandomSymbols(allSymbols, hash, HourSymbolsToRun).ToList();
+            var daily = GetRandomSymbols(allSymbols, hash, DailySymbolsToRun).ToList();
+
+            AddSecurity(ticks, Resolution.Tick);
+            AddSecurity(seconds, Resolution.Second);
+            AddSecurity(minutes, Resolution.Minute);
+            AddSecurity(hours, Resolution.Hour);
+            AddSecurity(daily, Resolution.Daily);
+
+            //SetUniverse(coarse => coarse.Take(1));
+        }
+
+        private void AddSecurity(IEnumerable<string> symbols, Resolution resolution)
+        {
+            foreach (var symbol in symbols)
+            {
+                var securityType = StressSymbols.ForexSymbols.Contains(symbol) ? SecurityType.Forex : SecurityType.Equity;
+                AddSecurity(securityType, symbol, resolution);
+            }
+        }
+
+        private IEnumerable<string> GetRandomSymbols(List<string> allSymbols, HashSet<string> hash, int numberOfSymbols)
+        {
+            return Enumerable.Range(0, numberOfSymbols).Select(x => GetRandomItem(allSymbols, hash));
         }
 
         private readonly Random _random = new Random();
-        private T GetRandomItem<T>(List<T> list)
+        private string GetRandomItem(IReadOnlyList<string> list, HashSet<string> hash)
         {
-            return list[_random.Next(list.Count)];
+            var count = 0;
+            string item;
+            do
+            {
+                item = list[_random.Next(list.Count)];
+                count++;
+            }
+            while (!hash.Add(item) && count < list.Count*2);
+            return item;
         }
 
         /// <summary>
@@ -92,122 +99,5 @@ namespace QuantConnect.Algorithm.Examples
         {
 
         }
-
-        /// <summary>
-        /// The stock symbols.
-        /// </summary>
-        public HashSet<string> StockSymbols = new HashSet<string>
-        {
-            "ABT",
-            "ABBV",
-            "ACE",
-            "ACN",
-            "ACT",
-            "ADBE",
-            "ADT",
-            "AES",
-            "AET",
-            "AFL",
-            "AMG",
-            "A",
-            "GAS",
-            "APD",
-            "ARG",
-            "AKAM",
-            "AA",
-            "ALXN",
-            "ATI",
-            "ALLE",
-            "AGN",
-            "ADS",
-            "ALL",
-            "ALTR",
-            "MO",
-            "AMZN",
-            "AEE",
-            "AEP",
-            "AXP",
-            "AIG",
-            "AMT",
-            "AMP",
-            "ABC",
-            "AME",
-            "AMGN",
-            "APH",
-            "APC",
-            "ADI",
-            "AON",
-            "APA",
-            "AIV",
-            "AAPL",
-            "AMAT",
-            "ADM",
-            "AIZ",
-            "T",
-            "ADSK",
-            "ADP",
-            "AN",
-            "AZO",
-            "AVGO",
-            "AVB",
-            "AVY",
-            "AVP",
-            "BHI",
-            "BLL",
-            "BAC",
-            "BK",
-            "BCR",
-            "BAX",
-            "BBT",
-            "BDX",
-            "BBBY",
-            "BMS",
-            "BRK.B",
-            "BBY",
-            "BIIB",
-            "BLK",
-            "HRB",
-            "BA",
-            "BWA",
-            "BXP",
-            "BSX",
-            "BMY",
-            "BRCM",
-            "BF.B",
-            "CHRW",
-            "CA",
-            "CVC",
-            "COG",
-            "CAM",
-            "CPB",
-            "COF",
-            "CAH",
-            "CFN",
-            "KMX",
-            "CCL",
-            "CAT",
-            "CBG",
-            "CBS",
-            "CELG",
-            "CNP",
-            "CTL",
-            "CERN",
-            "CF",
-            "SCHW",
-            "MSFT",
-            "AAPL",
-            "GOOG",
-            "IBM",
-            "JNJ",
-            "TSLA",
-            "TWTR",
-            "LNKD",
-            "FB"
-        };
-
-        /// <summary>
-        /// The forex symbols.
-        /// </summary>
-        public HashSet<string> ForexSymbols = new HashSet<string>(Forex.CurrencyPairs);
     }
 }

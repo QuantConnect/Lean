@@ -32,9 +32,9 @@ namespace QuantConnect.Indicators
         /// <param name="time">The time associated with the value</param>
         /// <param name="value">The value to use to update this indicator</param>
         /// <returns>True if this indicator is ready, false otherwise</returns>
-        public static void Update(this IndicatorBase<IndicatorDataPoint> indicator, DateTime time, decimal value)
+        public static bool Update(this IndicatorBase<IndicatorDataPoint> indicator, DateTime time, decimal value)
         {
-            indicator.Update(new IndicatorDataPoint(time, value));
+            return indicator.Update(new IndicatorDataPoint(time, value));
         }
 
         /// <summary>

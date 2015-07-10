@@ -149,6 +149,7 @@ namespace QuantConnect.Securities
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
                     var config = subscriptions.Add(objectType, SecurityType.Forex, symbol, minimumResolution, market, exchangeHours.TimeZone, true, false, isTradeBar, isTradeBar, true);
                     var security = new Forex.Forex(this, config, 1m);
+                    SecuritySymbol = config.Symbol;
                     securities.Add(symbol, security);
                     Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol + " for cash " + Symbol + " currency feed");
                     return;

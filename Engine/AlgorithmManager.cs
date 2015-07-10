@@ -22,6 +22,7 @@ using Fasterflect;
 using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -166,10 +167,10 @@ namespace QuantConnect.Lean.Engine
                 .FirstOrDefault(x => x.DeclaringType == algorithm.GetType()) != null;
 
             //Go through the subscription types and create invokers to trigger the event handlers for each custom type:
-            foreach (var config in feed.Subscriptions) 
+            foreach (var config in feed.Subscriptions.Select(x => x.Configuration)) 
             {
                 //If type is a tradebar, combine tradebars and ticks into unified array:
-                if (config.Type.Name != "TradeBar" && config.Type.Name != "Tick") 
+                if (config.Type.Name != "TradeBar" && config.Type.Name != "Tick" && !config.IsInternalFeed) 
                 {
                     //Get the matching method for this event handler - e.g. public void OnData(Quandl data) { .. }
                     var genericMethod = (algorithm.GetType()).GetMethod("OnData", new[] { config.Type });
@@ -251,6 +252,18 @@ namespace QuantConnect.Lean.Engine
                 //Set the algorithm and real time handler's time
                 algorithm.SetDateTime(time);
 
+                if (timeSlice.SecurityChanges != SecurityChanges.None)
+                {
+                    foreach (var security in timeSlice.SecurityChanges.AddedSecurities)
+                    {
+                        if (!algorithm.Securities.ContainsKey(security.Symbol))
+                        {
+                            // add the new security
+                            algorithm.Securities.Add(security);
+                        }
+                    }
+                }
+
                 //On each time step push the real time prices to the cashbook so we can have updated conversion rates
                 foreach (var kvp in timeSlice.CashBookUpdateData)
                 {
@@ -268,18 +281,6 @@ namespace QuantConnect.Lean.Engine
 
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
-
-                if (timeSlice.SecurityChanges != SecurityChanges.None)
-                {
-                    foreach (var security in timeSlice.SecurityChanges.AddedSecurities)
-                    {
-                        if (!algorithm.Securities.ContainsKey(security.Symbol))
-                        {
-                            // add the new security
-                            algorithm.Securities.Add(security);
-                        }
-                    }
-                }
 
                 if (delistingTickets.Count != 0)
                 {
@@ -356,6 +357,22 @@ namespace QuantConnect.Lean.Engine
                     nextMarginCallTime = time + marginCallFrequency;
                 }
 
+                // before we call any events, let the algorithm know about universe changes
+                if (timeSlice.SecurityChanges != SecurityChanges.None)
+                {
+                    try
+                    {
+                        algorithm.OnSecuritiesChanged(timeSlice.SecurityChanges);
+                    }
+                    catch (Exception err)
+                    {
+                        algorithm.RunTimeError = err;
+                        _algorithmState = AlgorithmStatus.RuntimeError;
+                        Log.Error("AlgorithmManager.Run(): RuntimeError: OnSecuritiesChanged event: " + err.Message);
+                        return;
+                    }
+                }
+
                 // apply dividends
                 foreach (var dividend in timeSlice.Slice.Dividends.Values)
                 {
@@ -366,14 +383,24 @@ namespace QuantConnect.Lean.Engine
                 // apply splits
                 foreach (var split in timeSlice.Slice.Splits.Values)
                 {
-                    Log.Trace("AlgorithmManager.Run(): Applying Split for " + split.Symbol);
-                    algorithm.Portfolio.ApplySplit(split);
-                    // apply the split to open orders as well in raw mode, all other modes are split adjusted
-                    if (_liveMode || algorithm.Securities[split.Symbol].SubscriptionDataConfig.DataNormalizationMode == DataNormalizationMode.Raw)
+                    try
                     {
-                        // in live mode we always want to have our order match the order at the brokerage, so apply the split to the orders
-                        var openOrders = transactions.GetOrderTickets(ticket => ticket.Status.IsOpen() && ticket.Symbol == split.Symbol);
-                        algorithm.BrokerageModel.ApplySplit(openOrders.ToList(), split);
+                        Log.Trace("AlgorithmManager.Run(): Applying Split for " + split.Symbol);
+                        algorithm.Portfolio.ApplySplit(split);
+                        // apply the split to open orders as well in raw mode, all other modes are split adjusted
+                        if (_liveMode || algorithm.Securities[split.Symbol].SubscriptionDataConfig.DataNormalizationMode == DataNormalizationMode.Raw)
+                        {
+                            // in live mode we always want to have our order match the order at the brokerage, so apply the split to the orders
+                            var openOrders = transactions.GetOrderTickets(ticket => ticket.Status.IsOpen() && ticket.Symbol == split.Symbol);
+                            algorithm.BrokerageModel.ApplySplit(openOrders.ToList(), split);
+                        }
+                    }
+                    catch (Exception err)
+                    {
+                        algorithm.RunTimeError = err;
+                        _algorithmState = AlgorithmStatus.RuntimeError;
+                        Log.Error("AlgorithmManager.Run(): RuntimeError: Split event: " + err.Message);
+                        return;
                     }
                 }
 
@@ -397,6 +424,7 @@ namespace QuantConnect.Lean.Engine
                     algorithm.RunTimeError = err;
                     _algorithmState = AlgorithmStatus.RuntimeError;
                     Log.Error("AlgorithmManager.Run(): RuntimeError: Consolidators update: " + err.Message);
+                    return;
                 }
 
                 // fire custom event handlers

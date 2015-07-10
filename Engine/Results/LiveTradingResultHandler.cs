@@ -1038,13 +1038,12 @@ namespace QuantConnect.Lean.Engine.Results
                 //Update the asset prices to take a real time sample of the market price even though we're using minute bars
                 if (_dataFeed != null)
                 {
-                    for (var i = 0; i < _dataFeed.Subscriptions.Count; i++)
+                    foreach (var subscription in _dataFeed.Subscriptions)
                     {
-                        var price = _dataFeed.RealtimePrices[i];
-                        var subscription = _dataFeed.Subscriptions[i];
-                        
+                        var price = subscription.RealtimePrice;
+
                         //Sample Portfolio Value:
-                        var security = _algorithm.Securities[subscription.Symbol];
+                        var security = _algorithm.Securities[subscription.Configuration.Symbol];
                         var last = security.GetLastData();
                         if (last != null)
                         {
@@ -1053,11 +1052,11 @@ namespace QuantConnect.Lean.Engine.Results
                         else
                         {
                             // we haven't gotten data yet so just spoof a tick to push through the system to start with
-                            security.SetMarketPrice(new Tick(DateTime.Now, subscription.Symbol, price, price));
+                            security.SetMarketPrice(new Tick(DateTime.Now, subscription.Configuration.Symbol, price, price));
                         }
 
                         //Sample Asset Pricing:
-                        SampleAssetPrices(subscription.Symbol, time, price);
+                        SampleAssetPrices(subscription.Configuration.Symbol, time, price);
                     }
                 }
 

@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
@@ -26,7 +28,7 @@ namespace QuantConnect.Securities
     /// Enumerable security management class for grouping security objects into an array and providing any common properties.
     /// </summary>
     /// <remarks>Implements IDictionary for the index searching of securities by symbol</remarks>
-    public class SecurityManager : IDictionary<string, Security> 
+    public class SecurityManager : IDictionary<string, Security>
     {
         private readonly TimeKeeper _timeKeeper;
 
@@ -55,7 +57,31 @@ namespace QuantConnect.Securities
         public SecurityManager(TimeKeeper timeKeeper)
         {
             _timeKeeper = timeKeeper;
-            _securityManager = new Dictionary<string, Security>();
+            _securityManager = new ConcurrentDictionary<string, Security>();
+        }
+
+        /// <summary>
+        /// Gets the maximum number of minute symbols allowed in the algorithm
+        /// </summary>
+        public int MinuteLimit
+        {
+            get { return _minuteLimit; }
+        }
+
+        /// <summary>
+        /// Gets the maximum number of second symbols allowed in the algorithm
+        /// </summary>
+        public int SecondLimit
+        {
+            get { return _secondLimit; }
+        }
+
+        /// <summary>
+        /// Gets the maximum number of tick symbols allowed in the algorithm
+        /// </summary>
+        public int TickLimit
+        {
+            get { return _tickLimit; }
         }
 
         /// <summary>
@@ -218,7 +244,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Enumerator.</returns>
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() 
+        IEnumerator IEnumerable.GetEnumerator() 
         {
             return _securityManager.GetEnumerator();
         }
@@ -280,7 +306,7 @@ namespace QuantConnect.Securities
             _minuteLimit = minute;  //Limit the number and combination of symbols
             _secondLimit = second;
             _tickLimit = tick;
-            _maxRamEstimate = Math.Max(Math.Max(_minuteLimit * _minuteMemory, _secondLimit * _secondMemory), _tickLimit * _tickMemory);
+            _maxRamEstimate = Math.Max(Math.Max(MinuteLimit * _minuteMemory, SecondLimit * _secondMemory), TickLimit * _tickMemory);
         }
 
         /// <summary>
@@ -290,17 +316,17 @@ namespace QuantConnect.Securities
         private void CheckResolutionCounts(Resolution resolution)
         {
             //Maximum Data Usage: mainly RAM constraints but this has never been fully tested.
-            if (GetResolutionCount(Resolution.Tick) >= _tickLimit && resolution == Resolution.Tick)
+            if (GetResolutionCount(Resolution.Tick) >= TickLimit && resolution == Resolution.Tick)
             {
-                throw new Exception("We currently only support " + _tickLimit + " tick assets at a time due to physical memory limitations.");
+                throw new Exception("We currently only support " + TickLimit + " tick assets at a time due to physical memory limitations.");
             }
-            if (GetResolutionCount(Resolution.Second) >= _secondLimit && resolution == Resolution.Second)
+            if (GetResolutionCount(Resolution.Second) >= SecondLimit && resolution == Resolution.Second)
             {
-                throw new Exception("We currently only support  " + _secondLimit + "  second resolution securities at a time due to physical memory limitations.");
+                throw new Exception("We currently only support  " + SecondLimit + "  second resolution securities at a time due to physical memory limitations.");
             }
-            if (GetResolutionCount(Resolution.Minute) >= _minuteLimit && resolution == Resolution.Minute)
+            if (GetResolutionCount(Resolution.Minute) >= MinuteLimit && resolution == Resolution.Minute)
             {
-                throw new Exception("We currently only support  " + _minuteLimit + "  minute assets at a time due to physical memory limitations.");
+                throw new Exception("We currently only support  " + MinuteLimit + "  minute assets at a time due to physical memory limitations.");
             }
 
             //Current ram usage: this especially applies during live trading where micro servers have limited resources:
