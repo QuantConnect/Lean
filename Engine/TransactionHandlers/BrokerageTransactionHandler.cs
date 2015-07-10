@@ -521,7 +521,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             OrderTicket ticket;
             var order = Order.CreateOrder(request);
-            order.Price = _algorithm.Securities[request.Symbol].Price;
 
             if (!_orders.TryAdd(order.Id, order))
             {
