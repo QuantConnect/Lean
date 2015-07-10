@@ -70,8 +70,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
                 var csv = line.Split(',');
                 yield return new FactorFileRow(
                     DateTime.ParseExact(csv[0], DateFormat.EightCharacter, CultureInfo.InvariantCulture, DateTimeStyles.None),
-                    decimal.Parse(csv[1]),
-                    decimal.Parse(csv[2])
+                    decimal.Parse(csv[1], CultureInfo.InvariantCulture),
+                    decimal.Parse(csv[2], CultureInfo.InvariantCulture)
                     );
             }
         }

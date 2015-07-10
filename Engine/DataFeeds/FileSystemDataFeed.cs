@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -36,7 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IAlgorithm _algorithm;
         private int _subscriptions;
         private bool[] _endOfBridge;
-        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
         /// List of the subscription the algorithm has requested. Subscriptions contain the type, sourcing information and manage the enumeration of data.
@@ -118,7 +119,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var security = _algorithm.Securities[Subscriptions[i].Symbol];
 
                 var tradeableDates = Time.EachTradeableDay(security, start.Date, end.Date);
-                IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, security, DataFeedEndpoint.FileSystem, start, end, resultHandler, tradeableDates);
+                IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, security, start, end, resultHandler, tradeableDates, false);
 
                 // optionally apply fill forward logic, but never for tick data
                 if (config.FillDataForward && config.Resolution != Resolution.Tick)
@@ -146,17 +147,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <remarks>This is a hot-thread and should be kept extremely lean. Modify with caution.</remarks>
         public void Run()
         {
-            var frontier = DateTime.MinValue;
-
+            var frontier = DateTime.MaxValue;
             try
             {
-                frontier = SubscriptionReaders
-                    .Where(x => x.Current != null)
-                    .Select(x => x.Current.EndTime)
-                    .DefaultIfEmpty(DateTime.MinValue)
-                    .Min();
+                // get a listing of time zones and also the initial frontier in utc
+                var offsetProviders = new TimeZoneOffsetProvider[Subscriptions.Count];
+                for (int i = 0; i < Subscriptions.Count; i++)
+                {
+                    // skip the already finished readers
+                    if (SubscriptionReaders[i].Current == null)
+                    {
+                        continue;
+                    }
 
-                Log.Trace("FileSystemDataFeed.Run(): Begin: " + frontier);
+                    offsetProviders[i] = new TimeZoneOffsetProvider(Subscriptions[i].TimeZone, _algorithm.StartDate.AddDays(-1), _algorithm.EndDate.AddDays(1));
+                    
+                    // compute the initial frontier time
+                    var currentEndTimeUtc = SubscriptionReaders[i].Current.EndTime.ConvertToUtc(Subscriptions[i].TimeZone);
+                    var endTime = SubscriptionReaders[i].Current.EndTime.Ticks - offsetProviders[i].GetOffsetTicks(currentEndTimeUtc); 
+                    if (endTime < frontier.Ticks)
+                    {
+                        frontier = new DateTime(endTime);
+                    }
+                }
+
+                Log.Trace(string.Format("FileSystemDataFeed.Run(): Begin: {0} UTC", frontier));
 
                 // continue to loop over each subscription, enqueuing data in time order
                 while (!_cancellationTokenSource.IsCancellationRequested)
@@ -176,7 +191,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         data[i] = cache;
 
                         var enumerator = SubscriptionReaders[i];
-                        while (enumerator.Current.EndTime <= frontier)
+                        var currentOffsetTicks = offsetProviders[i].GetOffsetTicks(frontier);
+                        while (enumerator.Current.EndTime.Ticks - currentOffsetTicks <= frontier.Ticks)
                         {
                             // we want bars rounded using their subscription times, we make a clone
                             // so we don't interfere with the enumerator's internal logic
@@ -191,8 +207,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             }
                         }
 
-                        // next data point time
-                        earlyBirdTicks = Math.Min(enumerator.Current.EndTime.Ticks, earlyBirdTicks);
+                        earlyBirdTicks = Math.Min(earlyBirdTicks, enumerator.Current.EndTime.Ticks - currentOffsetTicks);
                     }
 
                     if (earlyBirdTicks == long.MaxValue)
@@ -205,7 +220,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     Bridge.Add(new TimeSlice(frontier, data), _cancellationTokenSource.Token);
 
                     // never go backwards in time, so take the max between early birds and the current frontier
-                    frontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks));
+                    frontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);
+                }
+
+                if (!_cancellationTokenSource.IsCancellationRequested)
+                {
+                    Bridge.CompleteAdding();
                 }
             }
             catch (Exception err)
@@ -214,13 +234,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             finally
             {
-                Log.Trace("FileSystemDataFeed.Run(): Data Feed Completed at " + frontier);
+                Log.Trace(string.Format("FileSystemDataFeed.Run(): Data Feed Completed at {0} UTC", frontier));
                 LoadingComplete = true;
-                if (!_cancellationTokenSource.IsCancellationRequested)
-                {
-                    // if we've already disposed the collection then don't mark it as completed adding, it's gone!
-                    Bridge.CompleteAdding();
-                }
 
                 //Close up all streams:
                 for (var i = 0; i < Subscriptions.Count; i++)
@@ -240,7 +255,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             Log.Trace("FileSystemDataFeed.Exit(): Exit triggered.");
             _cancellationTokenSource.Cancel();
-            Bridge.Dispose();
+            if (Bridge != null)
+            {
+                Bridge.Dispose();
+            }
         }
     }
 }

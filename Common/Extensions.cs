@@ -19,7 +19,9 @@ using System.Text;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Timers;
+using NodaTime;
 
 namespace QuantConnect 
 {
@@ -135,6 +137,31 @@ namespace QuantConnect
             if (d == 0) return 0;
             var scale = (decimal)Math.Pow(10, Math.Floor(Math.Log10((double) Math.Abs(d))) + 1);
             return scale * Math.Round(d / scale, digits);
+        }
+
+        /// <summary>
+        /// Provides global smart rounding, numbers larger than 1000 will round to 4 decimal places,
+        /// while numbers smaller will round to 7 significant digits
+        /// </summary>
+        public static decimal SmartRounding(this decimal input)
+        {
+            input = Normalize(input);
+
+            // any larger numbers we still want some decimal places
+            if (input > 1000)
+            {
+                return Math.Round(input, 4);
+            }
+
+            // this is good for forex and other small numbers
+            var d = (double)input;
+            return (decimal)d.RoundToSignificantDigits(7);
+        }
+
+        private static decimal Normalize(decimal input)
+        {
+            // http://stackoverflow.com/a/7983330/1582922
+            return input / 1.000000000000000000000000000000000m;
         }
 
         /// <summary>
@@ -299,6 +326,36 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Converts the specified time from the <paramref name="from"/> time zone to the <paramref name="to"/> time zone
+        /// </summary>
+        /// <param name="time">The time to be converted in terms of the <paramref name="from"/> time zone</param>
+        /// <param name="from">The time zone the specified <paramref name="time"/> is in</param>
+        /// <param name="to">The time zone to be converted to</param>
+        /// <param name="strict">True for strict conversion, this will throw during ambiguitities, false for lenient conversion</param>
+        /// <returns>The time in terms of the to time zone</returns>
+        public static DateTime ConvertTo(this DateTime time, DateTimeZone from, DateTimeZone to, bool strict = false)
+        {
+            if (strict)
+            {
+                return from.AtStrictly(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
+            }
+            
+            return @from.AtLeniently(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
+        }
+
+        /// <summary>
+        /// Converts the specified time from the <paramref name="from"/> time zone to <see cref="TimeZones.Utc"/>
+        /// </summary>
+        /// <param name="time">The time to be converted in terms of the <paramref name="from"/> time zone</param>
+        /// <param name="from">The time zone the specified <paramref name="time"/> is in</param>
+        /// <param name="strict">True for strict conversion, this will throw during ambiguitities, false for lenient conversion</param>
+        /// <returns>The time in terms of the to time zone</returns>
+        public static DateTime ConvertToUtc(this DateTime time, DateTimeZone from, bool strict = false)
+        {
+            return ConvertTo(time, from, TimeZones.Utc, strict);
+        }
+
+        /// <summary>
         /// Add the reset method to the System.Timer class.
         /// </summary>
         /// <param name="timer">System.timer object</param>
@@ -422,11 +479,11 @@ namespace QuantConnect
             }
             if (typeof (IConvertible).IsAssignableFrom(conversionType))
             {
-                return (T) Convert.ChangeType(value, conversionType);
+                return (T)Convert.ChangeType(value, conversionType, CultureInfo.InvariantCulture);
             }
             if (typeof (TimeSpan) == conversionType)
             {
-                return (T) (object) TimeSpan.Parse(value);
+                return (T)(object)TimeSpan.Parse(value, CultureInfo.InvariantCulture);
             }
 
             throw new ArgumentException("Extensions.ConvertTo is unable to convert to type: " + typeof (T).Name);

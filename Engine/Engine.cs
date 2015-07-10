@@ -381,7 +381,7 @@ namespace QuantConnect.Lean.Engine
 
                 //Close result handler:
                 _algorithmHandlers.Results.Exit();
-                StateCheck.Ping.Exit();
+                statusPing.Exit();
 
                 //Wait for the threads to complete:
                 var ts = Stopwatch.StartNew();

@@ -374,7 +374,7 @@ namespace QuantConnect.Securities
             }
 
             // this is in the account currency
-            var marketOrder = new MarketOrder(_security.Symbol, -Quantity, _security.Time, type: _security.Type) {Price = Price};
+            var marketOrder = new MarketOrder(_security.Symbol, -Quantity, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone), type: _security.Type);
             var orderFee = _security.TransactionModel.GetOrderFee(_security, marketOrder);
 
             return (Price - AveragePrice) * Quantity - orderFee;

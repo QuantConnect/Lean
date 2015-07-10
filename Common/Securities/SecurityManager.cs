@@ -28,8 +28,10 @@ namespace QuantConnect.Securities
     /// <remarks>Implements IDictionary for the index searching of securities by symbol</remarks>
     public class SecurityManager : IDictionary<string, Security> 
     {
+        private readonly TimeKeeper _timeKeeper;
+
         //Internal dictionary implementation:
-        private IDictionary<string, Security> _securityManager;
+        private readonly IDictionary<string, Security> _securityManager;
         private int _minuteLimit = 500;
         private int _minuteMemory = 2;
         private int _secondLimit = 100;
@@ -39,11 +41,21 @@ namespace QuantConnect.Securities
         private decimal _maxRamEstimate = 1024;
 
         /// <summary>
+        /// Gets the most recent time this manager was updated
+        /// </summary>
+        public DateTime UtcTime
+        {
+            get { return _timeKeeper.UtcTime; }
+        }
+
+        /// <summary>
         /// Initialise the algorithm security manager with two empty dictionaries
         /// </summary>
-        public SecurityManager()
+        /// <param name="timeKeeper"></param>
+        public SecurityManager(TimeKeeper timeKeeper)
         {
-            _securityManager = new Dictionary<string, Security>(); 
+            _timeKeeper = timeKeeper;
+            _securityManager = new Dictionary<string, Security>();
         }
 
         /// <summary>
@@ -56,6 +68,7 @@ namespace QuantConnect.Securities
         public void Add(string symbol, Security security)
         {
             CheckResolutionCounts(security.Resolution);
+            security.SetLocalTimeKeeper(_timeKeeper.GetLocalTimeKeeper(security.SubscriptionDataConfig.TimeZone));
             _securityManager.Add(symbol, security);
         }
 
@@ -275,7 +288,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="time">Time Frontier</param>
         /// <param name="data">Data packets to update</param>
-        public void Update(DateTime time, Dictionary<int, List<BaseData>> data) 
+        public void Update(DateTime time, Dictionary<int, List<BaseData>> data)
         {
             try 
             {
@@ -297,7 +310,8 @@ namespace QuantConnect.Securities
                             break;
                         }
                     }
-                    security.SetMarketPrice(time, dataPoint);
+
+                    security.SetMarketPrice(dataPoint);
                 }
             }
             catch (Exception err) 

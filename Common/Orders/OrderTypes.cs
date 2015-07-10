@@ -101,42 +101,37 @@ namespace QuantConnect.Orders
         /// <summary>
         /// New order pre-submission to the order processor.
         /// </summary>
-        New,
-
-        /// <summary>
-        /// Order flagged for updating the inmarket order.
-        /// </summary>
-        Update,
+        New = 0,
 
         /// <summary>
         /// Order submitted to the market
         /// </summary>
-        Submitted,
+        Submitted = 1,
 
         /// <summary>
         /// Partially filled, In Market Order.
         /// </summary>
-        PartiallyFilled,
+        PartiallyFilled = 2,
 
         /// <summary>
         /// Completed, Filled, In Market Order.
         /// </summary>
-        Filled,
+        Filled = 3,
 
         /// <summary>
         /// Order cancelled before it was filled
         /// </summary>
-        Canceled,
+        Canceled = 5,
 
         /// <summary>
         /// No Order State Yet
         /// </summary>
-        None,
+        None = 6,
 
         /// <summary>
         /// Order invalidated before it hit the market (e.g. insufficient capital)..
         /// </summary>
-        Invalid
+        Invalid = 7
     }
 
 } // End QC Namespace:

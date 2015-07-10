@@ -47,7 +47,7 @@ namespace QuantConnect
         /// This is expensive, it creates a new thread and closely monitors the loop.
         /// </summary>
         /// <param name="period">delay period between event callbacks</param>
-        /// <param name="callback">Callback event passed the time the event is intended to be triggered</param>
+        /// <param name="callback">Callback event passed the UTC time the event is intended to be triggered</param>
         public RealTimeSynchronizedTimer(TimeSpan period, Action<DateTime> callback)
         {
             _period = period;
@@ -55,7 +55,7 @@ namespace QuantConnect
             _timer = new Stopwatch();
             _thread = new Thread(Scanner);
             _stopped = false;
-            _triggerTime = DateTime.Now.RoundUp(period);
+            _triggerTime = DateTime.UtcNow.RoundUp(period);
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace QuantConnect
         { 
             _timer.Start();
             _thread.Start();
-            _triggerTime = DateTime.Now.RoundDown(_period).Add(_period);
+            _triggerTime = DateTime.UtcNow.RoundDown(_period).Add(_period);
         }
         
         /// <summary>
@@ -75,11 +75,11 @@ namespace QuantConnect
         {
             while (!_stopped)
             {
-                if (_callback != null && DateTime.Now >= _triggerTime)
+                if (_callback != null && DateTime.UtcNow >= _triggerTime)
                 {
                     _timer.Restart();
                     var triggeredAt = _triggerTime;
-                    _triggerTime = DateTime.Now.RoundDown(_period).Add(_period);
+                    _triggerTime = DateTime.UtcNow.RoundDown(_period).Add(_period);
                     _callback(triggeredAt);
                 }
 

@@ -229,7 +229,7 @@ namespace QuantConnect.Tests.Indicators
                 High = values.GetCsvValue("high").ToDecimal(),
                 Low = values.GetCsvValue("low").ToDecimal(),
                 Close = values.GetCsvValue("close").ToDecimal(),
-                Volume = fileHasVolume ? long.Parse(values.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
+                Volume = fileHasVolume ? long.Parse(values.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : 0
             });
         }
 

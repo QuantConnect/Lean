@@ -197,7 +197,7 @@ namespace QuantConnect
             try
             {
                 string[] data = line.Split(',');
-                coin.Time = DateTime.Parse(data[0]);
+                coin.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture);
                 coin.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
                 coin.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
                 coin.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
@@ -219,13 +219,21 @@ namespace QuantConnect
     /// </summary>
     public class LiveBitcoin
     {
+        [JsonProperty("timestamp")]
         public int Timestamp = 0;
+        [JsonProperty("last")]
         public decimal Last = 0;
+        [JsonProperty("high")]
         public decimal High = 0;
+        [JsonProperty("low")]
         public decimal Low = 0;
+        [JsonProperty("bid")]
         public decimal Bid = 0;
+        [JsonProperty("ask")]
         public decimal Ask = 0;
+        [JsonProperty("vwap")]
         public decimal VWAP = 0;
+        [JsonProperty("volume")]
         public decimal Volume = 0;
     }
 }

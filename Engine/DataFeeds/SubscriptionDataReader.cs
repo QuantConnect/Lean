@@ -58,7 +58,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private string _mappedSymbol = "";
 
         // Location of the datafeed - the type of this data.
-        private readonly DataFeedEndpoint _feedEndpoint;
 
         // Create a single instance to invoke all Type Methods:
         private readonly BaseData _dataFactory;
@@ -108,12 +107,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="config">Subscription configuration object</param>
         /// <param name="security">Security asset</param>
-        /// <param name="feed">Feed type enum</param>
         /// <param name="periodStart">Start date for the data request/backtest</param>
         /// <param name="periodFinish">Finish date for the data request/backtest</param>
         /// <param name="resultHandler"></param>
         /// <param name="tradeableDates">Defines the dates for which we'll request data, in order</param>
-        public SubscriptionDataReader(SubscriptionDataConfig config, Security security, DataFeedEndpoint feed, DateTime periodStart, DateTime periodFinish, IResultHandler resultHandler, IEnumerable<DateTime> tradeableDates)
+        /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
+        public SubscriptionDataReader(SubscriptionDataConfig config, Security security, DateTime periodStart, DateTime periodFinish, IResultHandler resultHandler, IEnumerable<DateTime> tradeableDates, bool isLiveMode)
         {
             //Save configuration of data-subscription:
             _config = config;
@@ -127,13 +126,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Save access to securities
             _security = security;
             _isDynamicallyLoadedData = security.IsDynamicallyLoadedData;
-            _isLiveMode = _feedEndpoint == DataFeedEndpoint.LiveTrading;
+            _isLiveMode = isLiveMode;
 
             // do we have factor tables?
             _hasScaleFactors = FactorFile.HasScalingFactors(config.Symbol, config.Market);
 
             //Save the type of data we'll be getting from the source.
-            _feedEndpoint = feed;
 
             //Create the dynamic type-activators:
             var objectActivator = ObjectActivator.GetActivator(config.Type);
@@ -242,6 +240,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // stop reading when we get a value after the end
                         _endOfStream = true;
                         return false;
+                    }
+
+                    // this happens when a single file has multiple days worth of data,
+                    // we still want to advance our tradeable dates enumerator
+                    if (instance.EndTime.Date > _tradeableDates.Current)
+                    {
+                        DateTime date;
+                        TryGetNextDate(out date);
+
+                        // we produce auxiliary data on date changes, so check for the data
+                        if (_auxiliaryData.Count > 0)
+                        {
+                            // check for any auxilliary data before reading a line
+                            Current = _auxiliaryData.Dequeue();
+                            return true;
+                        }
                     }
 
                     // we've made it past all of our filters, we're withing the requested start/end of the subscription,
@@ -380,6 +394,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 date = _tradeableDates.Current;
                 if (!_mapFile.HasData(date))
+                {
+                    continue;
+                }
+
+                // don't do other checks if we haven't goten data for this date yet
+                if (_previous != null && _previous.EndTime > _tradeableDates.Current)
                 {
                     continue;
                 }

@@ -54,7 +54,7 @@ namespace QuantConnect.Orders
         /// <param name="limitPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
         public LimitOrder(string symbol, int quantity, decimal limitPrice, DateTime time, string tag = "", SecurityType type = SecurityType.Base) :
-            base(symbol, quantity, OrderType.Limit, time, 0, tag, type)
+            base(symbol, quantity, OrderType.Limit, time, tag, type)
         {
             LimitPrice = limitPrice;
 
@@ -62,6 +62,29 @@ namespace QuantConnect.Orders
             {
                 //Default tag values to display limit price in GUI.
                 Tag = "Limit Price: " + limitPrice.ToString("C");
+            }
+        }
+
+        /// <summary>
+        /// Gets the value of this order at the given market price.
+        /// </summary>
+        /// <param name="currentMarketPrice">The current market price of the security</param>
+        /// <returns>The value of this order given the current market price</returns>
+        public override decimal GetValue(decimal currentMarketPrice)
+        {
+            return Quantity*LimitPrice;
+        }
+
+        /// <summary>
+        /// Modifies the state of this order to match the update request
+        /// </summary>
+        /// <param name="request">The request to update this order object</param>
+        public override void ApplyUpdateOrderRequest(UpdateOrderRequest request)
+        {
+            base.ApplyUpdateOrderRequest(request);
+            if (request.LimitPrice.HasValue)
+            {
+                LimitPrice = request.LimitPrice.Value;
             }
         }
 
@@ -74,7 +97,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return string.Format("{0} order for {1} unit{2} of {3} at limit {4}", Type, Quantity, Quantity == 1 ? "" : "s", Symbol, LimitPrice);
+            return string.Format("{0} order for {1} unit{2} of {3} at limit {4}", Type, Quantity, Quantity == 1 ? "" : "s", Symbol, LimitPrice.SmartRounding());
         }
     }
 }

@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NodaTime;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 
@@ -26,14 +27,18 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionManager
     {
+        private readonly TimeKeeper _timeKeeper;
+
         /// Generic Market Data Requested and Object[] Arguements to Get it:
         public List<SubscriptionDataConfig> Subscriptions;
 
         /// <summary>
         /// Initialise the Generic Data Manager Class
         /// </summary>
-        public SubscriptionManager() 
+        /// <param name="timeKeeper">The algoritm's time keeper</param>
+        public SubscriptionManager(TimeKeeper timeKeeper)
         {
+            _timeKeeper = timeKeeper;
             //Generic Type Data Holder:
             Subscriptions = new List<SubscriptionDataConfig>();
         }
@@ -55,9 +60,12 @@ namespace QuantConnect.Data
         /// <param name="security">Market Data Asset</param>
         /// <param name="symbol">Symbol of the asset we're like</param>
         /// <param name="resolution">Resolution of Asset Required</param>
+        /// <param name="market">The market this security resides in</param>
+        /// <param name="timeZone">The time zone the subscription's data is time stamped in</param>
         /// <param name="fillDataForward">when there is no data pass the last tradebar forward</param>
         /// <param name="extendedMarketHours">Request premarket data as well when true </param>
-        public SubscriptionDataConfig Add(SecurityType security, string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false)
+        /// <returns>The newly created <see cref="SubscriptionDataConfig"/></returns>
+        public SubscriptionDataConfig Add(SecurityType security, string symbol, Resolution resolution, string market, DateTimeZone timeZone, bool fillDataForward = true, bool extendedMarketHours = false)
         {
             //Set the type: market data only comes in two forms -- ticks(trade by trade) or tradebar(time summaries)
             var dataType = typeof(TradeBar);
@@ -65,44 +73,42 @@ namespace QuantConnect.Data
             {
                 dataType = typeof(Tick);
             }
-            return Add(dataType, security, symbol, resolution, fillDataForward, extendedMarketHours, true, true);
+            return Add(dataType, security, symbol, resolution, market, timeZone, fillDataForward, extendedMarketHours, true, true, false);
         }
 
         /// <summary>
-        /// Add Market Data Required - generic data typing support as long as Type implements IBaseData.
+        /// Add Market Data Required - generic data typing support as long as Type implements BaseData.
         /// </summary>
         /// <param name="dataType">Set the type of the data we're subscribing to.</param>
         /// <param name="security">Market Data Asset</param>
         /// <param name="symbol">Symbol of the asset we're like</param>
         /// <param name="resolution">Resolution of Asset Required</param>
+        /// <param name="market">The market this security resides in</param>
+        /// <param name="timeZone">The time zone the subscription's data is time stamped in</param>
         /// <param name="fillDataForward">when there is no data pass the last tradebar forward</param>
         /// <param name="extendedMarketHours">Request premarket data as well when true </param>
         /// <param name="isTradeBar">Set to true if this data has Open, High, Low, and Close properties</param>
         /// <param name="hasVolume">Set to true if this data has a Volume property</param>
         /// <param name="isInternalFeed">Set to true to prevent data from this subscription from being sent into the algorithm's OnData events</param>
-        public SubscriptionDataConfig Add(Type dataType, SecurityType security, string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false, bool isTradeBar = false, bool hasVolume = false, bool isInternalFeed = false) 
+        /// <returns>The newly created <see cref="SubscriptionDataConfig"/></returns>
+        public SubscriptionDataConfig Add(Type dataType, SecurityType security, string symbol, Resolution resolution, string market, DateTimeZone timeZone, bool fillDataForward = true, bool extendedMarketHours = false, bool isTradeBar = false, bool hasVolume = false, bool isInternalFeed = false) 
         {
             //Clean:
             symbol = symbol.ToUpper();
-            //Create:
-            var newConfig = new SubscriptionDataConfig(dataType, security, symbol, resolution, fillDataForward, extendedMarketHours, isTradeBar, hasVolume, isInternalFeed, Subscriptions.Count);
 
-            //For now choose the liquidity and country codes based on our current data providers.
-            // This gives us room to grow to international markets and other brokerage providers.
-            switch (security)
+            if (timeZone == null)
             {
-                case SecurityType.Forex:
-                    //Currently QC FX data source is FXCM pricing.
-                    newConfig.Market = QuantConnect.Market.FXCM;
-                    break;
-                case SecurityType.Equity:
-                    //Currently QC Equities are US Only.
-                    newConfig.Market = QuantConnect.Market.USA;
-                    break;
+                throw new ArgumentNullException("timeZone", "TimeZone is a required parameter for new subscriptions.  Set to the time zone the raw data is time stamped in.");
             }
+            
+            //Create:
+            var newConfig = new SubscriptionDataConfig(dataType, security, symbol, resolution, market, timeZone, fillDataForward, extendedMarketHours, isTradeBar, hasVolume, isInternalFeed, Subscriptions.Count);
 
             //Add to subscription list: make sure we don't have his symbol:
             Subscriptions.Add(newConfig);
+
+            // add the time zone to our time keeper
+            _timeKeeper.AddTimeZone(timeZone);
 
             return newConfig;
         }

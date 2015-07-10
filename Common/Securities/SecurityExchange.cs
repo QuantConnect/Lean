@@ -14,6 +14,9 @@
 */
 
 using System;
+using System.Linq;
+using NodaTime;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -22,126 +25,99 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityExchange 
     {
-        private DateTime _frontier;
-        private TimeSpan _marketOpen = TimeSpan.FromHours(0);
-        private TimeSpan _marketClose = TimeSpan.FromHours(24).Subtract(TimeSpan.FromTicks(1));
+        private DateTime _localFrontier;
+        private SecurityExchangeHours _exchangeHours;
 
         /// <summary>
-        /// Timezone for the exchange
+        /// Gets the <see cref="SecurityExchangeHours"/> for this exchange
         /// </summary>
-        public string TimeZone 
+        public SecurityExchangeHours Hours
         {
-            get;
-            set;
+            get { return _exchangeHours; }
         }
 
         /// <summary>
-        /// Default market open time 00:00
+        /// Gets the time zone for this exchange
         /// </summary>
-        public virtual TimeSpan MarketOpen
+        public DateTimeZone TimeZone 
         {
-            get { return _marketOpen; }
-            set { _marketOpen = value; }
+            get { return _exchangeHours.TimeZone; }
         }
 
         /// <summary>
-        /// Default market closing time 24:00
+        /// Gets the market open time for the current day
         /// </summary>
-        public virtual TimeSpan MarketClose
+        public TimeSpan MarketOpen
         {
-            get { return _marketClose; }
-            set { _marketClose = value; }
+            get { return _exchangeHours.GetMarketHours(_localFrontier).MarketOpen; }
         }
 
         /// <summary>
-        /// Default market open time 00:00
+        /// Gets the market close time for the current day
         /// </summary>
-        public virtual TimeSpan ExtendedMarketOpen
+        public TimeSpan MarketClose
         {
-            get { return _marketOpen; }
-            set { _marketOpen = value; }
+            get { return _exchangeHours.GetMarketHours(_localFrontier).MarketClose; }
         }
 
         /// <summary>
-        /// Default market extended closing time 24:00
+        /// Gets the extended market open time for the current day
         /// </summary>
-        public virtual TimeSpan ExtendedMarketClose
+        public TimeSpan ExtendedMarketOpen
         {
-            get { return _marketClose; }
-            set { _marketClose = value; }
+            get { return _exchangeHours.GetMarketHours(_localFrontier).ExtendedMarketOpen; }
+        }
+
+        /// <summary>
+        /// Gets the extended market close time for the current day
+        /// </summary>
+        public TimeSpan ExtendedMarketClose
+        {
+            get { return _exchangeHours.GetMarketHours(_localFrontier).ExtendedMarketClose; }
         }
 
         /// <summary>
         /// Number of trading days per year for this security. By default the market is open 365 days per year.
         /// </summary>
         /// <remarks>Used for performance statistics to calculate sharpe ratio accurately</remarks>
-        public virtual int TradingDaysPerYear 
+        public virtual int TradingDaysPerYear
         {
-            get 
-            {
-                return 365;
-            }
+            get { return 365; }
         }
 
         /// <summary>
         /// Time from the most recent data
         /// </summary>
-        public DateTime Time 
+        public DateTime LocalTime
         {
-            get 
-            {
-                return _frontier;
-            }
+            get { return _localFrontier; }
         }
 
         /// <summary>
         /// Boolean property for quickly testing if the exchange is open.
         /// </summary>
-        public virtual bool ExchangeOpen 
+        public bool ExchangeOpen
         {
-            get 
-            { 
-                return DateTimeIsOpen(Time); 
-            }
+            get { return _exchangeHours.IsOpen(_localFrontier, false); }
         }
 
         /// <summary>
-        /// Check if we are past a certain time: simple method for wrapping datetime.
+        /// Initializes a new instance of the <see cref="SecurityExchange"/> class using the specified
+        /// exchange hours to determine open/close times
         /// </summary>
-        public bool TimeIsPast(int iHour, int iMin, int iSec = 0) {
-
-            if (Time.Hour > iHour) {
-                return true;
-            
-            } else if (Time.Hour < iHour) {
-                return false;
-            
-            } else if (Time.Hour == iHour) {
-                if (Time.Minute > iMin) {
-                    return true;
-
-                } else if (Time.Minute < iMin) {
-                    return false;
-
-                } else if (Time.Minute == iMin) {
-                    //Minute Equal, Check Seconds.
-                    if (Time.Second >= iSec) {
-                        return true;
-                    } else if (Time.Second < iSec) {
-                        return false;
-                    }
-                }
-            }
-            return false;
+        /// <param name="exchangeHours">Contains the weekly exchange schedule plus holidays</param>
+        public SecurityExchange(SecurityExchangeHours exchangeHours)
+        {
+            _exchangeHours = exchangeHours;
         }
 
         /// <summary>
-        /// Set the current datetime:
+        /// Set the current datetime in terms of the exchange's local time zone
         /// </summary>
-        /// <param name="newTime">Most recent data tick</param>
-        public void SetDateTimeFrontier(DateTime newTime) 
+        /// <param name="newLocalTime">Most recent data tick</param>
+        public void SetLocalDateTimeFrontier(DateTime newLocalTime) 
         {
-            _frontier = newTime;
+            _localFrontier = newLocalTime;
         }
 
         /// <summary>
@@ -150,31 +126,29 @@ namespace QuantConnect.Securities
         /// <remarks>This is useful for first checking the date list, and then the market hours to save CPU cycles</remarks>
         /// <param name="dateToCheck">Date to check</param>
         /// <returns>Return true if the exchange is open for this date</returns>
-        public virtual bool DateIsOpen(DateTime dateToCheck)
+        public bool DateIsOpen(DateTime dateToCheck)
         {
-            return true;
+            return _exchangeHours.IsDateOpen(dateToCheck);
         }
 
         /// <summary>
-        /// Time of day the market opens.
+        /// Gets the date time the market opens on the specified day
         /// </summary>
         /// <param name="time">DateTime object for this date</param>
         /// <returns>DateTime the market is considered open</returns>
-        public virtual DateTime TimeOfDayOpen(DateTime time) 
+        public DateTime TimeOfDayOpen(DateTime time)
         {
-            //Default to midnight, start of day.
-            return time.Date;
+            return time.Date + _exchangeHours.GetMarketHours(time).MarketOpen;
         }
 
         /// <summary>
-        /// Time of day the market closes.
+        /// Gets the date time the market closes on the specified day
         /// </summary>
         /// <param name="time">DateTime object for this date</param>
         /// <returns>DateTime the market day is considered closed</returns>
-        public virtual DateTime TimeOfDayClosed(DateTime time)
+        public DateTime TimeOfDayClosed(DateTime time)
         {
-            //Default to midnight, start of *next* day.
-            return time.Date.AddDays(1);
+            return time.Date + _exchangeHours.GetMarketHours(time).MarketClose;
         }
 
         /// <summary>
@@ -182,9 +156,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="dateTime">DateTime to check</param>
         /// <returns>Boolean true if the market is open</returns>
-        public virtual bool DateTimeIsOpen(DateTime dateTime)
+        public bool DateTimeIsOpen(DateTime dateTime)
         {
-            return DateIsOpen(dateTime);
+            return _exchangeHours.IsOpen(dateTime, false);
         }
 
         /// <summary>
@@ -192,9 +166,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="time">Current time of day</param>
         /// <returns>True if we are in extended or primary marketing hours.</returns>
-        public virtual bool DateTimeIsExtendedOpen(DateTime time)
+        public bool DateTimeIsExtendedOpen(DateTime time)
         {
-            return DateIsOpen(time);
+            return _exchangeHours.IsOpen(time, true);
         }
 
         /// <summary>
@@ -202,34 +176,63 @@ namespace QuantConnect.Securities
         /// </summary>
         public bool IsOpenDuringBar(DateTime barStartTime, DateTime barEndTime, bool isExtendedMarketHours)
         {
-            DateTime marketOpen;
-            DateTime marketClose;
-            var emitDate = barStartTime.Date;
-            if (!DateIsOpen(emitDate))
+            return _exchangeHours.IsOpen(barStartTime, barEndTime, isExtendedMarketHours);
+        }
+
+        /// <summary>
+        /// Sets the regular market hours for the specified days. Extended market hours are
+        /// set to the same as the regular market hours. If no days are specified then
+        /// all days will be updated. 
+        /// <para>Specify <see cref="TimeSpan.Zero"/> for both <paramref name="marketOpen"/>
+        /// and <paramref name="marketClose"/> to close the exchange for the specified days.</para>
+        /// <para>Specify
+        /// <see cref="TimeSpan.Zero"/> for <paramref name="marketOpen"/> and <see cref="QuantConnect.Time.OneDay"/>
+        /// for open all day</para>
+        /// </summary>
+        /// <param name="marketOpen">The time of day the market opens</param>
+        /// <param name="marketClose">The time of day the market closes</param>
+        /// <param name="days">The days of the week to set these times for</param>
+        public void SetMarketHours(TimeSpan marketOpen, TimeSpan marketClose, params DayOfWeek[] days)
+        {
+            SetMarketHours(marketOpen, marketOpen, marketClose, marketClose, days);
+        }
+
+        /// <summary>
+        /// Sets the regular market hours for the specified days If no days are specified then
+        /// all days will be updated.
+        /// </summary>
+        /// <param name="extendedMarketOpen">The time of day the pre market opens</param>
+        /// <param name="marketOpen">The time of day the market opens</param>
+        /// <param name="marketClose">The time of day the market closes</param>
+        /// <param name="extendedMarketClose">The time of day the post market opens</param>
+        /// <param name="days">The days of the week to set these times for</param>
+        public void SetMarketHours(TimeSpan extendedMarketOpen, TimeSpan marketOpen, TimeSpan marketClose, TimeSpan extendedMarketClose, params DayOfWeek[] days)
+        {
+            if (days.IsNullOrEmpty()) days = Enum.GetValues(typeof(DayOfWeek)).OfType<DayOfWeek>().ToArray();
+            
+            // make sure extended hours are outside of regular hours
+            extendedMarketOpen = TimeSpan.FromTicks(Math.Min(extendedMarketOpen.Ticks, marketOpen.Ticks));
+            extendedMarketClose = TimeSpan.FromTicks(Math.Max(extendedMarketClose.Ticks, marketClose.Ticks));
+
+            var marketHours = _exchangeHours.MarketHours.ToDictionary();
+            foreach (var day in days)
             {
-                return false;
+                if (marketOpen == TimeSpan.Zero && marketClose == TimeSpan.Zero)
+                {
+                    marketHours[day] = LocalMarketHours.ClosedAllDay(day);
+                }
+                else if (marketOpen == TimeSpan.Zero && marketClose == Time.OneDay)
+                {
+                    marketHours[day] = LocalMarketHours.OpenAllDay(day);
+                }
+                else
+                {
+                    marketHours[day] = new LocalMarketHours(day, extendedMarketOpen, marketOpen, marketClose, extendedMarketClose);
+                }
             }
 
-            // pick market open/close times based out whether or not we've requested extended market hour
-            if (isExtendedMarketHours)
-            {
-                marketOpen = emitDate + ExtendedMarketOpen;
-                marketClose = emitDate + ExtendedMarketClose;
-            }
-            else
-            {
-                marketOpen = emitDate + MarketOpen;
-                marketClose = emitDate + MarketClose;
-            }
-
-            // allow instantenous data to land exactly on the open/close times
-            if (barStartTime == barEndTime)
-            {
-                return barStartTime >= marketOpen && barStartTime <= marketClose;
-            }
-
-            // detect any overlap with requested market hours
-            return barStartTime < marketClose && barEndTime > marketOpen;
+            // create a new exchange hours instance for the new hours
+            _exchangeHours = new SecurityExchangeHours(_exchangeHours.TimeZone, _exchangeHours.Holidays, marketHours);
         }
     }
 }

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System.Globalization;
 using System.Linq;
 
 namespace QuantConnect.Util
@@ -68,7 +69,7 @@ namespace QuantConnect.Util
         private static int[] ParseVersion(string version)
         {
             var parts = version.Split('.');
-            return parts.Select(int.Parse).ToArray();
+            return parts.Select(x => int.Parse(x, CultureInfo.InvariantCulture)).ToArray();
         }
     }
 }

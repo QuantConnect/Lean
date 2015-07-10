@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Orders;
-using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities.Forex 
 {
@@ -30,9 +29,7 @@ namespace QuantConnect.Securities.Forex
         /// Forex Holding Class
         /// </summary>
         /// <param name="security">The forex security being held</param>
-        /// <param name="transactionModel">The transaction model used for the security</param>
-        /// <param name="marginModel">The margin model used for the security</param>
-        public ForexHolding(Forex security, ISecurityTransactionModel transactionModel, ISecurityMarginModel marginModel)
+        public ForexHolding(Forex security)
             : base(security)
         {
             _forex = security;
@@ -80,7 +77,7 @@ namespace QuantConnect.Securities.Forex
             if (AbsoluteQuantity > 0)
             {
                 // this is in the account currency
-                var marketOrder = new MarketOrder(_forex.Symbol, -Quantity, _forex.Time, type:_forex.Type){Price = Price};
+                var marketOrder = new MarketOrder(_forex.Symbol, -Quantity, _forex.LocalTime.ConvertToUtc(_forex.Exchange.TimeZone), type:_forex.Type);
                 orderFee = _forex.TransactionModel.GetOrderFee(_forex, marketOrder);
             }
 

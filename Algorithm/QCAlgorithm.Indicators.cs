@@ -30,13 +30,12 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose values we want as an indicator</param>
         /// <param name="selector">Selects a value from the BaseData, if null defaults to the .Value property (x => x.Value)</param>
+        /// <param name="fieldName">The name of the field being selected</param>
         /// <returns>A new Identity indicator for the specified symbol and selector</returns>
-        public Identity Identity(string symbol, Func<BaseData, decimal> selector = null)
+        public Identity Identity(string symbol, Func<BaseData, decimal> selector = null, string fieldName = null)
         {
-            string name = CreateIndicatorName(string.Empty, symbol, null);
-            var identity = new Identity(name);
-            RegisterIndicator(symbol, identity, (Resolution?)null, selector);
-            return identity;
+            var resolution = GetSubscription(symbol).Resolution;
+            return Identity(symbol, resolution, selector, fieldName);
         }
 
         /// <summary>
@@ -46,10 +45,11 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol whose values we want as an indicator</param>
         /// <param name="resolution">The desired resolution of the data</param>
         /// <param name="selector">Selects a value from the BaseData, if null defaults to the .Value property (x => x.Value)</param>
+        /// <param name="fieldName">The name of the field being selected</param>
         /// <returns>A new Identity indicator for the specified symbol and selector</returns>
-        public Identity Identity(string symbol, Resolution resolution, Func<BaseData, decimal> selector = null)
+        public Identity Identity(string symbol, Resolution resolution, Func<BaseData, decimal> selector = null, string fieldName = null)
         {
-            string name = CreateIndicatorName(string.Empty, symbol, resolution);
+            string name = CreateIndicatorName(symbol, fieldName ?? "close", resolution);
             var identity = new Identity(name);
             RegisterIndicator(symbol, identity, resolution, selector);
             return identity;

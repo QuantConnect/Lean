@@ -26,7 +26,8 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class TradierBrokerageModel : IBrokerageModel
     {
-        private static readonly EquityExchange EquityExchange = new EquityExchange();
+        private static readonly EquityExchange EquityExchange = 
+            new EquityExchange(SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours("usa", null, SecurityType.Equity));
 
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
@@ -76,8 +77,10 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
         public bool CanExecuteOrder(Security security, Order order)
         {
+            EquityExchange.SetLocalDateTimeFrontier(security.Exchange.LocalTime);
+
             // tradier doesn't support after hours trading
-            var timeOfDay = security.Time.TimeOfDay;
+            var timeOfDay = security.LocalTime.TimeOfDay;
             if (timeOfDay < EquityExchange.MarketOpen || timeOfDay > EquityExchange.MarketClose)
             {
                 return false;

@@ -52,8 +52,8 @@ namespace QuantConnect.Orders
         /// <param name="time">Time the order was placed</param>
         /// <param name="stopPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public StopMarketOrder(string symbol, int quantity, decimal stopPrice, DateTime time, string tag = "", SecurityType type = SecurityType.Base) :
-            base(symbol, quantity, OrderType.StopMarket, time, 0, tag, type)
+        public StopMarketOrder(string symbol, int quantity, decimal stopPrice, DateTime time, string tag = "", SecurityType type = SecurityType.Base)
+            : base(symbol, quantity, OrderType.StopMarket, time, tag, type)
         {
             StopPrice = stopPrice;
 
@@ -61,6 +61,29 @@ namespace QuantConnect.Orders
             {
                 //Default tag values to display stop price in GUI.
                 Tag = "Stop Price: " + stopPrice.ToString("C");
+            }
+        }
+
+        /// <summary>
+        /// Gets the value of this order at the given market price.
+        /// </summary>
+        /// <param name="currentMarketPrice">The current market price of the security</param>
+        /// <returns>The value of this order given the current market price</returns>
+        public override decimal GetValue(decimal currentMarketPrice)
+        {
+            return Quantity*StopPrice;
+        }
+
+        /// <summary>
+        /// Modifies the state of this order to match the update request
+        /// </summary>
+        /// <param name="request">The request to update this order object</param>
+        public override void ApplyUpdateOrderRequest(UpdateOrderRequest request)
+        {
+            base.ApplyUpdateOrderRequest(request);
+            if (request.StopPrice.HasValue)
+            {
+                StopPrice = request.StopPrice.Value;
             }
         }
 
@@ -73,7 +96,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return string.Format("{0} order for {1} unit{2} of {3} at stop {4}", Type, Quantity, Quantity == 1 ? "" : "s", Symbol, StopPrice);
+            return string.Format("{0} order for {1} unit{2} of {3} at stop {4}", Type, Quantity, Quantity == 1 ? "" : "s", Symbol, StopPrice.SmartRounding());
         }
     }
 }

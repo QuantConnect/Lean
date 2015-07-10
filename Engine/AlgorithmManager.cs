@@ -237,15 +237,15 @@ namespace QuantConnect.Lean.Engine
 
                 //Update algorithm state after capturing performance from previous day
 
+                //Set the algorithm and real time handler's time
+                algorithm.SetDateTime(time);
+                realtime.SetTime(time);
+
                 //On each time step push the real time prices to the cashbook so we can have updated conversion rates
                 algorithm.Portfolio.CashBook.Update(newData);
 
                 //Update the securities properties: first before calling user code to avoid issues with data
                 algorithm.Securities.Update(time, newData);
-
-                //Set the algorithm and real time handler's time
-                algorithm.SetDateTime(time);
-                realtime.SetTime(time);
 
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
@@ -260,8 +260,7 @@ namespace QuantConnect.Lean.Engine
                 if (algorithm.RunTimeError != null)
                 {
                     _algorithmState = AlgorithmStatus.RuntimeError;
-                    Log.Trace(string.Format("AlgorithmManager.Run(): Algorithm encountered a runtime error at {0}. Error: {1}", timeSlice.Time,
-                        algorithm.RunTimeError));
+                    Log.Trace(string.Format("AlgorithmManager.Run(): Algorithm encountered a runtime error at {0}. Error: {1}", timeSlice.Time, algorithm.RunTimeError));
                     break;
                 }
 
@@ -287,10 +286,10 @@ namespace QuantConnect.Lean.Engine
                         }
 
                         // execute the margin call orders
-                        var executedOrders = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
-                        foreach (var order in executedOrders)
+                        var executedTickets = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
+                        foreach (var ticket in executedTickets)
                         {
-                            algorithm.Error(string.Format("{0} - Executed MarginCallOrder: {1} - Quantity: {2} @ {3}", algorithm.Time, order.Symbol, order.Quantity, order.Price));
+                            algorithm.Error(string.Format("{0} - Executed MarginCallOrder: {1} - Quantity: {2} @ {3}", algorithm.Time, ticket.Symbol, ticket.Quantity, ticket.OrderEvents.Last().FillPrice));
                         }
                     }
                     // we didn't perform a margin call, but got the warning flag back, so issue the warning to the algorithm
@@ -512,11 +511,13 @@ namespace QuantConnect.Lean.Engine
             if (_algorithmState == AlgorithmStatus.Liquidated || !_liveMode)
             {
                 // without this we can't liquidate equities since the exchange is 'technically' closed
-                var hackedFrontier = algorithm.Time == DateTime.MinValue ? DateTime.MinValue : algorithm.Time.AddMilliseconds(-1);
+                var hackedFrontier = algorithm.UtcTime == DateTime.MinValue ? DateTime.MinValue : algorithm.UtcTime.AddMilliseconds(-1);
                 algorithm.SetDateTime(hackedFrontier);
-                foreach (var security in algorithm.Securities)
+                foreach (var security in algorithm.Securities.Values)
                 {
-                    security.Value.SetMarketPrice(hackedFrontier, null);
+                    // this is purely to set the exchange times, not sexy
+                    var beforeMarketClose = (security.Exchange.LocalTime.Date + security.Exchange.MarketClose).AddMilliseconds(-1);
+                    security.Exchange.SetLocalDateTimeFrontier(beforeMarketClose);
                 }
 
                 Log.Trace("AlgorithmManager.Run(): Liquidating algorithm holdings...");

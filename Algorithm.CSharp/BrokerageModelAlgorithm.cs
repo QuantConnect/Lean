@@ -100,7 +100,8 @@ namespace QuantConnect.Algorithm.Examples
                 
                 // we want to model brokerage requirement of _minimumAccountBalance cash value in account
 
-                var orderCost = order.Value;
+                var price = order.Status.IsFill() ? order.Price : security.Price;
+                var orderCost = order.GetValue(price);
                 var cash = _algorithm.Portfolio.Cash;
                 var cashAfterOrder = cash - orderCost;
                 if (cashAfterOrder < _minimumAccountBalance)

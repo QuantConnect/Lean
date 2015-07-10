@@ -18,18 +18,12 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Abstract base data class of QuantConnect. It is intended to be extended to define 
     /// generic user customizable data types while at the same time implementing the basics of data where possible
     /// </summary>
     public abstract class BaseData : IBaseData
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
         private MarketDataType _dataType = MarketDataType.Base;
         private DateTime _time;
         private string _symbol = string.Empty;

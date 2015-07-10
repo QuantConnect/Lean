@@ -23,7 +23,7 @@ namespace QuantConnect.Securities.Forex
     /// FOREX Security Object Implementation for FOREX Assets
     /// </summary>
     /// <seealso cref="Security"/>
-    public class Forex : Security 
+    public class Forex : Security
     {
         /// <summary>
         /// Constructor for the forex security
@@ -33,17 +33,33 @@ namespace QuantConnect.Securities.Forex
         /// <param name="leverage">The leverage used for this security</param>
         /// <param name="isDynamicallyLoadedData">True for custom data, false otherwise</param>
         public Forex(Cash quoteCurrency, SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false)
-            : base(config, leverage, isDynamicallyLoadedData)
+            : this(SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(config), quoteCurrency, config, leverage, isDynamicallyLoadedData)
+        {
+            // this constructor is provided for backward compatibility
+
+            // should we even keep this?
+        }
+
+        /// <summary>
+        /// Constructor for the forex security
+        /// </summary>
+        /// <param name="exchangeHours">Defines the hours this exchange is open</param>
+        /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
+        /// <param name="config">The subscription configuration for this security</param>
+        /// <param name="leverage">The leverage used for this security</param>
+        /// <param name="isDynamicallyLoadedData">True for custom data, false otherwise</param>
+        public Forex(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false)
+            : base(exchangeHours, config, leverage, isDynamicallyLoadedData)
         {
             QuoteCurrency = quoteCurrency;
             //Holdings for new Vehicle:
             Cache = new ForexCache();
-            Exchange = new ForexExchange(); 
+            Exchange = new ForexExchange(exchangeHours); 
             DataFilter = new ForexDataFilter();
             TransactionModel = new ForexTransactionModel();
             PortfolioModel = new ForexPortfolioModel();
             MarginModel = new ForexMarginModel(leverage);
-            Holdings = new ForexHolding(this, TransactionModel, MarginModel);
+            Holdings = new ForexHolding(this);
 
             // decompose the symbol into each currency pair
             string baseCurrencySymbol, quoteCurrencySymbol;

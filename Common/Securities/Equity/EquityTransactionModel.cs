@@ -38,7 +38,8 @@ namespace QuantConnect.Securities.Equity
         /// <returns>The cost of the order in units of the account currency</returns>
         public override decimal GetOrderFee(Security security, Order order)
         {
-            var tradeValue = Math.Abs(order.Value);
+            var price = order.Status.IsFill() ? order.Price : security.Price;
+            var tradeValue = Math.Abs(order.GetValue(price));
 
             //Per share fees
             var tradeFee = 0.005m*order.AbsoluteQuantity;

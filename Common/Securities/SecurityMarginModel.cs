@@ -106,7 +106,8 @@ namespace QuantConnect.Securities
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
             var orderFees = security.TransactionModel.GetOrderFee(security, order);
 
-            return order.Price*order.AbsoluteQuantity*InitialMarginRequirement + orderFees;
+            var price = order.Status.IsFill() ? order.Price : security.Price;
+            return order.GetValue(price)*InitialMarginRequirement + orderFees;
         }
 
         /// <summary>
@@ -170,7 +171,7 @@ namespace QuantConnect.Securities
         /// <param name="netLiquidationValue">The net liquidation value for the entire account</param>
         /// <param name="totalMargin">The total margin used by the account in units of base currency</param>
         /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
-        public virtual Order GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin)
+        public virtual SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin)
         {
             // leave a buffer in default implementation
             const decimal marginBuffer = 0.10m;
@@ -199,7 +200,7 @@ namespace QuantConnect.Securities
                 quantity *= -1;
             }
 
-            return new MarketOrder(security.Symbol, quantity, security.Time, "Margin Call", security.Type);
+            return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), "Margin Call");
         }
     }
 }

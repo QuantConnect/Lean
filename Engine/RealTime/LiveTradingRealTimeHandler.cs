@@ -262,40 +262,28 @@ namespace QuantConnect.Lean.Engine.RealTime
                 switch (security.Type)
                 {
                     case SecurityType.Equity:
-                        //If we're open set both market open&close to midnight, so it won't open.
-                        if (_today[SecurityType.Equity].Status != "open")
+                        var equityMarketHours = _today[SecurityType.Equity];
+                        if (equityMarketHours.Status != "open")
                         {
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = TimeSpan.FromHours(0);
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketClose = TimeSpan.FromHours(0);
-                        } 
-                        else if (sub.ExtendedMarketHours)
-                        {
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = _today[SecurityType.Equity].PreMarket.Start.TimeOfDay;
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketClose = _today[SecurityType.Equity].PostMarket.End.TimeOfDay;
-                            Log.Trace(
-                                string.Format(
-                                    "LiveTradingRealTimeHandler.SetupEvents(Equity): Extended market hours set: Symbol: {0} Start: {1} End: {2}",
-                                    sub.Symbol, _today[SecurityType.Equity].PreMarket.Start,
-                                    _today[SecurityType.Equity].PostMarket.End));
+                            _algorithm.Securities[sub.Symbol].Exchange.SetMarketHours(TimeSpan.Zero, TimeSpan.Zero, date.DayOfWeek);
                         }
                         else
                         {
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = _today[SecurityType.Equity].Open.Start.TimeOfDay;
-                            _algorithm.Securities[sub.Symbol].Exchange.MarketClose = _today[SecurityType.Equity].Open.End.TimeOfDay;
-                            Log.Trace(
-                                string.Format(
-                                    "LiveTradingRealTimeHandler.SetupEvents(Equity): Normal market hours set: Symbol: {0} Start: {1} End: {2}",
-                                    sub.Symbol, _today[SecurityType.Equity].Open.Start, _today[SecurityType.Equity].Open.End));
+                            var extendedMarketOpen = equityMarketHours.PreMarket.Start.TimeOfDay;
+                            var marketOpen = equityMarketHours.Open.Start.TimeOfDay;
+                            var marketClose = equityMarketHours.Open.End.TimeOfDay;
+                            var extendedMarketClose = equityMarketHours.PostMarket.End.TimeOfDay;
+                            _algorithm.Securities[sub.Symbol].Exchange.SetMarketHours(extendedMarketOpen, marketOpen, marketClose, extendedMarketClose, date.DayOfWeek);
+                            Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents(Equity): Market hours set: Symbol: {0} Extended Start: {1} Start: {2} End: {3} Extended End: {4}",
+                                    sub.Symbol, extendedMarketOpen, marketOpen, marketClose, extendedMarketClose));
                         }
                         break;
 
                     case SecurityType.Forex:
-                        _algorithm.Securities[sub.Symbol].Exchange.MarketOpen = _today[SecurityType.Forex].Open.Start.TimeOfDay;
-                        _algorithm.Securities[sub.Symbol].Exchange.MarketClose = _today[SecurityType.Forex].Open.End.TimeOfDay;
-                        Log.Trace(
-                            string.Format(
-                                "LiveTradingRealTimeHandler.SetupEvents(Forex): Normal market hours set: Symbol: {0} Start: {1} End: {2}",
-                                sub.Symbol, _today[SecurityType.Forex].Open.Start, _today[SecurityType.Forex].Open.End));
+                        var forexMarketHours = _today[SecurityType.Forex].Open;
+                        _algorithm.Securities[sub.Symbol].Exchange.SetMarketHours(forexMarketHours.Start.TimeOfDay, forexMarketHours.End.TimeOfDay, date.DayOfWeek);
+                        Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents(Forex): Normal market hours set: Symbol: {0} Start: {1} End: {2}",
+                                sub.Symbol, forexMarketHours.Start, forexMarketHours.End));
                         break;
                 }
             }

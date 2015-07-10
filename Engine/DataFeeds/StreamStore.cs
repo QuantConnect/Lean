@@ -183,10 +183,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// A time period has lapsed, trigger a save/queue of the current value of data.
         /// </summary>
-        /// <param name="triggerTime">The time we're triggering this archive for</param>
+        /// <param name="utcTriggerTime">The time we're triggering this archive for</param>
         /// <param name="fillForward">Data stream is a fillforward type</param>
-        public void TriggerArchive(DateTime triggerTime, bool fillForward)
+        public void TriggerArchive(DateTime utcTriggerTime, bool fillForward)
         {
+            var localTriggerTime = utcTriggerTime.ConvertTo(TimeZones.Utc, _config.TimeZone);
             lock (_lock)
             {
                 try
@@ -209,7 +210,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         // the time is actually the end time of a bar, check to see if the start time
                         // is within market hours, which is really just checking the _previousData's EndTime
-                        if (!_security.Exchange.IsOpenDuringBar(triggerTime - _increment, triggerTime, _config.ExtendedMarketHours))
+                        if (!_security.Exchange.IsOpenDuringBar(localTriggerTime - _increment, localTriggerTime, _config.ExtendedMarketHours))
                         {
                             Log.Debug("StreamStore.TriggerArchive(): Exchange is closed: " + Symbol);
                             return;
@@ -237,7 +238,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private DateTime ComputeBarStartTime()
         {
             // for live data feeds compute a bar start time base on wall clock time, this prevents splitting of data into the algorithm
-            return DateTime.Now.RoundDown(_increment);
+            return DateTime.UtcNow.RoundDown(_increment).ConvertToUtc(_config.TimeZone);
         }
     }
 }

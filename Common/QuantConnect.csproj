@@ -98,6 +98,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\NodaTime.1.3.1\lib\net35-Client\NodaTime.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.configuration" />
@@ -135,17 +139,30 @@
     <Compile Include="Data\Slice.cs" />
     <Compile Include="Data\SubscriptionDataSource.cs" />
     <Compile Include="Field.cs" />
+    <Compile Include="LocalTimeKeeper.cs" />
     <Compile Include="Market.cs" />
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
+    <Compile Include="Orders\CancelOrderRequest.cs" />
     <Compile Include="Orders\MarketOnCloseOrder.cs" />
     <Compile Include="Orders\MarketOnOpenOrder.cs" />
+    <Compile Include="Orders\OrderField.cs" />
+    <Compile Include="Orders\OrderRequest.cs" />
+    <Compile Include="Orders\OrderRequestStatus.cs" />
+    <Compile Include="Orders\OrderRequestType.cs" />
+    <Compile Include="Orders\OrderResponse.cs" />
+    <Compile Include="Orders\OrderResponseErrorCode.cs" />
+    <Compile Include="Orders\OrderExtensions.cs" />
+    <Compile Include="Orders\OrderTicket.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />
     <Compile Include="Orders\StopMarketOrder.cs" />
     <Compile Include="Orders\LimitOrder.cs" />
     <Compile Include="Orders\MarketOrder.cs" />
     <Compile Include="Orders\OrderTypes.cs" />
     <Compile Include="Orders\OrderError.cs" />
+    <Compile Include="Orders\SubmitOrderRequest.cs" />
+    <Compile Include="Orders\UpdateOrderFields.cs" />
+    <Compile Include="Orders\UpdateOrderRequest.cs" />
     <Compile Include="Packets\HandledErrorPacket.cs" />
     <Compile Include="Properties\SharedAssemblyInfo.cs" />
     <Compile Include="Securities\Cash.cs" />
@@ -153,6 +170,9 @@
     <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
     <Compile Include="Securities\Equity\EquityMarginModel.cs" />
     <Compile Include="Securities\Equity\EquityPortfolioModel.cs" />
+    <Compile Include="Securities\LocalMarketHours.cs" />
+    <Compile Include="Securities\SecurityExchangeHours.cs" />
+    <Compile Include="Securities\SecurityExchangeHoursProvider.cs" />
     <Compile Include="Securities\Forex\ForexMarginModel.cs" />
     <Compile Include="Securities\Forex\ForexPortfolioModel.cs" />
     <Compile Include="Securities\IHoldingsProvider.cs" />
@@ -225,9 +245,12 @@
     <Compile Include="Securities\SecurityTransactionManager.cs" />
     <Compile Include="OS.cs" />
     <Compile Include="Statistics\Statistics.cs" />
-    <Compile Include="Realtime.cs" />
+    <Compile Include="RealTimeSynchronizedTimer.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TimeKeeper.cs" />
+    <Compile Include="TimeZoneOffsetProvider.cs" />
+    <Compile Include="TimeZones.cs" />
     <Compile Include="Util\Composer.cs" />
     <Compile Include="Util\ExpressionBuilder.cs" />
     <Compile Include="Util\FixedSizeQueue.cs" />
