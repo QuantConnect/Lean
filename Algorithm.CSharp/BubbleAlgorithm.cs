@@ -268,7 +268,7 @@ namespace QuantConnect
                 //DateTime.ParseExact() and explicit declare the format your data source has.
                 string dateString = data[0];
                 index.Time = DateTime.ParseExact(dateString, format, provider);
-                index.Cape = Convert.ToDecimal(data[10]);
+                index.Cape = Convert.ToDecimal(data[10], CultureInfo.InvariantCulture);
                 index.Symbol = "CAPE";
                 index.Value = index.Cape;
             }

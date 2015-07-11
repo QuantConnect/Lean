@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -26,12 +27,16 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Provides a regression baseline focused on updating orders
     /// </summary>
-    public class UpdateOrderRegressionAlgorithm : QCAlgorithm
+    public class UpdateOrderLiveTestAlgorithm : QCAlgorithm
     {
-        private int LastMonth = -1;
+        private static readonly Random Random = new Random();
+
+        private const decimal ImmediateCancelPercentage = 0.05m;
+
+        private int LastMinute = -1;
         private Security Security;
-        private int Quantity = 100;
-        private const int DeltaQuantity = 10;
+        private int Quantity = 5;
+        private const int DeltaQuantity = 1;
 
         private const decimal StopPercentage = 0.025m;
         private const decimal StopPercentageDelta = 0.005m;
@@ -41,24 +46,35 @@ namespace QuantConnect.Algorithm.CSharp
         private const string Symbol = "SPY";
         private const SecurityType SecurityType = QuantConnect.SecurityType.Equity;
 
-        private readonly CircularQueue<OrderType> _orderTypesQueue = new CircularQueue<OrderType>(Enum.GetValues(typeof(OrderType)).OfType<OrderType>());
-        private readonly List<OrderTicket> _tickets = new List<OrderTicket>(); 
+        private readonly CircularQueue<OrderType> _orderTypesQueue = new CircularQueue<OrderType>(new []
+        {
+            OrderType.MarketOnOpen,
+            OrderType.MarketOnClose,
+            OrderType.StopLimit,
+            OrderType.StopMarket,
+            OrderType.Limit,
+            OrderType.Market
+        });
+
+        private readonly List<OrderTicket> _tickets = new List<OrderTicket>();
+
+        private readonly HashSet<int> _immediateCancellations = new HashSet<int>();
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 01, 01);  //Set Start Date
-            SetEndDate(2015, 01, 01);    //Set End Date
+            SetStartDate(2013, 10, 07);  //Set Start Date
+            SetEndDate(2013, 10, 07);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType, Symbol, Resolution.Daily);
+            AddSecurity(SecurityType, Symbol, Resolution.Second);
             Security = Securities[Symbol];
 
             _orderTypesQueue.CircleCompleted += (sender, args) =>
             {
-                // flip our signs when we've gone through all the order types
+                // flip our signs
                 Quantity *= -1;
             };
         }
@@ -69,54 +85,63 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (!data.Bars.ContainsKey(Symbol)) return;
+            if (!Security.HasData)
+            {
+                Log("::::: NO DATA :::::");
+                return;
+            }
 
             // each month make an action
-            if (Time.Month != LastMonth)
+            if (Time.Minute != LastMinute && Time.Second == 0)
             {
+                Log("");
+                Log("--------------Minute: " + Time.Minute);
+                Log("");
+                LastMinute = Time.Minute;
                 // we'll submit the next type of order from the queue
                 var orderType = _orderTypesQueue.Dequeue();
-                //Log("");
-                Log("\r\n--------------MONTH: " + Time.ToString("MMMM") + ":: " + orderType + "\r\n");
-                //Log("");
-                LastMonth = Time.Month;
                 Log("ORDER TYPE:: " + orderType);
                 var isLong = Quantity > 0;
-                var stopPrice = isLong ? (1 + StopPercentage)*data.Bars[Symbol].High : (1 - StopPercentage)*data.Bars[Symbol].Low;
-                var limitPrice = isLong ? (1 - LimitPercentage)*stopPrice : (1 + LimitPercentage)*stopPrice;
+                var stopPrice = isLong ? (1 + StopPercentage) * Security.High : (1 - StopPercentage) * Security.Low;
+                var limitPrice = isLong ? (1 - LimitPercentage) * stopPrice : (1 + LimitPercentage) * stopPrice;
                 if (orderType == OrderType.Limit)
                 {
-                    limitPrice = !isLong ? (1 + LimitPercentage) * data.Bars[Symbol].High : (1 - LimitPercentage) * data.Bars[Symbol].Low;
+                    limitPrice = !isLong ? (1 + LimitPercentage) * Security.High : (1 - LimitPercentage) * Security.Low;
                 }
                 var request = new SubmitOrderRequest(orderType, SecurityType, Symbol, Quantity, stopPrice, limitPrice, Time, orderType.ToString());
                 var ticket = Transactions.AddOrder(request);
                 _tickets.Add(ticket);
+                if ((decimal)Random.NextDouble() < ImmediateCancelPercentage)
+                {
+                    Log("Immediate cancellation requested!");
+                    _immediateCancellations.Add(ticket.OrderId);
+                }
             }
             else if (_tickets.Count > 0)
             {
                 var ticket = _tickets.Last();
-                if (Time.Day > 8 && Time.Day < 14)
+                if (Time.Second > 15 && Time.Second < 30)
                 {
                     if (ticket.UpdateRequests.Count == 0 && ticket.Status.IsOpen())
                     {
-                        Log("TICKET:: " + ticket);
+                        Log(ticket.ToString());
                         ticket.Update(new UpdateOrderFields
                         {
-                            Quantity = ticket.Quantity + Math.Sign(Quantity)*DeltaQuantity,
+                            Quantity = ticket.Quantity + Math.Sign(Quantity) * DeltaQuantity,
                             Tag = "Change quantity: " + Time
                         });
                         Log("UPDATE1:: " + ticket.UpdateRequests.Last());
                     }
                 }
-                else if (Time.Day > 13 && Time.Day < 20)
+                else if (Time.Second > 29 && Time.Second < 45)
                 {
                     if (ticket.UpdateRequests.Count == 1 && ticket.Status.IsOpen())
                     {
-                        Log("TICKET:: " + ticket);
+                        Log(ticket.ToString());
                         ticket.Update(new UpdateOrderFields
                         {
-                            LimitPrice = Security.Price*(1 - Math.Sign(ticket.Quantity)*LimitPercentageDelta),
-                            StopPrice = Security.Price*(1 + Math.Sign(ticket.Quantity)*StopPercentageDelta),
+                            LimitPrice = Security.Price * (1 - Math.Sign(ticket.Quantity) * LimitPercentageDelta),
+                            StopPrice = Security.Price * (1 + Math.Sign(ticket.Quantity) * StopPercentageDelta),
                             Tag = "Change prices: " + Time
                         });
                         Log("UPDATE2:: " + ticket.UpdateRequests.Last());
@@ -126,7 +151,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (ticket.UpdateRequests.Count == 2 && ticket.Status.IsOpen())
                     {
-                        Log("TICKET:: " + ticket);
+                        Log(ticket.ToString());
                         ticket.Cancel(Time + " and is still open!");
                         Log("CANCELLED:: " + ticket.CancelRequest);
                     }
@@ -136,6 +161,12 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
+            if (_immediateCancellations.Contains(orderEvent.OrderId))
+            {
+                _immediateCancellations.Remove(orderEvent.OrderId);
+                Transactions.CancelOrder(orderEvent.OrderId);
+            }
+
             if (orderEvent.Status == OrderStatus.Filled)
             {
                 Log("FILLED:: " + Transactions.GetOrderById(orderEvent.OrderId) + " FILL PRICE:: " + orderEvent.FillPrice.SmartRounding());
@@ -143,14 +174,20 @@ namespace QuantConnect.Algorithm.CSharp
             else
             {
                 Log(orderEvent.ToString());
-                Log("TICKET:: " + _tickets.Last());
             }
         }
 
-        private new void Log(string msg)
+        private void Log(string msg)
         {
-            if (LiveMode) Debug(msg);
-            else base.Log(msg);
+            // redirect live logs to debug window
+            if (LiveMode)
+            {
+                Debug(msg);
+            }
+            else
+            {
+                base.Log(msg);
+            }
         }
 
         /// <summary>
@@ -169,7 +206,7 @@ namespace QuantConnect.Algorithm.CSharp
             public CircularQueue(IEnumerable<T> items)
             {
                 _queue = new Queue<T>();
-            
+
                 var first = true;
                 foreach (var item in items)
                 {

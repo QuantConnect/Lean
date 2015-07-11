@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
@@ -128,12 +129,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 EndOfBridge[i] = false;
                 _subscriptionReaderManagers[i] = new SubscriptionDataReader(
                     Subscriptions[i], 
-                    algorithm.Securities[Subscriptions[i].Symbol],
-                    DataFeedEndpoint.Database, 
+                    algorithm.Securities[Subscriptions[i].Symbol], 
                     algorithm.StartDate, 
                     algorithm.EndDate, 
                     resultHandler,
-                    Time.EachTradeableDay(algorithm.Securities, algorithm.StartDate, algorithm.EndDate)
+                    Time.EachTradeableDay(algorithm.Securities, algorithm.StartDate, algorithm.EndDate), 
+                    job is LiveNodePacket
                     );
             }
         }
@@ -247,14 +248,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 var bar = new TradeBar()
                 {
-                    Time = DateTime.Parse(dictionary["time"]).AddHours(15.9), //Closing time roughly 4pm
+                    Time = DateTime.Parse(dictionary["time"], CultureInfo.InvariantCulture).AddHours(15.9), //Closing time roughly 4pm
                     DataType = MarketDataType.TradeBar,
-                    Open = decimal.Parse(dictionary["open"]),
-                    High = decimal.Parse(dictionary["high"]),
-                    Low = decimal.Parse(dictionary["low"]),
-                    Close = decimal.Parse(dictionary["close"]),
+                    Open = decimal.Parse(dictionary["open"], CultureInfo.InvariantCulture),
+                    High = decimal.Parse(dictionary["high"], CultureInfo.InvariantCulture),
+                    Low = decimal.Parse(dictionary["low"], CultureInfo.InvariantCulture),
+                    Close = decimal.Parse(dictionary["close"], CultureInfo.InvariantCulture),
                     Symbol = symbol,
-                    Value = decimal.Parse(dictionary["close"]),
+                    Value = decimal.Parse(dictionary["close"], CultureInfo.InvariantCulture),
                     Volume = 0
                 };
                 bars.Add(bar);

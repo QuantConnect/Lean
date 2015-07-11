@@ -32,6 +32,8 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class Security 
     {
+        private LocalTimeKeeper _localTimeKeeper;
+
         private readonly string _symbol;
         private readonly bool _isDynamicallyLoadedData;
         private readonly SubscriptionDataConfig _config;
@@ -245,11 +247,15 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Local time for this market 
         /// </summary>
-        public virtual DateTime Time 
+        public virtual DateTime LocalTime
         {
-            get 
+            get
             {
-                return Exchange.Time;
+                if (_localTimeKeeper == null)
+                {
+                    throw new Exception("Security.SetLocalTimeKeeper(LocalTimeKeeper) must be called in order to use the LocalTime property.");
+                }
+                return _localTimeKeeper.LocalTime;
             }
         }
 
@@ -373,9 +379,6 @@ namespace QuantConnect.Securities
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Get the last price update set to the security.
         /// </summary>
@@ -386,14 +389,23 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Sets the <see cref="LocalTimeKeeper"/> to be used for this <see cref="Security"/>.
+        /// This is the source of this instance's time.
+        /// </summary>
+        /// <param name="localTimeKeeper">The source of this <see cref="Security"/>'s time.</param>
+        public void SetLocalTimeKeeper(LocalTimeKeeper localTimeKeeper)
+        {
+            _localTimeKeeper = localTimeKeeper;
+        }
+
+        /// <summary>
         /// Update any security properties based on the lastest market data and time
         /// </summary>
         /// <param name="data">New data packet from LEAN</param>
-        /// <param name="frontier">Time frontier / where we are in time.</param>
-        public void SetMarketPrice(DateTime frontier, BaseData data) 
+        public void SetMarketPrice(BaseData data) 
         { 
             //Update the Exchange/Timer:
-            Exchange.SetDateTimeFrontier(frontier);
+            Exchange.SetLocalDateTimeFrontier(_localTimeKeeper.LocalTime);
 
             //Add new point to cache:
             if (data == null) return;

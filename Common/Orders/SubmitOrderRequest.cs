@@ -86,12 +86,11 @@ namespace QuantConnect.Orders
         /// <param name="securityType">The symbol's <see cref="SecurityType"/></param>
         /// <param name="symbol">The symbol to be traded</param>
         /// <param name="quantity">The number of units to be ordered</param>
-        /// <param name="marketPrice">The current market price of the symbol</param>
         /// <param name="stopPrice">The stop price for stop orders, non-stop orers this value is ignored</param>
         /// <param name="limitPrice">The limit price for limit orders, non-limit orders this value is ignored</param>
         /// <param name="time">The time this request was created</param>
         /// <param name="tag">A custom tag for this request</param>
-        public SubmitOrderRequest(OrderType orderType, SecurityType securityType, string symbol, int quantity, decimal marketPrice, decimal stopPrice, decimal limitPrice, DateTime time, string tag)
+        public SubmitOrderRequest(OrderType orderType, SecurityType securityType, string symbol, int quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag)
             : base(time, (int) OrderResponseErrorCode.UnableToFindOrder, tag)
         {
             SecurityType = securityType;
@@ -122,7 +121,7 @@ namespace QuantConnect.Orders
         {
             // create a proxy order object to steal his to string method
             var proxy = Order.CreateOrder(this);
-            return string.Format("{0}: Submit Order: ({1}) - {2} {3}", Time, OrderId, proxy, Tag) + " Status: " + Status;
+            return string.Format("{0} UTC: Submit Order: ({1}) - {2} {3}", Time, OrderId, proxy, Tag) + " Status: " + Status;
         }
     }
 }

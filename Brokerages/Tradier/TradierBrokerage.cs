@@ -82,7 +82,8 @@ namespace QuantConnect.Brokerages.Tradier
         // this is used to block reentrance when handling contingent orders
         private readonly HashSet<long> _contingentReentranceGuardByQCOrderID = new HashSet<long>();
         private readonly HashSet<long> _unknownTradierOrderIDs = new HashSet<long>(); 
-        private readonly FixedSizeHashQueue<long> _verifiedUnknownTradierOrderIDs = new FixedSizeHashQueue<long>(1000); 
+        private readonly FixedSizeHashQueue<long> _verifiedUnknownTradierOrderIDs = new FixedSizeHashQueue<long>(1000);
+        private readonly FixedSizeHashQueue<int> _cancelledQcOrderIDs = new FixedSizeHashQueue<int>(10000);  
 
         /// <summary>
         /// Event fired when our session has been refreshed/tokens updated
@@ -910,6 +911,12 @@ namespace QuantConnect.Brokerages.Tradier
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
+            if (_cancelledQcOrderIDs.Contains(order.Id))
+            {
+                Log.Trace("TradierBrokerage.PlaceOrder(): Cancelled Order: " + order.Id + " - " + order);
+                return false;
+            }
+
             // before doing anything, verify only one outstanding order per symbol
             var cachedOpenOrder = _cachedOpenOrdersByTradierOrderID.FirstOrDefault(x => x.Value.Symbol == order.Symbol).Value;
             if (cachedOpenOrder != null)
@@ -1103,6 +1110,14 @@ namespace QuantConnect.Brokerages.Tradier
                 Log.Trace("TradierBrokerage.CancelOrder(): Unable to cancel order without BrokerId.");
                 return false;
             }
+
+            // remove any contingent orders
+            ContingentOrderQueue contingent;
+            _contingentOrdersByQCOrderID.TryRemove(order.Id, out contingent);
+
+            // add this id to the cancelled list, this is to prevent resubmits of certain simulated order
+            // types, such as market on close
+            _cancelledQcOrderIDs.Add(order.Id);
 
             foreach (var orderID in order.BrokerId)
             {

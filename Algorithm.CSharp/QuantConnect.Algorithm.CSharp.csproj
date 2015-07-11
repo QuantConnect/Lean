@@ -75,6 +75,7 @@
     <Compile Include="RenkoConsolidatorAlgorithm.cs" />
     <Compile Include="StressSymbolsAlgorithm.cs" />
     <Compile Include="TickDataFilteringAlgorithm.cs" />
+    <Compile Include="UpdateOrderLiveTestAlgorithm.cs" />
     <Compile Include="UpdateOrderRegressionAlgorithm.cs" />
     <Compile Include="UpdateOrderDemoAlgorithm.cs" />
   </ItemGroup>

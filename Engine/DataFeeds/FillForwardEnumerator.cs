@@ -125,10 +125,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // don't mark as filling forward so we come back into this block, subscription is done
                         //_isFillingForward = true;
                         Current = fillForward;
+                        _emittedAuxilliaryData = false;
                         return true;
                     }
-                    
+
                     Current = endOfSubscription;
+                    _emittedAuxilliaryData = false;
                     return true;
                 }
             }

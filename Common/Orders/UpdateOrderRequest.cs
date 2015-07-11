@@ -67,7 +67,7 @@ namespace QuantConnect.Orders
             {
                 updates.Add("StopPrice: " + StopPrice.Value.SmartRounding());
             }
-            return string.Format("{0}: Update Order: ({1}) - {2} {3} Status: {4}", Time, OrderId, string.Join(", ", updates), Tag, Status);
+            return string.Format("{0} UTC: Update Order: ({1}) - {2} {3} Status: {4}", Time, OrderId, string.Join(", ", updates), Tag, Status);
         }
     }
 }

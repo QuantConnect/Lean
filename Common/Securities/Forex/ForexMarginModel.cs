@@ -60,7 +60,8 @@ namespace QuantConnect.Securities.Forex
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
             var orderFees = security.TransactionModel.GetOrderFee(security, order);
 
-            var orderCostInAccountCurrency = order.Price*order.AbsoluteQuantity*forex.QuoteCurrency.ConversionRate;
+            var price = order.Status.IsFill() ? order.Price : security.Price;
+            var orderCostInAccountCurrency = order.GetValue(price)*forex.QuoteCurrency.ConversionRate;
             return orderCostInAccountCurrency*InitialMarginRequirement + orderFees;
         }
 
@@ -100,7 +101,7 @@ namespace QuantConnect.Securities.Forex
                 quantity *= -1;
             }
 
-            return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, security.Price, 0, 0, security.Time, "Margin Call");
+            return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), "Margin Call");
         }
     }
 }

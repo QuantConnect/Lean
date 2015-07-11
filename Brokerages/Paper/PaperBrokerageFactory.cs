@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
@@ -56,7 +57,7 @@ namespace QuantConnect.Brokerages.Paper
             //Try and use the live job packet cash if exists, otherwise resort to the user algo cash:
             if (job.BrokerageData.ContainsKey("project-paper-equity"))
             {
-                var consistentCash = Convert.ToDecimal(job.BrokerageData["project-paper-equity"]);
+                var consistentCash = Convert.ToDecimal(job.BrokerageData["project-paper-equity"], CultureInfo.InvariantCulture);
                 algorithm.SetCash(consistentCash);
             }
 

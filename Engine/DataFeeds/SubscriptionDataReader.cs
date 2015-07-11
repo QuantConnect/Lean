@@ -58,7 +58,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private string _mappedSymbol = "";
 
         // Location of the datafeed - the type of this data.
-        private readonly DataFeedEndpoint _feedEndpoint;
 
         // Create a single instance to invoke all Type Methods:
         private readonly BaseData _dataFactory;
@@ -108,12 +107,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="config">Subscription configuration object</param>
         /// <param name="security">Security asset</param>
-        /// <param name="feed">Feed type enum</param>
         /// <param name="periodStart">Start date for the data request/backtest</param>
         /// <param name="periodFinish">Finish date for the data request/backtest</param>
         /// <param name="resultHandler"></param>
         /// <param name="tradeableDates">Defines the dates for which we'll request data, in order</param>
-        public SubscriptionDataReader(SubscriptionDataConfig config, Security security, DataFeedEndpoint feed, DateTime periodStart, DateTime periodFinish, IResultHandler resultHandler, IEnumerable<DateTime> tradeableDates)
+        /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
+        public SubscriptionDataReader(SubscriptionDataConfig config, Security security, DateTime periodStart, DateTime periodFinish, IResultHandler resultHandler, IEnumerable<DateTime> tradeableDates, bool isLiveMode)
         {
             //Save configuration of data-subscription:
             _config = config;
@@ -127,13 +126,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Save access to securities
             _security = security;
             _isDynamicallyLoadedData = security.IsDynamicallyLoadedData;
-            _isLiveMode = _feedEndpoint == DataFeedEndpoint.LiveTrading;
+            _isLiveMode = isLiveMode;
 
             // do we have factor tables?
             _hasScaleFactors = FactorFile.HasScalingFactors(config.Symbol, config.Market);
 
             //Save the type of data we'll be getting from the source.
-            _feedEndpoint = feed;
 
             //Create the dynamic type-activators:
             var objectActivator = ObjectActivator.GetActivator(config.Type);

@@ -39,9 +39,9 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the time the security information was last updated
         /// </summary>
-        public DateTime Time
+        public DateTime UtcTime
         {
-            get { return _securities.Time; }
+            get { return _securities.UtcTime; }
         }
         
         /// <summary>
@@ -156,7 +156,7 @@ namespace QuantConnect.Securities
         /// <param name="orderId">Specific order id to remove</param>
         public OrderTicket RemoveOrder(int orderId)
         {
-            return ProcessRequest(new CancelOrderRequest(_securities.Time, orderId, string.Empty));
+            return ProcessRequest(new CancelOrderRequest(_securities.UtcTime, orderId, string.Empty));
         }
 
         /// <summary>

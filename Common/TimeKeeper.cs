@@ -81,7 +81,13 @@ namespace QuantConnect
         /// <returns>The <see cref="LocalTimeKeeper"/> instance for the specified time zone</returns>
         public LocalTimeKeeper GetLocalTimeKeeper(DateTimeZone timeZone)
         {
-            return _localTimeKeepers[timeZone];
+            LocalTimeKeeper localTimeKeeper;
+            if (!_localTimeKeepers.TryGetValue(timeZone, out localTimeKeeper))
+            {
+                localTimeKeeper = new LocalTimeKeeper(UtcTime, timeZone);
+                _localTimeKeepers[timeZone] = localTimeKeeper;
+            }
+            return localTimeKeeper;
         }
 
         /// <summary>

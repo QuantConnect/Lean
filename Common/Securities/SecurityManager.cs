@@ -39,14 +39,13 @@ namespace QuantConnect.Securities
         private int _tickLimit = 30;
         private int _tickMemory = 34;
         private decimal _maxRamEstimate = 1024;
-        private DateTime _time;
 
         /// <summary>
         /// Gets the most recent time this manager was updated
         /// </summary>
-        public DateTime Time
+        public DateTime UtcTime
         {
-            get { return _time; }
+            get { return _timeKeeper.UtcTime; }
         }
 
         /// <summary>
@@ -69,6 +68,7 @@ namespace QuantConnect.Securities
         public void Add(string symbol, Security security)
         {
             CheckResolutionCounts(security.Resolution);
+            security.SetLocalTimeKeeper(_timeKeeper.GetLocalTimeKeeper(security.SubscriptionDataConfig.TimeZone));
             _securityManager.Add(symbol, security);
         }
 
@@ -290,7 +290,6 @@ namespace QuantConnect.Securities
         /// <param name="data">Data packets to update</param>
         public void Update(DateTime time, Dictionary<int, List<BaseData>> data)
         {
-            _time = time;
             try 
             {
                 //If its market data, look for the matching security symbol and update it:
@@ -312,8 +311,7 @@ namespace QuantConnect.Securities
                         }
                     }
 
-                    var localTimeKeeper = _timeKeeper.GetLocalTimeKeeper(security.SubscriptionDataConfig.TimeZone);
-                    security.SetMarketPrice(localTimeKeeper.LocalTime, dataPoint);
+                    security.SetMarketPrice(dataPoint);
                 }
             }
             catch (Exception err) 

@@ -584,7 +584,7 @@ namespace QuantConnect.Securities
                 tick.BidPrice *= split.SplitFactor;
             }
 
-            security.SetMarketPrice(split.Time, next);
+            security.SetMarketPrice(next);
         }
 
         /// <summary>

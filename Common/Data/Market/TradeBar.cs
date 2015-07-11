@@ -225,10 +225,10 @@ namespace QuantConnect.Data.Market
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
                 tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
-                tradeBar.Open = config.GetNormalizedPrice(Convert.ToDecimal(csv[1])/_scaleFactor);
-                tradeBar.High = config.GetNormalizedPrice(Convert.ToDecimal(csv[2])/_scaleFactor);
-                tradeBar.Low = config.GetNormalizedPrice(Convert.ToDecimal(csv[3])/_scaleFactor);
-                tradeBar.Close = config.GetNormalizedPrice(Convert.ToDecimal(csv[4])/_scaleFactor);
+                tradeBar.Open = config.GetNormalizedPrice(Convert.ToDecimal(csv[1], CultureInfo.InvariantCulture) / _scaleFactor);
+                tradeBar.High = config.GetNormalizedPrice(Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture) / _scaleFactor);
+                tradeBar.Low = config.GetNormalizedPrice(Convert.ToDecimal(csv[3], CultureInfo.InvariantCulture) / _scaleFactor);
+                tradeBar.Close = config.GetNormalizedPrice(Convert.ToDecimal(csv[4], CultureInfo.InvariantCulture) / _scaleFactor);
             }
             else
             {
@@ -266,10 +266,10 @@ namespace QuantConnect.Data.Market
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
                 tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
-                tradeBar.Open = Convert.ToDecimal(csv[1]);
-                tradeBar.High = Convert.ToDecimal(csv[2]);
-                tradeBar.Low = Convert.ToDecimal(csv[3]);
-                tradeBar.Close = Convert.ToDecimal(csv[4]);
+                tradeBar.Open = Convert.ToDecimal(csv[1], CultureInfo.InvariantCulture);
+                tradeBar.High = Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture);
+                tradeBar.Low = Convert.ToDecimal(csv[3], CultureInfo.InvariantCulture);
+                tradeBar.Close = Convert.ToDecimal(csv[4], CultureInfo.InvariantCulture);
             }
             else
             {

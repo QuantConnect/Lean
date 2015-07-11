@@ -49,7 +49,7 @@ namespace QuantConnect.Securities
                 security.Holdings.AddNewSale(fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity));
 
                 //Get the Fee for this Order - Update the Portfolio Cash Balance: Remove Transacion Fees.
-                var order = new MarketOrder(security.Symbol, fill.FillQuantity, security.Time, type: security.Type) { Price = fill.FillPrice };
+                var order = new MarketOrder(security.Symbol, fill.FillQuantity, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), type: security.Type) {Price = fill.FillPrice, Status = OrderStatus.Filled};
                 var feeThisOrder = Math.Abs(security.TransactionModel.GetOrderFee(security, order));
                 security.Holdings.AddNewFee(feeThisOrder);
                 portfolio.CashBook[CashBook.AccountCurrency].Quantity -= feeThisOrder;
@@ -105,7 +105,7 @@ namespace QuantConnect.Securities
                     //Update Vehicle Profit Tracking:
                     security.Holdings.AddNewProfit(lastTradeProfit);
                     security.Holdings.SetLastTradeProfit(lastTradeProfit);
-                    portfolio.AddTransactionRecord(security.Time, lastTradeProfit - 2 * feeThisOrder);
+                    portfolio.AddTransactionRecord(security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), lastTradeProfit - 2 * feeThisOrder);
                 }
 
 

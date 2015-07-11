@@ -59,7 +59,7 @@ namespace QuantConnect.Securities.Forex
             TransactionModel = new ForexTransactionModel();
             PortfolioModel = new ForexPortfolioModel();
             MarginModel = new ForexMarginModel(leverage);
-            Holdings = new ForexHolding(this, TransactionModel, MarginModel);
+            Holdings = new ForexHolding(this);
 
             // decompose the symbol into each currency pair
             string baseCurrencySymbol, quoteCurrencySymbol;

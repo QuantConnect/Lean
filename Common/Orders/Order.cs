@@ -21,7 +21,7 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Order struct for placing new trade
     /// </summary>
-    public abstract class Order
+    public abstract class Order 
     {
         /// <summary>
         /// Order ID.
@@ -42,7 +42,7 @@ namespace QuantConnect.Orders
         /// Symbol of the Asset
         /// </summary>
         public string Symbol;
-
+        
         /// <summary>
         /// Price of the Order.
         /// </summary>
@@ -86,15 +86,15 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Order Direction Property based off Quantity.
         /// </summary>
-        public OrderDirection Direction
+        public OrderDirection Direction 
         {
-            get
+            get 
             {
-                if (Quantity > 0)
+                if (Quantity > 0) 
                 {
                     return OrderDirection.Buy;
-                }
-                if (Quantity < 0)
+                } 
+                if (Quantity < 0) 
                 {
                     return OrderDirection.Sell;
                 }
@@ -113,9 +113,10 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Value of the order at limit price if a limit order, or market price if a market order.
         /// </summary>
-        public abstract decimal Value
-        {
-            get;
+        [Obsolete("Value property has been made obsolete. Use GetValue(currentMarketPrice) instead.")]
+        public abstract decimal Value 
+        { 
+            get; 
         }
 
         /// <summary>
@@ -169,7 +170,7 @@ namespace QuantConnect.Orders
         /// <param name="order">Order type (market, limit or stoploss order)</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        protected Order(string symbol, SecurityType type, int quantity, OrderType order, DateTime time, string tag = "")
+        protected Order(string symbol, SecurityType type, int quantity, OrderType order, DateTime time, string tag = "") 
         {
             Time = time;
             Price = 0;
@@ -183,6 +184,14 @@ namespace QuantConnect.Orders
             BrokerId = new List<long>();
             ContingentId = 0;
         }
+
+        /// <summary>
+        /// Gets the value of this order at the given market price.
+        /// NOTE: Some order types derive value from other parameters, such as limit prices
+        /// </summary>
+        /// <param name="currentMarketPrice">The current market price of the security</param>
+        /// <returns>The value of this order given the current market price</returns>
+        public abstract decimal GetValue(decimal currentMarketPrice);
 
         /// <summary>
         /// Modifies the state of this order to match the update request

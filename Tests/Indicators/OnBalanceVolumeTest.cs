@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Globalization;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -30,7 +31,7 @@ namespace QuantConnect.Tests.Indicators
                 Current =
                 {
                     Time = new DateTime(2013, 4, 30),
-                    Value = Decimal.Parse("1.156486E+08", System.Globalization.NumberStyles.Float)
+                    Value = decimal.Parse("1.156486E+08", NumberStyles.Float, CultureInfo.InvariantCulture)
                 }
             };
 

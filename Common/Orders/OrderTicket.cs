@@ -260,16 +260,17 @@ namespace QuantConnect.Orders
         /// <returns>The <see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse Update(UpdateOrderFields fields)
         {
-            _transactionManager.UpdateOrder(new UpdateOrderRequest(_transactionManager.Time, SubmitRequest.OrderId, fields));
+            _transactionManager.UpdateOrder(new UpdateOrderRequest(_transactionManager.UtcTime, SubmitRequest.OrderId, fields));
             return _updateRequests.Last().Response;
         }
 
         /// <summary>
         /// Submits a new request to cancel this order
         /// </summary>
-        public OrderResponse Cancel()
+        public OrderResponse Cancel(string tag = null)
         {
-            _transactionManager.CancelOrder(OrderId);
+            var request = new CancelOrderRequest(_transactionManager.UtcTime, OrderId, tag);
+            _transactionManager.ProcessRequest(request);
             return CancelRequest.Response;
         }
 
@@ -328,7 +329,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderTicket InvalidCancelOrderId(SecurityTransactionManager transactionManager, CancelOrderRequest request)
         {
-            var submit = new SubmitOrderRequest(OrderType.Market, SecurityType.Base, string.Empty, 0, 0, 0, 0, DateTime.MaxValue, string.Empty);
+            var submit = new SubmitOrderRequest(OrderType.Market, SecurityType.Base, string.Empty, 0, 0, 0, DateTime.MaxValue, string.Empty);
             submit.SetResponse(OrderResponse.UnableToFindOrder(request));
             var ticket = new OrderTicket(transactionManager, submit);
             request.SetResponse(OrderResponse.UnableToFindOrder(request));
@@ -342,7 +343,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderTicket InvalidUpdateOrderId(SecurityTransactionManager transactionManager, UpdateOrderRequest request)
         {
-            var submit = new SubmitOrderRequest(OrderType.Market, SecurityType.Base, string.Empty, 0, 0, 0, 0, DateTime.MaxValue, string.Empty);
+            var submit = new SubmitOrderRequest(OrderType.Market, SecurityType.Base, string.Empty, 0, 0, 0, DateTime.MaxValue, string.Empty);
             submit.SetResponse(OrderResponse.UnableToFindOrder(request));
             var ticket = new OrderTicket(transactionManager, submit);
             request.SetResponse(OrderResponse.UnableToFindOrder(request));
@@ -380,7 +381,7 @@ namespace QuantConnect.Orders
         private int ResponseCount()
         {
             return (_submitRequest.Response == OrderResponse.Unprocessed ? 0 : 1) 
-                 + (_cancelRequest.Response == OrderResponse.Unprocessed ? 0 : 1)
+                 + (_cancelRequest == null || _cancelRequest.Response == OrderResponse.Unprocessed ? 0 : 1)
                  + _updateRequests.Count(x => x.Response != OrderResponse.Unprocessed);
         }
 
