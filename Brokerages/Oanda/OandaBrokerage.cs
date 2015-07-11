@@ -265,68 +265,7 @@ namespace QuantConnect.Brokerages.Oanda
                 {"units", Convert.ToInt32(order.AbsoluteQuantity).ToString()}
             };
 
-            if (order.Direction != OrderDirection.Buy && order.Direction != OrderDirection.Sell)
-            {
-                throw new Exception("Invalid Order Direction");
-            }
-
-            requestParams.Add("side", order.Direction == OrderDirection.Buy  ? "buy" : "sell");
-            
-            if (order.Type == OrderType.Market)
-            {
-                requestParams.Add("type", "market");
-            }
-
-            if (order.Type == OrderType.Limit)
-            {
-                requestParams.Add("type", "limit");
-                requestParams.Add("price", order.Price.ToString(CultureInfo.InvariantCulture));
-                switch (order.Direction)
-                {
-                    case OrderDirection.Buy:
-                        requestParams.Add("lowerBound", ((LimitOrder)order).LimitPrice.ToString(CultureInfo.InvariantCulture));
-                        break;
-
-                    case OrderDirection.Sell:
-                        requestParams.Add("upperBound", ((LimitOrder)order).LimitPrice.ToString(CultureInfo.InvariantCulture));
-                        break;
-                }
-
-                requestParams.Add("expiry", XmlConvert.ToString(order.DurationValue, XmlDateTimeSerializationMode.Utc));
-            }
-
-            //this type should contain a stop and a limit to that stop.
-            if (order.Type == OrderType.StopLimit)
-            {
-                requestParams.Add("type", "stop");
-                requestParams.Add("price", order.Price.ToString(CultureInfo.InvariantCulture));
-                switch (order.Direction)
-                {
-                    case OrderDirection.Buy:
-                        requestParams.Add("upperBound", ((StopLimitOrder)order).StopPrice.ToString(CultureInfo.InvariantCulture));
-                        break;
-                    case OrderDirection.Sell:
-                        requestParams.Add("lowerBound", ((StopLimitOrder)order).StopPrice.ToString(CultureInfo.InvariantCulture));
-                        break;
-                }
-                requestParams.Add("expiry", XmlConvert.ToString(order.DurationValue, XmlDateTimeSerializationMode.Utc));
-            }
-
-            if (order.Type == OrderType.StopMarket)
-            {
-                requestParams.Add("type", "marketIftouched");
-                requestParams.Add("price", order.Price.ToString(CultureInfo.InvariantCulture));
-                switch (order.Direction)
-                {
-                    case OrderDirection.Buy:
-                        requestParams.Add("upperBound", ((StopMarketOrder)order).Price.ToString(CultureInfo.InvariantCulture));
-                        break;
-                    case OrderDirection.Sell:
-                        requestParams.Add("lowerBound", ((StopLimitOrder)order).Price.ToString(CultureInfo.InvariantCulture));
-                        break;
-                }
-                requestParams.Add("expiry", XmlConvert.ToString(order.DurationValue, XmlDateTimeSerializationMode.Utc));
-            }
+            PopulateOrderRequestParameters(order, requestParams);
 
             Log.Trace(string.Format("OandaBrokerage.PlaceOrder(): {0} to {1} {2} units of {3}", order.Type, order.Direction, order.Quantity, order.Symbol));
 
@@ -401,25 +340,98 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
 
-       // public TradesResponseAsync
-
         /// <summary>
-        /// Retrieves the list of open trades belonging to the account
+        /// Updates the order with the same id
         /// </summary>
-        /// <param name="account">the account to retrieve the list for</param>
-        /// <param name="requestParams">optional additional parameters for the request (name, value pairs)</param>
-        /// <returns>List of TradeData objects (or empty list, if no trades)</returns>
-        //public static async Task<List<TradeData>> GetTradeListAsync(int account, Dictionary<string, string> requestParams = null)
-        //{
-        //    var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + account + "/trades";
-        //    var tradeResponse = await MakeRequestAsync<TradesResponse>(requestString, "GET", requestParams);
+        /// <param name="order">The new order information</param>
+        /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
+        public override bool UpdateOrder(Order order)
+        {
+            Log.Trace("OandaBrokerage.UpdateOrder(): " + order);
 
-        //    var trades = new List<TradeData>();
-        //    trades.AddRange(tradeResponse.trades);
+            if (!order.BrokerId.Any())
+            {
+                // we need the brokerage order id in order to perform an update
+                Log.Trace("OandaBrokerage.UpdateOrder(): Unable to update order without BrokerId.");
 
-        //    return trades;
-        //}
-        
+                //var orderDuration = GetOrderDuration(order.Duration);
+                //var limitPrice = GetLimitPrice(order);
+                //var stopPrice = GetStopPrice(order);
+
+            }
+
+            throw new NotImplementedException();
+        }
+
+        private static void PopulateOrderRequestParameters(Order order, Dictionary<string, string> requestParams)
+        {
+            if (order.Direction != OrderDirection.Buy && order.Direction != OrderDirection.Sell)
+            {
+                throw new Exception("Invalid Order Direction");
+            }
+
+            requestParams.Add("side", order.Direction == OrderDirection.Buy ? "buy" : "sell");
+
+            if (order.Type == OrderType.Market)
+            {
+                requestParams.Add("type", "market");
+            }
+
+            if (order.Type == OrderType.Limit)
+            {
+                requestParams.Add("type", "limit");
+                requestParams.Add("price", order.Price.ToString(CultureInfo.InvariantCulture));
+                switch (order.Direction)
+                {
+                    case OrderDirection.Buy:
+                        requestParams.Add("lowerBound", ((LimitOrder) order).LimitPrice.ToString(CultureInfo.InvariantCulture));
+                        break;
+
+                    case OrderDirection.Sell:
+                        requestParams.Add("upperBound", ((LimitOrder) order).LimitPrice.ToString(CultureInfo.InvariantCulture));
+                        break;
+                }
+
+                requestParams.Add("expiry", XmlConvert.ToString(order.DurationValue, XmlDateTimeSerializationMode.Utc));
+            }
+
+            //this type should contain a stop and a limit to that stop.
+            if (order.Type == OrderType.StopLimit)
+            {
+                requestParams.Add("type", "stop");
+                requestParams.Add("price", order.Price.ToString(CultureInfo.InvariantCulture));
+                switch (order.Direction)
+                {
+                    case OrderDirection.Buy:
+                        requestParams.Add("upperBound",
+                            ((StopLimitOrder) order).StopPrice.ToString(CultureInfo.InvariantCulture));
+                        break;
+                    case OrderDirection.Sell:
+                        requestParams.Add("lowerBound",
+                            ((StopLimitOrder) order).StopPrice.ToString(CultureInfo.InvariantCulture));
+                        break;
+                }
+                requestParams.Add("expiry", XmlConvert.ToString(order.DurationValue, XmlDateTimeSerializationMode.Utc));
+            }
+
+            if (order.Type == OrderType.StopMarket)
+            {
+                requestParams.Add("type", "marketIftouched");
+                requestParams.Add("price", order.Price.ToString(CultureInfo.InvariantCulture));
+                switch (order.Direction)
+                {
+                    case OrderDirection.Buy:
+                        requestParams.Add("upperBound", ((StopMarketOrder) order).Price.ToString(CultureInfo.InvariantCulture));
+                        break;
+                    case OrderDirection.Sell:
+                        requestParams.Add("lowerBound", ((StopLimitOrder) order).Price.ToString(CultureInfo.InvariantCulture));
+                        break;
+                }
+                requestParams.Add("expiry", XmlConvert.ToString(order.DurationValue, XmlDateTimeSerializationMode.Utc));
+            }
+        }
+
+
         /// <summary>
         /// Checks for fill events by registering to the event session to receive events.
         /// </summary>
@@ -485,24 +497,35 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Updates the order with the same id
-        /// </summary>
-        /// <param name="order">The new order information</param>
-        /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
-        public override bool UpdateOrder(Order order)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
         /// Cancels the order with the specified ID
         /// </summary>
         /// <param name="order">The order to cancel</param>
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            throw new NotImplementedException();
+            Log.Trace("OandaBrokerage.CancelOrder(): " + order);
+            
+            if (!order.BrokerId.Any())
+            {
+                Log.Trace("OandaBrokerage.CancelOrder(): Unable to cancel order without BrokerId.");
+                return false;
+            }
+
+            foreach (var orderId in order.BrokerId)
+            {
+                var response = CancelOrderAsync(orderId);
+                OnOrderEvent(new OrderEvent(order, "Oanda Cancel Order Event") { Status = OrderStatus.Canceled });
+            }
+
+            return true;
         }
+
+        private async Task<Order> CancelOrderAsync(long orderId)
+        {
+            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
+            return await MakeRequestAsync<Order>(requestString, "DELETE");
+        }
+        
 
         /// <summary>
         /// Verify we have a user session; or refresh the access token.
@@ -693,18 +716,6 @@ namespace QuantConnect.Brokerages.Oanda
                 var result = task.Result;
                 return result;
             }
-            //var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account);
-
-            //var request = new RestRequest("accounts/{accountId}/positions");
-            //request.AddUrlSegment("accountId", AccountId.ToString());
-
-            //RestClient client = new RestClient(requestString);
-
-            //client.AddDefaultHeader("Accept", "application/json");
-            //client.AddDefaultHeader("Authorization", "Bearer " + AccessToken);
-
-            //var raw = client.Execute(request);
-            //return new List<Position>();
         }
 
         /// <summary>
