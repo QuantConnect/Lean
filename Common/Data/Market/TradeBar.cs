@@ -233,14 +233,14 @@ namespace QuantConnect.Data.Market
             else
             {
                 // Using custom "ToDecimal" conversion for speed on high resolution data.
-                tradeBar.Time = date.Date.AddMilliseconds(Convert.ToInt32(csv[0]));
+                tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32());
                 tradeBar.Open = config.GetNormalizedPrice(csv[1].ToDecimal()/_scaleFactor);
                 tradeBar.High = config.GetNormalizedPrice(csv[2].ToDecimal()/_scaleFactor);
                 tradeBar.Low = config.GetNormalizedPrice(csv[3].ToDecimal()/_scaleFactor);
                 tradeBar.Close = config.GetNormalizedPrice(csv[4].ToDecimal()/_scaleFactor);
             }
 
-            tradeBar.Volume = Convert.ToInt64(csv[5]);
+            tradeBar.Volume = csv[5].ToInt64();
             return tradeBar;
         }
 
@@ -274,7 +274,7 @@ namespace QuantConnect.Data.Market
             else
             {
                 //Fast decimal conversion
-                tradeBar.Time = date.Date.AddMilliseconds(Convert.ToInt32(csv[0]));
+                tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32());
                 tradeBar.Open = csv[1].ToDecimal();
                 tradeBar.High = csv[2].ToDecimal();
                 tradeBar.Low = csv[3].ToDecimal();
