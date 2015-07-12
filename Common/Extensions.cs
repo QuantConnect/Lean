@@ -173,30 +173,27 @@ namespace QuantConnect
         public static decimal ToDecimal(this string str)
         {
             long value = 0;
-            var decimalPlaces = int.MinValue;
-            bool hasDecimals = str.Contains(".");
+            var decimalPlaces = 0;
+            bool hasDecimals = false;
 
             for (var i = 0; i < str.Length; i++)
             {
                 var ch = str[i];
-                if (ch >= '0' && ch <= '9')
+                if (ch == '.')
                 {
-                    value = value * 10 + (ch - '0');
-                    if (hasDecimals) decimalPlaces++;
-                }
-                else if (ch == '.')
-                {
+                    hasDecimals = true;
                     decimalPlaces = 0;
                 }
                 else
                 {
-                    break;
+                    value = value * 10 + (ch - '0');
+                    decimalPlaces++;
                 }
             }
 
             var lo = (int)value;
             var mid = (int)(value >> 32);
-            return new decimal(lo, mid, 0, false, (byte)decimalPlaces);
+            return new decimal(lo, mid, 0, false, (byte)(hasDecimals ? decimalPlaces : 0));
         }
 
         /// <summary>
