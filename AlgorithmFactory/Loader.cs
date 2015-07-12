@@ -147,7 +147,7 @@ namespace QuantConnect.AlgorithmFactory
                 var engine = Python.CreateEngine();
 
                 //Load the dll - built with clr.Compiler()
-                Log.Trace("Loader.TryCreatePythonAlgorithm(): Loading python assembly...");
+                Log.Trace("Loader.TryCreatePythonAlgorithm(): Loading python assembly: " + assemblyPath);
                 var library = Assembly.LoadFile(Path.GetFullPath(assemblyPath));
                 engine.Runtime.LoadAssembly(library);
 
@@ -159,9 +159,9 @@ namespace QuantConnect.AlgorithmFactory
                     var scope = engine.Runtime.ImportModule("main");
                     items = (List<KeyValuePair<string, dynamic>>)scope.GetItems();
                 }
-                catch (Exception)
+                catch (Exception err)
                 {
-                    errorMessage = "Could not locate 'main' module. Please make sure you have a main.py file in your project";
+                    errorMessage = "Could not locate 'main' module. Please make sure you have a main.py file in your project. " + err.Message;
                     return false;
                 }
 
