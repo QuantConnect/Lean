@@ -174,6 +174,7 @@ namespace QuantConnect
         {
             long value = 0;
             var decimalPlaces = int.MinValue;
+            bool hasDecimals = str.Contains(".");
 
             for (var i = 0; i < str.Length; i++)
             {
@@ -181,7 +182,7 @@ namespace QuantConnect
                 if (ch >= '0' && ch <= '9')
                 {
                     value = value * 10 + (ch - '0');
-                    decimalPlaces++;
+                    if (hasDecimals) decimalPlaces++;
                 }
                 else if (ch == '.')
                 {
