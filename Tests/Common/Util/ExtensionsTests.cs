@@ -62,9 +62,9 @@ namespace QuantConnect.Tests.Common.Util
         public void GetBetterTypeNameHandlesRecursiveGenericTypes()
         {
             var type = typeof (Dictionary<List<int>, Dictionary<int, string>>);
-            const string expected = "Dictionary<List<System.Int32>, Dictionary<System.Int32, System.String>>";
+            const string expected = "Dictionary<List<Int32>, Dictionary<Int32, String>>";
             var actual = type.GetBetterTypeName();
-            Assert.AreNotEqual(expected, actual);
+            Assert.AreEqual(expected, actual);
         }
 
         private class Super<T>

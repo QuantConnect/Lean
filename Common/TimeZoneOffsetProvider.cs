@@ -32,16 +32,6 @@ namespace QuantConnect
         private readonly DateTimeZone _timeZone;
         private readonly Queue<long> _discontinuities;
 
-        public DateTime UtcNextDiscontinuity
-        {
-            get { return new DateTime(_nextDiscontinuity); }
-        }
-
-        public TimeSpan CurrentUtcOffset
-        {
-            get { return TimeSpan.FromTicks(_currentOffsetTicks); }
-        }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="TimeZoneOffsetProvider"/> class
         /// </summary>
@@ -59,9 +49,6 @@ namespace QuantConnect
             var end = DateTimeZone.Utc.AtLeniently(LocalDateTime.FromDateTime(utcEndTime));
             var zoneIntervals = _timeZone.GetZoneIntervals(start.ToInstant(), end.ToInstant());
             _discontinuities = new Queue<long>(zoneIntervals.Select(x => x.Start.ToDateTimeUtc().Ticks));
-
-            var disc = _discontinuities.ToList();
-            var t = new DateTime(disc[0]);
 
             if (_discontinuities.Count == 0)
             {

@@ -269,6 +269,18 @@ namespace QuantConnect.Lean.Engine
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
 
+                if (timeSlice.SecurityChanges != SecurityChanges.None)
+                {
+                    foreach (var security in timeSlice.SecurityChanges.AddedSecurities)
+                    {
+                        if (!algorithm.Securities.ContainsKey(security.Symbol))
+                        {
+                            // add the new security
+                            algorithm.Securities.Add(security);
+                        }
+                    }
+                }
+
                 if (delistingTickets.Count != 0)
                 {
                     for (int i = 0; i < delistingTickets.Count; i++)
@@ -337,6 +349,7 @@ namespace QuantConnect.Lean.Engine
                             algorithm.RunTimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
                             Log.Error("AlgorithmManager.Run(): RuntimeError: OnMarginCallWarning: " + err.Message + " STACK >>> " + err.StackTrace);
+                            return;
                         }
                     }
 
@@ -454,8 +467,11 @@ namespace QuantConnect.Lean.Engine
 
                 try
                 {
-                    // EVENT HANDLER v3.0 -- all data in a single event
-                    algorithm.OnData(timeSlice.Slice);
+                    if (timeSlice.Slice.Count != 0)
+                    {
+                        // EVENT HANDLER v3.0 -- all data in a single event
+                        algorithm.OnData(timeSlice.Slice);
+                    }
                 }
                 catch (Exception err)
                 {

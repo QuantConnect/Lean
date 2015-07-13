@@ -138,7 +138,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            var slice = new Slice(utcDateTime, data.Where(x => !x.Key.SubscriptionDataConfig.IsInternalFeed).SelectMany(x => x.Value));
+            var slice = new Slice(utcDateTime.ConvertTo(TimeZones.Utc, algorithm.TimeZone), data.Where(x => !x.Key.SubscriptionDataConfig.IsInternalFeed).SelectMany(x => x.Value));
 
             return new TimeSlice(utcDateTime, count, slice, data, cash, security, consolidator, custom);
         }
