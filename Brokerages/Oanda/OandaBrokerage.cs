@@ -158,13 +158,12 @@ namespace QuantConnect.Brokerages.Oanda
         {
             var cash = new List<Cash>();
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId;
-            using (var task = MakeRequestAsync<AccountsResponse>(requestString))
+            using (var task = MakeRequestAsync<Account>(requestString))
             {
                 task.Wait();
                 var accountResponse = task.Result;
-
                 //TODO figure how exchange rates work in Oanda. probably need to call http://developer.oanda.com/exchange-rates-api/v1/currencies/
-                cash.AddRange(accountResponse.accounts.Select(account => new Cash(account.accountCurrency, Convert.ToDecimal(account.balance), new decimal(1.0))));
+                cash.Add(new Cash(accountResponse.accountCurrency, accountResponse.balance.ToDecimal(), new decimal(1.0)));
             }
             return cash;
         }
@@ -469,6 +468,29 @@ namespace QuantConnect.Brokerages.Oanda
         {
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/trades";
             return await MakeRequestAsync<TradesResponse>(requestString, "GET", requestParams);
+        }
+
+        /// <summary>
+        /// Retrieves the current rate for each of a list of instruments
+        /// </summary>
+        /// <param name="instruments">the list of instruments to check</param>
+        /// <returns>List of Price objects with the current price for each instrument</returns>
+        public async Task<List<Price>> GetRatesAsync(List<Instrument> instruments)
+        {
+            var requestBuilder = new StringBuilder(EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Rates) + "prices?instruments=");
+
+            foreach (var instrument in instruments)
+            {
+                requestBuilder.Append(instrument.instrument + ",");
+            }
+            var requestString = requestBuilder.ToString().Trim(',');
+            requestString = requestString.Replace(",", "%2C");
+
+            var pricesResponse = await MakeRequestAsync<PricesResponse>(requestString);
+            var prices = new List<Price>();
+            prices.AddRange(pricesResponse.prices);
+
+            return prices;
         }
 
         /// <summary>

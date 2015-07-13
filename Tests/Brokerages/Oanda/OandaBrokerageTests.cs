@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Oanda;
+using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Brokerages.Oanda.DataType.Communications;
 using QuantConnect.Brokerages.Oanda.Framework;
 using QuantConnect.Interfaces;
@@ -85,7 +87,8 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         protected override decimal GetAskPrice(string symbol, SecurityType securityType)
         {
             var oanda = (OandaBrokerage) Brokerage;
-            return new decimal(0.0);
+            var quotes = oanda.GetRatesAsync(new List<Instrument> { new Instrument { instrument = symbol } });
+            return (decimal)quotes.Result[0].ask;
         }
     }
 }
