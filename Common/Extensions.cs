@@ -167,45 +167,65 @@ namespace QuantConnect
         /// <summary>
         /// Extension method for faster string to decimal conversion. 
         /// </summary>
-        /// <param name="str">String to be converted to decimal value</param>
+        /// <param name="str">String to be converted to positive decimal value</param>
         /// <remarks>Method makes some assuptions - always numbers, no "signs" +,- etc.</remarks>
         /// <returns>Decimal value of the string</returns>
         public static decimal ToDecimal(this string str)
         {
             long value = 0;
-            var exp = 0;
-            var decimalPlaces = int.MinValue;
-            const long maxValueDivideTen = (long.MaxValue/10);
+            var decimalPlaces = 0;
+            bool hasDecimals = false;
 
             for (var i = 0; i < str.Length; i++)
             {
                 var ch = str[i];
-                if (ch >= '0' && ch <= '9') 
+                if (ch == '.')
                 {
-                    while (value >= maxValueDivideTen) 
-                    {
-                        value >>= 1;
-                        exp++;
-                    }
-                    value = value * 10 + (ch - '0');
-                    decimalPlaces++;
-                } 
-                else if (ch == '.') 
-                {
+                    hasDecimals = true;
                     decimalPlaces = 0;
-                } 
+                }
                 else
                 {
-                    break;
+                    value = value * 10 + (ch - '0');
+                    decimalPlaces++;
                 }
             }
 
-            if (decimalPlaces > 0) 
-            {
-                return (decimal)value / (int)Math.Pow(10, decimalPlaces);
-            }
+            var lo = (int)value;
+            var mid = (int)(value >> 32);
+            return new decimal(lo, mid, 0, false, (byte)(hasDecimals ? decimalPlaces : 0));
+        }
 
-            return (decimal)value;
+        /// <summary>
+        /// Extension method for faster string to Int32 conversion. 
+        /// </summary>
+        /// <param name="str">String to be converted to positive Int32 value</param>
+        /// <remarks>Method makes some assuptions - always numbers, no "signs" +,- etc.</remarks>
+        /// <returns>Int32 value of the string</returns>
+        public static int ToInt32(this string str)
+        {
+            int value = 0;
+            for (var i = 0; i < str.Length; i++)
+            {
+                value = value * 10 + (str[i] - '0');
+            }
+            return value;
+        }
+
+        /// <summary>
+        /// Extension method for faster string to Int64 conversion. 
+        /// </summary>
+        /// <param name="str">String to be converted to positive Int64 value</param>
+        /// <remarks>Method makes some assuptions - always numbers, no "signs" +,- etc.</remarks>
+        /// <returns>Int32 value of the string</returns>
+        public static long ToInt64(this string str)
+        {
+            long value = 0;
+            for (var i = 0; i < str.Length; i++)
+            {
+                value = value * 10 + (str[i] - '0');
+            }
+            return value;
         }
 
         /// <summary>
