@@ -8,6 +8,7 @@ clr.AddReference("QuantConnect.Common")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
+from QuantConnect.Indicators import *
 
 class BasicTemplateAlgorithm(QCAlgorithm):
 
