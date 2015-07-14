@@ -285,12 +285,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         public Order GetOrderById(int orderId)
         {
             Order order;
-            if (_orders.TryGetValue(orderId, out order))
-            {
-                // return a clone to prevent object reference shenanigans, you must submit a request to change the order
-                return ObjectActivator.Clone(order);
-            }
-            return null;
+            return _orders.TryGetValue(orderId, out order) ? order.Clone() : null;
         }
 
         /// <summary>
@@ -300,7 +295,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
         public Order GetOrderByBrokerageId(int brokerageId)
         {
-            return _orders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
+            var order = _orders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
+            return order != null ? order.Clone() : null;
         }
 
         /// <summary>
@@ -320,9 +316,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (filter != null)
             {
                 // return a clone to prevent object reference shenanigans, you must submit a request to change the order
-                return _orders.Select(x => x.Value).Where(filter).Select(ObjectActivator.Clone);
+                return _orders.Select(x => x.Value).Where(filter).Select(x => x.Clone());
             }
-            return _orders.Select(x => x.Value).Select(ObjectActivator.Clone);
+            return _orders.Select(x => x.Value).Select(x => x.Clone());
         }
 
         /// <summary>
