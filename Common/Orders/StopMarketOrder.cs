@@ -98,5 +98,16 @@ namespace QuantConnect.Orders
         {
             return string.Format("{0} order for {1} unit{2} of {3} at stop {4}", Type, Quantity, Quantity == 1 ? "" : "s", Symbol, StopPrice.SmartRounding());
         }
+
+        /// <summary>
+        /// Creates a deep-copy clone of this order
+        /// </summary>
+        /// <returns>A copy of this order</returns>
+        public override Order Clone()
+        {
+            var order = new StopMarketOrder {StopPrice = StopPrice};
+            CopyTo(order);
+            return order;
+        }
     }
 }

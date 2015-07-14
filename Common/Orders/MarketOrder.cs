@@ -63,5 +63,16 @@ namespace QuantConnect.Orders
         {
             return Quantity*currentMarketPrice;
         }
+
+        /// <summary>
+        /// Creates a deep-copy clone of this order
+        /// </summary>
+        /// <returns>A copy of this order</returns>
+        public override Order Clone()
+        {
+            var order = new MarketOrder();
+            CopyTo(order);
+            return order;
+        }
     }
 }
