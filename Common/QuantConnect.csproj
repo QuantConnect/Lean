@@ -249,6 +249,7 @@
     <Compile Include="Time.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TimeKeeper.cs" />
+    <Compile Include="TimeUpdatedEventArgs.cs" />
     <Compile Include="TimeZoneOffsetProvider.cs" />
     <Compile Include="TimeZones.cs" />
     <Compile Include="Util\Composer.cs" />

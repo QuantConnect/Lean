@@ -396,6 +396,11 @@ namespace QuantConnect.Securities
         public void SetLocalTimeKeeper(LocalTimeKeeper localTimeKeeper)
         {
             _localTimeKeeper = localTimeKeeper;
+            _localTimeKeeper.TimeUpdated += (sender, args) =>
+            {
+                //Update the Exchange/Timer:
+                Exchange.SetLocalDateTimeFrontier(args.Time);
+            };
         }
 
         /// <summary>
@@ -403,10 +408,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="data">New data packet from LEAN</param>
         public void SetMarketPrice(BaseData data) 
-        { 
-            //Update the Exchange/Timer:
-            Exchange.SetLocalDateTimeFrontier(_localTimeKeeper.LocalTime);
-
+        {
             //Add new point to cache:
             if (data == null) return;
             Cache.AddData(data);

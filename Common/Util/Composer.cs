@@ -18,8 +18,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
+using System.ComponentModel.Composition.Primitives;
 using System.ComponentModel.Composition.ReflectionModel;
+using System.IO;
 using System.Linq;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Util
 {
@@ -28,6 +31,8 @@ namespace QuantConnect.Util
     /// </summary>
     public class Composer
     {
+        private static readonly string PluginDirectory = Config.Get("plugin-directory");
+
         /// <summary>
         /// Gets the singleton instance
         /// </summary>
@@ -145,9 +150,16 @@ namespace QuantConnect.Util
             lock(_exportedValuesLockObject)
             {
                 // grab assemblies from current executing directory
-                var dllCatalog = new DirectoryCatalog(AppDomain.CurrentDomain.BaseDirectory, "*.dll");
-                var exeCatalog = new DirectoryCatalog(AppDomain.CurrentDomain.BaseDirectory, "*.exe");
-                var aggregate = new AggregateCatalog(dllCatalog, exeCatalog);
+                var catalogs = new List<ComposablePartCatalog>
+                {
+                    new DirectoryCatalog(AppDomain.CurrentDomain.BaseDirectory, "*.dll"),
+                    new DirectoryCatalog(AppDomain.CurrentDomain.BaseDirectory, "*.exe")
+                };
+                if (!string.IsNullOrWhiteSpace(PluginDirectory) && Directory.Exists(PluginDirectory) && new DirectoryInfo(PluginDirectory).FullName != AppDomain.CurrentDomain.BaseDirectory)
+                {
+                    catalogs.Add(new DirectoryCatalog(PluginDirectory, "*.dll"));
+                }
+                var aggregate = new AggregateCatalog(catalogs);
                 _compositionContainer = new CompositionContainer(aggregate);
                 _exportedValues.Clear();
             }
