@@ -7,6 +7,7 @@ using QuantConnect.Brokerages.Oanda;
 using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Brokerages.Oanda.DataType.Communications;
 using QuantConnect.Brokerages.Oanda.Framework;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using Environment = QuantConnect.Brokerages.Oanda.Environment;
@@ -24,14 +25,22 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         {
             var oandaBrokerage = new OandaBrokerage(orderProvider, holdingsProvider, 0);
             var tokens = OandaBrokerageFactory.GetTokens();
-
-            var requestString = EndpointResolver.ResolveEndpoint(Environment.Sandbox, Server.Account) + "accounts";
-            using (var task = oandaBrokerage.MakeRequestAsync<AccountResponse>(requestString, "POST"))
+            var environment = Config.Get("oanda-environment");
+            if (environment == "sandbox")
+            { 
+                var requestString = EndpointResolver.ResolveEndpoint(Environment.Sandbox, Server.Account) + "accounts";
+                using (var task = oandaBrokerage.MakeRequestAsync<AccountResponse>(requestString, "POST"))
+                {
+                    task.Wait();
+                    var accountResponse = task.Result;
+                    oandaBrokerage.SetAccountId(accountResponse.accountId);
+                    oandaBrokerage.SetEnvironment("sandbox");
+                }
+            }
+            else
             {
-                task.Wait();
-                var accountResponse = task.Result;
-                oandaBrokerage.SetAccountId(accountResponse.accountId);
-                oandaBrokerage.SetEnvironment("sandbox");
+                oandaBrokerage.SetAccountId(Convert.ToInt32(Config.Get("oanda-account-id")));
+                oandaBrokerage.SetEnvironment(Config.Get("oanda-environment"));    
             }
 
             var qcUserId = OandaBrokerageFactory.Configuration.QuantConnectUserId;

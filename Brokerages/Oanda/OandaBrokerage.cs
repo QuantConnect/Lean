@@ -348,18 +348,28 @@ namespace QuantConnect.Brokerages.Oanda
         {
             Log.Trace("OandaBrokerage.UpdateOrder(): " + order);
 
+
             if (!order.BrokerId.Any())
             {
+
+                var requestParams = new Dictionary<string, string>
+                {
+                    {"instrument", order.Symbol},
+                    {"units", Convert.ToInt32(order.AbsoluteQuantity).ToString()},
+                    {"id", order.Id.ToString()}
+                };
+
                 // we need the brokerage order id in order to perform an update
                 Log.Trace("OandaBrokerage.UpdateOrder(): Unable to update order without BrokerId.");
-
-                //var orderDuration = GetOrderDuration(order.Duration);
-                //var limitPrice = GetLimitPrice(order);
-                //var stopPrice = GetStopPrice(order);
-
+                PopulateOrderRequestParameters(order, requestParams);
+                var result = UpdateOrderAsync(order.Id, requestParams).Result;
+                if(result == null || result.id == 0)
+                {
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateFailed", "Failed to update Oanda order id: " + order.Id + "."));
+                    return false;
+                }
             }
-
-            throw new NotImplementedException();
+            return true;
         }
 
         private static void PopulateOrderRequestParameters(Order order, Dictionary<string, string> requestParams)
@@ -404,11 +414,11 @@ namespace QuantConnect.Brokerages.Oanda
                 {
                     case OrderDirection.Buy:
                         requestParams.Add("upperBound",
-                            ((StopLimitOrder) order).StopPrice.ToString(CultureInfo.InvariantCulture));
+                            ((StopLimitOrder) order).LimitPrice.ToString(CultureInfo.InvariantCulture));
                         break;
                     case OrderDirection.Sell:
                         requestParams.Add("lowerBound",
-                            ((StopLimitOrder) order).StopPrice.ToString(CultureInfo.InvariantCulture));
+                            ((StopLimitOrder)order).LimitPrice.ToString(CultureInfo.InvariantCulture));
                         break;
                 }
 
@@ -418,18 +428,20 @@ namespace QuantConnect.Brokerages.Oanda
 
             if (order.Type == OrderType.StopMarket)
             {
-                requestParams.Add("type", "marketIftouched");
-                requestParams.Add("price", order.Price.ToString(CultureInfo.InvariantCulture));
+                requestParams.Add("type", "marketIfTouched");
+                requestParams.Add("price", ((StopMarketOrder)order).StopPrice.ToString(CultureInfo.InvariantCulture));
                 switch (order.Direction)
                 {
                     case OrderDirection.Buy:
-                        requestParams.Add("upperBound", ((StopMarketOrder) order).Price.ToString(CultureInfo.InvariantCulture));
+                        requestParams.Add("upperBound", ((StopMarketOrder)order).StopPrice.ToString(CultureInfo.InvariantCulture));
                         break;
                     case OrderDirection.Sell:
-                        requestParams.Add("lowerBound", ((StopLimitOrder) order).Price.ToString(CultureInfo.InvariantCulture));
+                        requestParams.Add("lowerBound", ((StopMarketOrder)order).StopPrice.ToString(CultureInfo.InvariantCulture));
                         break;
                 }
-                requestParams.Add("expiry", XmlConvert.ToString(order.DurationValue, XmlDateTimeSerializationMode.Utc));
+
+                //3 months is the max expiry for Oanda, and OrderDuration.GTC is only currently available
+                requestParams.Add("expiry", XmlConvert.ToString(DateTime.Now.AddMonths(3), XmlDateTimeSerializationMode.Utc));
             }
         }
 
@@ -471,6 +483,18 @@ namespace QuantConnect.Brokerages.Oanda
         {
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/trades";
             return await MakeRequestAsync<TradesResponse>(requestString, "GET", requestParams);
+        }
+        
+		/// <summary>
+		/// Modify the specified order, updating it with the parameters provided
+		/// </summary>
+		/// <param name="orderId">the order to update</param>
+		/// <param name="requestParams">the parameters to update (name, value pairs)</param>
+		/// <returns>Order object containing the new details of the order (post update)</returns>
+        public async Task<DataType.Order> UpdateOrderAsync(int orderId, Dictionary<string, string> requestParams)
+        {
+            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
+            return await MakeRequestAsync<DataType.Order>(requestString, "PATCH", requestParams);
         }
 
         /// <summary>

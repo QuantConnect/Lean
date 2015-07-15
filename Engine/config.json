@@ -56,10 +56,10 @@
     "database-name": "lean",
         
     // oanda configuration
-	"oanda-account-id": "6885546",
-    "oanda-access-token": "bfa5a2250acb5efdc22f925eb89e1256-834a58416cf2cd6bf48f74d189a801bb",
-    "oanda-refresh-token": "bfa5a2250acb5efdc22f925eb89e1256-834a58416cf2cd6bf48f74d189a801bb",
-    "oanda-tokens-issued-at": "2015-06-15 12:00:00",
+	"oanda-account-id": "",
+    "oanda-access-token": "",
+    "oanda-refresh-token": "",
+    "oanda-tokens-issued-at": "",
     "oanda-lifespan": "100000",
     "oanda-environment": "practice",
 
