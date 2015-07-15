@@ -397,7 +397,12 @@ namespace QuantConnect
         {
             //1. Initialize:
             var files = new List<string>();
-            var outFolder = zipFile.Substring(0, zipFile.LastIndexOf(Path.DirectorySeparatorChar));
+            var slash = zipFile.LastIndexOf(Path.DirectorySeparatorChar);
+            var outFolder = "";
+            if (slash > 0)
+            {
+                outFolder = zipFile.Substring(0, slash);
+            }
             ZipFile zf = null;
 
             try

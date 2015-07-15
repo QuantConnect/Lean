@@ -22,6 +22,7 @@ using System.Runtime.InteropServices;
 using ImpromptuInterface;
 using IronPython.Hosting;
 using Microsoft.Scripting.Hosting;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 
@@ -38,6 +39,9 @@ namespace QuantConnect.AlgorithmFactory
 
         // Language of the loader class.
         private readonly Language _language;
+
+        // Location of the IronPython standard library
+        private readonly string _ironPythonLibrary = Config.Get("ironpython-location", "../ironpython/Lib");
 
         // Defines how we resolve a list of type names into a single type name to be instantiated
         private readonly Func<List<string>, string> _multipleTypeNameResolverFunction;
@@ -145,9 +149,12 @@ namespace QuantConnect.AlgorithmFactory
             {
                 //Create the python engine
                 var engine = Python.CreateEngine();
+                var paths = engine.GetSearchPaths();
+                paths.Add(_ironPythonLibrary);
+                engine.SetSearchPaths(paths);
 
                 //Load the dll - built with clr.Compiler()
-                Log.Trace("Loader.TryCreatePythonAlgorithm(): Loading python assembly...");
+                Log.Trace("Loader.TryCreatePythonAlgorithm(): Loading python assembly: " + assemblyPath);
                 var library = Assembly.LoadFile(Path.GetFullPath(assemblyPath));
                 engine.Runtime.LoadAssembly(library);
 
@@ -159,9 +166,9 @@ namespace QuantConnect.AlgorithmFactory
                     var scope = engine.Runtime.ImportModule("main");
                     items = (List<KeyValuePair<string, dynamic>>)scope.GetItems();
                 }
-                catch (Exception)
+                catch (Exception err)
                 {
-                    errorMessage = "Could not locate 'main' module. Please make sure you have a main.py file in your project";
+                    errorMessage = err.Message + " - could not locate 'main' module. Please make sure you have a main.py file in your project.";
                     return false;
                 }
 

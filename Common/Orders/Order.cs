@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Orders
 {
@@ -223,6 +224,32 @@ namespace QuantConnect.Orders
         public override string ToString()
         {
             return string.Format("{0} order for {1} unit{3} of {2}", Type, Quantity, Symbol, Quantity == 1 ? "" : "s");
+        }
+
+        /// <summary>
+        /// Creates a deep-copy clone of this order
+        /// </summary>
+        /// <returns>A copy of this order</returns>
+        public abstract Order Clone();
+
+        /// <summary>
+        /// Copies base Order properties to the specified order
+        /// </summary>
+        /// <param name="order">The target of the copy</param>
+        protected void CopyTo(Order order)
+        {
+            order.Id = Id;
+            order.Time = Time;
+            order.BrokerId = BrokerId.ToList();
+            order.ContingentId = ContingentId;
+            order.Duration = Duration;
+            order.Price = Price;
+            order.Quantity = Quantity;
+            order.SecurityType = SecurityType;
+            order.Status = Status;
+            order.Symbol = Symbol;
+            order.Tag = Tag;
+            order.Type = Type;
         }
 
         /// <summary>

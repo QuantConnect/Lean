@@ -28,6 +28,11 @@ namespace QuantConnect
         private readonly DateTimeZone _timeZone;
 
         /// <summary>
+        /// Event fired each time <see cref="UpdateTime"/> is called
+        /// </summary>
+        public event EventHandler<TimeUpdatedEventArgs> TimeUpdated;
+
+        /// <summary>
         /// Gets the time zone of this <see cref="LocalTimeKeeper"/>
         /// </summary>
         public DateTimeZone TimeZone
@@ -62,6 +67,10 @@ namespace QuantConnect
         {
             // redefine the lazy conversion each time this is set
             _localTime = new Lazy<DateTime>(() => utcDateTime.ConvertTo(DateTimeZone.Utc, _timeZone));
+            if (TimeUpdated != null)
+            {
+                TimeUpdated(this, new TimeUpdatedEventArgs(_localTime.Value, TimeZone));
+            }
         }
     }
 }

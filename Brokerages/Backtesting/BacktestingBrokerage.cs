@@ -195,109 +195,110 @@ namespace QuantConnect.Brokerages.Backtesting
                     return;
                 }
 
-                _needsScan = false;
-            }
+                //2. NOW ALL ORDERS IN ORDER DICTIONARY::> 
+                //   Scan through Orders: Process fills. Trigger Events.
+                //   Refresh the order model: look at the orders for ones - process every time.
 
-            //2. NOW ALL ORDERS IN ORDER DICTIONARY::> 
-            //   Scan through Orders: Process fills. Trigger Events.
-            //   Refresh the order model: look at the orders for ones - process every time.
-            
-            // find orders that still need to be processed, be sure to sort them by their id so we
-            // fill them in the proper order
-            var orders = (from order in _pending
-                          where order.Value.Status != OrderStatus.Filled &&
-                                order.Value.Status != OrderStatus.Canceled &&
-                                order.Value.Status != OrderStatus.Invalid
-                          orderby order.Value.Id ascending
-                          select order);
+                // find orders that still need to be processed, be sure to sort them by their id so we
+                // fill them in the proper order
+                var orders = (from order in _pending
+                              where order.Value.Status != OrderStatus.Filled &&
+                                    order.Value.Status != OrderStatus.Canceled &&
+                                    order.Value.Status != OrderStatus.Invalid
+                              orderby order.Value.Id ascending
+                              select order);
 
-            //Now we have the orders; re-apply the order models to each order.
-            foreach (var kvp in orders)
-            {
-                var order = kvp.Value;
+                var stillNeedsScan = false;
 
-                var security = _algorithm.Securities[order.Symbol];
-
-                // check if we would actually be able to fill this
-                if (!_algorithm.BrokerageModel.CanExecuteOrder(security, order))
+                //Now we have the orders; re-apply the order models to each order.
+                foreach (var kvp in orders)
                 {
-                    continue;
-                }
+                    var order = kvp.Value;
 
-                // verify sure we have enough cash to perform the fill
-                var sufficientBuyingPower = _algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order);
+                    var security = _algorithm.Securities[order.Symbol];
 
-                var fill = new OrderEvent();
-                fill.Symbol = order.Symbol;
-
-                //Before we check this queued order make sure we have buying power:
-                if (sufficientBuyingPower)
-                {
-                    //Model:
-                    var model = security.TransactionModel;
-
-                    //Based on the order type: refresh its model to get fill price and quantity
-                    try
+                    // check if we would actually be able to fill this
+                    if (!_algorithm.BrokerageModel.CanExecuteOrder(security, order))
                     {
-                        switch (order.Type)
+                        continue;
+                    }
+
+                    // verify sure we have enough cash to perform the fill
+                    var sufficientBuyingPower = _algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order);
+
+                    var fill = new OrderEvent();
+                    fill.Symbol = order.Symbol;
+
+                    //Before we check this queued order make sure we have buying power:
+                    if (sufficientBuyingPower)
+                    {
+                        //Model:
+                        var model = security.TransactionModel;
+
+                        //Based on the order type: refresh its model to get fill price and quantity
+                        try
                         {
-                            case OrderType.Limit:
-                                fill = model.LimitFill(security, order as LimitOrder);
-                                break;
+                            switch (order.Type)
+                            {
+                                case OrderType.Limit:
+                                    fill = model.LimitFill(security, order as LimitOrder);
+                                    break;
 
-                            case OrderType.StopMarket:
-                                fill = model.StopMarketFill(security, order as StopMarketOrder);
-                                break;
+                                case OrderType.StopMarket:
+                                    fill = model.StopMarketFill(security, order as StopMarketOrder);
+                                    break;
 
-                            case OrderType.Market:
-                                fill = model.MarketFill(security, order as MarketOrder);
-                                break;
+                                case OrderType.Market:
+                                    fill = model.MarketFill(security, order as MarketOrder);
+                                    break;
 
-                            case OrderType.StopLimit:
-                                fill = model.StopLimitFill(security, order as StopLimitOrder);
-                                break;
+                                case OrderType.StopLimit:
+                                    fill = model.StopLimitFill(security, order as StopLimitOrder);
+                                    break;
 
-                            case OrderType.MarketOnOpen:
-                                fill = model.MarketOnOpenFill(security, order as MarketOnOpenOrder);
-                                break;
+                                case OrderType.MarketOnOpen:
+                                    fill = model.MarketOnOpenFill(security, order as MarketOnOpenOrder);
+                                    break;
 
-                            case OrderType.MarketOnClose:
-                                fill = model.MarketOnCloseFill(security, order as MarketOnCloseOrder);
-                                break;
+                                case OrderType.MarketOnClose:
+                                    fill = model.MarketOnCloseFill(security, order as MarketOnCloseOrder);
+                                    break;
+                            }
+                        }
+                        catch (Exception err)
+                        {
+                            Log.Error("BacktestingBrokerage.Scan(): " + err.Message);
+                            _algorithm.Error(string.Format("Order Error: id: {0}, Transaction model failed to fill for order type: {1} with error: {2}",
+                                order.Id, order.Type, err.Message));
                         }
                     }
-                    catch (Exception err)
+                    else
                     {
-                        Log.Error("BacktestingBrokerage.Scan(): " + err.Message);
-                        _algorithm.Error(string.Format("Order Error: id: {0}, Transaction model failed to fill for order type: {1} with error: {2}", order.Id, order.Type, err.Message));
+                        //Flag order as invalid and push off queue:
+                        order.Status = OrderStatus.Invalid;
+                        _algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id,
+                            order.GetValue(security.Price).SmartRounding()));
+                    }
+
+                    // change in status or a new fill
+                    if (order.Status != fill.Status || fill.FillQuantity != 0)
+                    {
+                        //If the fill models come back suggesting filled, process the affects on portfolio
+                        OnOrderEvent(fill);
+                    }
+
+                    if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.Invalid || order.Status == OrderStatus.Canceled)
+                    {
+                        _pending.TryRemove(order.Id, out order);
+                    }
+                    else
+                    {
+                        stillNeedsScan = true;
                     }
                 }
-                else
-                {
-                    //Flag order as invalid and push off queue:
-                    order.Status = OrderStatus.Invalid;
-                    _algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.GetValue(security.Price).SmartRounding()));
-                }
-
-                // change in status or a new fill
-                if (order.Status != fill.Status || fill.FillQuantity != 0)
-                {
-                    //If the fill models come back suggesting filled, process the affects on portfolio
-                    OnOrderEvent(fill);
-                }
-
-                if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.Invalid || order.Status == OrderStatus.Canceled)
-                {
-                    _pending.TryRemove(order.Id, out order);
-                }
-                else
-                {
-                    // if we didn't fill then we need to continue to scan
-                    lock (_needsScanLock)
-                    {
-                        _needsScan = true;
-                    }
-                }
+                
+                // if we didn't fill then we need to continue to scan
+                _needsScan = stillNeedsScan;
             }
         }
 

@@ -301,7 +301,7 @@ namespace QuantConnect.Lean.Engine.Results
                     while (_orderEvents.TryDequeue(out orderEvent) && stopwatch.ElapsedMilliseconds < 15)
                     {
                         var order = _algorithm.Transactions.GetOrderById(orderEvent.OrderId);
-                        deltaOrders[orderEvent.OrderId] = ObjectActivator.Clone(order) as Order;
+                        deltaOrders[orderEvent.OrderId] = order.Clone();
                     }
 
                     //For charting convert to UTC

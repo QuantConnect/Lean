@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
@@ -284,8 +285,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         public Order GetOrderById(int orderId)
         {
             Order order;
-            _orders.TryGetValue(orderId, out order);
-            return order;
+            return _orders.TryGetValue(orderId, out order) ? order.Clone() : null;
         }
 
         /// <summary>
@@ -295,7 +295,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
         public Order GetOrderByBrokerageId(int brokerageId)
         {
-            return _orders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
+            var order = _orders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
+            return order != null ? order.Clone() : null;
         }
 
         /// <summary>
@@ -314,9 +315,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             if (filter != null)
             {
-                return _orders.Select(x => x.Value).Where(filter);
+                // return a clone to prevent object reference shenanigans, you must submit a request to change the order
+                return _orders.Select(x => x.Value).Where(filter).Select(x => x.Clone());
             }
-            return _orders.Select(x => x.Value);
+            return _orders.Select(x => x.Value).Select(x => x.Clone());
         }
 
         /// <summary>

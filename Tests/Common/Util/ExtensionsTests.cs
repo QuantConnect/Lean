@@ -103,5 +103,21 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(123.45678m, value);
         }
 
+        [Test]
+        public void ConvertsZeroDecimalFromString()
+        {
+            const string input = "0.45678";
+            var value = input.ToDecimal();
+            Assert.AreEqual(0.45678m, value);
+        }
+
+        [Test]
+        public void ConvertsOneNumberDecimalFromString()
+        {
+            const string input = "1.45678";
+            var value = input.ToDecimal();
+            Assert.AreEqual(1.45678m, value);
+        }
+
     }
 }

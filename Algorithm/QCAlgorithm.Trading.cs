@@ -170,7 +170,10 @@ namespace QuantConnect.Algorithm
             if (!security.Exchange.ExchangeOpen)
             {
                 var mooTicket = MarketOnOpenOrder(symbol, quantity, tag);
-                Debug("Converted OrderID: " + mooTicket.OrderId + " into a MarketOnOpen order.");
+                if (security.SubscriptionDataConfig.Resolution != Resolution.Daily)
+                {
+                    Debug("Converted OrderID: " + mooTicket.OrderId + " into a MarketOnOpen order.");
+                }   
                 return mooTicket;
             }
 
@@ -488,69 +491,56 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Automatically place an order which will set the holdings to between 100% or -100% of *Buying Power*.
+        /// Automatically place an order which will set the holdings to between 100% or -100% of *PORTFOLIO VALUE*.
         /// E.g. SetHoldings("AAPL", 0.1); SetHoldings("IBM", -0.2); -> Sets portfolio as long 10% APPL and short 20% IBM
+        /// E.g. SetHoldings("AAPL", 2); -> Sets apple to 2x leveraged with all our cash.
         /// </summary>
-        /// <param name="symbol">   string Symbol indexer</param>
+        /// <param name="symbol">string Symbol indexer</param>
         /// <param name="percentage">decimal fraction of portfolio to set stock</param>
         /// <param name="liquidateExistingHoldings">bool flag to clean all existing holdings before setting new faction.</param>
         /// <param name="tag">Tag the order with a short string.</param>
         /// <seealso cref="MarketOrder"/>
         public void SetHoldings(string symbol, decimal percentage, bool liquidateExistingHoldings = false, string tag = "")
         {
-            //Error checks:
-            if (!Portfolio.ContainsKey(symbol))
+            //Initialize Requirements:
+            Security security;
+            if (!Securities.TryGetValue(symbol, out security))
             {
                 Error(symbol.ToUpper() + " not found in portfolio. Request this data when initializing the algorithm.");
                 return;
             }
-
-            //Range check values:
-            if (percentage > 1) percentage = 1;
-            if (percentage < -1) percentage = -1;
 
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
                 foreach (var holdingSymbol in Portfolio.Keys)
                 {
-                    if (holdingSymbol != symbol && Portfolio[holdingSymbol].AbsoluteQuantity > 0)
+                    if (holdingSymbol != symbol && security.Holdings.AbsoluteQuantity > 0)
                     {
                         //Go through all existing holdings [synchronously], market order the inverse quantity:
-                        Order(holdingSymbol, -Portfolio[holdingSymbol].Quantity);
+                        Order(holdingSymbol, -security.Holdings.Quantity);
                     }
                 }
             }
+            
+            //Find delta in margin to trade:
+            // 1. Eg. 50% * $100k = $50k Target        2. Eg. 200% * 100k = $200k Target
+            var targetPortfolioValue = percentage*Portfolio.TotalPortfolioValue;
+            // 1. Eg. $0 Holdings Currently.           2. Eg. -$50k Currently.
+            var currentPortfolioValue = security.Holdings.HoldingsValue;
+            // Delta in holdings value:
+            var deltaRequired = targetPortfolioValue - currentPortfolioValue;
+            //Convert value delta back to unlevered margin move:
+            var deltaMarginToTrade = Math.Abs(deltaRequired/security.MarginModel.GetLeverage(security));
+            //Adjust direction based on delta required:
+            var direction = (deltaRequired > 0) ? OrderDirection.Buy : OrderDirection.Sell;
 
-            var security = Securities[symbol];
-
-            // compute the remaining margin for this security
-            var direction = percentage > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-
-            // we need to account for the margin gained if crossing the zero line
-            decimal extraMarginForClosing = 0m;
-            if (security.Holdings.IsLong && direction == OrderDirection.Sell)
-            {
-                extraMarginForClosing = security.MarginModel.GetMaintenanceMargin(security);
-            }
-            else if (security.Holdings.IsShort && direction == OrderDirection.Buy)
-            {
-                extraMarginForClosing = security.MarginModel.GetMaintenanceMargin(security);
-            }
-
-            // compute an estimate of the buying power for this security incorporating the implied leverage
-            // we don't want to apply the percentag to the required margin to bring us to zero, so we back out the 'extraMaginForClosing'
-            var marginRemaining = Math.Abs(percentage)*(security.MarginModel.GetMarginRemaining(Portfolio, security, direction) - extraMarginForClosing);
-            marginRemaining += extraMarginForClosing;
-
-            //
             // Since we can't assume anything about the fee structure and the relative size of fees in
             // relation to the order size we need to perform some root finding. In general we'll only need
             // a two loops to compute a correct value. Some exotic fee structures may require more searching.
-            //
 
             // compute the margin required for a single share
-            int quantity = 1;
+            var quantity = 1;
             var marketOrder = new MarketOrder(symbol, quantity, Time, type: security.Type);
             var marginRequiredForSingleShare = security.MarginModel.GetInitialMarginRequiredForOrder(security, marketOrder);
 
@@ -558,18 +548,18 @@ namespace QuantConnect.Algorithm
             if (security.Price == 0) return;
 
             // we can't even afford one more share
-            if (marginRemaining < marginRequiredForSingleShare) return;
+            if (deltaMarginToTrade < marginRequiredForSingleShare) return;
 
             // we want marginRequired to end up between this and marginRemaining
-            var marginRequiredLowerThreshold = marginRemaining - marginRequiredForSingleShare;
+            var marginRequiredLowerThreshold = deltaMarginToTrade - marginRequiredForSingleShare;
 
             // iterate until we get a decent estimate, max out at 10 loops.
-            int loops = 0;
+            var loops = 0;
             var marginRequired = marginRequiredForSingleShare;
-            while (marginRequired > marginRemaining || marginRequired < marginRequiredLowerThreshold)
+            while (marginRequired > deltaMarginToTrade || marginRequired < marginRequiredLowerThreshold)
             {
                 var marginPerShare = marginRequired/quantity;
-                quantity = (int) Math.Truncate(marginRemaining/marginPerShare);
+                quantity = (int) Math.Truncate(deltaMarginToTrade/marginPerShare);
                 marketOrder.Quantity = quantity;
                 if (quantity == 0)
                 {

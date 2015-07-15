@@ -99,5 +99,16 @@ namespace QuantConnect.Orders
         {
             return string.Format("{0} order for {1} unit{2} of {3} at limit {4}", Type, Quantity, Quantity == 1 ? "" : "s", Symbol, LimitPrice.SmartRounding());
         }
+
+        /// <summary>
+        /// Creates a deep-copy clone of this order
+        /// </summary>
+        /// <returns>A copy of this order</returns>
+        public override Order Clone()
+        {
+            var order = new LimitOrder {LimitPrice = LimitPrice};
+            CopyTo(order);
+            return order;
+        }
     }
 }
