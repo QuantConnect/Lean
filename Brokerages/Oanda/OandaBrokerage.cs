@@ -379,7 +379,7 @@ namespace QuantConnect.Brokerages.Oanda
             if (order.Type == OrderType.Limit)
             {
                 requestParams.Add("type", "limit");
-                requestParams.Add("price", order.Price.ToString(CultureInfo.InvariantCulture));
+                requestParams.Add("price", ((LimitOrder)order).LimitPrice.ToString(CultureInfo.InvariantCulture));
                 switch (order.Direction)
                 {
                     case OrderDirection.Buy:
@@ -391,14 +391,15 @@ namespace QuantConnect.Brokerages.Oanda
                         break;
                 }
 
-                requestParams.Add("expiry", XmlConvert.ToString(order.DurationValue, XmlDateTimeSerializationMode.Utc));
+                //3 months is the max expiry for Oanda, and OrderDuration.GTC is only currently available
+                requestParams.Add("expiry", XmlConvert.ToString(DateTime.Now.AddMonths(3), XmlDateTimeSerializationMode.Utc));
             }
 
             //this type should contain a stop and a limit to that stop.
             if (order.Type == OrderType.StopLimit)
             {
                 requestParams.Add("type", "stop");
-                requestParams.Add("price", order.Price.ToString(CultureInfo.InvariantCulture));
+                requestParams.Add("price", ((StopLimitOrder)order).StopPrice.ToString(CultureInfo.InvariantCulture));
                 switch (order.Direction)
                 {
                     case OrderDirection.Buy:
@@ -410,7 +411,9 @@ namespace QuantConnect.Brokerages.Oanda
                             ((StopLimitOrder) order).StopPrice.ToString(CultureInfo.InvariantCulture));
                         break;
                 }
-                requestParams.Add("expiry", XmlConvert.ToString(order.DurationValue, XmlDateTimeSerializationMode.Utc));
+
+                //3 months is the max expiry for Oanda, and OrderDuration.GTC is only currently available
+                requestParams.Add("expiry", XmlConvert.ToString(DateTime.Now.AddMonths(3), XmlDateTimeSerializationMode.Utc));
             }
 
             if (order.Type == OrderType.StopMarket)
