@@ -119,7 +119,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // we can fill forward the rest of this subscription if required
                     var endOfSubscription = Current.Clone(true);
-                    endOfSubscription.Time = _subscriptionEndTime - _dataResolution;
+                    endOfSubscription.Time = _subscriptionEndTime.RoundDown(_dataResolution);
                     if (RequiresFillForwardData(_previous, endOfSubscription, out fillForward))
                     {
                         // don't mark as filling forward so we come back into this block, subscription is done
@@ -208,7 +208,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // this is the normal case where we had a hole in the middle of the day
                 fillForward = previous.Clone(true);
-                fillForward.Time = previous.Time + _fillForwardResolution;
+                fillForward.Time = (previous.Time + _fillForwardResolution).RoundDown(_fillForwardResolution);
                 return true;
             }
 

@@ -171,6 +171,11 @@ namespace QuantConnect.Securities
                 var order = GetOrderById(orderId);
                 if (order == null || !Completed(order))
                 {
+                    if (order != null && order.Type != OrderType.Market)
+                    {
+                        // can't wait for non-market orders to fill
+                        return;
+                    }
                     Thread.Sleep(1);
                 }
                 else
