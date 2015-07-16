@@ -560,7 +560,7 @@ namespace QuantConnect.Algorithm
             {
                 var marginPerShare = marginRequired/quantity;
                 quantity = (int) Math.Truncate(deltaMarginToTrade/marginPerShare);
-                marketOrder.Quantity = quantity;
+                marketOrder = new MarketOrder(symbol, quantity, Time, type: security.Type);
                 if (quantity == 0)
                 {
                     // can't order anything

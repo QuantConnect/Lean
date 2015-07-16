@@ -23,6 +23,14 @@ namespace QuantConnect.Orders
     public class MarketOnCloseOrder : Order
     {
         /// <summary>
+        /// MarketOnClose Order Type
+        /// </summary>
+        public override OrderType Type
+        {
+            get { return OrderType.MarketOnClose; }
+        }
+
+        /// <summary>
         /// Value of the order at limit price if a limit order, or market price if a market order.
         /// </summary>
         public override decimal Value
@@ -34,7 +42,6 @@ namespace QuantConnect.Orders
         /// Intiializes a new instance of the <see cref="MarketOnCloseOrder"/> class.
         /// </summary>
         public MarketOnCloseOrder()
-            : base(OrderType.MarketOnClose)
         {
         }
 
@@ -47,7 +54,7 @@ namespace QuantConnect.Orders
         /// <param name="time">The current time</param>
         /// <param name="tag">A user defined tag for the order</param>
         public MarketOnCloseOrder(string symbol, SecurityType type, int quantity, DateTime time, string tag = "")
-            : base(symbol, quantity, OrderType.MarketOnClose, time, tag, type)
+            : base(symbol, quantity, time, tag, type)
         {
         }
 

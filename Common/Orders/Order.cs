@@ -27,62 +27,62 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Order ID.
         /// </summary>
-        public int Id;
+        public int Id { get; internal set; }
 
         /// <summary>
         /// Order id to process before processing this order.
         /// </summary>
-        public int ContingentId;
+        public int ContingentId { get; internal set; }
 
         /// <summary>
         /// Brokerage Id for this order for when the brokerage splits orders into multiple pieces
         /// </summary>
-        public List<long> BrokerId;
+        public List<long> BrokerId { get; internal set; }
 
         /// <summary>
         /// Symbol of the Asset
         /// </summary>
-        public string Symbol;
+        public string Symbol { get; internal set; }
         
         /// <summary>
         /// Price of the Order.
         /// </summary>
-        public decimal Price;
+        public decimal Price { get; internal set; }
 
         /// <summary>
         /// Time the order was created.
         /// </summary>
-        public DateTime Time;
+        public DateTime Time { get; internal set; }
 
         /// <summary>
         /// Number of shares to execute.
         /// </summary>
-        public int Quantity;
+        public int Quantity { get; internal set; }
 
         /// <summary>
         /// Order Type
         /// </summary>
-        public OrderType Type { get; private set; }
+        public abstract OrderType Type { get; }
 
         /// <summary>
         /// Status of the Order
         /// </summary>
-        public OrderStatus Status;
+        public OrderStatus Status { get; internal set; }
 
         /// <summary>
         /// Order duration - GTC or Day. Day not supported in backtests.
         /// </summary>
-        public OrderDuration Duration = OrderDuration.GTC;
+        public OrderDuration Duration { get; internal set; }
 
         /// <summary>
         /// Tag the order with some custom data
         /// </summary>
-        public string Tag;
+        public string Tag { get; internal set; }
 
         /// <summary>
         /// The symbol's security type
         /// </summary>
-        public SecurityType SecurityType = SecurityType.Equity;
+        public SecurityType SecurityType { get; internal set; }
 
         /// <summary>
         /// Order Direction Property based off Quantity.
@@ -123,11 +123,10 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
-        protected Order(OrderType type)
+        protected Order()
         {
             Time = new DateTime();
             Price = 0;
-            Type = type;
             Quantity = 0;
             Symbol = "";
             Status = OrderStatus.None;
@@ -144,14 +143,12 @@ namespace QuantConnect.Orders
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
         /// <param name="type">Type of the security order</param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
-        /// <param name="order">Order type (market, limit or stoploss order)</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        protected Order(string symbol, int quantity, OrderType order, DateTime time, string tag = "", SecurityType type = SecurityType.Base)
+        protected Order(string symbol, int quantity, DateTime time, string tag = "", SecurityType type = SecurityType.Base)
         {
             Time = time;
             Price = 0;
-            Type = order;
             Quantity = quantity;
             Symbol = symbol;
             Status = OrderStatus.None;
@@ -168,14 +165,12 @@ namespace QuantConnect.Orders
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
         /// <param name="type"></param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
-        /// <param name="order">Order type (market, limit or stoploss order)</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        protected Order(string symbol, SecurityType type, int quantity, OrderType order, DateTime time, string tag = "") 
+        protected Order(string symbol, SecurityType type, int quantity, DateTime time, string tag = "") 
         {
             Time = time;
             Price = 0;
-            Type = order;
             Quantity = quantity;
             Symbol = symbol;
             Status = OrderStatus.None;
@@ -249,7 +244,6 @@ namespace QuantConnect.Orders
             order.Status = Status;
             order.Symbol = Symbol;
             order.Tag = Tag;
-            order.Type = Type;
         }
 
         /// <summary>
