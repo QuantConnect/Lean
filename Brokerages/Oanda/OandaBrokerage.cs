@@ -871,7 +871,7 @@ namespace QuantConnect.Brokerages.Oanda
                     throw new NotImplementedException("The Oanda order type " + order.type + " is not implemented.");
             }
             qcOrder.Symbol = order.instrument;
-            qcOrder.Quantity = order.units;
+            qcOrder.Quantity = ConvertQuantity(order);
             qcOrder.SecurityType = _instrumentSecurityTypeMap[order.instrument];
 
             //TODO need further thought on how to translate this to QC, typically any open order 
@@ -882,6 +882,28 @@ namespace QuantConnect.Brokerages.Oanda
             qcOrder.Time = XmlConvert.ToDateTime(order.time, XmlDateTimeSerializationMode.Utc);
             
             return qcOrder;
+        }
+
+        /// <summary>
+        /// Converts the Oanda order quantity into a qc quantity
+        /// </summary>
+        /// <remarks>
+        /// Oanda quantities are always positive and use the direction to denote +/-, where as qc
+        /// order quantities determine the direction
+        /// </remarks>
+        protected int ConvertQuantity(DataType.Order order)
+        {
+            switch (order.side)
+            {
+                case "buy":
+                    return order.units;
+
+                case "sell":
+                    return -order.units;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
     }
 }

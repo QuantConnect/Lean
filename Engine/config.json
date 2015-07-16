@@ -60,7 +60,7 @@
     "oanda-access-token": "",
     "oanda-refresh-token": "",
     "oanda-tokens-issued-at": "",
-    "oanda-lifespan": "100000",
+    "oanda-lifespan": "",
     "oanda-environment": "practice",
 
     "environments": {
