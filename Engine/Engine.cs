@@ -351,7 +351,7 @@ namespace QuantConnect.Lean.Engine
                                 var profitLoss =
                                     new SortedDictionary<DateTime, decimal>(algorithm.Transactions.TransactionRecord);
                                 statistics = Statistics.Statistics.Generate(equity, profitLoss, performance,
-                                    _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, 252);
+                                    _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, algorithm.Transactions.OrdersCount, 252);
                             }
                         }
                         catch (Exception err)

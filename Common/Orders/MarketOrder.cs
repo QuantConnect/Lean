@@ -26,8 +26,15 @@ namespace QuantConnect.Orders
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
         public MarketOrder()
-            : base(OrderType.Market)
         {
+        }
+
+        /// <summary>
+        /// Market Order Type
+        /// </summary>
+        public override OrderType Type
+        {
+            get { return OrderType.Market; }
         }
 
         /// <summary>
@@ -35,10 +42,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public override decimal Value
         {
-            get
-            {
-                return Convert.ToDecimal(Quantity) * Price;
-            }
+            get { return Convert.ToDecimal(Quantity)*Price; }
         }
 
         /// <summary>
@@ -49,8 +53,8 @@ namespace QuantConnect.Orders
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public MarketOrder(string symbol, int quantity, DateTime time, string tag = "", SecurityType type = SecurityType.Base) :
-            base(symbol, quantity, OrderType.Market, time, tag, type)
+        public MarketOrder(string symbol, int quantity, DateTime time, string tag = "", SecurityType type = SecurityType.Base)
+            : base(symbol, quantity, time, tag, type)
         {
         }
 

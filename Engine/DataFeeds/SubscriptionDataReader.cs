@@ -129,7 +129,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _isLiveMode = isLiveMode;
 
             // do we have factor tables?
-            _hasScaleFactors = FactorFile.HasScalingFactors(config.Symbol, config.Market);
+            if (!security.IsDynamicallyLoadedData)
+            {
+                _hasScaleFactors = FactorFile.HasScalingFactors(config.Symbol, config.Market);
+            }
 
             //Save the type of data we'll be getting from the source.
 
