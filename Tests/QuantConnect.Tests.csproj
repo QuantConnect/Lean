@@ -65,6 +65,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AlgorithmRunner.cs" />
+    <Compile Include="Algorithm\AlgorithmTradingTests.cs" />
     <Compile Include="Brokerages\BrokerageTests.cs" />
     <Compile Include="Brokerages\HoldingsProvider.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageDataQueueHandlerTest.cs" />
@@ -111,11 +112,11 @@
     <Compile Include="RegressionTests.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />
-    <None Include="Algorithm\Test_Cash.cs" />
-    <None Include="Algorithm\Test_LiveAlgorithm.cs" />
-    <None Include="Algorithm\Test_MixedAssets.cs" />
-    <None Include="Algorithm\Test_OnEndOfDay.cs" />
-    <None Include="Algorithm\Test_SetHolding.cs" />
+    <None Include="RegressionAlgorithms\Test_Cash.cs" />
+    <None Include="RegressionAlgorithms\Test_LiveAlgorithm.cs" />
+    <None Include="RegressionAlgorithms\Test_MixedAssets.cs" />
+    <None Include="RegressionAlgorithms\Test_OnEndOfDay.cs" />
+    <None Include="RegressionAlgorithms\Test_SetHolding.cs" />
     <Compile Include="AssemblyInitialize.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageFactoryTests.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageTests.cs" />

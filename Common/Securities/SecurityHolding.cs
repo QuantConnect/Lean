@@ -161,10 +161,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal HoldingsValue
         {
-            get
-            {
-                return _price * Convert.ToDecimal(Quantity);
-            }
+            get { return _price*Convert.ToDecimal(Quantity); }
         }
 
         /// <summary>
@@ -173,12 +170,9 @@ namespace QuantConnect.Securities
         /// <seealso cref="HoldingsValue"/>
         public virtual decimal AbsoluteHoldingsValue
         {
-            get
-            {
-                return Math.Abs(HoldingsValue);
-            }
+            get { return Math.Abs(HoldingsValue); }
         }
-        
+
         /// <summary>
         /// Boolean flat indicating if we hold any of the security
         /// </summary>
