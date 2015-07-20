@@ -329,17 +329,12 @@ namespace QuantConnect.Securities
         {
             get
             {
-                // we can't include forex in this calculation since we would be double account with respect to the cash book
-                var totalUnrealizedProfitWithoutForex = (from position in Securities.Values
-                                                         where position.Type != SecurityType.Forex
-                                                         select position.Holdings.UnrealizedProfit).Sum();
+                // we can't include forex in this calculation since we would be double accounting with respect to the cash book
+                var totalHoldingsValueWithoutForex = (from position in Securities.Values
+                                                      where position.Type != SecurityType.Forex
+                                                      select position.Holdings.HoldingsValue).Sum();
 
-                // we can't include forex in this calculation since we would be double account with respect to the cash book
-                var totalHoldingsCostWithoutForex = (from position in Securities.Values
-                                                     where position.Type != SecurityType.Forex
-                                                     select position.Holdings.AbsoluteHoldingsCost).Sum();
-
-                return CashBook.TotalValueInAccountCurrency + totalUnrealizedProfitWithoutForex + totalHoldingsCostWithoutForex;
+                return CashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForex;
             }
         }
 

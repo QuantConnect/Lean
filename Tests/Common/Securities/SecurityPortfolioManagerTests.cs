@@ -326,6 +326,60 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(sufficientCapital);
         }
 
+        [Test]
+        public void SellingShortFromZeroAddsToCash()
+        {
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            portfolio.SetCash(0);
+
+            securities.Add("AAPL", new Security(SecurityExchangeHours.AlwaysOpen, CreateTradeBarDataConfig(SecurityType.Equity, "AAPL"), 1));
+
+            var fill = new OrderEvent(1, "AAPL", OrderStatus.Filled, 100, -100);
+            portfolio.ProcessFill(fill);
+
+            Assert.AreEqual(100 * 100, portfolio.Cash);
+            Assert.AreEqual(-100, securities["AAPL"].Holdings.Quantity);
+        }
+
+        [Test]
+        public void SellingShortFromLongAddsToCash()
+        {
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            portfolio.SetCash(0);
+
+            securities.Add("AAPL", new Security(SecurityExchangeHours.AlwaysOpen, CreateTradeBarDataConfig(SecurityType.Equity, "AAPL"), 1));
+            securities["AAPL"].Holdings.SetHoldings(100, 100);
+
+            var fill = new OrderEvent(1, "AAPL", OrderStatus.Filled, 100, -100);
+            portfolio.ProcessFill(fill);
+
+            Assert.AreEqual(100 * 100, portfolio.Cash);
+            Assert.AreEqual(0, securities["AAPL"].Holdings.Quantity);
+        }
+
+        [Test]
+        public void SellingShortFromShortAddsToCash()
+        {
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            portfolio.SetCash(0);
+
+            securities.Add("AAPL", new Security(SecurityExchangeHours.AlwaysOpen, CreateTradeBarDataConfig(SecurityType.Equity, "AAPL"), 1));
+            securities["AAPL"].Holdings.SetHoldings(100, -100);
+
+            var fill = new OrderEvent(1, "AAPL", OrderStatus.Filled, 100, -100);
+            Assert.AreEqual(-100, securities["AAPL"].Holdings.Quantity);
+            portfolio.ProcessFill(fill);
+
+            Assert.AreEqual(100 * 100, portfolio.Cash);
+            Assert.AreEqual(-200, securities["AAPL"].Holdings.Quantity);
+        }
+
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, string symbol)
         {
             if (type == SecurityType.Equity)
