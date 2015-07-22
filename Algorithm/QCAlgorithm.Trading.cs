@@ -522,69 +522,83 @@ namespace QuantConnect.Algorithm
                     }
                 }
             }
-            
-            //Find delta in margin to trade:
-            // 1. Eg. 50% * $100k = $50k Target        2. Eg. 200% * 100k = $200k Target
-            var targetPortfolioValue = percentage*Portfolio.TotalPortfolioValue;
-            // 1. Eg. $0 Holdings Currently.           2. Eg. -$50k Currently.
-            var currentPortfolioValue = security.Holdings.HoldingsValue;
-            // Delta in holdings value:
-            var deltaRequired = targetPortfolioValue - currentPortfolioValue;
-            //Convert value delta back to unlevered margin move:
-            var deltaMarginToTrade = Math.Abs(deltaRequired/security.MarginModel.GetLeverage(security));
-            //Adjust direction based on delta required:
-            var direction = (deltaRequired > 0) ? OrderDirection.Buy : OrderDirection.Sell;
 
-            // Since we can't assume anything about the fee structure and the relative size of fees in
-            // relation to the order size we need to perform some root finding. In general we'll only need
-            // a two loops to compute a correct value. Some exotic fee structures may require more searching.
-
-            // compute the margin required for a single share
-            var quantity = 1;
-            var marketOrder = new MarketOrder(symbol, quantity, Time, type: security.Type);
-            var marginRequiredForSingleShare = security.MarginModel.GetInitialMarginRequiredForOrder(security, marketOrder);
-
-            // we can't do anything if we don't have data yet
-            if (security.Price == 0) return;
-
-            // we can't even afford one more share
-            if (deltaMarginToTrade < marginRequiredForSingleShare) return;
-
-            // we want marginRequired to end up between this and marginRemaining
-            var marginRequiredLowerThreshold = deltaMarginToTrade - marginRequiredForSingleShare;
-
-            // iterate until we get a decent estimate, max out at 10 loops.
-            var loops = 0;
-            var marginRequired = marginRequiredForSingleShare;
-            while (marginRequired > deltaMarginToTrade || marginRequired < marginRequiredLowerThreshold)
+            //Only place trade if we've got > 1 share to order.
+            var quantity = CalculateOrderQuantity(symbol, percentage);
+            if (Math.Abs(quantity) > 0)
             {
-                var marginPerShare = marginRequired/quantity;
-                quantity = (int) Math.Truncate(deltaMarginToTrade/marginPerShare);
-                marketOrder = new MarketOrder(symbol, quantity, Time, type: security.Type);
-                if (quantity == 0)
-                {
-                    // can't order anything
-                    return;
-                }
-                marginRequired = security.MarginModel.GetInitialMarginRequiredForOrder(security, marketOrder);
+                MarketOrder(symbol, quantity, false, tag);
+            }
+        }
 
-                // no need to iterate longer than 10
-                if (++loops > 10) break;
+        /// <summary>
+        /// Calculate the order quantity to achieve target-percent holdings.
+        /// </summary>
+        /// <param name="symbol">Security object we're asking for</param>
+        /// <param name="target">Target percentag holdings</param>
+        /// <returns>Order quantity to achieve this percentage</returns>
+        public int CalculateOrderQuantity(string symbol, double target)
+        {
+            return CalculateOrderQuantity(symbol, (decimal)target);
+        }
+
+        /// <summary>
+        /// Calculate the order quantity to achieve target-percent holdings.
+        /// </summary>
+        /// <param name="symbol">Security object we're asking for</param>
+        /// <param name="target">Target percentag holdings, this is an unlevered value, so 
+        /// if you have 2x leverage and request 100% holdings, it will utilize half of the 
+        /// available margin</param>
+        /// <returns>Order quantity to achieve this percentage</returns>
+        public int CalculateOrderQuantity(string symbol, decimal target)
+        {
+            var security = Securities[symbol];
+
+            // this is the value in dollars that we want our holdings to have
+            var targetPortfolioValue = target*Portfolio.TotalPortfolioValue;
+
+            var price = security.Holdings.Price;
+            var quantity = security.Holdings.Quantity;
+            var currentHoldingsValue = price*quantity;
+
+            // remove directionality, we'll work in the land of absolutes
+            var targetOrderValue = Math.Abs(targetPortfolioValue - currentHoldingsValue);
+            var direction = targetPortfolioValue > currentHoldingsValue ? OrderDirection.Buy : OrderDirection.Sell;
+
+
+            // define lower and upper thresholds for the iteration
+            var lowerThreshold = targetOrderValue - price/2;
+            var upperThreshold = targetOrderValue + price/2;
+
+            // continue iterating while  we're still not within the specified thresholds
+            var iterations = 0;
+            var orderQuantity = 0;
+            decimal orderValue = 0;
+            while ((orderValue < lowerThreshold || orderValue > upperThreshold) && iterations < 10)
+            {
+                // find delta from where we are to where we want to be
+                var delta = targetOrderValue - orderValue;
+                // use delta value to compute a change in quantity required
+                var deltaQuantity = (int)(delta / price);
+
+                orderQuantity += deltaQuantity;
+
+                // recompute order fees
+                var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime, type: security.Type);
+                var fee = security.TransactionModel.GetOrderFee(security, order);
+
+                orderValue = Math.Abs(order.GetValue(price)) + fee;
+
+                // we need to add the fee in as well, even though it's not value, it's still a cost for the transaction
+                // and we need to account for it to be sure we can make the trade produced by this method, imagine
+                // set holdings 100% with 1x leverage, but a high fee structure, it quickly becomes necessary to include
+                // otherwise the result of this function will be inactionable.
+
+                iterations++;
             }
 
-            // nothing to change
-            if (quantity == 0)
-            {
-                return;
-            }
-
-            // adjust for going short
-            if (direction == OrderDirection.Sell)
-            {
-                quantity *= -1;
-            }
-
-            MarketOrder(symbol, quantity, false, tag);
+            // add directionality back in
+            return (direction == OrderDirection.Sell ? -1 : 1) * orderQuantity;
         }
 
         /// <summary>

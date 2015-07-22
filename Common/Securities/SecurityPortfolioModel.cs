@@ -63,17 +63,11 @@ namespace QuantConnect.Securities
                     {
                         //Closing up towards Zero.
                         lastTradeProfit = (fill.FillPrice - averageHoldingsPrice) * fill.AbsoluteFillQuantity;
-
-                        //New cash += profitLoss + costOfAsset/leverage.
-                        portfolio.CashBook[CashBook.AccountCurrency].Quantity += lastTradeProfit + ((averageHoldingsPrice * fill.AbsoluteFillQuantity));
                     }
                     else
                     {
                         //Closing up to Neg/Short Position (selling more than we have) - Only calc profit on the stock we have to sell.
                         lastTradeProfit = (fill.FillPrice - averageHoldingsPrice) * quantityHoldings;
-
-                        //New cash += profitLoss + costOfAsset/leverage.
-                        portfolio.CashBook[CashBook.AccountCurrency].Quantity += lastTradeProfit + ((averageHoldingsPrice * quantityHoldings));
                     }
                     closedPosition = true;
                 }
@@ -84,17 +78,11 @@ namespace QuantConnect.Securities
                     {
                         //Reducing the stock we have, and enough stock on hand to process order.
                         lastTradeProfit = (averageHoldingsPrice - fill.FillPrice) * fill.AbsoluteFillQuantity;
-
-                        //New cash += profitLoss + costOfAsset/leverage.
-                        portfolio.CashBook[CashBook.AccountCurrency].Quantity += lastTradeProfit + ((averageHoldingsPrice * fill.AbsoluteFillQuantity));
                     }
                     else
                     {
                         //Increasing stock holdings, short to positive through zero, but only calc profit on stock we Buy.
                         lastTradeProfit = (averageHoldingsPrice - fill.FillPrice) * absoluteHoldingsQuantity;
-
-                        //New cash += profitLoss + costOfAsset/leverage.
-                        portfolio.CashBook[CashBook.AccountCurrency].Quantity += lastTradeProfit + ((averageHoldingsPrice * absoluteHoldingsQuantity));
                     }
                     closedPosition = true;
                 }
@@ -108,6 +96,7 @@ namespace QuantConnect.Securities
                     portfolio.AddTransactionRecord(security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), lastTradeProfit - 2 * feeThisOrder);
                 }
 
+                portfolio.CashBook[CashBook.AccountCurrency].Quantity -= (fill.FillPrice * Convert.ToDecimal(fill.FillQuantity));
 
                 //UPDATE HOLDINGS QUANTITY, AVG PRICE:
                 //Currently NO holdings. The order is ALL our holdings.
@@ -116,7 +105,6 @@ namespace QuantConnect.Securities
                     //First transaction just subtract order from cash and set our holdings:
                     averageHoldingsPrice = fill.FillPrice;
                     quantityHoldings = fill.FillQuantity;
-                    portfolio.CashBook[CashBook.AccountCurrency].Quantity -= (fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity));
                 }
                 else if (isLong)
                 {
@@ -129,7 +117,6 @@ namespace QuantConnect.Securities
                             //Add the new quantity:
                             quantityHoldings += fill.FillQuantity;
                             //Subtract this order from cash:
-                            portfolio.CashBook[CashBook.AccountCurrency].Quantity -= (fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity));
                             break;
 
                         case OrderDirection.Sell:
@@ -138,7 +125,6 @@ namespace QuantConnect.Securities
                             {
                                 //If we've now passed through zero from selling stock: new avg price:
                                 averageHoldingsPrice = fill.FillPrice;
-                                portfolio.CashBook[CashBook.AccountCurrency].Quantity -= (fill.FillPrice * Math.Abs(quantityHoldings));
                             }
                             else if (quantityHoldings == 0)
                             {
@@ -159,7 +145,6 @@ namespace QuantConnect.Securities
                             {
                                 //If we were short but passed through zero, new average price is what we paid. The short position was closed.
                                 averageHoldingsPrice = fill.FillPrice;
-                                portfolio.CashBook[CashBook.AccountCurrency].Quantity -= (fill.FillPrice * Math.Abs(quantityHoldings));
                             }
                             else if (quantityHoldings == 0)
                             {
@@ -173,7 +158,6 @@ namespace QuantConnect.Securities
                             //      dAvg = (-500 + -1000) / -200 = 7.5
                             averageHoldingsPrice = ((averageHoldingsPrice * quantityHoldings) + (Convert.ToDecimal(fill.FillQuantity) * fill.FillPrice)) / (quantityHoldings + (decimal)fill.FillQuantity);
                             quantityHoldings += fill.FillQuantity;
-                            portfolio.CashBook[CashBook.AccountCurrency].Quantity -= (fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity));
                             break;
                     }
                 }
