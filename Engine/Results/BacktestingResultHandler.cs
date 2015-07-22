@@ -654,6 +654,17 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Sample the current benchmark performance directly with a time-value pair.
+        /// </summary>
+        /// <param name="time">Current backtest date.</param>
+        /// <param name="value">Current benchmark value.</param>
+        /// <seealso cref="IResultHandler.Sample"/>
+        public void SampleBenchmark(DateTime time, decimal value)
+        {
+            Sample("Benchmark", ChartType.Stacked, "Benchmark", SeriesType.Line, time, value);
+        }
+
+        /// <summary>
         /// Add a range of samples from the users algorithms to the end of our current list.
         /// </summary>
         /// <param name="updates">Chart updates since the last request.</param>
