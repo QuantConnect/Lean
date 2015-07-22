@@ -209,49 +209,6 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Secondary (internal) request handler. differs from primary in that parameters are placed in the body instead of the request string
-        /// </summary>
-        /// <typeparam name="T">response type</typeparam>
-        /// <param name="method">method to use (usually POST or PATCH)</param>
-        /// <param name="requestParams">the parameters to pass in the request body</param>
-        /// <param name="requestString">the request to make</param>
-        /// <returns>response, via type T</returns>
-        private async Task<T> MakeRequestWithBody<T>(string method, Dictionary<string, string> requestParams, string requestString)
-        {
-            // Create the body
-            var requestBody = CreateParamString(requestParams);
-            var request = WebRequest.CreateHttp(requestString);
-            request.Headers[HttpRequestHeader.Authorization] = "Bearer " + AccessToken;
-            request.Method = method;
-            request.ContentType = "application/x-www-form-urlencoded";
-
-            using (var writer = new StreamWriter(await request.GetRequestStreamAsync()))
-            {
-                // Write the body
-                await writer.WriteAsync(requestBody);
-            }
-
-            // Handle the response
-            try
-            {
-                using (var response = await request.GetResponseAsync())
-                {
-                    var serializer = new DataContractJsonSerializer(typeof(T));
-                    return (T)serializer.ReadObject(response.GetResponseStream());
-                }
-            }
-            catch (WebException ex)
-            {
-                var response = (HttpWebResponse)ex.Response;
-                var stream = new StreamReader(response.GetResponseStream());
-                var result = stream.ReadToEnd();
-                throw new Exception(result);
-            }
-        }
-
-
-
-        /// <summary>
         /// Places a new order and assigns a new broker ID to the order
         /// </summary>
         /// <param name="order">The order to be placed</param>
@@ -275,6 +232,21 @@ namespace QuantConnect.Brokerages.Oanda
 
             if (postOrderResponse != null)
             {
+                if (postOrderResponse.tradeOpened != null)
+                {
+                    order.BrokerId.Add(postOrderResponse.tradeOpened.id);
+                }
+                
+                if (postOrderResponse.tradeReduced != null)
+                {
+                    order.BrokerId.Add(postOrderResponse.tradeReduced.id);
+                }
+
+                if (postOrderResponse.orderOpened != null)
+                {
+                    order.BrokerId.Add(postOrderResponse.orderOpened.id);
+                }
+
                 OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Submitted });
             } 
             else
@@ -294,7 +266,10 @@ namespace QuantConnect.Brokerages.Oanda
                     var tradeListResponse = GetTradeListAsync(requestParams).Result;
                     if (tradeListResponse.trades.Any(trade => trade.id == tradeOpenedId))
                     {
+                        //TODO: we need to include in the broker id the orders....
+                        order.BrokerId.Add(tradeOpenedId);
                         OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Filled });
+
                     }
                 }
 
@@ -494,7 +469,7 @@ namespace QuantConnect.Brokerages.Oanda
         public async Task<DataType.Order> UpdateOrderAsync(int orderId, Dictionary<string, string> requestParams)
         {
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
-            return await MakeRequestAsync<DataType.Order>(requestString, "PATCH", requestParams);
+            return await MakeRequestWithBody<DataType.Order>(requestString, "PATCH", requestParams);
         }
 
         /// <summary>
@@ -528,7 +503,7 @@ namespace QuantConnect.Brokerages.Oanda
         public async Task<PostOrderResponse> PostOrderAsync(Dictionary<string, string> requestParams)
         {
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders";
-            return await MakeRequestWithBody<PostOrderResponse>("POST", requestParams, requestString);
+            return await MakeRequestWithBody<PostOrderResponse>(requestString, "POST", requestParams);
         }
 
         /// <summary>
@@ -753,6 +728,47 @@ namespace QuantConnect.Brokerages.Oanda
                 var stream = GetResponseStream(ex.Response);
                 var reader = new StreamReader(stream);
                 var result = reader.ReadToEnd();
+                throw new Exception(result);
+            }
+        }
+
+        /// <summary>
+        /// Secondary (internal) request handler. differs from primary in that parameters are placed in the body instead of the request string
+        /// </summary>
+        /// <typeparam name="T">response type</typeparam>
+        /// <param name="method">method to use (usually POST or PATCH)</param>
+        /// <param name="requestParams">the parameters to pass in the request body</param>
+        /// <param name="requestString">the request to make</param>
+        /// <returns>response, via type T</returns>
+        private async Task<T> MakeRequestWithBody<T>(string requestString, string method, Dictionary<string, string> requestParams)
+        {
+            // Create the body
+            var requestBody = CreateParamString(requestParams);
+            var request = WebRequest.CreateHttp(requestString);
+            request.Headers[HttpRequestHeader.Authorization] = "Bearer " + AccessToken;
+            request.Method = method;
+            request.ContentType = "application/x-www-form-urlencoded";
+
+            using (var writer = new StreamWriter(await request.GetRequestStreamAsync()))
+            {
+                // Write the body
+                await writer.WriteAsync(requestBody);
+            }
+
+            // Handle the response
+            try
+            {
+                using (var response = await request.GetResponseAsync())
+                {
+                    var serializer = new DataContractJsonSerializer(typeof(T));
+                    return (T)serializer.ReadObject(response.GetResponseStream());
+                }
+            }
+            catch (WebException ex)
+            {
+                var response = (HttpWebResponse)ex.Response;
+                var stream = new StreamReader(response.GetResponseStream());
+                var result = stream.ReadToEnd();
                 throw new Exception(result);
             }
         }
