@@ -284,8 +284,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>The order with the specified id, or null if no match is found</returns>
         public Order GetOrderById(int orderId)
         {
-            Order order;
-            return _orders.TryGetValue(orderId, out order) ? order.Clone() : null;
+            Order order = GetOrderByIdInternal(orderId);
+            return order != null ? order.Clone() : null;
         }
 
         private Order GetOrderByIdInternal(int orderId)
@@ -614,6 +614,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // modify the values of the order object
             order.ApplyUpdateOrderRequest(request);
+            ticket.SetOrder(order);
 
             bool orderUpdated;
             try
@@ -666,7 +667,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 return OrderResponse.InvalidStatus(request, order);
             }
-            
+
+            ticket.SetOrder(order);
+
             bool orderCanceled;
             try
             {
