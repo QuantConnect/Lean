@@ -169,6 +169,11 @@ namespace QuantConnect.CoarseUniverseGenerator
                         writer.WriteLine(coarseFileLine);
                     }
                 }
+
+                if (symbols%10 == 0)
+                {
+                    Console.WriteLine(DateTime.UtcNow.ToString("o") + ": Completed processing {0} symbols. Current elapsed: " + stopwatch.Elapsed.TotalSeconds.ToString("0.00"), symbols);
+                }
             }
 
             // dispose all the writers at the end of processing
