@@ -1,0 +1,13 @@
+﻿{
+    //-------------------------------------------
+    // Configuration for the Coarse Universe Generator
+    //-------------------------------------------
+
+    "data-directory": "C:\\Lean\\Data",
+
+    // set to true to keep the process running and each day
+    // at the specified update-time-of-day it will wake up
+    // and perform the update
+    "update-mode": false,
+    "update-time-of-day": "5:00"
+}
