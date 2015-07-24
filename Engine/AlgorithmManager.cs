@@ -236,7 +236,7 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 //Update algorithm state after capturing performance from previous day
-
+                
                 //Set the algorithm and real time handler's time
                 algorithm.SetDateTime(time);
                 realtime.SetTime(time);
@@ -311,10 +311,10 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 //Trigger the data events: Invoke the types we have data for:
-                var newBars = new TradeBars(time);
-                var newTicks = new Ticks(time);
-                var newDividends = new Dividends(time);
-                var newSplits = new Splits(time);
+                var newBars = new TradeBars(algorithm.Time);
+                var newTicks = new Ticks(algorithm.Time);
+                var newDividends = new Dividends(algorithm.Time);
+                var newSplits = new Splits(algorithm.Time);
 
                 //Invoke all non-tradebars, non-ticks methods and build up the TradeBars and Ticks dictionaries
                 // --> i == Subscription Configuration Index, so we don't need to compare types.
@@ -467,7 +467,7 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 // EVENT HANDLER v3.0 -- all data in a single event
-                var slice = new Slice(time, newData.Values.SelectMany(x => x),
+                var slice = new Slice(algorithm.Time, newData.Values.SelectMany(x => x),
                     newBars.Count == 0 ? null : newBars,
                     newTicks.Count == 0 ? null : newTicks,
                     newSplits.Count == 0 ? null : newSplits,
