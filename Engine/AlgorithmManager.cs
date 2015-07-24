@@ -239,7 +239,7 @@ namespace QuantConnect.Lean.Engine
                 
                 //Set the algorithm and real time handler's time
                 algorithm.SetDateTime(time);
-                realtime.SetTime(time);
+                realtime.SetTime(algorithm.Time);
 
                 //On each time step push the real time prices to the cashbook so we can have updated conversion rates
                 algorithm.Portfolio.CashBook.Update(newData);
