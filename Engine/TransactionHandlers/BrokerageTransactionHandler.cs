@@ -200,7 +200,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             try
             {
                 //Update the order from the behaviour
-                var order = GetOrderById(request.OrderId);
+                var order = GetOrderByIdInternal(request.OrderId);
                 if (order == null)
                 {
                     // can't update an order that doesn't exist!
@@ -248,7 +248,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             try
             {
                 //Error check
-                var order = GetOrderById(request.OrderId);
+                var order = GetOrderByIdInternal(request.OrderId);
                 if (order == null)
                 {
                     Log.Error("BrokerageTransactionHandler.CancelOrder(): Cannot find this id.");
@@ -284,8 +284,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>The order with the specified id, or null if no match is found</returns>
         public Order GetOrderById(int orderId)
         {
+            Order order = GetOrderByIdInternal(orderId);
+            return order != null ? order.Clone() : null;
+        }
+
+        private Order GetOrderByIdInternal(int orderId)
+        {
             Order order;
-            return _orders.TryGetValue(orderId, out order) ? order.Clone() : null;
+            return _orders.TryGetValue(orderId, out order) ? order : null;
         }
 
         /// <summary>
@@ -661,9 +667,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 return OrderResponse.InvalidStatus(request, order);
             }
-            
+
             ticket.SetOrder(order);
-            
+
             bool orderCanceled;
             try
             {
@@ -680,6 +686,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 // we failed to cancel the order for some reason
                 order.Status = OrderStatus.Invalid;
             }
+            else
+            {
+                // we succeeded to cancel the order
+                order.Status = OrderStatus.Canceled;
+            }
 
             if (request.Tag != null)
             {
@@ -693,7 +704,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private void HandleOrderEvent(OrderEvent fill)
         {
             // update the order status
-            var order = _algorithm.Transactions.GetOrderById(fill.OrderId);
+            var order = GetOrderByIdInternal(fill.OrderId);
             if (order == null)
             {
                 Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to locate Order with id " + fill.OrderId);
