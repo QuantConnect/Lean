@@ -318,7 +318,7 @@ namespace QuantConnect.Securities
                 //  SPY  | | | | | | | | | | | | | | | | | | | |
                 var currentBar = asset.GetLastData();
                 var localOrderTime = order.Time.ConvertTo(TimeZones.Utc, asset.Exchange.TimeZone);
-                if (localOrderTime >= currentBar.EndTime) return fill;
+                if (currentBar == null || localOrderTime >= currentBar.EndTime) return fill;
 
                 // if the MOO was submitted during market the previous day, wait for a day to turn over
                 if (asset.Exchange.DateTimeIsOpen(localOrderTime) && localOrderTime.Date == asset.LocalTime.Date)
