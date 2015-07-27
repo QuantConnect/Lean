@@ -554,6 +554,9 @@ namespace QuantConnect.Algorithm
         {
             var security = Securities[symbol];
 
+            // can't order it if we don't have data
+            if (security.Price == 0) return 0;
+
             // this is the value in dollars that we want our holdings to have
             var targetPortfolioValue = target*Portfolio.TotalPortfolioValue;
 
