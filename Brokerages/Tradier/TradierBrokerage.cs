@@ -198,6 +198,11 @@ namespace QuantConnect.Brokerages.Tradier
             var method = "TradierBrokerage.Execute." + request.Resource;
             var parameters = request.Parameters.Select(x => x.Name + ": " + x.Value);
 
+            if (attempts != 0)
+            {
+                Log.Trace(method + "(): Begin attempt " + attempts);
+            }
+
             lock (_lockAccessCredentials)
             {
                 var client = new RestClient(RequestEndpoint);
