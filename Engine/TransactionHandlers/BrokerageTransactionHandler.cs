@@ -275,6 +275,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             return ticket;
         }
 
+        /// <summary>
+        /// Gets and enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// </summary>
+        /// <param name="filter">The filter predicate used to find the required order tickets</param>
+        /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
+        public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)
+        {
+            return _orderTickets.Select(x => x.Value).Where(filter ?? (x => true));
+        }
+
         #endregion
 
         /// <summary>

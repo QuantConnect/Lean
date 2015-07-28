@@ -160,6 +160,16 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets and enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// </summary>
+        /// <param name="filter">The filter predicate used to find the required order tickets</param>
+        /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
+        public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)
+        {
+            return _orderProcessor.GetOrderTickets(filter ?? (x => true));
+        }
+
+        /// <summary>
         /// Wait for a specific order to be either Filled, Invalid or Canceled
         /// </summary>
         /// <param name="orderId">The id of the order to wait for</param>
