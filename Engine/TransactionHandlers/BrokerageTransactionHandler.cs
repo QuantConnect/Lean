@@ -407,6 +407,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return;
             }
 
+            Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Enter");
+
             // every morning flip this switch back
             if (_syncedLiveBrokerageCashToday && DateTime.Now.Date != LastSyncDate)
             {
@@ -443,6 +445,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _orders.TryRemove(item.Key, out value);
                 _orderTickets.TryRemove(item.Key, out ticket);
             }
+
+            Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Exit");
         }
 
         /// <summary>

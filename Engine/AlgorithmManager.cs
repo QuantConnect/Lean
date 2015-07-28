@@ -474,7 +474,17 @@ namespace QuantConnect.Lean.Engine
                     newDividends.Count == 0 ? null : newDividends
                     );
 
-                algorithm.OnData(slice);
+                try
+                {
+                    algorithm.OnData(slice);
+                }
+                catch (Exception err)
+                {
+                    algorithm.RunTimeError = err;
+                    _algorithmState = AlgorithmStatus.RuntimeError;
+                    Log.Error("AlgorithmManager.Run(): RuntimeError: Slice: " + err.Message + " STACK >>> " + err.StackTrace);
+                    return;
+                }
 
                 //If its the historical/paper trading models, wait until market orders have been "filled"
                 // Manually trigger the event handler to prevent thread switch.
