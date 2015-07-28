@@ -390,17 +390,18 @@ namespace QuantConnect.Lean.Engine.Results
                     // Upload the logs every 1-2 minutes; this can be a heavy operation depending on amount of live logging and should probably be done asynchronously.
                     if (DateTime.Now > _nextLogStoreUpdate)
                     {
+                        List<LogEntry> logs;
                         Log.Debug("LiveTradingResultHandler.Update(): Storing log...");
                         lock (_logStoreLock)
                         {
                             var utc = DateTime.UtcNow;
-                            var logs = (from log in _logStore
-                                        where log.Time >= utc.RoundDown(TimeSpan.FromHours(1))
-                                        select log).ToList();
+                            logs = (from log in _logStore
+                                    where log.Time >= utc.RoundDown(TimeSpan.FromHours(1))
+                                    select log).ToList();
                             //Override the log master to delete the old entries and prevent memory creep.
                             _logStore = logs;
-                            StoreLog(logs);
                         }
+                        StoreLog(logs);
                         _nextLogStoreUpdate = DateTime.Now.AddMinutes(2);
                         Log.Debug("LiveTradingResultHandler.Update(): Finished storing log");
                     }
@@ -1018,6 +1019,8 @@ namespace QuantConnect.Lean.Engine.Results
 
             if (time > _nextSample || forceProcess)
             {
+                Log.Debug("LiveTradingResultHandler.ProcessSynchronousEvents(): Enter");
+
                 //Set next sample time: 4000 samples per backtest
                 _nextSample = time.Add(ResamplePeriod);
 
@@ -1122,7 +1125,9 @@ namespace QuantConnect.Lean.Engine.Results
                             break;
                     }
                 }
-            } 
+            }
+
+            Log.Debug("LiveTradingResultHandler.ProcessSynchronousEvents(): Exit");
         }
     } // End Result Handler Thread:
 

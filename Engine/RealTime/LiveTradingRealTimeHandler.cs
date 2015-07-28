@@ -124,6 +124,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
 
             _isActive = false;
+            Log.Trace("LiveTradingRealTimeHandler.Run(): Exiting thread... Exit triggered: " + _exitTriggered);
         }
 
         /// <summary>

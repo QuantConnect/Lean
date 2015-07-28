@@ -287,6 +287,9 @@ namespace QuantConnect.Lean.Engine
                             {
                                 //Debugging at this level is difficult, stack trace needed.
                                 Log.Error("Engine.Run", err);
+                                algorithm.RunTimeError = err;
+                                algorithmManager.SetStatus(AlgorithmStatus.RuntimeError);
+                                return;
                             }
 
                             Log.Trace("Engine.Run(): Exiting Algorithm Manager");
