@@ -33,6 +33,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         public string RequestedSymbol { get; private set; }
 
         /// <summary>
+        /// Gets the last date in the map file which is indicative of a delisting event
+        /// </summary>
+        public DateTime DelistingDate
+        {
+            get { return _data.Keys.Count == 0 ? DateTime.MaxValue : _data.Keys.Last(); }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MapFile"/> class.
         /// </summary>
         public MapFile(string requestedSymbol, IEnumerable<MapFileRow> data)

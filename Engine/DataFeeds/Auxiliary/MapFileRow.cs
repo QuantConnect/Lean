@@ -49,7 +49,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         /// </summary>
         public static IEnumerable<MapFileRow> Read(string symbol, string market)
         {
-            var path = Constants.DataFolder + "equity/" + market + "/map_files/" + symbol.ToLower() + ".csv";
+            var path = Path.Combine(Constants.DataFolder, "equity", market, "map_files", symbol.ToLower() + ".csv");
             foreach (var line in File.ReadAllLines(path))
             {
                 var csv = line.Split(',');

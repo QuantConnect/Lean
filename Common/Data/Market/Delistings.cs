@@ -19,22 +19,22 @@ using System;
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// Collection of splits keyed by string symbol
+    /// Collections of <see cref="Delisting"/> keyed by string symbol
     /// </summary>
-    public class Splits : DataDictionary<Split>
+    public class Delistings : DataDictionary<Delisting>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Splits"/> dictionary
+        /// Initializes a new instance of the <see cref="Delistings"/> dictionary
         /// </summary>
-        public Splits()
+        public Delistings()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Splits"/> dictionary
+        /// Initializes a new instance of the <see cref="Delistings"/> dictionary
         /// </summary>
         /// <param name="frontier">The time associated with the data in this dictionary</param>
-        public Splits(DateTime frontier)
+        public Delistings(DateTime frontier)
             : base(frontier)
         {
         }

@@ -32,7 +32,8 @@ namespace QuantConnect.Data
 
         // aux data
         private readonly Lazy<Splits> _splits;
-        private readonly Lazy<Dividends> _dividends; 
+        private readonly Lazy<Dividends> _dividends;
+        private readonly Lazy<Delistings> _delistings; 
 
         // string -> data   for non-tick data
         // string -> list{data} for tick data
@@ -81,6 +82,14 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Gets the <see cref="Delistings"/> for this slice of data
+        /// </summary>
+        public Delistings Delistings
+        {
+            get { return _delistings.Value; }
+        }
+
+        /// <summary>
         /// Gets the number of symbols held in this slice
         /// </summary>
         public int Count
@@ -112,7 +121,7 @@ namespace QuantConnect.Data
         /// <param name="time">The timestamp for this slice of data</param>
         /// <param name="data">The raw data in this slice</param>
         public Slice(DateTime time, IEnumerable<BaseData> data)
-            : this(time, data, null, null, null, null)
+            : this(time, data, null, null, null, null, null)
         {
         }
 
@@ -125,7 +134,8 @@ namespace QuantConnect.Data
         /// <param name="ticks">This ticks for this slice</param>
         /// <param name="splits">The splits for this slice</param>
         /// <param name="dividends">The dividends for this slice</param>
-        public Slice(DateTime time, IEnumerable<BaseData> data, TradeBars tradeBars, Ticks ticks, Splits splits, Dividends dividends)
+        /// <param name="delistings">The delistings for this slice</param>
+        public Slice(DateTime time, IEnumerable<BaseData> data, TradeBars tradeBars, Ticks ticks, Splits splits, Dividends dividends, Delistings delistings)
         {
             Time = time;
 
@@ -139,6 +149,7 @@ namespace QuantConnect.Data
             // auxiliary data
             _splits = new Lazy<Splits>(() => CreateSplitsCollection(splits));
             _dividends = new Lazy<Dividends>(() => CreateDividendsCollection(dividends));
+            _delistings = new Lazy<Delistings>(() => CreateDelistingsCollection(delistings));
         }
 
         /// <summary>
@@ -316,6 +327,20 @@ namespace QuantConnect.Data
                 dividends[dividend.Symbol] = dividend;
             }
             return dividends;
+        }
+
+        /// <summary>
+        /// Returns the input delistings if non-null, otherwise produces one from the dynamic data dictionary
+        /// </summary>
+        private Delistings CreateDelistingsCollection(Delistings delistings)
+        {
+            if (delistings != null) return delistings;
+            delistings = new Delistings(Time);
+            foreach (var dividend in _data.Value.Values.OfType<Delisting>())
+            {
+                delistings[dividend.Symbol] = dividend;
+            }
+            return delistings;
         }
 
         /// <summary>
