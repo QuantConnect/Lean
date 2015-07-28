@@ -290,6 +290,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private Order GetOrderByIdInternal(int orderId)
         {
+            // this function can be invoked by brokerages when getting open orders, guard against null ref
+            if (_orders == null) return null;
+            
             Order order;
             return _orders.TryGetValue(orderId, out order) ? order : null;
         }
@@ -301,6 +304,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
         public Order GetOrderByBrokerageId(int brokerageId)
         {
+            // this function can be invoked by brokerages when getting open orders, guard against null ref
+            if (_orders == null) return null;
+            
             var order = _orders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
             return order != null ? order.Clone() : null;
         }
