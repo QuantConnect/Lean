@@ -374,8 +374,11 @@ namespace QuantConnect.Securities
 
             try
             {
-                // wait until market closes
-                if (asset.Exchange.ExchangeOpen)
+                var localOrderTime = order.Time.ConvertTo(TimeZones.Utc, asset.Exchange.TimeZone);
+                var nextMarketClose = asset.Exchange.Hours.GetNextMarketClose(localOrderTime, false);
+                
+                // wait until market closes after the order time 
+                if (asset.LocalTime < nextMarketClose)
                 {
                     return fill;
                 }
