@@ -640,6 +640,7 @@ namespace QuantConnect.Lean.Engine
                     var submitOrderRequest = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
                         -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
                     var ticket = algorithm.Transactions.ProcessRequest(submitOrderRequest);
+                    delisting.SetOrderTicket(ticket);
                     delistingTickets.Add(ticket);
                 }
                 else

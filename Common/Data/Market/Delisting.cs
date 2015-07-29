@@ -15,6 +15,7 @@
 */
 
 using System;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Data.Market
 {
@@ -28,6 +29,11 @@ namespace QuantConnect.Data.Market
         /// A <see cref="DelistingType.Warning"/> is sent
         /// </summary>
         public DelistingType Type { get; private set; }
+
+        /// <summary>
+        /// Gets the <see cref="OrderTicket"/> that was submitted to liquidate this position
+        /// </summary>
+        public OrderTicket Ticket { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Delisting"/> class
@@ -52,6 +58,15 @@ namespace QuantConnect.Data.Market
             Time = date;
             Value = price;
             Type = type;
+        }
+
+        /// <summary>
+        /// Sets the <see cref="OrderTicket"/> used to liquidate this position
+        /// </summary>
+        /// <param name="ticket">The ticket that represents the order to liquidate this position</param>
+        public void SetOrderTicket(OrderTicket ticket)
+        {
+            Ticket = ticket;
         }
 
         /// <summary>

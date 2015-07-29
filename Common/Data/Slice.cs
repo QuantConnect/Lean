@@ -308,7 +308,7 @@ namespace QuantConnect.Data
         {
             if (splits != null) return splits;
             splits = new Splits(Time);
-            foreach (var split in _data.Value.Values.OfType<Split>())
+            foreach (var split in _data.Value.Values.Select(x => x.GetData()).OfType<Split>())
             {
                 splits[split.Symbol] = split;
             }
@@ -322,7 +322,7 @@ namespace QuantConnect.Data
         {
             if (dividends != null) return dividends;
             dividends = new Dividends(Time);
-            foreach (var dividend in _data.Value.Values.OfType<Dividend>())
+            foreach (var dividend in _data.Value.Values.Select(x => x.GetData()).OfType<Dividend>())
             {
                 dividends[dividend.Symbol] = dividend;
             }
@@ -336,9 +336,9 @@ namespace QuantConnect.Data
         {
             if (delistings != null) return delistings;
             delistings = new Delistings(Time);
-            foreach (var dividend in _data.Value.Values.OfType<Delisting>())
+            foreach (var delisting in _data.Value.Values.Select(x => x.GetData()).OfType<Delisting>())
             {
-                delistings[dividend.Symbol] = dividend;
+                delistings[delisting.Symbol] = delisting;
             }
             return delistings;
         }

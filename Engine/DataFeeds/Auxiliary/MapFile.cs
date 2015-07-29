@@ -37,7 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         /// </summary>
         public DateTime DelistingDate
         {
-            get { return _data.Keys.Count == 0 ? DateTime.MaxValue : _data.Keys.Last(); }
+            get { return _data.Keys.Count == 0 ? new DateTime(3000, 1, 1) : _data.Keys.Last(); }
         }
 
         /// <summary>
