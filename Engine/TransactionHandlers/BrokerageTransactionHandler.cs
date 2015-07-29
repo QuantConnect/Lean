@@ -742,6 +742,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             //Apply the filled order to our portfolio:
             if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)
             {
+                Log.Debug("BrokerageTransactionHandler.HandleOrderEvent(): " + fill);
                 Interlocked.Exchange(ref _lastFillTimeTicks, DateTime.Now.Ticks);
                 _algorithm.Portfolio.ProcessFill(fill);
             }
