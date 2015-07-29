@@ -275,6 +275,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             return ticket;
         }
 
+        /// <summary>
+        /// Gets and enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// </summary>
+        /// <param name="filter">The filter predicate used to find the required order tickets</param>
+        /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
+        public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)
+        {
+            return _orderTickets.Select(x => x.Value).Where(filter ?? (x => true));
+        }
+
         #endregion
 
         /// <summary>
@@ -732,6 +742,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             //Apply the filled order to our portfolio:
             if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)
             {
+                Log.Debug("BrokerageTransactionHandler.HandleOrderEvent(): " + fill);
                 Interlocked.Exchange(ref _lastFillTimeTicks, DateTime.Now.Ticks);
                 _algorithm.Portfolio.ProcessFill(fill);
             }

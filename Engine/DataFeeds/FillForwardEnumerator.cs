@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -28,6 +29,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class FillForwardEnumerator : IEnumerator<BaseData>
     {
+        private DateTime? _delistedTime;
         private BaseData _previous;
         private bool _isFillingForward;
         private bool _emittedAuxilliaryData;
@@ -96,6 +98,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
+            if (_delistedTime.HasValue)
+            {
+                // don't fill forward after data after the delisted date
+                if (_previous == null || _previous.EndTime >= _delistedTime.Value)
+                {
+                    return false;
+                }
+            }
+
             if (!_emittedAuxilliaryData)
             {
                 // only set the _previous if the last item we emitted was NOT auxilliary data,
@@ -110,6 +121,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // if we're filling forward we don't need to move next since we haven't emitted _enumerator.Current yet
                 if (!_enumerator.MoveNext())
                 {
+                    if (_delistedTime.HasValue)
+                    {
+                        // don't fill forward delisted data
+                        return false;
+                    }
+
                     // check to see if we ran out of data before the end of the subscription
                     if (_previous == null || _previous.EndTime >= _subscriptionEndTime)
                     {
@@ -146,6 +163,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 _emittedAuxilliaryData = true;
                 Current = _enumerator.Current;
+                var delisting = Current as Delisting;
+                if (delisting != null && delisting.Type == DelistingType.Delisted)
+                {
+                    _delistedTime = delisting.EndTime;
+                }
                 return true;
             }
             

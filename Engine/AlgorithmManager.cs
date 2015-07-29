@@ -29,7 +29,9 @@ using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -140,6 +142,7 @@ namespace QuantConnect.Lean.Engine
             var methodInvokers = new Dictionary<Type, MethodInvoker>();
             var marginCallFrequency = TimeSpan.FromMinutes(5);
             var nextMarginCallTime = DateTime.MinValue;
+            var delistingTickets = new List<OrderTicket>();
 
             //Initialize Properties:
             _algorithmId = job.AlgorithmId;
@@ -155,6 +158,7 @@ namespace QuantConnect.Lean.Engine
             // dividend and split events
             var hasOnDataDividends = AddMethodInvoker<Dividends>(algorithm, methodInvokers);
             var hasOnDataSplits = AddMethodInvoker<Splits>(algorithm, methodInvokers);
+            var hasOnDataDelistings = AddMethodInvoker<Delistings>(algorithm, methodInvokers);
 
             // Algorithm 3.0 data accessors
             var hasOnDataSlice = algorithm.GetType().GetMethods()
@@ -250,6 +254,20 @@ namespace QuantConnect.Lean.Engine
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
 
+                if (delistingTickets.Count != 0)
+                {
+                    for (int i = 0; i < delistingTickets.Count; i++)
+                    {
+                        var ticket = delistingTickets[i];
+                        if (ticket.Status == OrderStatus.Filled)
+                        {
+                            algorithm.Securities.Remove(ticket.Symbol);
+                            delistingTickets.RemoveAt(i--);
+                            Log.Trace("AlgorithmManager.Run(): Security removed: " + ticket.Symbol);
+                        }
+                    }
+                }
+
                 //Check if the user's signalled Quit: loop over data until day changes.
                 if (algorithm.GetQuit())
                 {
@@ -315,6 +333,7 @@ namespace QuantConnect.Lean.Engine
                 var newTicks = new Ticks(algorithm.Time);
                 var newDividends = new Dividends(algorithm.Time);
                 var newSplits = new Splits(algorithm.Time);
+                var newDelistings = new Delistings(algorithm.Time);
 
                 //Invoke all non-tradebars, non-ticks methods and build up the TradeBars and Ticks dictionaries
                 // --> i == Subscription Configuration Index, so we don't need to compare types.
@@ -355,7 +374,6 @@ namespace QuantConnect.Lean.Engine
                         if (split != null)
                         {
                             Log.Trace("AlgorithmManager.Run(): Applying Split for " + split.Symbol);
-
                             // if this is a split apply to portfolio
                             algorithm.Portfolio.ApplySplit(split);
                             if (hasOnDataSplits)
@@ -364,6 +382,16 @@ namespace QuantConnect.Lean.Engine
                                 newSplits.Add(split);
                             }
                             continue;
+                        }
+
+                        var delisting = dataPoint as Delisting;
+                        if (delisting != null)
+                        {
+                            if (hasOnDataDelistings)
+                            {
+                                // add to out data dictonary to pump into OnData(Delistings data)
+                                newDelistings.Add(delisting);
+                            }
                         }
 
                         //Update registered consolidators for this symbol index
@@ -443,14 +471,21 @@ namespace QuantConnect.Lean.Engine
                     {
                         methodInvokers[typeof (Splits)](algorithm, newSplits);
                     }
+                    if (hasOnDataDelistings && newDelistings.Count != 0)
+                    {
+                        methodInvokers[typeof (Delistings)](algorithm, newDelistings);
+                    }
                 }
                 catch (Exception err)
                 {
                     algorithm.RunTimeError = err;
                     _algorithmState = AlgorithmStatus.RuntimeError;
-                    Log.Error("AlgorithmManager.Run(): RuntimeError: Dividends/Splits: " + err.Message + " STACK >>> " + err.StackTrace);
+                    Log.Error("AlgorithmManager.Run(): RuntimeError: Dividends/Splits/Delistings: " + err.Message + " STACK >>> " + err.StackTrace);
                     return;
                 }
+
+                // run the delisting logic after firing delisting events
+                HandleDelistedSymbols(algorithm, newDelistings, delistingTickets);
 
                 //After we've fired all other events in this second, fire the pricing events:
                 try
@@ -471,7 +506,8 @@ namespace QuantConnect.Lean.Engine
                     newBars.Count == 0 ? null : newBars,
                     newTicks.Count == 0 ? null : newTicks,
                     newSplits.Count == 0 ? null : newSplits,
-                    newDividends.Count == 0 ? null : newDividends
+                    newDividends.Count == 0 ? null : newDividends,
+                    newDelistings.Count == 0 ? null : newDelistings
                     );
 
                 try
@@ -584,6 +620,36 @@ namespace QuantConnect.Lean.Engine
                 return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Performs delisting logic for the securities specified in <paramref name="newDelistings"/> that are marked as <see cref="DelistingType.Delisted"/>. 
+        /// This includes liquidating the position and removing the security from the algorithm's collection.
+        /// If we're unable to liquidate the position (maybe daily data or EOD already) then we'll add it to the <paramref name="delistingTickets"/>
+        /// for the algo manager time loop to check later
+        /// </summary>
+        private static void HandleDelistedSymbols(IAlgorithm algorithm, Delistings newDelistings, ICollection<OrderTicket> delistingTickets)
+        {
+            foreach (var delisting in newDelistings.Values)
+            {
+                // submit an order to liquidate on market close
+                if (delisting.Type == DelistingType.Warning)
+                {
+                    Log.Trace("AlgorithmManager.Run(): Security delisting warning: " + delisting.Symbol);
+                    var security = algorithm.Securities[delisting.Symbol];
+                    var submitOrderRequest = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
+                        -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
+                    var ticket = algorithm.Transactions.ProcessRequest(submitOrderRequest);
+                    delisting.SetOrderTicket(ticket);
+                    delistingTickets.Add(ticket);
+                }
+                else
+                {
+                    Log.Trace("AlgorithmManager.Run(): Security delisted: " + delisting.Symbol);
+                    algorithm.Securities.Remove(delisting.Symbol);
+                    Log.Trace("AlgorithmManager.Run(): Security removed: " + delisting.Symbol);
+                }
+            }
         }
     } // End of AlgorithmManager
 

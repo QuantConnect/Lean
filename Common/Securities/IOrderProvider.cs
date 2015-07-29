@@ -44,6 +44,13 @@ namespace QuantConnect.Securities
         Order GetOrderByBrokerageId(int brokerageId);
 
         /// <summary>
+        /// Gets and enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// </summary>
+        /// <param name="filter">The filter predicate used to find the required order tickets. If null is specified then all tickets are returned</param>
+        /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
+        IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null);
+
+        /// <summary>
         /// Gets all orders matching the specified filter. Specifying null will return an enumerable
         /// of all orders.
         /// </summary>

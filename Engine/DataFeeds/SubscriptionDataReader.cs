@@ -77,6 +77,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         // and on the next trading day we use this data to produce the split instance
         private decimal? _splitFactor;
 
+        // we'll use these flags to denote we've already fired off the DelistedType.Warning
+        // and a DelistedType.Delisted Delisting object, the _delistingType object is save here
+        // since we need to wait for the next trading day before emitting
+        private bool _delisted;
+        private bool _delistedWarning;
+
         // true if we're in live mode, false otherwise
         private readonly bool _isLiveMode;
 
@@ -84,6 +90,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly Queue<BaseData> _auxiliaryData;
         private readonly IResultHandler _resultHandler;
         private readonly IEnumerator<DateTime> _tradeableDates;
+
+        // used when emitting aux data from within while loop
+        private bool _emittedAuxilliaryData;
+        private BaseData _lastInstanceBeforeAuxilliaryData;
 
         /// <summary>
         /// Last read BaseData object from this type and source
@@ -196,7 +206,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            _previous = Current;
+            if (Current != null && Current.DataType != MarketDataType.Auxiliary)
+            {
+                // only save previous price data
+                _previous = Current;
+            }
 
             if (_subscriptionFactoryEnumerator == null)
             {
@@ -218,6 +232,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // check for any auxilliary data before reading a line
                     Current = _auxiliaryData.Dequeue();
+                    return true;
+                }
+
+                if (_emittedAuxilliaryData)
+                {
+                    _emittedAuxilliaryData = false;
+                    Current = _lastInstanceBeforeAuxilliaryData;
+                    _lastInstanceBeforeAuxilliaryData = null;
                     return true;
                 }
 
@@ -255,8 +277,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // we produce auxiliary data on date changes, so check for the data
                         if (_auxiliaryData.Count > 0)
                         {
-                            // check for any auxilliary data before reading a line
+                            // since we're emitting this here we need to save off the instance for next time
                             Current = _auxiliaryData.Dequeue();
+                            _emittedAuxilliaryData = true;
+                            _lastInstanceBeforeAuxilliaryData = instance;
                             return true;
                         }
                     }
@@ -396,6 +420,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             while (_tradeableDates.MoveNext())
             {
                 date = _tradeableDates.Current;
+
+                CheckForDelisting(date);
+
                 if (!_mapFile.HasData(date))
                 {
                     continue;
@@ -509,6 +536,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (_factorFile.HasDividendEventOnNextTradingDay(date, out priceFactorRatio))
             {
                 _priceFactorRatio = priceFactorRatio;
+            }
+        }
+
+        /// <summary>
+        /// Check for delistings and emit them into the aux data queue
+        /// </summary>
+        private void CheckForDelisting(DateTime date)
+        {
+            // these ifs set flags to tell us to produce a delisting instance
+            if (!_delistedWarning && date >= _mapFile.DelistingDate)
+            {
+                _delistedWarning = true;
+                var price = _previous != null ? _previous.Price : 0;
+                _auxiliaryData.Enqueue(new Delisting(_config.Symbol, date, price, DelistingType.Warning));
+            }
+            else if (!_delisted && date > _mapFile.DelistingDate)
+            {
+                _delisted = true;
+                var price = _previous != null ? _previous.Price : 0;
+                // delisted at EOD
+                _auxiliaryData.Enqueue(new Delisting(_config.Symbol, _mapFile.DelistingDate.AddDays(1), price, DelistingType.Delisted));
             }
         }
 
