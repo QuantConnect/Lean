@@ -134,7 +134,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     algorithm.EndDate, 
                     resultHandler,
                     Time.EachTradeableDay(algorithm.Securities, algorithm.StartDate, algorithm.EndDate), 
-                    job is LiveNodePacket
+                    job is LiveNodePacket, 
+                    algorithm.EndDate
                     );
             }
         }
