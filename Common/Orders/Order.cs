@@ -218,7 +218,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return string.Format("{0} order for {1} unit{3} of {2}", Type, Quantity, Symbol, Quantity == 1 ? "" : "s");
+            return string.Format("OrderId: {0} {1} {2} order for {3} unit{4} of {5}", Id, Status, Type, Quantity, Quantity == 1 ? "" : "s", Symbol);
         }
 
         /// <summary>
