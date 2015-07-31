@@ -14,6 +14,8 @@
  *
 */
 
+using System.Collections.Generic;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Interfaces;
@@ -49,6 +51,13 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to test for execution</param>
         /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
         bool CanExecuteOrder(Security security, Order order);
+
+        /// <summary>
+        /// Applies the split to the specified order ticket
+        /// </summary>
+        /// <param name="tickets">The open tickets matching the split event</param>
+        /// <param name="split">The split event data</param>
+        void ApplySplit(List<OrderTicket> tickets, Split split);
 
         /// <summary>
         /// Gets a new transaction model the represents this brokerage's fee structure and fill behavior

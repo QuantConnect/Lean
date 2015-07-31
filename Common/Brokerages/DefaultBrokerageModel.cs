@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Collections.Generic;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
@@ -58,6 +60,26 @@ namespace QuantConnect.Brokerages
         public virtual bool CanExecuteOrder(Security security, Order order)
         {
             return true;
+        }
+
+        /// <summary>
+        /// Applies the split to the specified order ticket
+        /// </summary>
+        /// <remarks>
+        /// This default implementation will update the orders to maintain a similar market value
+        /// </remarks>
+        /// <param name="tickets">The open tickets matching the split event</param>
+        /// <param name="split">The split event data</param>
+        public virtual void ApplySplit(List<OrderTicket> tickets, Split split)
+        {
+            // by default we'll just update the orders to have the same notional value
+            var splitFactor = split.SplitFactor;
+            tickets.ForEach(ticket => ticket.Update(new UpdateOrderFields
+            {
+                Quantity = (int?) (ticket.Quantity/splitFactor),
+                LimitPrice = ticket.OrderType.IsLimitOrder() ? ticket.Get(OrderField.LimitPrice)*splitFactor : (decimal?) null,
+                StopPrice = ticket.OrderType.IsStopOrder() ? ticket.Get(OrderField.StopPrice)*splitFactor : (decimal?) null
+            }));
         }
 
         /// <summary>
