@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         /// </summary>
         protected override decimal HighPrice
         {
-            get { return 1000m; }
+            get { return 5m; }
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         /// </summary>
         protected override decimal LowPrice
         {
-            get { return 0.01m; }
+            get { return 0.32m; }
         }
 
         /// <summary>

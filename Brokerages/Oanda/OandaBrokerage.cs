@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -38,8 +39,7 @@ namespace QuantConnect.Brokerages.Oanda
         private DateTime _issuedAt;
 
         private TimeSpan _lifeSpan = TimeSpan.FromSeconds(86399); // 1 second less than a day
-
-        private Timer _orderFillTimer;
+        
 
         private readonly object _fillLock = new object();
         
@@ -61,6 +61,8 @@ namespace QuantConnect.Brokerages.Oanda
         //This should correlate to the Orders list in Oanda.
         private readonly IOrderProvider _orderProvider;
 
+        private readonly ConcurrentDictionary<long, DataType.Order> _cachedOpenOrdersByOandaOrderId;
+
         /// <summary>
         /// The QC User id, used for refreshing the session
         /// </summary>
@@ -74,7 +76,6 @@ namespace QuantConnect.Brokerages.Oanda
         /// <summary>
         /// Refresh Token Access:
         /// </summary>
-        // TODO not sure if the refresh token is necessary
         public string RefreshToken { get; private set; }
 
 
@@ -89,7 +90,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaBrokerage"/> class.
         /// </summary>
-        /// <param name="orderMapping">The order mapping.</param>
+        /// <param name="orderProvider">The order provider.</param>
         /// <param name="holdingsProvider">The holdings provider.</param>
         /// <param name="accountId">The account identifier.</param>
         public OandaBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider, int accountId)
@@ -98,6 +99,7 @@ namespace QuantConnect.Brokerages.Oanda
             _orderProvider = orderProvider;
             _holdingsProvider = holdingsProvider;
             AccountId = accountId;
+            _cachedOpenOrdersByOandaOrderId = new ConcurrentDictionary<long, DataType.Order>();
             _instrumentSecurityTypeMap = MapInstrumentToSecurityType(GetInstrumentsAsync().Result);
         }
 
@@ -116,7 +118,13 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The open orders returned from Oanda</returns>
         public override List<Order> GetOpenOrders()
         {
-            var orderList = GetOrderListAsync().Result.Select(ConvertOrder).ToList();
+            var oandaOrders = GetOrderListAsync().Result;
+
+            var orderList = oandaOrders.Select(ConvertOrder).ToList();
+            foreach (var openOrder in orderList)
+            {
+                _cachedOpenOrdersByOandaOrderId[openOrder.Id] = oandaOrders.FirstOrDefault(oo => oo.id == openOrder.Id);
+            }
             return orderList;
         }
 
@@ -144,7 +152,7 @@ namespace QuantConnect.Brokerages.Oanda
                 AveragePrice = (decimal)position.avgPrice,
                 ConversionRate = 1.0m,
                 CurrencySymbol = "$",
-                Quantity = position.units
+                Quantity = position.side == "sell" ? -position.units : position.units
             };
         }
 
@@ -235,16 +243,19 @@ namespace QuantConnect.Brokerages.Oanda
                 if (postOrderResponse.tradeOpened != null)
                 {
                     order.BrokerId.Add(postOrderResponse.tradeOpened.id);
+                    //order.BrokerId.Add(order.Id);
                 }
                 
                 if (postOrderResponse.tradeReduced != null)
                 {
                     order.BrokerId.Add(postOrderResponse.tradeReduced.id);
+                    //order.BrokerId.Add(order.Id);
                 }
 
                 if (postOrderResponse.orderOpened != null)
                 {
                     order.BrokerId.Add(postOrderResponse.orderOpened.id);
+                    //order.BrokerId.Add(order.Id);
                 }
 
                 OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Submitted });
@@ -266,7 +277,6 @@ namespace QuantConnect.Brokerages.Oanda
                     var tradeListResponse = GetTradeListAsync(requestParams).Result;
                     if (tradeListResponse.trades.Any(trade => trade.id == tradeOpenedId))
                     {
-                        //TODO: we need to include in the broker id the orders....
                         order.BrokerId.Add(tradeOpenedId);
                         OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Filled });
 
@@ -295,6 +305,7 @@ namespace QuantConnect.Brokerages.Oanda
                     var tradeListResponse = GetTradeListAsync(requestParams).Result;
                     if (tradeListResponse.trades.Any(trade => trade.id == tradeOpenedId))
                     {
+                        order.BrokerId.Add(tradeOpenedId);
                         OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Filled });
                     }
                 }
@@ -322,28 +333,44 @@ namespace QuantConnect.Brokerages.Oanda
         public override bool UpdateOrder(Order order)
         {
             Log.Trace("OandaBrokerage.UpdateOrder(): " + order);
-
-
+            
             if (!order.BrokerId.Any())
             {
-
-                var requestParams = new Dictionary<string, string>
-                {
-                    {"instrument", order.Symbol},
-                    {"units", Convert.ToInt32(order.AbsoluteQuantity).ToString()},
-                    {"id", order.Id.ToString()}
-                };
-
                 // we need the brokerage order id in order to perform an update
                 Log.Trace("OandaBrokerage.UpdateOrder(): Unable to update order without BrokerId.");
-                PopulateOrderRequestParameters(order, requestParams);
-                var result = UpdateOrderAsync(order.Id, requestParams).Result;
-                if(result == null || result.id == 0)
-                {
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateFailed", "Failed to update Oanda order id: " + order.Id + "."));
-                    return false;
-                }
+                return false;
             }
+
+            //this.GetOpenOrders();
+
+            // there's only one active order per qc order, find it
+            //var activeOrder = order.BrokerId.Where(x => _cachedOpenOrdersByOandaOrderId.ContainsKey(x)).Select(x => _cachedOpenOrdersByOandaOrderId[x]).SingleOrDefault();
+
+            //if (activeOrder == null)
+            //{
+            //    Log.Trace("Unable to locate active Tradier order for QC order id: " + order.Id + " with Tradier ids: " + string.Join(", ", order.BrokerId));
+            //    return false;
+            //}
+
+            var requestParams = new Dictionary<string, string>
+            {
+                {"instrument", order.Symbol},
+                {"units", Convert.ToInt32(order.AbsoluteQuantity).ToString()},
+            };
+
+            // we need the brokerage order id in order to perform an update
+            PopulateOrderRequestParameters(order, requestParams);
+
+            UpdateOrderAsync(order.BrokerId.First(), requestParams);
+
+            //Console.Out.Write("---- Update Order ----");
+            //Console.Out.Write(result.Result);
+            //if (result == null || result.id == 0)
+            //{
+            //    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateFailed", "Failed to update Oanda order id: " + order.Id + "."));
+            //    return false;
+            //}
+            
             return true;
         }
 
@@ -368,11 +395,17 @@ namespace QuantConnect.Brokerages.Oanda
                 switch (order.Direction)
                 {
                     case OrderDirection.Buy:
-                        requestParams.Add("lowerBound", ((LimitOrder) order).LimitPrice.ToString(CultureInfo.InvariantCulture));
+                        //Limit Order Does not like Lower Bound Values == Limit Price value
+                        //Don't set bounds when placing limit orders. 
+                        //Orders can be submitted with lower and upper bounds. If the market price on execution falls outside these bounds, it is considered a "Bounds Violation" and the order is cancelled.
+                        //requestParams.Add("lowerBound", ((LimitOrder) order).LimitPrice.ToString(CultureInfo.InvariantCulture));
                         break;
 
                     case OrderDirection.Sell:
-                        requestParams.Add("upperBound", ((LimitOrder) order).LimitPrice.ToString(CultureInfo.InvariantCulture));
+                        //Limit Order Does not like Lower Bound Values == Limit Price value
+                        //Don't set bounds when placing limit orders. 
+                        //Orders can be submitted with lower and upper bounds. If the market price on execution falls outside these bounds, it is considered a "Bounds Violation" and the order is cancelled.
+                        //requestParams.Add("upperBound", ((LimitOrder) order).LimitPrice.ToString(CultureInfo.InvariantCulture));
                         break;
                 }
 
@@ -388,12 +421,13 @@ namespace QuantConnect.Brokerages.Oanda
                 switch (order.Direction)
                 {
                     case OrderDirection.Buy:
-                        requestParams.Add("upperBound",
-                            ((StopLimitOrder) order).LimitPrice.ToString(CultureInfo.InvariantCulture));
+                        //Orders can be submitted with lower and upper bounds. If the market price on execution falls outside these bounds, it is considered a "Bounds Violation" and the order is cancelled.
+            
+                        //requestParams.Add("upperBound",((StopLimitOrder) order).LimitPrice.ToString(CultureInfo.InvariantCulture));
                         break;
                     case OrderDirection.Sell:
-                        requestParams.Add("lowerBound",
-                            ((StopLimitOrder)order).LimitPrice.ToString(CultureInfo.InvariantCulture));
+                        //Orders can be submitted with lower and upper bounds. If the market price on execution falls outside these bounds, it is considered a "Bounds Violation" and the order is cancelled.
+                        //requestParams.Add("lowerBound",((StopLimitOrder)order).LimitPrice.ToString(CultureInfo.InvariantCulture));
                         break;
                 }
 
@@ -447,6 +481,36 @@ namespace QuantConnect.Brokerages.Oanda
         {
             Console.Out.Write("---- On Event Received ----");
             Console.Out.Write(data.transaction);
+            if (data.transaction != null)
+            {
+                if (data.transaction.type == "ORDER_FILLED")
+                {
+                    var qcOrder = _orderProvider.GetOrderByBrokerageId(data.transaction.orderId);
+                    //if (qcOrder.AbsoluteQuantity == data.transaction.units)
+                    //{ 
+                    var fill = new OrderEvent(qcOrder, "Oanda Fill Event")
+                    {
+                            Status = OrderStatus.Filled,
+                    //    // this is guaranteed to be wrong in the event we have multiple fills within our polling interval,
+                    //    // we're able to partially cope with the fill quantity by diffing the previous info vs current info
+                    //    // but the fill price will always be the most recent fill, so if we have two fills with 1/10 of a second
+                    //    // we'll get the latter fill price, so for large orders this can lead to inconsistent state
+                        FillPrice = (decimal)data.transaction.price,
+                    //    FillQuantity = (int)(updatedOrder.QuantityExecuted - cachedOrder.QuantityExecuted)
+                        FillQuantity = data.transaction.units
+                    };
+
+
+                    // flip the quantity on sell actions
+                    if (qcOrder.Direction == OrderDirection.Sell)
+                    {
+                        fill.FillQuantity *= -1;
+                    }
+                    OnOrderEvent(fill);
+
+                    //}
+                }
+            }
         }
 
         /// <summary>
@@ -460,16 +524,71 @@ namespace QuantConnect.Brokerages.Oanda
             return await MakeRequestAsync<TradesResponse>(requestString, "GET", requestParams);
         }
         
+        //TODO: issues running tasks async, order tend to not be found because the filled event getting fired after the order for update is already called.
 		/// <summary>
 		/// Modify the specified order, updating it with the parameters provided
 		/// </summary>
-		/// <param name="orderId">the order to update</param>
+		/// <param name="orderId">the identifier of the order to update</param>
 		/// <param name="requestParams">the parameters to update (name, value pairs)</param>
 		/// <returns>Order object containing the new details of the order (post update)</returns>
-        public async Task<DataType.Order> UpdateOrderAsync(int orderId, Dictionary<string, string> requestParams)
+        //public async Task<DataType.Order> UpdateOrderAsync(long orderId, Dictionary<string, string> requestParams)
+        //{
+        //    var orderRequest = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
+
+        //    var order = await MakeRequestAsync<DataType.Order>(orderRequest);
+        //    if(order != null && order.id > 0)
+        //    {
+        //        var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
+        //        var updatedOrder = await MakeRequestWithBody<DataType.Order>(requestString, "PATCH", requestParams);
+        //        if (updatedOrder != null && updatedOrder.id > 0)
+        //        {
+        //            return updatedOrder;
+        //        }
+        //    }
+            
+        //    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateFailed", "Failed to update Oanda order id: " + orderId + "."));
+        //    throw new Exception("Failed to update Oanda order id: " + orderId + ".");
+        //}
+
+        public void UpdateOrderAsync(long orderId, Dictionary<string, string> requestParams)
+        {
+            var orderRequest = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
+
+            var order = MakeRequestAsync<DataType.Order>(orderRequest).Result;
+            if (order != null && order.id > 0)
+            {
+                var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
+                try
+                {
+                    var updatedOrder = MakeRequestWithBody<DataType.Order>(requestString, "PATCH", requestParams).Result;
+                    if (updatedOrder != null && updatedOrder.id > 0)
+                    {
+                        //OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateFailed", "Failed to update Oanda order id: " + orderId + "."));
+                    }    
+                } 
+                catch (Exception e)
+                {
+                    //Console.Write(_orderProvider.OrdersCount);
+                }
+                
+            } 
+            else
+            {
+
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateFailed", "Failed to update Oanda order id: " + orderId + "."));
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the details for a given order ID
+        /// </summary>
+        /// <param name="orderId">the id of the order to retrieve</param>
+        /// <returns>Order object containing the order details</returns>
+        public async Task<DataType.Order> GetOrderDetailsAsync(int orderId)
         {
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
-            return await MakeRequestWithBody<DataType.Order>(requestString, "PATCH", requestParams);
+            var order = await MakeRequestAsync<DataType.Order>(requestString);
+            return order;
         }
 
         /// <summary>
@@ -537,7 +656,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             foreach (var orderId in order.BrokerId)
             {
-                var response = CancelOrderAsync(orderId);
+                CancelOrderAsync(orderId);
                 OnOrderEvent(new OrderEvent(order, "Oanda Cancel Order Event") { Status = OrderStatus.Canceled });
             }
 
@@ -655,7 +774,7 @@ namespace QuantConnect.Brokerages.Oanda
             var stream = response.GetResponseStream();
             if (response.Headers["Content-Encoding"] == "gzip")
             {	// if we received a gzipped response, handle that
-                stream = new GZipStream(stream, CompressionMode.Decompress);
+                if (stream != null) stream = new GZipStream(stream, CompressionMode.Decompress);
             }
             return stream;
         }
@@ -884,15 +1003,14 @@ namespace QuantConnect.Brokerages.Oanda
                     break;
 
                 default:
-                    throw new NotImplementedException("The Oanda order type " + order.type + " is not implemented.");
+                    throw new NotSupportedException("The Oanda order type " + order.type + " is not supported.");
             }
             qcOrder.Symbol = order.instrument;
             qcOrder.Quantity = ConvertQuantity(order);
             qcOrder.SecurityType = _instrumentSecurityTypeMap[order.instrument];
-
-            //TODO need further thought on how to translate this to QC, typically any open order 
             qcOrder.Status = OrderStatus.None;
             qcOrder.BrokerId.Add(order.id);
+            qcOrder.Id = order.id;
             qcOrder.Duration = OrderDuration.Specific;
             qcOrder.DurationValue = XmlConvert.ToDateTime(order.expiry, XmlDateTimeSerializationMode.Utc);
             qcOrder.Time = XmlConvert.ToDateTime(order.time, XmlDateTimeSerializationMode.Utc);
