@@ -571,7 +571,7 @@ namespace QuantConnect.Securities
                 tradeBar.Low *= split.SplitFactor;
             }
             
-            // make sure to modify bide/ask as well for tradebar data types
+            // make sure to modify bid/ask as well for tradebar data types
             var tick = next as Tick;
             if (tick != null)
             {

@@ -554,6 +554,9 @@ namespace QuantConnect.Algorithm
         {
             var security = Securities[symbol];
 
+            // can't order it if we don't have data
+            if (security.Price == 0) return 0;
+
             // this is the value in dollars that we want our holdings to have
             var targetPortfolioValue = target*Portfolio.TotalPortfolioValue;
 
@@ -643,7 +646,7 @@ namespace QuantConnect.Algorithm
 
         private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, int quantity, string tag, decimal stopPrice = 0m, decimal limitPrice = 0m)
         {
-            return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, Time, tag);
+            return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, UtcTime, tag);
         }
     }
 }

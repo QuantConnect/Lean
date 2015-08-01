@@ -103,7 +103,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return string.Format("{0} order for {1} unit{2} of {3} at limit {4}", Type, Quantity, Quantity == 1 ? "" : "s", Symbol, LimitPrice.SmartRounding());
+            return string.Format("{0} at limit {1}", base.ToString(), LimitPrice.SmartRounding());
         }
 
         /// <summary>

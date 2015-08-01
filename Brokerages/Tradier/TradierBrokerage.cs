@@ -198,6 +198,11 @@ namespace QuantConnect.Brokerages.Tradier
             var method = "TradierBrokerage.Execute." + request.Resource;
             var parameters = request.Parameters.Select(x => x.Name + ": " + x.Value);
 
+            if (attempts != 0)
+            {
+                Log.Trace(method + "(): Begin attempt " + attempts);
+            }
+
             lock (_lockAccessCredentials)
             {
                 var client = new RestClient(RequestEndpoint);
@@ -911,6 +916,8 @@ namespace QuantConnect.Brokerages.Tradier
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
+            Log.Trace("TradierBrokerage.PlaceOrder(): " + order);
+
             if (_cancelledQcOrderIDs.Contains(order.Id))
             {
                 Log.Trace("TradierBrokerage.PlaceOrder(): Cancelled Order: " + order.Id + " - " + order);
@@ -929,11 +936,12 @@ namespace QuantConnect.Brokerages.Tradier
                     Log.Error("TradierBrokerage.PlaceOrder(): Unable to locate existing QC Order when verifying single outstanding order per symbol.");
                     _cachedOpenOrdersByTradierOrderID.TryRemove(cachedOpenOrder.Id, out tradierOrder);
                 }
-                else
+                // if the qc order is still listed as open, then we have an issue, attempt to cancel it before placing this new order
+                else if (qcOrder.Status.IsOpen())
                 {
                     // let the world know what we're doing
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OneOrderPerSymbol",
-                        "The TradierBrokerage plugin currently only supports one outstanding order per symbol. Canceled old order: " + qcOrder.Id)
+                        "Tradier Brokerage currently only supports one outstanding order per symbol. Canceled old order: " + qcOrder.Id)
                         );
 
                     // cancel the open order and clear out any contingents

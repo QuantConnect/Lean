@@ -87,7 +87,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         public static bool HasScalingFactors(string symbol, string market)
         {
             // check for factor files
-            if (File.Exists(Constants.DataFolder + "equity/" + market + "/factor_files/" + symbol.ToLower() + ".csv"))
+            var path = Path.Combine(Constants.DataFolder, "equity", market, "factor_files", symbol.ToLower() + ".csv");
+            if (File.Exists(path))
             {
                 return true;
             }

@@ -119,7 +119,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var security = _algorithm.Securities[Subscriptions[i].Symbol];
 
                 var tradeableDates = Time.EachTradeableDay(security, start.Date, end.Date);
-                IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, security, start, end, resultHandler, tradeableDates, false);
+
+                IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, security, 
+                    start, end, 
+                    resultHandler, 
+                    tradeableDates, 
+                    false, 
+                    // we want a backtest to use the same symbols regardless of start/end dates, so we set the resolution
+                    // to null which means give me the current/most recent symbol mapping for the requested symbol
+                    symbolResolutionDate: null
+                    );
 
                 // optionally apply fill forward logic, but never for tick data
                 if (config.FillDataForward && config.Resolution != Resolution.Tick)

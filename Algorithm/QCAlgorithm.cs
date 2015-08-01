@@ -388,7 +388,7 @@ namespace QuantConnect.Algorithm
         // <summary>
         // Event - v2.0 SPLIT EVENT HANDLER: (Pattern) Basic template for user to override when inspecting split data.
         // </summary>
-        // <param name="data">IDictionary of Splits Data Keyed by Symbol String</param>
+        // <param name="data">IDictionary of Split Data Keyed by Symbol String</param>
         //public void OnData(Splits data)
         //{
         //
@@ -402,6 +402,12 @@ namespace QuantConnect.Algorithm
         //{
         //
         //}
+
+        // <summary>
+        // Event - v2.0 DELISTING EVENT HANDLER: (Pattern) Basic template for user to override when inspecting delisting data
+        // </summary>
+        // <param name="data">IDictionary of Delisting Data Keyed by Symbol String</param>
+        //public void OnDelisting(Delistings data)
 
         /// <summary>
         /// Margin call event handler. This method is called right before the margin call orders are placed in the market.

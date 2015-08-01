@@ -64,8 +64,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         /// </summary>
         public static IEnumerable<FactorFileRow> Read(string symbol, string market)
         {
-            string format = Constants.DataFolder + "equity/" + market + "/factor_files/" + symbol.ToLower() + ".csv";
-            foreach (var line in File.ReadAllLines(format))
+            string path = Path.Combine(Constants.DataFolder, "equity", market, "factor_files", symbol.ToLower() + ".csv");
+            foreach (var line in File.ReadAllLines(path))
             {
                 var csv = line.Split(',');
                 yield return new FactorFileRow(

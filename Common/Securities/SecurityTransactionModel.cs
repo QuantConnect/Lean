@@ -318,7 +318,7 @@ namespace QuantConnect.Securities
                 //  SPY  | | | | | | | | | | | | | | | | | | | |
                 var currentBar = asset.GetLastData();
                 var localOrderTime = order.Time.ConvertTo(TimeZones.Utc, asset.Exchange.TimeZone);
-                if (localOrderTime >= currentBar.EndTime) return fill;
+                if (currentBar == null || localOrderTime >= currentBar.EndTime) return fill;
 
                 // if the MOO was submitted during market the previous day, wait for a day to turn over
                 if (asset.Exchange.DateTimeIsOpen(localOrderTime) && localOrderTime.Date == asset.LocalTime.Date)
@@ -374,8 +374,11 @@ namespace QuantConnect.Securities
 
             try
             {
-                // wait until market closes
-                if (asset.Exchange.ExchangeOpen)
+                var localOrderTime = order.Time.ConvertTo(TimeZones.Utc, asset.Exchange.TimeZone);
+                var nextMarketClose = asset.Exchange.Hours.GetNextMarketClose(localOrderTime, false);
+                
+                // wait until market closes after the order time 
+                if (asset.LocalTime < nextMarketClose)
                 {
                     return fill;
                 }

@@ -275,6 +275,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             return ticket;
         }
 
+        /// <summary>
+        /// Gets and enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// </summary>
+        /// <param name="filter">The filter predicate used to find the required order tickets</param>
+        /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
+        public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)
+        {
+            return _orderTickets.Select(x => x.Value).Where(filter ?? (x => true));
+        }
+
         #endregion
 
         /// <summary>
@@ -290,6 +300,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private Order GetOrderByIdInternal(int orderId)
         {
+            // this function can be invoked by brokerages when getting open orders, guard against null ref
+            if (_orders == null) return null;
+            
             Order order;
             return _orders.TryGetValue(orderId, out order) ? order : null;
         }
@@ -301,6 +314,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
         public Order GetOrderByBrokerageId(int brokerageId)
         {
+            // this function can be invoked by brokerages when getting open orders, guard against null ref
+            if (_orders == null) return null;
+            
             var order = _orders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
             return order != null ? order.Clone() : null;
         }
@@ -401,6 +417,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return;
             }
 
+            Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Enter");
+
             // every morning flip this switch back
             if (_syncedLiveBrokerageCashToday && DateTime.Now.Date != LastSyncDate)
             {
@@ -437,6 +455,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _orders.TryRemove(item.Key, out value);
                 _orderTickets.TryRemove(item.Key, out ticket);
             }
+
+            Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Exit");
         }
 
         /// <summary>
@@ -722,6 +742,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             //Apply the filled order to our portfolio:
             if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)
             {
+                Log.Debug("BrokerageTransactionHandler.HandleOrderEvent(): " + fill);
                 Interlocked.Exchange(ref _lastFillTimeTicks, DateTime.Now.Ticks);
                 _algorithm.Portfolio.ProcessFill(fill);
             }

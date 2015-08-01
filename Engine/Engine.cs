@@ -287,6 +287,9 @@ namespace QuantConnect.Lean.Engine
                             {
                                 //Debugging at this level is difficult, stack trace needed.
                                 Log.Error("Engine.Run", err);
+                                algorithm.RunTimeError = err;
+                                algorithmManager.SetStatus(AlgorithmStatus.RuntimeError);
+                                return;
                             }
 
                             Log.Trace("Engine.Run(): Exiting Algorithm Manager");
@@ -350,8 +353,9 @@ namespace QuantConnect.Lean.Engine
                                 var performance = charts[strategyEquityKey].Series[dailyPerformanceKey].Values;
                                 var profitLoss =
                                     new SortedDictionary<DateTime, decimal>(algorithm.Transactions.TransactionRecord);
+                                var numberOfTrades = algorithm.Transactions.GetOrders(x => x.Status.IsFill()).Count();
                                 statistics = Statistics.Statistics.Generate(equity, profitLoss, performance,
-                                    _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, algorithm.Transactions.OrdersCount, 252);
+                                    _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, numberOfTrades, 252);
                             }
                         }
                         catch (Exception err)

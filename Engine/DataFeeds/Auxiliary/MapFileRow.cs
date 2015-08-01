@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
 {
@@ -49,7 +50,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         /// </summary>
         public static IEnumerable<MapFileRow> Read(string symbol, string market)
         {
-            var path = Constants.DataFolder + "equity/" + market + "/map_files/" + symbol.ToLower() + ".csv";
+            var path = MapFile.GetMapFilePath(symbol, market);
+            if (!File.Exists(path))
+            {
+                yield break;
+            }
+
             foreach (var line in File.ReadAllLines(path))
             {
                 var csv = line.Split(',');

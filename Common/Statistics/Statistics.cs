@@ -108,14 +108,13 @@ namespace QuantConnect.Statistics
         /// <param name="pointsPerformance"> Daily performance</param>
         /// <param name="startingCash">Amount of starting cash in USD </param>
         /// <param name="totalFees">The total fees incurred over the life time of the algorithm</param>
-        /// <param name="totalOrders">Total number of orders processed.</param>
+        /// <param name="totalTrades">Total number of orders executed.</param>
         /// <param name="tradingDaysPerYear">Number of trading days per year</param>
         /// <returns>Statistics Array, Broken into Annual Periods</returns>
-        public static Dictionary<string, string> Generate(IEnumerable<ChartPoint> pointsEquity, SortedDictionary<DateTime, decimal> profitLoss, IEnumerable<ChartPoint> pointsPerformance, decimal startingCash, decimal totalFees, decimal totalOrders, double tradingDaysPerYear = 252)
+        public static Dictionary<string, string> Generate(IEnumerable<ChartPoint> pointsEquity, SortedDictionary<DateTime, decimal> profitLoss, IEnumerable<ChartPoint> pointsPerformance, decimal startingCash, decimal totalFees, decimal totalTrades, double tradingDaysPerYear = 252)
         {
             //Initialise the response:
             double riskFreeRate = 0;
-            decimal totalTrades = totalOrders;
             decimal totalClosedTrades = 0;
             decimal totalWins = 0;
             decimal totalLosses = 0;
