@@ -54,6 +54,24 @@ namespace QuantConnect.Algorithm
             RegisterIndicator(symbol, identity, resolution, selector);
             return identity;
         }
+
+        /// <summary>
+        /// Creates a new Identity indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The symbol whose values we want as an indicator</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <param name="selector">Selects a value from the BaseData, if null defaults to the .Value property (x => x.Value)</param>
+        /// <param name="fieldName">The name of the field being selected</param>
+        /// <returns>A new Identity indicator for the specified symbol and selector</returns>
+        public Identity Identity(string symbol, TimeSpan resolution, Func<BaseData, decimal> selector = null, string fieldName = null)
+        {
+            string name = string.Format("{0}({1}_{2})", symbol, fieldName ?? "close", resolution);
+            var identity = new Identity(name);
+            RegisterIndicator(symbol, identity, ResolveConsolidator(symbol, resolution), selector);
+            return identity;
+        }
+
         /// <summary>
         /// Creates a new IchimokuKinkoHyo indicator for the symbol. The indicator will be automatically
         /// updated on the given resolution.
@@ -73,7 +91,6 @@ namespace QuantConnect.Algorithm
             var ichimoku = new IchimokuKinkoHyo(name, tenkanPeriod, kijunPeriod, senkouAPeriod, senkouBPeriod, senkouADelayPeriod, senkouBDelayPeriod);
             RegisterIndicator(symbol, ichimoku, resolution);
             return ichimoku;
-
         }
 
         /// <summary>
@@ -734,7 +751,7 @@ namespace QuantConnect.Algorithm
         /// <param name="type">The indicator type, for example, 'SMA5'</param>
         /// <param name="resolution">The resolution requested</param>
         /// <returns>A unique for the given parameters</returns>
-        protected string CreateIndicatorName(string symbol, string type, Resolution? resolution)
+        public string CreateIndicatorName(string symbol, string type, Resolution? resolution)
         {
             if (!resolution.HasValue)
             {
