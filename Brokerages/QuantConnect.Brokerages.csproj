@@ -75,28 +75,14 @@
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerageFactory.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersGatewayRunner.cs" />
     <Compile Include="Oanda\DataType\Account.cs" />
-    <Compile Include="Oanda\DataType\AccountDetails.cs" />
-    <Compile Include="Oanda\DataType\CalendarEvent.cs" />
-    <Compile Include="Oanda\DataType\Candle.cs" />
     <Compile Include="Oanda\DataType\Communications\AccountResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\AccountsResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\CandlesResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\DeletePositionResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\DeleteTradeResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\InstrumentsResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\OrdersResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\PositionsResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\PostOrderResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\PricesResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\Requests\AccountRequest.cs" />
-    <Compile Include="Oanda\DataType\Communications\Requests\CandlesRequest.cs" />
-    <Compile Include="Oanda\DataType\Communications\Requests\OrderPostRequest.cs" />
-    <Compile Include="Oanda\DataType\Communications\Requests\PricePollRequest.cs" />
-    <Compile Include="Oanda\DataType\Communications\Requests\Request.cs" />
     <Compile Include="Oanda\DataType\Communications\Response.cs" />
-    <Compile Include="Oanda\DataType\Communications\SessionResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\TradesResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\TransactionsResponse.cs" />
     <Compile Include="Oanda\DataType\Event.cs" />
     <Compile Include="Oanda\DataType\Heartbeat.cs" />
     <Compile Include="Oanda\DataType\IHeartbeat.cs" />
@@ -104,14 +90,11 @@
     <Compile Include="Oanda\DataType\Order.cs" />
     <Compile Include="Oanda\DataType\Position.cs" />
     <Compile Include="Oanda\DataType\Price.cs" />
-    <Compile Include="Oanda\DataType\RateStreamResponse.cs" />
     <Compile Include="Oanda\DataType\TradeData.cs" />
     <Compile Include="Oanda\DataType\Transaction.cs" />
     <Compile Include="Oanda\Environment.cs" />
     <Compile Include="Oanda\Framework\Common.cs" />
-    <Compile Include="Oanda\Framework\CustomEventArgs.cs" />
     <Compile Include="Oanda\Framework\EndpointResolver.cs" />
-    <Compile Include="Oanda\Framework\ObservableObject.cs" />
     <Compile Include="Oanda\OandaBrokerage.cs" />
     <Compile Include="Oanda\OandaBrokerageFactory.cs" />
     <Compile Include="Oanda\Server.cs" />
@@ -160,6 +143,7 @@
       <Name>QuantConnect.Logging</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

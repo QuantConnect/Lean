@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -479,27 +494,26 @@ namespace QuantConnect.Brokerages.Oanda
 
         private void OnEventReceived(Event data)
         {
+            #if DEBUG
             Console.Out.Write("---- On Event Received ----");
             Console.Out.Write(data.transaction);
+            #endif
+            
             if (data.transaction != null)
             {
                 if (data.transaction.type == "ORDER_FILLED")
                 {
                     var qcOrder = _orderProvider.GetOrderByBrokerageId(data.transaction.orderId);
-                    //if (qcOrder.AbsoluteQuantity == data.transaction.units)
-                    //{ 
                     var fill = new OrderEvent(qcOrder, "Oanda Fill Event")
                     {
-                            Status = OrderStatus.Filled,
-                    //    // this is guaranteed to be wrong in the event we have multiple fills within our polling interval,
-                    //    // we're able to partially cope with the fill quantity by diffing the previous info vs current info
-                    //    // but the fill price will always be the most recent fill, so if we have two fills with 1/10 of a second
-                    //    // we'll get the latter fill price, so for large orders this can lead to inconsistent state
-                        FillPrice = (decimal)data.transaction.price,
-                    //    FillQuantity = (int)(updatedOrder.QuantityExecuted - cachedOrder.QuantityExecuted)
+                        Status = OrderStatus.Filled,
+                        //    // this is guaranteed to be wrong in the event we have multiple fills within our polling interval,
+                        //    // we're able to partially cope with the fill quantity by diffing the previous info vs current info
+                        //    // but the fill price will always be the most recent fill, so if we have two fills with 1/10 of a second
+                        //    // we'll get the latter fill price, so for large orders this can lead to inconsistent state
+                        FillPrice = (decimal) data.transaction.price,
                         FillQuantity = data.transaction.units
                     };
-
 
                     // flip the quantity on sell actions
                     if (qcOrder.Direction == OrderDirection.Sell)
@@ -507,8 +521,6 @@ namespace QuantConnect.Brokerages.Oanda
                         fill.FillQuantity *= -1;
                     }
                     OnOrderEvent(fill);
-
-                    //}
                 }
             }
         }
