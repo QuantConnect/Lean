@@ -404,9 +404,9 @@ namespace QuantConnect.Lean.Engine
                         //Update registered consolidators for this symbol index
                         try
                         {
-                            for (var j = 0; j < config.Consolidators.Count; j++)
+                            foreach (var consolidator in config.Consolidators)
                             {
-                                config.Consolidators[j].Update(dataPoint);
+                                consolidator.Update(dataPoint);
                             }
                         }
                         catch (Exception err)
