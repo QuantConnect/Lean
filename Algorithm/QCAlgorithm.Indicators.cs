@@ -575,6 +575,20 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol to register against</param>
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
+        /// <param name="resolution">The resolution at which to send data to the indicator, null to use the same resolution as the subscription</param>
+        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
+        public void RegisterIndicator<T>(string symbol, IndicatorBase<T> indicator, TimeSpan? resolution, Func<BaseData, T> selector = null)
+            where T : BaseData
+        {
+            RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution), selector);
+        }
+
+        /// <summary>
+        /// Registers the consolidator to receive automatic updates as well as configures the indicator to receive updates
+        /// from the consolidator.
+        /// </summary>
+        /// <param name="symbol">The symbol to register against</param>
+        /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="consolidator">The consolidator to receive raw subscription data</param>
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
         public void RegisterIndicator<T>(string symbol, IndicatorBase<T> indicator, IDataConsolidator consolidator, Func<BaseData, T> selector = null) 
