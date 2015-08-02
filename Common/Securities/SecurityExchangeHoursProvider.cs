@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities
@@ -94,6 +95,9 @@ namespace QuantConnect.Securities
                         // base securities are always open by default
                         return SecurityExchangeHours.AlwaysOpen;
                     }
+
+                    Log.Error("SecurityExchangeHoursProvider.GetExchangeHours(): Unable to locate exchange hours for " + key + "." +
+                        "Available keys: " + string.Join(", ", _exchangeHours.Keys));
 
                     // there was nothing that really matched exactly... what should we do here?
                     throw new ArgumentException("Unable to locate exchange hours for " + key);

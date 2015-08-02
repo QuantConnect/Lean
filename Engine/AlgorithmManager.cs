@@ -376,6 +376,13 @@ namespace QuantConnect.Lean.Engine
                             Log.Trace("AlgorithmManager.Run(): Applying Split for " + split.Symbol);
                             // if this is a split apply to portfolio
                             algorithm.Portfolio.ApplySplit(split);
+                            // apply the split to open orders as well in raw mode, all other modes are split adjusted
+                            if (_liveMode || algorithm.Securities[split.Symbol].SubscriptionDataConfig.DataNormalizationMode == DataNormalizationMode.Raw)
+                            {
+                                // in live mode we always want to have our order match the order at the brokerage, so apply the split to the orders
+                                var openOrders = transactions.GetOrderTickets(ticket => ticket.Status.IsOpen() && ticket.Symbol == split.Symbol);
+                                algorithm.BrokerageModel.ApplySplit(openOrders.ToList(), split);
+                            }
                             if (hasOnDataSplits)
                             {
                                 // and add to our data dictionary to pump into OnData(Splits data)
@@ -397,9 +404,9 @@ namespace QuantConnect.Lean.Engine
                         //Update registered consolidators for this symbol index
                         try
                         {
-                            for (var j = 0; j < config.Consolidators.Count; j++)
+                            foreach (var consolidator in config.Consolidators)
                             {
-                                config.Consolidators[j].Update(dataPoint);
+                                consolidator.Update(dataPoint);
                             }
                         }
                         catch (Exception err)

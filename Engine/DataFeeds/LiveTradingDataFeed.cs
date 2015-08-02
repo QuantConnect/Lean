@@ -145,7 +145,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         DateTime.MaxValue,
                         resultHandler,
                         Time.EachTradeableDay(algorithm.Securities, periodStart, DateTime.MaxValue), 
-                        true
+                        true, 
+                        DateTime.Today
                         );
 
                     // wrap the subscription data reader with a filter enumerator

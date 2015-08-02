@@ -122,7 +122,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="resultHandler"></param>
         /// <param name="tradeableDates">Defines the dates for which we'll request data, in order</param>
         /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
-        public SubscriptionDataReader(SubscriptionDataConfig config, Security security, DateTime periodStart, DateTime periodFinish, IResultHandler resultHandler, IEnumerable<DateTime> tradeableDates, bool isLiveMode)
+        /// <param name="symbolResolutionDate">The date used to resolve the correct symbol</param>
+        public SubscriptionDataReader(SubscriptionDataConfig config, 
+            Security security, 
+            DateTime periodStart, 
+            DateTime periodFinish, 
+            IResultHandler resultHandler, 
+            IEnumerable<DateTime> tradeableDates, 
+            bool isLiveMode, 
+            DateTime? symbolResolutionDate
+            )
         {
             //Save configuration of data-subscription:
             _config = config;
@@ -137,12 +146,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _security = security;
             _isDynamicallyLoadedData = security.IsDynamicallyLoadedData;
             _isLiveMode = isLiveMode;
-
-            // do we have factor tables?
-            if (!security.IsDynamicallyLoadedData)
-            {
-                _hasScaleFactors = FactorFile.HasScalingFactors(config.Symbol, config.Market);
-            }
 
             //Save the type of data we'll be getting from the source.
 
@@ -175,12 +178,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Load the entire factor and symbol mapping tables into memory, we'll start with some defaults
             _factorFile = new FactorFile(config.Symbol, new List<FactorFileRow>());
             _mapFile = new MapFile(config.Symbol, new List<MapFileRow>());
-            try 
+            try
             {
-                if (_hasScaleFactors)
+                // do we have map/factor tables? -- only applies to equities
+                if (!security.IsDynamicallyLoadedData && security.Type == SecurityType.Equity)
                 {
-                    _factorFile = FactorFile.Read(config.Symbol, config.Market);
-                    _mapFile = MapFile.Read(config.Symbol, config.Market);
+                    // resolve the correct map file as of the date
+                    _mapFile = MapFile.ResolveMapFile(config.Symbol, config.Market, symbolResolutionDate);
+                    _hasScaleFactors = FactorFile.HasScalingFactors(_mapFile.EntitySymbol, config.Market);
+                    if (_hasScaleFactors)
+                    {
+                        _factorFile = FactorFile.Read(config.Symbol, config.Market);
+                    }
                 }
             } 
             catch (Exception err) 

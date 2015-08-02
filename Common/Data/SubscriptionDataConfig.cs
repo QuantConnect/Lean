@@ -117,7 +117,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Consolidators that are registred with this subscription
         /// </summary>
-        public readonly List<IDataConsolidator> Consolidators;
+        public readonly HashSet<IDataConsolidator> Consolidators;
 
         /// <summary>
         /// Constructor for Data Subscriptions
@@ -163,7 +163,7 @@ namespace QuantConnect.Data
             SubscriptionIndex = subscriptionIndex;
             Market = market;
             TimeZone = timeZone;
-            Consolidators = new List<IDataConsolidator>();
+            Consolidators = new HashSet<IDataConsolidator>();
 
             // verify the market string contains letters a-Z
             if (string.IsNullOrWhiteSpace(market))

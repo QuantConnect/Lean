@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Collections.Generic;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
@@ -24,7 +26,7 @@ namespace QuantConnect.Brokerages
     /// <summary>
     /// Provides tradier specific properties
     /// </summary>
-    public class TradierBrokerageModel : IBrokerageModel
+    public class TradierBrokerageModel : DefaultBrokerageModel
     {
         private static readonly EquityExchange EquityExchange = 
             new EquityExchange(SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours("usa", null, SecurityType.Equity));
@@ -40,7 +42,7 @@ namespace QuantConnect.Brokerages
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
             message = null;
 
@@ -75,13 +77,18 @@ namespace QuantConnect.Brokerages
         /// <param name="security">The security being ordered</param>
         /// <param name="order">The order to test for execution</param>
         /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
-        public bool CanExecuteOrder(Security security, Order order)
+        public override bool CanExecuteOrder(Security security, Order order)
         {
             EquityExchange.SetLocalDateTimeFrontier(security.Exchange.LocalTime);
 
+            var cache = security.GetLastData();
+            if (cache == null)
+            {
+                return false;
+            }
+
             // tradier doesn't support after hours trading
-            var timeOfDay = security.LocalTime.TimeOfDay;
-            if (timeOfDay < EquityExchange.MarketOpen || timeOfDay > EquityExchange.MarketClose)
+            if (!EquityExchange.IsOpenDuringBar(cache.Time, cache.EndTime, false))
             {
                 return false;
             }
@@ -89,11 +96,30 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Applies the split to the specified order ticket
+        /// </summary>
+        /// <param name="tickets">The open tickets matching the split event</param>
+        /// <param name="split">The split event data</param>
+        public override void ApplySplit(List<OrderTicket> tickets, Split split)
+        {
+            // tradier cancels reverse splits
+            var splitFactor = split.SplitFactor;
+            if (splitFactor > 1.0m)
+            {
+                tickets.ForEach(ticket => ticket.Cancel("Tradier Brokerage cancels open orders on reverse split symbols"));
+            }
+            else
+            {
+                base.ApplySplit(tickets, split);
+            }
+        }
+
+        /// <summary>
         /// Gets a new transaction model the represents this brokerage's fee structure and fill behavior
         /// </summary>
         /// <param name="security">The security to get a transaction model for</param>
         /// <returns>The transaction model for this brokerage</returns>
-        public ISecurityTransactionModel GetTransactionModel(Security security)
+        public override ISecurityTransactionModel GetTransactionModel(Security security)
         {
             if (security.Type == SecurityType.Equity)
             {
