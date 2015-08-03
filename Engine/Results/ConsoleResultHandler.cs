@@ -180,22 +180,32 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public void Run()
         {
-            while ( !_exitTriggered || Messages.Count > 0 ) 
+            try
             {
-                Thread.Sleep(100);
-
-                var now = DateTime.UtcNow;
-                if (now > _updateTime)
+                while ( !_exitTriggered || Messages.Count > 0 ) 
                 {
-                    _updateTime = now.AddSeconds(5);
-                    _algorithmNode.LogAlgorithmStatus(_lastSampledTimed);
+                    Thread.Sleep(100);
+
+                    var now = DateTime.UtcNow;
+                    if (now > _updateTime)
+                    {
+                        _updateTime = now.AddSeconds(5);
+                        _algorithmNode.LogAlgorithmStatus(_lastSampledTimed);
+                    }
+                }
+
+                // Write Equity and EquityPerformance files in charts directory
+                foreach (var fileName in _equityResults.Keys)
+                {
+                    File.WriteAllLines(fileName, _equityResults[fileName]);
                 }
             }
-
-            // Write Equity and EquityPerformance files in charts directory
-            foreach (var fileName in _equityResults.Keys)
+            catch (Exception err)
             {
-                File.WriteAllLines(fileName, _equityResults[fileName]);
+                // unexpected error, we need to close down shop
+                Log.Error(err);
+                // quit the algorithm due to error
+                _algorithm.RunTimeError = err;
             }
 
             Log.Trace("ConsoleResultHandler: Ending Thread...");

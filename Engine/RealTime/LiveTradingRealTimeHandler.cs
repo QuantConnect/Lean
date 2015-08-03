@@ -113,14 +113,21 @@ namespace QuantConnect.Lean.Engine.RealTime
             //Continue looping until exit triggered:
             while (!_exitTriggered)
             {
-                //Trigger as close to second as reasonable. 1.00, 2.00 etc.
-                _time = DateTime.UtcNow.ConvertTo(TimeZones.Utc, _algorithm.TimeZone);
-                var nextSecond = _time.RoundUp(TimeSpan.FromSeconds(1));
-                var delay = Convert.ToInt32((nextSecond - _time).TotalMilliseconds);
-                Thread.Sleep(delay < 0 ? 1 : delay);
+                try
+                {
+                    //Trigger as close to second as reasonable. 1.00, 2.00 etc.
+                    _time = DateTime.UtcNow.ConvertTo(TimeZones.Utc, _algorithm.TimeZone);
+                    var nextSecond = _time.RoundUp(TimeSpan.FromSeconds(1));
+                    var delay = Convert.ToInt32((nextSecond - _time).TotalMilliseconds);
+                    Thread.Sleep(delay < 0 ? 1 : delay);
 
-                //Refresh event processing:
-                ScanEvents();
+                    //Refresh event processing:
+                    ScanEvents();
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                }
             }
 
             _isActive = false;
