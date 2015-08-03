@@ -114,7 +114,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             while (!_exitTriggered)
             {
                 //Trigger as close to second as reasonable. 1.00, 2.00 etc.
-                _time = DateTime.UtcNow.ConvertToUtc(_algorithm.TimeZone);
+                _time = DateTime.UtcNow.ConvertTo(TimeZones.Utc, _algorithm.TimeZone);
                 var nextSecond = _time.RoundUp(TimeSpan.FromSeconds(1));
                 var delay = Convert.ToInt32((nextSecond - _time).TotalMilliseconds);
                 Thread.Sleep(delay < 0 ? 1 : delay);
