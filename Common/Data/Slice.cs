@@ -225,7 +225,7 @@ namespace QuantConnect.Data
             if (_data.Value.TryGetValue(symbol, out symbolData))
             {
                 data = symbolData.GetData();
-                return true;
+                return data != null;
             }
             return false;
         }
