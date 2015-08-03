@@ -208,7 +208,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public void DebugMessage(string message)
         {
-            Log.Trace("Debug Message >> " + message);
+            Log.Trace(_algorithm.Time + ": Debug >> " + message);
         }
 
         /// <summary>
@@ -217,7 +217,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd in the log.</param>
         public void LogMessage(string message)
         {
-            Log.Trace("Log Message >> " + message);
+            Log.Trace(_algorithm.Time + ": Log >> " + message);
         }
 
         /// <summary>
@@ -227,7 +227,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Stacktrace information string</param>
         public void RuntimeError(string message, string stacktrace = "")
         {
-            Log.Error("Error Message >> " + message + (!string.IsNullOrEmpty(stacktrace) ? (" >> ST: " + stacktrace) : ""));
+            Log.Error(_algorithm.Time + ": Error >> " + message + (!string.IsNullOrEmpty(stacktrace) ? (" >> ST: " + stacktrace) : ""));
         }
 
         /// <summary>
@@ -237,7 +237,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Stacktrace information string</param>
         public void ErrorMessage(string message, string stacktrace = "")
         {
-            Log.Error("Error Message >> " + message + (!string.IsNullOrEmpty(stacktrace) ? (" >> ST: " + stacktrace) : ""));
+            Log.Error(_algorithm.Time + ": Error >> " + message + (!string.IsNullOrEmpty(stacktrace) ? (" >> ST: " + stacktrace) : ""));
         }
 
         /// <summary>
