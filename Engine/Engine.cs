@@ -389,7 +389,10 @@ namespace QuantConnect.Lean.Engine
 
                 //Wait for the threads to complete:
                 var ts = Stopwatch.StartNew();
-                while ((_algorithmHandlers.Results.IsActive || (_algorithmHandlers.Transactions != null && _algorithmHandlers.Transactions.IsActive) || (_algorithmHandlers.DataFeed != null && _algorithmHandlers.DataFeed.IsActive))
+                while ((_algorithmHandlers.Results.IsActive 
+                    || (_algorithmHandlers.Transactions != null && _algorithmHandlers.Transactions.IsActive) 
+                    || (_algorithmHandlers.DataFeed != null && _algorithmHandlers.DataFeed.IsActive)
+                    || (_algorithmHandlers.RealTime != null && _algorithmHandlers.RealTime.IsActive))
                     && ts.ElapsedMilliseconds < 30*1000)
                 {
                     Thread.Sleep(100);
