@@ -1,3 +1,4 @@
+}{
 {
     // this configuration file works by first loading all top-level
     // configuration items and then will load the specified environment
@@ -48,12 +49,6 @@
     "tradier-refresh-token": "",
     "tradier-issued-at": "",
     "trader-lifespan": "",
-
-    //Database Datafeed Connection:
-    "database-address": "localhost",
-    "database-user": "root",
-    "database-password": "",
-    "database-name": "lean",
 
     "environments": {
 
