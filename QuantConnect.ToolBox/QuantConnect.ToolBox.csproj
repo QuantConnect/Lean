@@ -48,6 +48,7 @@
     <Compile Include="InstrumentType.cs" />
     <Compile Include="LeanBar.cs" />
     <Compile Include="LeanInstrument.cs" />
+    <Compile Include="Log.cs" />
     <Compile Include="OS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

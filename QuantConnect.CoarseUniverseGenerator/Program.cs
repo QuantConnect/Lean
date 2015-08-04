@@ -27,6 +27,8 @@ namespace QuantConnect.CoarseUniverseGenerator
 {
     public static class Program
     {
+        private const string ExclusionsFile = "exclusions.txt";
+
         /// <summary>
         /// This program generates the coarse files requires by lean for universe selection.
         /// Universe selection is planned to happen in two stages, the first stage, the 'coarse'
@@ -88,6 +90,14 @@ namespace QuantConnect.CoarseUniverseGenerator
         /// <param name="dataDirectory">The Lean /Data directory</param>
         private static void ProcessEquityDirectories(string dataDirectory)
         {
+            var exclusions = new HashSet<string>();
+            if (File.Exists(ExclusionsFile))
+            {
+                var excludedSymbols = File.ReadLines(ExclusionsFile).Select(x => x.Trim()).Where(x => !x.StartsWith("#"));
+                exclusions = new HashSet<string>(excludedSymbols, StringComparer.InvariantCultureIgnoreCase);
+                Log.Trace("Loaded {0} symbols into the exclusion set", exclusions.Count);
+            }
+
             var equity = Path.Combine(dataDirectory, "equity");
             foreach (var directory in Directory.EnumerateDirectories(equity))
             {
@@ -103,7 +113,7 @@ namespace QuantConnect.CoarseUniverseGenerator
                     .DefaultIfEmpty(DateTime.MinValue)
                     .Max();
 
-                ProcessDailyFolder(dailyFolder, coarseFolder, start);
+                ProcessDailyFolder(dailyFolder, coarseFolder, start, exclusions);
             }
         }
 
@@ -114,11 +124,12 @@ namespace QuantConnect.CoarseUniverseGenerator
         /// <param name="dailyFolder">The folder with daily data</param>
         /// <param name="coarseFolder">The coarse output folder</param>
         /// <param name="start">The start time, this is resolve by finding the most recent written coarse file</param>
-        private static void ProcessDailyFolder(string dailyFolder, string coarseFolder, DateTime start)
+        /// <param name="exclusions">The symbols to be excluded from processing</param>
+        private static void ProcessDailyFolder(string dailyFolder, string coarseFolder, DateTime start, HashSet<string> exclusions)
         {
             const decimal scaleFactor = 10000m;
 
-            Console.WriteLine(DateTime.UtcNow.ToString("o") + ": Processing: " + dailyFolder);
+            Log.Trace("Processing: {0}", dailyFolder);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -131,50 +142,69 @@ namespace QuantConnect.CoarseUniverseGenerator
             // open up each daily file to get the values and append to the daily coarse files
             foreach (var file in Directory.EnumerateFiles(dailyFolder))
             {
-                symbols++;
-                ZipFile zip;
-                using (var reader = Compression.Unzip(file, out zip))
+                try
                 {
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
+                    var symbol = Path.GetFileNameWithoutExtension(file);
+                    if (symbol == null)
                     {
-                        var csv = line.Split(',');
-                        var date = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
-                        if (date <= start) continue;
+                        Log.Trace("Unable to resolve symbol from file: {0}", file);
+                        continue;
+                    }
 
-                        var close = decimal.Parse(csv[4])/scaleFactor;
-                        var volume = long.Parse(csv[5]);
+                    symbol = symbol.ToUpper();
 
-                        var dollarVolume = close*volume;
+                    if (exclusions.Contains(symbol))
+                    {
+                        Log.Trace("Excluded symbol: {0}", symbol);
+                        continue;
+                    }
 
-                        var symbol = Path.GetFileNameWithoutExtension(file);
-                        if (symbol == null)
+                    ZipFile zip;
+                    using (var reader = Compression.Unzip(file, out zip))
+                    {
+                        symbols++;
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
                         {
-                            Console.WriteLine(DateTime.UtcNow.ToString("o") + ": Unable to resolve symbol from file: " + file);
-                            continue;
+                            //20150625.csv
+                            var csv = line.Split(',');
+                            var date = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
+                            if (date <= start) continue;
+
+                            var close = decimal.Parse(csv[4])/scaleFactor;
+                            var volume = long.Parse(csv[5]);
+
+                            var dollarVolume = close*volume;
+
+                            var coarseFile = Path.Combine(coarseFolder, date.ToString("yyyyMMdd") + ".csv");
+                            dates.Add(date);
+
+                            // symbol,close,dollar volume
+                            var coarseFileLine = symbol + "," + close + "," + dollarVolume;
+
+                            StreamWriter writer;
+                            if (!writers.TryGetValue(coarseFile, out writer))
+                            {
+                                writer = new StreamWriter(new FileStream(coarseFile, FileMode.Append, FileAccess.Write, FileShare.Write));
+                                writers[coarseFile] = writer;
+                            }
+                            writer.WriteLine(coarseFileLine);
                         }
+                    }
 
-                        var coarseFile = Path.Combine(coarseFolder, date.ToString("yyyyMMdd") + ".csv");
-                        dates.Add(date);
-
-                        // symbol,close,dollar volume
-                        var coarseFileLine = symbol.ToUpper() + "," + close + "," + dollarVolume;
-
-                        StreamWriter writer;
-                        if (!writers.TryGetValue(coarseFile, out writer))
-                        {
-                            writer = new StreamWriter(new FileStream(coarseFile, FileMode.Append, FileAccess.Write, FileShare.Write));
-                            writers[coarseFile] = writer;
-                        }
-                        writer.WriteLine(coarseFileLine);
+                    if (symbols%1000 == 0)
+                    {
+                        Log.Trace("Completed processing {0} symbols. Current elapsed: {1} seconds", symbols, stopwatch.Elapsed.TotalSeconds.ToString("0.00"));
                     }
                 }
-
-                if (symbols%10 == 0)
+                catch (Exception err)
                 {
-                    Console.WriteLine(DateTime.UtcNow.ToString("o") + ": Completed processing {0} symbols. Current elapsed: " + stopwatch.Elapsed.TotalSeconds.ToString("0.00"), symbols);
+                    // log the error and continue with the process
+                    Log.Error(err.ToString());
                 }
             }
+
+            Log.Trace("Saving {0} coarse files to disk", dates.Count);
 
             // dispose all the writers at the end of processing
             foreach (var writer in writers)
@@ -184,7 +214,7 @@ namespace QuantConnect.CoarseUniverseGenerator
 
             stopwatch.Stop();
 
-            Console.WriteLine(DateTime.UtcNow.ToString("o") + ": Processed {0} symbols into {1} coarse files in {2}", symbols, dates.Count, stopwatch.Elapsed.TotalSeconds.ToString("0.00"));
+            Log.Trace("Processed {0} symbols into {1} coarse files in {2} seconds", symbols, dates.Count, stopwatch.Elapsed.TotalSeconds.ToString("0.00"));
         }
 
         /// <summary>
