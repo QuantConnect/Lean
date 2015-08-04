@@ -194,6 +194,12 @@ namespace QuantConnect.Securities
         /// <param name="days">The days of the week to set these times for</param>
         public void SetMarketHours(TimeSpan marketOpen, TimeSpan marketClose, params DayOfWeek[] days)
         {
+            // if we specify close as 1 tick before the day rolls over, the exchange is still
+            // considered to be open all day,so set it to one day and this impl will make it OpenAllDay
+            if (marketOpen == TimeSpan.Zero && marketClose.Ticks == Time.OneDay.Ticks - 1)
+            {
+                marketClose = Time.OneDay;
+            }
             SetMarketHours(marketOpen, marketOpen, marketClose, marketClose, days);
         }
 
