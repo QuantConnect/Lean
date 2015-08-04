@@ -162,6 +162,12 @@ namespace QuantConnect.CoarseUniverseGenerator
                     ZipFile zip;
                     using (var reader = Compression.Unzip(file, out zip))
                     {
+                        // 50 period EMA constant
+                        const decimal k = 2m / (30 + 1);
+
+                        var seeded = false;
+                        var runningAverageVolume = 0m;
+
                         symbols++;
                         string line;
                         while ((line = reader.ReadLine()) != null)
@@ -174,13 +180,20 @@ namespace QuantConnect.CoarseUniverseGenerator
                             var close = decimal.Parse(csv[4])/scaleFactor;
                             var volume = long.Parse(csv[5]);
 
-                            var dollarVolume = close*volume;
+                            // compute the current volume EMA for dollar volume calculations
+                            runningAverageVolume = seeded
+                                ? volume*k + runningAverageVolume*(1 - k)
+                                : volume;
+
+                            seeded = true;
+
+                            var dollarVolume = close*runningAverageVolume;
 
                             var coarseFile = Path.Combine(coarseFolder, date.ToString("yyyyMMdd") + ".csv");
                             dates.Add(date);
 
-                            // symbol,close,dollar volume
-                            var coarseFileLine = symbol + "," + close + "," + dollarVolume;
+                            // symbol,close,volume,dollar volume
+                            var coarseFileLine = symbol + "," + close + "," + volume +"," + dollarVolume;
 
                             StreamWriter writer;
                             if (!writers.TryGetValue(coarseFile, out writer))
