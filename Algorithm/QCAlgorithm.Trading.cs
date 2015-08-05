@@ -553,14 +553,13 @@ namespace QuantConnect.Algorithm
         public int CalculateOrderQuantity(string symbol, decimal target)
         {
             var security = Securities[symbol];
+            var price = security.Price;
 
             // can't order it if we don't have data
-            if (security.Price == 0) return 0;
+            if (price == 0) return 0;
 
             // this is the value in dollars that we want our holdings to have
             var targetPortfolioValue = target*Portfolio.TotalPortfolioValue;
-
-            var price = security.Holdings.Price;
             var quantity = security.Holdings.Quantity;
             var currentHoldingsValue = price*quantity;
 
