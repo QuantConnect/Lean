@@ -70,6 +70,7 @@ namespace QuantConnect.Lean.Engine
             //Initialize:
             string mode = "RELEASE";
             var liveMode = Config.GetBool("live-mode");
+            Log.DebuggingEnabled = Config.GetBool("debug-mode");
 
             #if DEBUG 
                 mode = "DEBUG";
