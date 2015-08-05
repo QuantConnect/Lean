@@ -191,6 +191,15 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets the function used to define the benchmark. This function will return
+        /// the value of the benchmark at a requested date/time
+        /// </summary>
+        Func<DateTime, decimal> Benchmark
+        { 
+            get;
+        }
+
+        /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
         /// </summary>
         void Initialize();

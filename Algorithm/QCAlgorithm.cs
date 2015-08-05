@@ -543,7 +543,63 @@ namespace QuantConnect.Algorithm
             }
         }
 
+        /// <summary>
+        /// Sets the benchmark used for computing statistics of the algorithm to the specified symbol
+        /// </summary>
+        /// <param name="symbol">symbol to use as the benchmark</param>
+        /// <param name="securityType">Is the symbol an equity, option, forex, etc. Default SecurityType.Equity</param>
+        /// <remarks>
+        /// Must use symbol that is available to the trade engine in your data store(not strictly enforced)
+        /// </remarks>
+        public void SetBenchmark(SecurityType securityType, string symbol)
+        {
+            symbol = symbol.ToUpper();
 
+            var resolution = LiveMode ? Resolution.Second : Resolution.Daily;
+            if (!Securities.ContainsKey(symbol))
+            {
+                AddSecurity(securityType, symbol, resolution);
+            }
+
+            // just return the current price
+            Benchmark = dateTime => Securities[symbol].Price;
+        }
+
+        /// <summary>
+        /// Sets the benchmark used for computing statistics of the algorithm to the specified symbol, defaulting to SecurityType.Equity
+        /// if the symbol doesn't exist in the algorithm
+        /// </summary>
+        /// <param name="symbol">symbol to use as the benchmark</param>
+        /// <remarks>
+        /// Overload to accept symbol without passing SecurityType. If symbol is in portfolio it will use that SecurityType, otherwise will default to SecurityType.Equity
+        /// </remarks>
+        public void SetBenchmark(string symbol)
+        {
+            SetBenchmark(Portfolio.ContainsKey(symbol) ? Portfolio[symbol].Type : SecurityType.Equity,symbol);
+        }
+
+        /// <summary>
+        /// Sets the specified function as the benchmark, this function provides the value of
+        /// the benchmark at each date/time requested
+        /// </summary>
+        /// <param name="benchmark">The benchmark producing function</param>
+        public void SetBenchmark(Func<DateTime, decimal> benchmark)
+        {
+            Benchmark = benchmark;
+        }
+
+        /// <summary>
+        /// Benchmark
+        /// </summary>
+        /// <remarks>Use Benchmark to override default symbol based benchmark, and create your own benchmark. For example a custom moving average benchmark </remarks>
+        /// 
+        public Func<DateTime, decimal> Benchmark
+        {
+            get;
+            private set;
+        }
+
+   
         /// <summary>
         /// Set initial cash for the strategy while backtesting. During live mode this value is ignored 
         /// and replaced with the actual cash of your brokerage account.

@@ -223,6 +223,8 @@ namespace QuantConnect.Lean.Engine
                     //On day-change sample equity and daily performance for statistics calculations
                     if (_previousTime.Date != time.Date)
                     {
+                        SampleBenchmark(algorithm, results, _previousTime.Date);
+
                         //Sample the portfolio value over time for chart.
                         results.SampleEquity(_previousTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
 
@@ -233,10 +235,15 @@ namespace QuantConnect.Lean.Engine
                         }
                         else
                         {
-                            results.SamplePerformance(_previousTime.Date, Math.Round((algorithm.Portfolio.TotalPortfolioValue - startingPortfolioValue) * 100 / startingPortfolioValue, 10));
+                            results.SamplePerformance(_previousTime.Date, Math.Round((algorithm.Portfolio.TotalPortfolioValue - startingPortfolioValue)*100/startingPortfolioValue, 10));
                         }
                         startingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
                     }
+                }
+                else
+                {
+                    // live mode continously sample the benchmark
+                    SampleBenchmark(algorithm, results, _previousTime.Date);
                 }
 
                 //Update algorithm state after capturing performance from previous day
@@ -593,8 +600,9 @@ namespace QuantConnect.Lean.Engine
             //Take final samples:
             results.SampleRange(algorithm.GetChartUpdates());
             results.SampleEquity(_previousTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
+            SampleBenchmark(algorithm, results, _previousTime);
             results.SamplePerformance(_previousTime, Math.Round((algorithm.Portfolio.TotalPortfolioValue - startingPortfolioValue) * 100 / startingPortfolioValue, 10));
-        } // End of Run();
+        }// End of Run();
 
         /// <summary>
         /// Set the quit state.
@@ -660,6 +668,26 @@ namespace QuantConnect.Lean.Engine
                 }
             }
         }
+
+        /// <summary>
+        /// Samples the benchmark in a  try/catch block
+        /// </summary>
+        private void SampleBenchmark(IAlgorithm algorithm, IResultHandler results, DateTime time)
+        {
+            try
+            {
+                // backtest mode, sample benchmark on day changes
+                results.SampleBenchmark(time, algorithm.Benchmark(time).SmartRounding());
+            }
+            catch (Exception err)
+            {
+                algorithm.RunTimeError = err;
+                _algorithmState = AlgorithmStatus.RuntimeError;
+                Log.Error("AlgorithmManager.Run(): RuntimeError: SampleBenchmark: " + err.Message + " STACK >>> " + err.StackTrace);
+            }
+        }
+
+
     } // End of AlgorithmManager
 
 } // End of Namespace.

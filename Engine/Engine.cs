@@ -344,6 +344,7 @@ namespace QuantConnect.Lean.Engine
                             const string strategyEquityKey = "Strategy Equity";
                             const string equityKey = "Equity";
                             const string dailyPerformanceKey = "Daily Performance";
+                            const string benchmarkKey = "Benchmark";
 
                             // make sure we've taken samples for these series before just blindly requesting them
                             if (charts.ContainsKey(strategyEquityKey) &&
@@ -355,7 +356,8 @@ namespace QuantConnect.Lean.Engine
                                 var profitLoss =
                                     new SortedDictionary<DateTime, decimal>(algorithm.Transactions.TransactionRecord);
                                 var numberOfTrades = algorithm.Transactions.GetOrders(x => x.Status.IsFill()).Count();
-                                statistics = Statistics.Statistics.Generate(equity, profitLoss, performance,
+                                var benchmark = charts[benchmarkKey].Series[benchmarkKey].Values.ToDictionary(chartPoint => Time.UnixTimeStampToDateTime(chartPoint.x), chartPoint => chartPoint.y);
+                                statistics = Statistics.Statistics.Generate(equity, profitLoss, performance, benchmark,
                                     _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, numberOfTrades, 252);
                             }
                         }
