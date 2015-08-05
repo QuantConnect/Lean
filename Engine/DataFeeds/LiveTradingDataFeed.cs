@@ -144,7 +144,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         periodStart,
                         DateTime.MaxValue,
                         resultHandler,
-                        Time.EachTradeableDay(algorithm.Securities, periodStart, DateTime.MaxValue), 
+                        Time.EachTradeableDay(algorithm.Securities.Values, periodStart, DateTime.MaxValue), 
                         true, 
                         DateTime.Today
                         );

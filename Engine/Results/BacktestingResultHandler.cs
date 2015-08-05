@@ -498,7 +498,7 @@ namespace QuantConnect.Lean.Engine.Results
             _algorithm = algorithm;
             
             //Setup the sampling periods:
-            _jobDays = Time.TradeableDates(Algorithm.Securities, _job.PeriodStart, _job.PeriodFinish);
+            _jobDays = Time.TradeableDates(Algorithm.Securities.Values, _job.PeriodStart, _job.PeriodFinish);
 
             //Setup Debug Messaging:
             _debugMessageMax = Convert.ToInt32(10 * _jobDays);
