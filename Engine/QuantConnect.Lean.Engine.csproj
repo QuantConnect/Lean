@@ -185,7 +185,6 @@
     <Compile Include="DataFeeds\InvalidSourceEventArgs.cs" />
     <Compile Include="DataFeeds\ISubscriptionFactory.cs" />
     <Compile Include="DataFeeds\LiveTradingDataFeed.cs" />
-    <Compile Include="DataFeeds\DatabaseDataFeed.cs" />
     <Compile Include="DataFeeds\Queues\DataQueue.cs" />
     <Compile Include="DataFeeds\Queues\FakeDataQueue.cs" />
     <Compile Include="DataFeeds\ReaderErrorEventArgs.cs" />

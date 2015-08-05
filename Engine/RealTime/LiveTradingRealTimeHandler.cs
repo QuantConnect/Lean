@@ -16,10 +16,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -36,8 +34,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         private bool _isActive = true;
         private List<RealTimeEvent> _events;
         private Dictionary<SecurityType, MarketToday> _today;
-        private IDataFeed _feed;
-        private TimeSpan _endOfDayDelta = TimeSpan.FromMinutes(10);
+        private readonly TimeSpan _endOfDayDelta = TimeSpan.FromMinutes(10);
 
         //Algorithm and Handlers:
         private IAlgorithm _algorithm;
@@ -116,7 +113,22 @@ namespace QuantConnect.Lean.Engine.RealTime
                 try
                 {
                     //Trigger as close to second as reasonable. 1.00, 2.00 etc.
-                    _time = DateTime.UtcNow.ConvertTo(TimeZones.Utc, _algorithm.TimeZone);
+                    var time = DateTime.UtcNow.ConvertTo(TimeZones.Utc, _algorithm.TimeZone);
+                    
+                    //Reset all the daily events
+                    if (_time.Date != time.Date)
+                    {
+                        _time = time;
+
+                        //Each day needs the events reset to update the market hours and set daily targets/events.
+                        SetupEvents(time);
+
+                        // recompute the time as it may have skipped a second while setting up events
+                        time = DateTime.UtcNow.ConvertTo(TimeZones.Utc, _algorithm.TimeZone);
+                    }
+
+                    _time = time;
+
                     var nextSecond = _time.RoundUp(TimeSpan.FromSeconds(1));
                     var delay = Convert.ToInt32((nextSecond - _time).TotalMilliseconds);
                     Thread.Sleep(delay < 0 ? 1 : delay);
@@ -148,6 +160,8 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             try
             {
+                date = date.Date;
+
                 //Clear the previous days events to reset with today:
                 ClearEvents();
                 
@@ -155,7 +169,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 RefreshMarketHoursToday(date);
 
                 // END OF DAY REAL TIME EVENT:
-                SetupEndOfDayEvent();
+                SetupEndOfDayEvent(date);
             }
             catch (Exception err)
             {
@@ -167,8 +181,12 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// Setup the end of day event handler for all symbols in the users algorithm. 
         /// End of market hours are determined by the market hours today property.
         /// </summary>
-        private void SetupEndOfDayEvent()
+        /// <param name="date">The date to set up events for</param>
+        private void SetupEndOfDayEvent(DateTime date)
         {
+            // we use this to see if time has already passed for an EOD event
+            var currentAlgorithmTime = DateTime.UtcNow.ConvertTo(TimeZones.Utc, _algorithm.TimeZone);
+
             // Load Today variables based on security type:
             foreach (var security in _algorithm.Securities.Values)
             {
@@ -185,21 +203,18 @@ namespace QuantConnect.Lean.Engine.RealTime
                 else
                 {
                     //If custom/dynamic data get close time from user defined security object.
-                    endOfDayEventTime = _time.Date + security.Exchange.MarketClose.Subtract(_endOfDayDelta);
+                    endOfDayEventTime = date + security.Exchange.MarketClose.Subtract(_endOfDayDelta);
                 }
 
                 //2. Set this time as the handler for EOD event:
                 if (endOfDayEventTime.HasValue)
                 {
-
-                    if (_time< endOfDayEventTime.Value)
+                    if (currentAlgorithmTime < endOfDayEventTime.Value)
                     {
-
-                        Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents(): Setup EOD Event for {0}", endOfDayEventTime.Value.ToString("u")));
+                        Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents(): Setup EOD Event for {0} at {1}", security.Symbol, endOfDayEventTime.Value.ToString("u")));
                     }
                     else
                     {
-
                         Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents(): Skipping Setup of EOD Event for {0} because time has passed.", security.Symbol));
                         continue;
                     }
@@ -222,8 +237,8 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
 
             // fire just before the day rolls over, 11:58pm
-            var endOfDay = _time.Date.AddHours(23.967);
-            if (_time < endOfDay) 
+            var endOfDay = date.AddHours(23.967);
+            if (currentAlgorithmTime < endOfDay) 
             { 
                 AddEvent(new RealTimeEvent(endOfDay, () =>
                 {
@@ -343,12 +358,8 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <param name="time"></param>
         public void SetTime(DateTime time)
         {
-            //Reset all the daily events
-            if (_time.Date != time.Date)
-            {
-                //Each day needs the events reset to update the market hours and set daily targets/events.
-                SetupEvents(time);
-            }
+            // in live mode we use current time for our time keeping
+            // this method is used by backtesting to set time based on the data
         }
 
         /// <summary>
