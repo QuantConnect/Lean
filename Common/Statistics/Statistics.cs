@@ -156,7 +156,10 @@ namespace QuantConnect.Statistics
                 performance.Values.ToList().ForEach(i => listPerformance.Add((double)(i / 100)));
                 benchmark = new SortedDictionary<DateTime, decimal>(unsortedBenchmark);
 
-                // start off the benchmark's performance as zero, this isn't 100% correct, but close enough
+                // to find the delta in benchmark for first day, we need to know the price at the opening
+                // moment of the day, but since we cannot find this, we cannot find the first benchmark's delta,
+                // so we pad it with Zero. If running a short backtest this will skew results, longer backtests
+                // will not be affected much
                 listBenchmark.Add(0);
 
                 //Get benchmark performance array for same period:
