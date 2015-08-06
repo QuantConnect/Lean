@@ -454,7 +454,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // we want to remove orders older than 10k records, but only in live mode
             const int maxOrdersToKeep = 10000;
-            if (_orders.Count < maxOrdersToKeep + 1) return;
+            if (_orders.Count < maxOrdersToKeep + 1)
+            {
+                Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Exit");
+                return;
+            }
 
             int max = _orders.Max(x => x.Key);
             int lowestOrderIdToKeep = max - maxOrdersToKeep;
