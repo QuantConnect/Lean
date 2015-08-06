@@ -204,6 +204,12 @@ namespace QuantConnect.Interfaces
         /// </summary>
         void Initialize();
 
+        /// <summary>
+        /// Called by setup handlers after Initialize and allows the algorithm a chance to organize
+        /// the data gather in the Initialize method
+        /// </summary>
+        void PostInitialize();
+
         // <summary>
         // v1.0 Handler for Tick Events [DEPRECATED June-2014]
         // </summary>

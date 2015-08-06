@@ -167,8 +167,8 @@ namespace QuantConnect.Statistics
                 {
                     if (dt >= equity.Keys.FirstOrDefault().AddDays(-1) && dt < equity.Keys.LastOrDefault())
                     {
-                        var previous = benchmark[dtPrevious];
-                        if (benchmark.ContainsKey(dtPrevious) && previous != 0)
+                        decimal previous;
+                        if (benchmark.TryGetValue(dtPrevious, out previous) && previous != 0)
                         {
                             var deltaBenchmark = (benchmark[dt] - previous)/previous;
                             listBenchmark.Add((double)(deltaBenchmark));

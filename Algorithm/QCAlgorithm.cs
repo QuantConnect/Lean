@@ -63,6 +63,10 @@ namespace QuantConnect.Algorithm
         private bool _checkedForOnDataSlice;
         private Action<Slice> _onDataSlice;
 
+        // set by SetBenchmark helper API functions
+        private string _benchmarkSymbol;
+        private SecurityType _benchmarkSecurityType;
+
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
         /// QCAlgorithm manages the transactions, portfolio, charting and security subscriptions for the users algorithms.
@@ -323,6 +327,37 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Called by setup handlers after Initialize and allows the algorithm a chance to organize
+        /// the data gather in the Initialize method
+        /// </summary>
+        public void PostInitialize()
+        {
+            // if the benchmark hasn't been set yet, set it
+            if (Benchmark == null)
+            {
+                // apply the default benchmark if it hasn't been set
+                if (string.IsNullOrEmpty(_benchmarkSymbol))
+                {
+                    _benchmarkSymbol = "SPY";
+                    _benchmarkSecurityType = SecurityType.Equity;
+                }
+
+                // if the requested benchmark system wasn't already added, then add it now
+                Security security;
+                if (!Securities.TryGetValue(_benchmarkSymbol, out security))
+                {
+                    // add the security as an internal feed so the algorithm doesn't receive the data
+                    var resolution = _liveMode ? Resolution.Second : Resolution.Daily;
+                    var market = _benchmarkSecurityType == SecurityType.Forex ? "fxcm" : "usa";
+                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider, _benchmarkSecurityType, _benchmarkSymbol, resolution, market, true, 1m, false, true);
+                }
+
+                // just return the current price
+                Benchmark = dateTime => security.Price;
+            }
+        }
+
+        /// <summary>
         /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
         /// </summary>
         /// <code>
@@ -553,16 +588,8 @@ namespace QuantConnect.Algorithm
         /// </remarks>
         public void SetBenchmark(SecurityType securityType, string symbol)
         {
-            symbol = symbol.ToUpper();
-
-            var resolution = LiveMode ? Resolution.Second : Resolution.Daily;
-            if (!Securities.ContainsKey(symbol))
-            {
-                AddSecurity(securityType, symbol, resolution);
-            }
-
-            // just return the current price
-            Benchmark = dateTime => Securities[symbol].Price;
+            _benchmarkSymbol = symbol.ToUpper();
+            _benchmarkSecurityType = securityType;
         }
 
         /// <summary>
@@ -575,7 +602,8 @@ namespace QuantConnect.Algorithm
         /// </remarks>
         public void SetBenchmark(string symbol)
         {
-            SetBenchmark(Portfolio.ContainsKey(symbol) ? Portfolio[symbol].Type : SecurityType.Equity,symbol);
+            _benchmarkSymbol = symbol.ToUpper();
+            _benchmarkSecurityType = SecurityType.Equity;
         }
 
         /// <summary>
