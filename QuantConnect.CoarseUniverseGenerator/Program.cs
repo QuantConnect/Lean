@@ -50,6 +50,7 @@ namespace QuantConnect.CoarseUniverseGenerator
             }
             var dataDirectory = jtoken.Value<string>();
 
+            var ignoreMaplessSymbols = false;
             var updateMode = false;
             var updateTime = TimeSpan.Zero;
             if (config.TryGetValue("update-mode", out jtoken))
@@ -61,9 +62,16 @@ namespace QuantConnect.CoarseUniverseGenerator
                 }
             }
 
+            //Ignore symbols without a map file:
+            // Typically these are nothing symbols (NASDAQ test symbols, or symbols listed for a few days who aren't actually ever traded).
+            if (config.TryGetValue("ignore-mapless", out jtoken))
+            {
+                ignoreMaplessSymbols = jtoken.Value<bool>();
+            }
+
             do
             {
-                ProcessEquityDirectories(dataDirectory);
+                ProcessEquityDirectories(dataDirectory, ignoreMaplessSymbols);
             }
             while (WaitUntilTimeInUpdateMode(updateMode, updateTime));
         }
@@ -88,7 +96,8 @@ namespace QuantConnect.CoarseUniverseGenerator
         /// Iterates over each equity directory and aggregates the data into the coarse file
         /// </summary>
         /// <param name="dataDirectory">The Lean /Data directory</param>
-        private static void ProcessEquityDirectories(string dataDirectory)
+        /// <param name="ignoreMaplessSymbols">Ignore symbols without a QuantQuote map file.</param>
+        private static void ProcessEquityDirectories(string dataDirectory, bool ignoreMaplessSymbols)
         {
             var exclusions = new HashSet<string>();
             if (File.Exists(ExclusionsFile))
@@ -102,6 +111,7 @@ namespace QuantConnect.CoarseUniverseGenerator
             foreach (var directory in Directory.EnumerateDirectories(equity))
             {
                 var dailyFolder = Path.Combine(directory, "daily");
+                var mapFileFolder = Path.Combine(directory, "map_files");
                 var coarseFolder = Path.Combine(directory, "fundamental", "coarse");
                 if (!Directory.Exists(coarseFolder))
                 {
@@ -113,7 +123,7 @@ namespace QuantConnect.CoarseUniverseGenerator
                     .DefaultIfEmpty(DateTime.MinValue)
                     .Max();
 
-                ProcessDailyFolder(dailyFolder, coarseFolder, start, exclusions);
+                ProcessDailyFolder(dailyFolder, coarseFolder, mapFileFolder, start, exclusions, ignoreMaplessSymbols);
             }
         }
 
@@ -123,9 +133,11 @@ namespace QuantConnect.CoarseUniverseGenerator
         /// </summary>
         /// <param name="dailyFolder">The folder with daily data</param>
         /// <param name="coarseFolder">The coarse output folder</param>
+        /// <param name="mapFileFolder">Location of the map file for the data</param>
         /// <param name="start">The start time, this is resolve by finding the most recent written coarse file</param>
         /// <param name="exclusions">The symbols to be excluded from processing</param>
-        private static void ProcessDailyFolder(string dailyFolder, string coarseFolder, DateTime start, HashSet<string> exclusions)
+        /// <param name="ignoreMapless">Ignore the symbols without a map file.</param>
+        private static void ProcessDailyFolder(string dailyFolder, string coarseFolder, string mapFileFolder, DateTime start, HashSet<string> exclusions, bool ignoreMapless)
         {
             const decimal scaleFactor = 10000m;
 
@@ -134,6 +146,7 @@ namespace QuantConnect.CoarseUniverseGenerator
             var stopwatch = Stopwatch.StartNew();
 
             var symbols = 0;
+            var maplessCount = 0;
             var dates = new HashSet<DateTime>();
 
             // instead of opening/closing these constantly, open them once and dispose at the end (~3x speed improvement)
@@ -156,6 +169,14 @@ namespace QuantConnect.CoarseUniverseGenerator
                     if (exclusions.Contains(symbol))
                     {
                         Log.Trace("Excluded symbol: {0}", symbol);
+                        continue;
+                    }
+
+                    if (ignoreMapless && !File.Exists(Path.Combine(mapFileFolder, symbol.ToLower() + ".csv")))
+                    {
+                        maplessCount++;
+                        // Too verbose.
+                        //Log.Trace("Excluded mapless symbol: " + symbol);
                         continue;
                     }
 
@@ -228,6 +249,7 @@ namespace QuantConnect.CoarseUniverseGenerator
             stopwatch.Stop();
 
             Log.Trace("Processed {0} symbols into {1} coarse files in {2} seconds", symbols, dates.Count, stopwatch.Elapsed.TotalSeconds.ToString("0.00"));
+            Log.Trace("Excluded {0} mapless symbols.", maplessCount);
         }
 
         /// <summary>

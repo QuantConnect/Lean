@@ -9,5 +9,9 @@
     // at the specified update-time-of-day it will wake up
     // and perform the update
     "update-mode": false,
-    "update-time-of-day": "5:00"
+    "update-time-of-day": "5:00",
+
+	// QuantQuote data without map files is good filter for non-tradable or test symbols. 
+	// defaults to false here for open source users who have their own data, and no specific map files.
+	"ignore-mapless":"false"
 }
