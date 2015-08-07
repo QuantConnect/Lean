@@ -41,12 +41,23 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the <see cref="DonchianChannel"/> class.
         /// </summary>
         /// <param name="name">The name.</param>
-        /// <param name="period">The period.</param>
+        /// <param name="period">The period for both the upper and lower channels.</param>
         public DonchianChannel(string name, int period)
+            : this(name, period, period)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DonchianChannel"/> class.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="upperPeriod">The period for the upper channel.</param>
+        /// <param name="lowerPeriod">The period for the lower channel</param>
+        public DonchianChannel(string name, int upperPeriod, int lowerPeriod)
             : base(name)
         {
-            UpperBand = new Maximum(name + "_UpperBand", period);
-            LowerBand = new Minimum(name + "_LowerBand", period);
+            UpperBand = new Maximum(name + "_UpperBand", upperPeriod);
+            LowerBand = new Minimum(name + "_LowerBand", lowerPeriod);
         }
 
         /// <summary>
