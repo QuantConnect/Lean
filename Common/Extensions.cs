@@ -385,7 +385,12 @@ namespace QuantConnect
         /// <returns>The time in terms of the to time zone</returns>
         public static DateTime ConvertToUtc(this DateTime time, DateTimeZone from, bool strict = false)
         {
-            return ConvertTo(time, from, TimeZones.Utc, strict);
+            if (strict)
+            {
+                return from.AtStrictly(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
+            }
+
+            return from.AtLeniently(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
         }
 
         /// <summary>
