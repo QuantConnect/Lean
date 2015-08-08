@@ -325,7 +325,9 @@ namespace QuantConnect.Lean.Engine.Results
                         //Get the updates since the last chart
                         foreach (var chart in _charts)
                         {
-                            deltaCharts.Add(chart.Value.Name, chart.Value.GetUpdates());
+                            // remove directory pathing characters from chart names
+                            var safeName = chart.Value.Name.Replace('/', '-');
+                            deltaCharts.Add(safeName, chart.Value.GetUpdates());
                         }
                     }
                     Log.Debug("LiveTradingResultHandler.Update(): End build delta charts");
@@ -376,10 +378,15 @@ namespace QuantConnect.Lean.Engine.Results
                     {
                         Log.Debug("LiveTradingResultHandler.Update(): Pre-store result");
                         _nextChartsUpdate = DateTime.Now.AddMinutes(1);
-                        Dictionary<string, Chart> chartComplete;
+                        var chartComplete = new Dictionary<string, Chart>();
                         lock (_chartLock)
                         {
-                            chartComplete = new Dictionary<string, Chart>(Charts);
+                            foreach (var chart in Charts)
+                            {
+                                // remove directory pathing characters from chart names
+                                var safeName = chart.Value.Name.Replace('/', '-');
+                                chartComplete.Add(safeName, chart.Value);
+                            }
                         }
                         var orders = new Dictionary<int, Order>(_transactionHandler.Orders);
                         var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, orders, _algorithm.Transactions.TransactionRecord, holdings, deltaStatistics, runtimeStatistics, serverStatistics));
