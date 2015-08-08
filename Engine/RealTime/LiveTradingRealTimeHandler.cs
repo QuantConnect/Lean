@@ -72,7 +72,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             AddEvent(new ScheduledEvent("RefreshMarketHours", times, (name, triggerTime) =>
             {
                 // refresh market hours from api every day
-                RefreshMarketHoursToday(triggerTime);
+                RefreshMarketHoursToday(triggerTime.ConvertFromUtc(_algorithm.TimeZone).Date);
             }));
 
             // add end of day events for each tradeable day
