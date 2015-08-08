@@ -126,8 +126,8 @@ namespace QuantConnect.Lean.Engine
             Log.Trace("         Transactions: " + leanEngineAlgorithmHandlers.Transactions.GetType().FullName);
 
             // if the job version doesn't match this instance version then we can't process it
-            // we also don't want to reprocess redelivered live jobs
-            if (job.Version != Constants.Version || (liveMode && job.Redelivered))
+            // we also don't want to reprocess redelivered jobs
+            if (job.Version != Constants.Version || job.Redelivered)
             {
                 Log.Error("Engine.Run(): Job Version: " + job.Version + "  Deployed Version: " + Constants.Version + " Redelivered: " + job.Redelivered);
 
