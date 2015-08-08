@@ -413,7 +413,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // checks below again
 
                 // in live mode subscription reader will move next but return null for current since nothing is there
-                subscription.MoveNext();
+                if (!subscription.MoveNext())
+                {
+                    // we've exhaused this source for now, the only source that would do this is
+                    // a remote file, let's wait for five minutes and check again to see if we can
+                    // get another piece of data. sadly, in this case it does mean redownloading the
+                    // entire file and reading through all the data before getting to the end to see
+                    // if there's a new line
+                    subscription.SetNextUpdateTime(TimeSpan.FromMinutes(5));
+                }
+
                 // true success defined as if we got a non-null value
                 if (subscription.Current == null)
                 {

@@ -100,6 +100,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             RealtimePrice = price;
         }
 
+        /// <summary>
+        /// Sets the next update time in reference to now
+        /// </summary>
+        /// <param name="duration">The duration to wait before NeedsUpdate = true</param>
+        public void SetNextUpdateTime(TimeSpan duration)
+        {
+            _nextUpdateTimeUtc = DateTime.UtcNow.Add(duration);
+        }
+
         private static DateTime GetRoundedUtcNow(TimeSpan increment)
         {
             return DateTime.UtcNow.Add(increment).RoundDown(increment);
