@@ -66,6 +66,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public LiveSubscription(Security security, IEnumerator<BaseData> enumerator, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefined, bool isFundamentalSubscription)
             : base(security, enumerator, utcStartTime, utcEndTime, isUserDefined, isFundamentalSubscription)
         {
+            NeedsMoveNext = true;
             IsCustomData = security.IsDynamicallyLoadedData;
             StreamStore = new StreamStore(Configuration, security);
         }
