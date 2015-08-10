@@ -43,13 +43,10 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             if (environment == "sandbox")
             { 
                 var requestString = EndpointResolver.ResolveEndpoint(Environment.Sandbox, Server.Account) + "accounts";
-                using (var task = oandaBrokerage.MakeRequestAsync<AccountResponse>(requestString, "POST"))
-                {
-                    task.Wait();
-                    var accountResponse = task.Result;
-                    oandaBrokerage.SetAccountId(accountResponse.accountId);
-                    oandaBrokerage.SetEnvironment("sandbox");
-                }
+                var accountResponse = oandaBrokerage.MakeRequest<AccountResponse>(requestString, "POST");
+                oandaBrokerage.SetAccountId(accountResponse.accountId);
+                oandaBrokerage.SetEnvironment("sandbox");
+                
             }
             else
             {
@@ -112,8 +109,8 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         protected override decimal GetAskPrice(string symbol, SecurityType securityType)
         {
             var oanda = (OandaBrokerage) Brokerage;
-            var quotes = oanda.GetRatesAsync(new List<Instrument> { new Instrument { instrument = symbol } });
-            return (decimal)quotes.Result[0].ask;
+            var quotes = oanda.GetRates(new List<Instrument> { new Instrument { instrument = symbol } });
+            return (decimal)quotes[0].ask;
         }
     }
 }

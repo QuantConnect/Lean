@@ -129,7 +129,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public void InitializeInstrumentSecurityTypeMap()
         {
-            InstrumentSecurityTypeMap = MapInstrumentToSecurityType(GetInstrumentsAsync().Result);
+            InstrumentSecurityTypeMap = MapInstrumentToSecurityType(GetInstrumentsAsync());
         }
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The open orders returned from Oanda</returns>
         public override List<Order> GetOpenOrders()
         {
-            var oandaOrders = GetOrderListAsync().Result;
+            var oandaOrders = GetOrderList();
 
             var orderList = oandaOrders.Select(ConvertOrder).ToList();
             foreach (var openOrder in orderList)
@@ -195,13 +195,9 @@ namespace QuantConnect.Brokerages.Oanda
         {
             var cash = new List<Cash>();
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId;
-            using (var task = MakeRequestAsync<Account>(requestString))
-            {
-                task.Wait();
-                var accountResponse = task.Result;
-                //TODO figure how exchange rates work in Oanda. probably need to call http://developer.oanda.com/exchange-rates-api/v1/currencies/
-                cash.Add(new Cash(accountResponse.accountCurrency, accountResponse.balance.ToDecimal(), new decimal(1.0)));
-            }
+            var accountResponse = MakeRequest<Account>(requestString);
+            //TODO figure how exchange rates work in Oanda. probably need to call http://developer.oanda.com/exchange-rates-api/v1/currencies/
+            cash.Add(new Cash(accountResponse.accountCurrency, accountResponse.balance.ToDecimal(), new decimal(1.0)));
             return cash;
         }
         
@@ -231,7 +227,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// Gets the list of available tradable instruments/products from Oanda
         /// </summary>
         /// <returns></returns>
-        public async Task<List<Instrument>> GetInstrumentsAsync(List<string> instrumentNames = null)
+        public List<Instrument> GetInstrumentsAsync(List<string> instrumentNames = null)
         {
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Rates) + "instruments?accountId=" + AccountId;
             if (instrumentNames != null)
@@ -239,7 +235,7 @@ namespace QuantConnect.Brokerages.Oanda
                 var instrumentsParam = GetCommaSeparatedList(instrumentNames);
                 requestString += "&instruments=" + Uri.EscapeDataString(instrumentsParam);
             }
-            var instrumentResponse = await MakeRequestAsync<InstrumentsResponse>(requestString);
+            var instrumentResponse = MakeRequest<InstrumentsResponse>(requestString);
             var instruments = new List<Instrument>();
             instruments.AddRange(instrumentResponse.instruments);
             return instruments;
@@ -263,9 +259,9 @@ namespace QuantConnect.Brokerages.Oanda
             Log.Trace(string.Format("OandaBrokerage.PlaceOrder(): {0} to {1} {2} units of {3}", order.Type, order.Direction, order.Quantity, order.Symbol));
 
 
-            var priorOrderPositions = GetTradeListAsync(requestParams).Result;
+            var priorOrderPositions = GetTradeList(requestParams);
 
-            var postOrderResponse = PostOrderAsync(requestParams).Result;
+            var postOrderResponse = PostOrderAsync(requestParams);
 
             if (postOrderResponse != null)
             {
@@ -303,7 +299,7 @@ namespace QuantConnect.Brokerages.Oanda
                 {
                     var tradeOpenedId = postOrderResponse.tradeOpened.id;
                     requestParams = new Dictionary<string, string>();
-                    var tradeListResponse = GetTradeListAsync(requestParams).Result;
+                    var tradeListResponse = GetTradeList(requestParams);
                     if (tradeListResponse.trades.Any(trade => trade.id == tradeOpenedId))
                     {
                         order.BrokerId.Add(tradeOpenedId);
@@ -331,7 +327,7 @@ namespace QuantConnect.Brokerages.Oanda
                 {
                     var tradeOpenedId = postOrderResponse.tradeOpened.id;
                     requestParams = new Dictionary<string, string>();
-                    var tradeListResponse = GetTradeListAsync(requestParams).Result;
+                    var tradeListResponse = GetTradeList(requestParams);
                     if (tradeListResponse.trades.Any(trade => trade.id == tradeOpenedId))
                     {
                         order.BrokerId.Add(tradeOpenedId);
@@ -390,7 +386,7 @@ namespace QuantConnect.Brokerages.Oanda
             // we need the brokerage order id in order to perform an update
             PopulateOrderRequestParameters(order, requestParams);
 
-            UpdateOrderAsync(order.BrokerId.First(), requestParams);
+            UpdateOrder(order.BrokerId.First(), requestParams);
 
             //Console.Out.Write("---- Update Order ----");
             //Console.Out.Write(result.Result);
@@ -544,10 +540,10 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="requestParams"></param>
         /// <returns></returns>
-        public async Task<TradesResponse> GetTradeListAsync(Dictionary<string, string> requestParams = null)
+        public TradesResponse GetTradeList(Dictionary<string, string> requestParams = null)
         {
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/trades";
-            return await MakeRequestAsync<TradesResponse>(requestString, "GET", requestParams);
+            return MakeRequest<TradesResponse>(requestString, "GET", requestParams);
         }
         
         //TODO: issues running tasks async, order tend to not be found because the filled event getting fired after the order for update is already called.
@@ -556,17 +552,17 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="orderId">the identifier of the order to update</param>
         /// <param name="requestParams">the parameters to update (name, value pairs)</param>
-        public void UpdateOrderAsync(long orderId, Dictionary<string, string> requestParams)
+        public void UpdateOrder(long orderId, Dictionary<string, string> requestParams)
         {
             var orderRequest = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
 
-            var order = MakeRequestAsync<DataType.Order>(orderRequest).Result;
+            var order = MakeRequest<DataType.Order>(orderRequest);
             if (order != null && order.id > 0)
             {
                 var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
                 try
                 {
-                    var updatedOrder = MakeRequestWithBody<DataType.Order>(requestString, "PATCH", requestParams).Result;
+                    var updatedOrder = MakeRequestWithBody<DataType.Order>(requestString, "PATCH", requestParams);
                     if (updatedOrder != null && updatedOrder.id > 0)
                     {
                         //OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateFailed", "Failed to update Oanda order id: " + orderId + "."));
@@ -590,10 +586,10 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="orderId">the id of the order to retrieve</param>
         /// <returns>Order object containing the order details</returns>
-        public async Task<DataType.Order> GetOrderDetailsAsync(int orderId)
+        public DataType.Order GetOrderDetails(int orderId)
         {
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
-            var order = await MakeRequestAsync<DataType.Order>(requestString);
+            var order = MakeRequest<DataType.Order>(requestString);
             return order;
         }
 
@@ -602,7 +598,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="instruments">the list of instruments to check</param>
         /// <returns>List of Price objects with the current price for each instrument</returns>
-        public async Task<List<Price>> GetRatesAsync(List<Instrument> instruments)
+        public List<Price> GetRates(List<Instrument> instruments)
         {
             var requestBuilder = new StringBuilder(EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Rates) + "prices?instruments=");
 
@@ -613,7 +609,7 @@ namespace QuantConnect.Brokerages.Oanda
             var requestString = requestBuilder.ToString().Trim(',');
             requestString = requestString.Replace(",", "%2C");
 
-            var pricesResponse = await MakeRequestAsync<PricesResponse>(requestString);
+            var pricesResponse = MakeRequest<PricesResponse>(requestString);
             var prices = new List<Price>();
             prices.AddRange(pricesResponse.prices);
 
@@ -625,10 +621,10 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="requestParams">the parameters to use in the request</param>
         /// <returns>PostOrderResponse with details of the results (throws if if fails)</returns>
-        public async Task<PostOrderResponse> PostOrderAsync(Dictionary<string, string> requestParams)
+        public PostOrderResponse PostOrderAsync(Dictionary<string, string> requestParams)
         {
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders";
-            return await MakeRequestWithBody<PostOrderResponse>(requestString, "POST", requestParams);
+            return MakeRequestWithBody<PostOrderResponse>(requestString, "POST", requestParams);
         }
 
         /// <summary>
@@ -636,10 +632,10 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="requestParams">optional additional parameters for the request (name, value pairs)</param>
         /// <returns>List of Order objects (or empty list, if no orders)</returns>
-        public async Task<List<DataType.Order>> GetOrderListAsync(Dictionary<string, string> requestParams = null)
+        public List<DataType.Order> GetOrderList(Dictionary<string, string> requestParams = null)
         {
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders";
-            var ordersResponse = await MakeRequestAsync<OrdersResponse>(requestString, "GET", requestParams);
+            var ordersResponse = MakeRequest<OrdersResponse>(requestString, "GET", requestParams);
             var orders = new List<DataType.Order>();
             orders.AddRange(ordersResponse.orders);
             return orders;
@@ -669,10 +665,11 @@ namespace QuantConnect.Brokerages.Oanda
             return true;
         }
 
-        private async Task<Order> CancelOrderAsync(long orderId)
+        private void CancelOrderAsync(long orderId)
         {
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
-            return await MakeRequestAsync<Order>(requestString, "DELETE");
+            //TODO: something potentially wrong with this request.
+            var response = MakeRequestAsync<Order>(requestString, "DELETE");
         }
         
 
@@ -827,6 +824,44 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="method">method for the request (defaults to GET)</param>
         /// <param name="requestParams">optional parameters (note that if provided, it's assumed the requestString doesn't contain any)</param>
         /// <returns>response via type T</returns>
+        public T MakeRequest<T>(string requestString, string method = "GET", Dictionary<string, string> requestParams = null)
+        {
+            if (requestParams != null && requestParams.Count > 0)
+            {
+                var parameters = CreateParamString(requestParams);
+                requestString = requestString + "?" + parameters;
+            }
+            var request = WebRequest.CreateHttp(requestString);
+            request.Headers[HttpRequestHeader.Authorization] = "Bearer " + AccessToken;
+            request.Headers[HttpRequestHeader.AcceptEncoding] = "gzip, deflate";
+            request.Method = method;
+
+            try
+            {
+                using (var response = request.GetResponse())
+                {
+                    var serializer = new DataContractJsonSerializer(typeof(T));
+                    var stream = GetResponseStream(response);
+                    return (T)serializer.ReadObject(stream);
+                }
+            }
+            catch (WebException ex)
+            {
+                var stream = GetResponseStream(ex.Response);
+                var reader = new StreamReader(stream);
+                var result = reader.ReadToEnd();
+                throw new Exception(result);
+            }
+        }
+
+        /// <summary>
+        /// Primary (internal) asynchronous request handler
+        /// </summary>
+        /// <typeparam name="T">The response type</typeparam>
+        /// <param name="requestString">the request to make</param>
+        /// <param name="method">method for the request (defaults to GET)</param>
+        /// <param name="requestParams">optional parameters (note that if provided, it's assumed the requestString doesn't contain any)</param>
+        /// <returns>response via type T</returns>
         public async Task<T> MakeRequestAsync<T>(string requestString, string method = "GET", Dictionary<string, string> requestParams = null)
         {
             if (requestParams != null && requestParams.Count > 0)
@@ -865,7 +900,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="requestParams">the parameters to pass in the request body</param>
         /// <param name="requestString">the request to make</param>
         /// <returns>response, via type T</returns>
-        private async Task<T> MakeRequestWithBody<T>(string requestString, string method, Dictionary<string, string> requestParams)
+        private T MakeRequestWithBody<T>(string requestString, string method, Dictionary<string, string> requestParams)
         {
             // Create the body
             var requestBody = CreateParamString(requestParams);
@@ -874,16 +909,16 @@ namespace QuantConnect.Brokerages.Oanda
             request.Method = method;
             request.ContentType = "application/x-www-form-urlencoded";
 
-            using (var writer = new StreamWriter(await request.GetRequestStreamAsync()))
+            using (var writer = new StreamWriter(request.GetRequestStream()))
             {
                 // Write the body
-                await writer.WriteAsync(requestBody);
+                writer.WriteAsync(requestBody);
             }
 
             // Handle the response
             try
             {
-                using (var response = await request.GetResponseAsync())
+                using (var response = request.GetResponse())
                 {
                     var serializer = new DataContractJsonSerializer(typeof(T));
                     return (T)serializer.ReadObject(response.GetResponseStream());
@@ -916,7 +951,7 @@ namespace QuantConnect.Brokerages.Oanda
         public async Task<List<Position>> GetPositionsAsync(int accountId)
         {
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + accountId + "/positions";
-            var positionResponse = await MakeRequestAsync<PositionsResponse>(requestString);
+            var positionResponse = MakeRequest<PositionsResponse>(requestString);
             var positions = new List<Position>();
             positions.AddRange(positionResponse.positions);
             return positions;
