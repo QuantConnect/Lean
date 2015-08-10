@@ -109,9 +109,7 @@ namespace QuantConnect.Algorithm
             UniverseSettings = new SubscriptionSettings(Resolution.Minute, 2m, true, false);
 
             // initialize our scheduler, this acts as a liason to the real time handler
-            Schedule = new ScheduleManager(Securities);
-            DateRules = new DateRules(Securities);
-            TimeRules = new TimeRules(Securities, TimeZone);
+            Schedule = new ScheduleManager(Securities, TimeZone);
         }
 
         /// <summary>
@@ -178,7 +176,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public DateRules DateRules
         {
-            get; private set;
+            get { return Schedule.DateRules; }
         }
 
         /// <summary>
@@ -186,7 +184,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public TimeRules TimeRules
         {
-            get; private set;
+            get { return Schedule.TimeRules; }
         }
 
         /// <summary>

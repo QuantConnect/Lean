@@ -15,6 +15,7 @@
 */
 
 using System;
+using NodaTime;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Scheduling
@@ -29,12 +30,25 @@ namespace QuantConnect.Scheduling
         private readonly SecurityManager _securities;
 
         /// <summary>
+        /// Gets the date rules helper object to make specifying dates for events easier
+        /// </summary>
+        public DateRules DateRules { get; private set; }
+
+        /// <summary>
+        /// Gets the time rules helper object to make specifying times for events easier
+        /// </summary>
+        public TimeRules TimeRules { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ScheduleManager"/> class
         /// </summary>
         /// <param name="securities">Securities manager containing the algorithm's securities</param>
-        public ScheduleManager(SecurityManager securities)
+        /// <param name="timeZone">The algorithm's time zone</param>
+        public ScheduleManager(SecurityManager securities, DateTimeZone timeZone)
         {
             _securities = securities;
+            DateRules = new DateRules(securities);
+            TimeRules = new TimeRules(securities, timeZone);
         }
 
         /// <summary>
