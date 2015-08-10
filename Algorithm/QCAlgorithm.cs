@@ -26,6 +26,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Notifications;
 using QuantConnect.Orders;
+using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
@@ -106,6 +107,11 @@ namespace QuantConnect.Algorithm
             _exchangeHoursProvider = SecurityExchangeHoursProvider.FromDataFolder();
 
             UniverseSettings = new SubscriptionSettings(Resolution.Minute, 2m, true, false);
+
+            // initialize our scheduler, this acts as a liason to the real time handler
+            Schedule = new ScheduleManager(Securities);
+            DateRules = new DateRules(Securities);
+            TimeRules = new TimeRules(Securities, TimeZone);
         }
 
         /// <summary>
@@ -156,6 +162,31 @@ namespace QuantConnect.Algorithm
         {
             get; 
             set;
+        }
+
+        /// <summary>
+        /// Gets schedule manager for adding/removing scheduled events
+        /// </summary>
+        public ScheduleManager Schedule
+        {
+            get; 
+            private set;
+        }
+
+        /// <summary>
+        /// Gets the date rules helper object to make specifying dates for events easier
+        /// </summary>
+        public DateRules DateRules
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the time rules helper object to make specifying times for events easier
+        /// </summary>
+        public TimeRules TimeRules
+        {
+            get; private set;
         }
 
         /// <summary>
@@ -566,6 +597,9 @@ namespace QuantConnect.Algorithm
             if (timeZone == null) throw new ArgumentNullException("timeZone");
             _timeKeeper.AddTimeZone(timeZone);
             _localTimeKeeper = _timeKeeper.GetLocalTimeKeeper(timeZone);
+
+            // the time rules need to know the default time zone as well
+            TimeRules.SetDefaultTimeZone(timeZone);
         }
 
         /// <summary>

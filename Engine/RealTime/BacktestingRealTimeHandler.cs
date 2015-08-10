@@ -22,6 +22,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -32,7 +33,9 @@ namespace QuantConnect.Lean.Engine.RealTime
     {
         private IAlgorithm _algorithm;
         private IResultHandler _resultHandler;
-        private ConcurrentDictionary<string, ScheduledEvent> _scheduledEvents;
+        // initialize this immediately since the Initialzie method gets called after IAlgorithm.Initialize,
+        // so we want to be ready to accept events as soon as possible
+        private readonly ConcurrentDictionary<string, ScheduledEvent> _scheduledEvents = new ConcurrentDictionary<string, ScheduledEvent>();
 
         /// <summary>
         /// Flag indicating the hander thread is completely finished and ready to dispose.
@@ -46,28 +49,27 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Intializes the real time handler for the specified algorithm and job
         /// </summary>
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api) 
+        public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api) 
         {
             //Initialize:
             _algorithm = algorithm;
             _resultHandler =  resultHandler;
-            _scheduledEvents = new ConcurrentDictionary<string, ScheduledEvent>();
 
             // create events for algorithm's end of tradeable dates
-            AddEvent(ScheduledEvent.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, _algorithm.StartDate, _algorithm.EndDate, ScheduledEvent.AlgorithmEndOfDayDelta));
+            Add(ScheduledEventFactory.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, _algorithm.StartDate, _algorithm.EndDate, ScheduledEvent.AlgorithmEndOfDayDelta));
 
             // set up the events for each security to fire every tradeable date before market close
             foreach (var security in _algorithm.Securities.Values)
             {
-                AddEvent(ScheduledEvent.EverySecurityEndOfDay(_algorithm, _resultHandler, security, algorithm.StartDate, _algorithm.EndDate, ScheduledEvent.SecurityEndOfDayDelta));
+                Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, algorithm.StartDate, _algorithm.EndDate, ScheduledEvent.SecurityEndOfDayDelta));
             }
 
-            if (Log.DebuggingEnabled)
+            foreach (var scheduledEvent in _scheduledEvents)
             {
-                foreach (var scheduledEvent in _scheduledEvents)
-                {
-                    scheduledEvent.Value.IsLoggingEnabled = true;
-                }
+                // zoom past old events
+                scheduledEvent.Value.SkipEventsUntil(algorithm.UtcTime);
+                // set logging accordingly
+                scheduledEvent.Value.IsLoggingEnabled = Log.DebuggingEnabled;
             }
         }
         
@@ -80,16 +82,31 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Add a new event to our list of events to scan.
+        /// Adds the specified event to the schedule
         /// </summary>
-        /// <param name="newEvent">Event object to montitor daily.</param>
-        public void AddEvent(ScheduledEvent newEvent)
+        /// <param name="scheduledEvent">The event to be scheduled, including the date/times the event fires and the callback</param>
+        public void Add(ScheduledEvent scheduledEvent)
         {
-            _scheduledEvents[newEvent.Name] = newEvent;
+            if (_algorithm != null)
+            {
+                scheduledEvent.SkipEventsUntil(_algorithm.UtcTime);
+            }
+
+            _scheduledEvents[scheduledEvent.Name] = scheduledEvent;
             if (Log.DebuggingEnabled)
             {
-                newEvent.IsLoggingEnabled = true;
+                scheduledEvent.IsLoggingEnabled = true;
             }
+        }
+
+        /// <summary>
+        /// Removes the specified event from the schedule
+        /// </summary>
+        /// <param name="name">The name of the event to remove</param>
+        public void Remove(string name)
+        {
+            ScheduledEvent scheduledEvent;
+            _scheduledEvents.TryRemove(name, out scheduledEvent);
         }
 
         /// <summary>

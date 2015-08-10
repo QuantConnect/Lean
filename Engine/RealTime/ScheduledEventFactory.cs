@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -20,150 +20,16 @@ using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
+using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
     /// <summary>
-    /// Real time self scheduling event
+    /// Provides methods for creating common scheduled events
     /// </summary>
-    public class ScheduledEvent : IDisposable
+    public static class ScheduledEventFactory
     {
-        /// <summary>
-        /// Gets the default time before market close end of trading day events will fire
-        /// </summary>
-        public static readonly TimeSpan SecurityEndOfDayDelta = TimeSpan.FromMinutes(10);
-
-        /// <summary>
-        /// Gets the default time before midnight end of day events will fire
-        /// </summary>
-        public static readonly TimeSpan AlgorithmEndOfDayDelta = TimeSpan.FromMinutes(2);
-
-        private bool _needsMoveNext = true;
-        private bool _endOfScheduledEvents;
-
-        private readonly string _name;
-        private readonly Action<string, DateTime> _callback;
-        private readonly IEnumerator<DateTime> _eventUtcTimes;
-
-        /// <summary>
-        /// Gets or sets whether this event will log each time it fires
-        /// </summary>
-        public bool IsLoggingEnabled
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// Gets the next time this scheduled event will fire in UTC
-        /// </summary>
-        public DateTime NextEventUtcTime
-        {
-            get { return _endOfScheduledEvents ? DateTime.MaxValue : _eventUtcTimes.Current; }
-        }
-
-        /// <summary>
-        /// Gets an identifier for this event
-        /// </summary>
-        public string Name
-        {
-            get { return _name; }
-        }
-
-        /// <summary>
-        /// Initalizes a new instance of the <see cref="ScheduledEvent"/> class
-        /// </summary>
-        /// <param name="name">An identifier for this event</param>
-        /// <param name="eventUtcTime">The date time the event should fire</param>
-        /// <param name="callback">Delegate to be called when the event time passes</param>
-        public ScheduledEvent(string name, DateTime eventUtcTime, Action<string, DateTime> callback)
-            : this(name, new[] { eventUtcTime }.AsEnumerable().GetEnumerator(), callback)
-        {
-        }
-
-        /// <summary>
-        /// Initalizes a new instance of the <see cref="ScheduledEvent"/> class
-        /// </summary>
-        /// <param name="name">An identifier for this event</param>
-        /// <param name="eventUtcTimes">An enumerable that emits event times</param>
-        /// <param name="callback">Delegate to be called each time an event passes</param>
-        public ScheduledEvent(string name, IEnumerable<DateTime> eventUtcTimes, Action<string, DateTime> callback)
-            : this(name, eventUtcTimes.GetEnumerator(), callback)
-        {
-        }
-
-        /// <summary>
-        /// Initalizes a new instance of the <see cref="ScheduledEvent"/> class
-        /// </summary>
-        /// <param name="name">An identifier for this event</param>
-        /// <param name="eventUtcTimes">An enumerator that emits event times</param>
-        /// <param name="callback">Delegate to be called each time an event passes</param>
-        public ScheduledEvent(string name, IEnumerator<DateTime> eventUtcTimes, Action<string, DateTime> callback)
-        {
-            _name = name;
-            _callback = callback;
-            _eventUtcTimes = eventUtcTimes;
-        }
-
-        /// <summary>
-        /// Scans this event and fires the callback if an event happened
-        /// </summary>
-        /// <param name="utcTime">The current time in UTC</param>
-        public void Scan(DateTime utcTime)
-        {
-            if (_endOfScheduledEvents)
-            {
-                return;
-            }
-
-            if (_needsMoveNext)
-            {
-                // if we've passed an event or are just priming the pump, we need to move next
-                if (!_eventUtcTimes.MoveNext())
-                {
-                    if (IsLoggingEnabled)
-                    {
-                        Log.Trace(string.Format("ScheduledEvent.{0}: Completed scheduled events.", Name));
-                    }
-                    _endOfScheduledEvents = true;
-                    return;
-                }
-                if (IsLoggingEnabled)
-                {
-                    Log.Trace(string.Format("ScheduledEvent.{0}: Next event: {1} UTC", Name, _eventUtcTimes.Current.ToString(DateFormat.UI)));
-                }
-            }
-
-            // if time has passed our event
-            if (utcTime >= _eventUtcTimes.Current)
-            {
-                if (IsLoggingEnabled)
-                {
-                    Log.Trace(string.Format("ScheduledEvent.{0}: Firing at {1} UTC Scheduled at {2} UTC", Name,
-                        utcTime.ToString(DateFormat.UI),
-                        _eventUtcTimes.Current.ToString(DateFormat.UI))
-                        );
-                }
-                // fire the event
-                _callback(_name, _eventUtcTimes.Current);
-                _needsMoveNext = true;
-            }
-            else
-            {
-                // we haven't passed the event time yet, so keep waiting on this Current
-                _needsMoveNext = false;
-            }
-        }
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
-            _eventUtcTimes.Dispose();
-        }
-
         /// <summary>
         /// Creates a new <see cref="ScheduledEvent"/> that will fire at the specified <paramref name="timeOfDay"/> for every day in
         /// <paramref name="dates"/>
@@ -220,16 +86,16 @@ namespace QuantConnect.Lean.Engine.RealTime
 
             return new ScheduledEvent(CreateEventName("Algorithm", "EndOfDay"), times, (name, triggerTime) =>
             {
-                Log.Debug(string.Format("ScheduledEvent.{0}: Firing at {1}", name, triggerTime));
+                Log.Debug(String.Format("ScheduledEvent.{0}: Firing at {1}", name, triggerTime));
                 try
                 {
                     algorithm.OnEndOfDay();
-                    Log.Debug(string.Format("ScheduledEvent.{0}: Fired On End of Day Event() for Day({1})", name, triggerTime.ToShortDateString()));
+                    Log.Debug(String.Format("ScheduledEvent.{0}: Fired On End of Day Event() for Day({1})", name, triggerTime.ToShortDateString()));
                 }
                 catch (Exception err)
                 {
-                    resultHandler.RuntimeError(string.Format("Runtime error in {0} event: {1}", name, err.Message), err.StackTrace);
-                    Log.Error(string.Format("ScheduledEvent.{0}: {1}", name, err.Message));
+                    resultHandler.RuntimeError(String.Format("Runtime error in {0} event: {1}", name, err.Message), err.StackTrace);
+                    Log.Error(String.Format("ScheduledEvent.{0}: {1}", name, err.Message));
                 }
             });
         }
@@ -275,8 +141,8 @@ namespace QuantConnect.Lean.Engine.RealTime
                 }
                 catch (Exception err)
                 {
-                    resultHandler.RuntimeError(string.Format("Runtime error in {0} event: {1}", name, err.Message), err.StackTrace);
-                    Log.Error(string.Format("ScheduledEvent.{0}: {1}", name, err.Message));
+                    resultHandler.RuntimeError(String.Format("Runtime error in {0} event: {1}", name, err.Message), err.StackTrace);
+                    Log.Error(String.Format("ScheduledEvent.{0}: {1}", name, err.Message));
                 }
             });
         }
@@ -289,7 +155,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <returns>A string representing a fully scoped event name</returns>
         public static string CreateEventName(string scope, string name)
         {
-            return string.Format("{0}.{1}", scope, name);
+            return String.Format("{0}.{1}", scope, name);
         }
     }
 }

@@ -211,7 +211,7 @@ namespace QuantConnect.Lean.Engine
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
-                    initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, out brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions);
+                    initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, out brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime);
 
                     //If there are any reasons it failed, pass these back to the IDE.
                     if (!initializeComplete || algorithm.ErrorMessages.Count > 0 || _algorithmHandlers.Setup.Errors.Count > 0)
@@ -247,7 +247,7 @@ namespace QuantConnect.Lean.Engine
 
                     _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results);
                     _algorithmHandlers.Transactions.Initialize(algorithm, brokerage, _algorithmHandlers.Results);
-                    _algorithmHandlers.RealTime.Initialize(algorithm, job, _algorithmHandlers.Results, _systemHandlers.Api);
+                    _algorithmHandlers.RealTime.Setup(algorithm, job, _algorithmHandlers.Results, _systemHandlers.Api);
 
                     //Set the error handlers for the brokerage asynchronous errors.
                     _algorithmHandlers.Setup.SetupErrorHandler(_algorithmHandlers.Results, brokerage);

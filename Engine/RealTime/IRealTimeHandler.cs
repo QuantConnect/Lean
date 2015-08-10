@@ -15,11 +15,11 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -27,7 +27,7 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// Real time event handler, trigger functions at regular or pretimed intervals
     /// </summary>
     [InheritedExport(typeof(IRealTimeHandler))]
-    public interface IRealTimeHandler
+    public interface IRealTimeHandler : IEventSchedule
     {
         /// <summary>
         /// Thread status flag.
@@ -40,18 +40,12 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Intializes the real time handler for the specified algorithm and job
         /// </summary>
-        void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api);
+        void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api);
 
         /// <summary>
         /// Main entry point to scan and trigger the realtime events.
         /// </summary>
         void Run();
-
-        /// <summary>
-        /// Add a new event to the processing list
-        /// </summary>
-        /// <param name="newEvent">Event information</param>
-        void AddEvent(ScheduledEvent newEvent);
         
         /// <summary>
         /// Set the current time for the event scanner (so we can use same code for backtesting and live events)
