@@ -190,6 +190,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
             SetupHandler.UpdateTransactionModels(algorithm, algorithm.BrokerageModel);
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
+            algorithm.PostInitialize();
 
             //Calculate the max runtime for the strategy
             _maxRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager.Count);

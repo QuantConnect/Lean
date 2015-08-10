@@ -21,6 +21,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Notifications;
@@ -63,6 +64,10 @@ namespace QuantConnect.Algorithm
         private bool _checkedForOnDataSlice;
         private Action<Slice> _onDataSlice;
 
+        // set by SetBenchmark helper API functions
+        private string _benchmarkSymbol;
+        private SecurityType _benchmarkSecurityType;
+
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
         /// QCAlgorithm manages the transactions, portfolio, charting and security subscriptions for the users algorithms.
@@ -99,6 +104,8 @@ namespace QuantConnect.Algorithm
 
             // get exchange hours loaded from the market-hours-database.csv in /Data/market-hours
             _exchangeHoursProvider = SecurityExchangeHoursProvider.FromDataFolder();
+
+            UniverseSettings = new SubscriptionSettings(Resolution.Minute, 2m, true, false);
         }
 
         /// <summary>
@@ -257,6 +264,22 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Gets the current universe selector, or null if no selection is to be performed
+        /// </summary>
+        public IUniverse Universe
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the subscription settings to be used when adding securities via universe selection
+        /// </summary>
+        public SubscriptionSettings UniverseSettings
+        {
+            get; private set;
+        }
+
+        /// <summary>
         /// Storage for debugging messages before the event handler has passed control back to the Lean Engine.
         /// </summary>
         /// <seealso cref="Debug(string)"/>
@@ -323,6 +346,37 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Called by setup handlers after Initialize and allows the algorithm a chance to organize
+        /// the data gather in the Initialize method
+        /// </summary>
+        public void PostInitialize()
+        {
+            // if the benchmark hasn't been set yet, set it
+            if (Benchmark == null)
+            {
+                // apply the default benchmark if it hasn't been set
+                if (string.IsNullOrEmpty(_benchmarkSymbol))
+                {
+                    _benchmarkSymbol = "SPY";
+                    _benchmarkSecurityType = SecurityType.Equity;
+                }
+
+                // if the requested benchmark system wasn't already added, then add it now
+                Security security;
+                if (!Securities.TryGetValue(_benchmarkSymbol, out security))
+                {
+                    // add the security as an internal feed so the algorithm doesn't receive the data
+                    var resolution = _liveMode ? Resolution.Second : Resolution.Daily;
+                    var market = _benchmarkSecurityType == SecurityType.Forex ? "fxcm" : "usa";
+                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider, _benchmarkSecurityType, _benchmarkSymbol, resolution, market, true, 1m, false, true);
+                }
+
+                // just return the current price
+                Benchmark = dateTime => security.Price;
+            }
+        }
+
+        /// <summary>
         /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
         /// </summary>
         /// <code>
@@ -365,6 +419,15 @@ namespace QuantConnect.Algorithm
             {
                 _onDataSlice(slice);
             }
+        }
+
+        /// <summary>
+        /// Event fired each time the we add/remove securities from the data feed
+        /// </summary>
+        /// <param name="changes"></param>
+        public virtual void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            
         }
 
         // <summary>
@@ -543,7 +606,56 @@ namespace QuantConnect.Algorithm
             }
         }
 
+        /// <summary>
+        /// Sets the benchmark used for computing statistics of the algorithm to the specified symbol
+        /// </summary>
+        /// <param name="symbol">symbol to use as the benchmark</param>
+        /// <param name="securityType">Is the symbol an equity, option, forex, etc. Default SecurityType.Equity</param>
+        /// <remarks>
+        /// Must use symbol that is available to the trade engine in your data store(not strictly enforced)
+        /// </remarks>
+        public void SetBenchmark(SecurityType securityType, string symbol)
+        {
+            _benchmarkSymbol = symbol.ToUpper();
+            _benchmarkSecurityType = securityType;
+        }
 
+        /// <summary>
+        /// Sets the benchmark used for computing statistics of the algorithm to the specified symbol, defaulting to SecurityType.Equity
+        /// if the symbol doesn't exist in the algorithm
+        /// </summary>
+        /// <param name="symbol">symbol to use as the benchmark</param>
+        /// <remarks>
+        /// Overload to accept symbol without passing SecurityType. If symbol is in portfolio it will use that SecurityType, otherwise will default to SecurityType.Equity
+        /// </remarks>
+        public void SetBenchmark(string symbol)
+        {
+            _benchmarkSymbol = symbol.ToUpper();
+            _benchmarkSecurityType = SecurityType.Equity;
+        }
+
+        /// <summary>
+        /// Sets the specified function as the benchmark, this function provides the value of
+        /// the benchmark at each date/time requested
+        /// </summary>
+        /// <param name="benchmark">The benchmark producing function</param>
+        public void SetBenchmark(Func<DateTime, decimal> benchmark)
+        {
+            Benchmark = benchmark;
+        }
+
+        /// <summary>
+        /// Benchmark
+        /// </summary>
+        /// <remarks>Use Benchmark to override default symbol based benchmark, and create your own benchmark. For example a custom moving average benchmark </remarks>
+        /// 
+        public Func<DateTime, decimal> Benchmark
+        {
+            get;
+            private set;
+        }
+
+   
         /// <summary>
         /// Set initial cash for the strategy while backtesting. During live mode this value is ignored 
         /// and replaced with the actual cash of your brokerage account.
@@ -770,6 +882,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Sets the current universe selector for the algorithm. This will be executed on day changes
+        /// </summary>
+        /// <param name="selector">The universe selector</param>
+        public void SetUniverse(IUniverse selector)
+        {
+            Universe = selector;
+        }
+
+        /// <summary>
+        /// Sets the current universe selector for the algorithm. This will be executed on day changes
+        /// </summary>
+        /// <param name="coarse">Defines an initial coarse selection</param>
+        public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<CoarseFundamental>> coarse)
+        {
+            Universe = new FuncUniverse(coarse);
+        }
+
+        /// <summary>
         /// Set the maximum number of assets allowable to ensure good memory usage / avoid linux killing job.
         /// </summary>
         /// <param name="minuteLimit">Maximum number of minute level assets the live mode can support with selected server</param>
@@ -811,7 +941,7 @@ namespace QuantConnect.Algorithm
         {
             AddSecurity(securityType, symbol, resolution, null, fillDataForward, leverage, extendedMarketHours);
         }
-            
+
         /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm
         /// </summary>
@@ -824,75 +954,21 @@ namespace QuantConnect.Algorithm
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
         public void AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
         {
+            if (_locked)
+            {
+                throw new Exception("Algorithm.AddSecurity(): Cannot add another security after algorithm running.");
+            }
+
             try
             {
-                if (_locked)
-                {
-                    throw new Exception("Algorithm.AddSecurity(): Cannot add another security after algorithm running.");
-                }
-                
-                symbol = symbol.ToUpper();
-                //If it hasn't been set, use some defaults based on the portfolio type:
-                if (leverage <= 0)
-                {
-                    switch (securityType)
-                    {
-                        case SecurityType.Equity:
-                            leverage = 2; //Cash Ac. = 1, RegT Std = 2 or PDT = 4.
-                            break;
-                        case SecurityType.Forex:
-                            leverage = 50;
-                            break;
-                    }
-                }
-
-                if (market == null)
-                {
-                    // set default values
-                    if (securityType == SecurityType.Forex) market = "fxcm";
-                    else if (securityType == SecurityType.Equity) market = "usa";
-                    else market = "usa";
-                }
-
-                //Add the symbol to Data Manager -- generate unified data streams for algorithm events
-                var exchangeHours = _exchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
-                var config = SubscriptionManager.Add(securityType, symbol, resolution, market, exchangeHours.TimeZone, fillDataForward, extendedMarketHours);
-
-                Security security;
-                switch (config.SecurityType)
-                {
-                    case SecurityType.Equity:
-                        security = new Equity(exchangeHours, config, leverage, false);
-                        break;
-
-                    case SecurityType.Forex:
-                        // decompose the symbol into each currency pair
-                        string baseCurrency, quoteCurrency;
-                        QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out baseCurrency, out quoteCurrency);
-
-                        if (!Portfolio.CashBook.ContainsKey(baseCurrency))
-                        {
-                            // since we have none it's safe to say the conversion is zero
-                            Portfolio.CashBook.Add(baseCurrency, 0, 0);
-                        }
-                        if (!Portfolio.CashBook.ContainsKey(quoteCurrency))
-                        {
-                            // since we have none it's safe to say the conversion is zero
-                            Portfolio.CashBook.Add(quoteCurrency, 0, 0);
-                        }
-                        security = new Forex(exchangeHours, Portfolio.CashBook[quoteCurrency], config, leverage, false);
-                        break;
-
-                    default:
-                    case SecurityType.Base:
-                        security = new Security(exchangeHours, config, leverage, false);
-                        break;
-                }
+                var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider,
+                    securityType, symbol, resolution, market,
+                    fillDataForward, leverage, extendedMarketHours, false);
 
                 //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
-                Securities.Add(config.Symbol, security);
+                Securities.Add(security.Symbol, security);
             }
-            catch (Exception err) 
+            catch (Exception err)
             {
                 Error("Algorithm.AddSecurity(): " + err.Message);
             }

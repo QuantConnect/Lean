@@ -57,7 +57,8 @@ namespace QuantConnect.Tests.Common.Securities
             // we're going to process fills and very our equity after each fill
             var subscriptions = new SubscriptionManager(TimeKeeper);
             var securities = new SecurityManager(TimeKeeper);
-            securities.Add("CASH", new Security(SecurityExchangeHours.AlwaysOpen, subscriptions.Add(SecurityType.Base, "CASH", Resolution.Daily, "usa", TimeZones.NewYork), leverage: 10));
+            var security = new Security(SecurityExchangeHours.AlwaysOpen, subscriptions.Add(SecurityType.Base, "CASH", Resolution.Daily, "usa", TimeZones.NewYork), leverage: 10);
+            securities.Add("CASH", security);
             var transactions = new SecurityTransactionManager(securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.SetCash(equity[0]);
@@ -67,12 +68,10 @@ namespace QuantConnect.Tests.Common.Securities
                 // before processing the fill we must deduct the cost
                 var fill = fills[i];
                 var time = DateTime.Today.AddDays(i);
-
+                TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
                 // the value of 'CASH' increments for each fill, the original test algo did this monthly
                 // the time doesn't really matter though
-                var updateData = new Dictionary<int, List<BaseData>>();
-                updateData.Add(0, new List<BaseData> {new IndicatorDataPoint("CASH", time, i + 1)});
-                securities.Update(time, updateData);
+                security.SetMarketPrice(new IndicatorDataPoint("CASH", time, i + 1));
 
                 portfolio.ProcessFill(fill);
                 Assert.AreEqual(equity[i + 1], portfolio.TotalPortfolioValue, "Failed on " + i);
@@ -154,13 +153,23 @@ namespace QuantConnect.Tests.Common.Securities
                 Assert.AreEqual((double)mchJwb, (double)(mchUsd*usdJwb), 1e-10);
                 //Console.WriteLine("Step: " + i + " -- MCHJWB: " + mchJwb);
 
-                var updateData = new Dictionary<int, List<BaseData>>();
-                updateData.Add(0, new List<BaseData> {new IndicatorDataPoint("MCHJWB", time, mchJwb)});
-                updateData.Add(1, new List<BaseData> {new IndicatorDataPoint("MCHUSD", time, mchUsd)});
-                updateData.Add(2, new List<BaseData> {new IndicatorDataPoint("JWBUSD", time, usdJwb)});
 
-                securities.Update(time, updateData);
-                portfolio.CashBook.Update(updateData);
+                jwbCash.Update(new IndicatorDataPoint("MCHJWB", time, mchJwb));
+                usdCash.Update(new IndicatorDataPoint("MCHUSD", time, mchUsd));
+                mchCash.Update(new IndicatorDataPoint("JWBUSD", time, usdJwb));
+
+                var updateData = new Dictionary<Security, BaseData>
+                {
+                    {mchJwbSecurity, new IndicatorDataPoint("MCHJWB", time, mchJwb)},
+                    {mchUsdSecurity, new IndicatorDataPoint("MCHUSD", time, mchUsd)},
+                    {usdJwbSecurity, new IndicatorDataPoint("JWBUSD", time, usdJwb)}
+                };
+
+                foreach (var kvp in updateData)
+                {
+                    kvp.Key.SetMarketPrice(kvp.Value);
+                }
+
                 portfolio.ProcessFill(fill);
                 //Console.WriteLine("-----------------------");
                 //Console.WriteLine(fill);
@@ -383,9 +392,9 @@ namespace QuantConnect.Tests.Common.Securities
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, string symbol)
         {
             if (type == SecurityType.Equity)
-                return new SubscriptionDataConfig(typeof (TradeBar), SecurityType.Equity, symbol, Resolution.Minute, "usa", TimeZones.NewYork, true, true, true, true, true, 0);
+                return new SubscriptionDataConfig(typeof (TradeBar), SecurityType.Equity, symbol, Resolution.Minute, "usa", TimeZones.NewYork, true, true, true, true, true);
             if (type == SecurityType.Forex)
-                return new SubscriptionDataConfig(typeof (TradeBar), SecurityType.Forex, symbol, Resolution.Minute, "fxcm", TimeZones.NewYork, true, true, true, true, true, 2);
+                return new SubscriptionDataConfig(typeof (TradeBar), SecurityType.Forex, symbol, Resolution.Minute, "fxcm", TimeZones.NewYork, true, true, true, true, true);
             throw new NotImplementedException(type.ToString());
         }
         

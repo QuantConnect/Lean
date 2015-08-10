@@ -187,7 +187,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="fillForward">Data stream is a fillforward type</param>
         public void TriggerArchive(DateTime utcTriggerTime, bool fillForward)
         {
-            var localTriggerTime = utcTriggerTime.ConvertTo(TimeZones.Utc, _config.TimeZone);
+            var localTriggerTime = utcTriggerTime.ConvertFromUtc(_config.TimeZone);
             lock (_lock)
             {
                 try
@@ -237,8 +237,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private DateTime ComputeBarStartTime()
         {
-            // for live data feeds compute a bar start time base on wall clock time, this prevents splitting of data into the algorithm
-            return DateTime.UtcNow.RoundDown(_increment).ConvertToUtc(_config.TimeZone);
+            return DateTime.UtcNow.RoundDown(_increment).ConvertFromUtc(_config.TimeZone);
         }
     }
 }

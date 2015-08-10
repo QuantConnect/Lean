@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
 using System.Globalization;
+using System.Linq;
 using System.Timers;
 using NodaTime;
 
@@ -360,7 +361,19 @@ namespace QuantConnect
                 return from.AtStrictly(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
             }
             
-            return @from.AtLeniently(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
+            return from.AtLeniently(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
+        }
+
+        /// <summary>
+        /// Converts the specified time from UTC to the <paramref name="to"/> time zone
+        /// </summary>
+        /// <param name="time">The time to be converted expressed in UTC</param>
+        /// <param name="to">The destinatio time zone</param>
+        /// <param name="strict">True for strict conversion, this will throw during ambiguitities, false for lenient conversion</param>
+        /// <returns>The time in terms of the <paramref name="to"/> time zone</returns>
+        public static DateTime ConvertFromUtc(this DateTime time, DateTimeZone to, bool strict = false)
+        {
+            return time.ConvertTo(TimeZones.Utc, to, strict);
         }
 
         /// <summary>
@@ -372,7 +385,12 @@ namespace QuantConnect
         /// <returns>The time in terms of the to time zone</returns>
         public static DateTime ConvertToUtc(this DateTime time, DateTimeZone from, bool strict = false)
         {
-            return ConvertTo(time, from, TimeZones.Utc, strict);
+            if (strict)
+            {
+                return from.AtStrictly(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
+            }
+
+            return from.AtLeniently(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
         }
 
         /// <summary>
@@ -450,11 +468,8 @@ namespace QuantConnect
             if (type.IsGenericType)
             {
                 var genericArguments = type.GetGenericArguments();
-                for (int i = 0; i < genericArguments.Length; i++)
-                {
-                    string toBeReplaced = "`" + (i + 1);
-                    name = name.Replace(toBeReplaced, genericArguments[i].GetBetterTypeName());
-                }
+                var toBeReplaced = "`" + (genericArguments.Length);
+                name = name.Replace(toBeReplaced, "<" + string.Join(", ", genericArguments.Select(x => x.GetBetterTypeName())) + ">");
             }
             return name;
         }

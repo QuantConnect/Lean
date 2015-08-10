@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BasicTemplateAlgorithm.cs" />
+    <Compile Include="CustomBenchmarkAlgorithm.cs" />
     <Compile Include="DelistingEventsAlgorithm.cs" />
     <Compile Include="LimitFillRegressionAlgorithm.cs" />
     <Compile Include="BasicTemplateFillForwardAlgorithm.cs" />
@@ -75,7 +76,9 @@
     <Compile Include="RegressionAlgorithm.cs" />
     <Compile Include="RenkoConsolidatorAlgorithm.cs" />
     <Compile Include="StressSymbolsAlgorithm.cs" />
+    <Compile Include="StressSymbols.cs" />
     <Compile Include="TickDataFilteringAlgorithm.cs" />
+    <Compile Include="UniverseSelectionAlgorithm.cs" />
     <Compile Include="UpdateOrderLiveTestAlgorithm.cs" />
     <Compile Include="UpdateOrderRegressionAlgorithm.cs" />
     <Compile Include="UpdateOrderDemoAlgorithm.cs" />

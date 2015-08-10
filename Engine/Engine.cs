@@ -70,6 +70,7 @@ namespace QuantConnect.Lean.Engine
             //Initialize:
             string mode = "RELEASE";
             var liveMode = Config.GetBool("live-mode");
+            Log.DebuggingEnabled = Config.GetBool("debug-mode");
 
             #if DEBUG 
                 mode = "DEBUG";
@@ -125,10 +126,10 @@ namespace QuantConnect.Lean.Engine
             Log.Trace("         Transactions: " + leanEngineAlgorithmHandlers.Transactions.GetType().FullName);
 
             // if the job version doesn't match this instance version then we can't process it
-            // we also don't want to reprocess redelivered live jobs
-            if (job.Version != Constants.Version || (liveMode && job.Redelivered))
+            // we also don't want to reprocess redelivered jobs
+            if (job.Version != Constants.Version || job.Redelivered)
             {
-                Log.Error("Engine.Run(): Job Version: " + job.Version + "  Deployed Version: " + Constants.Version);
+                Log.Error("Engine.Run(): Job Version: " + job.Version + "  Deployed Version: " + Constants.Version + " Redelivered: " + job.Redelivered);
 
                 //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
                 //In this event kill the old algorithm and leave a message so the user can later review.
@@ -343,6 +344,7 @@ namespace QuantConnect.Lean.Engine
                             const string strategyEquityKey = "Strategy Equity";
                             const string equityKey = "Equity";
                             const string dailyPerformanceKey = "Daily Performance";
+                            const string benchmarkKey = "Benchmark";
 
                             // make sure we've taken samples for these series before just blindly requesting them
                             if (charts.ContainsKey(strategyEquityKey) &&
@@ -354,7 +356,8 @@ namespace QuantConnect.Lean.Engine
                                 var profitLoss =
                                     new SortedDictionary<DateTime, decimal>(algorithm.Transactions.TransactionRecord);
                                 var numberOfTrades = algorithm.Transactions.GetOrders(x => x.Status.IsFill()).Count();
-                                statistics = Statistics.Statistics.Generate(equity, profitLoss, performance,
+                                var benchmark = charts[benchmarkKey].Series[benchmarkKey].Values.ToDictionary(chartPoint => Time.UnixTimeStampToDateTime(chartPoint.x), chartPoint => chartPoint.y);
+                                statistics = Statistics.Statistics.Generate(equity, profitLoss, performance, benchmark,
                                     _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, numberOfTrades, 252);
                             }
                         }
@@ -389,7 +392,10 @@ namespace QuantConnect.Lean.Engine
 
                 //Wait for the threads to complete:
                 var ts = Stopwatch.StartNew();
-                while ((_algorithmHandlers.Results.IsActive || (_algorithmHandlers.Transactions != null && _algorithmHandlers.Transactions.IsActive) || (_algorithmHandlers.DataFeed != null && _algorithmHandlers.DataFeed.IsActive))
+                while ((_algorithmHandlers.Results.IsActive 
+                    || (_algorithmHandlers.Transactions != null && _algorithmHandlers.Transactions.IsActive) 
+                    || (_algorithmHandlers.DataFeed != null && _algorithmHandlers.DataFeed.IsActive)
+                    || (_algorithmHandlers.RealTime != null && _algorithmHandlers.RealTime.IsActive))
                     && ts.ElapsedMilliseconds < 30*1000)
                 {
                     Thread.Sleep(100);

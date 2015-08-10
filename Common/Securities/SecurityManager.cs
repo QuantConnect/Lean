@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
@@ -26,7 +28,7 @@ namespace QuantConnect.Securities
     /// Enumerable security management class for grouping security objects into an array and providing any common properties.
     /// </summary>
     /// <remarks>Implements IDictionary for the index searching of securities by symbol</remarks>
-    public class SecurityManager : IDictionary<string, Security> 
+    public class SecurityManager : IDictionary<string, Security>
     {
         private readonly TimeKeeper _timeKeeper;
 
@@ -55,7 +57,31 @@ namespace QuantConnect.Securities
         public SecurityManager(TimeKeeper timeKeeper)
         {
             _timeKeeper = timeKeeper;
-            _securityManager = new Dictionary<string, Security>();
+            _securityManager = new ConcurrentDictionary<string, Security>();
+        }
+
+        /// <summary>
+        /// Gets the maximum number of minute symbols allowed in the algorithm
+        /// </summary>
+        public int MinuteLimit
+        {
+            get { return _minuteLimit; }
+        }
+
+        /// <summary>
+        /// Gets the maximum number of second symbols allowed in the algorithm
+        /// </summary>
+        public int SecondLimit
+        {
+            get { return _secondLimit; }
+        }
+
+        /// <summary>
+        /// Gets the maximum number of tick symbols allowed in the algorithm
+        /// </summary>
+        public int TickLimit
+        {
+            get { return _tickLimit; }
         }
 
         /// <summary>
@@ -218,7 +244,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Enumerator.</returns>
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() 
+        IEnumerator IEnumerable.GetEnumerator() 
         {
             return _securityManager.GetEnumerator();
         }
@@ -280,44 +306,7 @@ namespace QuantConnect.Securities
             _minuteLimit = minute;  //Limit the number and combination of symbols
             _secondLimit = second;
             _tickLimit = tick;
-            _maxRamEstimate = Math.Max(Math.Max(_minuteLimit * _minuteMemory, _secondLimit * _secondMemory), _tickLimit * _tickMemory);
-        }
-
-        /// <summary>
-        /// Update the security properties/online functions with new data/price packets.
-        /// </summary>
-        /// <param name="time">Time Frontier</param>
-        /// <param name="data">Data packets to update</param>
-        public void Update(DateTime time, Dictionary<int, List<BaseData>> data)
-        {
-            try 
-            {
-                //If its market data, look for the matching security symbol and update it:
-                foreach (var security in _securityManager.Values)
-                {
-                    BaseData dataPoint = null;
-                    List<BaseData> dataPoints;
-                    if (data.TryGetValue(security.SubscriptionDataConfig.SubscriptionIndex, out dataPoints) && dataPoints.Count != 0)
-                    {
-                        // ignore aux data when doing data update, we trust the latest data more
-                        for (int i = dataPoints.Count - 1; i > -1; i--)
-                        {
-                            if (dataPoints[i].DataType == MarketDataType.Auxiliary)
-                            {
-                                continue;
-                            }
-                            dataPoint = dataPoints[i];
-                            break;
-                        }
-                    }
-
-                    security.SetMarketPrice(dataPoint);
-                }
-            }
-            catch (Exception err) 
-            {
-                Log.Error("Algorithm.Market.Update(): " + err.Message);
-            }
+            _maxRamEstimate = Math.Max(Math.Max(MinuteLimit * _minuteMemory, SecondLimit * _secondMemory), TickLimit * _tickMemory);
         }
 
         /// <summary>
@@ -327,17 +316,17 @@ namespace QuantConnect.Securities
         private void CheckResolutionCounts(Resolution resolution)
         {
             //Maximum Data Usage: mainly RAM constraints but this has never been fully tested.
-            if (GetResolutionCount(Resolution.Tick) >= _tickLimit && resolution == Resolution.Tick)
+            if (GetResolutionCount(Resolution.Tick) >= TickLimit && resolution == Resolution.Tick)
             {
-                throw new Exception("We currently only support " + _tickLimit + " tick assets at a time due to physical memory limitations.");
+                throw new Exception("We currently only support " + TickLimit + " tick assets at a time due to physical memory limitations.");
             }
-            if (GetResolutionCount(Resolution.Second) >= _secondLimit && resolution == Resolution.Second)
+            if (GetResolutionCount(Resolution.Second) >= SecondLimit && resolution == Resolution.Second)
             {
-                throw new Exception("We currently only support  " + _secondLimit + "  second resolution securities at a time due to physical memory limitations.");
+                throw new Exception("We currently only support  " + SecondLimit + "  second resolution securities at a time due to physical memory limitations.");
             }
-            if (GetResolutionCount(Resolution.Minute) >= _minuteLimit && resolution == Resolution.Minute)
+            if (GetResolutionCount(Resolution.Minute) >= MinuteLimit && resolution == Resolution.Minute)
             {
-                throw new Exception("We currently only support  " + _minuteLimit + "  minute assets at a time due to physical memory limitations.");
+                throw new Exception("We currently only support  " + MinuteLimit + "  minute assets at a time due to physical memory limitations.");
             }
 
             //Current ram usage: this especially applies during live trading where micro servers have limited resources:
@@ -363,6 +352,85 @@ namespace QuantConnect.Securities
             return _minuteMemory * minute + _secondMemory * second + _tickMemory * tick;
         }
 
+
+        /// <summary>
+        /// Creates a security and matching configuration. This applies the default leverage if
+        /// leverage is less than or equal to zero
+        /// </summary>
+        public static Security CreateSecurity(SecurityPortfolioManager securityPortfolioManager,
+            SubscriptionManager subscriptionManager,
+            SecurityExchangeHoursProvider securityExchangeHoursProvider,
+            SecurityType securityType,
+            string symbol,
+            Resolution resolution,
+            string market,
+            bool fillDataForward,
+            decimal leverage,
+            bool extendedMarketHours,
+            bool isInternalFeed)
+        {
+            symbol = symbol.ToUpper();
+            //If it hasn't been set, use some defaults based on the portfolio type:
+            if (leverage <= 0)
+            {
+                switch (securityType)
+                {
+                    case SecurityType.Equity:
+                        leverage = 2; //Cash Ac. = 1, RegT Std = 2 or PDT = 4.
+                        break;
+                    case SecurityType.Forex:
+                        leverage = 50;
+                        break;
+                }
+            }
+
+            if (market == null)
+            {
+                // set default values
+                if (securityType == SecurityType.Forex) market = "fxcm";
+                else if (securityType == SecurityType.Equity) market = "usa";
+                else market = "usa";
+            }
+
+            //Add the symbol to Data Manager -- generate unified data streams for algorithm events
+            var exchangeHours = securityExchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
+            var tradeBarType = typeof(Data.Market.TradeBar);
+            var type = resolution == Resolution.Tick ? typeof(Data.Market.Tick) : tradeBarType;
+            var isTradeBar = type == tradeBarType;
+            var config = subscriptionManager.Add(type, securityType, symbol, resolution, market, exchangeHours.TimeZone, fillDataForward, extendedMarketHours, isTradeBar, isTradeBar, isInternalFeed);
+
+            Security security;
+            switch (config.SecurityType)
+            {
+                case SecurityType.Equity:
+                    security = new Equity.Equity(exchangeHours, config, leverage, false);
+                    break;
+
+                case SecurityType.Forex:
+                    // decompose the symbol into each currency pair
+                    string baseCurrency, quoteCurrency;
+                    Forex.Forex.DecomposeCurrencyPair(symbol, out baseCurrency, out quoteCurrency);
+
+                    if (!securityPortfolioManager.CashBook.ContainsKey(baseCurrency))
+                    {
+                        // since we have none it's safe to say the conversion is zero
+                        securityPortfolioManager.CashBook.Add(baseCurrency, 0, 0);
+                    }
+                    if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
+                    {
+                        // since we have none it's safe to say the conversion is zero
+                        securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
+                    }
+                    security = new Forex.Forex(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, leverage, false);
+                    break;
+
+                default:
+                case SecurityType.Base:
+                    security = new Security(exchangeHours, config, leverage, false);
+                    break;
+            }
+            return security;
+        }
     } // End Algorithm Security Manager Class
 
 } // End QC Namespace

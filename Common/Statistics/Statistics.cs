@@ -30,41 +30,37 @@ namespace QuantConnect.Statistics
     /// <remarks>This is a particularly ugly class and one of the first ones written. It should be thrown out and re-written.</remarks>
     public class Statistics
     {
-        private static DateTime _benchmarkAge = new DateTime();
-        private static SortedDictionary<DateTime, decimal> _benchmark = new SortedDictionary<DateTime, decimal>();
-
         /// <summary>
         /// Retrieve a static S-P500 Benchmark for the statistics calculations. Update the benchmark once per day.
         /// </summary>
-        public static SortedDictionary<DateTime, decimal> Benchmark
+        public static SortedDictionary<DateTime, decimal> YahooSPYBenchmark
         {
             get
             {
-                if (_benchmark.Count == 0 || (DateTime.Now - _benchmarkAge) > TimeSpan.FromDays(1))
+                var benchmark = new SortedDictionary<DateTime, decimal>();
+                var url = "http://real-chart.finance.yahoo.com/table.csv?s=SPY&a=11&b=31&c=1997&d=" + (DateTime.Now.Month - 1) + "&e=" + DateTime.Now.Day + "&f=" + DateTime.Now.Year + "&g=d&ignore=.csv";
+                using (var net = new WebClient())
                 {
-                    //Fetch & Set Benchmark:
-                    _benchmark.Clear();
-                    var url = "http://real-chart.finance.yahoo.com/table.csv?s=SPY&a=11&b=31&c=1997&d=" + (DateTime.Now.Month - 1) + "&e=" + DateTime.Now.Day + "&f=" + DateTime.Now.Year + "&g=d&ignore=.csv";
-                    using (var net = new WebClient())
+                    net.Proxy = WebRequest.GetSystemWebProxy();
+                    var data = net.DownloadString(url);
+                    var first = true;
+                    using (var sr = new StreamReader(data.ToStream()))
                     {
-                        net.Proxy = WebRequest.GetSystemWebProxy();
-                        var data = net.DownloadString(url);
-                        var first = true;
-                        using (var sr = new StreamReader(data.ToStream()))
+                        while (sr.Peek() >= 0)
                         {
-                            while (sr.Peek() >= 0)
+                            var line = sr.ReadLine();
+                            if (first)
                             {
-                                var line = sr.ReadLine();
-                                if (first) { first = false; continue; }
-                                if (line == null) continue;
-                                var csv = line.Split(',');
-                                _benchmark.Add(DateTime.Parse(csv[0]), Convert.ToDecimal(csv[6], CultureInfo.InvariantCulture));
+                                first = false;
+                                continue;
                             }
+                            if (line == null) continue;
+                            var csv = line.Split(',');
+                            benchmark.Add(DateTime.Parse(csv[0]), Convert.ToDecimal(csv[6], CultureInfo.InvariantCulture));
                         }
                     }
-                    _benchmarkAge = DateTime.Now;
                 }
-                return _benchmark;
+                return benchmark;
             }
         }
 
@@ -106,12 +102,21 @@ namespace QuantConnect.Statistics
         /// <param name="pointsEquity">Equity value over time.</param>
         /// <param name="profitLoss">profit loss from trades</param>
         /// <param name="pointsPerformance"> Daily performance</param>
+        /// <param name="unsortedBenchmark"> Benchmark data as dictionary. Data does not need to be ordered</param>
         /// <param name="startingCash">Amount of starting cash in USD </param>
         /// <param name="totalFees">The total fees incurred over the life time of the algorithm</param>
         /// <param name="totalTrades">Total number of orders executed.</param>
         /// <param name="tradingDaysPerYear">Number of trading days per year</param>
         /// <returns>Statistics Array, Broken into Annual Periods</returns>
-        public static Dictionary<string, string> Generate(IEnumerable<ChartPoint> pointsEquity, SortedDictionary<DateTime, decimal> profitLoss, IEnumerable<ChartPoint> pointsPerformance, decimal startingCash, decimal totalFees, decimal totalTrades, double tradingDaysPerYear = 252)
+        public static Dictionary<string, string> Generate(IEnumerable<ChartPoint> pointsEquity, 
+            SortedDictionary<DateTime, decimal> profitLoss, 
+            IEnumerable<ChartPoint> pointsPerformance, 
+            Dictionary<DateTime, decimal> unsortedBenchmark, 
+            decimal startingCash, 
+            decimal totalFees, 
+            decimal totalTrades, 
+            double tradingDaysPerYear = 252
+            )
         {
             //Initialise the response:
             double riskFreeRate = 0;
@@ -142,22 +147,30 @@ namespace QuantConnect.Statistics
             var listBenchmark = new List<double>();
             var equity = new SortedDictionary<DateTime, decimal>();
             var performance = new SortedDictionary<DateTime, decimal>();
-
+            SortedDictionary<DateTime, decimal>  benchmark = null;
             try
             {
                 //Get array versions of the performance:
                 performance = ChartPointToDictionary(pointsPerformance);
                 equity = ChartPointToDictionary(pointsEquity);
                 performance.Values.ToList().ForEach(i => listPerformance.Add((double)(i / 100)));
+                benchmark = new SortedDictionary<DateTime, decimal>(unsortedBenchmark);
+
+                // to find the delta in benchmark for first day, we need to know the price at the opening
+                // moment of the day, but since we cannot find this, we cannot find the first benchmark's delta,
+                // so we pad it with Zero. If running a short backtest this will skew results, longer backtests
+                // will not be affected much
+                listBenchmark.Add(0);
 
                 //Get benchmark performance array for same period:
-                Benchmark.Keys.ToList().ForEach(dt =>
+                benchmark.Keys.ToList().ForEach(dt =>
                 {
                     if (dt >= equity.Keys.FirstOrDefault().AddDays(-1) && dt < equity.Keys.LastOrDefault())
                     {
-                        if (Benchmark.ContainsKey(dtPrevious))
+                        decimal previous;
+                        if (benchmark.TryGetValue(dtPrevious, out previous) && previous != 0)
                         {
-                            var deltaBenchmark = (Benchmark[dt] - Benchmark[dtPrevious]) / Benchmark[dtPrevious];
+                            var deltaBenchmark = (benchmark[dt] - previous)/previous;
                             listBenchmark.Add((double)(deltaBenchmark));
                         }
                         else
@@ -167,6 +180,8 @@ namespace QuantConnect.Statistics
                         dtPrevious = dt;
                     }
                 });
+
+                // TODO : if these lists are required to be the same length then we should create structure to pair the values, this way, by contract it will be enforced.
 
                 //THIS SHOULD NEVER HAPPEN --> But if it does, log it and fail silently.
                 while (listPerformance.Count < listBenchmark.Count)
@@ -197,9 +212,12 @@ namespace QuantConnect.Statistics
 
             try
             {
-                algoCompoundingPerformance = CompoundingAnnualPerformance(startingCash, equity.Values.LastOrDefault(), (decimal)fractionOfYears);
-                finalBenchmarkCash = ((Benchmark.Values.Last() - Benchmark.Values.First()) / Benchmark.Values.First()) * startingCash;
-                benchCompoundingPerformance = CompoundingAnnualPerformance(startingCash, finalBenchmarkCash, (decimal)fractionOfYears);
+                if (benchmark != null)
+                {
+                    algoCompoundingPerformance = CompoundingAnnualPerformance(startingCash, equity.Values.LastOrDefault(), (decimal) fractionOfYears);
+                    finalBenchmarkCash = ((benchmark.Values.Last() - benchmark.Values.First())/benchmark.Values.First())*startingCash;
+                    benchCompoundingPerformance = CompoundingAnnualPerformance(startingCash, finalBenchmarkCash, (decimal) fractionOfYears);
+                }
             }
             catch (Exception err)
             {
@@ -298,30 +316,30 @@ namespace QuantConnect.Statistics
                     Log.Error("Statistics.RunOrders(): Second Half: " + err.Message);
                 }
 
-                var profitLossRatio = Statistics.ProfitLossRatio(averageWin, averageLoss);
-                var profitLossRatioHuman = profitLossRatio.ToString();
+                var profitLossRatio = ProfitLossRatio(averageWin, averageLoss);
+                var profitLossRatioHuman = profitLossRatio.ToString(CultureInfo.InvariantCulture);
                 if (profitLossRatio == -1) profitLossRatioHuman = "0";
 
                 //Add the over all results first, break down by year later:
                 statistics = new Dictionary<string, string> { 
-                    { "Total Trades", Math.Round(totalTrades, 0).ToString() },
+                    { "Total Trades", Math.Round(totalTrades, 0).ToString(CultureInfo.InvariantCulture) },
                     { "Average Win", Math.Round(averageWin * 100, 2) + "%"  },
                     { "Average Loss", Math.Round(averageLoss * 100, 2) + "%" },
                     { "Compounding Annual Return", Math.Round(algoCompoundingPerformance * 100, 3) + "%" },
                     { "Drawdown", (DrawdownPercent(equity, 3) * 100) + "%" },
-                    { "Expectancy", Math.Round((winRate * averageWinRatio) - (lossRate), 3).ToString() },
+                    { "Expectancy", Math.Round((winRate * averageWinRatio) - (lossRate), 3).ToString(CultureInfo.InvariantCulture) },
                     { "Net Profit", Math.Round(totalNetProfit * 100, 3) + "%"},
-                    { "Sharpe Ratio", Math.Round(SharpeRatio(listPerformance, riskFreeRate), 3).ToString() },
+                    { "Sharpe Ratio", Math.Round(SharpeRatio(listPerformance, riskFreeRate), 3).ToString(CultureInfo.InvariantCulture) },
                     { "Loss Rate", Math.Round(lossRate * 100) + "%" },
                     { "Win Rate", Math.Round(winRate * 100) + "%" }, 
                     { "Profit-Loss Ratio", profitLossRatioHuman },
-                    { "Alpha", Math.Round(Alpha(listPerformance, listBenchmark, riskFreeRate), 3).ToString() },
-                    { "Beta", Math.Round(Beta(listPerformance, listBenchmark), 3).ToString() },
-                    { "Annual Standard Deviation", Math.Round(AnnualStandardDeviation(listPerformance, tradingDaysPerYear), 3).ToString() },
-                    { "Annual Variance", Math.Round(AnnualVariance(listPerformance, tradingDaysPerYear), 3).ToString() },
-                    { "Information Ratio", Math.Round(InformationRatio(listPerformance, listBenchmark), 3).ToString() },
-                    { "Tracking Error", Math.Round(TrackingError(listPerformance, listBenchmark), 3).ToString() },
-                    { "Treynor Ratio", Math.Round(TreynorRatio(listPerformance, listBenchmark, riskFreeRate), 3).ToString() },
+                    { "Alpha", Math.Round(Alpha(listPerformance, listBenchmark, riskFreeRate), 3).ToString(CultureInfo.InvariantCulture) },
+                    { "Beta", Math.Round(Beta(listPerformance, listBenchmark), 3).ToString(CultureInfo.InvariantCulture) },
+                    { "Annual Standard Deviation", Math.Round(AnnualStandardDeviation(listPerformance, tradingDaysPerYear), 3).ToString(CultureInfo.InvariantCulture) },
+                    { "Annual Variance", Math.Round(AnnualVariance(listPerformance, tradingDaysPerYear), 3).ToString(CultureInfo.InvariantCulture) },
+                    { "Information Ratio", Math.Round(InformationRatio(listPerformance, listBenchmark), 3).ToString(CultureInfo.InvariantCulture) },
+                    { "Tracking Error", Math.Round(TrackingError(listPerformance, listBenchmark), 3).ToString(CultureInfo.InvariantCulture) },
+                    { "Treynor Ratio", Math.Round(TreynorRatio(listPerformance, listBenchmark, riskFreeRate), 3).ToString(CultureInfo.InvariantCulture) },
                     { "Total Fees", "$" + totalFees.ToString("0.00") }
                 };
             }

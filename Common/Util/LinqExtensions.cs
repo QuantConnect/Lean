@@ -84,6 +84,14 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Performs the specified selector before calling DefaultIfEmpty. This is just short hand for Select(selector).DefaultIfEmpty(defaultValue)
+        /// </summary>
+        public static IEnumerable<TResult> DefaultIfEmpty<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector, TResult defaultValue = default(TResult))
+        {
+            return enumerable.Select(selector).DefaultIfEmpty(defaultValue);
+        }
+
+        /// <summary>
         /// Gets the median value in the collection
         /// </summary>
         /// <typeparam name="T">The item type in the collection</typeparam>

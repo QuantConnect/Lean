@@ -157,6 +157,14 @@ namespace QuantConnect.Lean.Engine.Results
         void SamplePerformance(DateTime time, decimal value);
 
         /// <summary>
+        /// Sample the current benchmark performance directly with a time-value pair.
+        /// </summary>
+        /// <param name="time">Current backtest date.</param>
+        /// <param name="value">Current benchmark value.</param>
+        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
+        void SampleBenchmark(DateTime time, decimal value);
+        
+        /// <summary>
         /// Sample the asset prices to generate plots.
         /// </summary>
         /// <param name="symbol">Symbol we're sampling.</param>

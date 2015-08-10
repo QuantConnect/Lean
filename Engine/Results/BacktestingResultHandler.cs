@@ -222,63 +222,73 @@ namespace QuantConnect.Lean.Engine.Results
             //SampleEquity(job.periodStart, job.startingCapital);
             //SamplePerformance(job.periodStart, 0);
 
-            while (!(_exitTriggered && Messages.Count == 0))
+            try
             {
-                //While there's no work to do, go back to the algorithm:
-                if (Messages.Count == 0)
+                while (!(_exitTriggered && Messages.Count == 0))
                 {
-                    Thread.Sleep(50);
-                }
-                else
-                {
-                    //1. Process Simple Messages in Queue
-                    Packet packet;
-                    if (Messages.TryDequeue(out packet))
+                    //While there's no work to do, go back to the algorithm:
+                    if (Messages.Count == 0)
                     {
-                        switch (packet.Type)
+                        Thread.Sleep(50);
+                    }
+                    else
+                    {
+                        //1. Process Simple Messages in Queue
+                        Packet packet;
+                        if (Messages.TryDequeue(out packet))
                         {
-                            //New Debug Message:
-                            case PacketType.Debug:
-                                var debug = packet as DebugPacket;
-                                if (lastMessage != debug.Message)
-                                {
-                                    //Log.Trace("BacktestingResultHandlerRun(): Debug Packet: " + debug.Message);
-                                    _messagingHandler.DebugMessage(debug.Message, debug.ProjectId, _backtestId, _compileId);
-                                    lastMessage = debug.Message;
-                                }
-                                break;
+                            switch (packet.Type)
+                            {
+                                //New Debug Message:
+                                case PacketType.Debug:
+                                    var debug = packet as DebugPacket;
+                                    if (lastMessage != debug.Message)
+                                    {
+                                        //Log.Trace("BacktestingResultHandlerRun(): Debug Packet: " + debug.Message);
+                                        _messagingHandler.DebugMessage(debug.Message, debug.ProjectId, _backtestId, _compileId);
+                                        lastMessage = debug.Message;
+                                    }
+                                    break;
 
-                            //Send log messages to the browser as well for live trading:
-                            case PacketType.SecurityTypes:
-                                var securityPacket = packet as SecurityTypesPacket;
-                                _messagingHandler.SecurityTypes(securityPacket);
-                                break;
+                                //Send log messages to the browser as well for live trading:
+                                case PacketType.SecurityTypes:
+                                    var securityPacket = packet as SecurityTypesPacket;
+                                    _messagingHandler.SecurityTypes(securityPacket);
+                                    break;
 
-                            case PacketType.RuntimeError:
-                                //Log.Error("QC.AlgorithmWorker.Run(): " + packet.Message);
-                                var runtime = packet as RuntimeErrorPacket;
-                                _messagingHandler.RuntimeError(_backtestId, runtime.Message, runtime.StackTrace);
-                                break;
+                                case PacketType.RuntimeError:
+                                    //Log.Error("QC.AlgorithmWorker.Run(): " + packet.Message);
+                                    var runtime = packet as RuntimeErrorPacket;
+                                    _messagingHandler.RuntimeError(_backtestId, runtime.Message, runtime.StackTrace);
+                                    break;
 
-                            case PacketType.HandledError:
-                                var handled = packet as HandledErrorPacket;
-                                Log.Error("BacktestingResultHandler.Run(): HandledError Packet: " + handled.Message);
-                                _messagingHandler.Send(handled);
-                                break;
+                                case PacketType.HandledError:
+                                    var handled = packet as HandledErrorPacket;
+                                    Log.Error("BacktestingResultHandler.Run(): HandledError Packet: " + handled.Message);
+                                    _messagingHandler.Send(handled);
+                                    break;
 
-                            default:
-                                //Default case..
-                                _messagingHandler.Send(packet);
-                                Log.Trace("BacktestingResultHandler.Run(): Default packet type: " + packet.Type);
-                                break;
+                                default:
+                                    //Default case..
+                                    _messagingHandler.Send(packet);
+                                    Log.Trace("BacktestingResultHandler.Run(): Default packet type: " + packet.Type);
+                                    break;
+                            }
                         }
                     }
-                }
 
-                //2. Update the packet scanner:
-                Update();
+                    //2. Update the packet scanner:
+                    Update();
 
-            } // While !End.
+                } // While !End.
+            }
+            catch (Exception err)
+            {
+                // unexpected error, we need to close down shop
+                Log.Error(err);
+                // quit the algorithm due to error
+                _algorithm.RunTimeError = err;
+            }
 
             Log.Trace("BacktestingResultHandler.Run(): Ending Thread...");
             _isActive = false;
@@ -488,7 +498,7 @@ namespace QuantConnect.Lean.Engine.Results
             _algorithm = algorithm;
             
             //Setup the sampling periods:
-            _jobDays = Time.TradeableDates(Algorithm.Securities, _job.PeriodStart, _job.PeriodFinish);
+            _jobDays = Time.TradeableDates(Algorithm.Securities.Values, _job.PeriodStart, _job.PeriodFinish);
 
             //Setup Debug Messaging:
             _debugMessageMax = Convert.ToInt32(10 * _jobDays);
@@ -641,6 +651,17 @@ namespace QuantConnect.Lean.Engine.Results
         {
             //Added a second chart to equity plot - daily perforamnce:
             Sample("Strategy Equity", ChartType.Stacked, "Daily Performance", SeriesType.Bar, time, value, "%");
+        }
+
+        /// <summary>
+        /// Sample the current benchmark performance directly with a time-value pair.
+        /// </summary>
+        /// <param name="time">Current backtest date.</param>
+        /// <param name="value">Current benchmark value.</param>
+        /// <seealso cref="IResultHandler.Sample"/>
+        public void SampleBenchmark(DateTime time, decimal value)
+        {
+            Sample("Benchmark", ChartType.Stacked, "Benchmark", SeriesType.Line, time, value);
         }
 
         /// <summary>

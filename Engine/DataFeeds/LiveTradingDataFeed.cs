@@ -21,11 +21,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Data;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -36,43 +38,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class LiveTradingDataFeed : IDataFeed
     {
         private LiveNodePacket _job;
-        private List<SubscriptionDataConfig> _subscriptions;
-        private readonly List<bool> _isDynamicallyLoadedData = new List<bool>();
-        private IEnumerator<BaseData>[] _subscriptionManagers;
         private bool _endOfBridges;
         private bool _isActive;
-        private bool[] _endOfBridge;
         private IAlgorithm _algorithm;
-        private readonly object _lock = new object();
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        private List<string> _symbols = new List<string>();
-        private Dictionary<int, StreamStore> _streamStores = new Dictionary<int, StreamStore>();
-        private List<decimal> _realtimePrices;
         private IDataQueueHandler _dataQueue;
+        private IResultHandler _resultHandler;
+        private UniverseSelection _universeSelection;
+        private ConcurrentDictionary<SymbolSecurityType, LiveSubscription> _subscriptions;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
+        /// <summary>
+        /// Gets all of the current subscriptions this data feed is processing
+        /// </summary>
+        public IEnumerable<Subscription> Subscriptions
+        {
+            get { return _subscriptions.Select(x => x.Value); }
+        }
 
         /// <summary>
         /// Cross-threading queue so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
         /// </summary>
-        public BlockingCollection<TimeSlice> Bridge
+        public BusyBlockingCollection<TimeSlice> Bridge
         {
             get; private set;
-        }
-
-        /// <summary>
-        /// Subscription collection for data requested.
-        /// </summary>
-        public List<SubscriptionDataConfig> Subscriptions
-        {
-            get  { return _subscriptions; }
-        }
-
-        /// <summary>
-        /// Prices of the datafeed this instant for dynamically updating security values (and calculation of the total portfolio value in realtime).
-        /// </summary>
-        /// <remarks>Indexed in order of the subscriptions</remarks>
-        public List<decimal> RealtimePrices 
-        {
-            get { return _realtimePrices; }
         }
 
         /// <summary>
@@ -84,80 +72,38 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Data has completely loaded and we don't expect any more.
-        /// </summary>
-        public bool LoadingComplete
-        {
-            get { return false; }
-        }
-
-        /// <summary>
         /// Live trading datafeed handler provides a base implementation of a live trading datafeed. Derived types
         /// need only implement the GetNextTicks() function to return unprocessed ticks from a data source.
         /// This creates a new data feed with a DataFeedEndpoint of LiveTrading.
         /// </summary>
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
-            _cancellationTokenSource = new CancellationTokenSource();
-
-            //Subscription Count:
-            _subscriptions = algorithm.SubscriptionManager.Subscriptions;
-
-            Bridge = new BlockingCollection<TimeSlice>();
-
-            //Set Properties:
-            _isActive = true;
-            _endOfBridge = new bool[Subscriptions.Count];
-            _subscriptionManagers = new IEnumerator<BaseData>[Subscriptions.Count];
-            _realtimePrices = new List<decimal>();
-
-            //Set the source of the live data:
-            _dataQueue = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Configuration.Config.Get("data-queue-handler", "LiveDataQueue"));
-
-            //Class Privates:
-            _algorithm = algorithm;
             if (!(job is LiveNodePacket))
             {
                 throw new ArgumentException("The LiveTradingDataFeed requires a LiveNodePacket.");
             }
+            _job = (LiveNodePacket)job;
 
-            _job = (LiveNodePacket) job;
+            _isActive = true;
+            _algorithm = algorithm;
+            _resultHandler = resultHandler;
+            _cancellationTokenSource = new CancellationTokenSource();
+            _universeSelection = new UniverseSelection(this, algorithm, true);
+            _dataQueue = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Configuration.Config.Get("data-queue-handler", "LiveDataQueue"));
+            
+            Bridge = new BusyBlockingCollection<TimeSlice>();
+            _subscriptions = new ConcurrentDictionary<SymbolSecurityType, LiveSubscription>();
 
-            //Setup the arrays:
-            for (var i = 0; i < Subscriptions.Count; i++)
+            var periodStart = DateTime.UtcNow.ConvertFromUtc(algorithm.TimeZone).AddDays(-7);
+            var periodEnd = Time.EndOfTime;
+            foreach (var security in algorithm.Securities.Values)
             {
-                _endOfBridge[i] = false;
-
-                //This is quantconnect data source, store here for speed/ease of access
-                var security = algorithm.Securities[_subscriptions[i].Symbol];
-                _isDynamicallyLoadedData.Add(security.IsDynamicallyLoadedData);
-
-                // only make readers for custom data, live data will come through data queue handler
-                if (_isDynamicallyLoadedData[i])
-                {
-                    //Subscription managers for downloading user data:
-                    // TODO: Update this when warmup comes in, we back up so we can get data that should have emitted at midnight today
-                    var periodStart = DateTime.Today.AddDays(-7);
-                    var subscriptionDataReader = new SubscriptionDataReader(
-                        _subscriptions[i],
-                        security,
-                        periodStart,
-                        DateTime.MaxValue,
-                        resultHandler,
-                        Time.EachTradeableDay(algorithm.Securities, periodStart, DateTime.MaxValue), 
-                        true, 
-                        DateTime.Today
-                        );
-
-                    // wrap the subscription data reader with a filter enumerator
-                    _subscriptionManagers[i] = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, subscriptionDataReader, security, DateTime.MaxValue);
-                }
-
-                _realtimePrices.Add(0);
+                var subscription = CreateSubscription(algorithm, resultHandler, security, periodStart, periodEnd);
+                _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription),  subscription);
             }
 
             // request for data from these symbols
-            var symbols = BuildTypeSymbolList(algorithm);
+            var symbols = BuildTypeSymbolList(algorithm.Securities.Values);
             if (symbols.Any())
             {
                 // don't subscribe if there's nothing there, this allows custom data to
@@ -168,6 +114,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
+        /// <summary>
+        /// Adds a new subscription to provide data for the specified security.
+        /// </summary>
+        /// <param name="security">The security to add a subscription for</param>
+        /// <param name="utcStartTime">The start time of the subscription</param>
+        /// <param name="utcEndTime">The end time of the subscription</param>
+        public void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime)
+        {
+            var symbols = BuildTypeSymbolList(new[] {security});
+            _dataQueue.Subscribe(_job, symbols);
+            var subscription = CreateSubscription(_algorithm, _resultHandler, security, DateTime.UtcNow.ConvertFromUtc(_algorithm.TimeZone).Date, Time.EndOfTime);
+            _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription), subscription);
+        }
+
+        /// <summary>
+        /// Removes the subscription from the data feed, if it exists
+        /// </summary>
+        /// <param name="security">The security to remove subscriptions for</param>
+        public void RemoveSubscription(Security security)
+        {
+            var symbols = BuildTypeSymbolList(new[] {security});
+            _dataQueue.Unsubscribe(_job, symbols);
+
+            LiveSubscription subscription;
+            _subscriptions.TryRemove(new SymbolSecurityType(security), out subscription);
+        }
 
         /// <summary>
         /// Execute the primary thread for retrieving stock data.
@@ -176,22 +148,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Run()
         {
-            // Symbols requested:
-            _symbols = (from security in _algorithm.Securities.Values
-                        where !security.IsDynamicallyLoadedData && (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
-                        select security.Symbol).ToList<string>();
-
             //Initialize:
-            _streamStores = new Dictionary<int, StreamStore>();
-            for (var i = 0; i < Subscriptions.Count; i++)
-            {
-                var config = _subscriptions[i];
-                if (config.Resolution != Resolution.Tick)
-                {
-                    _streamStores.Add(i, new StreamStore(config, _algorithm.Securities[config.Symbol]));
-                }
-            }
-            Log.Trace(string.Format("LiveTradingDataFeed.Stream(): Initialized {0} stream stores.", _streamStores.Count));
 
             // Set up separate thread to handle stream and building packets:
             var streamThread = new Thread(StreamStoreConsumer);
@@ -205,18 +162,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // determine if we're on even time boundaries for data emit
                 var onMinute = utcTriggerTime.Second == 0;
                 var onHour = onMinute && utcTriggerTime.Minute == 0;
-                var onDay = onHour && utcTriggerTime.Hour == 0;
 
                 // Determine if this subscription needs to be archived:
-                var items = new Dictionary<int, List<BaseData>>();
-                for (var i = 0; i < Subscriptions.Count; i++)
-                {
-                    // stream stores are only created for non-tick data and this timer thread is used
-                    // soley for dequeuing from the stream stores, this index, i, would be null
-                    if (Subscriptions[i].Resolution == Resolution.Tick) continue;
+                var items = new List<KeyValuePair<Security, List<BaseData>>>();
 
-                    bool triggerArchive = false;
-                    switch (_subscriptions[i].Resolution)
+                var changes = SecurityChanges.None;
+
+                var performedUniverseSelection = new HashSet<string>();
+                foreach (var kvp in _subscriptions)
+                {
+                    var subscription = kvp.Value;
+
+                    if (subscription.Configuration.Resolution == Resolution.Tick) continue;
+
+                    var localTime = new DateTime(utcTriggerTime.Ticks - subscription.OffsetProvider.GetOffsetTicks(utcTriggerTime));
+                    var onDay = onHour && localTime.Hour == 0;
+
+                    // perform universe selection if requested on day changes (don't perform multiple times per market)
+                    if (onDay && _algorithm.Universe != null && !performedUniverseSelection.Contains(subscription.Configuration.Symbol))
+                    {
+                        performedUniverseSelection.Add(subscription.Configuration.Symbol);
+                        var coarse = UniverseSelection.GetCoarseFundamentals(subscription.Configuration.Market, subscription.TimeZone, localTime.Date, true);
+                        changes = _universeSelection.ApplyUniverseSelection(localTime.Date, coarse);
+                    }
+
+                    var triggerArchive = false;
+                    switch (subscription.Configuration.Resolution)
                     {
                         case Resolution.Second:
                             triggerArchive = true;
@@ -234,21 +205,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     if (triggerArchive)
                     {
-                        _streamStores[i].TriggerArchive(utcTriggerTime, _subscriptions[i].FillDataForward);
+                        subscription.StreamStore.TriggerArchive(utcTriggerTime, subscription.Configuration.FillDataForward);
 
                         BaseData data;
                         var dataPoints = new List<BaseData>();
-                        while (_streamStores[i].Queue.TryDequeue(out data))
+                        while (subscription.StreamStore.Queue.TryDequeue(out data))
                         {
                             dataPoints.Add(data);
                         }
-                        items[i] = dataPoints;
+                        items.Add(new KeyValuePair<Security, List<BaseData>>(subscription.Security, dataPoints));
                     }
                 }
 
                 // don't try to add if we're already cancelling
                 if (_cancellationTokenSource.IsCancellationRequested) return;
-                Bridge.Add(new TimeSlice(utcTriggerTime, items));
+                Bridge.Add(TimeSlice.Create(_algorithm, utcTriggerTime, items, changes));
             });
 
             //Start the realtime sampler above
@@ -276,19 +247,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void StreamStoreConsumer()
         {
-            //Initialize
-            var update = new Dictionary<int, DateTime>();
-
             //Scan for the required time period to stream:
             Log.Trace("LiveTradingDataFeed.Stream(): Waiting for updated market hours...", true);
 
-            //Awake:
-            Log.Trace("LiveTradingDataFeed.Stream(): Market open, starting stream for " + string.Join(",", _symbols));
+            var symbols = (from security in _algorithm.Securities.Values
+                           where !security.IsDynamicallyLoadedData && (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
+                           select security.Symbol).ToList<string>();
+
+            Log.Trace("LiveTradingDataFeed.Stream(): Market open, starting stream for " + string.Join(",", symbols));
 
             //Micro-thread for polling for new data from data source:
             var liveThreadTask = new Task(()=> 
             {
-                if (_isDynamicallyLoadedData.All(x => x))
+                if (_subscriptions.All(x => x.Value.IsCustomData))
                 {
                     // if we're all custom data data don't waste CPU cycle with this thread
                     return;
@@ -304,35 +275,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         ticksCount++;
 
-                        //Get the stream store with this symbol:
-                        for (var i = 0; i < Subscriptions.Count; i++)
+                        foreach (var kvp in _subscriptions)
                         {
-                            if (_subscriptions[i].Symbol != point.Symbol) continue;
+                            var subscription = kvp.Value;
+
+                            if (subscription.Configuration.Symbol != point.Symbol) continue;
 
                             var tick = point as Tick;
                             if (tick != null)
                             {
-                                if (_subscriptions[i].Resolution == Resolution.Tick)
+                                // Update the realtime price stream value
+                                subscription.SetRealtimePrice(point.Value);
+
+                                if (subscription.Configuration.Resolution == Resolution.Tick)
                                 {
                                     // put ticks directly into the bridge
-                                    AddSingleItemToBridge(tick, i);
+                                    AddSingleItemToBridge(subscription, tick);
                                 }
                                 else
                                 {
                                     // Update our internal counter
-                                    _streamStores[i].Update(tick);
-                                    // Update the realtime price stream value
-                                    _realtimePrices[i] = point.Value;
+                                    subscription.StreamStore.Update(tick);
                                 }
                             }
                             else
                             {
                                 // reset the start time so it goes in sync with other data
-                                point.Time = DateTime.Now.RoundDown(_subscriptions[i].Increment);
+                                point.Time = DateTime.UtcNow.ConvertFromUtc(subscription.TimeZone).RoundDown(subscription.Configuration.Increment);
 
                                 //If its not a tick, inject directly into bridge for this symbol:
                                 //Bridge[i].Enqueue(new List<BaseData> {point});
-                                AddSingleItemToBridge(point, i);
+                                AddSingleItemToBridge(subscription, point);
                             }
                         }
                     }
@@ -345,87 +318,61 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // Micro-thread for custom data/feeds. This only supports polling at this time. todo: Custom data sockets
             var customFeedsTask = new Task(() =>
             {
-                // used to help prevent future data from entering the algorithm
-                // initial to all true, when we get future data, flip flag to false to prevent move next
-                var needsMoveNext = Enumerable.Range(0, Subscriptions.Count).Select(x => true).ToArray();
                 while(true)
                 {
-                    for (var i = 0; i < Subscriptions.Count; i++)
+                    foreach (var kvp in _subscriptions)
                     {
-                        if (_isDynamicallyLoadedData[i])
+                        var subscription = kvp.Value;
+
+                        // custom only thread
+                        if (!subscription.IsCustomData) continue;
+                        // wait for when it's time to update
+                        if (!subscription.NeedsUpdate) continue;
+
+                        var repeat = true;
+                        BaseData data = null;
+                        while (repeat && TryMoveNext(subscription, out data))
                         {
-                            if (!update.ContainsKey(i)) update.Add(i, new DateTime());
-
-                            if (DateTime.Now > update[i])
+                            if (data == null)
                             {
-                                //Now Time has passed -> Trigger a refresh,
-
-                                if (needsMoveNext[i])
-                                {
-                                    // if we didn't emit the previous value it's because it was in
-                                    // the future, so don't call MoveNext, just perform the date range
-                                    // checks below again
-                                    
-                                    // in live mode subscription reader will move next but return null for current since nothing is there
-                                    _subscriptionManagers[i].MoveNext();
-                                    // true success defined as if we got a non-null value
-                                    if (_subscriptionManagers[i].Current == null)
-                                    {
-                                        Log.Trace("LiveTradingDataFeed.Custom(): Current == null");
-                                        // we failed to get new data for this guy, try again next second
-                                        update[i] = DateTime.Now.Add(Time.OneSecond);
-                                        continue;
-                                    }
-                                }
-
-                                // if we didn't get anything keep going
-                                var data = _subscriptionManagers[i].Current;
-                                if (data == null)
-                                {
-                                    // heuristically speaking this should already be true, but no harm in explicitly setting it
-                                    needsMoveNext[i] = true;
-                                    continue;
-                                }
-
-                                // check to see if the data is too far in the past
-                                // this is useful when using custom remote files that may stretch far into the past,
-                                // so this if block will cause us to fast forward the reader until its recent increment
-                                if (data.EndTime < DateTime.Now.Subtract(_subscriptions[i].Increment.Add(Time.OneSecond)))
-                                {
-                                    // repeat this subscription, we're in the past still
-                                    i--;
-                                    continue;
-                                }
-
-                                // don't emit data in the future
-                                if (data.EndTime < DateTime.Now)
-                                {
-                                    if (_subscriptions[i].Resolution == Resolution.Tick)
-                                    {
-                                        // put ticks directly into the bridge
-                                        AddSingleItemToBridge(data, i);
-                                    }
-                                    else
-                                    {
-                                        Log.Trace("LiveTradingDataFeed.Custom(): Add to stream store.");
-                                        _streamStores[i].Update(data); //Update bar builder.
-                                        _realtimePrices[i] = data.Value; //Update realtime price value.
-                                        needsMoveNext[i] = true;
-                                    }
-                                }
-                                else
-                                {
-                                    // since this data is in the future and we didn't emit it,
-                                    // don't call MoveNext again and we'll keep performing time checks
-                                    // until its end time has passed and we can emit it into the bridge
-                                    needsMoveNext[i] = false;
-                                }
-
-                                // REVIEW:: We may want to set update to 'just before' the time, I'm thinking of daily data, so we
-                                //          ask for it at midnight, let's assume it's there, did we get it into the stream store
-                                //          before we called trigger archive?? I hope so, otherwise the data is always a full day late
-                                update[i] = DateTime.Now.Add(_subscriptions[i].Increment).RoundDown(_subscriptions[i].Increment);
+                                break;
                             }
+
+                            // check to see if the data is too far in the past
+                            // this is useful when using custom remote files that may stretch far into the past,
+                            // so this if block will cause us to fast forward the reader until its recent increment
+                            var earliestExpectedFirstPoint = DateTime.UtcNow.Subtract(subscription.Configuration.Increment.Add(Time.OneSecond));
+                            repeat = data.EndTime.ConvertToUtc(subscription.TimeZone) < earliestExpectedFirstPoint;
+                        }
+
+                        if (data == null)
+                        {
+                            continue;
+                        }
+
+                        // don't emit data in the future
+                        // TODO : Move this concern into LiveSubscription, maybe a CustomLiveSubscription, end goal just enumerate the damn thing at it works
+                        if (data.EndTime.ConvertToUtc(subscription.TimeZone) < DateTime.UtcNow)
+                        {
+                            if (subscription.Configuration.Resolution == Resolution.Tick)
+                            {
+                                // put ticks directly into the bridge
+                                AddSingleItemToBridge(subscription, data);
+                            }
+                            else
+                            {
+                                Log.Trace("LiveTradingDataFeed.Custom(): Add to stream store.");
+                                subscription.StreamStore.Update(data); //Update bar builder.
+                                subscription.SetRealtimePrice(data.Value); //Update realtime price value.
+                                subscription.NeedsMoveNext = true;
+                            }
+                        }
+                        else
+                        {
+                            // since this data is in the future and we didn't emit it,
+                            // don't call MoveNext again and we'll keep performing time checks
+                            // until its end time has passed and we can emit it into the bridge
+                            subscription.NeedsMoveNext = false;
                         }
                     }
 
@@ -441,7 +388,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var tasks = new [] {liveThreadTask, Task.FromResult(1)};
 
             // if we have any dynamically loaded data, start the custom thread
-            if (_isDynamicallyLoadedData.Any(x => x))
+            if (_subscriptions.Any(x => x.Value.IsCustomData))
             {
                 //Start task and set it as the second one we want to monitor:
                 customFeedsTask.Start();
@@ -456,36 +403,99 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Log.Trace(string.Format("LiveTradingDataFeed.Stream(): Stream Task Completed. Exit Signal: {0}", _cancellationTokenSource.IsCancellationRequested));
         }
 
+        private static bool TryMoveNext(LiveSubscription subscription, out BaseData data)
+        {
+            data = null;
+            if (subscription.NeedsMoveNext)
+            {
+                // if we didn't emit the previous value it's because it was in
+                // the future, so don't call MoveNext, just perform the date range
+                // checks below again
+
+                // in live mode subscription reader will move next but return null for current since nothing is there
+                if (!subscription.MoveNext())
+                {
+                    // we've exhaused this source for now, the only source that would do this is
+                    // a remote file, let's wait for five minutes and check again to see if we can
+                    // get another piece of data. sadly, in this case it does mean redownloading the
+                    // entire file and reading through all the data before getting to the end to see
+                    // if there's a new line
+                    subscription.SetNextUpdateTime(TimeSpan.FromMinutes(5));
+                }
+
+                // true success defined as if we got a non-null value
+                if (subscription.Current == null)
+                {
+                    Log.Trace("LiveTradingDataFeed.Custom(): Current == null");
+                    return false;
+                }
+            }
+
+            // if we didn't get anything keep going
+            data = subscription.Current;
+            if (data == null)
+            {
+                // heuristically speaking this should already be true, but no harm in explicitly setting it
+                subscription.NeedsMoveNext = true;
+                return false;
+            }
+            return true;
+        }
+
         /// <summary>
         /// Trigger the live trading datafeed thread to abort and stop looping.
         /// </summary>
         public void Exit()
         {
-            lock (_lock)
+            // Unsubscribe from these symbols
+            var symbols = BuildTypeSymbolList(_algorithm.Securities.Values);
+            if (symbols.Any())
             {
-                // Unsubscribe from these symbols
-                var symbols = BuildTypeSymbolList(_algorithm);
-                if (symbols.Any())
-                {
-                    // don't unsubscribe if there's nothing there, this allows custom data to
-                    // work with the LiveDataQueue default LEAN implemetation that just throws on every method.
-                    _dataQueue.Unsubscribe(_job, symbols);
-                }
-                _cancellationTokenSource.Cancel();
-                Bridge.Dispose();
+                // don't unsubscribe if there's nothing there, this allows custom data to
+                // work with the LiveDataQueue default LEAN implemetation that just throws on every method.
+                _dataQueue.Unsubscribe(_job, symbols);
             }
+            _cancellationTokenSource.Cancel();
+            Bridge.Dispose();
+        }
+
+        private static LiveSubscription CreateSubscription(IAlgorithm algorithm,
+            IResultHandler resultHandler,
+            Security security,
+            DateTime periodStart,
+            DateTime periodEnd)
+        {
+            IEnumerator<BaseData> enumerator = null;
+            if (security.IsDynamicallyLoadedData)
+            {
+                //Subscription managers for downloading user data:
+                // TODO: Update this when warmup comes in, we back up so we can get data that should have emitted at midnight today
+                var subscriptionDataReader = new SubscriptionDataReader(
+                    security.SubscriptionDataConfig,
+                    security,
+                    periodStart, Time.EndOfTime,
+                    resultHandler,
+                    Time.EachTradeableDay(algorithm.Securities.Values, periodStart, periodEnd),
+                    true,
+                    DateTime.UtcNow.ConvertFromUtc(algorithm.TimeZone).Date
+                    );
+
+                // wrap the subscription data reader with a filter enumerator
+                enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, subscriptionDataReader, security, periodEnd);
+            }
+            return new LiveSubscription(security, enumerator, periodStart, periodEnd, true, false);
         }
 
         /// <summary>
         /// Create list of symbols grouped by security type.
         /// </summary>
-        private Dictionary<SecurityType, List<string>> BuildTypeSymbolList(IAlgorithm algorithm)
+        private Dictionary<SecurityType, List<string>> BuildTypeSymbolList(IEnumerable<Security> securities)
         {
             // create a lookup keyed by SecurityType
             var symbols = new Dictionary<SecurityType, List<string>>();
 
             // Only subscribe equities and forex symbols
-            foreach (var security in algorithm.Securities.Values)
+            foreach (var security in securities)
             {
                 if (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
                 {
@@ -496,14 +506,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return symbols;
         }
 
-        private void AddSingleItemToBridge(BaseData tick, int i)
+        private void AddSingleItemToBridge(Subscription subscription, BaseData tick)
         {
             // don't try to add if we're already cancelling
             if (_cancellationTokenSource.IsCancellationRequested) return;
-            Bridge.Add(new TimeSlice(tick.EndTime.ConvertToUtc(Subscriptions[i].TimeZone), new Dictionary<int, List<BaseData>>
+            Bridge.Add(TimeSlice.Create(_algorithm, tick.EndTime.ConvertToUtc(subscription.TimeZone), new List<KeyValuePair<Security, List<BaseData>>>
             {
-                {i, new List<BaseData> {tick}}
-            }));
+                new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData> {tick})
+            }, SecurityChanges.None));
         }
     }
 }

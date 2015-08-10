@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -150,6 +151,22 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets the current universe selector, or null if no selection is to be performed
+        /// </summary>
+        IUniverse Universe
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the subscription settings to be used when adding securities via universe selection
+        /// </summary>
+        SubscriptionSettings UniverseSettings
+        {
+            get;
+        }
+
+        /// <summary>
         /// Debug messages from the strategy:
         /// </summary>
         List<string> DebugMessages
@@ -191,9 +208,24 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets the function used to define the benchmark. This function will return
+        /// the value of the benchmark at a requested date/time
+        /// </summary>
+        Func<DateTime, decimal> Benchmark
+        { 
+            get;
+        }
+
+        /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
         /// </summary>
         void Initialize();
+
+        /// <summary>
+        /// Called by setup handlers after Initialize and allows the algorithm a chance to organize
+        /// the data gather in the Initialize method
+        /// </summary>
+        void PostInitialize();
 
         // <summary>
         // v1.0 Handler for Tick Events [DEPRECATED June-2014]
@@ -218,6 +250,12 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="slice">The current slice of data</param>
         void OnData(Slice slice);
+
+        /// <summary>
+        /// Event fired each time the we add/remove securities from the data feed
+        /// </summary>
+        /// <param name="changes"></param>
+        void OnSecuritiesChanged(SecurityChanges changes);
 
         /// <summary>
         /// Send debug message

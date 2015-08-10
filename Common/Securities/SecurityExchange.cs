@@ -209,6 +209,13 @@ namespace QuantConnect.Securities
         public void SetMarketHours(TimeSpan extendedMarketOpen, TimeSpan marketOpen, TimeSpan marketClose, TimeSpan extendedMarketClose, params DayOfWeek[] days)
         {
             if (days.IsNullOrEmpty()) days = Enum.GetValues(typeof(DayOfWeek)).OfType<DayOfWeek>().ToArray();
+
+            // if we specify close as 1 tick before the day rolls over, the exchange is still
+            // considered to be open all day,so set it to one day and this impl will make it OpenAllDay
+            if (extendedMarketOpen == marketOpen && marketOpen == TimeSpan.Zero && extendedMarketClose == marketClose && marketClose.Ticks == Time.OneDay.Ticks - 1)
+            {
+                marketClose = Time.OneDay;
+            }
             
             // make sure extended hours are outside of regular hours
             extendedMarketOpen = TimeSpan.FromTicks(Math.Min(extendedMarketOpen.Ticks, marketOpen.Ticks));

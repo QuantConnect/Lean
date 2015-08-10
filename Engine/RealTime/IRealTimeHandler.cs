@@ -30,33 +30,9 @@ namespace QuantConnect.Lean.Engine.RealTime
     public interface IRealTimeHandler
     {
         /// <summary>
-        /// The real time handlers internal record of current time used to scan the events.
-        /// </summary>
-        DateTime Time 
-        { 
-            get;
-        }
-
-        /// <summary>
-        /// List of events we're monitoring.
-        /// </summary>
-        List<RealTimeEvent> Events
-        {
-            get;
-        }
-
-        /// <summary>
         /// Thread status flag.
         /// </summary>
         bool IsActive
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Data for the Market Open Hours Today
-        /// </summary>
-        Dictionary<SecurityType, MarketToday> MarketToday
         {
             get;
         }
@@ -72,32 +48,11 @@ namespace QuantConnect.Lean.Engine.RealTime
         void Run();
 
         /// <summary>
-        /// Given a list of events, set it up for this day.
-        /// </summary>
-        void SetupEvents(DateTime day);
-
-        /// <summary>
         /// Add a new event to the processing list
         /// </summary>
         /// <param name="newEvent">Event information</param>
-        void AddEvent(RealTimeEvent newEvent);
+        void AddEvent(ScheduledEvent newEvent);
         
-        /// <summary>
-        /// Trigger a scan of the events.
-        /// </summary>
-        void ScanEvents();
-
-        /// <summary>
-        /// Reset all the event flags for a new day.
-        /// </summary>
-        /// <remarks>Realtime events are setup as a timespan hours since </remarks>
-        void ResetEvents();
-
-        /// <summary>
-        /// Clear all the events in the list.
-        /// </summary>
-        void ClearEvents();
-
         /// <summary>
         /// Set the current time for the event scanner (so we can use same code for backtesting and live events)
         /// </summary>

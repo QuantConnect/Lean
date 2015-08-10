@@ -180,22 +180,32 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public void Run()
         {
-            while ( !_exitTriggered || Messages.Count > 0 ) 
+            try
             {
-                Thread.Sleep(100);
-
-                var now = DateTime.UtcNow;
-                if (now > _updateTime)
+                while ( !_exitTriggered || Messages.Count > 0 ) 
                 {
-                    _updateTime = now.AddSeconds(5);
-                    _algorithmNode.LogAlgorithmStatus(_lastSampledTimed);
+                    Thread.Sleep(100);
+
+                    var now = DateTime.UtcNow;
+                    if (now > _updateTime)
+                    {
+                        _updateTime = now.AddSeconds(5);
+                        _algorithmNode.LogAlgorithmStatus(_lastSampledTimed);
+                    }
+                }
+
+                // Write Equity and EquityPerformance files in charts directory
+                foreach (var fileName in _equityResults.Keys)
+                {
+                    File.WriteAllLines(fileName, _equityResults[fileName]);
                 }
             }
-
-            // Write Equity and EquityPerformance files in charts directory
-            foreach (var fileName in _equityResults.Keys)
+            catch (Exception err)
             {
-                File.WriteAllLines(fileName, _equityResults[fileName]);
+                // unexpected error, we need to close down shop
+                Log.Error(err);
+                // quit the algorithm due to error
+                _algorithm.RunTimeError = err;
             }
 
             Log.Trace("ConsoleResultHandler: Ending Thread...");
@@ -208,7 +218,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public void DebugMessage(string message)
         {
-            Log.Trace("Debug Message >> " + message);
+            Log.Trace(_algorithm.Time + ": Debug >> " + message);
         }
 
         /// <summary>
@@ -217,7 +227,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd in the log.</param>
         public void LogMessage(string message)
         {
-            Log.Trace("Log Message >> " + message);
+            Log.Trace(_algorithm.Time + ": Log >> " + message);
         }
 
         /// <summary>
@@ -227,7 +237,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Stacktrace information string</param>
         public void RuntimeError(string message, string stacktrace = "")
         {
-            Log.Error("Error Message >> " + message + (!string.IsNullOrEmpty(stacktrace) ? (" >> ST: " + stacktrace) : ""));
+            Log.Error(_algorithm.Time + ": Error >> " + message + (!string.IsNullOrEmpty(stacktrace) ? (" >> ST: " + stacktrace) : ""));
         }
 
         /// <summary>
@@ -237,7 +247,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Stacktrace information string</param>
         public void ErrorMessage(string message, string stacktrace = "")
         {
-            Log.Error("Error Message >> " + message + (!string.IsNullOrEmpty(stacktrace) ? (" >> ST: " + stacktrace) : ""));
+            Log.Error(_algorithm.Time + ": Error >> " + message + (!string.IsNullOrEmpty(stacktrace) ? (" >> ST: " + stacktrace) : ""));
         }
 
         /// <summary>
@@ -304,6 +314,16 @@ namespace QuantConnect.Lean.Engine.Results
             Sample("Strategy Equity", ChartType.Overlay, "Daily Performance", SeriesType.Line, time, value, "%");
         }
 
+        /// <summary>
+        /// Sample the current benchmark performance directly with a time-value pair.
+        /// </summary>
+        /// <param name="time">Current backtest date.</param>
+        /// <param name="value">Current benchmark value.</param>
+        /// <seealso cref="IResultHandler.Sample"/>
+        public void SampleBenchmark(DateTime time, decimal value)
+        {
+            Sample("Benchmark", ChartType.Stacked, "Benchmark", SeriesType.Line, time, value);
+        }
 
         /// <summary>
         /// Analyse the algorithm and determine its security types.

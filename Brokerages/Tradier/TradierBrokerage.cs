@@ -177,7 +177,7 @@ namespace QuantConnect.Brokerages.Tradier
                 _orderFillTimer.Dispose();
             }
             
-            var dueTime = ExpectedExpiry - DateTime.Now;
+            var dueTime = ExpectedExpiry - DateTime.UtcNow;
             if (dueTime < TimeSpan.Zero) dueTime = TimeSpan.Zero;
             var period = TimeSpan.FromDays(1).Subtract(TimeSpan.FromMinutes(-1));
             _refreshTimer = new Timer(state => RefreshSession(), null, dueTime, period);

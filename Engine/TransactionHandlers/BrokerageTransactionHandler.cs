@@ -348,40 +348,50 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public void Run()
         {
-            while (!_exitTriggered)
+            try
             {
-                _processingCompletedEvent.Reset();
-
-                OrderRequest request;
-                if (!_orderRequestQueue.TryDequeue(out request))
+                while (!_exitTriggered)
                 {
-                    _processingCompletedEvent.Set();
+                    _processingCompletedEvent.Reset();
 
-                    // if it's empty just sleep this thread for a little bit
-                    Thread.Sleep(1);
-                    continue;
+                    OrderRequest request;
+                    if (!_orderRequestQueue.TryDequeue(out request))
+                    {
+                        _processingCompletedEvent.Set();
+
+                        // if it's empty just sleep this thread for a little bit
+                        Thread.Sleep(1);
+                        continue;
+                    }
+
+                    OrderResponse response;
+                    switch (request.OrderRequestType)
+                    {
+                        case OrderRequestType.Submit:
+                            response = HandleSubmitOrderRequest((SubmitOrderRequest) request);
+                            break;
+                        case OrderRequestType.Update:
+                            response = HandleUpdateOrderRequest((UpdateOrderRequest) request);
+                            break;
+                        case OrderRequestType.Cancel:
+                            response = HandleCancelOrderRequest((CancelOrderRequest) request);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    // we've finally finished processing the request, mark as processed
+                    request.SetResponse(response, OrderRequestStatus.Processed);
+
+                    ProcessAsynchronousEvents();
                 }
-
-                OrderResponse response;
-                switch (request.OrderRequestType)
-                {
-                    case OrderRequestType.Submit:
-                        response = HandleSubmitOrderRequest((SubmitOrderRequest) request);
-                        break;
-                    case OrderRequestType.Update:
-                        response = HandleUpdateOrderRequest((UpdateOrderRequest) request);
-                        break;
-                    case OrderRequestType.Cancel:
-                        response = HandleCancelOrderRequest((CancelOrderRequest) request);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-                // we've finally finished processing the request, mark as processed
-                request.SetResponse(response, OrderRequestStatus.Processed);
-
-                ProcessAsynchronousEvents();
+            }
+            catch (Exception err)
+            {
+                // unexpected error, we need to close down shop
+                Log.Error(err);
+                // quit the algorithm due to error
+                _algorithm.RunTimeError = err;
             }
 
             Log.Trace("BrokerageTransactionHandler.Run(): Ending Thread...");
@@ -444,7 +454,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // we want to remove orders older than 10k records, but only in live mode
             const int maxOrdersToKeep = 10000;
-            if (_orders.Count < maxOrdersToKeep + 1) return;
+            if (_orders.Count < maxOrdersToKeep + 1)
+            {
+                Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Exit");
+                return;
+            }
 
             int max = _orders.Max(x => x.Key);
             int lowestOrderIdToKeep = max - maxOrdersToKeep;

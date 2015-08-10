@@ -162,13 +162,7 @@ namespace QuantConnect.Tests.Common.Securities
             cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
 
             var last = 120m;
-            var data = new Dictionary<int, List<BaseData>>();
-            data.Add(0, new List<BaseData>
-            {
-                new Tick(DateTime.Now, "USDJPY", last, 119.95m, 120.05m)
-            });
-
-            cash.Update(data);
+            cash.Update(new Tick(DateTime.Now, "USDJPY", last, 119.95m, 120.05m));
 
             // jpy is inverted, so compare on the inverse
             Assert.AreEqual(1 / last, cash.ConversionRate);
@@ -189,13 +183,7 @@ namespace QuantConnect.Tests.Common.Securities
             cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
 
             var last = 1.5m;
-            var data = new Dictionary<int, List<BaseData>>();
-            data.Add(0, new List<BaseData>
-            {
-                new Tick(DateTime.Now, "GBPUSD", last, last*1.009m, last*0.009m)
-            });
-
-            cash.Update(data);
+            cash.Update(new Tick(DateTime.Now, "GBPUSD", last, last * 1.009m, last * 0.009m));
 
             // jpy is inverted, so compare on the inverse
             Assert.AreEqual(last, cash.ConversionRate);
