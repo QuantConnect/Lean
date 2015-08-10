@@ -57,8 +57,14 @@ namespace QuantConnect.Brokerages.Oanda
         
 
         private readonly object _fillLock = new object();
-        
-        private readonly Dictionary<string, SecurityType> _instrumentSecurityTypeMap;
+
+        /// <summary>
+        /// Gets or sets the instrument security type map.
+        /// </summary>
+        /// <value>
+        /// The instrument security type map.
+        /// </value>
+        public Dictionary<string, SecurityType> InstrumentSecurityTypeMap { get; private set; }
 
         /// <summary>
         /// Gets the oanda environment.
@@ -115,7 +121,15 @@ namespace QuantConnect.Brokerages.Oanda
             _holdingsProvider = holdingsProvider;
             AccountId = accountId;
             _cachedOpenOrdersByOandaOrderId = new ConcurrentDictionary<long, DataType.Order>();
-            _instrumentSecurityTypeMap = MapInstrumentToSecurityType(GetInstrumentsAsync().Result);
+            InstrumentSecurityTypeMap =  new Dictionary<string, SecurityType>(); 
+        }
+
+        /// <summary>
+        /// Initializes the instrument security type map.
+        /// </summary>
+        public void InitializeInstrumentSecurityTypeMap()
+        {
+            InstrumentSecurityTypeMap = MapInstrumentToSecurityType(GetInstrumentsAsync().Result);
         }
 
         /// <summary>
@@ -163,7 +177,7 @@ namespace QuantConnect.Brokerages.Oanda
             return new Holding
             {
                 Symbol = position.instrument,
-                Type = _instrumentSecurityTypeMap[position.instrument],
+                Type = InstrumentSecurityTypeMap[position.instrument],
                 AveragePrice = (decimal)position.avgPrice,
                 ConversionRate = 1.0m,
                 CurrencySymbol = "$",
@@ -537,31 +551,11 @@ namespace QuantConnect.Brokerages.Oanda
         }
         
         //TODO: issues running tasks async, order tend to not be found because the filled event getting fired after the order for update is already called.
-		/// <summary>
-		/// Modify the specified order, updating it with the parameters provided
-		/// </summary>
-		/// <param name="orderId">the identifier of the order to update</param>
-		/// <param name="requestParams">the parameters to update (name, value pairs)</param>
-		/// <returns>Order object containing the new details of the order (post update)</returns>
-        //public async Task<DataType.Order> UpdateOrderAsync(long orderId, Dictionary<string, string> requestParams)
-        //{
-        //    var orderRequest = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
-
-        //    var order = await MakeRequestAsync<DataType.Order>(orderRequest);
-        //    if(order != null && order.id > 0)
-        //    {
-        //        var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
-        //        var updatedOrder = await MakeRequestWithBody<DataType.Order>(requestString, "PATCH", requestParams);
-        //        if (updatedOrder != null && updatedOrder.id > 0)
-        //        {
-        //            return updatedOrder;
-        //        }
-        //    }
-            
-        //    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateFailed", "Failed to update Oanda order id: " + orderId + "."));
-        //    throw new Exception("Failed to update Oanda order id: " + orderId + ".");
-        //}
-
+        /// <summary>
+        /// Modify the specified order, updating it with the parameters provided
+        /// </summary>
+        /// <param name="orderId">the identifier of the order to update</param>
+        /// <param name="requestParams">the parameters to update (name, value pairs)</param>
         public void UpdateOrderAsync(long orderId, Dictionary<string, string> requestParams)
         {
             var orderRequest = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
@@ -1019,7 +1013,7 @@ namespace QuantConnect.Brokerages.Oanda
             }
             qcOrder.Symbol = order.instrument;
             qcOrder.Quantity = ConvertQuantity(order);
-            qcOrder.SecurityType = _instrumentSecurityTypeMap[order.instrument];
+            qcOrder.SecurityType = InstrumentSecurityTypeMap[order.instrument];
             qcOrder.Status = OrderStatus.None;
             qcOrder.BrokerId.Add(order.id);
             qcOrder.Id = order.id;

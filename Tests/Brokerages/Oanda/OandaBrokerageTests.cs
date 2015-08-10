@@ -60,7 +60,9 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             var qcUserId = OandaBrokerageFactory.Configuration.QuantConnectUserId;
             oandaBrokerage.SetTokens(qcUserId, tokens.AccessToken, tokens.RefreshToken, tokens.IssuedAt,
                 TimeSpan.FromSeconds(tokens.ExpiresIn));
-            
+
+            oandaBrokerage.InitializeInstrumentSecurityTypeMap();
+
             // keep the tokens up to date in the event of a refresh
             oandaBrokerage.SessionRefreshed +=
                 (sender, args) =>
