@@ -421,6 +421,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // entire file and reading through all the data before getting to the end to see
                     // if there's a new line
                     subscription.SetNextUpdateTime(TimeSpan.FromMinutes(5));
+                    return false;
                 }
 
                 // true success defined as if we got a non-null value
