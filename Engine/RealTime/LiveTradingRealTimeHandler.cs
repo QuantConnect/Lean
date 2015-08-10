@@ -22,6 +22,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -31,8 +32,10 @@ namespace QuantConnect.Lean.Engine.RealTime
     public class LiveTradingRealTimeHandler : IRealTimeHandler
     {
         private bool _isActive = true;
-        private ConcurrentDictionary<string, ScheduledEvent> _events;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        // initialize this immediately since the Initialzie method gets called after IAlgorithm.Initialize,
+        // so we want to be ready to accept events as soon as possible
+        private readonly ConcurrentDictionary<string, ScheduledEvent> _scheduledEvents = new ConcurrentDictionary<string, ScheduledEvent>();
 
         //Algorithm and Handlers:
         private IApi _api;
@@ -50,13 +53,12 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Intializes the real time handler for the specified algorithm and job
         /// </summary>
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api)
+        public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api)
         {
             //Initialize:
             _api = api;
             _algorithm = algorithm;
             _resultHandler = resultHandler;
-            _events = new ConcurrentDictionary<string, ScheduledEvent>();
             _cancellationTokenSource = new CancellationTokenSource();
 
             var todayInAlgorithmTimeZone = DateTime.UtcNow.ConvertFromUtc(_algorithm.TimeZone).Date;
@@ -69,25 +71,28 @@ namespace QuantConnect.Lean.Engine.RealTime
                 from date in Time.EachDay(todayInAlgorithmTimeZone.AddDays(1), Time.EndOfTime)
                 select date.ConvertToUtc(_algorithm.TimeZone);
 
-            AddEvent(new ScheduledEvent("RefreshMarketHours", times, (name, triggerTime) =>
+            Add(new ScheduledEvent("RefreshMarketHours", times, (name, triggerTime) =>
             {
                 // refresh market hours from api every day
                 RefreshMarketHoursToday(triggerTime.ConvertFromUtc(_algorithm.TimeZone).Date);
             }));
 
             // add end of day events for each tradeable day
-            AddEvent(ScheduledEvent.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.AlgorithmEndOfDayDelta, DateTime.UtcNow));
+            Add(ScheduledEventFactory.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.AlgorithmEndOfDayDelta, DateTime.UtcNow));
 
             // add end of trading day events for each security
             foreach (var security in _algorithm.Securities.Values)
             {
                 // assumes security.Exchange has been updated with today's hours via RefreshMarketHoursToday
-                AddEvent(ScheduledEvent.EverySecurityEndOfDay(_algorithm, _resultHandler, security, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.SecurityEndOfDayDelta, DateTime.UtcNow));
+                Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.SecurityEndOfDayDelta, DateTime.UtcNow));
             }
 
-            foreach (var scheduledEvent in _events.Values)
+            foreach (var scheduledEvent in _scheduledEvents)
             {
-                scheduledEvent.IsLoggingEnabled = true;
+                // zoom past old events
+                scheduledEvent.Value.SkipEventsUntil(algorithm.UtcTime);
+                // set logging accordingly
+                scheduledEvent.Value.IsLoggingEnabled = Log.DebuggingEnabled;
             }
         }
 
@@ -112,7 +117,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                     Thread.Sleep(delay < 0 ? 1 : delay);
 
                     // poke each event to see if it should fire
-                    foreach (var scheduledEvent in _events)
+                    foreach (var scheduledEvent in _scheduledEvents)
                     {
                         scheduledEvent.Value.Scan(time);
                     }
@@ -171,12 +176,27 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Add this new event to our list.
+        /// Adds the specified event to the schedule
         /// </summary>
-        /// <param name="newEvent">New event we'd like processed.</param>
-        public void AddEvent(ScheduledEvent newEvent)
+        /// <param name="scheduledEvent">The event to be scheduled, including the date/times the event fires and the callback</param>
+        public void Add(ScheduledEvent scheduledEvent)
         {
-            _events.AddOrUpdate(newEvent.Name, newEvent);
+            if (_algorithm != null)
+            {
+                scheduledEvent.SkipEventsUntil(_algorithm.UtcTime);
+            }
+
+            _scheduledEvents.AddOrUpdate(scheduledEvent.Name, scheduledEvent);
+        }
+
+        /// <summary>
+        /// Removes the specified event from the schedule
+        /// </summary>
+        /// <param name="name"></param>
+        public void Remove(string name)
+        {
+            ScheduledEvent scheduledEvent;
+            _scheduledEvents.TryRemove(name, out scheduledEvent);
         }
 
         /// <summary>

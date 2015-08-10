@@ -21,6 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Notifications;
 using QuantConnect.Orders;
+using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Interfaces
@@ -81,6 +82,14 @@ namespace QuantConnect.Interfaces
         /// Notification manager for storing and processing live event messages
         /// </summary>
         NotificationManager Notify
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets schedule manager for adding/removing scheduled events
+        /// </summary>
+        ScheduleManager Schedule
         {
             get;
         }

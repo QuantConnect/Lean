@@ -75,6 +75,7 @@
     <Compile Include="QuandlImporterAlgorithm.cs" />
     <Compile Include="RegressionAlgorithm.cs" />
     <Compile Include="RenkoConsolidatorAlgorithm.cs" />
+    <Compile Include="ScheduledEventsAlgorithm.cs" />
     <Compile Include="StressSymbolsAlgorithm.cs" />
     <Compile Include="StressSymbols.cs" />
     <Compile Include="TickDataFilteringAlgorithm.cs" />

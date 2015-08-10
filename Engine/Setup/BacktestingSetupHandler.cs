@@ -21,6 +21,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
@@ -133,8 +134,9 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="baseJob">Algorithm job</param>
         /// <param name="resultHandler">The configured result handler</param>
         /// <param name="transactionHandler">The configurated transaction handler</param>
+        /// <param name="realTimeHandler">The configured real time handler</param>
         /// <returns>Boolean true on successfully initializing the algorithm</returns>
-        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob, IResultHandler resultHandler, ITransactionHandler transactionHandler)
+        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler)
         {
             var job = baseJob as BacktestNodePacket;
             if (job == null)
@@ -171,6 +173,8 @@ namespace QuantConnect.Lean.Engine.Setup
                     algorithm.SetAssetLimits(500, 100, 30);
                     //Set the algorithm time before we even initialize:
                     algorithm.SetDateTime(job.PeriodStart);
+                    //Set the source impl for the event scheduling
+                    algorithm.Schedule.SetEventSchedule(realTimeHandler);
                     //Initialise the algorithm, get the required data:
                     algorithm.Initialize();
                     //Add currency data feeds that weren't explicity added in Initialize
