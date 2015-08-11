@@ -169,16 +169,25 @@ namespace QuantConnect.Lean.Engine
             //Go through the subscription types and create invokers to trigger the event handlers for each custom type:
             foreach (var config in feed.Subscriptions.Select(x => x.Configuration)) 
             {
-                if (config.Type != typeof(TradeBar) && config.Type != typeof(Tick) && !config.IsInternalFeed)
+                //If type is a tradebar, combine tradebars and ticks into unified array:
+                if (config.Type.Name != "TradeBar" && config.Type.Name != "Tick" && !config.IsInternalFeed) 
                 {
-                    var hasCustomDataMethod = AddMethodInvoker(config.Type, algorithm, methodInvokers);
+                    //Get the matching method for this event handler - e.g. public void OnData(Quandl data) { .. }
+                    var genericMethod = (algorithm.GetType()).GetMethod("OnData", new[] { config.Type });
+
+                    //If we already have this Type-handler then don't add it to invokers again.
+                    if (methodInvokers.ContainsKey(config.Type)) continue;
 
                     //If we couldnt find the event handler, let the user know we can't fire that event.
-                    if (!hasCustomDataMethod && !hasOnDataSlice)
+                    if (genericMethod == null && !hasOnDataSlice)
                     {
                         algorithm.RunTimeError = new Exception("Data event handler not found, please create a function matching this template: public void OnData(" + config.Type.Name + " data) {  }");
                         _algorithmState = AlgorithmStatus.RuntimeError;
                         return;
+                    }
+                    if (genericMethod != null)
+                    {
+                        methodInvokers.Add(config.Type, genericMethod.DelegateForCallMethod());
                     }
                 }
             }
@@ -588,27 +597,14 @@ namespace QuantConnect.Lean.Engine
         /// <typeparam name="T">The data type to check for 'OnData(T data)</typeparam>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="methodInvokers">The dictionary of method invokers</param>
+        /// <param name="methodName">The name of the method to search for</param>
         /// <returns>True if the method existed and was added to the collection</returns>
-        private static bool AddMethodInvoker<T>(IAlgorithm algorithm, Dictionary<Type, MethodInvoker> methodInvokers)
+        private bool AddMethodInvoker<T>(IAlgorithm algorithm, Dictionary<Type, MethodInvoker> methodInvokers, string methodName = "OnData")
         {
-            // first check for OnData(T data);
-            var type = typeof (T);
-            return AddMethodInvoker(type, algorithm, methodInvokers);
-        }
-
-        private static bool AddMethodInvoker(Type type, IAlgorithm algorithm, Dictionary<Type, MethodInvoker> methodInvokers)
-        {
-            var newSplitMethodInfo = algorithm.GetType().GetMethod("OnData", new[] {type});
+            var newSplitMethodInfo = algorithm.GetType().GetMethod(methodName, new[] {typeof (T)});
             if (newSplitMethodInfo != null)
             {
-                methodInvokers.Add(type, newSplitMethodInfo.DelegateForCallMethod());
-                return true;
-            }
-            // second check for OnTypeName(T data);
-            newSplitMethodInfo = algorithm.GetType().GetMethod("On" + type.Name, new[] {type});
-            if (newSplitMethodInfo != null)
-            {
-                methodInvokers.Add(type, newSplitMethodInfo.DelegateForCallMethod());
+                methodInvokers.Add(typeof(T), newSplitMethodInfo.DelegateForCallMethod());
                 return true;
             }
             return false;
