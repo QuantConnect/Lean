@@ -15,6 +15,7 @@
 */
 
 using System;
+using NodaTime;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Scheduling
@@ -29,12 +30,25 @@ namespace QuantConnect.Scheduling
         private readonly SecurityManager _securities;
 
         /// <summary>
+        /// Gets the date rules helper object to make specifying dates for events easier
+        /// </summary>
+        public DateRules DateRules { get; private set; }
+
+        /// <summary>
+        /// Gets the time rules helper object to make specifying times for events easier
+        /// </summary>
+        public TimeRules TimeRules { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ScheduleManager"/> class
         /// </summary>
         /// <param name="securities">Securities manager containing the algorithm's securities</param>
-        public ScheduleManager(SecurityManager securities)
+        /// <param name="timeZone">The algorithm's time zone</param>
+        public ScheduleManager(SecurityManager securities, DateTimeZone timeZone)
         {
             _securities = securities;
+            DateRules = new DateRules(securities);
+            TimeRules = new TimeRules(securities, timeZone);
         }
 
         /// <summary>
@@ -77,6 +91,17 @@ namespace QuantConnect.Scheduling
         /// <param name="callback">The callback to be invoked</param>
         public void On(IDateRule dateRule, ITimeRule timeRule, Action callback)
         {
+            On(dateRule, timeRule, (name, time) => callback());
+        }
+
+        /// <summary>
+        /// Schedules the callback to run using the specified date and time rules
+        /// </summary>
+        /// <param name="dateRule">Specifies what dates the event should run</param>
+        /// <param name="timeRule">Specifies the times on those dates the event should run</param>
+        /// <param name="callback">The callback to be invoked</param>
+        public void On(IDateRule dateRule, ITimeRule timeRule, Action<string, DateTime> callback)
+        {
             var name = dateRule.Name + ": " + timeRule.Name;
             On(name, dateRule, timeRule, callback);
         }
@@ -90,10 +115,42 @@ namespace QuantConnect.Scheduling
         /// <param name="callback">The callback to be invoked</param>
         public void On(string name, IDateRule dateRule, ITimeRule timeRule, Action callback)
         {
+            On(name, dateRule, timeRule, (n, d) => callback());
+        }
+
+        /// <summary>
+        /// Schedules the callback to run using the specified date and time rules
+        /// </summary>
+        /// <param name="name">The event's unique name</param>
+        /// <param name="dateRule">Specifies what dates the event should run</param>
+        /// <param name="timeRule">Specifies the times on those dates the event should run</param>
+        /// <param name="callback">The callback to be invoked</param>
+        public void On(string name, IDateRule dateRule, ITimeRule timeRule, Action<string, DateTime> callback)
+        {
             var dates = dateRule.GetDates(_securities.UtcTime, Time.EndOfTime);
             var eventTimes = timeRule.CreateUtcEventTimes(dates);
-            var scheduledEvent = new ScheduledEvent(name, eventTimes, (s, time) => callback());
+            var scheduledEvent = new ScheduledEvent(name, eventTimes, callback);
             _eventSchedule.Add(scheduledEvent);
         }
+
+        #region Fluent Scheduling
+
+        /// <summary>
+        /// Entry point for the fluent scheduled event builder
+        /// </summary>
+        public IFluentSchedulingDateSpecifier Event()
+        {
+            return new FluentScheduledEventBuilder(this, _securities);
+        }
+
+        /// <summary>
+        /// Entry point for the fluent scheduled event builder
+        /// </summary>
+        public IFluentSchedulingDateSpecifier Event(string name)
+        {
+            return new FluentScheduledEventBuilder(this, _securities, name);
+        }
+
+        #endregion
     }
 }

@@ -64,7 +64,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void RegularMarketOpenNoDelta()
         {
             var rules = GetTimeRules(TimeZones.Utc);
-            var rule = rules.MarketOpen("SPY");
+            var rule = rules.AfterMarketOpen("SPY");
             var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 03) });
 
             int count = 0;
@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void RegularMarketOpenWithDelta()
         {
             var rules = GetTimeRules(TimeZones.Utc);
-            var rule = rules.MarketOpen("SPY", 30);
+            var rule = rules.AfterMarketOpen("SPY", 30);
             var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 03) });
 
             int count = 0;
@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void ExtendedMarketOpenNoDelta()
         {
             var rules = GetTimeRules(TimeZones.Utc);
-            var rule = rules.MarketOpen("SPY", 0, true);
+            var rule = rules.AfterMarketOpen("SPY", 0, true);
             var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 03) });
 
             int count = 0;
@@ -112,7 +112,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void ExtendedMarketOpenWithDelta()
         {
             var rules = GetTimeRules(TimeZones.Utc);
-            var rule = rules.MarketOpen("SPY", 30, true);
+            var rule = rules.AfterMarketOpen("SPY", 30, true);
             var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 03) });
 
             int count = 0;
@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void RegularMarketCloseNoDelta()
         {
             var rules = GetTimeRules(TimeZones.Utc);
-            var rule = rules.MarketClose("SPY");
+            var rule = rules.BeforeMarketClose("SPY");
             var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 03) });
 
             int count = 0;
@@ -144,7 +144,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void RegularMarketCloseWithDelta()
         {
             var rules = GetTimeRules(TimeZones.Utc);
-            var rule = rules.MarketClose("SPY", 30);
+            var rule = rules.BeforeMarketClose("SPY", 30);
             var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 03) });
 
             int count = 0;
@@ -160,7 +160,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void ExtendedMarketCloseNoDelta()
         {
             var rules = GetTimeRules(TimeZones.Utc);
-            var rule = rules.MarketClose("SPY", 0, true);
+            var rule = rules.BeforeMarketClose("SPY", 0, true);
             var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 03) });
 
             int count = 0;
@@ -176,7 +176,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void ExtendedMarketCloseWithDelta()
         {
             var rules = GetTimeRules(TimeZones.Utc);
-            var rule = rules.MarketClose("SPY", 30, true);
+            var rule = rules.BeforeMarketClose("SPY", 30, true);
             var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 03) });
             
             int count = 0;

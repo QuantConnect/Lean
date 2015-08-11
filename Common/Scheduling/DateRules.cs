@@ -15,7 +15,10 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Scheduling
 {
@@ -36,12 +39,23 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
+        /// Specifies an event should fire on each of the specified days of week
+        /// </summary>
+        /// <param name="days">The days the event shouls fire</param>
+        /// <returns>A date rule that fires on every specified day of week</returns>
+        public IDateRule Every(params DayOfWeek[] days)
+        {
+            var hash = days.ToHashSet();
+            return new FuncDateRule(string.Join(",", days), (start, end) => Time.EachDay(start, end).Where(date => hash.Contains(date.DayOfWeek)));
+        }
+
+        /// <summary>
         /// Specifies an event should fire every day
         /// </summary>
         /// <returns>A date rule that fires every day</returns>
         public IDateRule EveryDay()
         {
-            return EveryDayDateRule.Instance;
+            return new FuncDateRule("EveryDay", Time.EachDay);
         }
 
         /// <summary>
@@ -51,7 +65,8 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires every day the specified symbol trades</returns>
         public IDateRule EveryDay(string symbol)
         {
-            return new EveryTradeableDayDateRule(GetSecurity(symbol));
+            var security = GetSecurity(symbol);
+            return new FuncDateRule(symbol + ": EveryDay", (start, end) => Time.EachTradeableDay(security, start, end));
         }
 
         /// <summary>
@@ -60,7 +75,7 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires on the first of each month</returns>
         public IDateRule MonthStart()
         {
-            return MonthStartDateRule.Instance;
+            return new FuncDateRule("MonthStart", (start, end) => MonthStartIterator(null, start, end));
         }
 
         /// <summary>
@@ -72,7 +87,7 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires on the first tradeable date for the specified security each month</returns>
         public IDateRule MonthStart(string symbol)
         {
-            return new MonthStartDateRule(GetSecurity(symbol));
+            return new FuncDateRule(symbol + ": MonthStart", (start, end) => MonthStartIterator(GetSecurity(symbol), start, end));
         }
 
         /// <summary>
@@ -90,6 +105,37 @@ namespace QuantConnect.Scheduling
                 throw new Exception(symbol + " not found in portfolio. Request this data when initializing the algorithm.");
             }
             return security;
+        }
+
+        private static IEnumerable<DateTime> MonthStartIterator(Security security, DateTime start, DateTime end)
+        {
+            if (security == null)
+            {
+                foreach (var date in Time.EachDay(start, end))
+                {
+                    // fire on the first of each month
+                    if (date.Day == 1) yield return date;
+                }
+                yield break;
+            }
+
+            // start a month back so we can properly resolve the first event (we may have passed it)
+            var aMonthBeforeStart = start.AddMonths(-1);
+            int lastMonth = aMonthBeforeStart.Month;
+            foreach (var date in Time.EachTradeableDay(security, aMonthBeforeStart, end))
+            {
+                if (date.Month != lastMonth)
+                {
+                    if (date >= start)
+                    {
+                        // only emit if the date is on or after the start
+                        // the date may be before here because we backed up a month
+                        // to properly resolve the first tradeable date
+                        yield return date;
+                    }
+                    lastMonth = date.Month;
+                }
+            }
         }
     }
 }

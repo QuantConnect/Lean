@@ -82,6 +82,7 @@
     <Compile Include="Common\Data\SliceTests.cs" />
     <Compile Include="Common\Data\SubscriptionDataSourceTests.cs" />
     <Compile Include="Common\Scheduling\DateRulesTests.cs" />
+    <Compile Include="Common\Scheduling\ScheduledEventTests.cs" />
     <Compile Include="Common\Scheduling\TimeRulesTests.cs" />
     <Compile Include="Common\Securities\CashBookTests.cs" />
     <Compile Include="Common\Securities\CashTests.cs" />

@@ -16,24 +16,25 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Scheduling
 {
     /// <summary>
-    /// Specifies that an event should fire every day that the requested security trades
+    /// Uses a function to define an enumerable of dates over a requested start/end period
     /// </summary>
-    public class EveryTradeableDayDateRule : IDateRule
+    public class FuncDateRule : IDateRule
     {
-        private readonly Security _security;
+        private readonly Func<DateTime, DateTime, IEnumerable<DateTime>> _getDatesFuntion;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EveryTradeableDayDateRule"/> class
+        /// Initializes a new instance of the <see cref="FuncDateRule"/> class
         /// </summary>
-        /// <param name="security">The security whose tradeable dates we want an event for</param>
-        public EveryTradeableDayDateRule(Security security)
+        /// <param name="name">The name of this rule</param>
+        /// <param name="getDatesFuntion">The time applicator function</param>
+        public FuncDateRule(string name, Func<DateTime, DateTime, IEnumerable<DateTime>> getDatesFuntion)
         {
-            _security = security;
+            Name = name;
+            _getDatesFuntion = getDatesFuntion;
         }
 
         /// <summary>
@@ -41,7 +42,7 @@ namespace QuantConnect.Scheduling
         /// </summary>
         public string Name
         {
-            get { return _security.Symbol + ": EveryDay"; }
+            get; private set;
         }
 
         /// <summary>
@@ -52,7 +53,7 @@ namespace QuantConnect.Scheduling
         /// <returns>All dates in the interval matching this date rule</returns>
         public IEnumerable<DateTime> GetDates(DateTime start, DateTime end)
         {
-            return Time.EachTradeableDay(_security, start, end);
+            return _getDatesFuntion(start, end);
         }
     }
 }
