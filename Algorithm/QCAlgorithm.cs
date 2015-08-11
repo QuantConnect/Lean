@@ -839,6 +839,7 @@ namespace QuantConnect.Algorithm
             if (!_locked) 
             {
                 _startDate = start;
+                SetDateTime(_startDate);
             } 
             else
             {

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -27,11 +28,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 01);  //Set Start Date
-            SetEndDate(2013, 10, 30);    //Set End Date
+            SetStartDate(2013, 10, 07);  //Set Start Date
+            SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
+            AddSecurity(SecurityType.Equity, "SPY", Resolution.Minute);
 
             // you can now schedule code to run by using the Schedule property
             // DateRules and TimeRules are properties on QCAlgorithm that make it easy
@@ -44,33 +45,45 @@ namespace QuantConnect.Algorithm.CSharp
             //      Filters dates for when the exchange is open, schedules event
             //      at the specified number of minutes after market open
             //
-            Schedule.On(DateRules.EveryDay(), TimeRules.MarketOpen("SPY", 5), () =>
+            Schedule.On(DateRules.EveryDay(), TimeRules.AfterMarketOpen("SPY", 5), () =>
             {
                 // spy market open +5 minutes event
-                Log(string.Format("{0}: {1} ON MARKET OPEN", Time, "SPY"));
+                Console.WriteLine();
+                Console.WriteLine("{0}: {1} ON AFTER MARKET OPEN", Time, "SPY");
                 if (Securities["SPY"].Holdings.UnrealizedProfitPercent >= 0.005m)
                 {
                     // sell 1/10th of shares
-                    var qty = Securities["SPY"].Holdings.Quantity/10;
+                    var qty = Securities["SPY"].Holdings.Quantity / 10;
                     MarketOrder("SPY", -qty);
                 }
             });
 
+            // same event as above using the fluent sytax
+            //Schedule.Event()
+            //    .EveryDay()
+            //    .AfterMarketOpen("SPY", 5)
+            //    .Run(() =>{ /*This will fire five minutes after SPY market open*/ });
+
             //
-            // DateRules.MonthStart(symbol):
-            //      Produces dates for the first trading day of the month for the specified symbol
+            // DateRules.Every(params DayOfWeek[]):
+            //      Produces dates that match the specified days of the week
             //
             // TimeRules.MarketOpen(symbol, minutesAfter):
             //      Filters dates for when the exchange is open, schedules event
             //      at the specified number of minutes after market open
             //
-            Schedule.On(DateRules.MonthStart("SPY"), TimeRules.MarketClose("SPY", 15), () =>
+            Schedule.On(DateRules.Every(DayOfWeek.Tuesday, DayOfWeek.Thursday), TimeRules.BeforeMarketClose("SPY", 15), () =>
             {
-                // first trading day of the month, 15 minutes before market close
-                // spy market open +5 minutes event
-                Log(string.Format("{0}: {1} ON MONTH MARKET CLOSE", Time, "SPY"));
+                // tuesdays/thursdays, 15 minutes before market close
+                Console.WriteLine("{0}: {1} ON {2} BEFORE CLOSE", Time, "SPY", Time.DayOfWeek.ToString().ToUpper());
                 SetHoldings("SPY", 1.0);
             });
+
+            // same event as above using the fluent syntax
+            //Schedule.Event()
+            //    .Every(DayOfWeek.Tuesday, DayOfWeek.Thursday)
+            //    .BeforeMarketClose("SPY", 15)
+            //    .Run(() => {/*This will fire on the first SPY trading day of the month 15 minutes before market close*/});
         }
 
         /// <summary>

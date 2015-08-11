@@ -16,28 +16,25 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using NodaTime;
 
 namespace QuantConnect.Scheduling
 {
     /// <summary>
-    /// Specifies that an event should fire at a specific local time each day
+    /// Uses a function to define a time rule as a projection of date times to date times
     /// </summary>
-    public class SpecificTimeTimeRule : ITimeRule
+    public class FuncTimeRule : ITimeRule
     {
-        private readonly TimeSpan _timeOfDay;
-        private readonly DateTimeZone _timeZone;
+        private readonly Func<IEnumerable<DateTime>, IEnumerable<DateTime>> _createUtcEventTimesFunction;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SpecificTimeTimeRule"/> class
+        /// Initializes a new instance of the <see cref="FuncTimeRule"/> class
         /// </summary>
-        /// <param name="timeZone">The time zone the event times reference</param>
-        /// <param name="timeOfDay">The time of day in the time zone the event should fire</param>
-        public SpecificTimeTimeRule(DateTimeZone timeZone, TimeSpan timeOfDay)
+        /// <param name="name">The name of the time rule</param>
+        /// <param name="createUtcEventTimesFunction">Function used to transform dates into event date times</param>
+        public FuncTimeRule(string name, Func<IEnumerable<DateTime>, IEnumerable<DateTime>> createUtcEventTimesFunction)
         {
-            _timeZone = timeZone;
-            _timeOfDay = timeOfDay;
+            Name = name;
+            _createUtcEventTimesFunction = createUtcEventTimesFunction;
         }
 
         /// <summary>
@@ -45,7 +42,7 @@ namespace QuantConnect.Scheduling
         /// </summary>
         public string Name
         {
-            get { return _timeOfDay.TotalHours.ToString("0.##"); }
+            get; private set;
         }
 
         /// <summary>
@@ -56,11 +53,7 @@ namespace QuantConnect.Scheduling
         /// of applying this rule to the specified dates</returns>
         public IEnumerable<DateTime> CreateUtcEventTimes(IEnumerable<DateTime> dates)
         {
-            return from date in dates
-                   let localEventTime = date + _timeOfDay
-                   let utcEventTime = localEventTime.ConvertToUtc(_timeZone)
-                   select utcEventTime;
-
+            return _createUtcEventTimesFunction(dates);
         }
     }
 }

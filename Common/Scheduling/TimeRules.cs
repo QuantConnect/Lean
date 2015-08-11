@@ -15,6 +15,9 @@
 */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using QuantConnect.Securities;
 
@@ -56,7 +59,26 @@ namespace QuantConnect.Scheduling
         /// <returns>A time rule that fires at the specified time in the algorithm's time zone</returns>
         public ITimeRule At(TimeSpan timeOfDay)
         {
-            return new SpecificTimeTimeRule(_timeZone, timeOfDay);
+            var name = string.Join(",", timeOfDay.TotalHours.ToString("0.##"));
+            Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
+                from date in dates
+                let localEventTime = date + timeOfDay
+                let utcEventTime = localEventTime.ConvertToUtc(_timeZone)
+                select utcEventTime;
+
+            return new FuncTimeRule(name, applicator);
+        }
+
+        /// <summary>
+        /// Specifies an event should fire periodically on the requested interval
+        /// </summary>
+        /// <param name="interval">The frequency with which the event should fire</param>
+        /// <returns>A time rule that fires after each interval passes</returns>
+        public ITimeRule Every(TimeSpan interval)
+        {
+            var name = "Every " + interval.TotalMinutes.ToString("0.##") + " min";
+            Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates => EveryIntervalIterator(dates, interval);
+            return new FuncTimeRule(name, applicator);
         }
 
         /// <summary>
@@ -66,17 +88,25 @@ namespace QuantConnect.Scheduling
         /// <param name="minutesAfterOpen">The time after market open that the event should fire</param>
         /// <param name="extendedMarketOpen">True to use extended market open, false to use regular market open</param>
         /// <returns>A time rule that fires the specified number of minutes after the symbol's market open</returns>
-        public ITimeRule MarketOpen(string symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false)
+        public ITimeRule AfterMarketOpen(string symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false)
         {
             symbol = symbol.ToUpper();
 
-            Security security;
-            if (!_securities.TryGetValue(symbol, out security))
-            {
-                throw new Exception(symbol + " not found in portfolio. Request this data when initializing the algorithm.");
-            }
+            var security = GetSecurity(symbol);
 
-            return new MarketOpenTimeRule(security, TimeSpan.FromMinutes(minutesAfterOpen), extendedMarketOpen);
+            var type = extendedMarketOpen ? "ExtendedMarketOpen" : "MarketOpen";
+            var name = string.Format("{0}: {1} min after {2}", symbol, minutesAfterOpen.ToString("0.##"), type);
+
+            var timeAfterOpen = TimeSpan.FromMinutes(minutesAfterOpen);
+            Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
+                from date in dates
+                where security.Exchange.DateIsOpen(date)
+                let marketOpen = security.Exchange.Hours.GetNextMarketOpen(date, extendedMarketOpen)
+                let localEventTime = marketOpen + timeAfterOpen
+                let utcEventTime = localEventTime.ConvertToUtc(security.Exchange.TimeZone)
+                select utcEventTime;
+
+            return new FuncTimeRule(name, applicator);
         }
 
         /// <summary>
@@ -86,17 +116,46 @@ namespace QuantConnect.Scheduling
         /// <param name="minuteBeforeClose">The time before market close that the event should fire</param>
         /// <param name="extendedMarketClose">True to use extended market close, false to use regular market close</param>
         /// <returns>A time rule that fires the specified number of minutes before the symbol's market close</returns>
-        public ITimeRule MarketClose(string symbol, double minuteBeforeClose = 0, bool extendedMarketClose = false)
+        public ITimeRule BeforeMarketClose(string symbol, double minuteBeforeClose = 0, bool extendedMarketClose = false)
         {
             symbol = symbol.ToUpper();
 
+            var security = GetSecurity(symbol);
+
+            var type = extendedMarketClose ? "ExtendedMarketClose" : "MarketClose";
+            var name = string.Format("{0}: {1} min before {2}", security.Symbol, minuteBeforeClose.ToString("0.##"), type);
+
+            var timeBeforeClose = TimeSpan.FromMinutes(minuteBeforeClose);
+            Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
+                from date in dates
+                where security.Exchange.DateIsOpen(date)
+                let marketClose = security.Exchange.Hours.GetNextMarketClose(date, extendedMarketClose)
+                let localEventTime = marketClose - timeBeforeClose
+                let utcEventTime = localEventTime.ConvertToUtc(security.Exchange.TimeZone)
+                select utcEventTime;
+
+            return new FuncTimeRule(name, applicator);
+        }
+
+        private Security GetSecurity(string symbol)
+        {
             Security security;
             if (!_securities.TryGetValue(symbol, out security))
             {
                 throw new Exception(symbol + " not found in portfolio. Request this data when initializing the algorithm.");
             }
+            return security;
+        }
 
-            return new MarketCloseTimeRule(security, TimeSpan.FromMinutes(minuteBeforeClose), extendedMarketClose);
+        private static IEnumerable<DateTime> EveryIntervalIterator(IEnumerable<DateTime> dates, TimeSpan interval)
+        {
+            foreach (var date in dates)
+            {
+                for (var time = TimeSpan.Zero; time < Time.OneDay; time += interval)
+                {
+                    yield return date + time;
+                }
+            }
         }
     }
 }
