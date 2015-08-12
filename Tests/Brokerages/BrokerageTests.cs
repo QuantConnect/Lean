@@ -195,12 +195,9 @@ namespace QuantConnect.Tests.Brokerages
 
             var holdings = Brokerage.GetAccountHoldings();
 
-            
             foreach (var holding in holdings)
             {
                 if (holding.Quantity == 0) continue;
-                Console.WriteLine(holding.Quantity);
-
                 Log.Trace("Liquidating: " + holding);
                 var order = new MarketOrder(holding.Symbol, (int)-holding.Quantity, DateTime.Now, type: holding.Type);
                 _orderProvider.Add(order);
