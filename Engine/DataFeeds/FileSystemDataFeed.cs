@@ -301,35 +301,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private void AddSubscriptionForUniverseSelectionMarket(string market)
         {
-            var usaMarket = SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(market, null, SecurityType.Equity);
+            var exchangeHours = SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(market, null, SecurityType.Equity);
             var symbolName = market + "-market";
-            var usaConfig = new SubscriptionDataConfig(typeof (CoarseFundamental), SecurityType.Equity, symbolName, Resolution.Daily, market, usaMarket.TimeZone,
+            var subscriptionDataConfig = new SubscriptionDataConfig(typeof (CoarseFundamental), SecurityType.Equity, symbolName, Resolution.Daily, market, exchangeHours.TimeZone,
                 true, false, true);
-            var usaMarketSecurity = new Security(usaMarket, usaConfig, 1);
+            var security = new Security(exchangeHours, subscriptionDataConfig, 1);
             
             var cf = new CoarseFundamental();
             var list = new List<BaseData>();
-            foreach (var date in Time.EachTradeableDay(usaMarketSecurity, _algorithm.StartDate, _algorithm.EndDate))
+            foreach (var date in Time.EachTradeableDay(security, _algorithm.StartDate, _algorithm.EndDate))
             {
-                var factory = new BaseDataSubscriptionFactory(usaConfig, date, false);
-                var source = cf.GetSource(usaConfig, date, false);
+                var factory = new BaseDataSubscriptionFactory(subscriptionDataConfig, date, false);
+                var source = cf.GetSource(subscriptionDataConfig, date, false);
                 var coarseFundamentalForDate = factory.Read(source);
                 list.AddRange(coarseFundamentalForDate);
             }
 
 
-            // spoof a subscription for the USA market that emits at midnight of each tradeable day
-            var usaMarketSubscription = new Subscription(usaMarketSecurity,
+            // spoof a subscription for the market that emits at midnight of each tradeable day
+            var subscription = new Subscription(security,
                 list.GetEnumerator(),
-                _algorithm.StartDate.ConvertToUtc(usaMarket.TimeZone),
-                _algorithm.EndDate.ConvertToUtc(usaMarket.TimeZone),
+                _algorithm.StartDate.ConvertToUtc(exchangeHours.TimeZone),
+                _algorithm.EndDate.ConvertToUtc(exchangeHours.TimeZone),
                 false,
                 true
                 );
 
             // prime the pump
-            usaMarketSubscription.MoveNext();
-            _subscriptions.AddOrUpdate(new SymbolSecurityType(usaMarketSubscription), usaMarketSubscription);
+            subscription.MoveNext();
+            _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription), subscription);
         }
 
         /// <summary>
