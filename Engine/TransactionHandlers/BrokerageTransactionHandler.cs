@@ -243,10 +243,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return OrderTicket.InvalidCancelOrderId(_algorithm.Transactions, request);
             }
 
-            ticket.SetCancelRequest(request);
-            
             try
             {
+                // if we couldn't set this request as the cancellation then another thread/someone
+                // else is already doing it or it in fact has already been cancelled
+                if (!ticket.TrySetCancelRequest(request))
+                {
+                    // the ticket has already been cancelled
+                    request.SetResponse(OrderResponse.Error(request, OrderResponseErrorCode.InvalidRequest, "Cancellation is already in progress."));
+                    return ticket;
+                }
+
                 //Error check
                 var order = GetOrderByIdInternal(request.OrderId);
                 if (order == null)
@@ -256,7 +263,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
                 else if (order.Status.IsClosed())
                 {
-                    Log.Error("BrokerageTransactionHandler.CancelOrder(): Order already filled");
+                    Log.Error("BrokerageTransactionHandler.CancelOrder(): Order already " + order.Status);
                     request.SetResponse(OrderResponse.InvalidStatus(request, order));
                 }
                 else

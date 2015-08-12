@@ -28,6 +28,7 @@ namespace QuantConnect.Orders
     {
         private readonly object _orderEventsLock = new object();
         private readonly object _updateRequestsLock = new object();
+        private readonly object _setCancelRequestLock = new object();
 
         private Order _order;
         private OrderStatus? _orderStatusOverride;
@@ -293,10 +294,6 @@ namespace QuantConnect.Orders
             {
                 throw new ArgumentException("Received UpdateOrderRequest for incorrect order id.");
             }
-            if (_cancelRequest != null)
-            {
-                throw new ArgumentException("Unable to add update requests to canceled order ticket.");
-            }
 
             lock (_updateRequestsLock)
             {
@@ -307,18 +304,26 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Sets the <see cref="CancelOrderRequest"/> for this ticket. This can only be performed once.
         /// </summary>
+        /// <remarks>
+        /// This method is thread safe.
+        /// </remarks>
         /// <param name="request">The <see cref="CancelOrderRequest"/> that canceled this ticket.</param>
-        internal void SetCancelRequest(CancelOrderRequest request)
+        /// <returns>False if the the CancelRequest has already been set, true if this call set it</returns>
+        internal bool TrySetCancelRequest(CancelOrderRequest request)
         {
             if (request.OrderId != OrderId)
             {
                 throw new ArgumentException("Received CancelOrderRequest for incorrect order id.");
             }
-            if (_cancelRequest != null)
+            lock (_setCancelRequestLock)
             {
-                throw new ArgumentException("This order ticket has already been canceled.");
+                if (_cancelRequest != null)
+                {
+                    return false;
+                }
+                _cancelRequest = request;
             }
-            _cancelRequest = request;
+            return true;
         }
 
         /// <summary>
@@ -330,7 +335,7 @@ namespace QuantConnect.Orders
             submit.SetResponse(OrderResponse.UnableToFindOrder(request));
             var ticket = new OrderTicket(transactionManager, submit);
             request.SetResponse(OrderResponse.UnableToFindOrder(request));
-            ticket.SetCancelRequest(request);
+            ticket.TrySetCancelRequest(request);
             ticket._orderStatusOverride = OrderStatus.Invalid;
             return ticket;
         }
