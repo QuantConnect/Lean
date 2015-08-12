@@ -714,7 +714,7 @@ namespace QuantConnect.Algorithm
             // the subscription to figure out the isTradeBar and hasVolume flags
             if (typeof(DynamicData).IsAssignableFrom(subscription.Type))
             {
-                return new DynamicDataConsolidator(timeSpan.Value, subscription.IsTradeBar, subscription.HasVolume);
+                return new DynamicDataConsolidator(timeSpan.Value);
             }
 
             // no matter what we can always consolidate based on the time-value pair of BaseData

@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesTimeValuePairsWithOutVolumeProperly()
         {
             TradeBar newTradeBar = null;
-            var consolidator = new DynamicDataConsolidator(4, false, false);
+            var consolidator = new DynamicDataConsolidator(4);
             consolidator.DataConsolidated += (sender, tradeBar) =>
             {
                 newTradeBar = tradeBar;
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesTimeValuePairsWithVolumeProperly()
         {
             TradeBar newTradeBar = null;
-            var consolidator = new DynamicDataConsolidator(4, false, true);
+            var consolidator = new DynamicDataConsolidator(4);
             consolidator.DataConsolidated += (sender, tradeBar) =>
             {
                 newTradeBar = tradeBar;
@@ -144,7 +144,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesTradeBarsWithVolumeProperly()
         {
             TradeBar consolidated = null;
-            var consolidator = new DynamicDataConsolidator(3, true, true);
+            var consolidator = new DynamicDataConsolidator(3);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
@@ -199,7 +199,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesTradeBarsWithOutVolumeProperly()
         {
             TradeBar consolidated = null;
-            var consolidator = new DynamicDataConsolidator(3, true, false);
+            var consolidator = new DynamicDataConsolidator(3);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
@@ -245,15 +245,6 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(Math.Min(bar1.Low, Math.Min(bar2.Low, bar3.Low)), consolidated.Low);
             Assert.AreEqual(bar3.Close, consolidated.Close);
             Assert.AreEqual(0, consolidated.Volume);
-        }
-
-        [Test]
-        [ExpectedException(typeof (Exception), MatchType = MessageMatch.Contains, ExpectedMessage = "missing: open, high, low, close, volume")]
-        public void ThrowsErrorWhenDataShapeIsNotExpected()
-        {
-            var consolidator = new DynamicDataConsolidator(1, true, true);
-            var data = new CustomData();
-            consolidator.Update(data);
         }
 
         private class CustomData : DynamicData
