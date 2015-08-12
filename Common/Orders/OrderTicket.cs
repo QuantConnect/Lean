@@ -34,6 +34,9 @@ namespace QuantConnect.Orders
         private OrderStatus? _orderStatusOverride;
         private CancelOrderRequest _cancelRequest;
 
+        private int _quantityFilled;
+        private decimal _averageFillPrice;
+
         private readonly int _orderId;
         private readonly List<OrderEvent> _orderEvents; 
         private readonly SubmitOrderRequest _submitRequest;
@@ -84,6 +87,24 @@ namespace QuantConnect.Orders
         public int Quantity
         {
             get { return _order == null ? _submitRequest.Quantity : _order.Quantity; }
+        }
+
+        /// <summary>
+        /// Gets the average fill price for this ticket. If no fills have been processed
+        /// then this will return a value of zero.
+        /// </summary>
+        public decimal AverageFillPrice
+        {
+            get { return _averageFillPrice; }
+        }
+
+        /// <summary>
+        /// Gets the total qantity filled for this ticket. If no fills have been processed
+        /// then this will return a value of zero.
+        /// </summary>
+        public decimal QuantityFilled
+        {
+            get { return _quantityFilled; }
         }
 
         /// <summary>
@@ -267,6 +288,14 @@ namespace QuantConnect.Orders
             lock (_orderEventsLock)
             {
                 _orderEvents.Add(orderEvent);
+                if (orderEvent.FillQuantity != 0)
+                {
+                    // keep running totals of quantity filled and the average fill price so we
+                    // don't need to compute these on demand
+                    _quantityFilled += orderEvent.FillQuantity;
+                    var quantityWeightedFillPrice = _orderEvents.Where(x => x.Status.IsFill()).Sum(x => x.FillQuantity*x.FillPrice);
+                    _averageFillPrice = quantityWeightedFillPrice/_quantityFilled;
+                }
             }
         }
 
