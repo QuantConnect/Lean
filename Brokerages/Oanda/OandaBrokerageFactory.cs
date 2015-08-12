@@ -133,7 +133,6 @@ namespace QuantConnect.Brokerages.Oanda
             var issuedAt = Read<DateTime>(job.BrokerageData, "oanda-issued-at", errors);
             var lifeSpan = TimeSpan.FromSeconds(Read<double>(job.BrokerageData, "oanda-lifespan", errors));
             var environment = Read<string>(job.BrokerageData, "oanda-environment", errors);
-
             var brokerage = new OandaBrokerage(algorithm.Transactions, algorithm.Portfolio, accountId);
             // if we're running live locally we'll want to save any new tokens generated so that they can easily be retrieved
             if (Config.GetBool("local"))

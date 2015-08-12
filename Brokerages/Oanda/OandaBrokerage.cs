@@ -115,13 +115,12 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="orderProvider">The order provider.</param>
         /// <param name="holdingsProvider">The holdings provider.</param>
         /// <param name="accountId">The account identifier.</param>
-        public OandaBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider, int accountId, int userId)
+        public OandaBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider, int accountId)
             : base("Oanda Brokerage")
         {
             _orderProvider = orderProvider;
             _holdingsProvider = holdingsProvider;
             AccountId = accountId;
-            UserId = userId;
             _cachedOpenOrdersByOandaOrderId = new ConcurrentDictionary<long, DataType.Order>();
             InstrumentSecurityTypeMap =  new Dictionary<string, SecurityType>(); 
         }
