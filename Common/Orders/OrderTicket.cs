@@ -16,10 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 
 namespace QuantConnect.Orders
 {
@@ -174,17 +171,63 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Updates the internal order object with the current state
+        /// Gets the specified field from the ticket
         /// </summary>
-        /// <param name="order">The order</param>
-        internal void SetOrder(Order order)
+        /// <param name="field">The order field to get</param>
+        /// <returns>The value of the field</returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public decimal Get(OrderField field)
         {
-            if (_order != null && _order.Id != order.Id)
+            switch (field)
             {
-                throw new ArgumentException("Order id mismatch");
-            }
+                case OrderField.LimitPrice:
+                    if (_submitRequest.OrderType == OrderType.Limit)
+                    {
+                        return AccessOrder<LimitOrder>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                    }
+                    if (_submitRequest.OrderType == OrderType.StopLimit)
+                    {
+                        return AccessOrder<StopLimitOrder>(this, field, o => o.LimitPrice, r => r.LimitPrice);
+                    }
+                    break;
 
-            _order = order;
+                case OrderField.StopPrice:
+                    if (_submitRequest.OrderType == OrderType.StopLimit)
+                    {
+                        return AccessOrder<StopLimitOrder>(this, field, o => o.StopPrice, r => r.StopPrice);
+                    }
+                    if (_submitRequest.OrderType == OrderType.StopMarket)
+                    {
+                        return AccessOrder<StopMarketOrder>(this, field, o => o.StopPrice, r => r.StopPrice);
+                    }
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException("field", field, null);
+            }
+            throw new ArgumentException("Unable to get field " + field + " on order of type " + _submitRequest.OrderType);
+        }
+
+        /// <summary>
+        /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
+        /// the ticket with data specified in <paramref name="fields"/>
+        /// </summary>
+        /// <param name="fields">Defines what properties of the order should be updated</param>
+        /// <returns>The <see cref="OrderResponse"/> from updating the order</returns>
+        public OrderResponse Update(UpdateOrderFields fields)
+        {
+            _transactionManager.UpdateOrder(new UpdateOrderRequest(_transactionManager.UtcTime, SubmitRequest.OrderId, fields));
+            return _updateRequests.Last().Response;
+        }
+
+        /// <summary>
+        /// Submits a new request to cancel this order
+        /// </summary>
+        public OrderResponse Cancel(string tag = null)
+        {
+            var request = new CancelOrderRequest(_transactionManager.UtcTime, OrderId, tag);
+            _transactionManager.ProcessRequest(request);
+            return CancelRequest.Response;
         }
 
         /// <summary>
@@ -212,6 +255,32 @@ namespace QuantConnect.Orders
                 return lastUpdate;
             }
             return SubmitRequest;
+        }
+
+        /// <summary>
+        /// Adds an order event to this ticket
+        /// </summary>
+        /// <param name="orderEvent">The order event to be added</param>
+        internal void AddOrderEvent(OrderEvent orderEvent)
+        {
+            lock (_orderEventsLock)
+            {
+                _orderEvents.Add(orderEvent);
+            }
+        }
+
+        /// <summary>
+        /// Updates the internal order object with the current state
+        /// </summary>
+        /// <param name="order">The order</param>
+        internal void SetOrder(Order order)
+        {
+            if (_order != null && _order.Id != order.Id)
+            {
+                throw new ArgumentException("Order id mismatch");
+            }
+
+            _order = order;
         }
 
         /// <summary>
@@ -250,78 +319,6 @@ namespace QuantConnect.Orders
                 throw new ArgumentException("This order ticket has already been canceled.");
             }
             _cancelRequest = request;
-        }
-
-        /// <summary>
-        /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
-        /// the ticket with data specified in <paramref name="fields"/>
-        /// </summary>
-        /// <param name="fields">Defines what properties of the order should be updated</param>
-        /// <returns>The <see cref="OrderResponse"/> from updating the order</returns>
-        public OrderResponse Update(UpdateOrderFields fields)
-        {
-            _transactionManager.UpdateOrder(new UpdateOrderRequest(_transactionManager.UtcTime, SubmitRequest.OrderId, fields));
-            return _updateRequests.Last().Response;
-        }
-
-        /// <summary>
-        /// Submits a new request to cancel this order
-        /// </summary>
-        public OrderResponse Cancel(string tag = null)
-        {
-            var request = new CancelOrderRequest(_transactionManager.UtcTime, OrderId, tag);
-            _transactionManager.ProcessRequest(request);
-            return CancelRequest.Response;
-        }
-
-        /// <summary>
-        /// Adds an order event to this ticket
-        /// </summary>
-        /// <param name="orderEvent">The order event to be added</param>
-        internal void AddOrderEvent(OrderEvent orderEvent)
-        {
-            lock (_orderEventsLock)
-            {
-                _orderEvents.Add(orderEvent);
-            }
-        }
-
-        /// <summary>
-        /// Gets the specified field from the ticket
-        /// </summary>
-        /// <param name="field">The order field to get</param>
-        /// <returns>The value of the field</returns>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public decimal Get(OrderField field)
-        {
-            switch (field)
-            {
-                case OrderField.LimitPrice:
-                    if (_submitRequest.OrderType == OrderType.Limit)
-                    {
-                        return AccessOrder<LimitOrder>(this, field, o => o.LimitPrice, r => r.LimitPrice);
-                    }
-                    if (_submitRequest.OrderType == OrderType.StopLimit)
-                    {
-                        return AccessOrder<StopLimitOrder>(this, field, o => o.LimitPrice, r => r.LimitPrice);
-                    }
-                    break;
-
-                case OrderField.StopPrice:
-                    if (_submitRequest.OrderType == OrderType.StopLimit)
-                    {
-                        return AccessOrder<StopLimitOrder>(this, field, o => o.StopPrice, r => r.StopPrice);
-                    }
-                    if (_submitRequest.OrderType == OrderType.StopMarket)
-                    {
-                        return AccessOrder<StopMarketOrder>(this, field, o => o.StopPrice, r => r.StopPrice);
-                    }
-                    break;
-                
-                default:
-                    throw new ArgumentOutOfRangeException("field", field, null);
-            }
-            throw new ArgumentException("Unable to get field " + field + " on order of type " + _submitRequest.OrderType);
         }
 
         /// <summary>
