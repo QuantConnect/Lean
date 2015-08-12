@@ -177,7 +177,7 @@ namespace QuantConnect.Orders
         /// Updates the internal order object with the current state
         /// </summary>
         /// <param name="order">The order</param>
-        public void SetOrder(Order order)
+        internal void SetOrder(Order order)
         {
             if (_order != null && _order.Id != order.Id)
             {
@@ -218,7 +218,7 @@ namespace QuantConnect.Orders
         /// Adds a new <see cref="UpdateOrderRequest"/> to this ticket.
         /// </summary>
         /// <param name="request">The recently processed <see cref="UpdateOrderRequest"/></param>
-        public void AddUpdateRequest(UpdateOrderRequest request)
+        internal void AddUpdateRequest(UpdateOrderRequest request)
         {
             if (request.OrderId != OrderId)
             {
@@ -239,7 +239,7 @@ namespace QuantConnect.Orders
         /// Sets the <see cref="CancelOrderRequest"/> for this ticket. This can only be performed once.
         /// </summary>
         /// <param name="request">The <see cref="CancelOrderRequest"/> that canceled this ticket.</param>
-        public void SetCancelRequest(CancelOrderRequest request)
+        internal void SetCancelRequest(CancelOrderRequest request)
         {
             if (request.OrderId != OrderId)
             {
@@ -278,7 +278,7 @@ namespace QuantConnect.Orders
         /// Adds an order event to this ticket
         /// </summary>
         /// <param name="orderEvent">The order event to be added</param>
-        public void AddOrderEvent(OrderEvent orderEvent)
+        internal void AddOrderEvent(OrderEvent orderEvent)
         {
             lock (_orderEventsLock)
             {
