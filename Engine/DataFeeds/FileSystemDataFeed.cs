@@ -304,7 +304,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var usaMarket = SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(market, null, SecurityType.Equity);
             var symbolName = market + "-market";
             var usaConfig = new SubscriptionDataConfig(typeof (CoarseFundamental), SecurityType.Equity, symbolName, Resolution.Daily, market, usaMarket.TimeZone,
-                true, false, false, false, true);
+                true, false, true);
             var usaMarketSecurity = new Security(usaMarket, usaConfig, 1);
             
             var cf = new CoarseFundamental();

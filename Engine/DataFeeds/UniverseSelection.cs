@@ -175,7 +175,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public static IEnumerable<CoarseFundamental> GetCoarseFundamentals(string market, DateTimeZone timeZone, DateTime date, bool isLiveMode)
         {
             var factory = new CoarseFundamental();
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), SecurityType.Equity, string.Empty, Resolution.Daily, market, timeZone, true, false, false, false, true);
+            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), SecurityType.Equity, string.Empty, Resolution.Daily, market, timeZone, true, false, true);
             var reader = new BaseDataSubscriptionFactory(config, date, isLiveMode);
             var source = factory.GetSource(config, date, isLiveMode);
             return reader.Read(source).OfType<CoarseFundamental>();
