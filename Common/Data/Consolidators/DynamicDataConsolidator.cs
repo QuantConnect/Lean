@@ -25,8 +25,7 @@ namespace QuantConnect.Data.Consolidators
     public class DynamicDataConsolidator : TradeBarConsolidatorBase<DynamicData>
     {
         /// <summary>
-        /// Creates a consolidator to produce a new 'TradeBar' representing the period. Setting both isTradeBar and hasVolume to
-        /// false will result in time-value aggregation only.
+        /// Creates a consolidator to produce a new 'TradeBar' representing the period.
         /// </summary>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public DynamicDataConsolidator(TimeSpan period)
@@ -35,8 +34,7 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data. Setting both isTradeBar and hasVolume to
-        /// false will result in time-value aggregation only.
+        /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data.
         /// </summary>
         /// <param name="maxCount">The number of pieces to accept before emiting a consolidated bar</param>
         public DynamicDataConsolidator(int maxCount)
@@ -46,7 +44,6 @@ namespace QuantConnect.Data.Consolidators
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data or the period, whichever comes first.
-        /// Setting both isTradeBar and hasVolume to false will result in time-value aggregation only.
         /// </summary>
         /// <param name="maxCount">The number of pieces to accept before emiting a consolidated bar</param>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>

@@ -1021,22 +1021,7 @@ namespace QuantConnect.Algorithm
             // Defaults:extended market hours"      = true because we want events 24 hours, 
             //          fillforward                 = false because only want to trigger when there's new custom data.
             //          leverage                    = 1 because no leverage on nonmarket data?
-            AddData<T>(symbol, resolution, fillDataForward: false, leverage: 1m, isTradeBar: false, hasVolume: false);
-        }
-
-        /// <summary>
-        /// AddData<typeparam name="T"/> a new user defined data source, requiring only the minimum config options.
-        /// </summary>
-        /// <param name="symbol">Key/Symbol for data</param>
-        /// <param name="resolution">Resolution of the data</param>
-        /// <param name="isTradeBar">Set to true if this data has Open, High, Low, and Close properties</param>
-        /// <param name="hasVolume">Set to true if this data has a Volume property</param>
-        /// <remarks>Generic type T must implement base data</remarks>
-        public void AddData<T>(string symbol, Resolution resolution, bool isTradeBar, bool hasVolume)
-        {
-            if (_locked) return;
-
-            AddData<T>(symbol, resolution, fillDataForward: false, leverage: 1m, isTradeBar: isTradeBar, hasVolume: hasVolume);
+            AddData<T>(symbol, resolution, fillDataForward: false, leverage: 1m);
         }
 
         /// <summary>
@@ -1046,17 +1031,15 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
-        /// <param name="isTradeBar">Set to true if this data has Open, High, Low, and Close properties</param>
-        /// <param name="hasVolume">Set to true if this data has a Volume property</param>
         /// <remarks>Generic type T must implement base data</remarks>
-        public void AddData<T>(string symbol, Resolution resolution, bool fillDataForward, decimal leverage = 1.0m, bool isTradeBar = false, bool hasVolume = false)
+        public void AddData<T>(string symbol, Resolution resolution, bool fillDataForward, decimal leverage = 1.0m)
         {
             if (_locked) return;
 
             symbol = symbol.ToUpper();
 
             //Add this to the data-feed subscriptions
-            var config = SubscriptionManager.Add(typeof(T), SecurityType.Base, symbol, resolution, "usa", TimeZones.NewYork, fillDataForward, true, isTradeBar, hasVolume, false);
+            var config = SubscriptionManager.Add(typeof(T), SecurityType.Base, symbol, resolution, "usa", TimeZones.NewYork, fillDataForward, true, false);
 
             var exchangeHours = _exchangeHoursProvider.GetExchangeHours(config);
 

@@ -710,8 +710,7 @@ namespace QuantConnect.Algorithm
                 return new TickConsolidator(timeSpan.Value);
             }
 
-            // if our type can be used as a DynamicData then we'll use the DynamicDataConsolidator, inspect
-            // the subscription to figure out the isTradeBar and hasVolume flags
+            // if our type can be used as a DynamicData then we'll use the DynamicDataConsolidator
             if (typeof(DynamicData).IsAssignableFrom(subscription.Type))
             {
                 return new DynamicDataConsolidator(timeSpan.Value);

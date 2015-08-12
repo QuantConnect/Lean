@@ -396,8 +396,7 @@ namespace QuantConnect.Securities
             var exchangeHours = securityExchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
             var tradeBarType = typeof(Data.Market.TradeBar);
             var type = resolution == Resolution.Tick ? typeof(Data.Market.Tick) : tradeBarType;
-            var isTradeBar = type == tradeBarType;
-            var config = subscriptionManager.Add(type, securityType, symbol, resolution, market, exchangeHours.TimeZone, fillDataForward, extendedMarketHours, isTradeBar, isTradeBar, isInternalFeed);
+            var config = subscriptionManager.Add(type, securityType, symbol, resolution, market, exchangeHours.TimeZone, fillDataForward, extendedMarketHours, isInternalFeed);
 
             Security security;
             switch (config.SecurityType)
