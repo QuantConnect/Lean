@@ -93,6 +93,12 @@ $ git add --all
 $ git commit
 ```
 
+You can push your changes to your fork's master branch using:
+
+```bash
+$ git push origin master
+```
+
 When committing, be sure to follow [best practices](https://github.com/erlang/otp/wiki/Writing-good-commit-messages) writing good commit descriptions.
 
 After performing some work you'll want to merge in changes from the **upstream/master**. You can use the following two commands in order to assist upstream merging:
