@@ -501,7 +501,7 @@ namespace QuantConnect.Lean.Engine.Results
 
             // add in our subscription symbol
             Chart subscriptionChart;
-            if (deltaCharts.TryGetValue(_subscription, out subscriptionChart))
+            if (_subscription != null && deltaCharts.TryGetValue(_subscription, out subscriptionChart))
             {
                 var scharts = new Dictionary<string,Chart>();
                 scharts.Add(_subscription, subscriptionChart);
@@ -989,10 +989,11 @@ namespace QuantConnect.Lean.Engine.Results
             //Log.Trace("LiveTradingResultHandler.Truncate: Truncate Delta: " + (unixDateStop - unixDateStart) + " Incoming Points: " + result.Charts["Strategy Equity"].Series["Equity"].Values.Count);
 
             var charts = new Dictionary<string, Chart>();
-            foreach (var chart in result.Charts.Values)
+            foreach (var kvp in result.Charts)
             {
+                var chart = kvp.Value;
                 var newChart = new Chart(chart.Name, chart.ChartType);
-                charts.Add(newChart.Name, newChart);
+                charts.Add(kvp.Key, newChart);
                 foreach (var series in chart.Series.Values)
                 {
                     var newSeries = new Series(series.Name, series.SeriesType);
