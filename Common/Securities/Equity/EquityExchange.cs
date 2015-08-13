@@ -34,7 +34,7 @@ namespace QuantConnect.Securities.Equity
         /// derived from the market-hours-database for the USA Equity market
         /// </summary>
         public EquityExchange()
-            : base(SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours("usa", null, SecurityType.Equity))
+            : base(SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours("usa", null, SecurityType.Equity, TimeZones.NewYork))
         {
         }
 

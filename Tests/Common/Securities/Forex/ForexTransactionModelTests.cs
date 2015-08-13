@@ -40,9 +40,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         public void PerformsMarketFillBuy()
         {
             var model = new ForexTransactionModel();
+            var security = CreateSecurity();
             var order = new MarketOrder(Symbol, 100, DateTime.Now, type: SecurityType.Forex);
-            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
-            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, DateTime.Now, 101.123m));
 
@@ -55,13 +54,13 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
             Assert.AreEqual(OrderStatus.Filled, order.Status);
         }
+
         [Test]
         public void PerformsMarketFillSell()
         {
             var model = new ForexTransactionModel();
+            var security = CreateSecurity();
             var order = new MarketOrder(Symbol, -100, DateTime.Now, type: SecurityType.Forex);
-            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
-            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, DateTime.Now, 101.123m));
 
@@ -79,9 +78,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         public void PerformsLimitFillBuy()
         {
             var model = new ForexTransactionModel();
+            var security = CreateSecurity();
             var order = new LimitOrder(Symbol, 100, 101.5m, DateTime.Now, type: SecurityType.Forex);
-            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
-            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, DateTime.Now, 102m));
 
@@ -107,9 +105,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         public void PerformsLimitFillSell()
         {
             var model = new ForexTransactionModel();
+            var security = CreateSecurity();
             var order = new LimitOrder(Symbol, -100, 101.5m, DateTime.Now, type: SecurityType.Forex);
-            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
-            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, DateTime.Now, 101m));
 
@@ -135,9 +132,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         public void PerformsStopLimitFillBuy()
         {
             var model = new ForexTransactionModel();
+            var security = CreateSecurity();
             var order = new StopLimitOrder(Symbol, 100, 101.5m, 101.75m, DateTime.Now, type: SecurityType.Forex);
-            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
-            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, DateTime.Now, 100m));
 
@@ -172,9 +168,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         public void PerformsStopLimitFillSell()
         {
             var model = new ForexTransactionModel();
+            var security = CreateSecurity();
             var order = new StopLimitOrder(Symbol, -100, 101.75m, 101.50m, DateTime.Now, type: SecurityType.Forex);
-            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
-            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, DateTime.Now, 102m));
 
@@ -209,9 +204,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         public void PerformsStopMarketFillBuy()
         {
             var model = new ForexTransactionModel();
+            var security = CreateSecurity();
             var order = new StopMarketOrder(Symbol, 100, 101.5m, DateTime.Now, type: SecurityType.Forex);
-            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
-            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, DateTime.Now, 101m));
 
@@ -239,9 +233,8 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         public void PerformsStopMarketFillSell()
         {
             var model = new ForexTransactionModel();
+            var security = CreateSecurity();
             var order = new StopMarketOrder(Symbol, -100, 101.5m, DateTime.Now, type: SecurityType.Forex);
-            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
-            var security = new Security(SecurityExchangeHours.AlwaysOpen, config, 1);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, DateTime.Now, 102m));
 
@@ -263,6 +256,13 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(Math.Min(security.Price - slip, order.StopPrice), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
             Assert.AreEqual(OrderStatus.Filled, order.Status);
+        }
+
+        private Security CreateSecurity()
+        {
+            var config = CreateTradeBarDataConfig(SecurityType.Forex, Symbol);
+            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), config, 1);
+            return security;
         }
     }
 }

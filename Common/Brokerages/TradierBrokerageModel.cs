@@ -29,7 +29,7 @@ namespace QuantConnect.Brokerages
     public class TradierBrokerageModel : DefaultBrokerageModel
     {
         private static readonly EquityExchange EquityExchange = 
-            new EquityExchange(SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours("usa", null, SecurityType.Equity));
+            new EquityExchange(SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours("usa", null, SecurityType.Equity, TimeZones.NewYork));
 
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
