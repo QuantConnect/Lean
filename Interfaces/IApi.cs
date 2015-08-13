@@ -45,8 +45,9 @@ namespace QuantConnect.Interfaces
         /// Get the algorithm current status, active or cancelled from the user
         /// </summary>
         /// <param name="algorithmId"></param>
+        /// <param name="userId">The user id of the algorithm</param>
         /// <returns></returns>
-        AlgorithmControl GetAlgorithmStatus(string algorithmId);
+        AlgorithmControl GetAlgorithmStatus(string algorithmId, int userId);
 
         /// <summary>
         /// Set the algorithm status from the worker to update the UX e.g. if there was an error.

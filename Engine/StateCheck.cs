@@ -19,6 +19,7 @@ using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -34,14 +35,18 @@ namespace QuantConnect.Lean.Engine
             // set to true to break while loop in Run()
             private ManualResetEventSlim _exitEvent;
 
+            private readonly AlgorithmNodePacket _job;
             private readonly AlgorithmManager _algorithmManager;
             private readonly IApi _api;
             private readonly IResultHandler _resultHandler;
+            private readonly IMessagingHandler _messagingHandler;
 
-            public Ping(AlgorithmManager algorithmManager, IApi api, IResultHandler resultHandler)
+            public Ping(AlgorithmManager algorithmManager, IApi api, IResultHandler resultHandler, IMessagingHandler messagingHandler, AlgorithmNodePacket job)
             {
                 _api = api;
+                _job = job;
                 _resultHandler = resultHandler;
+                _messagingHandler = messagingHandler;
                 _algorithmManager = algorithmManager;
                 _exitEvent = new ManualResetEventSlim(false);
             }
@@ -49,20 +54,22 @@ namespace QuantConnect.Lean.Engine
             /// DB Ping Run Method:
             public void Run()
             {
-                while (!_exitEvent.Wait(500))
+                while (!_exitEvent.Wait(1000))
                 {
                     try
                     {
                         if (_algorithmManager.AlgorithmId != "" && _algorithmManager.QuitState == false)
                         {
                             //Get the state from the central server:
-                            var state = _api.GetAlgorithmStatus(_algorithmManager.AlgorithmId);
+                            var state = _api.GetAlgorithmStatus(_algorithmManager.AlgorithmId, _job.UserId);
 
                             //Set state via get/set method:
                             _algorithmManager.SetStatus(state.Status);
 
                             //Set which chart the user is look at, so we can reduce excess messaging (e.g. trading 100 symbols, only send 1).
                             _resultHandler.SetChartSubscription(state.ChartSubscription);
+
+                            _messagingHandler.HasSubscribers = state.HasSubscribers;
                         }
                     }
                     catch (ThreadAbortException)

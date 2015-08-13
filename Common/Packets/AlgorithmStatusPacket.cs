@@ -50,6 +50,12 @@ namespace QuantConnect.Packets
         public string AlgorithmId;
 
         /// <summary>
+        /// The current state of the channel
+        /// </summary>
+        [JsonProperty(PropertyName = "sChannelStatus")]
+        public string ChannelStatus;
+
+        /// <summary>
         /// Default constructor for JSON
         /// </summary>
         public AlgorithmStatusPacket()

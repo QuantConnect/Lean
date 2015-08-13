@@ -28,6 +28,12 @@ namespace QuantConnect.Interfaces
     public interface IMessagingHandler
     {
         /// <summary>
+        /// Gets or sets whether this messaging handler has any current subscribers.
+        /// When set to false, messages won't be sent.
+        /// </summary>
+        bool HasSubscribers { get; set; }
+
+        /// <summary>
         /// Initialize the Messaging System Plugin. 
         /// </summary>
         void Initialize();
