@@ -318,24 +318,28 @@ namespace QuantConnect.Lean.Engine
                     var marginCallOrders = algorithm.Portfolio.ScanForMarginCall(out issueMarginCallWarning);
                     if (marginCallOrders.Count != 0)
                     {
+                        var executingMarginCall = false;
                         try
                         {
                             // tell the algorithm we're about to issue the margin call
                             algorithm.OnMarginCall(marginCallOrders);
+
+                            executingMarginCall = true;
+
+                            // execute the margin call orders
+                            var executedTickets = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
+                            foreach (var ticket in executedTickets)
+                            {
+                                algorithm.Error(string.Format("{0} - Executed MarginCallOrder: {1} - Quantity: {2} @ {3}", algorithm.Time, ticket.Symbol, ticket.Quantity, ticket.OrderEvents.Last().FillPrice));
+                            }
                         }
                         catch (Exception err)
                         {
                             algorithm.RunTimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
-                            Log.Error("AlgorithmManager.Run(): RuntimeError: OnMarginCall: " + err.Message + " STACK >>> " + err.StackTrace);
+                            var locator = executingMarginCall ? "Portfolio.MarginCallModel.ExecuteMarginCall" : "OnMarginCall";
+                            Log.Error(string.Format("AlgorithmManager.Run(): RuntimeError: {0}: ", locator) + err.Message + " STACK >>> " + err.StackTrace);
                             return;
-                        }
-
-                        // execute the margin call orders
-                        var executedTickets = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
-                        foreach (var ticket in executedTickets)
-                        {
-                            algorithm.Error(string.Format("{0} - Executed MarginCallOrder: {1} - Quantity: {2} @ {3}", algorithm.Time, ticket.Symbol, ticket.Quantity, ticket.OrderEvents.Last().FillPrice));
                         }
                     }
                     // we didn't perform a margin call, but got the warning flag back, so issue the warning to the algorithm

@@ -223,11 +223,27 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    // verify sure we have enough cash to perform the fill
-                    var sufficientBuyingPower = _algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order);
-
                     var fill = new OrderEvent();
                     fill.Symbol = order.Symbol;
+
+                    // verify sure we have enough cash to perform the fill
+                    bool sufficientBuyingPower;
+                    try
+                    {
+                        sufficientBuyingPower = _algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order);
+                    }
+                    catch (Exception err)
+                    {
+                        // if we threw an error just mark it as invalid and remove the order from our pending list
+                        Order pending;
+                        _pending.TryRemove(order.Id, out pending);
+                        order.Status = OrderStatus.Invalid;
+                        OnOrderEvent(new OrderEvent(order, "Error in GetSufficientCapitalForOrder"));
+
+                        Log.Error(err);
+                        _algorithm.Error(string.Format("Order Error: id: {0}, Error executing margin models: {1}", order.Id, err.Message));
+                        continue;
+                    }
 
                     //Before we check this queued order make sure we have buying power:
                     if (sufficientBuyingPower)
