@@ -6,10 +6,11 @@
     // two predefined environments, 'backtesting' and 'live', feel free
     // to add more!
 
-    "environment": "backtesting",
+    "environment": "desktop",
+    "optimizer": true,
 
     // algorithm class selector
-    "algorithm-type-name": "BasicTemplateAlgorithm",
+    "algorithm-type-name": "ParameterizedAlgorithm",
 
     // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
     "algorithm-language": "CSharp", 
@@ -49,6 +50,12 @@
     "tradier-issued-at": "",
     "trader-lifespan": "",
 
+    //Database Datafeed Connection:
+    "database-address": "localhost",
+    "database-user": "root",
+    "database-password": "",
+    "database-name": "lean",
+
     "environments": {
 
         // defines the 'backtesting' environment
@@ -66,7 +73,7 @@
             "live-mode": false,
 
             "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
-            "result-handler": "QuantConnect.Lean.Engine.Results.DesktopResultHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.ConsoleResultHandler",
             "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
             "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
             "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"

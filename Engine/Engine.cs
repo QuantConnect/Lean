@@ -27,6 +27,8 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Util;
+using System.Reflection;
+using QuantConnect.Algorithm;
 
 namespace QuantConnect.Lean.Engine 
 {
@@ -66,15 +68,19 @@ namespace QuantConnect.Lean.Engine
         public static void Main(string[] args)
         {
             Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+            bool isOptimization = Config.GetBool("optimizer");
 
             //Initialize:
             string mode = "RELEASE";
             var liveMode = Config.GetBool("live-mode");
             Log.DebuggingEnabled = Config.GetBool("debug-mode");
 
-            #if DEBUG 
-                mode = "DEBUG";
-            #endif
+#if DEBUG
+            mode = "DEBUG";
+#endif
+
+            if(isOptimization)
+                mode = "OPTIMIZER";
 
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
@@ -140,13 +146,52 @@ namespace QuantConnect.Lean.Engine
                 return;
             }
 
-            try
+            // traditional single-test path
+            if (!isOptimization)
             {
-                var engine = new Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
-                engine.Run(job, assemblyPath);
+                try
+                {
+                    var engine = new Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
+                    engine.Run(job, assemblyPath);
+                }
+                finally
+                {
+                    //Delete the message from the job queue:
+                    leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
+                    Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
+
+                    // clean up resources
+                    leanEngineSystemHandlers.Dispose();
+                    leanEngineAlgorithmHandlers.Dispose();
+                    Log.LogHandler.Dispose();
+                }
             }
-            finally
+            // optmization multi-test path
+            else
             {
+                // Create a dummy engine that will read the algorithm and generate a job for each permutation of its parameters.
+                var mother = new Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
+                var algoMother = mother.AlgorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
+                var permutationsList = QCAlgorithm.ExtractPermutations(algoMother);
+                Log.Trace("Permutations: " + permutationsList.Count);
+
+                // permutation dictionary stores the extrapolated version of our parameters.
+                for(int x = 0; x < permutationsList.Count; x++)
+                {
+                    var permutation = permutationsList[x];
+                    try
+                    {
+                        // instance the engine and algorithm
+                        var engine = new Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
+                        engine.Run(job, assemblyPath, permutation);
+                    }
+                    catch(Exception e)
+                    {
+                        Log.Trace("BREAKING.  ERROR DURING PERMUTATION: " + x + ".  Error: " + e);
+                        break;
+                    }
+                }
+
                 //Delete the message from the job queue:
                 leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
                 Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
@@ -176,7 +221,7 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         /// <param name="job">The algorithm job to be processed</param>
         /// <param name="assemblyPath">The path to the algorithm's assembly</param>
-        public void Run(AlgorithmNodePacket job, string assemblyPath)
+        public void Run(AlgorithmNodePacket job, string assemblyPath, Dictionary<string, Tuple<Type, object>> parameters = null)
         {
             var algorithm = default(IAlgorithm);
             var algorithmManager = new AlgorithmManager(_liveMode);
@@ -209,6 +254,12 @@ namespace QuantConnect.Lean.Engine
                 {
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
+
+                    // if params were passed in, alter the algorithm contained in this instance of the engine with the new permutation
+                    if (parameters != null)
+                    {
+                        QCAlgorithm.AssignParameters(parameters, algorithm);
+                    }
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
                     initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, out brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime);
