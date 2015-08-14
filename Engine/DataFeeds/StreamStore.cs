@@ -124,8 +124,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
                 // we're waiting for the trigger archive to enqueue and set _data to null
+                var timeout = DateTime.UtcNow.AddMilliseconds(50);
                 while (_data != null && _data.Time < ComputeBarStartTime())
-                { Thread.Sleep(1); }
+                {
+                    if (DateTime.UtcNow > timeout)
+                    {
+                        Log.Error("StreamStore.Update(BaseData): Timeout reached.");
+                        break;
+                    }
+                    Thread.Sleep(1);
+                }
             }
             catch (NullReferenceException)
             {
@@ -157,8 +165,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
                 // we're waiting for the trigger archive to enqueue and set _data to null
+                var timeout = DateTime.UtcNow.AddMilliseconds(50);
                 while (_data != null && _data.Time < barStartTime)
-                { Thread.Sleep(1); }
+                {
+                    if (DateTime.UtcNow > timeout)
+                    {
+                        Log.Error("StreamStore.Update(Tick): Timeout reached.");
+                        break;
+                    }
+                    Thread.Sleep(1);
+                }
             }
             catch (NullReferenceException)
             {
