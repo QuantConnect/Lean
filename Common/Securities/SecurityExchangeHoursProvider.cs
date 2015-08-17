@@ -183,7 +183,21 @@ namespace QuantConnect.Securities
             var csv = line.Split(',');
             var marketHours = new List<LocalMarketHours>(7);
 
-            var timeZone = DateTimeZoneProviders.Tzdb[csv[0]];
+            // timezones can be specified using Tzdb names (America/New_York) or they can
+            // be specified using offsets, UTC-5
+
+            DateTimeZone timeZone;
+            if (!csv[0].StartsWith("UTC"))
+            {
+                timeZone = DateTimeZoneProviders.Tzdb[csv[0]];
+            }
+            else
+            {
+                // define the time zone as a constant offset time zone in the form: 'UTC-3.5' or 'UTC+10'
+                var millisecondsOffset = (int)TimeSpan.FromHours(double.Parse(csv[0].Replace("UTC", string.Empty))).TotalMilliseconds;
+                timeZone = DateTimeZone.ForOffset(Offset.FromMilliseconds(millisecondsOffset));
+            }
+
             //var market = csv[1];
             //var symbol = csv[2];
             //var type = csv[3];
