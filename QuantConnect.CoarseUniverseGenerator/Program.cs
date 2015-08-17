@@ -183,7 +183,7 @@ namespace QuantConnect.CoarseUniverseGenerator
                     ZipFile zip;
                     using (var reader = Compression.Unzip(file, out zip))
                     {
-                        // 50 period EMA constant
+                        // 30 period EMA constant
                         const decimal k = 2m / (30 + 1);
 
                         var seeded = false;
