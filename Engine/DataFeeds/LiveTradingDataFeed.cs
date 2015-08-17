@@ -313,7 +313,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (_cancellationTokenSource.IsCancellationRequested) return;
                     if (ticksCount == 0) Thread.Sleep(5);
                 }
-            });
+            }, TaskCreationOptions.LongRunning);
 
             // Micro-thread for custom data/feeds. This only supports polling at this time. todo: Custom data sockets
             var customFeedsTask = new Task(() =>
@@ -379,7 +379,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (_cancellationTokenSource.IsCancellationRequested) return;
                     Thread.Sleep(10);
                 }
-            });
+            }, TaskCreationOptions.LongRunning);
 
             //Wait for micro-threads to break before continuing
             liveThreadTask.Start();
