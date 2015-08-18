@@ -230,6 +230,15 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Check if a number is NaN or equal to zero
+        /// </summary>
+        /// <param name="value">The double value to check</param>
+        public static bool IsNaNOrZero(this double value)
+        {
+            return double.IsNaN(value) || Math.Abs(value) < double.Epsilon;
+        }
+
+        /// <summary>
         /// Gets the smallest positive number that can be added to a decimal instance and return
         /// a new value that does not == the old value
         /// </summary>

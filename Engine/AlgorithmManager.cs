@@ -290,6 +290,12 @@ namespace QuantConnect.Lean.Engine
                 foreach (var kvp in timeSlice.SecuritiesUpdateData)
                 {
                     kvp.Key.SetMarketPrice(kvp.Value);
+
+                    // Send market price updates to the TradeBuilder
+                    if (kvp.Value != null)
+                    {
+                        algorithm.TradeBuilder.SetMarketPrice(kvp.Key.Symbol, kvp.Value.Price);
+                    }
                 }
 
                 // fire real time events after we've updated based on the new data

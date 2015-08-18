@@ -684,7 +684,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // invalidate the order
                 var order = _orderProvider.GetOrderByBrokerageId(e.TickerId);
-                var orderEvent = new OrderEvent(order) {Status = OrderStatus.Invalid};
+                const int orderFee = 0;
+                var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Invalid };
                 OnOrderEvent(orderEvent);
             }
 
@@ -777,7 +778,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // mark sells as negative quantities
                 var fillQuantity = order.Direction == OrderDirection.Buy ? update.Filled : -update.Filled;
-                var orderEvent = new OrderEvent(order, "Interactive Brokers Fill Event")
+                const int orderFee = 0;
+                var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee, "Interactive Brokers Fill Event")
                 {
                     Status = status,
                     FillPrice = update.AverageFillPrice,

@@ -25,6 +25,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Statistics;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine 
@@ -333,11 +334,12 @@ namespace QuantConnect.Lean.Engine
 
                     try
                     {
+                        var trades = algorithm.TradeBuilder.ClosedTrades;
                         var charts = new Dictionary<string, Chart>(_algorithmHandlers.Results.Charts);
                         var orders = new Dictionary<int, Order>(_algorithmHandlers.Transactions.Orders);
                         var holdings = new Dictionary<string, Holding>();
-                        var statistics = new Dictionary<string, string>();
                         var banner = new Dictionary<string, string>();
+                        var statisticsResults = new StatisticsResults();
 
                         try
                         {
@@ -354,12 +356,12 @@ namespace QuantConnect.Lean.Engine
                             {
                                 var equity = charts[strategyEquityKey].Series[equityKey].Values;
                                 var performance = charts[strategyEquityKey].Series[dailyPerformanceKey].Values;
-                                var profitLoss =
-                                    new SortedDictionary<DateTime, decimal>(algorithm.Transactions.TransactionRecord);
-                                var numberOfTrades = algorithm.Transactions.GetOrders(x => x.Status.IsFill()).Count();
-                                var benchmark = charts[benchmarkKey].Series[benchmarkKey].Values.ToDictionary(chartPoint => Time.UnixTimeStampToDateTime(chartPoint.x), chartPoint => chartPoint.y);
-                                statistics = Statistics.Statistics.Generate(equity, profitLoss, performance, benchmark,
-                                    _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, numberOfTrades, 252);
+                                var profitLoss = new SortedDictionary<DateTime, decimal>(algorithm.Transactions.TransactionRecord);
+                                var totalTransactions = algorithm.Transactions.GetOrders(x => x.Status.IsFill()).Count();
+                                var benchmark = charts[benchmarkKey].Series[benchmarkKey].Values;
+
+                                statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity, performance, benchmark,
+                                    _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, totalTransactions);
                             }
                         }
                         catch (Exception err)
@@ -375,7 +377,7 @@ namespace QuantConnect.Lean.Engine
                                 job.AlgorithmId, totalSeconds.ToString("F2"), ((dataPoints/(double) 1000)/totalSeconds).ToString("F0"),
                                 dataPoints.ToString("N0")));
 
-                        _algorithmHandlers.Results.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, statistics, banner);
+                        _algorithmHandlers.Results.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, statisticsResults, banner);
                     }
                     catch (Exception err)
                     {

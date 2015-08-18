@@ -24,6 +24,7 @@ using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -197,7 +198,13 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Post the final result back to the controller worker if backtesting, or to console if local.
         /// </summary>
-        void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, Dictionary<string, string> statistics, Dictionary<string, string> banner);
+        /// <param name="job">Lean AlgorithmJob task</param>
+        /// <param name="orders">Collection of orders from the algorithm</param>
+        /// <param name="profitLoss">Collection of time-profit values for the algorithm</param>
+        /// <param name="holdings">Current holdings state for the algorithm</param>
+        /// <param name="statisticsResults">Statistics information for the algorithm (empty if not finished)</param>
+        /// <param name="banner">Runtime statistics banner information</param>
+        void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, StatisticsResults statisticsResults, Dictionary<string, string> banner);
 
         /// <summary>
         /// Send a algorithm status update to the user of the algorithms running state.
