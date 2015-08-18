@@ -287,7 +287,7 @@ namespace QuantConnect.Lean.Engine
                             catch (Exception err)
                             {
                                 //Debugging at this level is difficult, stack trace needed.
-                                Log.Error("Engine.Run", err);
+                                Log.Error(err);
                                 algorithm.RunTimeError = err;
                                 algorithmManager.SetStatus(AlgorithmStatus.RuntimeError);
                                 return;
