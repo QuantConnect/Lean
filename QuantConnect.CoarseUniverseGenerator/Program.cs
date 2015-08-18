@@ -144,6 +144,9 @@ namespace QuantConnect.CoarseUniverseGenerator
             Log.Trace("Processing: {0}", dailyFolder);
 
             var stopwatch = Stopwatch.StartNew();
+            
+            // load map files into memory
+            var mapFileCollection = new MapFileCollection(mapFileFolder); 
 
             var symbols = 0;
             var maplessCount = 0;
@@ -213,8 +216,26 @@ namespace QuantConnect.CoarseUniverseGenerator
                             var coarseFile = Path.Combine(coarseFolder, date.ToString("yyyyMMdd") + ".csv");
                             dates.Add(date);
 
+                            // this is kind of wierd, but is done to keep symbol resolution in the engine simpler
+                            // we're going to map this symbol to the correct map file symbol for the date.
+                            // for example, in 2013, GOOG was trading, but today it's GOOGL, and so it's
+                            // map file is GOOGL.csv, so we'll map the symbol to GOOGL so the engine can
+                            // easily resolve it
+                            var mappedSymbol = symbol;
+                            var mapFile = mapFileCollection.ResolveMapFile(symbol, date);
+                            if (mapFile == null && ignoreMapless)
+                            {
+                                // if we're ignoring mapless files then we should always be able to resolve this
+                                Log.Error(string.Format("Unable to resolve map file for {0} as of {1}", symbol, date.ToShortDateString()));
+                            }
+
+                            if (mapFile != null)
+                            {
+                                mappedSymbol = Path.GetFileNameWithoutExtension(mapFile).ToUpper();
+                            }
+
                             // symbol,close,volume,dollar volume
-                            var coarseFileLine = symbol + "," + close + "," + volume +"," + dollarVolume;
+                            var coarseFileLine = mappedSymbol + "," + close + "," + volume + "," + dollarVolume;
 
                             StreamWriter writer;
                             if (!writers.TryGetValue(coarseFile, out writer))
