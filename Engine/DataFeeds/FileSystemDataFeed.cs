@@ -94,7 +94,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _subscriptions.AddOrUpdate(new SymbolSecurityType(security), subscription);
                 
                 // prime the pump, run method checks current before move next calls
-                subscription.MoveNext();
+                PrimeSubscriptionPump(subscription, true);
             }
         }
 
@@ -130,7 +130,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription),  subscription);
 
             // prime the pump, run method checks current before move next calls
-            subscription.MoveNext();
+            PrimeSubscriptionPump(subscription, true);
         }
 
         /// <summary>
@@ -327,8 +327,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 true
                 );
 
-            // prime the pump
-            subscription.MoveNext();
+            // let user know if we fail to load the universe subscription, very important for when understanding backtest results!
+            PrimeSubscriptionPump(subscription, true);
             _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription), subscription);
         }
 
@@ -342,6 +342,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (Bridge != null)
             {
                 Bridge.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Calls move next on the subscription and logs if we didn't get any data (load failure)
+        /// </summary>
+        /// <param name="subscription">The subscription to prime</param>
+        /// <param name="messageUser">True to send an algorithm.Error to the user</param>
+        private void PrimeSubscriptionPump(Subscription subscription, bool messageUser)
+        {
+            if (!subscription.MoveNext())
+            {
+                Log.Error("FileSystemDataFeed.PrimeSubscriptionPump(): Failed to load subscription: " + subscription.Security.Symbol);
+                if (messageUser)
+                {
+                    _algorithm.Error("Failed to load subscription: " + subscription.Security.Symbol);
+                }
             }
         }
     }
