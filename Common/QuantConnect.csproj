@@ -270,6 +270,10 @@
     <Compile Include="Statistics\Statistics.cs" />
     <Compile Include="RealTimeSynchronizedTimer.cs" />
     <Compile Include="Symbol.cs" />
+    <Compile Include="Statistics\Trade.cs" />
+    <Compile Include="Statistics\TradeBuilder.cs" />
+    <Compile Include="Statistics\TradeEnums.cs" />
+    <Compile Include="Statistics\TradeExecution.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TimeKeeper.cs" />
