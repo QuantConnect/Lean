@@ -330,7 +330,7 @@ namespace QuantConnect.Lean.Engine
                             var executedTickets = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
                             foreach (var ticket in executedTickets)
                             {
-                                algorithm.Error(string.Format("{0} - Executed MarginCallOrder: {1} - Quantity: {2} @ {3}", algorithm.Time, ticket.Symbol, ticket.Quantity, ticket.OrderEvents.Last().FillPrice));
+                                algorithm.Error(string.Format("{0} - Executed MarginCallOrder: {1} - Quantity: {2} @ {3}", algorithm.Time, ticket.Symbol, ticket.Quantity, ticket.AverageFillPrice));
                             }
                         }
                         catch (Exception err)
