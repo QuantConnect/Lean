@@ -244,7 +244,7 @@ namespace QuantConnect.Lean.Engine
                 else
                 {
                     // live mode continously sample the benchmark
-                    SampleBenchmark(algorithm, results, _previousTime.Date);
+                    SampleBenchmark(algorithm, results, time);
                 }
 
                 //Update algorithm state after capturing performance from previous day
