@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
@@ -324,12 +325,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private IEnumerator<BaseData> ResolveDataEnumerator(bool endOfEnumerator)
         {
-            // clean up old resources
-            if (endOfEnumerator && _subscriptionFactoryEnumerator != null)
-            {
-                _subscriptionFactoryEnumerator.Dispose();
-            }
-
             do
             {
                 // always advance the date enumerator, this function is intended to be
@@ -346,13 +341,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 // check if we should create a new subscription factory
                 var sourceChanged = _source != newSource && newSource.Source != "";
-                var liveRemoteFile = _isLiveMode && _source.TransportMedium == SubscriptionTransportMedium.RemoteFile;
+                var liveRemoteFile = _isLiveMode && (_source == null || _source.TransportMedium == SubscriptionTransportMedium.RemoteFile);
                 if (sourceChanged || liveRemoteFile)
                 {
+                    // dispose of the current enumerator before creating a new one
+                    if (_subscriptionFactoryEnumerator != null)
+                    {
+                        _subscriptionFactoryEnumerator.Dispose();
+                    }
+
                     // save off for comparison next time
                     _source = newSource;
                     var subscriptionFactory = CreateSubscriptionFactory(newSource);
-                    return subscriptionFactory.Read(newSource).GetEnumerator();
+
+                    var previousTime = _previous == null ? DateTime.MinValue : _previous.EndTime;
+                    return subscriptionFactory.Read(newSource)
+                        // prevent the enumerator from emitting data before the last emitted time
+                        .Where(instance => instance != null && previousTime < instance.EndTime)
+                        .GetEnumerator();
                 }
 
                 // if there's still more in the enumerator and we received the same source from the GetSource call
