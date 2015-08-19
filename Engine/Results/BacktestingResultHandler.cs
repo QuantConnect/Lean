@@ -661,7 +661,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <seealso cref="IResultHandler.Sample"/>
         public void SampleBenchmark(DateTime time, decimal value)
         {
-            Sample("Strategy Equity", ChartType.Stacked, "Benchmark", SeriesType.Line, time, value);
+            Sample("Benchmark", ChartType.Stacked, "Benchmark", SeriesType.Line, time, value);
         }
 
         /// <summary>
