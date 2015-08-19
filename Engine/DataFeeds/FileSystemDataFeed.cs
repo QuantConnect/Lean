@@ -91,18 +91,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             foreach (var security in _algorithm.Securities.Values)
             {
                 var subscription = CreateSubscription(resultHandler, security, algorithm.StartDate, algorithm.EndDate, _fillForwardResolution, true);
-                _subscriptions.AddOrUpdate(new SymbolSecurityType(security), subscription);
-                
-                // prime the pump, run method checks current before move next calls
-                PrimeSubscriptionPump(subscription, true);
+                if (subscription != null)
+                {
+                    _subscriptions.AddOrUpdate(new SymbolSecurityType(security), subscription);
+
+                    // prime the pump, run method checks current before move next calls
+                    PrimeSubscriptionPump(subscription, true);
+                }
             }
         }
 
-        private static Subscription CreateSubscription(IResultHandler resultHandler, Security security, DateTime start, DateTime end, Resolution fillForwardResolution, bool userDefined)
+        private Subscription CreateSubscription(IResultHandler resultHandler, Security security, DateTime start, DateTime end, Resolution fillForwardResolution, bool userDefined)
         {
             var config = security.SubscriptionDataConfig;
             var tradeableDates = Time.EachTradeableDay(security, start.Date, end.Date);
+
+            // ReSharper disable once PossibleMultipleEnumeration
+            if (!tradeableDates.Any())
+            {
+                if (userDefined)
+                {
+                    _algorithm.Error(string.Format("No data loaded for {0} because there were no tradeable dates for this security.", security.Symbol));
+                }
+                return null;
+            }
+
             var symbolResolutionDate = userDefined ? (DateTime?)null : start;
+            // ReSharper disable once PossibleMultipleEnumeration
             IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, security, start, end, resultHandler, tradeableDates, false, symbolResolutionDate);
 
             // optionally apply fill forward logic, but never for tick data
@@ -127,6 +142,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime)
         {
             var subscription = CreateSubscription(_resultHandler, security, utcStartTime, utcEndTime, security.SubscriptionDataConfig.Resolution, false);
+            if (subscription == null)
+            {
+                // subscription will be null when there's no tradeable dates for the security between the requested times, so
+                // don't even try to load the data
+                return;
+            }
             _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription),  subscription);
 
             // prime the pump, run method checks current before move next calls
@@ -265,12 +286,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var frontier = DateTime.MaxValue;
             foreach (var subscription in Subscriptions)
             {
-                if (subscription.EndOfStream)
-                {
-                    Log.Trace("FileSystemDataFeed.Run(): Failed to load subscription: " + subscription.Configuration.Symbol);
-                    continue;
-                }
-
                 var current = subscription.Current;
                 if (current == null)
                 {
@@ -359,6 +374,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     _algorithm.Error("Failed to load subscription: " + subscription.Security.Symbol);
                 }
+                _subscriptions.TryRemove(new SymbolSecurityType(subscription), out subscription);
             }
         }
     }

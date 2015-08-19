@@ -80,25 +80,25 @@ namespace QuantConnect.Tests
         {
             AlgorithmRunner.RunLocalBacktest("UpdateOrderRegressionAlgorithm", new Dictionary<string, string>
             {
-                {"Total Trades", "10"},
+                {"Total Trades", "21"},
                 {"Average Win", "0%"},
-                {"Average Loss", "-0.22%"},
-                {"Compounding Annual Return", "-0.386%"},
-                {"Drawdown", "1.100%"},
+                {"Average Loss", "-1.72%"},
+                {"Compounding Annual Return", "-8.332%"},
+                {"Drawdown", "16.800%"},
                 {"Expectancy", "-1"},
-                {"Net Profit", "-0.770%"},
-                {"Sharpe Ratio", "-1.109"},
+                {"Net Profit", "-15.970%"},
+                {"Sharpe Ratio", "-1.358"},
                 {"Loss Rate", "100%"},
                 {"Win Rate", "0%"},
                 {"Profit-Loss Ratio", "0"},
-                {"Alpha", "-0.005"},
-                {"Beta", "-0.029"},
-                {"Annual Standard Deviation", "0.006"},
-                {"Annual Variance", "0"},
-                {"Information Ratio", "-1.408"},
-                {"Tracking Error", "0.034"},
-                {"Treynor Ratio", "0.213"},
-                {"Total Fees", "$10.00"}
+                {"Alpha", "-0.093"},
+                {"Beta", "0.037"},
+                {"Annual Standard Deviation", "0.063"},
+                {"Annual Variance", "0.004"},
+                {"Information Ratio", "-2.4"},
+                {"Tracking Error", "0.124"},
+                {"Treynor Ratio", "-2.29"},
+                {"Total Fees", "$21.00"}
             });
         }
 

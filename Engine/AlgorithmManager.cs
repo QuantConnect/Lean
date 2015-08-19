@@ -380,7 +380,7 @@ namespace QuantConnect.Lean.Engine
                 // apply dividends
                 foreach (var dividend in timeSlice.Slice.Dividends.Values)
                 {
-                    Log.Trace("AlgorithmManager.Run(): Applying Dividend for " + dividend.Symbol);
+                    Log.Trace("AlgorithmManager.Run(): Applying Dividend for " + dividend.Symbol, true);
                     algorithm.Portfolio.ApplyDividend(dividend);
                 }
 
@@ -389,7 +389,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     try
                     {
-                        Log.Trace("AlgorithmManager.Run(): Applying Split for " + split.Symbol);
+                        Log.Trace("AlgorithmManager.Run(): Applying Split for " + split.Symbol, true);
                         algorithm.Portfolio.ApplySplit(split);
                         // apply the split to open orders as well in raw mode, all other modes are split adjusted
                         if (_liveMode || algorithm.Securities[split.Symbol].SubscriptionDataConfig.DataNormalizationMode == DataNormalizationMode.Raw)
