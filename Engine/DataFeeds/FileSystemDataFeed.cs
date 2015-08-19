@@ -262,9 +262,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             catch (Exception err)
             {
-                Log.Error("FileSystemDataFeed.Run(): Encountered an error: " + err.Message);
-                Bridge.CompleteAdding();
-                _cancellationTokenSource.Cancel();
+                Log.Error("FileSystemDataFeed.Run(): Encountered an error: " + err.Message); 
+                if (!_cancellationTokenSource.IsCancellationRequested)
+                {
+                    Bridge.CompleteAdding();
+                    _cancellationTokenSource.Cancel();
+                }
             }
             finally
             {
