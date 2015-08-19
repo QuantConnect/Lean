@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
@@ -352,7 +353,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // save off for comparison next time
                     _source = newSource;
                     var subscriptionFactory = CreateSubscriptionFactory(newSource);
-                    return subscriptionFactory.Read(newSource).GetEnumerator();
+
+                    // prevent the enumerator from emitting data before the current time
+                    var previousTime = _previous == null ? DateTime.MinValue : _previous.EndTime;
+                    return subscriptionFactory.Read(newSource).Where(instance => previousTime < instance.EndTime).GetEnumerator();
                 }
 
                 // if there's still more in the enumerator and we received the same source from the GetSource call
