@@ -43,34 +43,17 @@ namespace QuantConnect.Statistics
 
         private readonly List<Trade> _closedTrades = new List<Trade>();
         private readonly Dictionary<string, Position> _positions = new Dictionary<string, Position>();
-
-        /// <summary>
-        /// Initializes a new instance of the TradeBuilder class
-        /// </summary>
-        public TradeBuilder()
-        {
-            FillGroupingMethod = FillGroupingMethod.FillToFill;
-            FillMatchingMethod = FillMatchingMethod.FIFO;
-        }
+        private readonly FillGroupingMethod _groupingMethod;
+        private readonly FillMatchingMethod _matchingMethod;
 
         /// <summary>
         /// Initializes a new instance of the TradeBuilder class
         /// </summary>
         public TradeBuilder(FillGroupingMethod groupingMethod, FillMatchingMethod matchingMethod)
         {
-            FillGroupingMethod = groupingMethod;
-            FillMatchingMethod = matchingMethod;
+            _groupingMethod = groupingMethod;
+            _matchingMethod = matchingMethod;
         }
-
-        /// <summary>
-        /// The method used to group order fills into trades
-        /// </summary>
-        public FillGroupingMethod FillGroupingMethod { get; set; }
-
-        /// <summary>
-        /// The method used to match offsetting order fills
-        /// </summary>
-        public FillMatchingMethod FillMatchingMethod { get; set; }
 
         /// <summary>
         /// The list of closed trades
@@ -90,10 +73,26 @@ namespace QuantConnect.Statistics
             Position position;
             if (!_positions.TryGetValue(symbol, out position)) return false;
 
-            if (FillGroupingMethod == FillGroupingMethod.FillToFill)
+            if (_groupingMethod == FillGroupingMethod.FillToFill)
                 return position.PendingTrades.Count > 0;
 
             return position.Executions.Count > 0;
+        }
+
+        /// <summary>
+        /// Sets the current market price for the symbol
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <param name="price"></param>
+        public void SetMarketPrice(string symbol, decimal price)
+        {
+            Position position;
+            if (!_positions.TryGetValue(symbol, out position)) return;
+
+            if (price > position.MaxPrice)
+                position.MaxPrice = price;
+            else if (price < position.MinPrice)
+                position.MinPrice = price;
         }
 
         /// <summary>
@@ -102,7 +101,7 @@ namespace QuantConnect.Statistics
         /// <param name="execution">The new execution</param>
         public void AddExecution(TradeExecution execution)
         {
-            switch (FillGroupingMethod)
+            switch (_groupingMethod)
             {
                 case FillGroupingMethod.FillToFill:
                     AddExecutionFillToFill(execution);
@@ -145,7 +144,7 @@ namespace QuantConnect.Statistics
 
             SetMarketPrice(execution.Symbol, execution.Price);
 
-            var index = FillMatchingMethod == FillMatchingMethod.FIFO ? 0 : position.PendingTrades.Count - 1;
+            var index = _matchingMethod == FillMatchingMethod.FIFO ? 0 : position.PendingTrades.Count - 1;
 
             if (Math.Sign(execution.Quantity) == (position.PendingTrades[index].Direction == TradeDirection.Long ? +1 : -1))
             {
@@ -173,7 +172,7 @@ namespace QuantConnect.Statistics
                         totalExecutedQuantity -= trade.Quantity * (trade.Direction == TradeDirection.Long ? +1 : -1);
                         position.PendingTrades.RemoveAt(index);
 
-                        if (index > 0 && FillMatchingMethod == FillMatchingMethod.LIFO) index--;
+                        if (index > 0 && _matchingMethod == FillMatchingMethod.LIFO) index--;
 
                         trade.ExitTime = execution.Time;
                         trade.ExitPrice = execution.Price;
@@ -261,7 +260,7 @@ namespace QuantConnect.Statistics
 
                     var reverseQuantity = position.Executions.Sum(x => x.Quantity);
 
-                    var index = FillMatchingMethod == FillMatchingMethod.FIFO ? 0 : position.Executions.Count - 1;
+                    var index = _matchingMethod == FillMatchingMethod.FIFO ? 0 : position.Executions.Count - 1;
 
                     var entryTime = position.Executions[0].Time;
                     var totalEntryQuantity = 0m;
@@ -285,7 +284,7 @@ namespace QuantConnect.Statistics
                         }
                         position.Executions.RemoveAt(index);
 
-                        if (FillMatchingMethod == FillMatchingMethod.LIFO && index > 0) index--;
+                        if (_matchingMethod == FillMatchingMethod.LIFO && index > 0) index--;
                     }
 
                     var direction = Math.Sign(execution.Quantity) < 0 ? TradeDirection.Long : TradeDirection.Short;
@@ -343,7 +342,7 @@ namespace QuantConnect.Statistics
 
             SetMarketPrice(execution.Symbol, execution.Price);
 
-            var index = FillMatchingMethod == FillMatchingMethod.FIFO ? 0 : position.Executions.Count - 1;
+            var index = _matchingMethod == FillMatchingMethod.FIFO ? 0 : position.Executions.Count - 1;
 
             if (Math.Sign(execution.Quantity) == Math.Sign(position.Executions[index].Quantity))
             {
@@ -361,14 +360,14 @@ namespace QuantConnect.Statistics
                 {
                     if (Math.Abs(execution.Quantity) >= Math.Abs(position.Executions[index].Quantity))
                     {
-                        if (FillMatchingMethod == FillMatchingMethod.LIFO)
+                        if (_matchingMethod == FillMatchingMethod.LIFO)
                             entryTime = position.Executions[index].Time;
 
                         totalExecutedQuantity -= position.Executions[index].Quantity;
                         entryPrice -= position.Executions[index].Quantity / totalExecutedQuantity * (position.Executions[index].Price - entryPrice);
                         position.Executions.RemoveAt(index);
 
-                        if (FillMatchingMethod == FillMatchingMethod.LIFO && index > 0) index--;
+                        if (_matchingMethod == FillMatchingMethod.LIFO && index > 0) index--;
                     }
                     else
                     {
@@ -407,22 +406,6 @@ namespace QuantConnect.Statistics
                     position.MaxPrice = execution.Price;
                 }
             }
-        }
-
-        /// <summary>
-        /// Sets the current market price for the symbol
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="price"></param>
-        public void SetMarketPrice(string symbol, decimal price)
-        {
-            Position position;
-            if (!_positions.TryGetValue(symbol, out position)) return;
-
-            if (price > position.MaxPrice)
-                position.MaxPrice = price;
-            else if (price < position.MinPrice)
-                position.MinPrice = price;
         }
 
     }

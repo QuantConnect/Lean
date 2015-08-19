@@ -28,6 +28,7 @@ using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Algorithm
 {
@@ -108,6 +109,9 @@ namespace QuantConnect.Algorithm
 
             // initialize our scheduler, this acts as a liason to the real time handler
             Schedule = new ScheduleManager(Securities, TimeZone);
+
+            // initialize the trade builder
+            TradeBuilder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO);
         }
 
         /// <summary>
@@ -177,6 +181,11 @@ namespace QuantConnect.Algorithm
             get;
             set;
         }
+
+        /// <summary>
+        /// Gets the Trade Builder to generate trades from executions
+        /// </summary>
+        public TradeBuilder TradeBuilder { get; private set; }
 
         /// <summary>
         /// Gets the date rules helper object to make specifying dates for events easier

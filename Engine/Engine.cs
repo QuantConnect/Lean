@@ -333,6 +333,7 @@ namespace QuantConnect.Lean.Engine
 
                     try
                     {
+                        var trades = algorithm.TradeBuilder.ClosedTrades;
                         var charts = new Dictionary<string, Chart>(_algorithmHandlers.Results.Charts);
                         var orders = new Dictionary<int, Order>(_algorithmHandlers.Transactions.Orders);
                         var holdings = new Dictionary<string, Holding>();

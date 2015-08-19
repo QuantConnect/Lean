@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
@@ -783,6 +784,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 try
                 {
                     _algorithm.Portfolio.ProcessFill(fill);
+
+                    _algorithm.TradeBuilder.AddExecution(new TradeExecution
+                    {
+                        Symbol = fill.Symbol,
+                        Time = _algorithm.UtcTime,
+                        Price = fill.FillPrice,
+                        Quantity = fill.FillQuantity
+                    });
                 }
                 catch (Exception err)
                 {
