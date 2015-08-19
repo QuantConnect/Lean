@@ -16,6 +16,8 @@ A contributor can be anyone! It could be you. Continue reading this section if y
 
 Code reviewers will be expecting to see code that follows Microsoft's C# guidelines. There are a few resources available [here](https://msdn.microsoft.com/en-us/library/czefa0ke(VS.71).aspx) and [here](https://msdn.microsoft.com/en-us/library/ff926074.aspx).
 
+As a point of consistency, we use soft tabs of four spaces to ensure files render correctly in everyone's environment/diff tools.
+
 All pull requests must be accompanied by units tests. If it is a new feature, the tests should highlight expected use cases as well as edge cases, if applicable. If it is a bugfix, there should be tests that expose the bug in question.
 
 ## Initial Setup
