@@ -44,6 +44,19 @@ namespace QuantConnect.Scheduling
         private readonly IEnumerator<DateTime> _orderedEventUtcTimes;
 
         /// <summary>
+        /// Event that fires each time this scheduled event happens
+        /// </summary>
+        public event Action<string, DateTime> EventFired;
+
+        /// <summary>
+        /// Gets or sets whether this event is enabled
+        /// </summary>
+        public bool Enabled
+        {
+            get; set;
+        }
+
+        /// <summary>
         /// Gets or sets whether this event will log each time it fires
         /// </summary>
         internal bool IsLoggingEnabled
@@ -73,7 +86,7 @@ namespace QuantConnect.Scheduling
         /// <param name="name">An identifier for this event</param>
         /// <param name="eventUtcTime">The date time the event should fire</param>
         /// <param name="callback">Delegate to be called when the event time passes</param>
-        public ScheduledEvent(string name, DateTime eventUtcTime, Action<string, DateTime> callback)
+        public ScheduledEvent(string name, DateTime eventUtcTime, Action<string, DateTime> callback = null)
             : this(name, new[] { eventUtcTime }.AsEnumerable().GetEnumerator(), callback)
         {
         }
@@ -84,7 +97,7 @@ namespace QuantConnect.Scheduling
         /// <param name="name">An identifier for this event</param>
         /// <param name="orderedEventUtcTimes">An enumerable that emits event times</param>
         /// <param name="callback">Delegate to be called each time an event passes</param>
-        public ScheduledEvent(string name, IEnumerable<DateTime> orderedEventUtcTimes, Action<string, DateTime> callback)
+        public ScheduledEvent(string name, IEnumerable<DateTime> orderedEventUtcTimes, Action<string, DateTime> callback = null)
             : this(name, orderedEventUtcTimes.GetEnumerator(), callback)
         {
         }
@@ -95,7 +108,7 @@ namespace QuantConnect.Scheduling
         /// <param name="name">An identifier for this event</param>
         /// <param name="orderedEventUtcTimes">An enumerator that emits event times</param>
         /// <param name="callback">Delegate to be called each time an event passes</param>
-        public ScheduledEvent(string name, IEnumerator<DateTime> orderedEventUtcTimes, Action<string, DateTime> callback)
+        public ScheduledEvent(string name, IEnumerator<DateTime> orderedEventUtcTimes, Action<string, DateTime> callback = null)
         {
             _name = name;
             _callback = callback;
@@ -103,6 +116,8 @@ namespace QuantConnect.Scheduling
 
             // prime the pump
             _endOfScheduledEvents = !_orderedEventUtcTimes.MoveNext();
+
+            Enabled = true;
         }
 
         /// <summary>
@@ -147,7 +162,7 @@ namespace QuantConnect.Scheduling
                             );
                     }
                     // fire the event
-                    _callback(_name, _orderedEventUtcTimes.Current);
+                    OnEventFired(_orderedEventUtcTimes.Current);
                     _needsMoveNext = true;
                 }
                 else
@@ -205,6 +220,23 @@ namespace QuantConnect.Scheduling
         void IDisposable.Dispose()
         {
             _orderedEventUtcTimes.Dispose();
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="EventFired"/> event
+        /// </summary>
+        /// <param name="triggerTime">The event's time in UTC</param>
+        protected void OnEventFired(DateTime triggerTime)
+        {
+            // don't fire the event if we're turned off
+            if (!Enabled) return;
+
+            if (_callback != null)
+            {
+                _callback(_name, _orderedEventUtcTimes.Current);
+            }
+            var handler = EventFired;
+            if (handler != null) handler(_name, triggerTime);
         }
     }
 }

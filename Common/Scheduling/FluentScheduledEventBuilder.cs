@@ -184,23 +184,23 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>
-        void IFluentSchedulingRunnable.Run(Action callback)
+        ScheduledEvent IFluentSchedulingRunnable.Run(Action callback)
         {
-            ((IFluentSchedulingRunnable)this).Run((name, time) => callback());
+            return ((IFluentSchedulingRunnable)this).Run((name, time) => callback());
         }
 
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>
-        void IFluentSchedulingRunnable.Run(Action<DateTime> callback)
+        ScheduledEvent IFluentSchedulingRunnable.Run(Action<DateTime> callback)
         {
-            ((IFluentSchedulingRunnable)this).Run((name, time) => callback(time));
+            return ((IFluentSchedulingRunnable)this).Run((name, time) => callback(time));
         }
 
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>
-        void IFluentSchedulingRunnable.Run(Action<string, DateTime> callback)
+        ScheduledEvent IFluentSchedulingRunnable.Run(Action<string, DateTime> callback)
         {
             var name = _name ?? _dateRule.Name + ": " + _timeRule.Name;
             // back the date up to ensure we get all events, the event scheduler will skip past events that whose time has passed
@@ -212,6 +212,7 @@ namespace QuantConnect.Scheduling
             }
             var scheduledEvent = new ScheduledEvent(name, eventTimes, callback);
             _schedule.Add(scheduledEvent);
+            return scheduledEvent;
         }
 
         /// <summary>
@@ -329,14 +330,14 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>
-        void Run(Action callback);
+        ScheduledEvent Run(Action callback);
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>
-        void Run(Action<DateTime> callback);
+        ScheduledEvent Run(Action<DateTime> callback);
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>
-        void Run(Action<string, DateTime> callback);
+        ScheduledEvent Run(Action<string, DateTime> callback);
     }
 }
