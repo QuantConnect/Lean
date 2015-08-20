@@ -230,7 +230,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 catch (Exception err)
                 {
                     Log.Error(err);
-                    AddInitializationError("Error connecting to brokerage: " + err.Message);
+                    AddInitializationError(string.Format("Error connecting to brokerage: {0}. " +
+                        "This may be caused by incorrect login credentials or an unsupported account type.", err.Message));
                     return false;
                 }
 
