@@ -162,7 +162,8 @@ namespace QuantConnect.Scheduling
         /// <param name="callback">The callback to be invoked</param>
         public void On(string name, IDateRule dateRule, ITimeRule timeRule, Action<string, DateTime> callback)
         {
-            var dates = dateRule.GetDates(_securities.UtcTime, Time.EndOfTime);
+            // back the date up to ensure we get all events, the event scheduler will skip past events that whose time has passed
+            var dates = dateRule.GetDates(_securities.UtcTime.Date.AddDays(-1), Time.EndOfTime);
             var eventTimes = timeRule.CreateUtcEventTimes(dates);
             var scheduledEvent = new ScheduledEvent(name, eventTimes, callback);
             Add(scheduledEvent);

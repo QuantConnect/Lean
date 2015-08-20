@@ -203,7 +203,8 @@ namespace QuantConnect.Scheduling
         void IFluentSchedulingRunnable.Run(Action<string, DateTime> callback)
         {
             var name = _name ?? _dateRule.Name + ": " + _timeRule.Name;
-            var dates = _dateRule.GetDates(_securities.UtcTime, Time.EndOfTime);
+            // back the date up to ensure we get all events, the event scheduler will skip past events that whose time has passed
+            var dates = _dateRule.GetDates(_securities.UtcTime.Date.AddDays(-1), Time.EndOfTime);
             var eventTimes = _timeRule.CreateUtcEventTimes(dates);
             if (_predicate != null)
             {
