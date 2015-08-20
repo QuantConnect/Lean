@@ -376,7 +376,7 @@ namespace QuantConnect.Lean.Engine
                                 job.AlgorithmId, totalSeconds.ToString("F2"), ((dataPoints/(double) 1000)/totalSeconds).ToString("F0"),
                                 dataPoints.ToString("N0")));
 
-                        _algorithmHandlers.Results.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, statistics, banner);
+                        _algorithmHandlers.Results.SendFinalResult(job, orders, trades, algorithm.Transactions.TransactionRecord, holdings, statistics, banner);
                     }
                     catch (Exception err)
                     {
