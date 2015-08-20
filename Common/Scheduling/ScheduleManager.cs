@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Securities;
 
@@ -28,6 +29,8 @@ namespace QuantConnect.Scheduling
         private IEventSchedule _eventSchedule;
 
         private readonly SecurityManager _securities;
+        private readonly object _eventScheduleLock = new object();
+        private readonly List<ScheduledEvent> _preInitializedEvents;
 
         /// <summary>
         /// Gets the date rules helper object to make specifying dates for events easier
@@ -49,6 +52,9 @@ namespace QuantConnect.Scheduling
             _securities = securities;
             DateRules = new DateRules(securities);
             TimeRules = new TimeRules(securities, timeZone);
+
+            // used for storing any events before the event schedule is set
+            _preInitializedEvents = new List<ScheduledEvent>();
         }
 
         /// <summary>
@@ -62,7 +68,16 @@ namespace QuantConnect.Scheduling
                 throw new ArgumentNullException("eventSchedule");
             }
 
-            _eventSchedule = eventSchedule;
+            lock (_eventScheduleLock)
+            {
+                _eventSchedule = eventSchedule;
+
+                // load up any events that were added before we were ready to send them to the scheduler
+                foreach (var scheduledEvent in _preInitializedEvents)
+                {
+                    _eventSchedule.Add(scheduledEvent);
+                }
+            }
         }
 
         /// <summary>
@@ -71,7 +86,17 @@ namespace QuantConnect.Scheduling
         /// <param name="scheduledEvent">The event to be scheduled, including the date/times the event fires and the callback</param>
         public void Add(ScheduledEvent scheduledEvent)
         {
-            _eventSchedule.Add(scheduledEvent);
+            lock (_eventScheduleLock)
+            {
+                if (_eventSchedule != null)
+                {
+                    _eventSchedule.Add(scheduledEvent);
+                }
+                else
+                {
+                    _preInitializedEvents.Add(scheduledEvent);
+                }
+            }
         }
 
         /// <summary>
@@ -80,7 +105,17 @@ namespace QuantConnect.Scheduling
         /// <param name="name">The name of the event to be removed</param>
         public void Remove(string name)
         {
-            _eventSchedule.Remove(name);
+            lock (_eventScheduleLock)
+            {
+                if (_eventSchedule != null)
+                {
+                    _eventSchedule.Remove(name);
+                }
+                else
+                {
+                    _preInitializedEvents.RemoveAll(se => se.Name == name);
+                }
+            }
         }
 
         /// <summary>
@@ -130,7 +165,7 @@ namespace QuantConnect.Scheduling
             var dates = dateRule.GetDates(_securities.UtcTime, Time.EndOfTime);
             var eventTimes = timeRule.CreateUtcEventTimes(dates);
             var scheduledEvent = new ScheduledEvent(name, eventTimes, callback);
-            _eventSchedule.Add(scheduledEvent);
+            Add(scheduledEvent);
         }
 
         #region Fluent Scheduling
