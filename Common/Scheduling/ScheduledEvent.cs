@@ -46,7 +46,7 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Gets or sets whether this event will log each time it fires
         /// </summary>
-        public bool IsLoggingEnabled
+        internal bool IsLoggingEnabled
         {
             get; set;
         }
@@ -109,7 +109,7 @@ namespace QuantConnect.Scheduling
         /// Scans this event and fires the callback if an event happened
         /// </summary>
         /// <param name="utcTime">The current time in UTC</param>
-        public void Scan(DateTime utcTime)
+        internal void Scan(DateTime utcTime)
         {
             if (_endOfScheduledEvents)
             {
@@ -166,7 +166,7 @@ namespace QuantConnect.Scheduling
         /// Fast forwards this schedule to the specified time without invoking the events
         /// </summary>
         /// <param name="utcTime">Frontier time</param>
-        public void SkipEventsUntil(DateTime utcTime)
+        internal void SkipEventsUntil(DateTime utcTime)
         {
             // check if our next event is in the past
             if (utcTime < _orderedEventUtcTimes.Current) return;
@@ -202,7 +202,7 @@ namespace QuantConnect.Scheduling
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
+        void IDisposable.Dispose()
         {
             _orderedEventUtcTimes.Dispose();
         }
