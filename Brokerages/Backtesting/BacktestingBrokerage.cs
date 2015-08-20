@@ -295,6 +295,9 @@ namespace QuantConnect.Brokerages.Backtesting
                             order.GetValue(security.Price).SmartRounding()));
                     }
 
+                    // set the Time property on the fill, required by TradeBuilder
+                    fill.Time = _algorithm.UtcTime;
+
                     // change in status or a new fill
                     if (order.Status != fill.Status || fill.FillQuantity != 0)
                     {

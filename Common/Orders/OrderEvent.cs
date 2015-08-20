@@ -33,6 +33,11 @@ namespace QuantConnect.Orders
         public Symbol Symbol;
 
         /// <summary>
+        /// The date and time of this event (UTC).
+        /// </summary>
+        public DateTime Time;
+
+        /// <summary>
         /// Status message of the order.
         /// </summary>
         public OrderStatus Status;
