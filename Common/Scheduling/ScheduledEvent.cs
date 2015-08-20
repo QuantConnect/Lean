@@ -168,6 +168,9 @@ namespace QuantConnect.Scheduling
         /// <param name="utcTime">Frontier time</param>
         public void SkipEventsUntil(DateTime utcTime)
         {
+            // check if our next event is in the past
+            if (utcTime < _orderedEventUtcTimes.Current) return;
+
             while (_orderedEventUtcTimes.MoveNext())
             {
                 // zoom through the enumerator until we get to the desired time
