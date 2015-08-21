@@ -292,7 +292,10 @@ namespace QuantConnect.Lean.Engine
                     kvp.Key.SetMarketPrice(kvp.Value);
 
                     // Send market price updates to the TradeBuilder
-                    algorithm.TradeBuilder.SetMarketPrice(kvp.Key.Symbol, kvp.Value.Price);
+                    if (kvp.Value != null)
+                    {
+                        algorithm.TradeBuilder.SetMarketPrice(kvp.Key.Symbol, kvp.Value.Price);
+                    }
                 }
 
                 // fire real time events after we've updated based on the new data

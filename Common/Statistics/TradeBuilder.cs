@@ -99,25 +99,26 @@ namespace QuantConnect.Statistics
         /// Processes a new execution, eventually creating a new trade
         /// </summary>
         /// <param name="execution">The new execution</param>
-        public void AddExecution(TradeExecution execution)
+        /// <param name="conversionRate">The current market conversion rate into the account currency</param>
+        public void AddExecution(TradeExecution execution, decimal conversionRate)
         {
             switch (_groupingMethod)
             {
                 case FillGroupingMethod.FillToFill:
-                    AddExecutionFillToFill(execution);
+                    AddExecutionFillToFill(execution, conversionRate);
                     break;
 
                 case FillGroupingMethod.FlatToFlat:
-                    AddExecutionFlatToFlat(execution);
+                    AddExecutionFlatToFlat(execution, conversionRate);
                     break;
 
                 case FillGroupingMethod.FlatToReduced:
-                    AddExecutionFlatToReduced(execution);
+                    AddExecutionFlatToReduced(execution, conversionRate);
                     break;
             }
         }
 
-        private void AddExecutionFillToFill(TradeExecution execution)
+        private void AddExecutionFillToFill(TradeExecution execution, decimal conversionRate)
         {
             Position position;
             if (!_positions.TryGetValue(execution.Symbol, out position) || position.PendingTrades.Count == 0)
@@ -176,9 +177,9 @@ namespace QuantConnect.Statistics
 
                         trade.ExitTime = execution.Time;
                         trade.ExitPrice = execution.Price;
-                        trade.ProfitLoss = (trade.ExitPrice - trade.EntryPrice) * trade.Quantity * (trade.Direction == TradeDirection.Long ? +1 : -1);
-                        trade.MAE = (trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * trade.Quantity;
-                        trade.MFE = (trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * trade.Quantity;
+                        trade.ProfitLoss = Math.Round((trade.ExitPrice - trade.EntryPrice) * trade.Quantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate, 2);
+                        trade.MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * trade.Quantity * conversionRate, 2);
+                        trade.MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * trade.Quantity * conversionRate, 2);
                         
                         _closedTrades.Add(trade);
                     }
@@ -196,9 +197,9 @@ namespace QuantConnect.Statistics
                             Quantity = Math.Abs(execution.Quantity),
                             ExitTime = execution.Time,
                             ExitPrice = execution.Price,
-                            ProfitLoss = (execution.Price - trade.EntryPrice) * Math.Abs(execution.Quantity) * (trade.Direction == TradeDirection.Long ? +1 : -1),
-                            MAE = (trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * Math.Abs(execution.Quantity),
-                            MFE = (trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * Math.Abs(execution.Quantity)
+                            ProfitLoss = Math.Round((execution.Price - trade.EntryPrice) * Math.Abs(execution.Quantity) * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate, 2),
+                            MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * Math.Abs(execution.Quantity) * conversionRate, 2),
+                            MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * Math.Abs(execution.Quantity) * conversionRate, 2)
                         });
                     }
                 }
@@ -228,7 +229,7 @@ namespace QuantConnect.Statistics
             }
         }
 
-        private void AddExecutionFlatToFlat(TradeExecution execution)
+        private void AddExecutionFlatToFlat(TradeExecution execution, decimal conversionRate)
         {
             Position position;
             if (!_positions.TryGetValue(execution.Symbol, out position) || position.Executions.Count == 0)
@@ -298,9 +299,9 @@ namespace QuantConnect.Statistics
                         Quantity = Math.Abs(totalEntryQuantity),
                         ExitTime = execution.Time,
                         ExitPrice = exitAveragePrice,
-                        ProfitLoss = Math.Round((exitAveragePrice - entryAveragePrice) * Math.Abs(totalEntryQuantity) * Math.Sign(totalEntryQuantity), 2),
-                        MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryAveragePrice : entryAveragePrice - position.MaxPrice) * Math.Abs(totalEntryQuantity), 2),
-                        MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryAveragePrice : entryAveragePrice - position.MinPrice) * Math.Abs(totalEntryQuantity), 2)
+                        ProfitLoss = Math.Round((exitAveragePrice - entryAveragePrice) * Math.Abs(totalEntryQuantity) * Math.Sign(totalEntryQuantity) * conversionRate, 2),
+                        MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryAveragePrice : entryAveragePrice - position.MaxPrice) * Math.Abs(totalEntryQuantity) * conversionRate, 2),
+                        MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryAveragePrice : entryAveragePrice - position.MinPrice) * Math.Abs(totalEntryQuantity) * conversionRate, 2)
                     });
 
                     _positions.Remove(execution.Symbol);
@@ -325,7 +326,7 @@ namespace QuantConnect.Statistics
             }
         }
 
-        private void AddExecutionFlatToReduced(TradeExecution execution)
+        private void AddExecutionFlatToReduced(TradeExecution execution, decimal conversionRate)
         {
             Position position;
             if (!_positions.TryGetValue(execution.Symbol, out position) || position.Executions.Count == 0)
@@ -388,9 +389,9 @@ namespace QuantConnect.Statistics
                     Quantity = Math.Abs(totalExecutedQuantity),
                     ExitTime = execution.Time,
                     ExitPrice = execution.Price,
-                    ProfitLoss = Math.Round((execution.Price - entryPrice) * Math.Abs(totalExecutedQuantity) * Math.Sign(-totalExecutedQuantity), 2),
-                    MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryPrice : entryPrice - position.MaxPrice) * Math.Abs(totalExecutedQuantity), 2),
-                    MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryPrice : entryPrice - position.MinPrice) * Math.Abs(totalExecutedQuantity), 2)
+                    ProfitLoss = Math.Round((execution.Price - entryPrice) * Math.Abs(totalExecutedQuantity) * Math.Sign(-totalExecutedQuantity) * conversionRate, 2),
+                    MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryPrice : entryPrice - position.MaxPrice) * Math.Abs(totalExecutedQuantity) * conversionRate, 2),
+                    MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryPrice : entryPrice - position.MinPrice) * Math.Abs(totalExecutedQuantity) * conversionRate, 2)
                 });
 
                 if (Math.Abs(totalExecutedQuantity) == Math.Abs(execution.Quantity) && position.Executions.Count == 0)

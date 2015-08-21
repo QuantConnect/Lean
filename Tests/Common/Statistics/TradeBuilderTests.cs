@@ -23,6 +23,7 @@ namespace QuantConnect.Tests.Common.Statistics
     public class TradeBuilderTests
     {
         private const string Symbol = "EURUSD";
+        private const decimal ConversionRate = 1;
         private readonly DateTime _startTime = new DateTime(2015, 08, 06, 15, 30, 0);
 
         [TestCase(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO)]
@@ -45,7 +46,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time,
                 Price = 1.08m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -59,7 +60,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(10),
                 Price = 1.09m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -99,7 +100,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time,
                 Price = 1.08m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -113,7 +114,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(10),
                 Price = 1.09m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -153,7 +154,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time,
                 Price = 1.08m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -166,7 +167,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(10),
                 Price = 1.07m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -180,7 +181,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(20),
                 Price = 1.09m,
                 Quantity = -2000
-            });
+            }, ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -253,7 +254,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time,
                 Price = 1.08m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -266,7 +267,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(10),
                 Price = 1.07m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -280,7 +281,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(20),
                 Price = 1.09m,
                 Quantity = 2000
-            });
+            }, ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -353,7 +354,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time,
                 Price = 1.07m,
                 Quantity = 2000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -366,7 +367,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(10),
                 Price = 1.08m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -380,7 +381,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(20),
                 Price = 1.09m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -453,7 +454,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time,
                 Price = 1.07m,
                 Quantity = -2000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -466,7 +467,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(10),
                 Price = 1.08m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -480,7 +481,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(20),
                 Price = 1.09m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -553,7 +554,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time,
                 Price = 1.07m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -566,7 +567,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(10),
                 Price = 1.08m,
                 Quantity = -2000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -580,7 +581,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(20),
                 Price = 1.09m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -633,7 +634,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time,
                 Price = 1.07m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -646,7 +647,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(10),
                 Price = 1.08m,
                 Quantity = 2000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -660,7 +661,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(20),
                 Price = 1.09m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -713,7 +714,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time,
                 Price = 1.07m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -726,7 +727,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(10),
                 Price = 1.08m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -740,7 +741,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(20),
                 Price = 1.09m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -751,7 +752,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(30),
                 Price = 1.08m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -762,7 +763,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(40),
                 Price = 1.09m,
                 Quantity = -2000
-            });
+            }, ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -886,7 +887,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time,
                 Price = 1.07m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -899,7 +900,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(10),
                 Price = 1.08m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -913,7 +914,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(20),
                 Price = 1.09m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -924,7 +925,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(30),
                 Price = 1.08m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -935,7 +936,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(40),
                 Price = 1.09m,
                 Quantity = 2000
-            });
+            }, ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -1059,7 +1060,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time,
                 Price = 1.07m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1072,7 +1073,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(10),
                 Price = 1.08m,
                 Quantity = 2000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1086,7 +1087,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(20),
                 Price = 1.09m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1097,7 +1098,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(30),
                 Price = 1.08m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1108,7 +1109,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(40),
                 Price = 1.09m,
                 Quantity = -3000
-            });
+            }, ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -1291,7 +1292,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time,
                 Price = 1.07m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1304,7 +1305,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(10),
                 Price = 1.08m,
                 Quantity = -2000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1318,7 +1319,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(20),
                 Price = 1.09m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1329,7 +1330,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(30),
                 Price = 1.08m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1340,7 +1341,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(40),
                 Price = 1.09m,
                 Quantity = 3000
-            });
+            }, ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -1523,7 +1524,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time,
                 Price = 1.07m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1536,7 +1537,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(10),
                 Price = 1.08m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1550,7 +1551,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(20),
                 Price = 1.09m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1561,7 +1562,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(30),
                 Price = 1.10m,
                 Quantity = -2000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1572,7 +1573,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(40),
                 Price = 1.08m,
                 Quantity = 1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1583,7 +1584,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(50),
                 Price = 1.09m,
                 Quantity = -2000
-            });
+            }, ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -1720,7 +1721,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time,
                 Price = 1.07m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1733,7 +1734,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(10),
                 Price = 1.08m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1747,7 +1748,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(20),
                 Price = 1.09m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1758,7 +1759,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(30),
                 Price = 1.10m,
                 Quantity = 2000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1769,7 +1770,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(40),
                 Price = 1.08m,
                 Quantity = -1000
-            });
+            }, ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1780,7 +1781,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Time = time.AddMinutes(50),
                 Price = 1.09m,
                 Quantity = 2000
-            });
+            }, ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
