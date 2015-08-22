@@ -794,13 +794,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         conversionRate = _algorithm.Portfolio.CashBook[quoteCurrency].ConversionRate;
                     }
 
-                    _algorithm.TradeBuilder.AddExecution(new TradeExecution
-                    {
-                        Symbol = fill.Symbol,
-                        Time = _algorithm.UtcTime,
-                        Price = fill.FillPrice,
-                        Quantity = fill.FillQuantity
-                    }, conversionRate);
+                    _algorithm.TradeBuilder.ProcessFill(fill, conversionRate);
                 }
                 catch (Exception err)
                 {

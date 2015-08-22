@@ -45,7 +45,7 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// The total unsigned quantity of the trade
         /// </summary>
-        public decimal Quantity { get; set; }
+        public int Quantity { get; set; }
 
         /// <summary>
         /// The date and time the trade was opened

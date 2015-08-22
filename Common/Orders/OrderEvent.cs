@@ -128,6 +128,24 @@ namespace QuantConnect.Orders
                 ? string.Format("OrderID: {0} Symbol: {1} Status: {2}", OrderId, Symbol, Status) 
                 : string.Format("OrderID: {0} Symbol: {1} Status: {2} Quantity: {3} FillPrice: {4}", OrderId, Symbol, Status, FillQuantity, FillPrice);
         }
+
+        /// <summary>
+        /// Returns a clone of the current object.
+        /// </summary>
+        /// <returns>The new clone object</returns>
+        public OrderEvent Clone()
+        {
+            return new OrderEvent
+            {
+                OrderId = OrderId,
+                Symbol = Symbol,
+                Time = Time,
+                Status = Status,
+                FillPrice = FillPrice,
+                FillQuantity = FillQuantity,
+                Message = Message,
+            };
+        }
     }
 
 } // End QC Namespace:
