@@ -87,7 +87,7 @@ namespace QuantConnect.Tests
                 {"Drawdown", "16.700%"},
                 {"Expectancy", "-1"},
                 {"Net Profit", "-15.892%"},
-                {"Sharpe Ratio", "-1.358"},
+                {"Sharpe Ratio", "-1.353"},
                 {"Loss Rate", "100%"},
                 {"Win Rate", "0%"},
                 {"Profit-Loss Ratio", "0"},
@@ -95,9 +95,9 @@ namespace QuantConnect.Tests
                 {"Beta", "0.037"},
                 {"Annual Standard Deviation", "0.062"},
                 {"Annual Variance", "0.004"},
-                {"Information Ratio", "-2.399"},
+                {"Information Ratio", "-2.39"},
                 {"Tracking Error", "0.124"},
-                {"Treynor Ratio", "-2.29"},
+                {"Treynor Ratio", "-2.256"},
                 {"Total Fees", "$21.00"}
             });
         }
