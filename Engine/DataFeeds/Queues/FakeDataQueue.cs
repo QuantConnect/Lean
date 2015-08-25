@@ -18,11 +18,12 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Timers;
+using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using Timer = System.Timers.Timer;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Queues
 {
@@ -31,6 +32,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
     /// </summary>
     public class FakeDataQueue : IDataQueueHandler
     {
+        private int count;
         private readonly Random _random = new Random();
 
         private readonly Timer _timer;
@@ -44,29 +46,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         {
             _ticks = new ConcurrentQueue<BaseData>();
             _symbols = new Dictionary<SecurityType, List<string>>();
+            
+            // load it up to start
+            PopulateQueue();
+            PopulateQueue();
+            PopulateQueue();
+            PopulateQueue();
+            
             _timer = new Timer
             {
                 AutoReset = true,
-                Enabled = true
+                Enabled = true,
+                Interval = 1000,
             };
+            
+            var lastCount = 0;
+            var lastTime = DateTime.Now;
             _timer.Elapsed += (sender, args) =>
             {
-                _timer.Interval = _random.Next(15, 2500); // around each second
-                foreach (var symbol in _symbols.SelectMany(x => x.Value))
-                {
-                    // 50/50 repeating chance of emitting each symbol
-                    while (_random.NextDouble() > 0.75)
-                    {
-                        _ticks.Enqueue(new Tick
-                        {
-                            Time = DateTime.Now,
-                            Symbol = symbol,
-                            Value = 10 + (decimal) Math.Abs(Math.Sin(DateTime.Now.TimeOfDay.TotalMinutes)),
-                            TickType = TickType.Trade,
-                            Quantity = _random.Next(10, (int) _timer.Interval)
-                        });
-                    }
-                }
+                var elapsed = (DateTime.Now - lastTime);
+                var ticksPerSecond = (count - lastCount)/elapsed.TotalSeconds;
+                Console.WriteLine("TICKS PER SECOND:: " + ticksPerSecond.ToString("000000.0") + " ITEMS IN QUEUE:: " + _ticks.Count);
+                lastCount = count;
+                lastTime = DateTime.Now;
+                PopulateQueue();
             };
         }
 
@@ -77,10 +80,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         public IEnumerable<BaseData> GetNextTicks()
         {
             BaseData tick;
-            var timeout = DateTime.UtcNow + Time.OneMillisecond;
-            while (_ticks.TryDequeue(out tick) && DateTime.UtcNow < timeout)
+            while (_ticks.TryDequeue(out tick))
             {
                 yield return tick;
+                Interlocked.Increment(ref count);
             }
         }
 
@@ -116,6 +119,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 if (_symbols.TryGetValue(securityType.Key, out securities))
                 {
                     securities.RemoveAll(x => securityType.Value.Contains(x));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Pumps a bunch of ticks into the queue
+        /// </summary>
+        private void PopulateQueue()
+        {
+            foreach (var symbol in _symbols.SelectMany(x => x.Value))
+            {
+                // emits 500k per second
+                for (int i = 0; i < 500000; i++)
+                {
+                    _ticks.Enqueue(new Tick
+                    {
+                        Time = DateTime.Now,
+                        Symbol = symbol,
+                        Value = 10 + (decimal)Math.Abs(Math.Sin(DateTime.Now.TimeOfDay.TotalMinutes)),
+                        TickType = TickType.Trade,
+                        Quantity = _random.Next(10, (int)_timer.Interval)
+                    });
                 }
             }
         }

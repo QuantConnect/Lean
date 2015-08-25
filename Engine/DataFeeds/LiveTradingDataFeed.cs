@@ -205,15 +205,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     if (triggerArchive)
                     {
-                        subscription.StreamStore.TriggerArchive(utcTriggerTime, subscription.Configuration.FillDataForward);
-
-                        BaseData data;
-                        var dataPoints = new List<BaseData>();
-                        while (subscription.StreamStore.Queue.TryDequeue(out data))
+                        var data = subscription.StreamStore.TriggerArchive(utcTriggerTime);
+                        if (data != null)
                         {
-                            dataPoints.Add(data);
+                            items.Add(new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData> {data}));
                         }
-                        items.Add(new KeyValuePair<Security, List<BaseData>>(subscription.Security, dataPoints));
                     }
                 }
 

@@ -59,11 +59,59 @@ namespace QuantConnect.Scheduling
         /// <returns>A time rule that fires at the specified time in the algorithm's time zone</returns>
         public ITimeRule At(TimeSpan timeOfDay)
         {
+            return At(timeOfDay, _timeZone);
+        }
+
+        /// <summary>
+        /// Specifies an event should fire at the specified time of day in the algorithm's time zone
+        /// </summary>
+        /// <param name="hour">The hour</param>
+        /// <param name="minute">The minute</param>
+        /// <param name="second">The second</param>
+        /// <returns>A time rule that fires at the specified time in the algorithm's time zone</returns>
+        public ITimeRule At(int hour, int minute, int second = 0)
+        {
+            return At(new TimeSpan(hour, minute, second), _timeZone);
+        }
+
+        /// <summary>
+        /// Specifies an event should fire at the specified time of day in the specified time zone
+        /// </summary>
+        /// <param name="hour">The hour</param>
+        /// <param name="minute">The minute</param>
+        /// <param name="timeZone">The time zone the event time is represented in</param>
+        /// <returns>A time rule that fires at the specified time in the algorithm's time zone</returns>
+        public ITimeRule At(int hour, int minute, DateTimeZone timeZone)
+        {
+            return At(new TimeSpan(hour, minute, 0), timeZone);
+        }
+
+        /// <summary>
+        /// Specifies an event should fire at the specified time of day in the specified time zone
+        /// </summary>
+        /// <param name="hour">The hour</param>
+        /// <param name="minute">The minute</param>
+        /// <param name="second">The second</param>
+        /// <param name="timeZone">The time zone the event time is represented in</param>
+        /// <returns>A time rule that fires at the specified time in the algorithm's time zone</returns>
+        public ITimeRule At(int hour, int minute, int second, DateTimeZone timeZone)
+        {
+            return At(new TimeSpan(hour, minute, second), timeZone);
+        }
+
+        /// <summary>
+        /// Specifies an event should fire at the specified time of day in the specified time zone
+        /// </summary>
+        /// <param name="timeOfDay">The time of day in the algorithm's time zone the event should fire</param>
+        /// <param name="timeZone">The time zone the date time is expressed in</param>
+        /// <returns>A time rule that fires at the specified time in the algorithm's time zone</returns>
+        public ITimeRule At(TimeSpan timeOfDay, DateTimeZone timeZone)
+        {
             var name = string.Join(",", timeOfDay.TotalHours.ToString("0.##"));
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
                 from date in dates
                 let localEventTime = date + timeOfDay
-                let utcEventTime = localEventTime.ConvertToUtc(_timeZone)
+                let utcEventTime = localEventTime.ConvertToUtc(timeZone)
                 select utcEventTime;
 
             return new FuncTimeRule(name, applicator);

@@ -25,227 +25,108 @@ using QuantConnect.Securities;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// StreamStore manages the creation of data objects for live streams; including managing 
-    /// a fillforward data stream request.
+    /// The stream store accepts data updates from the data feed and aggregates it into bars.
+    /// Custom data is not aggregated, just saved for when TriggerArchive is called.
     /// </summary>
-    /// <remarks>
-    /// Streams data is pushed into update where it is appended to the data object to be consolidated. Once required time has lapsed for the bar the 
-    /// data is piped into a queue.
-    /// </remarks>
     public class StreamStore
     {
-        //Internal lock object
-        private readonly object _lock = new object();
+        private BaseData _previous;
 
-        private BaseData _data;
-        private BaseData _previousData;
-        private readonly Type _type;
-        private readonly SubscriptionDataConfig _config;
         private readonly Security _security;
         private readonly TimeSpan _increment;
+        private readonly SubscriptionDataConfig _config;
         private readonly ConcurrentQueue<BaseData> _queue;
 
         /// <summary>
-        /// Public access to the data object we're dynamically generating.
+        /// Initializes a new instance of the <see cref="StreamStore"/> class
         /// </summary>
-        public BaseData Data
-        {
-            get
-            {
-                return _data;
-            }
-        }
-
-        /// <summary>
-        /// Timespan increment for this resolution data:
-        /// </summary>
-        public TimeSpan Increment
-        {
-            get
-            {
-                return _increment;
-            }
-        }
-
-        /// <summary>
-        /// Queue for temporary storage for generated data.
-        /// </summary>
-        public ConcurrentQueue<BaseData> Queue
-        {
-            get
-            {
-                return _queue;
-            }
-        }
-
-        /// <summary>
-        /// Symbol for the given stream.
-        /// </summary>
-        public string Symbol
-        {
-            get
-            {
-                return _config.Symbol;
-            }
-        }
-
-        /// <summary>
-        /// Create a new self updating, thread safe data updater.
-        /// </summary>
-        /// <param name="config">Configuration for subscription</param>
-        /// <param name="security">Security for the subscription</param>
+        /// <param name="config">The subscripton's configuration</param>
+        /// <param name="security">The security object, used for exchange hours</param>
         public StreamStore(SubscriptionDataConfig config, Security security)
         {
-            _type = config.Type;
-            _data = null;
-            _config = config;
             _security = security;
+            _config = config;
             _increment = config.Increment;
             _queue = new ConcurrentQueue<BaseData>();
-            if (config.Resolution == Resolution.Tick)
-            {
-                throw new ArgumentException("StreamStores are only for non-tick subscriptions");
-            }
         }
 
         /// <summary>
-        /// For custom data streams just manually set the data, it doesn't need to be compiled over time into a bar.
+        /// Updates the current working bar or creates a new working bar if TriggerArchive has been called
         /// </summary>
-        /// <param name="data">New data</param>
-        public void Update(BaseData data)
-        {
-            // if we're not within the configured market hours don't process the data
-            if (!_security.Exchange.IsOpenDuringBar(data.Time, data.EndTime, _config.ExtendedMarketHours))
-            {
-                return;
-            }
-
-            try
-            {
-                //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
-                // we're waiting for the trigger archive to enqueue and set _data to null
-                var timeout = DateTime.UtcNow.AddMilliseconds(50);
-                while (_data != null && _data.Time < ComputeBarStartTime())
-                {
-                    if (DateTime.UtcNow > timeout)
-                    {
-                        Log.Error("StreamStore.Update(BaseData): Timeout reached.");
-                        break;
-                    }
-                    Thread.Sleep(1);
-                }
-            }
-            catch (NullReferenceException)
-            {
-                // we were waiting for _data to go null, it just so happened to go null
-                // between the null check and the comparison
-            }
-
-            lock (_lock)
-            {
-                _data = data;
-            }
-        }
-
-        /// <summary>
-        /// Trade causing an update to the current tradebar object.
-        /// </summary>
-        /// <param name="tick"></param>
-        /// <remarks>We build bars from the trade data, or if its a tick stream just pass the trade through as a tick.</remarks>
+        /// <remarks>
+        /// This method assumes only one thread will be using this method. It is intended to
+        /// be consumed by the live trading data feed data tasks (live/custom)
+        /// </remarks>
+        /// <param name="tick">The new data to aggregate</param>
         public void Update(Tick tick)
         {
-            // if we're not within the configured market hours don't process the data
-            if (!_security.Exchange.IsOpenDuringBar(tick.Time, tick.EndTime, _config.ExtendedMarketHours))
-            {
-                return;
-            }
+            if (!IsMarketOpen(tick)) return;
 
-            var barStartTime = ComputeBarStartTime();
-            try
+            // get the current working bar and update it
+            BaseData working;
+            if (!_queue.TryPeek(out working))
             {
-                //If the second has ticked over, and we have data not processed yet, wait for it to be stored:
-                // we're waiting for the trigger archive to enqueue and set _data to null
-                var timeout = DateTime.UtcNow.AddMilliseconds(50);
-                while (_data != null && _data.Time < barStartTime)
-                {
-                    if (DateTime.UtcNow > timeout)
-                    {
-                        Log.Error("StreamStore.Update(Tick): Timeout reached.");
-                        break;
-                    }
-                    Thread.Sleep(1);
-                }
+                // the consumer took the bar, create a new one
+                working = CreateNewTradeBar(tick.LastPrice, tick.Quantity);
+                _queue.Enqueue(working);
             }
-            catch (NullReferenceException)
-            {
-                // we were waiting for _data to go null, it just so happened to go null
-                // between the null check and the comparison
-            }
-            
-            lock (_lock)
-            {
-                if (_data == null)
-                {
-                    _data = new TradeBar(barStartTime, _config.Symbol, tick.LastPrice, tick.LastPrice, tick.LastPrice, tick.LastPrice, tick.Quantity, _config.Resolution.ToTimeSpan());
-                }
-                else
-                {
-                    //Update the bar:
-                    _data.Update(tick.LastPrice, tick.Quantity, tick.BidPrice, tick.AskPrice);
-                }
-            }
+            working.Update(tick.LastPrice, tick.BidPrice, tick.AskPrice, tick.Quantity);
         }
 
         /// <summary>
-        /// A time period has lapsed, trigger a save/queue of the current value of data.
+        /// Enqueues the new data directly for the real time sync thread to take it via TriggerArchive
         /// </summary>
-        /// <param name="utcTriggerTime">The time we're triggering this archive for</param>
-        /// <param name="fillForward">Data stream is a fillforward type</param>
-        public void TriggerArchive(DateTime utcTriggerTime, bool fillForward)
+        /// <remarks>
+        /// This method assumes only one thread will be using this method. It is intended to
+        /// be consumed by the live trading data feed data tasks (live/custom)
+        /// </remarks>
+        /// <param name="baseData">The new custom data</param>
+        public void Update(BaseData baseData)
         {
-            var localTriggerTime = utcTriggerTime.ConvertFromUtc(_config.TimeZone);
-            lock (_lock)
+            if (!IsMarketOpen(baseData)) return;
+
+            // custom data doesn't get aggregated, just push it into the queue
+            _queue.Enqueue(baseData);
+        }
+
+        /// <summary>
+        /// Dequeues the current working bar
+        /// </summary>
+        /// <param name="utcTriggerTime">The current trigger time in UTC</param>
+        /// <returns>The base data instance, or null, if no data is to be emitted</returns>
+        public BaseData TriggerArchive(DateTime utcTriggerTime)
+        {
+            BaseData bar;
+            if (!_queue.TryDequeue(out bar))
             {
-                try
+                // if a bar wasn't ready, check for fill forward
+                if (_previous != null && _config.FillDataForward)
                 {
-                    //When there's nothing to do:
-                    if (_data == null && !fillForward)
-                    {
-                        Log.Debug("StreamStore.TriggerArchive(): No data to store, and not fill forward: " + Symbol);
-                    } 
-                    
-                    if (_data != null)
-                    {
-                        //Create clone and reset original
-                        Log.Debug("StreamStore.TriggerArchive(): Enqueued new data: S:" + _data.Symbol + " V:" + _data.Value);
-                        _previousData = _data.Clone();
-                        _queue.Enqueue(_data.Clone());
-                        _data = null;
-                    }
-                    else if (fillForward && _data == null && _previousData != null)
-                    {
-                        // the time is actually the end time of a bar, check to see if the start time
-                        // is within market hours, which is really just checking the _previousData's EndTime
-                        if (!_security.Exchange.IsOpenDuringBar(localTriggerTime - _increment, localTriggerTime, _config.ExtendedMarketHours))
-                        {
-                            Log.Debug("StreamStore.TriggerArchive(): Exchange is closed: " + Symbol);
-                            return;
-                        }
+                    // exchanges hours are in local time, so convert to local before checking if exchange is open
+                    var localTriggerTime = utcTriggerTime.ConvertFromUtc(_config.TimeZone);
 
-                        //There was no other data in this timer period, and this is a fillforward subscription:
-                        Log.Debug("StreamStore.TriggerArchive(): Fillforward, Previous Enqueued: S:" + _previousData.Symbol + " V:" + _previousData.Value);
-                        var cloneForward = _previousData.Clone(true);
-                        cloneForward.Time = _previousData.Time.Add(_increment);
-                        _queue.Enqueue(cloneForward);
-
-                        _previousData = cloneForward.Clone();
+                    // only perform fill forward behavior if the exchange is considered open
+                    var barStartTime = localTriggerTime - _increment;
+                    if (_security.Exchange.IsOpenDuringBar(barStartTime, localTriggerTime, _config.ExtendedMarketHours))
+                    {
+                        bar = _previous.Clone(true);
+                        bar.Time = barStartTime;
                     }
-                }
-                catch (Exception err)
-                {
-                    Log.Error("StreamStore.TriggerAchive(fillforward): Failed to archive: " + err.Message);
                 }
             }
+
+            // we don't have data, so just return null
+            if (bar == null) return null;
+
+            // reset the previous bar for fill forward
+            _previous = bar.Clone();
+
+            return bar;
+        }
+
+        private TradeBar CreateNewTradeBar(decimal marketPrice, long volume)
+        {
+            return new TradeBar(ComputeBarStartTime(), _config.Symbol, marketPrice, marketPrice, marketPrice, marketPrice, volume, _increment);
         }
 
         /// <summary>
@@ -254,6 +135,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private DateTime ComputeBarStartTime()
         {
             return DateTime.UtcNow.RoundDown(_increment).ConvertFromUtc(_config.TimeZone);
+        }
+
+        private bool IsMarketOpen(BaseData tick)
+        {
+            return _security.Exchange.IsOpenDuringBar(tick.Time, tick.EndTime, _config.ExtendedMarketHours);
         }
     }
 }

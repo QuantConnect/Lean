@@ -209,7 +209,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var cache = new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData>());
                         data.Add(cache);
 
-                        var currentOffsetTicks = subscription.OffsetProvider.GetOffsetTicks(frontier);
+                        var offsetProvider = subscription.OffsetProvider;
+                        var currentOffsetTicks = offsetProvider.GetOffsetTicks(frontier);
                         while (subscription.Current.EndTime.Ticks - currentOffsetTicks <= frontier.Ticks)
                         {
                             // we want bars rounded using their subscription times, we make a clone
@@ -238,7 +239,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         if (subscription.Current != null)
                         {
-                            earlyBirdTicks = Math.Min(earlyBirdTicks, subscription.Current.EndTime.Ticks - currentOffsetTicks);
+                            // take the earliest between the next piece of data or the next tz discontinuity
+                            earlyBirdTicks = Math.Min(earlyBirdTicks, Math.Min(subscription.Current.EndTime.Ticks - currentOffsetTicks, offsetProvider.GetNextDiscontinuity()));
                         }
                     }
 

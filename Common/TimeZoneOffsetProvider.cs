@@ -101,6 +101,15 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets this offset provider's next discontinuity
+        /// </summary>
+        /// <returns>The next discontinuity in UTC ticks</returns>
+        public long GetNextDiscontinuity()
+        {
+            return _nextDiscontinuity;
+        }
+
+        /// <summary>
         /// Converts the specified <paramref name="utcTime"/> using the offset resolved from
         /// a call to <see cref="GetOffsetTicks"/>
         /// </summary>
