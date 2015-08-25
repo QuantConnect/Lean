@@ -91,7 +91,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
             var files = from file in Directory.EnumerateFiles(path)
                         where file.EndsWith(".csv")
                         let entitySymbol = Path.GetFileNameWithoutExtension(file)
-                        let mapFileByPath = new KeyValuePair<string, MapFile>(file, new MapFile(entitySymbol, SafeMapFileRowRead(file)))
+                        let fileRead = SafeMapFileRowRead(file) ?? new List<MapFileRow>()
+                        let mapFileByPath = new KeyValuePair<string, MapFile>(file, new MapFile(entitySymbol, fileRead))
                         where mapFileByPath.Value != null
                         select mapFileByPath;
 
