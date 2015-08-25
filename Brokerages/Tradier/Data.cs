@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using Newtonsoft.Json;
 using QuantConnect.Util;
 
@@ -130,20 +129,19 @@ namespace QuantConnect.Brokerages.Tradier
 
         /// Open Price
         [JsonProperty(PropertyName = "open")]
-        public decimal Open = 0;
+        public decimal? Open = 0;
 
         /// High Price
         [JsonProperty(PropertyName = "high")]
-        public decimal High = 0;
+        public decimal? High = 0;
 
         /// Low Price
         [JsonProperty(PropertyName = "low")]
-        public decimal Low = 0;
+        public decimal? Low = 0;
 
         /// Closng Price
-        [DefaultValue(-1)]
         [JsonProperty(PropertyName = "close")]
-        public decimal ? Close = 0;
+        public decimal? Close = 0;
 
         /// Previous Close
         [JsonProperty(PropertyName = "prevclose")]
