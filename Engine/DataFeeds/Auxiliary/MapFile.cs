@@ -56,7 +56,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         public MapFile(string entitySymbol, IEnumerable<MapFileRow> data)
         {
             EntitySymbol = entitySymbol;
-            _data = new SortedDictionary<DateTime, MapFileRow>(data.ToDictionary(x => x.Date));
+            _data = new SortedDictionary<DateTime, MapFileRow>(data.Distinct().ToDictionary(x => x.Date));
         }
 
         /// <summary>
