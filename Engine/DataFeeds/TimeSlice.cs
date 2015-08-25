@@ -137,7 +137,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 BaseData update = null;
                 var consolidatorUpdate = new List<BaseData>(list.Count);
-                for (int i = list.Count - 1; i > -1; i--)
+                for (int i = 0; i < list.Count; i++)
                 {
                     var baseData = list[i];
                     if (!kvp.Key.SubscriptionDataConfig.IsInternalFeed)
@@ -170,11 +170,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         // this is data used to update consolidators
                         consolidatorUpdate.Add(baseData);
-                        if (update == null)
-                        {
-                            // this is the data used set market prices
-                            update = baseData;
-                        }
+                        // this is the data used set market prices
+                        update = baseData;
                     }
                     // include checks for various aux types so we don't have to construct the dictionaries in Slice
                     else if ((delisting = baseData as Delisting) != null)
