@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         public MapFileRow(DateTime date, string mappedSymbol)
         {
             Date = date;
-            MappedSymbol = mappedSymbol;
+            MappedSymbol = mappedSymbol.ToUpper();
         }
 
         /// <summary>
@@ -51,15 +51,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         public static IEnumerable<MapFileRow> Read(string symbol, string market)
         {
             var path = MapFile.GetMapFilePath(symbol, market);
-            if (!File.Exists(path))
-            {
-                yield break;
-            }
+            return File.Exists(path) 
+                ? Read(path) 
+                : Enumerable.Empty<MapFileRow>();
+        }
 
-            foreach (var line in File.ReadAllLines(path))
+        /// <summary>
+        /// Reads in the map_file at the specified path
+        /// </summary>
+        public static IEnumerable<MapFileRow> Read(string path)
+        {
+            foreach (var line in File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l)))
             {
                 var csv = line.Split(',');
-                yield return new MapFileRow(Time.ParseDate(csv[0]), csv[1]);
+                yield return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1]);
             }
         }
     }
