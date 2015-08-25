@@ -183,7 +183,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         performedUniverseSelection.Add(subscription.Configuration.Symbol);
                         var coarse = UniverseSelection.GetCoarseFundamentals(subscription.Configuration.Market, subscription.TimeZone, localTime.Date, true);
-                        changes = _universeSelection.ApplyUniverseSelection(localTime.Date, coarse);
+                        changes = _universeSelection.ApplyUniverseSelection(localTime.Date, subscription.Configuration.Market, coarse);
                     }
 
                     var triggerArchive = false;
