@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
     /// <summary>
     /// Represents an entire map file for a specified symbol
     /// </summary>
-    public class MapFile
+    public class MapFile : IEnumerable<MapFileRow>
     {
         private readonly SortedDictionary<DateTime, MapFileRow> _data;
 
@@ -55,7 +56,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         public MapFile(string entitySymbol, IEnumerable<MapFileRow> data)
         {
             EntitySymbol = entitySymbol;
-            _data = new SortedDictionary<DateTime, MapFileRow>(data.ToDictionary(x => x.Date));
+            _data = new SortedDictionary<DateTime, MapFileRow>(data.Distinct().ToDictionary(x => x.Date));
         }
 
         /// <summary>
@@ -168,5 +169,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
             var postDot = symbol.Substring(dot + 1);
             return int.TryParse(postDot, out i);
         }
+
+        #region Implementation of IEnumerable
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>1</filterpriority>
+        public IEnumerator<MapFileRow> GetEnumerator()
+        {
+            return _data.Values.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.IEnumerator"/> object that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        #endregion
     }
 }

@@ -234,7 +234,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 break;
                             }
 
-                            changes += _universeSelection.ApplyUniverseSelection(cache.Value[0].EndTime.Date, cache.Value.OfType<CoarseFundamental>());
+                            changes += _universeSelection.ApplyUniverseSelection(cache.Value[0].EndTime.Date, subscription.Configuration.Market, cache.Value.OfType<CoarseFundamental>());
                         }
 
                         if (subscription.Current != null)
