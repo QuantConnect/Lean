@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
     /// <summary>
     /// Represents a single row in a map_file. This is a csv file ordered as {date, mapped symbol}
     /// </summary>
-    public class MapFileRow
+    public class MapFileRow : IEquatable<MapFileRow>
     {
         /// <summary>
         /// Gets the date associated with this data
@@ -67,5 +67,69 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
                 yield return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1]);
             }
         }
+
+        #region Equality members
+
+        /// <summary>
+        /// Indicates whether the current object is equal to another object of the same type.
+        /// </summary>
+        /// <returns>
+        /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
+        /// </returns>
+        /// <param name="other">An object to compare with this object.</param>
+        public bool Equals(MapFileRow other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Date.Equals(other.Date) && string.Equals(MappedSymbol, other.MappedSymbol);
+        }
+
+        /// <summary>
+        /// Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>.
+        /// </summary>
+        /// <returns>
+        /// true if the specified object  is equal to the current object; otherwise, false.
+        /// </returns>
+        /// <param name="obj">The object to compare with the current object. </param><filterpriority>2</filterpriority>
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((MapFileRow)obj);
+        }
+
+        /// <summary>
+        /// Serves as a hash function for a particular type. 
+        /// </summary>
+        /// <returns>
+        /// A hash code for the current <see cref="T:System.Object"/>.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Date.GetHashCode() * 397) ^ (MappedSymbol != null ? MappedSymbol.GetHashCode() : 0);
+            }
+        }
+
+        /// <summary>
+        /// Determines whether or not the two instances are equal
+        /// </summary>
+        public static bool operator ==(MapFileRow left, MapFileRow right)
+        {
+            return Equals(left, right);
+        }
+
+        /// <summary>
+        /// Determines whether or not the two instances are not equal
+        /// </summary>
+        public static bool operator !=(MapFileRow left, MapFileRow right)
+        {
+            return !Equals(left, right);
+        }
+
+        #endregion
     }
 }
