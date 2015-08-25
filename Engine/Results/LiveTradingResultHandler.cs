@@ -228,21 +228,21 @@ namespace QuantConnect.Lean.Engine.Results
                             //Send log messages to the browser as well for live trading:
                             case PacketType.Log:
                                 var log = packet as LogPacket;
-                                Log.Trace("LiveTradingResultHandler.Run(): Log Packet: " + log.Message);
+                                Log.Debug("LiveTradingResultHandler.Run(): Log Packet: " + log.Message);
                                 _messagingHandler.LogMessage(_deployId, log.Message);
                                 break;
 
                             //Send log messages to the browser as well for live trading:
                             case PacketType.SecurityTypes:
                                 var securityPacket = packet as SecurityTypesPacket;
-                                Log.Trace("LiveTradingResultHandler.Run(): Security Types Packet: " + securityPacket.TypesCSV);
+                                Log.Debug("LiveTradingResultHandler.Run(): Security Types Packet: " + securityPacket.TypesCSV);
                                 _messagingHandler.SecurityTypes(securityPacket);
                                 break;
 
                             //Status Update
                             case PacketType.AlgorithmStatus:
                                 var statusPacket = packet as AlgorithmStatusPacket;
-                                Log.Trace("LiveTradingResultHandler.Run(): Algorithm Status Packet:" + statusPacket.Status + " " + statusPacket.AlgorithmId);
+                                Log.Debug("LiveTradingResultHandler.Run(): Algorithm Status Packet:" + statusPacket.Status + " " + statusPacket.AlgorithmId);
                                 _messagingHandler.AlgorithmStatus(statusPacket.AlgorithmId, statusPacket.Status, statusPacket.Message);
                                 break;
 
