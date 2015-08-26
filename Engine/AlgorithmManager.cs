@@ -259,6 +259,14 @@ namespace QuantConnect.Lean.Engine
                     {
                         methodInvokers[typeof (SymbolChangedEvents)](algorithm, timeSlice.Slice.SymbolChangedEvents);
                     }
+                    foreach (var symbol in timeSlice.Slice.SymbolChangedEvents.Keys)
+                    {
+                        // cancel all orders for the old symbol
+                        foreach (var ticket in transactions.GetOrderTickets(x => x.Status.IsOpen() && x.Symbol == symbol))
+                        {
+                            ticket.Cancel("Open order cancelled on symbol changed event");
+                        }
+                    }
                 }
 
                 if (timeSlice.SecurityChanges != SecurityChanges.None)
