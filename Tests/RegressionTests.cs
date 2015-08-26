@@ -128,5 +128,32 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$5433.00"}
             });
         }
+
+        [Test]
+        public void UniverseSelectionRegressionAlgorithm()
+        {
+            AlgorithmRunner.RunLocalBacktest("UniverseSelectionRegressionAlgorithm", new Dictionary<string, string>
+            {
+                {"Total Trades", "5"},
+                {"Average Win", "0.70%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "2101187.485%"},
+                {"Drawdown", "27.200%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "58.972%"},
+                {"Sharpe Ratio", "3.393"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "100%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "NaN"},
+                {"Beta", "NaN"},
+                {"Annual Standard Deviation", "5.491"},
+                {"Annual Variance", "30.149"},
+                {"Information Ratio", "NaN"},
+                {"Tracking Error", "NaN"},
+                {"Treynor Ratio", "NaN"},
+                {"Total Fees", "$2.00"}
+            });
+        }
     }
 }
