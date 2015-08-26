@@ -160,6 +160,7 @@ namespace QuantConnect.Lean.Engine
             var hasOnDataDividends = AddMethodInvoker<Dividends>(algorithm, methodInvokers);
             var hasOnDataSplits = AddMethodInvoker<Splits>(algorithm, methodInvokers);
             var hasOnDataDelistings = AddMethodInvoker<Delistings>(algorithm, methodInvokers);
+            var hasOnDataSymbolChangedEvents = AddMethodInvoker<SymbolChangedEvents>(algorithm, methodInvokers);
 
             // Algorithm 3.0 data accessors
             var hasOnDataSlice = algorithm.GetType().GetMethods()
@@ -251,6 +252,14 @@ namespace QuantConnect.Lean.Engine
 
                 //Set the algorithm and real time handler's time
                 algorithm.SetDateTime(time);
+
+                if (timeSlice.Slice.SymbolChangedEvents.Count != 0)
+                {
+                    if (hasOnDataSymbolChangedEvents)
+                    {
+                        methodInvokers[typeof (SymbolChangedEvents)](algorithm, timeSlice.Slice.SymbolChangedEvents);
+                    }
+                }
 
                 if (timeSlice.SecurityChanges != SecurityChanges.None)
                 {

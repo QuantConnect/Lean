@@ -478,7 +478,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var newSymbol = _mapFile.GetMappedSymbol(date);
                     if (_mappedSymbol != "" && newSymbol != _mappedSymbol)
                     {
-                        var changed = new SymbolChangedEvent(_config.Symbol, date, _mappedSymbol, _config.MappedSymbol);
+                        var changed = new SymbolChangedEvent(_config.Symbol, date, _mappedSymbol, newSymbol);
                         _auxiliaryData.Enqueue(changed);
                     }
                     _config.MappedSymbol = _mappedSymbol = newSymbol;

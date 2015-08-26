@@ -212,7 +212,7 @@ namespace QuantConnect.Data
         /// <returns>A clone of the current object</returns>
         public virtual BaseData Clone()
         {
-            return ObjectActivator.Clone(this);
+            return (BaseData) ObjectActivator.Clone((object)this);
         }
 
         /// <summary>

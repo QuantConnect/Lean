@@ -33,7 +33,8 @@ namespace QuantConnect.Data
         // aux data
         private readonly Splits _splits;
         private readonly Dividends _dividends;
-        private readonly Delistings _delistings; 
+        private readonly Delistings _delistings;
+        private readonly SymbolChangedEvents _symbolChangedEvents;
 
         // string -> data   for non-tick data
         // string -> list{data} for tick data
@@ -90,6 +91,14 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Gets the <see cref="QuantConnect.Data.Market.SymbolChangedEvents"/> for this slice of data
+        /// </summary>
+        public SymbolChangedEvents SymbolChangedEvents
+        {
+            get { return _symbolChangedEvents; }
+        }
+
+        /// <summary>
         /// Gets the number of symbols held in this slice
         /// </summary>
         public int Count
@@ -121,7 +130,7 @@ namespace QuantConnect.Data
         /// <param name="time">The timestamp for this slice of data</param>
         /// <param name="data">The raw data in this slice</param>
         public Slice(DateTime time, IEnumerable<BaseData> data)
-            : this(time, data, null, null, null, null, null)
+            : this(time, data, null, null, null, null, null, null)
         {
         }
 
@@ -135,7 +144,8 @@ namespace QuantConnect.Data
         /// <param name="splits">The splits for this slice</param>
         /// <param name="dividends">The dividends for this slice</param>
         /// <param name="delistings">The delistings for this slice</param>
-        public Slice(DateTime time, IEnumerable<BaseData> data, TradeBars tradeBars, Ticks ticks, Splits splits, Dividends dividends, Delistings delistings)
+        /// <param name="symbolChanges">The symbol changed events for this slice</param>
+        public Slice(DateTime time, IEnumerable<BaseData> data, TradeBars tradeBars, Ticks ticks, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges)
         {
             Time = time;
 
@@ -150,6 +160,7 @@ namespace QuantConnect.Data
             _splits = CreateSplitsCollection(splits);
             _dividends = CreateDividendsCollection(dividends);
             _delistings = CreateDelistingsCollection(delistings);
+            _symbolChangedEvents = CreateCollection<SymbolChangedEvents, SymbolChangedEvent>(symbolChanges);
         }
 
         /// <summary>
@@ -341,6 +352,27 @@ namespace QuantConnect.Data
                 delistings[delisting.Symbol] = delisting;
             }
             return delistings;
+        }
+
+        /// <summary>
+        /// Returns the input collection if onon-null, otherwise produces one from the dynamic data dictionary
+        /// </summary>
+        /// <typeparam name="T">The data dictionary type</typeparam>
+        /// <typeparam name="TItem">The item type of the data dictionary</typeparam>
+        /// <param name="collection">The input collection, if non-null, returned immediately</param>
+        /// <returns>The data dictionary of <typeparamref name="TItem"/> containing all the data of that type in this slice</returns>
+        private T CreateCollection<T, TItem>(T collection)
+            where T : DataDictionary<TItem>, new()
+            where TItem : BaseData
+        {
+            if (collection != null) return collection;
+            collection = new T();
+            collection.Time = Time;
+            foreach (var item in _data.Values.Select(x => x.GetData()).OfType<TItem>())
+            {
+                collection[item.Symbol] = item;
+            }
+            return collection;
         }
 
         /// <summary>

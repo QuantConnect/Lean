@@ -499,7 +499,13 @@ namespace QuantConnect.Algorithm
         // Event - v2.0 DELISTING EVENT HANDLER: (Pattern) Basic template for user to override when inspecting delisting data
         // </summary>
         // <param name="data">IDictionary of Delisting Data Keyed by Symbol String</param>
-        //public void OnDelisting(Delistings data)
+        //public void OnData(Delistings data)
+
+        // <summary>
+        // Event - v2.0 SYMBOL CHANGED EVENT HANDLER: (Pattern) Basic template for user to override when inspecting symbol changed data
+        // </summary>
+        // <param name="data">IDictionary of SymbolChangedEvent Data Keyed by Symbol String</param>
+        //public void OnData(SymbolChangedEvents data)
 
         /// <summary>
         /// Margin call event handler. This method is called right before the margin call orders are placed in the market.

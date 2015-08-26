@@ -119,6 +119,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Split split;
             Dividend dividend;
             Delisting delisting;
+            SymbolChangedEvent symbolChange;
 
             var algorithmTime = utcDateTime.ConvertFromUtc(algorithm.TimeZone);
             var tradeBars = new TradeBars(algorithmTime);
@@ -126,6 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var splits = new Splits(algorithmTime);
             var dividends = new Dividends(algorithmTime);
             var delistings = new Delistings(algorithmTime);
+            var symbolChanges = new SymbolChangedEvents(algorithmTime);
 
             foreach (var kvp in data)
             {
@@ -186,6 +188,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         splits[symbol] = split;
                     }
+                    else if ((symbolChange = baseData as SymbolChangedEvent) != null)
+                    {
+                        // symbol changes is keyed by the requested symbol
+                        symbolChanges[kvp.Key.SubscriptionDataConfig.Symbol] = symbolChange;
+                    }
                 }
 
                 // check for 'cash securities' if we found valid update data for this symbol
@@ -207,7 +214,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 consolidator.Add(new KeyValuePair<SubscriptionDataConfig, List<BaseData>>(kvp.Key.SubscriptionDataConfig, consolidatorUpdate));
             }
 
-            var slice = new Slice(utcDateTime.ConvertFromUtc(algorithm.TimeZone), allDataForAlgorithm, tradeBars, ticks, splits, dividends, delistings);
+            var slice = new Slice(utcDateTime.ConvertFromUtc(algorithm.TimeZone), allDataForAlgorithm, tradeBars, ticks, splits, dividends, delistings, symbolChanges);
 
             return new TimeSlice(utcDateTime, count, slice, data, cash, security, consolidator, custom, changes);
         }
