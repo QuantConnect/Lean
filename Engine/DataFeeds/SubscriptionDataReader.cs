@@ -475,8 +475,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (_hasScaleFactors)
                 {
                     // check to see if the symbol was remapped
-                    _mappedSymbol = _mapFile.GetMappedSymbol(date);
-                    _config.MappedSymbol = _mappedSymbol;
+                    var newSymbol = _mapFile.GetMappedSymbol(date);
+                    if (_mappedSymbol != "" && newSymbol != _mappedSymbol)
+                    {
+                        var changed = new SymbolChangedEvent(_config.Symbol, date, _mappedSymbol, _config.MappedSymbol);
+                        _auxiliaryData.Enqueue(changed);
+                    }
+                    _config.MappedSymbol = _mappedSymbol = newSymbol;
 
                     // update our price scaling factors in light of the normalization mode
                     UpdateScaleFactors(date);
