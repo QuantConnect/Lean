@@ -198,7 +198,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var earlyBirdTicks = long.MaxValue;
                     var data = new List<KeyValuePair<Security, List<BaseData>>>();
 
-                    foreach (var subscription in Subscriptions)
+                    // we union subscriptions with itself so if subscriptions changes on the first
+                    // iteration we will pick up those changes in the union call, this is used in
+                    // universe selection. an alternative is to extract this into a method and check
+                    // to see if changes != SecurityChanges.None, and re-run all subscriptions again,
+                    // This was added as quick fix due to an issue found in universe selection regression alg
+                    foreach (var subscription in Subscriptions.Union(Subscriptions))
                     {
                         if (subscription.EndOfStream)
                         {
