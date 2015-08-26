@@ -256,6 +256,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 //Error check
                 var order = GetOrderByIdInternal(request.OrderId);
+                if (order != null && request.Tag != null)
+                {
+                    order.Tag = request.Tag;
+                }
                 if (order == null)
                 {
                     Log.Error("BrokerageTransactionHandler.CancelOrder(): Cannot find this id.");
