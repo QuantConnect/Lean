@@ -34,18 +34,17 @@ namespace QuantConnect.Securities
     {
         private LocalTimeKeeper _localTimeKeeper;
 
-        private readonly string _symbol;
         private readonly bool _isDynamicallyLoadedData;
         private readonly SubscriptionDataConfig _config;
 
         /// <summary>
-        /// String symbol for the asset.
+        /// <see cref="Symbol"/> for the asset.
         /// </summary>
-        public string Symbol 
+        public Symbol Symbol 
         {
             get 
             {
-                return _symbol;
+                return _config.Symbol;
             }
         }
         
@@ -209,7 +208,6 @@ namespace QuantConnect.Securities
         public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false) 
         {
             _config = config;
-            _symbol = config.Symbol;
             _isDynamicallyLoadedData = isDynamicallyLoadedData;
 
             Cache = new SecurityCache();
@@ -441,7 +439,7 @@ namespace QuantConnect.Securities
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Symbol;
+            return Symbol.SID;
         }
     }
 }

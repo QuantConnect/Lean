@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm
         private Action<Slice> _onDataSlice;
 
         // set by SetBenchmark helper API functions
-        private string _benchmarkSymbol;
+        private Symbol _benchmarkSymbol = Symbol.Empty;
         private SecurityType _benchmarkSecurityType;
 
         /// <summary>
@@ -384,9 +384,9 @@ namespace QuantConnect.Algorithm
             if (Benchmark == null)
             {
                 // apply the default benchmark if it hasn't been set
-                if (string.IsNullOrEmpty(_benchmarkSymbol))
+                if (_benchmarkSymbol == Symbol.Empty)
                 {
-                    _benchmarkSymbol = "SPY";
+                    _benchmarkSymbol = new Symbol("SPY");
                     _benchmarkSecurityType = SecurityType.Equity;
                 }
 
@@ -535,9 +535,17 @@ namespace QuantConnect.Algorithm
         /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
         /// </summary>
         /// <param name="symbol">Asset symbol for this end of day event. Forex and equities have different closing hours.</param>
-        public virtual void OnEndOfDay(string symbol) 
+        public virtual void OnEndOfDay(string symbol)
         {
-            
+        }
+
+        /// <summary>
+        /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
+        /// </summary>
+        /// <param name="symbol">Asset symbol for this end of day event. Forex and equities have different closing hours.</param>
+        public virtual void OnEndOfDay(Symbol symbol)
+        {
+            OnEndOfDay(symbol.SID);
         }
 
         /// <summary>
@@ -652,9 +660,9 @@ namespace QuantConnect.Algorithm
         /// <remarks>
         /// Must use symbol that is available to the trade engine in your data store(not strictly enforced)
         /// </remarks>
-        public void SetBenchmark(SecurityType securityType, string symbol)
+        public void SetBenchmark(SecurityType securityType, Symbol symbol)
         {
-            _benchmarkSymbol = symbol.ToUpper();
+            _benchmarkSymbol = symbol;
             _benchmarkSecurityType = securityType;
         }
 
@@ -666,9 +674,9 @@ namespace QuantConnect.Algorithm
         /// <remarks>
         /// Overload to accept symbol without passing SecurityType. If symbol is in portfolio it will use that SecurityType, otherwise will default to SecurityType.Equity
         /// </remarks>
-        public void SetBenchmark(string symbol)
+        public void SetBenchmark(Symbol symbol)
         {
-            _benchmarkSymbol = symbol.ToUpper();
+            _benchmarkSymbol = symbol;
             _benchmarkSecurityType = SecurityType.Equity;
         }
 
@@ -961,7 +969,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="extendedMarketHours">Show the after market data as well</param>
-        public void AddSecurity(SecurityType securityType, string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false)
+        public void AddSecurity(SecurityType securityType, Symbol symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false)
         {
             AddSecurity(securityType, symbol, resolution, fillDataForward, 0, extendedMarketHours);
         }
@@ -975,8 +983,8 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <param name="extendedMarketHours">Extended market hours</param>
-        /// <remarks> AddSecurity(SecurityType securityType, string symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours)</remarks>
-        public void AddSecurity(SecurityType securityType, string symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours) 
+        /// <remarks> AddSecurity(SecurityType securityType, Symbol symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours)</remarks>
+        public void AddSecurity(SecurityType securityType, Symbol symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours) 
         {
             AddSecurity(securityType, symbol, resolution, null, fillDataForward, leverage, extendedMarketHours);
         }
@@ -991,7 +999,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
-        public void AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
+        public void AddSecurity(SecurityType securityType, Symbol symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
         {
             if (_locked)
             {
@@ -1020,7 +1028,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">Key/Symbol for data</param>
         /// <param name="resolution">Resolution of the data</param>
         /// <remarks>Generic type T must implement base data</remarks>
-        public void AddData<T>(string symbol, Resolution resolution = Resolution.Minute)
+        public void AddData<T>(Symbol symbol, Resolution resolution = Resolution.Minute)
             where T : BaseData, new()
         {
             if (_locked) return;
@@ -1041,7 +1049,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <remarks>Generic type T must implement base data</remarks>
-        public void AddData<T>(string symbol, Resolution resolution, bool fillDataForward, decimal leverage = 1.0m)
+        public void AddData<T>(Symbol symbol, Resolution resolution, bool fillDataForward, decimal leverage = 1.0m)
             where T : BaseData, new()
         {
             if (_locked) return;
@@ -1058,12 +1066,10 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <remarks>Generic type T must implement base data</remarks>
-        public void AddData<T>(string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public void AddData<T>(Symbol symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
             where T : BaseData, new()
         {
             if (_locked) return;
-
-            symbol = symbol.ToUpper();
 
             //Add this to the data-feed subscriptions
             var config = SubscriptionManager.Add(typeof(T), SecurityType.Base, symbol, resolution, "usa", timeZone, fillDataForward, true, false);

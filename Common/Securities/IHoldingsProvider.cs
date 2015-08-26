@@ -25,7 +25,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="symbol">The symbol to get holdings for</param>
         /// <returns>The holdings for the symbol or null if the symbol is invalid and/or not in the portfolio</returns>
-        Holding GetHoldings(string symbol);
+        Holding GetHoldings(Symbol symbol);
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ namespace QuantConnect.Securities
         /// <param name="provider">The <see cref="IHoldingsProvider"/></param>
         /// <param name="symbol">The symbol we want holdings quantity for</param>
         /// <returns>The quantity of holdings for the specified symbol</returns>
-        public static decimal GetHoldingsQuantity(this IHoldingsProvider provider, string symbol)
+        public static decimal GetHoldingsQuantity(this IHoldingsProvider provider, Symbol symbol)
         {
             var holding = provider.GetHoldings(symbol);
             return holding == null ? 0 : holding.Quantity;

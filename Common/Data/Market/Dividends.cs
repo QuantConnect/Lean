@@ -19,7 +19,7 @@ using System;
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// Collection of dividends keyed by string symbol
+    /// Collection of dividends keyed by <see cref="Symbol"/>
     /// </summary>
     public class Dividends : DataDictionary<Dividend>
     {

@@ -72,7 +72,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Symbol identifier of the underlying security.
         /// </summary>
-        public string Symbol
+        public Symbol Symbol
         {
             get
             {

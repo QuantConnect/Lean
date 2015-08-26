@@ -846,7 +846,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private void HandleSecurityHoldingUpdated(SecurityEvent holding)
         {
             // how close are we?
-            var securityHolding = _algorithm.Portfolio[holding.Symbol];
+            var securityHolding = _algorithm.Portfolio[new Symbol(holding.Symbol)];
             var deltaQuantity = securityHolding.Quantity - holding.Quantity;
             var deltaAvgPrice = securityHolding.AveragePrice - holding.AveragePrice;
             if (deltaQuantity != 0 || deltaAvgPrice != 0)

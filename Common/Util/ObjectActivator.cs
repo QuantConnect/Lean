@@ -19,6 +19,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using CloneExtensions;
 using Fasterflect;
+using QuantConnect.Data;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Util
 {
@@ -29,8 +31,14 @@ namespace QuantConnect.Util
     {
         private static readonly object _lock = new object();
         private static readonly object[] _emptyObjectArray = new object[0];
-        private static readonly Dictionary<Type, MethodInvoker> _cloneMethodsByType = new Dictionary<Type, MethodInvoker>(); 
-        private static readonly Dictionary<Type, Func<object[], object>> _activatorsByType = new Dictionary<Type, Func<object[], object>>(); 
+        private static readonly Dictionary<Type, MethodInvoker> _cloneMethodsByType = new Dictionary<Type, MethodInvoker>();
+        private static readonly Dictionary<Type, Func<object[], object>> _activatorsByType = new Dictionary<Type, Func<object[], object>>();
+
+        static ObjectActivator()
+        {
+            // we can reuse the symbol instance in the clone since it's immutable
+            CloneFactory.CustomInitializers.Add(typeof (Symbol), source => source);
+        }
 
         /// <summary>
         /// Fast Object Creator from Generic Type:

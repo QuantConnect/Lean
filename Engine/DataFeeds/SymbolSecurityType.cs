@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     internal sealed class SymbolSecurityType
     {
-        public readonly string Symbol;
+        public readonly Symbol Symbol;
         public readonly SecurityType SecurityType;
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="symbol">The symbol of the security</param>
         /// <param name="securityType">The security type of the security</param>
-        public SymbolSecurityType(string symbol, SecurityType securityType)
+        public SymbolSecurityType(Symbol symbol, SecurityType securityType)
         {
             if (symbol == null)
             {

@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
 {
@@ -42,7 +43,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Symbol of the Asset
         /// </summary>
-        public string Symbol { get; internal set; }
+        public Symbol Symbol { get; internal set; }
         
         /// <summary>
         /// Price of the Order.
@@ -128,7 +129,7 @@ namespace QuantConnect.Orders
             Time = new DateTime();
             Price = 0;
             Quantity = 0;
-            Symbol = "";
+            Symbol = Symbol.Empty;
             Status = OrderStatus.None;
             Tag = "";
             SecurityType = SecurityType.Base;
@@ -145,7 +146,7 @@ namespace QuantConnect.Orders
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        protected Order(string symbol, int quantity, DateTime time, string tag = "", SecurityType type = SecurityType.Base)
+        protected Order(Symbol symbol, int quantity, DateTime time, string tag = "", SecurityType type = SecurityType.Base)
         {
             Time = time;
             Price = 0;
@@ -167,7 +168,7 @@ namespace QuantConnect.Orders
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        protected Order(string symbol, SecurityType type, int quantity, DateTime time, string tag = "") 
+        protected Order(Symbol symbol, SecurityType type, int quantity, DateTime time, string tag = "") 
         {
             Time = time;
             Price = 0;

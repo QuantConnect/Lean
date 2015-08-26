@@ -15,6 +15,7 @@
 */
 
 using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Data.Market
 {
@@ -38,7 +39,7 @@ namespace QuantConnect.Data.Market
         /// <param name="date">The date</param>
         /// <param name="price">The price at the time of the split</param>
         /// <param name="splitFactor">The split factor to be applied to current holdings</param>
-        public Split(string symbol, DateTime date, decimal price, decimal splitFactor)
+        public Split(Symbol symbol, DateTime date, decimal price, decimal splitFactor)
              : this()
         {
             Symbol = symbol;

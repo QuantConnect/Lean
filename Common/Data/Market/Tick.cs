@@ -17,6 +17,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Data.Market
 {
@@ -78,7 +79,7 @@ namespace QuantConnect.Data.Market
         //public decimal Price;
 
         //Symbol of Asset.
-        //In Base Class: public string Symbol;
+        //In Base Class: public Symbol Symbol;
 
         //In Base Class: DateTime Of this TradeBar
         //public DateTime Time;
@@ -91,7 +92,7 @@ namespace QuantConnect.Data.Market
             Value = 0;
             Time = new DateTime();
             DataType = MarketDataType.Tick;
-            Symbol = "";
+            Symbol = Symbol.Empty;
             TickType = TickType.Trade;
             Quantity = 0;
             Exchange = "";
@@ -125,7 +126,7 @@ namespace QuantConnect.Data.Market
         /// <param name="symbol">Underlying currency pair we're trading</param>
         /// <param name="bid">FX tick bid value</param>
         /// <param name="ask">FX tick ask value</param>
-        public Tick(DateTime time, string symbol, decimal bid, decimal ask)
+        public Tick(DateTime time, Symbol symbol, decimal bid, decimal ask)
         {
             DataType = MarketDataType.Tick;
             Time = time;
@@ -145,7 +146,7 @@ namespace QuantConnect.Data.Market
         /// <param name="bid">Bid value</param>
         /// <param name="ask">Ask value</param>
         /// <param name="last">Last trade price</param>
-        public Tick(DateTime time, string symbol, decimal last, decimal bid, decimal ask)
+        public Tick(DateTime time, Symbol symbol, decimal last, decimal bid, decimal ask)
         {
             DataType = MarketDataType.Tick;
             Time = time;
@@ -161,7 +162,7 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="symbol">Symbol for underlying asset</param>
         /// <param name="line">CSV line of data from FXCM</param>
-        public Tick(string symbol, string line)
+        public Tick(Symbol symbol, string line)
         {
             var csv = line.Split(',');
             DataType = MarketDataType.Tick;
@@ -179,7 +180,7 @@ namespace QuantConnect.Data.Market
         /// <param name="symbol">Symbol for underlying asset</param>
         /// <param name="line">CSV line of data from QC tick csv</param>
         /// <param name="baseDate">The base date of the tick</param>
-        public Tick(string symbol, string line, DateTime baseDate)
+        public Tick(Symbol symbol, string line, DateTime baseDate)
         {
             var csv = line.Split(',');
             DataType = MarketDataType.Tick;
@@ -282,7 +283,7 @@ namespace QuantConnect.Data.Market
                 dataType = TickType.Quote;
             }
 
-            var symbol = string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol;
+            var symbol = string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol.SID : config.MappedSymbol;
             var securityType = config.SecurityType.ToString().ToLower();
             var market = config.Market.ToLower();
             var resolution = config.Resolution.ToString().ToLower();

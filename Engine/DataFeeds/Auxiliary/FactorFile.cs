@@ -32,23 +32,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         /// <summary>
         /// Gets the symbol this factor file represents
         /// </summary>
-        public string Symbol { get; private set; }
+        public string Permtick { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FactorFile"/> class.
         /// </summary>
-        public FactorFile(string symbol, IEnumerable<FactorFileRow> data)
+        public FactorFile(string permtick, IEnumerable<FactorFileRow> data)
         {
-            Symbol = symbol;
+            Permtick = permtick;
             _data = new SortedList<DateTime, FactorFileRow>(data.ToDictionary(x => x.Date));
         }
 
         /// <summary>
         /// Reads a FactorFile in from the <see cref="Constants.DataFolder"/>.
         /// </summary>
-        public static FactorFile Read(string symbol, string market)
+        public static FactorFile Read(string permtick, string market)
         {
-            return new FactorFile(symbol, FactorFileRow.Read(symbol, market));
+            return new FactorFile(permtick, FactorFileRow.Read(permtick, market));
         }
 
         /// <summary>
@@ -84,15 +84,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         /// <summary>
         /// Checks whether or not a symbol has scaling factors
         /// </summary>
-        public static bool HasScalingFactors(string symbol, string market)
+        public static bool HasScalingFactors(string permtick, string market)
         {
             // check for factor files
-            var path = Path.Combine(Constants.DataFolder, "equity", market, "factor_files", symbol.ToLower() + ".csv");
+            var path = Path.Combine(Constants.DataFolder, "equity", market, "factor_files", permtick.ToLower() + ".csv");
             if (File.Exists(path))
             {
                 return true;
             }
-            Log.Trace("FactorFile.HasScalingFactors(): Factor file not found: " + symbol);
+            Log.Trace("FactorFile.HasScalingFactors(): Factor file not found: " + permtick);
             return false;
         }
 

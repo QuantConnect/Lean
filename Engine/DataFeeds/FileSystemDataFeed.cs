@@ -116,9 +116,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return null;
             }
 
-            var symbolResolutionDate = userDefined ? (DateTime?)null : start;
             // ReSharper disable once PossibleMultipleEnumeration
-            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, security, start, end, resultHandler, tradeableDates, false, symbolResolutionDate);
+            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, security, start, end, resultHandler, tradeableDates, false);
 
             // optionally apply fill forward logic, but never for tick data
             if (config.FillDataForward && config.Resolution != Resolution.Tick)
@@ -327,7 +326,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private void AddSubscriptionForUniverseSelectionMarket(string market)
         {
             var exchangeHours = SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(market, null, SecurityType.Equity);
-            var symbolName = market + "-market";
+            var symbolName = new Symbol(market + "-coarse");
             var subscriptionDataConfig = new SubscriptionDataConfig(typeof (CoarseFundamental), SecurityType.Equity, symbolName, Resolution.Daily, market, exchangeHours.TimeZone,
                 true, false, true);
             var security = new Security(exchangeHours, subscriptionDataConfig, 1);

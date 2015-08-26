@@ -136,10 +136,8 @@ namespace QuantConnect.Scheduling
         /// <param name="minutesAfterOpen">The time after market open that the event should fire</param>
         /// <param name="extendedMarketOpen">True to use extended market open, false to use regular market open</param>
         /// <returns>A time rule that fires the specified number of minutes after the symbol's market open</returns>
-        public ITimeRule AfterMarketOpen(string symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false)
+        public ITimeRule AfterMarketOpen(Symbol symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false)
         {
-            symbol = symbol.ToUpper();
-
             var security = GetSecurity(symbol);
 
             var type = extendedMarketOpen ? "ExtendedMarketOpen" : "MarketOpen";
@@ -164,10 +162,8 @@ namespace QuantConnect.Scheduling
         /// <param name="minuteBeforeClose">The time before market close that the event should fire</param>
         /// <param name="extendedMarketClose">True to use extended market close, false to use regular market close</param>
         /// <returns>A time rule that fires the specified number of minutes before the symbol's market close</returns>
-        public ITimeRule BeforeMarketClose(string symbol, double minuteBeforeClose = 0, bool extendedMarketClose = false)
+        public ITimeRule BeforeMarketClose(Symbol symbol, double minuteBeforeClose = 0, bool extendedMarketClose = false)
         {
-            symbol = symbol.ToUpper();
-
             var security = GetSecurity(symbol);
 
             var type = extendedMarketClose ? "ExtendedMarketClose" : "MarketClose";
@@ -185,12 +181,12 @@ namespace QuantConnect.Scheduling
             return new FuncTimeRule(name, applicator);
         }
 
-        private Security GetSecurity(string symbol)
+        private Security GetSecurity(Symbol symbol)
         {
             Security security;
             if (!_securities.TryGetValue(symbol, out security))
             {
-                throw new Exception(symbol + " not found in portfolio. Request this data when initializing the algorithm.");
+                throw new Exception(symbol.SID + " not found in portfolio. Request this data when initializing the algorithm.");
             }
             return security;
         }

@@ -30,7 +30,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Easy access to the order symbol associated with this event.
         /// </summary>
-        public string Symbol;
+        public Symbol Symbol;
 
         /// <summary>
         /// Status message of the order.
@@ -81,7 +81,7 @@ namespace QuantConnect.Orders
         /// <param name="fillPrice">Fill price information if applicable.</param>
         /// <param name="fillQuantity">Fill quantity</param>
         /// <param name="message">Message from the exchange</param>
-        public OrderEvent(int id, string symbol, OrderStatus status, OrderDirection direction, decimal fillPrice, int fillQuantity, string message = "")
+        public OrderEvent(int id, Symbol symbol, OrderStatus status, OrderDirection direction, decimal fillPrice, int fillQuantity, string message = "")
         {
             OrderId = id;
             Status = status;

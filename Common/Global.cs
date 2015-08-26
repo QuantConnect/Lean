@@ -86,7 +86,7 @@ namespace QuantConnect
         public Holding(Securities.SecurityHolding holding)
              : this()
         {
-            Symbol = holding.Symbol;
+            Symbol = holding.Symbol.Value;
             Type = holding.Type;
             Quantity = holding.Quantity;
 
@@ -95,7 +95,7 @@ namespace QuantConnect
             {
                 rounding = 5;
                 string basec, quotec;
-                Forex.DecomposeCurrencyPair(holding.Symbol, out basec, out quotec);
+                Forex.DecomposeCurrencyPair(holding.Symbol.Value, out basec, out quotec);
                 CurrencySymbol = Forex.CurrencySymbols[quotec];
                 ConversionRate = ((ForexHolding) holding).ConversionRate;
             }

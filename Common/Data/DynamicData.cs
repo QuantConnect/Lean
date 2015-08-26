@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq.Expressions;
 using System.Reflection;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Data
 {
@@ -57,7 +58,7 @@ namespace QuantConnect.Data
             }
             if (name == "symbol")
             {
-                Symbol = (string)value;
+                Symbol = new Symbol((string) value);
             }
             // reaodnly
             //if (name == "Price")

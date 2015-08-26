@@ -11,32 +11,26 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using System;
+using System.Collections.Generic;
+using NUnit.Framework;
 
-namespace QuantConnect.Data.Market
+namespace QuantConnect.Tests.Common.Securities
 {
-    /// <summary>
-    /// Collection of splits keyed by <see cref="Symbol"/>
-    /// </summary>
-    public class Splits : DataDictionary<Split>
+    [TestFixture]
+    public class SymbolTests
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Splits"/> dictionary
-        /// </summary>
-        public Splits()
+        [Test]
+        public void UsesSidForDictionaryKey()
         {
-        }
+            var dictionary = new Dictionary<Symbol, int>
+            {
+                {new Symbol("sid", "value"), 1}
+            };
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Splits"/> dictionary
-        /// </summary>
-        /// <param name="frontier">The time associated with the data in this dictionary</param>
-        public Splits(DateTime frontier)
-            : base(frontier)
-        {
+            var key = new Symbol("sid", "other value");
+            Assert.IsTrue(dictionary.ContainsKey(key));
         }
     }
 }

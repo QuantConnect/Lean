@@ -19,7 +19,7 @@ using System;
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// Collections of <see cref="Delisting"/> keyed by string symbol
+    /// Collections of <see cref="Delisting"/> keyed by <see cref="Symbol"/>
     /// </summary>
     public class Delistings : DataDictionary<Delisting>
     {

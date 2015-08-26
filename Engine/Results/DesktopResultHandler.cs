@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -296,7 +297,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="symbol">Symbol we're sampling.</param>
         /// <param name="time">Time of sample</param>
         /// <param name="value">Value of the asset price</param>
-        public void SampleAssetPrices(string symbol, DateTime time, decimal value)
+        public void SampleAssetPrices(Symbol symbol, DateTime time, decimal value)
         { 
             //NOP. Don't sample asset prices in console.
         }

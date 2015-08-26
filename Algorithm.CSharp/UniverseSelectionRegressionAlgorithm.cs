@@ -14,10 +14,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -26,6 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class UniverseSelectionRegressionAlgorithm : QCAlgorithm
     {
+        private HashSet<Symbol> _delistedSymbols = new HashSet<Symbol>(); 
         private SecurityChanges _changes;
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -42,9 +45,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetUniverse(coarse =>
             {
-                var startsWithGoo = coarse.Where(x => x.Symbol.StartsWith("GOO")).ToList();
+                var startsWithGoo = coarse.Where(x => x.Symbol.SID.StartsWith("GOO")).ToList();
                 return from c in coarse
-                       where c.Symbol == "GOOG" || c.Symbol == "GOOCV" || c.Symbol == "GOOAV" || c.Symbol == "GOOGL"
+                       let sym = c.Symbol.Value
+                       where sym == "GOOG" || sym == "GOOCV" || sym == "GOOAV" || sym == "GOOGL"
                        select c;
             });
         }
@@ -55,17 +59,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            foreach (var kvp in data.Delistings)
+            {
+                _delistedSymbols.Add(kvp.Key);
+            }
+
             if (Transactions.OrdersCount == 0)
             {
                 MarketOrder("GOOG", 100);
-            }
-
-            if (data.Delistings.Count != 0)
-            {
-                foreach (var kvp in data.Delistings)
-                {
-                    Liquidate(kvp.Key);
-                }
             }
 
             if (Time.Date == new DateTime(2014, 04, 07))
@@ -77,13 +78,16 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 foreach (var security in _changes.AddedSecurities)
                 {
-                    Log("Purchasing: " + security.Symbol);
+                    Console.WriteLine(Time + ": Added: " + security.Symbol);
                     MarketOnOpenOrder(security.Symbol, 100);
                 }
                 foreach (var security in _changes.RemovedSecurities)
                 {
-                    Log("Selling: " + security.Symbol);
-                    MarketOnOpenOrder(security.Symbol, -100);
+                    Console.WriteLine(Time + ": Removed: " + security.Symbol);
+                    if (!_delistedSymbols.Contains(security.Symbol))
+                    {
+                        MarketOnOpenOrder(security.Symbol, -100);
+                    }
                 }
                 _changes = null;
             }
@@ -100,7 +104,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (orderEvent.Status.IsFill())
             {
-                Log("Filled " + Transactions.GetOrderById(orderEvent.OrderId));
+                Console.WriteLine(Time + ": Filled: " + Transactions.GetOrderById(orderEvent.OrderId));
             }
         }
 

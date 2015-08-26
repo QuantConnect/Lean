@@ -109,7 +109,7 @@ namespace QuantConnect.Brokerages
 
             // switch on the currency being bought
             string baseCurrency, quoteCurrency;
-            Forex.DecomposeCurrencyPair(order.Symbol, out baseCurrency, out quoteCurrency);
+            Forex.DecomposeCurrencyPair(order.Symbol.Value, out baseCurrency, out quoteCurrency);
 
 
             decimal max;

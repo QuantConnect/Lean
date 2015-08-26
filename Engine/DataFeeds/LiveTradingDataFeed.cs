@@ -179,9 +179,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var onDay = onHour && localTime.Hour == 0;
 
                     // perform universe selection if requested on day changes (don't perform multiple times per market)
-                    if (onDay && _algorithm.Universe != null && !performedUniverseSelection.Contains(subscription.Configuration.Market))
+                    if (onDay && _algorithm.Universe != null && performedUniverseSelection.Add(subscription.Configuration.Market))
                     {
-                        performedUniverseSelection.Add(subscription.Configuration.Market);
                         var coarse = UniverseSelection.GetCoarseFundamentals(subscription.Configuration.Market, subscription.TimeZone, localTime.Date, true);
                         changes = _universeSelection.ApplyUniverseSelection(localTime.Date, subscription.Configuration.Market, coarse);
                     }
@@ -248,7 +247,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var symbols = (from security in _algorithm.Securities.Values
                            where !security.IsDynamicallyLoadedData && (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
-                           select security.Symbol).ToList<string>();
+                           select security.Symbol.SID).ToList<string>();
 
             Log.Trace("LiveTradingDataFeed.Stream(): Market open, starting stream for " + string.Join(",", symbols));
 
@@ -473,8 +472,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     periodStart, Time.EndOfTime,
                     resultHandler,
                     Time.EachTradeableDay(algorithm.Securities.Values, periodStart, periodEnd),
-                    true,
-                    DateTime.UtcNow.ConvertFromUtc(algorithm.TimeZone).Date
+                    true
                     );
 
                 // wrap the subscription data reader with a filter enumerator
@@ -497,7 +495,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
                 {
                     if (!symbols.ContainsKey(security.Type)) symbols.Add(security.Type, new List<string>());
-                    symbols[security.Type].Add(security.Symbol);
+                    symbols[security.Type].Add(security.Symbol.SID);
                 }
             }
             return symbols;

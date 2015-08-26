@@ -42,10 +42,10 @@ namespace QuantConnect.Tests.Brokerages
             set { _holdings[symbol] = value; }
         }
 
-        public Holding GetHoldings(string symbol)
+        public Holding GetHoldings(Symbol symbol)
         {
             Holding holding;
-            _holdings.TryGetValue(symbol, out holding);
+            _holdings.TryGetValue(symbol.Value, out holding);
             return holding;
         }
 

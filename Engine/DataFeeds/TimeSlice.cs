@@ -110,7 +110,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var allDataForAlgorithm = new List<BaseData>(data.Count);
             var cash = new List<KeyValuePair<Cash, BaseData>>(algorithm.Portfolio.CashBook.Count);
 
-            var cashSecurities = new HashSet<string>();
+            var cashSecurities = new HashSet<Symbol>();
             foreach (var cashItem in algorithm.Portfolio.CashBook.Values)
             {
                 cashSecurities.Add(cashItem.SecuritySymbol);

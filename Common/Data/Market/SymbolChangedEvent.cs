@@ -15,6 +15,7 @@
 */
 
 using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Data.Market
 {
@@ -49,7 +50,7 @@ namespace QuantConnect.Data.Market
         /// <param name="date">The date/time this symbol remapping took place</param>
         /// <param name="oldSymbol">The old symbol mapping</param>
         /// <param name="newSymbol">The new symbol mapping</param>
-        public SymbolChangedEvent(string requestedSymbol, DateTime date, string oldSymbol, string newSymbol)
+        public SymbolChangedEvent(Symbol requestedSymbol, DateTime date, string oldSymbol, string newSymbol)
             : this()
         {
             Time = date;

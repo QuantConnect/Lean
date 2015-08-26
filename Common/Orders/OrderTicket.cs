@@ -68,7 +68,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Gets the symbol being ordered
         /// </summary>
-        public string Symbol
+        public Symbol Symbol
         {
             get { return _submitRequest.Symbol; }
         }
@@ -360,7 +360,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderTicket InvalidCancelOrderId(SecurityTransactionManager transactionManager, CancelOrderRequest request)
         {
-            var submit = new SubmitOrderRequest(OrderType.Market, SecurityType.Base, string.Empty, 0, 0, 0, DateTime.MaxValue, string.Empty);
+            var submit = new SubmitOrderRequest(OrderType.Market, SecurityType.Base, Symbol.Empty, 0, 0, 0, DateTime.MaxValue, string.Empty);
             submit.SetResponse(OrderResponse.UnableToFindOrder(request));
             var ticket = new OrderTicket(transactionManager, submit);
             request.SetResponse(OrderResponse.UnableToFindOrder(request));
@@ -374,7 +374,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderTicket InvalidUpdateOrderId(SecurityTransactionManager transactionManager, UpdateOrderRequest request)
         {
-            var submit = new SubmitOrderRequest(OrderType.Market, SecurityType.Base, string.Empty, 0, 0, 0, DateTime.MaxValue, string.Empty);
+            var submit = new SubmitOrderRequest(OrderType.Market, SecurityType.Base, Symbol.Empty, 0, 0, 0, DateTime.MaxValue, string.Empty);
             submit.SetResponse(OrderResponse.UnableToFindOrder(request));
             var ticket = new OrderTicket(transactionManager, submit);
             request.SetResponse(OrderResponse.UnableToFindOrder(request));

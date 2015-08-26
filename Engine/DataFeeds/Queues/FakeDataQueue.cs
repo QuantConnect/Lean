@@ -23,6 +23,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using Timer = System.Timers.Timer;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Queues
@@ -136,7 +137,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                     _ticks.Enqueue(new Tick
                     {
                         Time = DateTime.Now,
-                        Symbol = symbol,
+                        Symbol = new Symbol(symbol),
                         Value = 10 + (decimal)Math.Abs(Math.Sin(DateTime.Now.TimeOfDay.TotalMinutes)),
                         TickType = TickType.Trade,
                         Quantity = _random.Next(10, (int)_timer.Interval)

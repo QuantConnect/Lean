@@ -15,10 +15,12 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
 {
@@ -26,34 +28,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
     /// Provides a means of mapping a symbol at a point in time to the map file
     /// containing that share class's mapping information
     /// </summary>
-    public class MapFileResolver
+    public class MapFileResolver : IEnumerable<MapFile>
     {
-        private readonly Dictionary<string, MapFile> _mapFilesByPath;
+        private readonly Dictionary<string, MapFile> _mapFilesByEntitySymbol;
         private readonly Dictionary<string, SortedList<DateTime, MapFileRowEntry>> _bySymbol;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFileResolver"/> by reading
         /// in all files in the specified directory.
         /// </summary>
-        /// <param name="mapFilesByMapFilePath">The data used to initialize this resolver. Each key 
-        /// is the path to the map file and each value is the data contained in the map file</param>
-        public MapFileResolver(IEnumerable<KeyValuePair<string, MapFile>> mapFilesByMapFilePath)
+        /// <param name="mapFiles">The data used to initialize this resolver.</param>
+        public MapFileResolver(IEnumerable<MapFile> mapFiles)
         {
-            _mapFilesByPath = new Dictionary<string, MapFile>();
-            _bySymbol = new Dictionary<string, SortedList<DateTime, MapFileRowEntry>>();
+            _mapFilesByEntitySymbol = new Dictionary<string, MapFile>(StringComparer.InvariantCultureIgnoreCase);
+            _bySymbol = new Dictionary<string, SortedList<DateTime, MapFileRowEntry>>(StringComparer.InvariantCultureIgnoreCase);
 
-            foreach (var kvp in mapFilesByMapFilePath)
+            foreach (var mapFile in mapFiles)
             {
-                var mapFile = kvp.Value;
-                var mapFilePath = Path.GetFullPath(kvp.Key);
-
                 // add to our by path map
-                _mapFilesByPath.Add(mapFilePath, mapFile);
+                _mapFilesByEntitySymbol.Add(mapFile.Permtick, mapFile);
 
                 foreach (var row in mapFile)
                 {
                     SortedList<DateTime, MapFileRowEntry> entries;
-                    var mapFileRowEntry = new MapFileRowEntry(mapFilePath, row);
+                    var mapFileRowEntry = new MapFileRowEntry(mapFile.Permtick, row);
 
                     if (!_bySymbol.TryGetValue(row.MappedSymbol, out entries))
                     {
@@ -86,49 +84,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         /// <returns>The collection of map files capable of mapping equity symbols within the specified market</returns>
         public static MapFileResolver Create(string dataDirectory, string market)
         {
-            var path = Path.Combine(dataDirectory, "equity", market.ToLower(), "map_files");
-
-            var files = from file in Directory.EnumerateFiles(path)
-                        where file.EndsWith(".csv")
-                        let entitySymbol = Path.GetFileNameWithoutExtension(file)
-                        let fileRead = SafeMapFileRowRead(file) ?? new List<MapFileRow>()
-                        let mapFileByPath = new KeyValuePair<string, MapFile>(file, new MapFile(entitySymbol, fileRead))
-                        where mapFileByPath.Value != null
-                        select mapFileByPath;
-
-            return new MapFileResolver(files);
+            return Create(Path.Combine(dataDirectory, "equity", market.ToLower(), "map_files"));
         }
 
         /// <summary>
-        /// Resolves the map file path containing the mapping information for the symbol defined at <paramref name="date"/>
+        /// Creates a new instance of the <see cref="MapFileResolver"/> class by reading all map files
+        /// for the specified market into memory
         /// </summary>
-        /// <param name="symbol">The symbol as of <paramref name="date"/> to be mapped</param>
-        /// <param name="date">The date associated with the <paramref name="symbol"/></param>
-        /// <returns>The map file path responsible for mapping the symbol, if no map file is found, null is returned</returns>
-        public string ResolveMapFilePath(string symbol, DateTime date)
+        /// <param name="mapFileDirectory">The directory containing the map files</param>
+        /// <returns>The collection of map files capable of mapping equity symbols within the specified market</returns>
+        public static MapFileResolver Create(string mapFileDirectory)
         {
-            // lookup the symbol's history
-            SortedList<DateTime, MapFileRowEntry> entries;
-            if (!_bySymbol.TryGetValue(symbol.ToUpper(), out entries))
-            {
-                // secondary search for exact mapping, find path than ends with symbol.csv
-                var entry = _mapFilesByPath.FirstOrDefault(x => x.Key.EndsWith(symbol + ".csv", StringComparison.InvariantCultureIgnoreCase));
-                // if found, return path, if not found return null
-                return entry.Key;
-            }
+            var files = from file in Directory.EnumerateFiles(mapFileDirectory)
+                        where file.EndsWith(".csv")
+                        let entitySymbol = Path.GetFileNameWithoutExtension(file)
+                        let fileRead = SafeMapFileRowRead(file) ?? new List<MapFileRow>()
+                        select new MapFile(entitySymbol, fileRead);
 
-            // figure out what map file maps the specified symbol on the from date
-            string mapFile = null;
-            foreach (var kvp in entries)
-            {
-                mapFile = kvp.Value.MapFile;
-                if (kvp.Key >= date)
-                {
-                    break;
-                }
-            }
-
-            return mapFile;
+            return new MapFileResolver(files);
         }
 
         /// <summary>
@@ -139,12 +112,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         /// <returns>The map file responsible for mapping the symbol, if no map file is found, null is returned</returns>
         public MapFile ResolveMapFile(string symbol, DateTime date)
         {
-            var path = ResolveMapFilePath(symbol, date);
-
-            MapFile mapFile;
-            if (path == null || !_mapFilesByPath.TryGetValue(path, out mapFile))
+            // lookup the symbol's history
+            SortedList<DateTime, MapFileRowEntry> entries;
+            if (_bySymbol.TryGetValue(symbol, out entries))
             {
-                // return empty default instances if unable to resolve
+                if (entries.Count == 0)
+                {
+                    return new MapFile(symbol, new List<MapFileRow>());
+                }
+
+                var indexOf = entries.Keys.BinarySearch(date);
+                if (indexOf >= 0)
+                {
+                    symbol = entries.Values[indexOf].EntitySymbol;
+                }
+                else
+                {
+                    // if negative, it's the bitwise complement of where it should be
+                    indexOf = ~indexOf;
+                    if (indexOf < 0 || indexOf > entries.Values.Count - 1)
+                    {
+                        return new MapFile(symbol, new List<MapFileRow>());
+                    }
+                    symbol = entries.Values[indexOf].EntitySymbol;
+                }
+            }
+            // secondary search for exact mapping, find path than ends with symbol.csv
+            MapFile mapFile;
+            if (!_mapFilesByEntitySymbol.TryGetValue(symbol, out mapFile))
+            {
                 return new MapFile(symbol, new List<MapFileRow>());
             }
             return mapFile;
@@ -153,7 +149,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         /// <summary>
         /// Reads in the map file at the specified path, returning null if any exceptions are encountered
         /// </summary>
-        private static List<MapFileRow> SafeMapFileRowRead(string file)
+        public static List<MapFileRow> SafeMapFileRowRead(string file)
         {
             try
             {
@@ -179,17 +175,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
             /// <summary>
             /// Gets the full path to the map file that produced this row
             /// </summary>
-            public string MapFile { get; private set; }
+            public string EntitySymbol { get; private set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="MapFileRowEntry"/> class
             /// </summary>
-            /// <param name="mapFile">The map file that produced this row</param>
+            /// <param name="entitySymbol">The map file that produced this row</param>
             /// <param name="mapFileRow">The map file row data</param>
-            public MapFileRowEntry(string mapFile, MapFileRow mapFileRow)
+            public MapFileRowEntry(string entitySymbol, MapFileRow mapFileRow)
             {
                 MapFileRow = mapFileRow;
-                MapFile = Path.GetFullPath(mapFile);
+                EntitySymbol = entitySymbol;
             }
 
             /// <summary>
@@ -215,8 +211,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
             /// <filterpriority>2</filterpriority>
             public override string ToString()
             {
-                return MapFileRow.Date + ": " + MapFileRow.MappedSymbol + ": " + MapFile;
+                return MapFileRow.Date + ": " + MapFileRow.MappedSymbol + ": " + EntitySymbol;
             }
         }
+
+        #region Implementation of IEnumerable
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>1</filterpriority>
+        public IEnumerator<MapFile> GetEnumerator()
+        {
+            return _mapFilesByEntitySymbol.Values.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.IEnumerator"/> object that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        #endregion
     }
 }
