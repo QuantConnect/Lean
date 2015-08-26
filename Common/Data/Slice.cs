@@ -154,12 +154,12 @@ namespace QuantConnect.Data
             // market data
             _data = CreateDynamicDataDictionary(data);
             _ticks = CreateTicksCollection(ticks);
-            _bars = CreateTradeBarsCollection(tradeBars);
+            _bars = CreateCollection<TradeBars, TradeBar>(tradeBars);
 
             // auxiliary data
-            _splits = CreateSplitsCollection(splits);
-            _dividends = CreateDividendsCollection(dividends);
-            _delistings = CreateDelistingsCollection(delistings);
+            _splits = CreateCollection<Splits, Split>(splits);
+            _dividends = CreateCollection<Dividends, Dividend>(dividends);
+            _delistings = CreateCollection<Delistings, Delisting>(delistings);
             _symbolChangedEvents = CreateCollection<SymbolChangedEvents, SymbolChangedEvent>(symbolChanges);
         }
 
@@ -296,62 +296,6 @@ namespace QuantConnect.Data
                 ticks[listTicks[0].Symbol] = listTicks;
             }
             return ticks;
-        }
-
-        /// <summary>
-        /// Returns the input tradebars if non-null, otherwise produces one fom the dynamic data dictionary
-        /// </summary>
-        private TradeBars CreateTradeBarsCollection(TradeBars tradeBars)
-        {
-            if (tradeBars != null) return tradeBars;
-            tradeBars = new TradeBars(Time);
-            foreach (var bar in _data.Values.Select(x => x.GetData()).OfType<TradeBar>())
-            {
-                tradeBars[bar.Symbol] = bar;
-            }
-            return tradeBars;
-        }
-
-        /// <summary>
-        /// Returns the input splits if non-null, otherwise produces one fom the dynamic data dictionary
-        /// </summary>
-        private Splits CreateSplitsCollection(Splits splits)
-        {
-            if (splits != null) return splits;
-            splits = new Splits(Time);
-            foreach (var split in _data.Values.Select(x => x.GetData()).OfType<Split>())
-            {
-                splits[split.Symbol] = split;
-            }
-            return splits;
-        }
-
-        /// <summary>
-        /// Returns the input dividends if non-null, otherwise produces one fom the dynamic data dictionary
-        /// </summary>
-        private Dividends CreateDividendsCollection(Dividends dividends)
-        {
-            if (dividends != null) return dividends;
-            dividends = new Dividends(Time);
-            foreach (var dividend in _data.Values.Select(x => x.GetData()).OfType<Dividend>())
-            {
-                dividends[dividend.Symbol] = dividend;
-            }
-            return dividends;
-        }
-
-        /// <summary>
-        /// Returns the input delistings if non-null, otherwise produces one from the dynamic data dictionary
-        /// </summary>
-        private Delistings CreateDelistingsCollection(Delistings delistings)
-        {
-            if (delistings != null) return delistings;
-            delistings = new Delistings(Time);
-            foreach (var delisting in _data.Values.Select(x => x.GetData()).OfType<Delisting>())
-            {
-                delistings[delisting.Symbol] = delisting;
-            }
-            return delistings;
         }
 
         /// <summary>
