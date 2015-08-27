@@ -53,9 +53,8 @@ namespace QuantConnect.Tests.Indicators
         public void CompareAgainstExternalData()
         {
             var logr = new LogReturn(14);
-            // TODO: add LOGR to test indicators.
-            // Didn't find one of 'Close' or 'LOGR14' in the header: Date,SMA14,EMA14,MACD 12 26,RSI 14,OBV ,Close
-            //TestHelper.TestIndicator(logr, "LOGR14", 1e-2); // test file only has
+            double epsilon = 1e-3;
+            TestHelper.TestIndicator(logr, "spy_logr14.txt", "LOGR14", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, epsilon));
         }
     }
 }
