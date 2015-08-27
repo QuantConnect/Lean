@@ -48,6 +48,7 @@
     <Compile Include="AverageDirectionalIndex.cs" />
     <Compile Include="DonchianChannel.cs" />
     <Compile Include="IchimokuKinkoHyo.cs" />
+    <Compile Include="LogReturn.cs" />
     <Compile Include="OnBalanceVolume.cs" />
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>

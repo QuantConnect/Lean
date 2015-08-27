@@ -111,6 +111,7 @@
     <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
     <Compile Include="Indicators\DonchianChannelTest.cs" />
     <Compile Include="Indicators\IchimokuKinkoHyoTests.cs" />
+    <Compile Include="Indicators\LogReturnTests.cs" />
     <Compile Include="Indicators\OnBalanceVolumeTest.cs" />
     <Compile Include="Indicators\WilliamsPercentRTests.cs" />
     <Compile Include="Indicators\RateOfChangePercentTests.cs" />
@@ -268,6 +269,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_bollinger_bands.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_logr14.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_mfi.txt">

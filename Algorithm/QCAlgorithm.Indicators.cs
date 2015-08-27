@@ -538,6 +538,21 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new LogReturn indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose log return we seek</param>
+        /// <param name="period">The period of the log return.</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <returns>log return indicator for the requested symbol.</returns>
+        public LogReturn LOGR(string symbol, int period, Resolution? resolution = null)
+        {
+            string name = CreateIndicatorName(symbol, "LOGR", resolution);
+            var logr = new LogReturn(name, period);
+            RegisterIndicator(symbol, logr, resolution);
+            return logr;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
