@@ -19,6 +19,8 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     ///     Represents the LogReturn indicator (LOGR)
+    ///      - log returns are useful for identifying price convergence/divergence in a given period
+    ///      - logr = log (current price / last price in period)
     /// </summary>
     public class LogReturn : WindowIndicator<IndicatorDataPoint>
     {
@@ -43,6 +45,7 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         ///     Computes the next value for this indicator from the given state.
+        ///      - logr = log (current price / last price in period)
         /// </summary>
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input value to this indicator on this time step</param>
