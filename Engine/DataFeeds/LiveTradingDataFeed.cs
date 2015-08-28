@@ -179,9 +179,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var onDay = onHour && localTime.Hour == 0;
 
                     // perform universe selection if requested on day changes (don't perform multiple times per market)
-                    if (onDay && _algorithm.Universe != null && !performedUniverseSelection.Contains(subscription.Configuration.Symbol))
+                    if (onDay && _algorithm.Universe != null && !performedUniverseSelection.Contains(subscription.Configuration.Market))
                     {
-                        performedUniverseSelection.Add(subscription.Configuration.Symbol);
+                        performedUniverseSelection.Add(subscription.Configuration.Market);
                         var coarse = UniverseSelection.GetCoarseFundamentals(subscription.Configuration.Market, subscription.TimeZone, localTime.Date, true);
                         changes = _universeSelection.ApplyUniverseSelection(localTime.Date, subscription.Configuration.Market, coarse);
                     }
