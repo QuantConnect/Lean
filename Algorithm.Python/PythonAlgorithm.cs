@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-using QuantConnect.Data.Market;
-
 namespace QuantConnect.Algorithm.Python
 {
     /*  This is a place holder project for the build script & python file configurations.

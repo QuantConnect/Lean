@@ -14,10 +14,11 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using System.Runtime.Serialization;
-using System.Collections.Generic;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 
 namespace QuantConnect
@@ -48,7 +49,7 @@ namespace QuantConnect
     /// <summary>
     /// Singular holding of assets from backend live nodes:
     /// </summary>
-    [JsonObjectAttribute]
+    [JsonObject]
     public class Holding
     {
         /// Symbol of the Holding:
@@ -83,7 +84,7 @@ namespace QuantConnect
         /// Create a simple JSON holdings from a Security holding class.
         /// </summary>
         /// <param name="holding">Holdings object we'll use to initialize the transport</param>
-        public Holding(Securities.SecurityHolding holding)
+        public Holding(SecurityHolding holding)
              : this()
         {
             Symbol = holding.Symbol.Value;

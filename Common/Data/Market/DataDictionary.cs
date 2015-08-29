@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Data.Market
 {

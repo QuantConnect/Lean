@@ -13,10 +13,10 @@
  * limitations under the License.
  *
 */
+
 using System;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
-
 
 namespace QuantConnect.Algorithm.Examples
 {

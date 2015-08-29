@@ -19,8 +19,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Logging;
-
 
 namespace QuantConnect.Securities 
 {
@@ -392,8 +392,8 @@ namespace QuantConnect.Securities
 
             //Add the symbol to Data Manager -- generate unified data streams for algorithm events
             var exchangeHours = securityExchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
-            var tradeBarType = typeof(Data.Market.TradeBar);
-            var type = resolution == Resolution.Tick ? typeof(Data.Market.Tick) : tradeBarType;
+            var tradeBarType = typeof(TradeBar);
+            var type = resolution == Resolution.Tick ? typeof(Tick) : tradeBarType;
             var config = subscriptionManager.Add(type, securityType, symbol, resolution, market, exchangeHours.TimeZone, fillDataForward, extendedMarketHours, isInternalFeed);
 
             Security security;

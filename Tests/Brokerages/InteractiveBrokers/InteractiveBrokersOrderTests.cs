@@ -1,9 +1,9 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Brokerages.Tradier;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
         protected override decimal GetAskPrice(string symbol, SecurityType securityType)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider)

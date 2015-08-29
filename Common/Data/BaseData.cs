@@ -14,7 +14,6 @@
 */
 
 using System;
-using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data

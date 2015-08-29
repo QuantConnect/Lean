@@ -16,7 +16,6 @@
 
 using System;
 using QuantConnect.Orders;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Data.Market
 {

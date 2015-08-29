@@ -15,21 +15,18 @@
 
 using System;
 using System.Collections.Generic;
-using NodaTime;
-using NodaTime.TimeZones;
 using System.Linq;
 using System.Linq.Expressions;
+using NodaTime;
+using NodaTime.TimeZones;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Equity;
-using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Algorithm
 {

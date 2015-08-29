@@ -15,11 +15,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Data
 {

@@ -20,7 +20,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
 
-
 namespace QuantConnect.Algorithm.Examples
 {
     /// <summary>

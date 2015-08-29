@@ -12,15 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
-using ICSharpCode.SharpZipLib.Zip;
-using ICSharpCode.SharpZipLib.Tar;
-using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Core;
+using ICSharpCode.SharpZipLib.GZip;
+using ICSharpCode.SharpZipLib.Tar;
+using Ionic.Zip;
 using QuantConnect.Logging;
+using ZipEntry = ICSharpCode.SharpZipLib.Zip.ZipEntry;
+using ZipInputStream = ICSharpCode.SharpZipLib.Zip.ZipInputStream;
+using ZipOutputStream = ICSharpCode.SharpZipLib.Zip.ZipOutputStream;
 
 namespace QuantConnect 
 {
@@ -281,7 +285,7 @@ namespace QuantConnect
         /// <param name="filename">Location of the original zip file</param>
         /// <param name="zip">The ZipFile instance to be returned to the caller</param>
         /// <returns>Stream reader of the first file contents in the zip file</returns>
-        public static StreamReader Unzip(string filename, out Ionic.Zip.ZipFile zip)
+        public static StreamReader Unzip(string filename, out ZipFile zip)
         {
             StreamReader reader = null;
             zip = null;
@@ -292,7 +296,7 @@ namespace QuantConnect
                 {
                     try
                     {
-                        zip = new Ionic.Zip.ZipFile(filename);
+                        zip = new ZipFile(filename);
 
                         reader = new StreamReader(zip[0].OpenReader());
                     }
@@ -341,7 +345,7 @@ namespace QuantConnect
 
         private static IEnumerable<string> ReadLinesImpl(string filename)
         {
-            using (var zip = Ionic.Zip.ZipFile.Read(filename))
+            using (var zip = ZipFile.Read(filename))
             {
                 var entry = zip[0];
                 using (var entryReader = new StreamReader(entry.OpenReader()))
@@ -403,12 +407,12 @@ namespace QuantConnect
             {
                 outFolder = zipFile.Substring(0, slash);
             }
-            ZipFile zf = null;
+            ICSharpCode.SharpZipLib.Zip.ZipFile zf = null;
 
             try
             {
                 var fs = File.OpenRead(zipFile);
-                zf = new ZipFile(fs);
+                zf = new ICSharpCode.SharpZipLib.Zip.ZipFile(fs);
 
                 foreach (ZipEntry zipEntry in zf)
                 {

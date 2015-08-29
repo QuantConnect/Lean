@@ -14,11 +14,9 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using QuantConnect.Logging;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Data.Market
 {

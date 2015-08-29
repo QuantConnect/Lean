@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Tradier;
@@ -128,7 +129,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
             PlaceOrderWaitForStatus(new MarketOrder("ZNGA", -1, DateTime.Now, type: SecurityType.Equity), OrderStatus.Invalid, allowFailedSubmission: true);
 
             // wait for output to be generated
-            System.Threading.Thread.Sleep(20*1000);
+            Thread.Sleep(20*1000);
         }
     }
 }

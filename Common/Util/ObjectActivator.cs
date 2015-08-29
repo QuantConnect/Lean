@@ -19,8 +19,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using CloneExtensions;
 using Fasterflect;
-using QuantConnect.Data;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Util
 {

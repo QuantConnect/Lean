@@ -14,10 +14,9 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Indicators;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {

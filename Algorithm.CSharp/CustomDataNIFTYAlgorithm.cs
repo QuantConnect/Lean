@@ -19,7 +19,6 @@ using System.Globalization;
 using System.Linq;
 using QuantConnect.Data;
 
-
 namespace QuantConnect.Algorithm.Examples
 {
     /// <summary>

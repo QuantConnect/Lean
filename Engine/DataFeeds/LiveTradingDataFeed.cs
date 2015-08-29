@@ -20,12 +20,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -89,7 +90,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _resultHandler = resultHandler;
             _cancellationTokenSource = new CancellationTokenSource();
             _universeSelection = new UniverseSelection(this, algorithm, true);
-            _dataQueue = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Configuration.Config.Get("data-queue-handler", "LiveDataQueue"));
+            _dataQueue = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Config.Get("data-queue-handler", "LiveDataQueue"));
             
             Bridge = new BusyBlockingCollection<TimeSlice>();
             _subscriptions = new ConcurrentDictionary<SymbolSecurityType, LiveSubscription>();

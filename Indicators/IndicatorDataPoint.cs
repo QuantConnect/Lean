@@ -15,7 +15,6 @@
 
 using System;
 using QuantConnect.Data;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Indicators
 {

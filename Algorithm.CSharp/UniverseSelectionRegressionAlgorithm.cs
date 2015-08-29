@@ -19,7 +19,6 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Orders;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {

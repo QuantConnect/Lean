@@ -18,7 +18,6 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
-using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {

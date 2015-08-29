@@ -98,7 +98,7 @@ namespace QuantConnect.Tests.Indicators
 
             var expected = Enumerable.Range(0, count).Select(x => (decimal)x).OrderByDescending(x => x).ToList();
             var actual = targets.OrderByDescending(x => x).ToList();
-            foreach (var pair in expected.Zip(actual, Tuple.Create))
+            foreach (var pair in expected.Zip<decimal, TestIndicator, Tuple<decimal, TestIndicator>>(actual, Tuple.Create))
             {
                 Assert.AreEqual(pair.Item1, pair.Item2.Current.Value);
             }
@@ -116,7 +116,7 @@ namespace QuantConnect.Tests.Indicators
 
             var expected = Enumerable.Range(0, count).Select(x => (decimal)x).OrderBy(x => x).ToList();
             var actual = targets.OrderBy(x => x).ToList();
-            foreach (var pair in expected.Zip(actual, Tuple.Create))
+            foreach (var pair in expected.Zip<decimal, TestIndicator, Tuple<decimal, TestIndicator>>(actual, Tuple.Create))
             {
                 Assert.AreEqual(pair.Item1, pair.Item2.Current.Value);
             }

@@ -23,14 +23,16 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Util;
 using IB = Krs.Ats.IBNet;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -1210,7 +1212,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// IDataQueueHandler interface implementaion 
         /// </summary>
         /// 
-        public IEnumerable<Data.BaseData> GetNextTicks()
+        public IEnumerable<BaseData> GetNextTicks()
         {
             lock (_ticks)
             {
@@ -1225,7 +1227,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(Packets.LiveNodePacket job, IDictionary<SecurityType, List<string>> symbols)
+        public void Subscribe(LiveNodePacket job, IDictionary<SecurityType, List<string>> symbols)
         {
             foreach (var secType in symbols)
                 foreach (var symbol in secType.Value)
@@ -1246,7 +1248,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(Packets.LiveNodePacket job, IDictionary<SecurityType, List<string>> symbols)
+        public void Unsubscribe(LiveNodePacket job, IDictionary<SecurityType, List<string>> symbols)
         {
             foreach (var secType in symbols)
                 foreach (var symbol in secType.Value)

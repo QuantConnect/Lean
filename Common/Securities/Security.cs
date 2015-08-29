@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Text.RegularExpressions;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities.Equity;

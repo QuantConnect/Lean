@@ -27,7 +27,6 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Results
 {

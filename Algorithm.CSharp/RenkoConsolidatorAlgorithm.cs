@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
+using System;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 
@@ -78,7 +80,7 @@ namespace QuantConnect.Algorithm.Examples
             {
                 SetHoldings(data.Symbol, 1.0);
             }
-            System.Console.WriteLine("CLOSE - {0} - {1} {2}", data.Time.ToString("o"), data.Open, data.Close);
+            Console.WriteLine("CLOSE - {0} - {1} {2}", data.Time.ToString("o"), data.Open, data.Close);
         }
 
         /// <summary>
@@ -87,7 +89,7 @@ namespace QuantConnect.Algorithm.Examples
         /// <param name="data">The new renko bar produced by the consolidator</param>
         public void HandleRenko7Bar(RenkoBar data)
         {
-            System.Console.WriteLine("7BAR  - {0} - {1} {2}", data.Time.ToString("o"), data.Open, data.Close);
+            Console.WriteLine("7BAR  - {0} - {1} {2}", data.Time.ToString("o"), data.Open, data.Close);
         }
     }
 }
