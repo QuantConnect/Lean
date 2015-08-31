@@ -183,7 +183,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         performedUniverseSelection.Add(subscription.Configuration.Symbol);
                         var coarse = UniverseSelection.GetCoarseFundamentals(subscription.Configuration.Market, subscription.TimeZone, localTime.Date, true);
-                        changes = _universeSelection.ApplyUniverseSelection(localTime.Date, coarse);
+                        changes = _universeSelection.ApplyUniverseSelection(localTime.Date, subscription.Configuration.Market, coarse);
                     }
 
                     var triggerArchive = false;
@@ -205,15 +205,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     if (triggerArchive)
                     {
-                        subscription.StreamStore.TriggerArchive(utcTriggerTime, subscription.Configuration.FillDataForward);
-
-                        BaseData data;
-                        var dataPoints = new List<BaseData>();
-                        while (subscription.StreamStore.Queue.TryDequeue(out data))
+                        var data = subscription.StreamStore.TriggerArchive(utcTriggerTime);
+                        if (data != null)
                         {
-                            dataPoints.Add(data);
+                            items.Add(new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData> {data}));
                         }
-                        items.Add(new KeyValuePair<Security, List<BaseData>>(subscription.Security, dataPoints));
                     }
                 }
 
@@ -313,7 +309,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (_cancellationTokenSource.IsCancellationRequested) return;
                     if (ticksCount == 0) Thread.Sleep(5);
                 }
-            });
+            }, TaskCreationOptions.LongRunning);
 
             // Micro-thread for custom data/feeds. This only supports polling at this time. todo: Custom data sockets
             var customFeedsTask = new Task(() =>
@@ -379,7 +375,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (_cancellationTokenSource.IsCancellationRequested) return;
                     Thread.Sleep(10);
                 }
-            });
+            }, TaskCreationOptions.LongRunning);
 
             //Wait for micro-threads to break before continuing
             liveThreadTask.Start();

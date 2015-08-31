@@ -61,8 +61,9 @@ namespace QuantConnect.Api
         /// Get the algorithm status from the user with this algorithm id.
         /// </summary>
         /// <param name="algorithmId">String algorithm id we're searching for.</param>
+        /// <param name="userId">The user id of the algorithm</param>
         /// <returns>Algorithm status enum</returns>
-        public AlgorithmControl GetAlgorithmStatus(string algorithmId)
+        public AlgorithmControl GetAlgorithmStatus(string algorithmId, int userId)
         {
             return new AlgorithmControl();
         }

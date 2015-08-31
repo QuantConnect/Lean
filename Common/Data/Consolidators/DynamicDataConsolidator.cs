@@ -12,9 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Data.Consolidators
@@ -25,50 +24,32 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     public class DynamicDataConsolidator : TradeBarConsolidatorBase<DynamicData>
     {
-        private bool _first = true;
-        private readonly bool _hasVolume;
-        private readonly bool _isTradeBar;
-
         /// <summary>
-        /// Creates a consolidator to produce a new 'TradeBar' representing the period. Setting both isTradeBar and hasVolume to
-        /// false will result in time-value aggregation only.
+        /// Creates a consolidator to produce a new 'TradeBar' representing the period.
         /// </summary>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
-        /// <param name="isTradeBar">Set to true if the dynamic data has Open, High, Low, and Close properties defined</param>
-        /// <param name="hasVolume">Set to true if the dynamic data has Volume defined</param>
-        public DynamicDataConsolidator(TimeSpan period, bool isTradeBar, bool hasVolume)
+        public DynamicDataConsolidator(TimeSpan period)
             : base(period)
         {
-            _isTradeBar = isTradeBar;
-            _hasVolume = hasVolume;
         }
+
         /// <summary>
-        /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data. Setting both isTradeBar and hasVolume to
-        /// false will result in time-value aggregation only.
+        /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data.
         /// </summary>
         /// <param name="maxCount">The number of pieces to accept before emiting a consolidated bar</param>
-        /// <param name="isTradeBar">Set to true if the dynamic data has Open, High, Low, and Close properties defined</param>
-        /// <param name="hasVolume">Set to true if the dynamic data has Volume defined</param>
-        public DynamicDataConsolidator(int maxCount, bool isTradeBar, bool hasVolume)
+        public DynamicDataConsolidator(int maxCount)
             : base(maxCount)
         {
-            _isTradeBar = isTradeBar;
-            _hasVolume = hasVolume;
         }
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data or the period, whichever comes first.
-        /// Setting both isTradeBar and hasVolume to false will result in time-value aggregation only.
         /// </summary>
         /// <param name="maxCount">The number of pieces to accept before emiting a consolidated bar</param>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
-        /// <param name="isTradeBar">Set to true if the dynamic data has Open, High, Low, and Close properties defined</param>
-        /// <param name="hasVolume">Set to true if the dynamic data has Volume defined</param>
-        public DynamicDataConsolidator(int maxCount, TimeSpan period, bool isTradeBar, bool hasVolume)
+        public DynamicDataConsolidator(int maxCount, TimeSpan period)
             : base(maxCount, period)
         {
-            _isTradeBar = isTradeBar;
-            _hasVolume = hasVolume;
         }
 
         /// <summary>
@@ -79,34 +60,17 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="data">The new data</param>
         protected override void AggregateBar(ref TradeBar workingBar, DynamicData data)
         {
-            if (_first)
-            {
-                _first = false;
-                // the first time through we're going to inspect the data instance and verify
-                // the properties exist. We'll check them all first and throw a message containing
-                // all expected and all missing properties names.
-                VerifyDataShape(data);
-            }
+            // grab the properties, if they don't exist just use the .Value property
+            var open = GetNamedPropertyOrValueProperty(data, "Open");
+            var high = GetNamedPropertyOrValueProperty(data, "High");
+            var low = GetNamedPropertyOrValueProperty(data, "Low");
+            var close = GetNamedPropertyOrValueProperty(data, "Close");
 
-            decimal open, high, low, close;
-            long volume = 0;
-            if (_isTradeBar)
-            {
-                open = (decimal) Convert.ChangeType(data.GetProperty("Open"), typeof (decimal));
-                high = (decimal) Convert.ChangeType(data.GetProperty("High"), typeof (decimal));
-                low = (decimal) Convert.ChangeType(data.GetProperty("Low"), typeof (decimal));
-                close = (decimal) Convert.ChangeType(data.GetProperty("Close"), typeof (decimal));
-            }
-            else
-            {
-                // fall back on regular time-value aggregation
-                open = high = low = close = data.Value;
-            }
-            if (_hasVolume)
-            {
-                volume = (long) Convert.ChangeType(data.GetProperty("Volume"), typeof (long));
-            }
-
+            // if we have volume, use it, otherwise just use zero
+            var volume = data.HasProperty("Volume")
+                ? (long) Convert.ChangeType(data.GetProperty("Volume"), typeof (long))
+                : 0L;
+            
             if (workingBar == null)
             {
                 workingBar = new TradeBar
@@ -130,32 +94,13 @@ namespace QuantConnect.Data.Consolidators
             }
         }
 
-        private void VerifyDataShape(DynamicData data)
+        private static decimal GetNamedPropertyOrValueProperty(DynamicData data, string propertyName)
         {
-            var expected = new List<string>();
-            if (_isTradeBar)
+            if (!data.HasProperty(propertyName))
             {
-                // expect OHLC data
-                expected.AddRange(new[]{"open", "high", "low", "close"});
+                return data.Value;
             }
-            if (_hasVolume)
-            {
-                expected.Add("volume");
-            }
-
-            var missing = expected.Where(propertyName => !data.HasProperty(propertyName)).ToList();
-            if (missing.Any())
-            {
-                var message = string.Format("Error in DynamicDataConsolidator while consolidating type '{0}' with symbol '{1}'. " +
-                    "Expected property names: {2} but the following were missing: {3}", 
-                    data.GetType().Name, 
-                    data.Symbol,
-                    string.Join(", ", expected), 
-                    string.Join(", ", missing)
-                    );
-
-                throw new Exception(message);
-            }
+            return (decimal) Convert.ChangeType(data.GetProperty(propertyName), typeof (decimal));
         }
     }
 }

@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.Examples
             SetCash(25000);
 
             //Add Generic Quandl Data:
-            AddData<Quandl>(_quandlCode, Resolution.Daily, true, true);
+            AddData<Quandl>(_quandlCode, Resolution.Daily);
 
             sma = SMA(_quandlCode, 14);
         }

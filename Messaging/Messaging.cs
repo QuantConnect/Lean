@@ -25,6 +25,15 @@ namespace QuantConnect.Messaging
     public class Messaging : IMessagingHandler
     {
         /// <summary>
+        /// The default implementation doesn't send messages, so this does nothing.
+        /// </summary>
+        public bool HasSubscribers
+        {
+            get; 
+            set;
+        }
+
+        /// <summary>
         /// Initialize the messaging system
         /// </summary>
         public void Initialize()

@@ -73,7 +73,7 @@ namespace QuantConnect.Data
             {
                 dataType = typeof(Tick);
             }
-            return Add(dataType, security, symbol, resolution, market, timeZone, fillDataForward, extendedMarketHours, true, true, false);
+            return Add(dataType, security, symbol, resolution, market, timeZone, fillDataForward, extendedMarketHours, false);
         }
 
         /// <summary>
@@ -87,11 +87,9 @@ namespace QuantConnect.Data
         /// <param name="timeZone">The time zone the subscription's data is time stamped in</param>
         /// <param name="fillDataForward">when there is no data pass the last tradebar forward</param>
         /// <param name="extendedMarketHours">Request premarket data as well when true </param>
-        /// <param name="isTradeBar">Set to true if this data has Open, High, Low, and Close properties</param>
-        /// <param name="hasVolume">Set to true if this data has a Volume property</param>
         /// <param name="isInternalFeed">Set to true to prevent data from this subscription from being sent into the algorithm's OnData events</param>
         /// <returns>The newly created <see cref="SubscriptionDataConfig"/></returns>
-        public SubscriptionDataConfig Add(Type dataType, SecurityType security, string symbol, Resolution resolution, string market, DateTimeZone timeZone, bool fillDataForward = true, bool extendedMarketHours = false, bool isTradeBar = false, bool hasVolume = false, bool isInternalFeed = false) 
+        public SubscriptionDataConfig Add(Type dataType, SecurityType security, string symbol, Resolution resolution, string market, DateTimeZone timeZone, bool fillDataForward = true, bool extendedMarketHours = false, bool isInternalFeed = false) 
         {
             //Clean:
             symbol = symbol.ToUpper();
@@ -102,7 +100,7 @@ namespace QuantConnect.Data
             }
             
             //Create:
-            var newConfig = new SubscriptionDataConfig(dataType, security, symbol, resolution, market, timeZone, fillDataForward, extendedMarketHours, isTradeBar, hasVolume, isInternalFeed);
+            var newConfig = new SubscriptionDataConfig(dataType, security, symbol, resolution, market, timeZone, fillDataForward, extendedMarketHours, isInternalFeed);
 
             //Add to subscription list: make sure we don't have his symbol:
             Subscriptions.Add(newConfig);

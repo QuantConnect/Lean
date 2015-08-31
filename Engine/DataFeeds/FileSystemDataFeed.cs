@@ -91,18 +91,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             foreach (var security in _algorithm.Securities.Values)
             {
                 var subscription = CreateSubscription(resultHandler, security, algorithm.StartDate, algorithm.EndDate, _fillForwardResolution, true);
-                _subscriptions.AddOrUpdate(new SymbolSecurityType(security), subscription);
-                
-                // prime the pump, run method checks current before move next calls
-                subscription.MoveNext();
+                if (subscription != null)
+                {
+                    _subscriptions.AddOrUpdate(new SymbolSecurityType(security), subscription);
+
+                    // prime the pump, run method checks current before move next calls
+                    PrimeSubscriptionPump(subscription, true);
+                }
             }
         }
 
-        private static Subscription CreateSubscription(IResultHandler resultHandler, Security security, DateTime start, DateTime end, Resolution fillForwardResolution, bool userDefined)
+        private Subscription CreateSubscription(IResultHandler resultHandler, Security security, DateTime start, DateTime end, Resolution fillForwardResolution, bool userDefined)
         {
             var config = security.SubscriptionDataConfig;
             var tradeableDates = Time.EachTradeableDay(security, start.Date, end.Date);
+
+            // ReSharper disable once PossibleMultipleEnumeration
+            if (!tradeableDates.Any())
+            {
+                if (userDefined)
+                {
+                    _algorithm.Error(string.Format("No data loaded for {0} because there were no tradeable dates for this security.", security.Symbol));
+                }
+                return null;
+            }
+
             var symbolResolutionDate = userDefined ? (DateTime?)null : start;
+            // ReSharper disable once PossibleMultipleEnumeration
             IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, security, start, end, resultHandler, tradeableDates, false, symbolResolutionDate);
 
             // optionally apply fill forward logic, but never for tick data
@@ -127,10 +142,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime)
         {
             var subscription = CreateSubscription(_resultHandler, security, utcStartTime, utcEndTime, security.SubscriptionDataConfig.Resolution, false);
+            if (subscription == null)
+            {
+                // subscription will be null when there's no tradeable dates for the security between the requested times, so
+                // don't even try to load the data
+                return;
+            }
             _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription),  subscription);
 
             // prime the pump, run method checks current before move next calls
-            subscription.MoveNext();
+            PrimeSubscriptionPump(subscription, true);
         }
 
         /// <summary>
@@ -188,7 +209,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var cache = new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData>());
                         data.Add(cache);
 
-                        var currentOffsetTicks = subscription.OffsetProvider.GetOffsetTicks(frontier);
+                        var offsetProvider = subscription.OffsetProvider;
+                        var currentOffsetTicks = offsetProvider.GetOffsetTicks(frontier);
                         while (subscription.Current.EndTime.Ticks - currentOffsetTicks <= frontier.Ticks)
                         {
                             // we want bars rounded using their subscription times, we make a clone
@@ -212,12 +234,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 break;
                             }
 
-                            changes += _universeSelection.ApplyUniverseSelection(cache.Value[0].EndTime.Date, cache.Value.OfType<CoarseFundamental>());
+                            changes += _universeSelection.ApplyUniverseSelection(cache.Value[0].EndTime.Date, subscription.Configuration.Market, cache.Value.OfType<CoarseFundamental>());
                         }
 
                         if (subscription.Current != null)
                         {
-                            earlyBirdTicks = Math.Min(earlyBirdTicks, subscription.Current.EndTime.Ticks - currentOffsetTicks);
+                            // take the earliest between the next piece of data or the next tz discontinuity
+                            earlyBirdTicks = Math.Min(earlyBirdTicks, Math.Min(subscription.Current.EndTime.Ticks - currentOffsetTicks, offsetProvider.GetNextDiscontinuity()));
                         }
                     }
 
@@ -241,9 +264,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             catch (Exception err)
             {
-                Log.Error("FileSystemDataFeed.Run(): Encountered an error: " + err.Message);
-                Bridge.CompleteAdding();
-                _cancellationTokenSource.Cancel();
+                Log.Error("FileSystemDataFeed.Run(): Encountered an error: " + err.Message); 
+                if (!_cancellationTokenSource.IsCancellationRequested)
+                {
+                    Bridge.CompleteAdding();
+                    _cancellationTokenSource.Cancel();
+                }
             }
             finally
             {
@@ -265,12 +291,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var frontier = DateTime.MaxValue;
             foreach (var subscription in Subscriptions)
             {
-                if (subscription.EndOfStream)
-                {
-                    Log.Trace("FileSystemDataFeed.Run(): Failed to load subscription: " + subscription.Configuration.Symbol);
-                    continue;
-                }
-
                 var current = subscription.Current;
                 if (current == null)
                 {
@@ -301,35 +321,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private void AddSubscriptionForUniverseSelectionMarket(string market)
         {
-            var usaMarket = SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(market, null, SecurityType.Equity);
+            var exchangeHours = SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(market, null, SecurityType.Equity);
             var symbolName = market + "-market";
-            var usaConfig = new SubscriptionDataConfig(typeof (CoarseFundamental), SecurityType.Equity, symbolName, Resolution.Daily, market, usaMarket.TimeZone,
-                true, false, false, false, true);
-            var usaMarketSecurity = new Security(usaMarket, usaConfig, 1);
+            var subscriptionDataConfig = new SubscriptionDataConfig(typeof (CoarseFundamental), SecurityType.Equity, symbolName, Resolution.Daily, market, exchangeHours.TimeZone,
+                true, false, true);
+            var security = new Security(exchangeHours, subscriptionDataConfig, 1);
             
             var cf = new CoarseFundamental();
             var list = new List<BaseData>();
-            foreach (var date in Time.EachTradeableDay(usaMarketSecurity, _algorithm.StartDate, _algorithm.EndDate))
+            foreach (var date in Time.EachTradeableDay(security, _algorithm.StartDate, _algorithm.EndDate))
             {
-                var factory = new BaseDataSubscriptionFactory(usaConfig, date, false);
-                var source = cf.GetSource(usaConfig, date, false);
+                var factory = new BaseDataSubscriptionFactory(subscriptionDataConfig, date, false);
+                var source = cf.GetSource(subscriptionDataConfig, date, false);
                 var coarseFundamentalForDate = factory.Read(source);
                 list.AddRange(coarseFundamentalForDate);
             }
 
 
-            // spoof a subscription for the USA market that emits at midnight of each tradeable day
-            var usaMarketSubscription = new Subscription(usaMarketSecurity,
+            // spoof a subscription for the market that emits at midnight of each tradeable day
+            var subscription = new Subscription(security,
                 list.GetEnumerator(),
-                _algorithm.StartDate.ConvertToUtc(usaMarket.TimeZone),
-                _algorithm.EndDate.ConvertToUtc(usaMarket.TimeZone),
+                _algorithm.StartDate.ConvertToUtc(exchangeHours.TimeZone),
+                _algorithm.EndDate.ConvertToUtc(exchangeHours.TimeZone),
                 false,
                 true
                 );
 
-            // prime the pump
-            usaMarketSubscription.MoveNext();
-            _subscriptions.AddOrUpdate(new SymbolSecurityType(usaMarketSubscription), usaMarketSubscription);
+            // let user know if we fail to load the universe subscription, very important for when understanding backtest results!
+            PrimeSubscriptionPump(subscription, true);
+            _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription), subscription);
         }
 
         /// <summary>
@@ -342,6 +362,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (Bridge != null)
             {
                 Bridge.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Calls move next on the subscription and logs if we didn't get any data (load failure)
+        /// </summary>
+        /// <param name="subscription">The subscription to prime</param>
+        /// <param name="messageUser">True to send an algorithm.Error to the user</param>
+        private void PrimeSubscriptionPump(Subscription subscription, bool messageUser)
+        {
+            if (!subscription.MoveNext())
+            {
+                Log.Error("FileSystemDataFeed.PrimeSubscriptionPump(): Failed to load subscription: " + subscription.Security.Symbol);
+                if (messageUser)
+                {
+                    _algorithm.Error("Failed to load subscription: " + subscription.Security.Symbol);
+                }
+                _subscriptions.TryRemove(new SymbolSecurityType(subscription), out subscription);
             }
         }
     }

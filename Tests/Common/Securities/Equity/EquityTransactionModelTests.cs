@@ -251,7 +251,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         }
         private SubscriptionDataConfig CreateTradeBarConfig(string symbol)
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, symbol, Resolution.Minute, "usa", TimeZones.NewYork, true, true, true, true, false);
+            return new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, symbol, Resolution.Minute, "usa", TimeZones.NewYork, true, true, false);
         }
     }
 }

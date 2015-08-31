@@ -481,16 +481,31 @@ namespace QuantConnect.Algorithm
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose Donchian Channel we seek.</param>
+        /// <param name="upperPeriod">The period over which to compute the upper Donchian Channel.</param>
+        /// <param name="lowerPeriod">The period over which to compute the lower Donchian Channel.</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Donchian Channel indicator for the requested symbol.</returns>
+        public DonchianChannel DCH(string symbol, int upperPeriod, int lowerPeriod, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "DCH", resolution);
+            var donchianChannel = new DonchianChannel(name, upperPeriod, lowerPeriod);
+            RegisterIndicator(symbol, donchianChannel, resolution, selector);
+            return donchianChannel;
+        }
+
+        /// <summary>
+        /// Overload shorthand to create a new symmetric Donchian Channel indicator which
+        /// has the upper and lower channels set to the same period length.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Donchian Channel we seek.</param>
         /// <param name="period">The period over which to compute the Donchian Channel.</param>
         /// <param name="resolution">The resolution.</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The Donchian Channel indicator for the requested symbol.</returns>
         public DonchianChannel DCH(string symbol, int period, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, "DCH", resolution);
-            var donchianChannel = new DonchianChannel(name, period);
-            RegisterIndicator(symbol, donchianChannel, resolution, selector);
-            return donchianChannel;
+            return DCH(symbol, period, period, resolution, selector);
         }
 
         /// <summary>
@@ -520,6 +535,21 @@ namespace QuantConnect.Algorithm
         public Stochastic STO(string symbol, int period, Resolution? resolution = null)
         {
             return STO(symbol, period, period, 3, resolution);
+        }
+
+        /// <summary>
+        /// Creates a new LogReturn indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose log return we seek</param>
+        /// <param name="period">The period of the log return.</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <returns>log return indicator for the requested symbol.</returns>
+        public LogReturn LOGR(string symbol, int period, Resolution? resolution = null)
+        {
+            string name = CreateIndicatorName(symbol, "LOGR", resolution);
+            var logr = new LogReturn(name, period);
+            RegisterIndicator(symbol, logr, resolution);
+            return logr;
         }
 
         /// <summary>
@@ -710,11 +740,10 @@ namespace QuantConnect.Algorithm
                 return new TickConsolidator(timeSpan.Value);
             }
 
-            // if our type can be used as a DynamicData then we'll use the DynamicDataConsolidator, inspect
-            // the subscription to figure out the isTradeBar and hasVolume flags
+            // if our type can be used as a DynamicData then we'll use the DynamicDataConsolidator
             if (typeof(DynamicData).IsAssignableFrom(subscription.Type))
             {
-                return new DynamicDataConsolidator(timeSpan.Value, subscription.IsTradeBar, subscription.HasVolume);
+                return new DynamicDataConsolidator(timeSpan.Value);
             }
 
             // no matter what we can always consolidate based on the time-value pair of BaseData

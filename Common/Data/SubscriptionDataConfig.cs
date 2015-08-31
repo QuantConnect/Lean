@@ -65,16 +65,6 @@ namespace QuantConnect.Data
         public readonly bool ExtendedMarketHours;
 
         /// <summary>
-        /// True if the data type has OHLC properties, even if dynamic data
-        /// </summary>
-        public readonly bool IsTradeBar;
-
-        /// <summary>
-        /// True if the data type has a Volume property, even if it is dynamic data
-        /// </summary>
-        public readonly bool HasVolume;
-
-        /// <summary>
         /// True if this subscription was added for the sole purpose of providing currency conversion rates via <see cref="CashBook.EnsureCurrencyDataFeeds"/>
         /// </summary>
         public readonly bool IsInternalFeed;
@@ -125,9 +115,6 @@ namespace QuantConnect.Data
         /// <param name="timeZone">The time zone the raw data is time stamped in</param>
         /// <param name="fillForward">Fill in gaps with historical data</param>
         /// <param name="extendedHours">Equities only - send in data from 4am - 8pm</param>
-        /// <param name="isTradeBar">Set to true if the objectType has Open, High, Low, and Close properties defines, does not need to directly derive from the TradeBar class
-        /// This is used for the DynamicDataConsolidator</param>
-        /// <param name="hasVolume">Set to true if the objectType has a Volume property defined. This is used for the DynamicDataConsolidator</param>
         /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
         /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
         public SubscriptionDataConfig(Type objectType, 
@@ -138,8 +125,6 @@ namespace QuantConnect.Data
             DateTimeZone timeZone,
             bool fillForward, 
             bool extendedHours,
-            bool isTradeBar,
-            bool hasVolume,
             bool isInternalFeed)
         {
             Type = objectType;
@@ -148,8 +133,6 @@ namespace QuantConnect.Data
             Symbol = symbol.ToUpper();
             FillDataForward = fillForward;
             ExtendedMarketHours = extendedHours;
-            IsTradeBar = isTradeBar;
-            HasVolume = hasVolume;
             PriceScaleFactor = 1;
             MappedSymbol = symbol;
             IsInternalFeed = isInternalFeed;

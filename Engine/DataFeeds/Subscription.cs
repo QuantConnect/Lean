@@ -77,6 +77,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool IsFundamentalSubscription { get; private set; }
 
         /// <summary>
+        /// Gets the start time of this subscription in UTC
+        /// </summary>
+        public DateTime UtcStartTime { get; private set; }
+
+        /// <summary>
+        /// Gets the end time of this subscription in UTC
+        /// </summary>
+        public DateTime UtcEndTime { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Subscription"/> class
         /// </summary>
         /// <param name="security">The security this subscription is for</param>
@@ -94,6 +104,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IsFundamentalSubscription = isFundamentalSubscription;
             Configuration = security.SubscriptionDataConfig;
             OffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, utcStartTime, utcEndTime);
+
+            UtcStartTime = utcStartTime;
+            UtcEndTime = utcEndTime;
         }
 
         /// <summary>

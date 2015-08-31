@@ -243,12 +243,23 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return OrderTicket.InvalidCancelOrderId(_algorithm.Transactions, request);
             }
 
-            ticket.SetCancelRequest(request);
-            
             try
             {
+                // if we couldn't set this request as the cancellation then another thread/someone
+                // else is already doing it or it in fact has already been cancelled
+                if (!ticket.TrySetCancelRequest(request))
+                {
+                    // the ticket has already been cancelled
+                    request.SetResponse(OrderResponse.Error(request, OrderResponseErrorCode.InvalidRequest, "Cancellation is already in progress."));
+                    return ticket;
+                }
+
                 //Error check
                 var order = GetOrderByIdInternal(request.OrderId);
+                if (order != null && request.Tag != null)
+                {
+                    order.Tag = request.Tag;
+                }
                 if (order == null)
                 {
                     Log.Error("BrokerageTransactionHandler.CancelOrder(): Cannot find this id.");
@@ -256,7 +267,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
                 else if (order.Status.IsClosed())
                 {
-                    Log.Error("BrokerageTransactionHandler.CancelOrder(): Order already filled");
+                    Log.Error("BrokerageTransactionHandler.CancelOrder(): Order already " + order.Status);
                     request.SetResponse(OrderResponse.InvalidStatus(request, order));
                 }
                 else
@@ -579,7 +590,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             ticket.SetOrder(order);
 
             // check to see if we have enough money to place the order
-            if (!_algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order))
+            bool sufficientCapitalForOrder;
+            try
+            {
+                sufficientCapitalForOrder = _algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                _algorithm.Error(string.Format("Order Error: id: {0}, Error executing margin models: {1}", order.Id, err.Message));
+                return OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, "Error in GetSufficientCapitalForOrder");
+            }
+
+            if (!sufficientCapitalForOrder)
             {
                 order.Status = OrderStatus.Invalid;
                 var security = _algorithm.Securities[order.Symbol];
@@ -758,7 +781,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 Log.Debug("BrokerageTransactionHandler.HandleOrderEvent(): " + fill);
                 Interlocked.Exchange(ref _lastFillTimeTicks, DateTime.Now.Ticks);
-                _algorithm.Portfolio.ProcessFill(fill);
+                try
+                {
+                    _algorithm.Portfolio.ProcessFill(fill);
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    _algorithm.Error(string.Format("Order Error: id: {0}, Eror in Portfolio.ProcessFill: {1}", order.Id, err.Message));
+                }
             }
 
             // update the ticket after we've processed the fill, but before the event, this way everything is ready for user code

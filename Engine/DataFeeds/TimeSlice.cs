@@ -119,6 +119,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Split split;
             Dividend dividend;
             Delisting delisting;
+            SymbolChangedEvent symbolChange;
 
             var algorithmTime = utcDateTime.ConvertFromUtc(algorithm.TimeZone);
             var tradeBars = new TradeBars(algorithmTime);
@@ -126,6 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var splits = new Splits(algorithmTime);
             var dividends = new Dividends(algorithmTime);
             var delistings = new Delistings(algorithmTime);
+            var symbolChanges = new SymbolChangedEvents(algorithmTime);
 
             foreach (var kvp in data)
             {
@@ -137,7 +139,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 BaseData update = null;
                 var consolidatorUpdate = new List<BaseData>(list.Count);
-                for (int i = list.Count - 1; i > -1; i--)
+                for (int i = 0; i < list.Count; i++)
                 {
                     var baseData = list[i];
                     if (!kvp.Key.SubscriptionDataConfig.IsInternalFeed)
@@ -170,11 +172,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         // this is data used to update consolidators
                         consolidatorUpdate.Add(baseData);
-                        if (update == null)
-                        {
-                            // this is the data used set market prices
-                            update = baseData;
-                        }
+                        // this is the data used set market prices
+                        update = baseData;
                     }
                     // include checks for various aux types so we don't have to construct the dictionaries in Slice
                     else if ((delisting = baseData as Delisting) != null)
@@ -188,6 +187,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     else if ((split = baseData as Split) != null)
                     {
                         splits[symbol] = split;
+                    }
+                    else if ((symbolChange = baseData as SymbolChangedEvent) != null)
+                    {
+                        // symbol changes is keyed by the requested symbol
+                        symbolChanges[kvp.Key.SubscriptionDataConfig.Symbol] = symbolChange;
                     }
                 }
 
@@ -210,7 +214,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 consolidator.Add(new KeyValuePair<SubscriptionDataConfig, List<BaseData>>(kvp.Key.SubscriptionDataConfig, consolidatorUpdate));
             }
 
-            var slice = new Slice(utcDateTime.ConvertFromUtc(algorithm.TimeZone), allDataForAlgorithm, tradeBars, ticks, splits, dividends, delistings);
+            var slice = new Slice(utcDateTime.ConvertFromUtc(algorithm.TimeZone), allDataForAlgorithm, tradeBars, ticks, splits, dividends, delistings, symbolChanges);
 
             return new TimeSlice(utcDateTime, count, slice, data, cash, security, consolidator, custom, changes);
         }

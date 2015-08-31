@@ -160,6 +160,7 @@ namespace QuantConnect.Lean.Engine
             var hasOnDataDividends = AddMethodInvoker<Dividends>(algorithm, methodInvokers);
             var hasOnDataSplits = AddMethodInvoker<Splits>(algorithm, methodInvokers);
             var hasOnDataDelistings = AddMethodInvoker<Delistings>(algorithm, methodInvokers);
+            var hasOnDataSymbolChangedEvents = AddMethodInvoker<SymbolChangedEvents>(algorithm, methodInvokers);
 
             // Algorithm 3.0 data accessors
             var hasOnDataSlice = algorithm.GetType().GetMethods()
@@ -244,13 +245,29 @@ namespace QuantConnect.Lean.Engine
                 else
                 {
                     // live mode continously sample the benchmark
-                    SampleBenchmark(algorithm, results, _previousTime.Date);
+                    SampleBenchmark(algorithm, results, time);
                 }
 
                 //Update algorithm state after capturing performance from previous day
 
                 //Set the algorithm and real time handler's time
                 algorithm.SetDateTime(time);
+
+                if (timeSlice.Slice.SymbolChangedEvents.Count != 0)
+                {
+                    if (hasOnDataSymbolChangedEvents)
+                    {
+                        methodInvokers[typeof (SymbolChangedEvents)](algorithm, timeSlice.Slice.SymbolChangedEvents);
+                    }
+                    foreach (var symbol in timeSlice.Slice.SymbolChangedEvents.Keys)
+                    {
+                        // cancel all orders for the old symbol
+                        foreach (var ticket in transactions.GetOrderTickets(x => x.Status.IsOpen() && x.Symbol == symbol))
+                        {
+                            ticket.Cancel("Open order cancelled on symbol changed event");
+                        }
+                    }
+                }
 
                 if (timeSlice.SecurityChanges != SecurityChanges.None)
                 {
@@ -318,24 +335,28 @@ namespace QuantConnect.Lean.Engine
                     var marginCallOrders = algorithm.Portfolio.ScanForMarginCall(out issueMarginCallWarning);
                     if (marginCallOrders.Count != 0)
                     {
+                        var executingMarginCall = false;
                         try
                         {
                             // tell the algorithm we're about to issue the margin call
                             algorithm.OnMarginCall(marginCallOrders);
+
+                            executingMarginCall = true;
+
+                            // execute the margin call orders
+                            var executedTickets = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
+                            foreach (var ticket in executedTickets)
+                            {
+                                algorithm.Error(string.Format("{0} - Executed MarginCallOrder: {1} - Quantity: {2} @ {3}", algorithm.Time, ticket.Symbol, ticket.Quantity, ticket.AverageFillPrice));
+                            }
                         }
                         catch (Exception err)
                         {
                             algorithm.RunTimeError = err;
                             _algorithmState = AlgorithmStatus.RuntimeError;
-                            Log.Error("AlgorithmManager.Run(): RuntimeError: OnMarginCall: " + err.Message + " STACK >>> " + err.StackTrace);
+                            var locator = executingMarginCall ? "Portfolio.MarginCallModel.ExecuteMarginCall" : "OnMarginCall";
+                            Log.Error(string.Format("AlgorithmManager.Run(): RuntimeError: {0}: ", locator) + err.Message + " STACK >>> " + err.StackTrace);
                             return;
-                        }
-
-                        // execute the margin call orders
-                        var executedTickets = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
-                        foreach (var ticket in executedTickets)
-                        {
-                            algorithm.Error(string.Format("{0} - Executed MarginCallOrder: {1} - Quantity: {2} @ {3}", algorithm.Time, ticket.Symbol, ticket.Quantity, ticket.OrderEvents.Last().FillPrice));
                         }
                     }
                     // we didn't perform a margin call, but got the warning flag back, so issue the warning to the algorithm
@@ -376,7 +397,7 @@ namespace QuantConnect.Lean.Engine
                 // apply dividends
                 foreach (var dividend in timeSlice.Slice.Dividends.Values)
                 {
-                    Log.Trace("AlgorithmManager.Run(): Applying Dividend for " + dividend.Symbol);
+                    Log.Trace("AlgorithmManager.Run(): Applying Dividend for " + dividend.Symbol, true);
                     algorithm.Portfolio.ApplyDividend(dividend);
                 }
 
@@ -385,7 +406,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     try
                     {
-                        Log.Trace("AlgorithmManager.Run(): Applying Split for " + split.Symbol);
+                        Log.Trace("AlgorithmManager.Run(): Applying Split for " + split.Symbol, true);
                         algorithm.Portfolio.ApplySplit(split);
                         // apply the split to open orders as well in raw mode, all other modes are split adjusted
                         if (_liveMode || algorithm.Securities[split.Symbol].SubscriptionDataConfig.DataNormalizationMode == DataNormalizationMode.Raw)

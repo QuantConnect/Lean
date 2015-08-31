@@ -49,7 +49,7 @@ namespace QuantConnect.Util
         /// </returns>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            if ((string)reader.Value == "null")
+            if (reader.Value == null || (string)reader.Value == "null")
             {
                 return new T();
             }

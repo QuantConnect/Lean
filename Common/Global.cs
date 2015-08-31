@@ -367,6 +367,8 @@ namespace QuantConnect
         /// </summary>
         public AlgorithmControl()
         {
+            // default to true, API can override
+            HasSubscribers = true;
             Status = AlgorithmStatus.Running;
             ChartSubscription = "Strategy Equity";
         }
@@ -380,6 +382,11 @@ namespace QuantConnect
         /// Currently requested chart.
         /// </summary>
         public string ChartSubscription;
+
+        /// <summary>
+        /// True if there's subscribers on the channel
+        /// </summary>
+        public bool HasSubscribers;
     }
 
     /// <summary>
@@ -526,6 +533,20 @@ namespace QuantConnect
         };
     }
 
+    /// <summary>
+    /// Defines the different channel status values
+    /// </summary>
+    public static class ChannelStatus
+    {
+        /// <summary>
+        /// The channel is empty
+        /// </summary>
+        public const string Vacated = "channel_vacated";
+        /// <summary>
+        /// The channel has subscribers
+        /// </summary>
+        public const string Occupied = "channel_occupied";
+    }
 
     /// <summary>
     /// US Public Holidays - Not Tradeable:

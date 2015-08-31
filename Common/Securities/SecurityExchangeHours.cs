@@ -31,10 +31,6 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class SecurityExchangeHours
     {
-        private static readonly SecurityExchangeHours _alwaysOpen = new SecurityExchangeHours(DateTimeZone.Utc, Enumerable.Empty<DateTime>(),
-            Enum.GetValues(typeof (DayOfWeek)).OfType<DayOfWeek>().Select(LocalMarketHours.OpenAllDay).ToDictionary(x => x.DayOfWeek)
-            );
-
         private readonly DateTimeZone _timeZone;
         private readonly HashSet<long> _holidays;
 
@@ -75,9 +71,13 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets a <see cref="SecurityExchangeHours"/> instance that is always open
         /// </summary>
-        public static SecurityExchangeHours AlwaysOpen
+        public static SecurityExchangeHours AlwaysOpen(DateTimeZone timeZone)
         {
-            get { return _alwaysOpen; }
+            var dayOfWeeks = Enum.GetValues(typeof (DayOfWeek)).OfType<DayOfWeek>();
+            return new SecurityExchangeHours(timeZone,
+                Enumerable.Empty<DateTime>(),
+                dayOfWeeks.Select(LocalMarketHours.OpenAllDay).ToDictionary(x => x.DayOfWeek)
+                );
         }
 
         /// <summary>

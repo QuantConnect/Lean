@@ -3,10 +3,11 @@
 # Use # signs for comments
 # The data below is specified in terms of hours since local midnight in the time zone specified in column 1
 # The market and security type columns are required, the symbol column is optional, searching will be done first with symbol and then without the symbol as a fall back
-# Currently the time zones must be specified in a way such that they can be resolved via NodaTime'z Tzd
+# Time zones can be specified using a Tzdb name, or by specifying an offset from UTC using the form: 'UTC{+/-}{offset in hours}', for example, for a -2.5 hour offset: 'UTC-2.5'
 # Specify - for ex_open to signify the exchange is closed all day
 # Specify + for ex_open to signify the exchange is open all day
 # Specify 0 for midnight in local time and 24 for the end of day
 #
 America/New_York,usa,,equity,-,-,-,-,4,9.5,16,20,4,9.5,16,20,4,9.5,16,20,4,9.5,16,20,4,9.5,16,20,-,-,-,-
-America/New_York,fxcm,,forex,17,17,24,24,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,0,0,17,17,-,-,-,-
+# fxcm data uses EST, does not use EDT, so use a fixed offset
+UTC-05,fxcm,,forex,17,17,24,24,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,0,0,17,17,-,-,-,-

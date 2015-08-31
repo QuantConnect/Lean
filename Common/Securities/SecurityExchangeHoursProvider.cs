@@ -37,7 +37,7 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Gets an instant of <see cref="SecurityExchangeHoursProvider"/> that will always return <see cref="SecurityExchangeHours.AlwaysOpen"/>
-        /// for each call to <see cref="GetExchangeHours(string, string, SecurityType)"/>
+        /// for each call to <see cref="GetExchangeHours(string, string, SecurityType,DateTimeZone)"/>
         /// </summary>
         public static SecurityExchangeHoursProvider AlwaysOpen
         {
@@ -69,7 +69,7 @@ namespace QuantConnect.Securities
         /// <param name="configuration">The subscription data config to get exchange hours for</param>
         public SecurityExchangeHours GetExchangeHours(SubscriptionDataConfig configuration)
         {
-            return GetExchangeHours(configuration.Market, configuration.Symbol, configuration.SecurityType);
+            return GetExchangeHours(configuration.Market, configuration.Symbol, configuration.SecurityType, configuration.TimeZone);
         }
 
         /// <summary>
@@ -79,8 +79,11 @@ namespace QuantConnect.Securities
         /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
         /// <param name="symbol">The particular symbol being traded</param>
         /// <param name="securityType">The security type of the symbol</param>
+        /// <param name="overrideTimeZone">Specify this time zone to override the resolved time zone from the market hours database.
+        /// This value will also be used as the time zone for SecurityType.Base with no market hours database entry.
+        /// If null is specified, no override will be performed. If null is specified, and it's SecurityType.Base, then Utc will be used.</param>
         /// <returns>The exchange hours for the specified security</returns>
-        public virtual SecurityExchangeHours GetExchangeHours(string market, string symbol, SecurityType securityType)
+        public virtual SecurityExchangeHours GetExchangeHours(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
         {
             SecurityExchangeHours hours;
             var key = new Key(market, symbol, securityType);
@@ -92,8 +95,13 @@ namespace QuantConnect.Securities
                 {
                     if (securityType == SecurityType.Base)
                     {
+                        if (overrideTimeZone == null)
+                        {
+                            overrideTimeZone = TimeZones.Utc;
+                            Log.Trace("SecurityExchangeHoursProvider.GetExchangeHours(): Custom data no time zone specified, default to UTC. " + new Key(market, symbol, securityType));
+                        }
                         // base securities are always open by default
-                        return SecurityExchangeHours.AlwaysOpen;
+                        return SecurityExchangeHours.AlwaysOpen(overrideTimeZone);
                     }
 
                     Log.Error("SecurityExchangeHoursProvider.GetExchangeHours(): Unable to locate exchange hours for " + key + "." +
@@ -101,6 +109,12 @@ namespace QuantConnect.Securities
 
                     // there was nothing that really matched exactly... what should we do here?
                     throw new ArgumentException("Unable to locate exchange hours for " + key);
+                }
+                // perform time zone override if requested, we'll use the same exact local hours
+                // and holidays, but we'll express them in a different time zone
+                if (overrideTimeZone != null && !hours.TimeZone.Equals(overrideTimeZone))
+                {
+                    hours = new SecurityExchangeHours(overrideTimeZone, hours.Holidays, hours.MarketHours);
                 }
             }
 
@@ -169,7 +183,21 @@ namespace QuantConnect.Securities
             var csv = line.Split(',');
             var marketHours = new List<LocalMarketHours>(7);
 
-            var timeZone = DateTimeZoneProviders.Tzdb[csv[0]];
+            // timezones can be specified using Tzdb names (America/New_York) or they can
+            // be specified using offsets, UTC-5
+
+            DateTimeZone timeZone;
+            if (!csv[0].StartsWith("UTC"))
+            {
+                timeZone = DateTimeZoneProviders.Tzdb[csv[0]];
+            }
+            else
+            {
+                // define the time zone as a constant offset time zone in the form: 'UTC-3.5' or 'UTC+10'
+                var millisecondsOffset = (int)TimeSpan.FromHours(double.Parse(csv[0].Replace("UTC", string.Empty))).TotalMilliseconds;
+                timeZone = DateTimeZone.ForOffset(Offset.FromMilliseconds(millisecondsOffset));
+            }
+
             //var market = csv[1];
             //var symbol = csv[2];
             //var type = csv[3];
@@ -321,9 +349,9 @@ namespace QuantConnect.Securities
             {
             }
 
-            public override SecurityExchangeHours GetExchangeHours(string market, string symbol, SecurityType securityType)
+            public override SecurityExchangeHours GetExchangeHours(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
             {
-                return SecurityExchangeHours.AlwaysOpen;
+                return SecurityExchangeHours.AlwaysOpen(overrideTimeZone ?? TimeZones.Utc);
             }
         }
     }

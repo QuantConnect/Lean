@@ -44,9 +44,22 @@ namespace QuantConnect.Scheduling
         private readonly IEnumerator<DateTime> _orderedEventUtcTimes;
 
         /// <summary>
+        /// Event that fires each time this scheduled event happens
+        /// </summary>
+        public event Action<string, DateTime> EventFired;
+
+        /// <summary>
+        /// Gets or sets whether this event is enabled
+        /// </summary>
+        public bool Enabled
+        {
+            get; set;
+        }
+
+        /// <summary>
         /// Gets or sets whether this event will log each time it fires
         /// </summary>
-        public bool IsLoggingEnabled
+        internal bool IsLoggingEnabled
         {
             get; set;
         }
@@ -73,7 +86,7 @@ namespace QuantConnect.Scheduling
         /// <param name="name">An identifier for this event</param>
         /// <param name="eventUtcTime">The date time the event should fire</param>
         /// <param name="callback">Delegate to be called when the event time passes</param>
-        public ScheduledEvent(string name, DateTime eventUtcTime, Action<string, DateTime> callback)
+        public ScheduledEvent(string name, DateTime eventUtcTime, Action<string, DateTime> callback = null)
             : this(name, new[] { eventUtcTime }.AsEnumerable().GetEnumerator(), callback)
         {
         }
@@ -84,7 +97,7 @@ namespace QuantConnect.Scheduling
         /// <param name="name">An identifier for this event</param>
         /// <param name="orderedEventUtcTimes">An enumerable that emits event times</param>
         /// <param name="callback">Delegate to be called each time an event passes</param>
-        public ScheduledEvent(string name, IEnumerable<DateTime> orderedEventUtcTimes, Action<string, DateTime> callback)
+        public ScheduledEvent(string name, IEnumerable<DateTime> orderedEventUtcTimes, Action<string, DateTime> callback = null)
             : this(name, orderedEventUtcTimes.GetEnumerator(), callback)
         {
         }
@@ -95,7 +108,7 @@ namespace QuantConnect.Scheduling
         /// <param name="name">An identifier for this event</param>
         /// <param name="orderedEventUtcTimes">An enumerator that emits event times</param>
         /// <param name="callback">Delegate to be called each time an event passes</param>
-        public ScheduledEvent(string name, IEnumerator<DateTime> orderedEventUtcTimes, Action<string, DateTime> callback)
+        public ScheduledEvent(string name, IEnumerator<DateTime> orderedEventUtcTimes, Action<string, DateTime> callback = null)
         {
             _name = name;
             _callback = callback;
@@ -103,13 +116,15 @@ namespace QuantConnect.Scheduling
 
             // prime the pump
             _endOfScheduledEvents = !_orderedEventUtcTimes.MoveNext();
+
+            Enabled = true;
         }
 
         /// <summary>
         /// Scans this event and fires the callback if an event happened
         /// </summary>
         /// <param name="utcTime">The current time in UTC</param>
-        public void Scan(DateTime utcTime)
+        internal void Scan(DateTime utcTime)
         {
             if (_endOfScheduledEvents)
             {
@@ -147,7 +162,7 @@ namespace QuantConnect.Scheduling
                             );
                     }
                     // fire the event
-                    _callback(_name, _orderedEventUtcTimes.Current);
+                    OnEventFired(_orderedEventUtcTimes.Current);
                     _needsMoveNext = true;
                 }
                 else
@@ -166,8 +181,11 @@ namespace QuantConnect.Scheduling
         /// Fast forwards this schedule to the specified time without invoking the events
         /// </summary>
         /// <param name="utcTime">Frontier time</param>
-        public void SkipEventsUntil(DateTime utcTime)
+        internal void SkipEventsUntil(DateTime utcTime)
         {
+            // check if our next event is in the past
+            if (utcTime < _orderedEventUtcTimes.Current) return;
+
             while (_orderedEventUtcTimes.MoveNext())
             {
                 // zoom through the enumerator until we get to the desired time
@@ -199,9 +217,26 @@ namespace QuantConnect.Scheduling
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
+        void IDisposable.Dispose()
         {
             _orderedEventUtcTimes.Dispose();
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="EventFired"/> event
+        /// </summary>
+        /// <param name="triggerTime">The event's time in UTC</param>
+        protected void OnEventFired(DateTime triggerTime)
+        {
+            // don't fire the event if we're turned off
+            if (!Enabled) return;
+
+            if (_callback != null)
+            {
+                _callback(_name, _orderedEventUtcTimes.Current);
+            }
+            var handler = EventFired;
+            if (handler != null) handler(_name, triggerTime);
         }
     }
 }

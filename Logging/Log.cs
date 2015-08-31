@@ -84,9 +84,9 @@ namespace QuantConnect.Logging
         /// <param name="exception">The exception to be logged</param>
         /// <param name="message">An optional message to be logged, if null/whitespace the messge text will be extracted</param>
         /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
-        public static void Error(string method, Exception exception, string message = null, bool overrideMessageFloodProtection = false)
+        private static void Error(string method, Exception exception, string message = null, bool overrideMessageFloodProtection = false)
         {
-            message = message ?? method + "(): " + AggregateExceptionMessage(exception);
+            message = method + "(): " + (message ?? string.Empty) + " " + AggregateExceptionMessage(exception);
             var stack = AggregateStackTrace(exception);
             if (!string.IsNullOrEmpty(stack))
             {
@@ -103,7 +103,6 @@ namespace QuantConnect.Logging
         /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
         public static void Error(Exception exception, string message = null, bool overrideMessageFloodProtection = false)
         {
-            message = message == null ? exception.Message : message + "\t-\t" + exception.Message;
             Error(WhoCalledMe.GetMethodName(1), exception, message, overrideMessageFloodProtection);
         }
 

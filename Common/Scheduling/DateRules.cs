@@ -39,6 +39,32 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
+        /// Specifies an event should fire only on the specified day
+        /// </summary>
+        /// <param name="year">The year</param>
+        /// <param name="month">The month</param>
+        /// <param name="day">The day</param>
+        /// <returns></returns>
+        public IDateRule On(int year, int month, int day)
+        {
+            // make sure they're date objects
+            var dates = new[] {new DateTime(year, month, day)};
+            return new FuncDateRule(string.Join(",", dates.Select(x => x.ToShortDateString())), (start, end) => dates);
+        }
+
+        /// <summary>
+        /// Specifies an event should fire only on the specified days
+        /// </summary>
+        /// <param name="dates">The dates the event should fire</param>
+        /// <returns></returns>
+        public IDateRule On(params DateTime[] dates)
+        {
+            // make sure they're date objects
+            dates = dates.Select(x => x.Date).ToArray();
+            return new FuncDateRule(string.Join(",", dates.Select(x => x.ToShortDateString())), (start, end) => dates);
+        }
+
+        /// <summary>
         /// Specifies an event should fire on each of the specified days of week
         /// </summary>
         /// <param name="days">The days the event shouls fire</param>

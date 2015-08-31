@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using NodaTime;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Scheduling
@@ -184,26 +185,27 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>
-        void IFluentSchedulingRunnable.Run(Action callback)
+        ScheduledEvent IFluentSchedulingRunnable.Run(Action callback)
         {
-            ((IFluentSchedulingRunnable)this).Run((name, time) => callback());
+            return ((IFluentSchedulingRunnable)this).Run((name, time) => callback());
         }
 
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>
-        void IFluentSchedulingRunnable.Run(Action<DateTime> callback)
+        ScheduledEvent IFluentSchedulingRunnable.Run(Action<DateTime> callback)
         {
-            ((IFluentSchedulingRunnable)this).Run((name, time) => callback(time));
+            return ((IFluentSchedulingRunnable)this).Run((name, time) => callback(time));
         }
 
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>
-        void IFluentSchedulingRunnable.Run(Action<string, DateTime> callback)
+        ScheduledEvent IFluentSchedulingRunnable.Run(Action<string, DateTime> callback)
         {
             var name = _name ?? _dateRule.Name + ": " + _timeRule.Name;
-            var dates = _dateRule.GetDates(_securities.UtcTime, Time.EndOfTime);
+            // back the date up to ensure we get all events, the event scheduler will skip past events that whose time has passed
+            var dates = _dateRule.GetDates(_securities.UtcTime.Date.AddDays(-1), Time.EndOfTime);
             var eventTimes = _timeRule.CreateUtcEventTimes(dates);
             if (_predicate != null)
             {
@@ -211,6 +213,7 @@ namespace QuantConnect.Scheduling
             }
             var scheduledEvent = new ScheduledEvent(name, eventTimes, callback);
             _schedule.Add(scheduledEvent);
+            return scheduledEvent;
         }
 
         /// <summary>
@@ -241,6 +244,38 @@ namespace QuantConnect.Scheduling
             return this;
         }
 
+        IFluentSchedulingTimeSpecifier IFluentSchedulingDateSpecifier.On(int year, int month, int day)
+        {
+            _dateRule = _schedule.DateRules.On(year, month, day);
+            return this;
+        }
+
+        IFluentSchedulingTimeSpecifier IFluentSchedulingDateSpecifier.On(params DateTime[] dates)
+        {
+            _dateRule = _schedule.DateRules.On(dates);
+            return this;
+        }
+
+        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.At(int hour, int minute, int second)
+        {
+            return SetTimeRule(_schedule.TimeRules.At(hour, minute, second));
+        }
+
+        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.At(int hour, int minute, DateTimeZone timeZone)
+        {
+            return SetTimeRule(_schedule.TimeRules.At(hour, minute, 0, timeZone));
+        }
+
+        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.At(int hour, int minute, int second, DateTimeZone timeZone)
+        {
+            return SetTimeRule(_schedule.TimeRules.At(hour, minute, second, timeZone));
+        }
+
+        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.At(TimeSpan timeOfDay, DateTimeZone timeZone)
+        {
+            return SetTimeRule(_schedule.TimeRules.At(timeOfDay, timeZone));
+        }
+
         private Security GetSecurity(string symbol)
         {
             Security security;
@@ -263,6 +298,14 @@ namespace QuantConnect.Scheduling
         /// Filters the event times using the predicate
         /// </summary>
         IFluentSchedulingTimeSpecifier Where(Func<DateTime, bool> predicate);
+        /// <summary>
+        /// Creates events only on the specified date
+        /// </summary>
+        IFluentSchedulingTimeSpecifier On(int year, int month, int day);
+        /// <summary>
+        /// Creates events only on the specified dates
+        /// </summary>
+        IFluentSchedulingTimeSpecifier On(params DateTime[] dates);
         /// <summary>
         /// Creates events on each of the specified day of week
         /// </summary>
@@ -294,6 +337,22 @@ namespace QuantConnect.Scheduling
         /// Filters the event times using the predicate
         /// </summary>
         IFluentSchedulingTimeSpecifier Where(Func<DateTime, bool> predicate);
+        /// <summary>
+        /// Creates events that fire at the specified time of day in the specified time zone
+        /// </summary>
+        IFluentSchedulingRunnable At(int hour, int minute, int second = 0);
+        /// <summary>
+        /// Creates events that fire at the specified time of day in the specified time zone
+        /// </summary>
+        IFluentSchedulingRunnable At(int hour, int minute, DateTimeZone timeZone);
+        /// <summary>
+        /// Creates events that fire at the specified time of day in the specified time zone
+        /// </summary>
+        IFluentSchedulingRunnable At(int hour, int minute, int second, DateTimeZone timeZone);
+        /// <summary>
+        /// Creates events that fire at the specified time of day in the specified time zone
+        /// </summary>
+        IFluentSchedulingRunnable At(TimeSpan timeOfDay, DateTimeZone timeZone);
         /// <summary>
         /// Creates events that fire at the specific time of day in the algorithm's time zone
         /// </summary>
@@ -328,14 +387,14 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>
-        void Run(Action callback);
+        ScheduledEvent Run(Action callback);
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>
-        void Run(Action<DateTime> callback);
+        ScheduledEvent Run(Action<DateTime> callback);
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>
-        void Run(Action<string, DateTime> callback);
+        ScheduledEvent Run(Action<string, DateTime> callback);
     }
 }

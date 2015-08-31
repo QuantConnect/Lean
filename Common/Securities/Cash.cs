@@ -139,7 +139,6 @@ namespace QuantConnect.Securities
             var currencyPairs = Forex.Forex.CurrencyPairs;
             var minimumResolution = subscriptions.Subscriptions.Min(x => x.Resolution);
             var objectType = minimumResolution == Resolution.Tick ? typeof (Tick) : typeof (TradeBar);
-            var isTradeBar = objectType == typeof (TradeBar);
             foreach (var symbol in currencyPairs)
             {
                 if (symbol == normal || symbol == invert)
@@ -147,7 +146,7 @@ namespace QuantConnect.Securities
                     _invertRealTimePrice = symbol == invert;
                     var exchangeHours = exchangeHoursProvider.GetExchangeHours(market, symbol, SecurityType.Forex);
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
-                    var config = subscriptions.Add(objectType, SecurityType.Forex, symbol, minimumResolution, market, exchangeHours.TimeZone, true, false, isTradeBar, isTradeBar, true);
+                    var config = subscriptions.Add(objectType, SecurityType.Forex, symbol, minimumResolution, market, exchangeHours.TimeZone, true, false, true);
                     var security = new Forex.Forex(this, config, 1m);
                     SecuritySymbol = config.Symbol;
                     securities.Add(symbol, security);
