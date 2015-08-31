@@ -41,14 +41,11 @@ namespace QuantConnect.CoarseUniverseGenerator
         /// <param name="args">Unused argument</param>
         public static void Main(string[] args)
         {
+            Constants.Initialize();
+
             // read out the configuration file
             JToken jtoken;
             var config = JObject.Parse(File.ReadAllText("config.json"));
-            if (!config.TryGetValue("data-directory", out jtoken))
-            {
-                throw new Exception("Specify 'data-directory' in config.json");
-            }
-            var dataDirectory = jtoken.Value<string>();
 
             var ignoreMaplessSymbols = false;
             var updateMode = false;
@@ -71,7 +68,7 @@ namespace QuantConnect.CoarseUniverseGenerator
 
             do
             {
-                ProcessEquityDirectories(dataDirectory, ignoreMaplessSymbols);
+                ProcessEquityDirectories(Constants.DataFolder, ignoreMaplessSymbols);
             }
             while (WaitUntilTimeInUpdateMode(updateMode, updateTime));
         }
@@ -146,7 +143,7 @@ namespace QuantConnect.CoarseUniverseGenerator
             var stopwatch = Stopwatch.StartNew();
             
             // load map files into memory
-            var mapFileCollection = new MapFileCollection(mapFileFolder); 
+            var mapFileResolver = MapFileResolver.Create(mapFileFolder); 
 
             var symbols = 0;
             var maplessCount = 0;
@@ -216,26 +213,23 @@ namespace QuantConnect.CoarseUniverseGenerator
                             var coarseFile = Path.Combine(coarseFolder, date.ToString("yyyyMMdd") + ".csv");
                             dates.Add(date);
 
-                            // this is kind of wierd, but is done to keep symbol resolution in the engine simpler
-                            // we're going to map this symbol to the correct map file symbol for the date.
-                            // for example, in 2013, GOOG was trading, but today it's GOOGL, and so it's
-                            // map file is GOOGL.csv, so we'll map the symbol to GOOGL so the engine can
-                            // easily resolve it
-                            var mappedSymbol = symbol;
-                            var mapFile = mapFileCollection.ResolveMapFile(symbol, date);
+                            // try to resolve a map file and if found, use the permtick as the symbol
+                            var sid = symbol;
+                            var mapFile = mapFileResolver.ResolveMapFile(sid, date);
+                            if (mapFile != null)
+                            {
+                                // if available, us the permtick in the coarse files, because of this, we need
+                                // to update the coarse files each time new map files are added/permticks change
+                                sid = mapFile.Permtick;
+                            }
                             if (mapFile == null && ignoreMapless)
                             {
                                 // if we're ignoring mapless files then we should always be able to resolve this
                                 Log.Error(string.Format("Unable to resolve map file for {0} as of {1}", symbol, date.ToShortDateString()));
                             }
 
-                            if (mapFile != null)
-                            {
-                                mappedSymbol = Path.GetFileNameWithoutExtension(mapFile).ToUpper();
-                            }
-
-                            // symbol,close,volume,dollar volume
-                            var coarseFileLine = mappedSymbol + "," + close + "," + volume + "," + dollarVolume;
+                            // sid,symbol,close,volume,dollar volume
+                            var coarseFileLine = sid + "," + symbol + "," + close + "," + volume + "," + Math.Truncate(dollarVolume);
 
                             StreamWriter writer;
                             if (!writers.TryGetValue(coarseFile, out writer))

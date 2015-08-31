@@ -33,6 +33,10 @@
     <Reference Include="Ionic.Zip">
       <HintPath>..\packages\DotNetZip.1.9.3\lib\net20\Ionic.Zip.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -43,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compression.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="DateFormat.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="InstrumentType.cs" />
@@ -50,7 +55,7 @@
     <Compile Include="LeanInstrument.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="MapFile.cs" />
-    <Compile Include="MapFileCollection.cs" />
+    <Compile Include="MapFileResolver.cs" />
     <Compile Include="MapFileRow.cs" />
     <Compile Include="OS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
