@@ -408,6 +408,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     // we couldn't connect after several attempts, log the error and throw an exception
                     Log.Error("InteractiveBrokersBrokerage.Connect(): " + err.Message);
+
+                    // add a blurb about TWS for connection refused errors
+                    if (err.Message.Contains("Connection refused"))
+                    {
+                        throw new Exception(err.Message + ". Be sure to logout of Trader Workstation. IB only allows one active log in at a time.", err);
+                    }
+
                     throw;
                 }
             }
