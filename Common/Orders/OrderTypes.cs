@@ -89,6 +89,10 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Default Value - No Order Direction
         /// </summary>
+        /// <remarks>
+        /// Unfortunately this does not have a value of zero because
+        /// there are backtests saved that reference the values in this order
+        /// </remarks>
         Hold
     }
 

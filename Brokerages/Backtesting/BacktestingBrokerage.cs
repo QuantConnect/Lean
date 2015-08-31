@@ -223,8 +223,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    var fill = new OrderEvent();
-                    fill.Symbol = order.Symbol;
+                    var fill = new OrderEvent(order);
 
                     // verify sure we have enough cash to perform the fill
                     bool sufficientBuyingPower;

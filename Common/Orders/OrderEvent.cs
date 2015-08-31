@@ -63,10 +63,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public OrderDirection Direction
         {
-            get
-            {
-                return (FillQuantity > 0) ? OrderDirection.Buy : OrderDirection.Sell;
-            }
+            get; private set;
         }
 
         /// <summary>
@@ -80,10 +77,11 @@ namespace QuantConnect.Orders
         /// <param name="id">Id of the parent order</param>
         /// <param name="symbol">Asset Symbol</param>
         /// <param name="status">Status of the order</param>
+        /// <param name="direction">The direction of the order this event belongs to</param>
         /// <param name="fillPrice">Fill price information if applicable.</param>
         /// <param name="fillQuantity">Fill quantity</param>
         /// <param name="message">Message from the exchange</param>
-        public OrderEvent(int id = 0, string symbol = "", OrderStatus status = OrderStatus.None, decimal fillPrice = 0, int fillQuantity = 0, string message = "")
+        public OrderEvent(int id, string symbol, OrderStatus status, OrderDirection direction, decimal fillPrice, int fillQuantity, string message = "")
         {
             OrderId = id;
             Status = status;
@@ -91,6 +89,7 @@ namespace QuantConnect.Orders
             Message = message;
             FillQuantity = fillQuantity;
             Symbol = symbol;
+            Direction = direction;
         }
 
         /// <summary>
@@ -104,6 +103,7 @@ namespace QuantConnect.Orders
             Status = order.Status;
             Message = message;
             Symbol = order.Symbol;
+            Direction = order.Direction;
 
             //Initialize to zero, manually set fill quantity
             FillQuantity = 0;
