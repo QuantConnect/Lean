@@ -481,7 +481,7 @@ namespace QuantConnect.Securities
             {
                 // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
                 var currentBar = asset.GetLastData();
-                if (!asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, false))
+                if (asset.LocalTime.Date != currentBar.EndTime.Date || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, false))
                 {
                     return false;
                 }
