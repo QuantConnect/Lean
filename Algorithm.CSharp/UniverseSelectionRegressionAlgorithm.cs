@@ -40,11 +40,15 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 04, 07);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
+
+            // security that exists with no mappings
+            AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
+            // security that doesn't exist until half way in backtest (comes in as GOOCV)
             AddSecurity(SecurityType.Equity, "GOOG", Resolution.Daily);
 
             SetUniverse(coarse =>
             {
-                var startsWithGoo = coarse.Where(x => x.Symbol.SID.StartsWith("GOO")).ToList();
+                // select the various google symbols over the period
                 return from c in coarse
                        let sym = c.Symbol.Value
                        where sym == "GOOG" || sym == "GOOCV" || sym == "GOOAV" || sym == "GOOGL"
@@ -58,14 +62,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            if (Transactions.OrdersCount == 0)
+            {
+                MarketOrder("SPY", 100);
+            }
+
             foreach (var kvp in data.Delistings)
             {
                 _delistedSymbols.Add(kvp.Key);
-            }
-
-            if (Transactions.OrdersCount == 0)
-            {
-                MarketOrder("GOOG", 100);
             }
 
             if (Time.Date == new DateTime(2014, 04, 07))
@@ -73,16 +77,17 @@ namespace QuantConnect.Algorithm.CSharp
                 Liquidate();
                 return;
             }
+
             if (_changes != null && _changes.AddedSecurities.All(x => data.Bars.ContainsKey(x.Symbol)))
             {
                 foreach (var security in _changes.AddedSecurities)
                 {
-                    Console.WriteLine(Time + ": Added: " + security.Symbol);
+                    Console.WriteLine(Time + ": Added Security: " + security.Symbol);
                     MarketOnOpenOrder(security.Symbol, 100);
                 }
                 foreach (var security in _changes.RemovedSecurities)
                 {
-                    Console.WriteLine(Time + ": Removed: " + security.Symbol);
+                    Console.WriteLine(Time + ": Removed Security: " + security.Symbol);
                     if (!_delistedSymbols.Contains(security.Symbol))
                     {
                         MarketOnOpenOrder(security.Symbol, -100);
@@ -101,6 +106,10 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
+            if (orderEvent.Status == OrderStatus.Submitted)
+            {
+                Console.WriteLine(Time + ": Submitted: " + Transactions.GetOrderById(orderEvent.OrderId));
+            }
             if (orderEvent.Status.IsFill())
             {
                 Console.WriteLine(Time + ": Filled: " + Transactions.GetOrderById(orderEvent.OrderId));
