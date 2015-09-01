@@ -66,7 +66,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         {
             var config = security.SubscriptionDataConfig;
             IEnumerator<BaseData> reader = new SubscriptionDataReader(config, 
-                security, 
                 start, 
                 end, 
                 ResultHandlerStub.Instance,

@@ -33,7 +33,6 @@ namespace QuantConnect.Securities
     {
         private LocalTimeKeeper _localTimeKeeper;
 
-        private readonly bool _isDynamicallyLoadedData;
         private readonly SubscriptionDataConfig _config;
 
         /// <summary>
@@ -204,10 +203,9 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false) 
+        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, decimal leverage) 
         {
             _config = config;
-            _isDynamicallyLoadedData = isDynamicallyLoadedData;
 
             Cache = new SecurityCache();
             Exchange = new SecurityExchange(exchangeHours);
@@ -281,17 +279,6 @@ namespace QuantConnect.Securities
             get
             {
                 return Holdings.Leverage;
-            }
-        }
-
-        /// <summary>
-        /// Use QuantConnect data source flag, or is the security a user imported object
-        /// </summary>
-        public virtual bool IsDynamicallyLoadedData 
-        {
-            get
-            {
-                return _isDynamicallyLoadedData;
             }
         }
 

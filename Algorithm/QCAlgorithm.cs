@@ -403,7 +403,7 @@ namespace QuantConnect.Algorithm
                     // add the security as an internal feed so the algorithm doesn't receive the data
                     var resolution = _liveMode ? Resolution.Second : Resolution.Daily;
                     var market = _benchmarkSecurityType == SecurityType.Forex ? "fxcm" : "usa";
-                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider, _benchmarkSecurityType, _benchmarkSymbol, resolution, market, true, 1m, false, true);
+                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider, _benchmarkSecurityType, _benchmarkSymbol, resolution, market, true, 1m, false, true, false);
                 }
 
                 // just return the current price
@@ -1021,8 +1021,8 @@ namespace QuantConnect.Algorithm
             {
                 var sec = Securities[x];
                 var secConfig = sec.SubscriptionDataConfig; 
-                var config = new SubscriptionDataConfig(secConfig.Type, secConfig.SecurityType, x, resolution, secConfig.Market, secConfig.TimeZone, fillForward, extendedMarket, false);
-                return new Security(sec.Exchange.Hours, config, sec.Leverage, sec.IsDynamicallyLoadedData);
+                var config = new SubscriptionDataConfig(secConfig.Type, secConfig.SecurityType, x, resolution, secConfig.Market, secConfig.TimeZone, fillForward, extendedMarket, false, secConfig.IsCustomData);
+                return new Security(sec.Exchange.Hours, config, sec.Leverage);
             });
             start = start.ConvertToUtc(TimeZone);
             end = end.ConvertToUtc(TimeZone);
@@ -1098,7 +1098,7 @@ namespace QuantConnect.Algorithm
             {
                 var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider,
                     securityType, symbol, resolution, market,
-                    fillDataForward, leverage, extendedMarketHours, false);
+                    fillDataForward, leverage, extendedMarketHours, false, false);
 
                 //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
                 Securities.Add(security.Symbol, security);
@@ -1160,12 +1160,12 @@ namespace QuantConnect.Algorithm
             if (_locked) return;
 
             //Add this to the data-feed subscriptions
-            var config = SubscriptionManager.Add(typeof(T), SecurityType.Base, symbol, resolution, "usa", timeZone, fillDataForward, true, false);
+            var config = SubscriptionManager.Add(typeof(T), SecurityType.Base, symbol, resolution, "usa", timeZone, true, fillDataForward, true, false);
 
             var exchangeHours = _exchangeHoursProvider.GetExchangeHours(config);
 
             //Add this new generic data as a tradeable security: 
-            var security = new Security(exchangeHours, config, leverage, true);
+            var security = new Security(exchangeHours, config, leverage);
             Securities.Add(symbol, security);
         }
 

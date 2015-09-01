@@ -194,7 +194,7 @@ namespace QuantConnect.Tests.Common.Scheduling
             var manager = new SecurityManager(timeKeeper);
             var securityExchangeHours = SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours("usa", null, SecurityType.Equity);
             var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, "SPY", Resolution.Daily, "usa", securityExchangeHours.TimeZone, true, false, false);
-            manager.Add("SPY", new Security(securityExchangeHours, config, 1, false));
+            manager.Add("SPY", new Security(securityExchangeHours, config, 1));
             var rules = new TimeRules(manager, dateTimeZone);
             return rules;
         }

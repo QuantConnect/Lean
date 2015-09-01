@@ -210,7 +210,7 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.CashBook["USD"].Quantity = quantity;
 
             var config = CreateTradeBarDataConfig(SecurityType.Equity, "AAPL");
-            securities.Add(new Security(SecurityExchangeHours, config, leverage, false));
+            securities.Add(new Security(SecurityExchangeHours, config, leverage));
 
             var time = DateTime.Now;
             const decimal buyPrice = 1m;
@@ -296,7 +296,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var time = DateTime.Now;
             var config1 = CreateTradeBarDataConfig(SecurityType.Equity, "AAPL");
-            securities.Add(new Security(SecurityExchangeHours, config1, 2, false));
+            securities.Add(new Security(SecurityExchangeHours, config1, 2));
             securities["AAPL"].Holdings.SetHoldings(100, 100);
             securities["AAPL"].SetMarketPrice(new TradeBar{Time = time, Value = 100});
             //Console.WriteLine("AAPL TMU: " + securities["AAPL"].MarginModel.GetMaintenanceMargin(securities["AAPL"]));
@@ -305,7 +305,7 @@ namespace QuantConnect.Tests.Common.Securities
             //Console.WriteLine();
 
             var config2 = CreateTradeBarDataConfig(SecurityType.Forex, "EURUSD");
-            securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, config2, 100, false));
+            securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, config2, 100));
             securities["EURUSD"].Holdings.SetHoldings(1.1m, 1000);
             securities["EURUSD"].SetMarketPrice(new TradeBar { Time = time, Value = 1.1m });
             //Console.WriteLine("EURUSD TMU: " + securities["EURUSD"].MarginModel.GetMaintenanceMargin(securities["EURUSD"]));
@@ -314,7 +314,7 @@ namespace QuantConnect.Tests.Common.Securities
             //Console.WriteLine();
 
             var config3 = CreateTradeBarDataConfig(SecurityType.Forex, "EURGBP");
-            securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, gbpCash, config3, 100, false));
+            securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, gbpCash, config3, 100));
             securities["EURGBP"].Holdings.SetHoldings(1m, 1000);
             securities["EURGBP"].SetMarketPrice(new TradeBar { Time = time, Value = 1m });
             //Console.WriteLine("EURGBP TMU: " + securities["EURGBP"].MarginModel.GetMaintenanceMargin(securities["EURGBP"]));

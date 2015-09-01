@@ -145,7 +145,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // this is all the data that goes into the algorithm
                         allDataForAlgorithm.Add(baseData);
                     }
-                    if (kvp.Key.IsDynamicallyLoadedData)
+                    if (kvp.Key.SubscriptionDataConfig.IsCustomData)
                     {
                         // this is all the custom data
                         custom.Add(kvp);

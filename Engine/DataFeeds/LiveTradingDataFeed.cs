@@ -247,7 +247,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Log.Trace("LiveTradingDataFeed.Stream(): Waiting for updated market hours...", true);
 
             var symbols = (from security in _algorithm.Securities.Values
-                           where !security.IsDynamicallyLoadedData && (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
+                           where !security.SubscriptionDataConfig.IsCustomData && (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
                            select security.Symbol.SID).ToList<string>();
 
             Log.Trace("LiveTradingDataFeed.Stream(): Market open, starting stream for " + string.Join(",", symbols));
@@ -463,13 +463,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             DateTime periodEnd)
         {
             IEnumerator<BaseData> enumerator = null;
-            if (security.IsDynamicallyLoadedData)
+            if (security.SubscriptionDataConfig.IsCustomData)
             {
                 //Subscription managers for downloading user data:
                 // TODO: Update this when warmup comes in, we back up so we can get data that should have emitted at midnight today
                 var subscriptionDataReader = new SubscriptionDataReader(
                     security.SubscriptionDataConfig,
-                    security,
                     periodStart, Time.EndOfTime,
                     resultHandler,
                     Time.EachTradeableDay(algorithm.Securities.Values, periodStart, periodEnd),
