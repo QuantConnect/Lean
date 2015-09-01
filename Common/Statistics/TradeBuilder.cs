@@ -46,6 +46,10 @@ namespace QuantConnect.Statistics
         private readonly Dictionary<string, Position> _positions = new Dictionary<string, Position>();
         private readonly FillGroupingMethod _groupingMethod;
         private readonly FillMatchingMethod _matchingMethod;
+        private bool _liveMode;
+
+        private const int LiveModeMaxTradeCount = 10000;
+        private const int LiveModeMaxTradeAgeMonths = 12;
 
         /// <summary>
         /// Initializes a new instance of the TradeBuilder class
@@ -54,6 +58,15 @@ namespace QuantConnect.Statistics
         {
             _groupingMethod = groupingMethod;
             _matchingMethod = matchingMethod;
+        }
+
+        /// <summary>
+        /// Sets the live mode flag
+        /// </summary>
+        /// <param name="live">The live mode flag</param>
+        public void SetLiveMode(bool live)
+        {
+            _liveMode = live;
         }
 
         /// <summary>
@@ -182,14 +195,14 @@ namespace QuantConnect.Statistics
                         trade.MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * trade.Quantity * conversionRate, 2);
                         trade.MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * trade.Quantity * conversionRate, 2);
                         
-                        _closedTrades.Add(trade);
+                        AddNewTrade(trade);
                     }
                     else
                     {
                         totalExecutedQuantity += fill.FillQuantity;
                         trade.Quantity -= fill.AbsoluteFillQuantity;
 
-                        _closedTrades.Add(new Trade
+                        AddNewTrade(new Trade
                         {
                             Symbol = trade.Symbol,
                             EntryTime = trade.EntryTime,
@@ -291,7 +304,7 @@ namespace QuantConnect.Statistics
 
                     var direction = Math.Sign(fill.FillQuantity) < 0 ? TradeDirection.Long : TradeDirection.Short;
 
-                    _closedTrades.Add(new Trade
+                    AddNewTrade(new Trade
                     {
                         Symbol = fill.Symbol,
                         EntryTime = entryTime,
@@ -381,7 +394,7 @@ namespace QuantConnect.Statistics
 
                 var direction = totalExecutedQuantity < 0 ? TradeDirection.Long : TradeDirection.Short;
 
-                _closedTrades.Add(new Trade
+                AddNewTrade(new Trade
                 {
                     Symbol = fill.Symbol,
                     EntryTime = entryTime,
@@ -407,6 +420,30 @@ namespace QuantConnect.Statistics
                     position.MinPrice = fill.FillPrice;
                     position.MaxPrice = fill.FillPrice;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Adds a trade to the list of closed trades, capping the total number only in live mode
+        /// </summary>
+        private void AddNewTrade(Trade trade)
+        {
+            _closedTrades.Add(trade);
+
+            // Due to memory constraints in live mode, we cap the number of trades
+            if (!_liveMode) 
+                return;
+
+            // maximum number of trades
+            if (_closedTrades.Count > LiveModeMaxTradeCount)
+            {
+                _closedTrades.RemoveRange(0, _closedTrades.Count - LiveModeMaxTradeCount);
+            }
+
+            // maximum age of trades
+            while (_closedTrades.Count > 0 && _closedTrades[0].ExitTime.Date.AddMonths(LiveModeMaxTradeAgeMonths) < DateTime.Today)
+            {
+                _closedTrades.RemoveAt(0);
             }
         }
 

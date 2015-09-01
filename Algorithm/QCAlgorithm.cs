@@ -945,6 +945,7 @@ namespace QuantConnect.Algorithm
             {
                 _liveMode = live;
                 Notify = new NotificationManager(live);
+                TradeBuilder.SetLiveMode(live);
             }
         }
 
