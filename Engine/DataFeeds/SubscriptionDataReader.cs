@@ -46,9 +46,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Configuration of the data-reader:
         private readonly SubscriptionDataConfig _config;
 
-        /// Subscription Securities Access
-        private readonly Security _security;
-
         /// true if we can find a scale factor file for the security of the form: ..\Lean\Data\equity\market\factor_files\{SYMBOL}.csv
         private readonly bool _hasScaleFactors;
 
@@ -145,7 +142,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _periodFinish = periodFinish;
 
             //Save access to securities
-            _security = security;
             _isDynamicallyLoadedData = security.IsDynamicallyLoadedData;
             _isLiveMode = isLiveMode;
             _includeAuxilliaryData = includeAuxilliaryData;
@@ -496,11 +492,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     UpdateScaleFactors(date);
                 }
 
-                // if the exchange is open then we should look for data for this data
-                if (_security.Exchange.DateIsOpen(date))
-                {
-                    return true;
-                }
+                // we've passed initial checks,now go get data for this date!
+                return true;
             }
 
             // no more tradeable dates, we've exhausted the enumerator
