@@ -123,6 +123,7 @@ namespace QuantConnect.Lean.Engine
             Log.Trace("         RealTime:     " + leanEngineAlgorithmHandlers.RealTime.GetType().FullName);
             Log.Trace("         Results:      " + leanEngineAlgorithmHandlers.Results.GetType().FullName);
             Log.Trace("         Transactions: " + leanEngineAlgorithmHandlers.Transactions.GetType().FullName);
+            Log.Trace("         History:      " + leanEngineAlgorithmHandlers.HistoryProvider.GetType().FullName);
 
             // if the job version doesn't match this instance version then we can't process it
             // we also don't want to reprocess redelivered jobs
@@ -209,6 +210,8 @@ namespace QuantConnect.Lean.Engine
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
                     _algorithmHandlers.Results.SetAlgorithm(algorithm);
+                    // set the history provider before setting up the algorithm
+                    algorithm.HistoryProvider = _algorithmHandlers.HistoryProvider;
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
                     initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, out brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime);
@@ -366,10 +369,11 @@ namespace QuantConnect.Lean.Engine
 
                         //Diagnostics Completed, Send Result Packet:
                         var totalSeconds = (DateTime.Now - startTime).TotalSeconds;
+                        var dataPoints = algorithmManager.DataPoints + _algorithmHandlers.HistoryProvider.DataPointCount;
                         _algorithmHandlers.Results.DebugMessage(
                             string.Format("Algorithm Id:({0}) completed in {1} seconds at {2}k data points per second. Processing total of {3} data points.",
-                                job.AlgorithmId, totalSeconds.ToString("F2"), ((algorithmManager.DataPoints/(double) 1000)/totalSeconds).ToString("F0"),
-                                algorithmManager.DataPoints.ToString("N0")));
+                                job.AlgorithmId, totalSeconds.ToString("F2"), ((dataPoints/(double) 1000)/totalSeconds).ToString("F0"),
+                                dataPoints.ToString("N0")));
 
                         _algorithmHandlers.Results.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, statistics, banner);
                     }

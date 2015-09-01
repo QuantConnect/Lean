@@ -132,6 +132,7 @@
     <Compile Include="Data\Fundamental\FuncUniverse.cs" />
     <Compile Include="Data\Fundamental\IUniverse.cs" />
     <Compile Include="Data\Fundamental\SecurityChanges.cs" />
+    <Compile Include="Data\HistoryRequest.cs" />
     <Compile Include="Data\Market\DataDictionary.cs" />
     <Compile Include="Data\Market\Delisting.cs" />
     <Compile Include="Data\Market\Delistings.cs" />

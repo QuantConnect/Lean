@@ -95,6 +95,15 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets or sets the history provider for the algorithm
+        /// </summary>
+        IHistoryProvider HistoryProvider
+        {
+            get; 
+            set;
+        }
+
+        /// <summary>
         /// Public name for the algorithm.
         /// </summary>
         /// <remarks>Not currently used but preserved for API integrity</remarks>

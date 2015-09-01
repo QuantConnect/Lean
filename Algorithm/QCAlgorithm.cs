@@ -169,6 +169,15 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Gets or sets the history provider for the algorithm
+        /// </summary>
+        IHistoryProvider IAlgorithm.HistoryProvider
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets the date rules helper object to make specifying dates for events easier
         /// </summary>
         public DateRules DateRules
@@ -941,6 +950,88 @@ namespace QuantConnect.Algorithm
         public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<CoarseFundamental>> coarse)
         {
             Universe = new FuncUniverse(coarse);
+        }
+
+        /// <summary>
+        /// Gets the history for the symbol using the configured subscription settings
+        /// </summary>
+        /// <param name="span">The lookback period</param>
+        /// <param name="symbols">The symbols to get history for</param>
+        /// <returns>An enumerable of slice data containing the symbol's data over the recent span</returns>
+        public IEnumerable<Slice> History(TimeSpan span, params Symbol[] symbols)
+        {
+            var start = UtcTime - span;
+            var end = UtcTime;
+            var securities = symbols.Select(x => Securities[x]);
+            return History(securities, TimeZone, start, end);
+        }
+
+        /// <summary>
+        /// Gets the history for all symbols using the configured subscription settings
+        /// </summary>
+        /// <param name="span">The lookback period</param>
+        /// <returns>An enumerable of slice data containing the symbol's data over the recent span</returns>
+        public IEnumerable<Slice> History(TimeSpan span)
+        {
+            var start = UtcTime - span;
+            var end = UtcTime;
+            return History(Securities.Values, TimeZone, start, end);
+        }
+
+        /// <summary>
+        /// Gets the history for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol to request historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution of the requested data</param>
+        /// <param name="fillForward">True for fill forward</param>
+        /// <param name="extendedMarket">True to receive data during pre/post market</param>
+        /// <returns>An enumerable of slice data containing the requested symbol's data over the specified interval</returns>
+        public IEnumerable<Slice> History(Symbol symbol,
+            DateTime start,
+            DateTime end,
+            Resolution resolution,
+            bool fillForward = true,
+            bool extendedMarket = false)
+        {
+            return History(new[] {symbol}, start, end, resolution, fillForward, extendedMarket);
+        }
+
+        /// <summary>
+        /// Gets the history for the specified symbols
+        /// </summary>
+        /// <param name="symbols">The symbols to request historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution of the requested data</param>
+        /// <param name="fillForward">True for fill forward</param>
+        /// <param name="extendedMarket">True to receive data during pre/post market</param>
+        /// <returns>An enumerable of slice data containing the requested symbols' data over the specified interval</returns>
+        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols,
+            DateTime start,
+            DateTime end,
+            Resolution resolution,
+            bool fillForward = true,
+            bool extendedMarket = false)
+        {
+            // create some securities/configs for the request, this is really only required due to dependencies
+            // on SubscriptionDataReader (who asks for entire Security vs ExchangeHours)
+            var securities = symbols.Select(x =>
+            {
+                var sec = Securities[x];
+                var secConfig = sec.SubscriptionDataConfig; 
+                var config = new SubscriptionDataConfig(secConfig.Type, secConfig.SecurityType, x, resolution, secConfig.Market, secConfig.TimeZone, fillForward, extendedMarket, false);
+                return new Security(sec.Exchange.Hours, config, sec.Leverage, sec.IsDynamicallyLoadedData);
+            });
+            start = start.ConvertToUtc(TimeZone);
+            end = end.ConvertToUtc(TimeZone);
+            return History(securities, TimeZone, start, end);
+        }
+
+        private IEnumerable<Slice> History(IEnumerable<Security> securities, DateTimeZone timeZone, DateTime startTimeUtc, DateTime endTimeUtc)
+        {
+            return ((IAlgorithm)this).HistoryProvider.GetHistory(securities, timeZone, startTimeUtc, endTimeUtc);
         }
 
         /// <summary>
