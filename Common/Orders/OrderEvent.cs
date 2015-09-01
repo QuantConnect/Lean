@@ -77,7 +77,7 @@ namespace QuantConnect.Orders
         public string Message;
 
         /// <summary>
-        /// Order Constructor.
+        /// Order Event Constructor.
         /// </summary>
         /// <param name="id">Id of the parent order</param>
         /// <param name="symbol">Asset Symbol</param>
@@ -116,6 +116,21 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Helper Constructor for TradeBuilder tests
+        /// </summary>
+        /// <param name="symbol">Asset Symbol</param>
+        /// <param name="time">Date/time of this event</param>
+        /// <param name="fillPrice">Fill price</param>
+        /// <param name="fillQuantity">Fill quantity</param>
+        public OrderEvent(string symbol, DateTime time, decimal fillPrice, int fillQuantity)
+        {
+            Symbol = symbol;
+            Time = time;
+            FillPrice = fillPrice;
+            FillQuantity = fillQuantity;
+        }
+
+        /// <summary>
         /// Returns a string that represents the current object.
         /// </summary>
         /// <returns>
@@ -135,16 +150,7 @@ namespace QuantConnect.Orders
         /// <returns>The new clone object</returns>
         public OrderEvent Clone()
         {
-            return new OrderEvent
-            {
-                OrderId = OrderId,
-                Symbol = Symbol,
-                Time = Time,
-                Status = Status,
-                FillPrice = FillPrice,
-                FillQuantity = FillQuantity,
-                Message = Message,
-            };
+            return (OrderEvent)MemberwiseClone();
         }
     }
 
