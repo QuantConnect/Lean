@@ -215,7 +215,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 // don't try to add if we're already cancelling
                 if (_cancellationTokenSource.IsCancellationRequested) return;
-                Bridge.Add(TimeSlice.Create(_algorithm, utcTriggerTime, items, changes));
+                Bridge.Add(TimeSlice.Create(utcTriggerTime, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, items, changes));
             });
 
             //Start the realtime sampler above
@@ -506,7 +506,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             // don't try to add if we're already cancelling
             if (_cancellationTokenSource.IsCancellationRequested) return;
-            Bridge.Add(TimeSlice.Create(_algorithm, tick.EndTime.ConvertToUtc(subscription.TimeZone), new List<KeyValuePair<Security, List<BaseData>>>
+            Bridge.Add(TimeSlice.Create(tick.EndTime.ConvertToUtc(subscription.TimeZone), _algorithm.TimeZone, _algorithm.Portfolio.CashBook, new List<KeyValuePair<Security, List<BaseData>>>
             {
                 new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData> {tick})
             }, SecurityChanges.None));

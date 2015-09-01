@@ -255,7 +255,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // enqueue our next time slice and set the frontier for the next
-                    Bridge.Add(TimeSlice.Create(_algorithm, frontier, data, changes), _cancellationTokenSource.Token);
+                    Bridge.Add(TimeSlice.Create(frontier, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, changes), _cancellationTokenSource.Token);
 
                     // never go backwards in time, so take the max between early birds and the current frontier
                     frontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);
