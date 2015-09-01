@@ -231,7 +231,7 @@ namespace QuantConnect
         /// <returns>Enumerable date range</returns>
         public static IEnumerable<DateTime> EachTradeableDay(Security security, DateTime from, DateTime thru)
         {
-            return EachTradeableDay(security.Exchange, from, thru);
+            return EachTradeableDay(security.Exchange.Hours, from, thru);
         }
 
 
@@ -242,11 +242,11 @@ namespace QuantConnect
         /// <param name="from">Start date</param>
         /// <param name="thru">End date</param>
         /// <returns>Enumerable date range</returns>
-        public static IEnumerable<DateTime> EachTradeableDay(SecurityExchange exchange, DateTime from, DateTime thru)
+        public static IEnumerable<DateTime> EachTradeableDay(SecurityExchangeHours exchange, DateTime from, DateTime thru)
         {
             for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1))
             {
-                if (exchange.DateIsOpen(day))
+                if (exchange.IsDateOpen(day))
                 {
                     yield return day;
                 }
