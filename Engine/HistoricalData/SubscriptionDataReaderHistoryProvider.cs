@@ -33,28 +33,22 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.HistoricalData
 {
+    /// <summary>
+    /// Provides an implementation of <see cref="IHistoryProvider"/> that uses <see cref="BaseData"/>
+    /// instances to retrieve historical data
+    /// </summary>
     public class SubscriptionDataReaderHistoryProvider : IHistoryProvider
     {
-        private int _dataPointCount = 0;
+        private int _dataPointCount;
         public int DataPointCount { get { return _dataPointCount; } }
 
-        public IEnumerable<Slice> GetHistory(IEnumerable<Security> securities, DateTimeZone sliceTimeZone, DateTime startTimeUtc, DateTime endTimeUtc)
+        public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
-            securities = securities.ToList();
-
-            var fillForwardResolution =
-                (from security in securities
-                 where security.SubscriptionDataConfig.Resolution != Resolution.Tick
-                 select security.SubscriptionDataConfig.Increment)
-                    .DefaultIfEmpty(Time.OneMinute)
-                    .Min();
-
             // create subscription objects from the configs
             var subscriptions = new List<Subscription>();
-            foreach (var security in securities)
+            foreach (var request in requests)
             {
-                var enumerator = CreateEnumerator(security, startTimeUtc, endTimeUtc, fillForwardResolution);
-                var subscription = new Subscription(security, enumerator, startTimeUtc, endTimeUtc, false, false);
+                var subscription = CreateSubscription(request, request.StartTimeUtc, request.EndTimeUtc);
                 subscription.MoveNext(); // prime pump
                 subscriptions.Add(subscription);
             }
@@ -62,25 +56,41 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             return CreateSliceEnumerableFromSubscriptions(subscriptions, sliceTimeZone);
         }
 
-        private IEnumerator<BaseData> CreateEnumerator(Security security, DateTime start, DateTime end, TimeSpan fillForwardResolution)
+        private Subscription CreateSubscription(HistoryRequest request, DateTime start, DateTime end)
         {
-            var config = security.SubscriptionDataConfig;
+            // data reader expects these values in local times
+            start = start.ConvertFromUtc(request.ExchangeHours.TimeZone);
+            end = end.ConvertFromUtc(request.ExchangeHours.TimeZone);
+
+            var config = new SubscriptionDataConfig(request.DataType, 
+                request.SecurityType, 
+                request.Symbol, 
+                request.Resolution, 
+                request.Market, 
+                request.TimeZone, 
+                request.FillForwardResolution.HasValue, 
+                request.IncludeExtendedMarketHours, 
+                false, 
+                request.IsCustomData
+                );
+
+            var security = new Security(request.ExchangeHours, config, 1.0m);
+
             IEnumerator<BaseData> reader = new SubscriptionDataReader(config, 
                 start, 
                 end, 
                 ResultHandlerStub.Instance,
-                Time.EachTradeableDay(new[] {security}, start, end), 
+                Time.EachTradeableDay(request.ExchangeHours, start, end), 
                 false
                 );
 
             // optionally apply fill forward behavior
-            if (config.FillDataForward)
+            if (request.FillForwardResolution.HasValue)
             {
-                reader = new FillForwardEnumerator(reader, security.Exchange, fillForwardResolution, security.IsExtendedMarketHours, end, config.Increment);
+                reader = new FillForwardEnumerator(reader, security.Exchange, request.FillForwardResolution.Value.ToTimeSpan(), security.IsExtendedMarketHours, end, config.Increment);
             }
 
-            // finally wrap with user defined data filters
-            return new SubscriptionFilterEnumerator(reader, security, end);
+            return new Subscription(security, reader, start, end, false, false);
         }
 
         private IEnumerable<Slice> CreateSliceEnumerableFromSubscriptions(List<Subscription> subscriptions, DateTimeZone sliceTimeZone)

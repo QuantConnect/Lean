@@ -50,6 +50,7 @@
     <Compile Include="BasicTemplateAlgorithm.cs" />
     <Compile Include="CustomBenchmarkAlgorithm.cs" />
     <Compile Include="DelistingEventsAlgorithm.cs" />
+    <Compile Include="HistoryAlgorithm.cs" />
     <Compile Include="LimitFillRegressionAlgorithm.cs" />
     <Compile Include="BasicTemplateFillForwardAlgorithm.cs" />
     <Compile Include="BenchmarkAlgorithm.cs" />

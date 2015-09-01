@@ -13,12 +13,10 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using NodaTime;
 using QuantConnect.Data;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Interfaces
 {
@@ -36,11 +34,9 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets the history for the requested securities
         /// </summary>
-        /// <param name="securities">The securities to request historical data for</param>
+        /// <param name="requests">The historical data requests</param>
         /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
-        /// <param name="startTimeUtc">The start of the interval</param>
-        /// <param name="endTimeUtc">The end of the interval</param>
-        /// <returns>An enumerable of the slices of data in time order starting at <paramref name="startTimeUtc"/></returns>
-        IEnumerable<Slice> GetHistory(IEnumerable<Security> securities, DateTimeZone sliceTimeZone, DateTime startTimeUtc, DateTime endTimeUtc);
+        /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
+        IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone);
     }
 }
