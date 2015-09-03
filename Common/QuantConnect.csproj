@@ -146,6 +146,7 @@
     <Compile Include="Data\Market\SymbolChangedEvent.cs" />
     <Compile Include="Data\Market\SymbolChangedEvents.cs" />
     <Compile Include="Data\Slice.cs" />
+    <Compile Include="Data\SliceExtensions.cs" />
     <Compile Include="Data\SubscriptionDataSource.cs" />
     <Compile Include="Data\SubscriptionSettings.cs" />
     <Compile Include="Field.cs" />
