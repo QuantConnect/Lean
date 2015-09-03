@@ -208,6 +208,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
+                    _algorithmHandlers.Results.SetAlgorithm(algorithm);
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
                     initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, out brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime);
@@ -242,8 +243,6 @@ namespace QuantConnect.Lean.Engine
                     algorithm.SetLocked();
 
                     //Load the associated handlers for data, transaction and realtime events:
-                    _algorithmHandlers.Results.SetAlgorithm(algorithm);
-
                     _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results);
                     _algorithmHandlers.Transactions.Initialize(algorithm, brokerage, _algorithmHandlers.Results);
                     _algorithmHandlers.RealTime.Setup(algorithm, job, _algorithmHandlers.Results, _systemHandlers.Api);
