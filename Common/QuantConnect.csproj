@@ -267,6 +267,7 @@
     <Compile Include="Securities\SecurityPortfolioManager.cs" />
     <Compile Include="Securities\SecurityTransactionManager.cs" />
     <Compile Include="OS.cs" />
+    <Compile Include="Statistics\AlgorithmPerformance.cs" />
     <Compile Include="Statistics\Statistics.cs" />
     <Compile Include="RealTimeSynchronizedTimer.cs" />
     <Compile Include="Symbol.cs" />

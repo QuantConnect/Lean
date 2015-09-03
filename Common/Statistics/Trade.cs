@@ -71,5 +71,13 @@ namespace QuantConnect.Statistics
         /// The Maximum Favorable Excursion (as symbol currency)
         /// </summary>
         public decimal MFE { get; set; }
+
+        /// <summary>
+        /// Returns the duration of the trade
+        /// </summary>
+        public TimeSpan Duration
+        {
+            get { return ExitTime - EntryTime; }
+        }
     }
 }
