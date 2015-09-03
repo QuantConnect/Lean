@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.IO;
 using System.Net;
 
@@ -35,7 +36,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         public RemoteFileSubscriptionStreamReader(string source, string downloadDirectory)
         {
             // create a hash for a new filename
-            var filename = source.ToMD5() + source.GetExtension();
+            var filename = Guid.NewGuid() + source.GetExtension();
             var destination = Path.Combine(downloadDirectory, filename);
 
             using (var client = new WebClient())
