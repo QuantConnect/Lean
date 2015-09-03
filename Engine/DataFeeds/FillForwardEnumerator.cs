@@ -146,6 +146,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         return true;
                     }
 
+                    // don't emit the last bar if the market isn't considered open!
+                    if (!_exchange.IsOpenDuringBar(endOfSubscription.Time, endOfSubscription.EndTime, _isExtendedMarketHours))
+                    {
+                        return false;
+                    }
+                    
                     Current = endOfSubscription;
                     _emittedAuxilliaryData = false;
                     return true;
