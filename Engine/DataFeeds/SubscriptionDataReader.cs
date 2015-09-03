@@ -255,8 +255,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         continue;
                     }
 
-                    // request bars to have end after period start, ticks can be on the period start
-                    //if (instance.EndTime <= _periodStart || (instance.Time == instance.EndTime && instance.EndTime == _periodStart))
                     if (instance.EndTime < _periodStart)
                     {
                         // keep reading until we get a value on or after the start

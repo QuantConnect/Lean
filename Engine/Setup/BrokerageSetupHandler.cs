@@ -96,7 +96,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 // if there's more than one then check configuration for which one we should use
                 var algorithmName = Config.Get("algorithm-type-name");
-                return names.Single(x => x.Contains(algorithmName));
+                return names.Single(x => x.Contains("." + algorithmName));
             });
 
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
@@ -149,9 +149,11 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 Log.Trace("BrokerageSetupHandler.Setup(): Initializing algorithm...");
 
+                resultHandler.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Initializing, "Initializing algorithm...");
+
                 //Execute the initialize code:
                 var isolator = new Isolator();
-                var initializeComplete = isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(10), () =>
+                var initializeComplete = isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(300), () =>
                 {
                     try
                     {

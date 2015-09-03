@@ -94,6 +94,7 @@ namespace QuantConnect.Data
             else if (typeof (T) == typeof (List<Tick>))
             {
                 // perform the selection on the last tick
+                // NOTE: This is a known bug, should be updated to perform the selection on each item in the list
                 var dataSelector = (Func<Tick, decimal>) ExpressionBuilder.MakePropertyOrFieldSelector(typeof (Tick), field).Compile();
                 selector = ticks => dataSelector(((List<Tick>) (object) ticks).Last());
             }

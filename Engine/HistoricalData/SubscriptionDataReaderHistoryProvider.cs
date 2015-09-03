@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,6 +31,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Lean.Engine.HistoricalData
 {
@@ -40,8 +42,21 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     public class SubscriptionDataReaderHistoryProvider : IHistoryProvider
     {
         private int _dataPointCount;
-        public int DataPointCount { get { return _dataPointCount; } }
 
+        /// <summary>
+        /// Gets the total number of data points emitted by this history provider
+        /// </summary>
+        public int DataPointCount
+        {
+            get { return _dataPointCount; }
+        }
+
+        /// <summary>
+        /// Gets the history for the requested securities
+        /// </summary>
+        /// <param name="requests">The historical data requests</param>
+        /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
+        /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
         public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
             // create subscription objects from the configs
@@ -56,6 +71,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             return CreateSliceEnumerableFromSubscriptions(subscriptions, sliceTimeZone);
         }
 
+        /// <summary>
+        /// Creates a subscription to process the request
+        /// </summary>
         private Subscription CreateSubscription(HistoryRequest request, DateTime start, DateTime end)
         {
             // data reader expects these values in local times
@@ -81,7 +99,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 end, 
                 ResultHandlerStub.Instance,
                 Time.EachTradeableDay(request.ExchangeHours, start, end), 
-                false
+                false,
+                includeAuxilliaryData: false
                 );
 
             // optionally apply fill forward behavior
@@ -90,9 +109,17 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 reader = new FillForwardEnumerator(reader, security.Exchange, request.FillForwardResolution.Value.ToTimeSpan(), security.IsExtendedMarketHours, end, config.Increment);
             }
 
+            // this is needed to get the correct result from bar count based requests, don't permit data
+            // throw whose end time is equal to local start,which the subscription data reader does allow
+            // only apply this filter to non-tick subscriptions
+            reader = new FilterEnumerator<BaseData>(reader, data => config.Resolution == Resolution.Tick || data.EndTime > start);
+
             return new Subscription(security, reader, start, end, false, false);
         }
 
+        /// <summary>
+        /// Enumerates the subscriptions into slices
+        /// </summary>
         private IEnumerable<Slice> CreateSliceEnumerableFromSubscriptions(List<Subscription> subscriptions, DateTimeZone sliceTimeZone)
         {
             // required by TimeSlice.Create, but we don't need it's behavior
@@ -192,6 +219,59 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             public void Exit() { }
             public void PurgeQueue() { }
             public void ProcessSynchronousEvents(bool forceProcess = false) { }
+
+            #endregion
+        }
+
+        private class FilterEnumerator<T> : IEnumerator<T>
+        {
+            private readonly IEnumerator<T> _enumerator;
+            private readonly Func<T, bool> _filter;
+
+            public FilterEnumerator(IEnumerator<T> enumerator, Func<T, bool> filter)
+            {
+                _enumerator = enumerator;
+                _filter = filter;
+            }
+
+            #region Implementation of IDisposable
+
+            public void Dispose()
+            {
+                _enumerator.Dispose();
+            }
+
+            #endregion
+
+            #region Implementation of IEnumerator
+
+            public bool MoveNext()
+            {
+                // run the enumerator until it passes the specified filter
+                while (_enumerator.MoveNext())
+                {
+                    if (_filter(_enumerator.Current))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            public void Reset()
+            {
+                _enumerator.Reset();
+            }
+
+            public T Current
+            {
+                get { return _enumerator.Current; }
+            }
+
+            object IEnumerator.Current
+            {
+                get { return _enumerator.Current; }
+            }
 
             #endregion
         }

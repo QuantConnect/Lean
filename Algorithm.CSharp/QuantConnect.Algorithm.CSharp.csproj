@@ -66,6 +66,7 @@
     <Compile Include="ETFGlobalRotationAlgorithm.cs" />
     <Compile Include="IndicatorSuiteAlgorithm.cs" />
     <Compile Include="LiveFeaturesAlgorithm.cs" />
+    <Compile Include="WarmupHistoryAlgorithm.cs" />
     <Compile Include="MACDTrendAlgorithm.cs" />
     <Compile Include="MarginCallEventsAlgorithm.cs" />
     <Compile Include="MarketOnOpenOnCloseAlgorithm.cs" />

@@ -787,7 +787,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 catch (Exception err)
                 {
                     Log.Error(err);
-                    _algorithm.Error(string.Format("Order Error: id: {0}, Eror in Portfolio.ProcessFill: {1}", order.Id, err.Message));
+                    _algorithm.Error(string.Format("Order Error: id: {0}, Error in Portfolio.ProcessFill: {1}", order.Id, err.Message));
                 }
             }
 
@@ -815,6 +815,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 catch (Exception err)
                 {
                     _algorithm.Error("Order Event Handler Error: " + err.Message);
+                    // kill the algorithm
+                    _algorithm.RunTimeError = err;
                 }
             }
         }

@@ -117,6 +117,9 @@ namespace QuantConnect.Packets
         OrderEvent,
 
         /// Boolean true/false success
-        Success
+        Success,
+
+        /// History live job packets
+        History
     }
 }

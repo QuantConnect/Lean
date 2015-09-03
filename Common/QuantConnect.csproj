@@ -175,6 +175,7 @@
     <Compile Include="Orders\UpdateOrderFields.cs" />
     <Compile Include="Orders\UpdateOrderRequest.cs" />
     <Compile Include="Packets\HandledErrorPacket.cs" />
+    <Compile Include="Packets\HistoryPacket.cs" />
     <Compile Include="Properties\SharedAssemblyInfo.cs" />
     <Compile Include="Scheduling\CompositeTimeRule.cs" />
     <Compile Include="Scheduling\DateRules.cs" />

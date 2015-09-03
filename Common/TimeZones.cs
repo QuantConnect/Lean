@@ -33,6 +33,11 @@ namespace QuantConnect
         public static readonly DateTimeZone NewYork = DateTimeZoneProviders.Tzdb["America/New_York"];
 
         /// <summary>
+        /// Get the Eastern Standard Time (EST) WITHOUT daylight savings, this is a constant -5 hour offset
+        /// </summary>
+        public static readonly DateTimeZone EasternStandard = DateTimeZoneProviders.Tzdb["UTC-05"];
+
+        /// <summary>
         /// Gets the time zone for London, England. This is a daylight savings time zone.
         /// </summary>
         public static readonly DateTimeZone London = DateTimeZoneProviders.Tzdb["Europe/London"];
