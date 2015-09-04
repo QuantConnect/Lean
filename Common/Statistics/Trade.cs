@@ -79,5 +79,14 @@ namespace QuantConnect.Statistics
         {
             get { return ExitTime - EntryTime; }
         }
+
+        /// <summary>
+        /// Returns the amount of profit given back before the trade was closed
+        /// </summary>
+        public decimal EndTradeDrawdown
+        {
+            get { return ProfitLoss - MFE; }
+        }
+
     }
 }

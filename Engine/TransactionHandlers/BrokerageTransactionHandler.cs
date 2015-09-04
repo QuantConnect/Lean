@@ -26,7 +26,6 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
-using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {

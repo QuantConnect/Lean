@@ -156,7 +156,24 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// The standard deviation of the profits/losses for all trades (as symbol currency)
         /// </summary>
-        public decimal ProfitLossStandardDeviation{ get; private set; }
+        public decimal ProfitLossStandardDeviation { get; private set; }
+
+        /// <summary>
+        /// The ratio of the total profit to the total loss
+        /// </summary>
+        /// <remarks>If the total profit is zero, ProfitFactor is set to zero</remarks>
+        /// <remarks>if the total loss is zero and the total profit is nonzero, ProfitFactor is set to 10</remarks>
+        public decimal ProfitFactor { get; private set; }
+
+        /// <summary>
+        /// The maximum amount of profit given back by a single trade before exit (as symbol currency)
+        /// </summary>
+        public decimal MaximumEndTradeDrawdown { get; private set; }
+
+        /// <summary>
+        /// The average amount of profit given back by all trades before exit (as symbol currency)
+        /// </summary>
+        public decimal AverageEndTradeDrawdown { get; private set; }
 
 
         /// <summary>
@@ -239,11 +256,17 @@ namespace QuantConnect.Statistics
 
                 if (trade.MFE > LargestMFE) 
                     LargestMFE = trade.MFE;
+
+                if (trade.EndTradeDrawdown < MaximumEndTradeDrawdown)
+                    MaximumEndTradeDrawdown = trade.EndTradeDrawdown;
             }
 
             ProfitLossRatio = AverageLoss < 0 ? AverageProfit / Math.Abs(AverageLoss) : -1;
             WinRate = TotalNumberOfTrades > 0 ? (decimal)NumberOfWinningTrades / TotalNumberOfTrades : 0;
             LossRate = TotalNumberOfTrades > 0 ? 1 - WinRate : 0;
+            ProfitFactor = TotalProfit == 0 ? 0 : (TotalLoss < 0 ? TotalProfit / Math.Abs(TotalLoss) : 10);
+
+            AverageEndTradeDrawdown = AverageProfitLoss - AverageMFE;
         }
     }
 }

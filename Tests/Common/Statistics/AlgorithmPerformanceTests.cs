@@ -57,6 +57,9 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(0, performance.MaximumClosedTradeDrawdown);
             Assert.AreEqual(0, performance.MaximumIntraTradeDrawdown);
             Assert.AreEqual(0, performance.ProfitLossStandardDeviation);
+            Assert.AreEqual(0, performance.ProfitFactor);
+            Assert.AreEqual(0, performance.MaximumEndTradeDrawdown);
+            Assert.AreEqual(0, performance.AverageEndTradeDrawdown);
         }
 
         [Test]
@@ -90,6 +93,9 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(0, performance.MaximumClosedTradeDrawdown);
             Assert.AreEqual(-70, performance.MaximumIntraTradeDrawdown);
             Assert.AreEqual(5.77350269189626m, performance.ProfitLossStandardDeviation);
+            Assert.AreEqual(10, performance.ProfitFactor);
+            Assert.AreEqual(-20, performance.MaximumEndTradeDrawdown);
+            Assert.AreEqual(-16.666666666666666666666666666m, performance.AverageEndTradeDrawdown);
         }
 
         private IEnumerable<Trade> CreateThreeWinners()
@@ -171,6 +177,9 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(-50, performance.MaximumClosedTradeDrawdown);
             Assert.AreEqual(-80, performance.MaximumIntraTradeDrawdown);
             Assert.AreEqual(5.77350269189626m, performance.ProfitLossStandardDeviation);
+            Assert.AreEqual(0, performance.ProfitFactor);
+            Assert.AreEqual(-50, performance.MaximumEndTradeDrawdown);
+            Assert.AreEqual(-33.333333333333333333333333334m, performance.AverageEndTradeDrawdown);
         }
 
         private IEnumerable<Trade> CreateThreeLosers()
@@ -252,6 +261,9 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(-40, performance.MaximumClosedTradeDrawdown);
             Assert.AreEqual(-70, performance.MaximumIntraTradeDrawdown);
             Assert.AreEqual(17.3205080756888m, performance.ProfitLossStandardDeviation);
+            Assert.AreEqual(0.25m, performance.ProfitFactor);
+            Assert.AreEqual(-50, performance.MaximumEndTradeDrawdown);
+            Assert.AreEqual(-31.666666666666666666666666666667m, performance.AverageEndTradeDrawdown);
         }
 
         private IEnumerable<Trade> CreateTwoLosersOneWinner()
