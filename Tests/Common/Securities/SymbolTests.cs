@@ -13,10 +13,24 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Algorithm.Python
+using System.Collections.Generic;
+using NUnit.Framework;
+
+namespace QuantConnect.Tests.Common.Securities
 {
-    /*  This is a place holder project for the build script & python file configurations.
-     *  
-     *  It compiles to a DLL which is deleted after compilation by the python builder.
-     */
+    [TestFixture]
+    public class SymbolTests
+    {
+        [Test]
+        public void UsesSidForDictionaryKey()
+        {
+            var dictionary = new Dictionary<Symbol, int>
+            {
+                {new Symbol("sid", "value"), 1}
+            };
+
+            var key = new Symbol("sid", "other value");
+            Assert.IsTrue(dictionary.ContainsKey(key));
+        }
+    }
 }

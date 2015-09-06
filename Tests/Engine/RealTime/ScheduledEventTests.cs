@@ -16,7 +16,6 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Scheduling;
 using QuantConnect.Util;
 

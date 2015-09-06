@@ -53,7 +53,7 @@ namespace QuantConnect.Orders
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public MarketOrder(string symbol, int quantity, DateTime time, string tag = "", SecurityType type = SecurityType.Base)
+        public MarketOrder(Symbol symbol, int quantity, DateTime time, string tag = "", SecurityType type = SecurityType.Base)
             : base(symbol, quantity, time, tag, type)
         {
         }

@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -32,7 +32,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the symbol of the security required to provide conversion rates.
         /// </summary>
-        public string SecuritySymbol { get; private set; }
+        public Symbol SecuritySymbol { get; private set; }
 
         /// <summary>
         /// Gets the symbol used to represent this cash
@@ -101,7 +101,7 @@ namespace QuantConnect.Securities
         {
             if (Symbol == CashBook.AccountCurrency)
             {
-                SecuritySymbol = string.Empty;
+                SecuritySymbol = QuantConnect.Symbol.Empty;
                 _isBaseCurrency = true;
                 ConversionRate = 1.0m;
                 return;
@@ -117,12 +117,12 @@ namespace QuantConnect.Securities
             string invert = CashBook.AccountCurrency + Symbol;
             foreach (var config in subscriptions.Subscriptions.Where(config => config.SecurityType == SecurityType.Forex))
             {
-                if (config.Symbol == normal)
+                if (config.Symbol.Value == normal)
                 {
                     SecuritySymbol = config.Symbol;
                     return;
                 }
-                if (config.Symbol == invert)
+                if (config.Symbol.Value == invert)
                 {
                     SecuritySymbol = config.Symbol;
                     _invertRealTimePrice = true;
@@ -136,20 +136,20 @@ namespace QuantConnect.Securities
                              select config.Market).FirstOrDefault() ?? "fxcm";
 
             // if we've made it here we didn't find a subscription, so we'll need to add one
-            var currencyPairs = Forex.Forex.CurrencyPairs;
+            var currencyPairs = Forex.Forex.CurrencyPairs.Select(x => new Symbol(x));
             var minimumResolution = subscriptions.Subscriptions.Min(x => x.Resolution);
             var objectType = minimumResolution == Resolution.Tick ? typeof (Tick) : typeof (TradeBar);
             foreach (var symbol in currencyPairs)
             {
-                if (symbol == normal || symbol == invert)
+                if (symbol.Value == normal || symbol.Value == invert)
                 {
-                    _invertRealTimePrice = symbol == invert;
+                    _invertRealTimePrice = symbol.Value == invert;
                     var exchangeHours = exchangeHoursProvider.GetExchangeHours(market, symbol, SecurityType.Forex);
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
                     var config = subscriptions.Add(objectType, SecurityType.Forex, symbol, minimumResolution, market, exchangeHours.TimeZone, true, false, true);
                     var security = new Forex.Forex(this, config, 1m);
                     SecuritySymbol = config.Symbol;
-                    securities.Add(symbol, security);
+                    securities.Add(config.Symbol, security);
                     Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol + " for cash " + Symbol + " currency feed");
                     return;
                 }

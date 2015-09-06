@@ -341,7 +341,7 @@ namespace QuantConnect.Lean.Engine.Results
                     // only send holdings updates when we have changes in orders, except for first time, then we want to send all
                     foreach (var asset in _algorithm.Securities.Values.OrderBy(x => x.Symbol))
                     {
-                        holdings.Add(asset.Symbol, new Holding(asset.Holdings));
+                        holdings.Add(asset.Symbol.Value, new Holding(asset.Holdings));
                     }
 
                     //Add the algorithm statistics first.
@@ -652,7 +652,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="time">Time of sample</param>
         /// <param name="value">Value of the asset price</param>
         /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
-        public void SampleAssetPrices(string symbol, DateTime time, decimal value)
+        public void SampleAssetPrices(Symbol symbol, DateTime time, decimal value)
         {
             // don't send stockplots for internal feeds
             Security security;
@@ -663,7 +663,7 @@ namespace QuantConnect.Lean.Engine.Results
                 var close = now.Date + security.Exchange.MarketClose;
                 if (now > open && now < close)
                 {
-                    Sample("Stockplot: " + symbol, ChartType.Overlay, "Stockplot: " + symbol, SeriesType.Line, time, value);
+                    Sample("Stockplot: " + symbol.Value, ChartType.Overlay, "Stockplot: " + symbol.Value, SeriesType.Line, time, value);
                 }
             }
         }

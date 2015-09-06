@@ -36,7 +36,7 @@ namespace QuantConnect.Securities.Forex
 
             string baseCurrency;
             string quoteCurrency;
-            Forex.DecomposeCurrencyPair(security.Symbol, out baseCurrency, out quoteCurrency);
+            Forex.DecomposeCurrencyPair(security.Symbol.Value, out baseCurrency, out quoteCurrency);
 
             // e.g. EUR GBP
 

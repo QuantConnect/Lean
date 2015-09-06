@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 

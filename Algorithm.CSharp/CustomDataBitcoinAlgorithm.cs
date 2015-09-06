@@ -14,9 +14,6 @@
 */
 
 using System;
-using System.Globalization;
-using QuantConnect.Data;
-
 
 namespace QuantConnect.Algorithm.Examples
 {

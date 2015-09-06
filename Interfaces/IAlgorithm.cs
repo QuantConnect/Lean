@@ -303,7 +303,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Call this method at the end of each day of data.
         /// </summary>
-        void OnEndOfDay(string symbol);
+        void OnEndOfDay(Symbol symbol);
 
         /// <summary>
         /// Call this event at the end of the algorithm running.
@@ -356,7 +356,7 @@ namespace QuantConnect.Interfaces
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
-        void AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours);
+        void AddSecurity(SecurityType securityType, Symbol symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours);
 
         /// <summary>
         /// Set the starting capital for the strategy
@@ -377,7 +377,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="symbolToLiquidate">Specific asset to liquidate, defaults to all.</param>
         /// <returns>list of order ids</returns>
-        List<int> Liquidate(string symbolToLiquidate = "");
+        List<int> Liquidate(Symbol symbolToLiquidate = null);
 
         /// <summary>
         /// Set live mode state of the algorithm run: Public setter for the algorithm property LiveMode.

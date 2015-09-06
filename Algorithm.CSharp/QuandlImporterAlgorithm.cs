@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 using QuantConnect.Data.Custom;
 using QuantConnect.Indicators;
-
 
 namespace QuantConnect.Algorithm.Examples
 {

@@ -26,7 +26,7 @@ namespace QuantConnect.Data
     {
         private MarketDataType _dataType = MarketDataType.Base;
         private DateTime _time;
-        private string _symbol = string.Empty;
+        private Symbol _symbol = Symbol.Empty;
         private decimal _value;
         private bool _isFillForward;
 
@@ -81,9 +81,9 @@ namespace QuantConnect.Data
         }
         
         /// <summary>
-        /// String symbol representation for underlying Security
+        /// Symbol representation for underlying Security
         /// </summary>
-        public string Symbol
+        public Symbol Symbol
         {
             get
             {

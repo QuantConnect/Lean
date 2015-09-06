@@ -25,7 +25,7 @@ namespace QuantConnect.Data
     /// <summary>
     /// Provides a data structure for all of an algorithm's data at a single time step
     /// </summary>
-    public class Slice : IEnumerable<KeyValuePair<string, BaseData>>
+    public class Slice : IEnumerable<KeyValuePair<Symbol, BaseData>>
     {
         private readonly Ticks _ticks; 
         private readonly TradeBars _bars;
@@ -109,9 +109,9 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets all the symbols in this slice
         /// </summary>
-        public IReadOnlyList<string> Keys
+        public IReadOnlyList<Symbol> Keys
         {
-            get { return new List<string>(_data.Keys); }
+            get { return new List<Symbol>(_data.Keys); }
         }
 
         /// <summary>
@@ -171,7 +171,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="symbol">The data's symbols</param>
         /// <returns>The data for the specified symbol</returns>
-        public dynamic this[string symbol]
+        public dynamic this[Symbol symbol]
         {
             get
             {
@@ -180,7 +180,7 @@ namespace QuantConnect.Data
                 {
                     return value.GetData();
                 }
-                throw new KeyNotFoundException(string.Format("'{0}' wasn't found in the Slice object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{0}\")", symbol));
+                throw new KeyNotFoundException(string.Format("'{0}' wasn't found in the Slice object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{0}\")", symbol.SID));
             }
         }
 
@@ -207,7 +207,7 @@ namespace QuantConnect.Data
         /// <typeparam name="T">The type of data we seek</typeparam>
         /// <param name="symbol">The specific symbol was seek</param>
         /// <returns>The data for the requested symbol</returns>
-        public T Get<T>(string symbol)
+        public T Get<T>(Symbol symbol)
             where T : BaseData
         {
             return Get<T>()[symbol];
@@ -218,7 +218,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="symbol">The symbol we seek data for</param>
         /// <returns>True if this instance contains data for the symbol, false otherwise</returns>
-        public bool ContainsKey(string symbol)
+        public bool ContainsKey(Symbol symbol)
         {
             return _data.ContainsKey(symbol);
         }
@@ -229,7 +229,7 @@ namespace QuantConnect.Data
         /// <param name="symbol">The symbol we want data for</param>
         /// <param name="data">The data for the specifed symbol, or null if no data was found</param>
         /// <returns>True if data was found, false otherwise</returns>
-        public bool TryGetValue(string symbol, out dynamic data)
+        public bool TryGetValue(Symbol symbol, out dynamic data)
         {
             data = null;
             SymbolData symbolData;
@@ -326,7 +326,7 @@ namespace QuantConnect.Data
         /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
         /// </returns>
         /// <filterpriority>1</filterpriority>
-        public IEnumerator<KeyValuePair<string, BaseData>> GetEnumerator()
+        public IEnumerator<KeyValuePair<Symbol, BaseData>> GetEnumerator()
         {
             return GetKeyValuePairEnumerable().GetEnumerator();
         }
@@ -343,17 +343,17 @@ namespace QuantConnect.Data
             return GetEnumerator();
         }
 
-        private IEnumerable<KeyValuePair<string, BaseData>> GetKeyValuePairEnumerable()
+        private IEnumerable<KeyValuePair<Symbol, BaseData>> GetKeyValuePairEnumerable()
         {
             // this will not enumerate auxilliary data!
-            return _data.Select(kvp => new KeyValuePair<string, BaseData>(kvp.Key, kvp.Value.GetData()));
+            return _data.Select(kvp => new KeyValuePair<Symbol, BaseData>(kvp.Key, kvp.Value.GetData()));
         }
 
         private enum SubscriptionType { TradeBar, Tick, Custom };
         private class SymbolData
         {
             public SubscriptionType Type;
-            public readonly string Symbol;
+            public readonly Symbol Symbol;
 
             // data
             public BaseData Custom;
@@ -361,7 +361,7 @@ namespace QuantConnect.Data
             public readonly List<Tick> Ticks;
             public readonly List<BaseData> AuxilliaryData;
 
-            public SymbolData(string symbol)
+            public SymbolData(Symbol symbol)
             {
                 Symbol = symbol;
                 Ticks = new List<Tick>();

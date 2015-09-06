@@ -18,16 +18,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using Krs.Ats.IBNet;
 using NUnit.Framework;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Packets;
-using Order = QuantConnect.Orders.Order;
-using OrderStatus = QuantConnect.Orders.OrderStatus;
-using OrderType = QuantConnect.Orders.OrderType;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {

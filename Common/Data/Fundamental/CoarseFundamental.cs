@@ -84,12 +84,12 @@ namespace QuantConnect.Data.Fundamental
                 var csv = line.Split(',');
                 return new CoarseFundamental
                 {
-                    Symbol = csv[0],
+                    Symbol = new Symbol(csv[0], csv[1]),
                     Time = date,
                     Market = config.Market,
-                    Value = csv[1].ToDecimal(),
-                    Volume = csv[2].ToInt64(),
-                    DollarVolume = csv[3].ToDecimal()
+                    Value = csv[2].ToDecimal(),
+                    Volume = csv[3].ToInt64(),
+                    DollarVolume = csv[4].ToDecimal()
                 };
             }
             catch (Exception)

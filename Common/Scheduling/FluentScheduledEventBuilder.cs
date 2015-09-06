@@ -104,7 +104,7 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Creates events on every trading day of the year for the symbol
         /// </summary>
-        IFluentSchedulingTimeSpecifier IFluentSchedulingDateSpecifier.EveryDay(string symbol)
+        IFluentSchedulingTimeSpecifier IFluentSchedulingDateSpecifier.EveryDay(Symbol symbol)
         {
             _dateRule = _schedule.DateRules.EveryDay(symbol);
             return this;
@@ -122,7 +122,7 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Creates events on the first trading day of the month
         /// </summary>
-        IFluentSchedulingTimeSpecifier IFluentSchedulingDateSpecifier.MonthStart(string symbol)
+        IFluentSchedulingTimeSpecifier IFluentSchedulingDateSpecifier.MonthStart(Symbol symbol)
         {
             _dateRule = _schedule.DateRules.MonthStart(symbol);
             return this;
@@ -150,7 +150,7 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Creates events that fire a specified number of minutes after market open
         /// </summary>
-        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.AfterMarketOpen(string symbol, double minutesAfterOpen, bool extendedMarketOpen)
+        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.AfterMarketOpen(Symbol symbol, double minutesAfterOpen, bool extendedMarketOpen)
         {
             return SetTimeRule(_schedule.TimeRules.AfterMarketOpen(symbol, minutesAfterOpen, extendedMarketOpen));
         }
@@ -158,7 +158,7 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Creates events that fire a specified numer of minutes before market close
         /// </summary>
-        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.BeforeMarketClose(string symbol, double minuteBeforeClose, bool extendedMarketClose)
+        IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.BeforeMarketClose(Symbol symbol, double minuteBeforeClose, bool extendedMarketClose)
         {
             return SetTimeRule(_schedule.TimeRules.BeforeMarketClose(symbol, minuteBeforeClose, extendedMarketClose));
         }
@@ -230,7 +230,7 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Filters the event times to only include times where the symbol's market is considered open
         /// </summary>
-        IFluentSchedulingRunnable IFluentSchedulingRunnable.DuringMarketHours(string symbol, bool extendedMarket)
+        IFluentSchedulingRunnable IFluentSchedulingRunnable.DuringMarketHours(Symbol symbol, bool extendedMarket)
         {
             var security = GetSecurity(symbol);
             Func<DateTime, bool> predicate = time =>
@@ -276,12 +276,12 @@ namespace QuantConnect.Scheduling
             return SetTimeRule(_schedule.TimeRules.At(timeOfDay, timeZone));
         }
 
-        private Security GetSecurity(string symbol)
+        private Security GetSecurity(Symbol symbol)
         {
             Security security;
             if (!_securities.TryGetValue(symbol, out security))
             {
-                throw new Exception(symbol + " not found in portfolio. Request this data when initializing the algorithm.");
+                throw new Exception(symbol.SID + " not found in portfolio. Request this data when initializing the algorithm.");
             }
             return security;
         }
@@ -317,7 +317,7 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Creates events on every trading day of the year for the symbol
         /// </summary>
-        IFluentSchedulingTimeSpecifier EveryDay(string symbol);
+        IFluentSchedulingTimeSpecifier EveryDay(Symbol symbol);
         /// <summary>
         /// Creates events on the first day of the month
         /// </summary>
@@ -325,7 +325,7 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Creates events on the first trading day of the month
         /// </summary>
-        IFluentSchedulingTimeSpecifier MonthStart(string symbol);
+        IFluentSchedulingTimeSpecifier MonthStart(Symbol symbol);
     }
 
     /// <summary>
@@ -364,11 +364,11 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Creates events that fire a specified number of minutes after market open
         /// </summary>
-        IFluentSchedulingRunnable AfterMarketOpen(string symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false);
+        IFluentSchedulingRunnable AfterMarketOpen(Symbol symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false);
         /// <summary>
         /// Creates events that fire a specified numer of minutes before market close
         /// </summary>
-        IFluentSchedulingRunnable BeforeMarketClose(string symbol, double minuteBeforeClose = 0, bool extendedMarketClose = false);
+        IFluentSchedulingRunnable BeforeMarketClose(Symbol symbol, double minuteBeforeClose = 0, bool extendedMarketClose = false);
     }
 
     /// <summary>
@@ -383,7 +383,7 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Filters the event times to only include times where the symbol's market is considered open
         /// </summary>
-        IFluentSchedulingRunnable DuringMarketHours(string symbol, bool extendedMarket = false);
+        IFluentSchedulingRunnable DuringMarketHours(Symbol symbol, bool extendedMarket = false);
         /// <summary>
         /// Register the defined event with the callback
         /// </summary>

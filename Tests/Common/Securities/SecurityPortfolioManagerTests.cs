@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
@@ -46,6 +46,9 @@ namespace QuantConnect.Tests.Common.Securities
                 x.Get<int>("OrderId"),
                 x.Get<string>("Symbol"),
                 x.Get<OrderStatus>("Status"),
+                x.Get<int>("FillQuantity") < 0 ? OrderDirection.Sell 
+              : x.Get<int>("FillQuantity") > 0 ? OrderDirection.Buy 
+                                               : OrderDirection.Hold,
                 x.Get<decimal>("FillPrice"),
                 x.Get<int>("FillQuantity"))
                 ).ToList();
@@ -95,6 +98,9 @@ namespace QuantConnect.Tests.Common.Securities
                 x.Get<int>("OrderId"),
                 x.Get<string>("Symbol"),
                 x.Get<OrderStatus>("Status"),
+                x.Get<int>("FillQuantity") < 0 ? OrderDirection.Sell 
+              : x.Get<int>("FillQuantity") > 0 ? OrderDirection.Buy 
+                                               : OrderDirection.Hold,
                 x.Get<decimal>("FillPrice"),
                 x.Get<int>("FillQuantity"))
                 ).ToList();
@@ -347,7 +353,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             securities.Add("AAPL", new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, "AAPL"), 1));
 
-            var fill = new OrderEvent(1, "AAPL", OrderStatus.Filled, 100, -100);
+            var fill = new OrderEvent(1, "AAPL", OrderStatus.Filled, OrderDirection.Sell,  100, -100);
             portfolio.ProcessFill(fill);
 
             Assert.AreEqual(100 * 100, portfolio.Cash);
@@ -365,7 +371,7 @@ namespace QuantConnect.Tests.Common.Securities
             securities.Add("AAPL", new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, "AAPL"), 1));
             securities["AAPL"].Holdings.SetHoldings(100, 100);
 
-            var fill = new OrderEvent(1, "AAPL", OrderStatus.Filled, 100, -100);
+            var fill = new OrderEvent(1, "AAPL", OrderStatus.Filled, OrderDirection.Sell,  100, -100);
             portfolio.ProcessFill(fill);
 
             Assert.AreEqual(100 * 100, portfolio.Cash);
@@ -383,7 +389,7 @@ namespace QuantConnect.Tests.Common.Securities
             securities.Add("AAPL", new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, "AAPL"), 1));
             securities["AAPL"].Holdings.SetHoldings(100, -100);
 
-            var fill = new OrderEvent(1, "AAPL", OrderStatus.Filled, 100, -100);
+            var fill = new OrderEvent(1, "AAPL", OrderStatus.Filled, OrderDirection.Sell,  100, -100);
             Assert.AreEqual(-100, securities["AAPL"].Holdings.Quantity);
             portfolio.ProcessFill(fill);
 

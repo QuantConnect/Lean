@@ -119,7 +119,18 @@ namespace QuantConnect.Indicators
         /// <returns>The Fast Stochastics %K value.</returns>
         private decimal ComputeFastStoch(int period, TradeBar input)
         {
-            var fastStoch = _maximum.Samples >= period ? (input.Close - _mininum) / (_maximum - _mininum) : new decimal(0.0);
+            var denominator = (_maximum - _mininum);
+            var numerator = (input.Close - _mininum);
+            decimal fastStoch;
+            if (denominator == 0m)
+            {
+                // if there's no range, just return constant zero
+                fastStoch = 0m;
+            }
+            else
+            {
+                fastStoch = _maximum.Samples >= period ? numerator/denominator : new decimal(0.0);
+            }
             _sumFastK.Update(input.Time, fastStoch);
             return fastStoch * 100;
         }

@@ -59,7 +59,7 @@ namespace QuantConnect.Orders
         /// <param name="time">Time the order was placed</param>
         /// <param name="stopPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public StopMarketOrder(string symbol, int quantity, decimal stopPrice, DateTime time, string tag = "", SecurityType type = SecurityType.Base)
+        public StopMarketOrder(Symbol symbol, int quantity, decimal stopPrice, DateTime time, string tag = "", SecurityType type = SecurityType.Base)
             : base(symbol, quantity, time, tag, type)
         {
             StopPrice = stopPrice;

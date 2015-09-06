@@ -925,7 +925,7 @@ namespace QuantConnect.Brokerages.Tradier
             }
 
             // before doing anything, verify only one outstanding order per symbol
-            var cachedOpenOrder = _cachedOpenOrdersByTradierOrderID.FirstOrDefault(x => x.Value.Symbol == order.Symbol).Value;
+            var cachedOpenOrder = _cachedOpenOrdersByTradierOrderID.FirstOrDefault(x => x.Value.Symbol == order.Symbol.Value).Value;
             if (cachedOpenOrder != null)
             {
                 var qcOrder = _orderProvider.GetOrderByBrokerageId((int) cachedOpenOrder.Id);
@@ -1595,7 +1595,7 @@ namespace QuantConnect.Brokerages.Tradier
                 default:
                     throw new NotImplementedException("The Tradier order type " + order.Type + " is not implemented.");
             }
-            qcOrder.Symbol = order.Symbol;
+            qcOrder.Symbol = new Symbol(order.Symbol);
             qcOrder.Quantity = ConvertQuantity(order);
             qcOrder.SecurityType = SecurityType.Equity; // tradier only support equities? but also options??
             qcOrder.Status = ConvertStatus(order.Status);
@@ -1965,7 +1965,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 QCOrder = order;
                 Classification = classification;
-                Symbol = order.Symbol;
+                Symbol = order.Symbol.Value;
                 Direction = ConvertDirection(order.Direction, holdingQuantity);
                 Quantity = Math.Abs(order.Quantity);
                 Price = GetLimitPrice(order);

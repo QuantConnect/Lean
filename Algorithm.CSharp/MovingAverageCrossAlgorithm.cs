@@ -18,7 +18,6 @@ using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
-
 namespace QuantConnect.Algorithm.Examples
 {
     /// <summary>

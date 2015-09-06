@@ -68,5 +68,36 @@ namespace QuantConnect.Data.Fundamental
             var removals = left.RemovedSecurities.Union(right.RemovedSecurities).Where(x => !additions.Contains(x)).ToList();
             return new SecurityChanges(additions, removals);
         }
+
+        #region Overrides of Object
+
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            if (AddedSecurities.Count == 0 && RemovedSecurities.Count == 0)
+            {
+                return "SecurityChanges: None";
+            }
+            var added = string.Empty;
+            if (AddedSecurities.Count != 0)
+            {
+                added = " Added: " + string.Join(",", AddedSecurities.Select(x => x.Symbol.SID));
+            }
+            var removed = string.Empty;
+            if (RemovedSecurities.Count != 0)
+            {
+                removed = " Removed: " + string.Join(",", RemovedSecurities.Select(x => x.Symbol.SID));
+            }
+
+            return "SecurityChanges: " + added + removed;
+        }
+
+        #endregion
     }
 }

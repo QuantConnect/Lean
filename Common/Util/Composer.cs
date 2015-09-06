@@ -69,6 +69,28 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Adds the specified instance to this instance to allow it to be recalled via GetExportedValueByTypeName
+        /// </summary>
+        /// <typeparam name="T">The contract type</typeparam>
+        /// <param name="instance">The instance to add</param>
+        public void AddPart<T>(T instance)
+        {
+            lock (_exportedValuesLockObject)
+            {
+                IEnumerable values;
+                if (_exportedValues.TryGetValue(typeof (T), out values))
+                {
+                    ((IList<T>) values).Add(instance);
+                }
+                else
+                {
+                    values = new List<T> {instance};
+                    _exportedValues[typeof (T)] = values;
+                }
+            }
+        }
+
+        /// <summary>
         /// Extension method to searches the composition container for an export that has a matching type name. This function
         /// will first try to match on Type.AssemblyQualifiedName, then Type.FullName, and finally on Type.Name
         /// 

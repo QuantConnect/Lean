@@ -16,14 +16,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -110,7 +107,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var allDataForAlgorithm = new List<BaseData>(data.Count);
             var cash = new List<KeyValuePair<Cash, BaseData>>(algorithm.Portfolio.CashBook.Count);
 
-            var cashSecurities = new HashSet<string>();
+            var cashSecurities = new HashSet<Symbol>();
             foreach (var cashItem in algorithm.Portfolio.CashBook.Values)
             {
                 cashSecurities.Add(cashItem.SecuritySymbol);

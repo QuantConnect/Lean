@@ -62,9 +62,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         /// <summary>
         /// Reads in the factor file for the specified equity symbol
         /// </summary>
-        public static IEnumerable<FactorFileRow> Read(string symbol, string market)
+        public static IEnumerable<FactorFileRow> Read(string permtick, string market)
         {
-            string path = Path.Combine(Constants.DataFolder, "equity", market, "factor_files", symbol.ToLower() + ".csv");
+            string path = Path.Combine(Constants.DataFolder, "equity", market, "factor_files", permtick.ToLower() + ".csv");
             foreach (var line in File.ReadAllLines(path))
             {
                 var csv = line.Split(',');

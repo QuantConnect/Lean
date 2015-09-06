@@ -32,7 +32,6 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -308,7 +307,7 @@ namespace QuantConnect.Lean.Engine
                         {
                             algorithm.Securities.Remove(ticket.Symbol);
                             delistingTickets.RemoveAt(i--);
-                            Log.Trace("AlgorithmManager.Run(): Security removed: " + ticket.Symbol);
+                            Log.Trace("AlgorithmManager.Run(): Delisted Security removed: " + ticket.Symbol.SID);
                         }
                     }
                 }

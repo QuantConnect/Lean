@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using MathNetStatistics = MathNet.Numerics.Statistics.Statistics;
 
 namespace QuantConnect.Indicators

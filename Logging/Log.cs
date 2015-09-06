@@ -14,9 +14,9 @@
 */
 
 using System;
-using System.Threading;
-using System.Text;
 using System.Collections;
+using System.Text;
+using System.Threading;
 
 namespace QuantConnect.Logging 
 {

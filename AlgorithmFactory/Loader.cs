@@ -21,7 +21,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using ImpromptuInterface;
 using IronPython.Hosting;
-using Microsoft.Scripting.Hosting;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;

@@ -19,9 +19,7 @@ using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds.Auxiliary;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -35,7 +33,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly IDataFeed _dataFeed;
         private readonly IAlgorithm _algorithm;
-        private readonly Dictionary<string, MapFileResolver> _mapFileResolversByMarket;
         private readonly SecurityExchangeHoursProvider _hoursProvider = SecurityExchangeHoursProvider.FromDataFolder();
 
         /// <summary>
@@ -48,7 +45,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             _dataFeed = dataFeed;
             _algorithm = algorithm;
-            _mapFileResolversByMarket = new Dictionary<string, MapFileResolver>();
         }
 
         /// <summary>
@@ -94,17 +90,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // perform initial filtering and limit the result
             var initialSelections = selector.SelectCoarse(coarse).Take(limit).ToList();
 
-            // create a map of each subscription to its 'unique' first symbol/date
-            // it's important that we use the symbol from the configuration, since this will be gauranteed to be the actual
-            // symbol, in order to deconflict symbols (for example, added GOOG pre split, then added GOOG post split, but different securities)
-            var existingSubscriptions = _dataFeed.Subscriptions.ToDictionary(x => x,
-                x => GetMapFileResolver(x.Configuration.Market).ResolveMapFile(x.Configuration.Symbol, x.UtcStartTime.ConvertFromUtc(x.Configuration.TimeZone)).FirstOrDefault()
-                );
+            // create a hash set of our existing subscriptions by sid
+            var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol);
 
             // create a map of each selection to its 'unique' first symbol/date
-            var selectedSubscriptions = initialSelections.ToDictionary(x => Tuple.Create(x.Symbol, x.Market, SecurityType.Equity),
-                x => GetMapFileResolver(x.Market).ResolveMapFile(x.Symbol, date).FirstOrDefault()
-                );
+            var selectedSubscriptions = initialSelections.ToHashSet(x => x.Symbol);
 
             var additions = new List<Security>();
             var removals = new List<Security>();
@@ -123,32 +113,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // don't remove subscriptions for different markets and non-equity types
                 if (config.Market != market || config.SecurityType != SecurityType.Equity) continue;
 
-                var uniqueFirstSymbolDate = existingSubscriptions[subscription];
-
-                // if it's null, then no map information exists
-                if (uniqueFirstSymbolDate == null)
-                {
-                    // do simple symbol/market/security type comparison
-                    if (selectedSubscriptions.ContainsKey(Tuple.Create(config.Symbol, config.Market, config.SecurityType)))
-                    {
-                        continue;
-                    }
-
-                    // if we were unable to match on symbol/market/security type, then we need to remove this subscription, fall through
-                }
-                else
-                {
-                    // determine if we've selected a matching first symbol/date
-                    var matchFound = selectedSubscriptions.Values.Any(firstSymbolDate => uniqueFirstSymbolDate.Equals(uniqueFirstSymbolDate));
-
-                    // if we found a match between the existing subscription and new selections, then don't remove it
-                    if (matchFound)
-                    {
-                        continue;
-                    }
-
-                    // if we were unable to find a match then we need to remove this subscription, fall through
-                }
+                // if we've selected this subscription again, keep it
+                if (selectedSubscriptions.Contains(config.Symbol)) continue;
 
                 // let the algorithm know this security has been removed from the universe
                 removals.Add(subscription.Security);
@@ -169,68 +135,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var settings = _algorithm.UniverseSettings;
 
             // find new selections and add them to the algorithm
-            foreach (var kvp in selectedSubscriptions)
+            foreach (var sid in selectedSubscriptions)
             {
-                var selection = kvp.Key;
-
-                // verify that this selection isn't already added by searching through existing subscriptions
-                // for a matching first symbol/date
-                var firstSymbolDate = kvp.Value;
-
-                if (existingSubscriptions.Values.Any(x => (x == null && firstSymbolDate == null) || (x != null && x.Equals(firstSymbolDate))))
-                {
-                    // we already have a subscription for this symbol so don't re-add it
-                    continue;
-                }
-
-                // so we need to add a subscription, but there is a slight chance the same symbol exists
-                // so if the same symbol exists we need to add it under a different symbol, maybe .a, .b, .c ??
-
-                var suffix = 'a';
-                var symbol = selection.Item1;
-                while (_algorithm.Securities.ContainsKey(symbol + "." + suffix))
-                {
-                    suffix++;
-                }
-
+                // we already have a subscription for this symbol so don't re-add it
+                if (existingSubscriptions.Contains(sid)) continue;
+                
                 // create the new security, the algorithm thread will add this at the appropriate time
                 var security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _hoursProvider,
                     SecurityType.Equity,
-                    selection.Item1,
+                    sid,
                     settings.Resolution,
-                    selection.Item2,
+                    market,
                     settings.FillForward,
                     settings.Leverage,
                     settings.ExtendedMarketHours,
                     false
                     );
 
-                additions.Add(security);
+                additions.Add(security);;
 
                 // add the new subscriptions to the data feed
                 _dataFeed.AddSubscription(security, date, _algorithm.EndDate);
             }
 
             // return None if there's no changes, otherwise return what we've modified
-            return additions.Count + removals.Count != 0 
-                ? new SecurityChanges(additions, removals) 
+            return additions.Count + removals.Count != 0
+                ? new SecurityChanges(additions, removals)
                 : SecurityChanges.None;
-        }
-
-        /// <summary>
-        /// Gets the map file resolver for the specified market
-        /// </summary>
-        /// <param name="market">The market</param>
-        /// <returns>The map file resolver for the specified market</returns>
-        private MapFileResolver GetMapFileResolver(string market)
-        {
-            MapFileResolver resolver;
-            if (!_mapFileResolversByMarket.TryGetValue(market, out resolver))
-            {
-                resolver = MapFileResolver.Create(Constants.DataFolder, market);
-                _mapFileResolversByMarket[market] = resolver;
-            }
-            return resolver;
         }
 
         /// <summary>
@@ -239,7 +170,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public static IEnumerable<CoarseFundamental> GetCoarseFundamentals(string market, DateTimeZone timeZone, DateTime date, bool isLiveMode)
         {
             var factory = new CoarseFundamental();
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), SecurityType.Equity, string.Empty, Resolution.Daily, market, timeZone, true, false, true);
+            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), SecurityType.Equity, new Symbol(market + "-coarse"), Resolution.Daily, market, timeZone, true, false, true);
             var reader = new BaseDataSubscriptionFactory(config, date, isLiveMode);
             var source = factory.GetSource(config, date, isLiveMode);
             return reader.Read(source).OfType<CoarseFundamental>();

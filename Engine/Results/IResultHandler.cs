@@ -163,7 +163,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="value">Current benchmark value.</param>
         /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
         void SampleBenchmark(DateTime time, decimal value);
-        
+
         /// <summary>
         /// Sample the asset prices to generate plots.
         /// </summary>
@@ -171,7 +171,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="time">Time of sample</param>
         /// <param name="value">Value of the asset price</param>
         /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
-        void SampleAssetPrices(string symbol, DateTime time, decimal value);
+        void SampleAssetPrices(Symbol symbol, DateTime time, decimal value);
 
         /// <summary>
         /// Add a range of samples from the users algorithms to the end of our current list.

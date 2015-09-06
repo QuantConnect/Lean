@@ -48,9 +48,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
         /// <summary>
         /// Reads in the map_file for the specified equity symbol
         /// </summary>
-        public static IEnumerable<MapFileRow> Read(string symbol, string market)
+        public static IEnumerable<MapFileRow> Read(string permtick, string market)
         {
-            var path = MapFile.GetMapFilePath(symbol, market);
+            var path = MapFile.GetMapFilePath(permtick, market);
             return File.Exists(path) 
                 ? Read(path) 
                 : Enumerable.Empty<MapFileRow>();

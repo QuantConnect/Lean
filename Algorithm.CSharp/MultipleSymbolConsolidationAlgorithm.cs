@@ -223,7 +223,7 @@ namespace QuantConnect.Algorithm.Examples
                 // verify the input data matches our symbol - sanity check
                 if (!string.Equals(data.Symbol, Symbol, StringComparison.CurrentCultureIgnoreCase))
                 {
-                    throw new ArgumentException("Expected trade bar data for " + Symbol + " but received " + data.Symbol.ToUpper());
+                    throw new ArgumentException("Expected trade bar data for " + Symbol + " but received " + data.Symbol);
                 }
 
                 Bars.Add(data);

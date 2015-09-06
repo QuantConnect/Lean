@@ -51,7 +51,7 @@ namespace QuantConnect.Data.Market
         /// <param name="date">The date the symbol was delisted</param>
         /// <param name="price">The final price before delisting</param>
         /// <param name="type">The type of delisting event</param>
-        public Delisting(string symbol, DateTime date, decimal price, DelistingType type)
+        public Delisting(Symbol symbol, DateTime date, decimal price, DelistingType type)
             : this()
         {
             Symbol = symbol;

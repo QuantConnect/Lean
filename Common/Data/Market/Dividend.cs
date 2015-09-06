@@ -38,7 +38,7 @@ namespace QuantConnect.Data.Market
         /// <param name="date">The date</param>
         /// <param name="close">The close</param>
         /// <param name="priceFactorRatio">The ratio of the price factors, pf_i/pf_i+1</param>
-        public Dividend(string symbol, DateTime date, decimal close, decimal priceFactorRatio)
+        public Dividend(Symbol symbol, DateTime date, decimal close, decimal priceFactorRatio)
             : this()
         {
             Symbol = symbol;
@@ -52,7 +52,7 @@ namespace QuantConnect.Data.Market
         /// <param name="symbol">The symbol</param>
         /// <param name="date">The date</param>
         /// <param name="distribution">The dividend amount</param>
-        public Dividend(string symbol, DateTime date, decimal distribution)
+        public Dividend(Symbol symbol, DateTime date, decimal distribution)
             : this()
         {
             Symbol = symbol;

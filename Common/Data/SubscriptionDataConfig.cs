@@ -29,6 +29,10 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionDataConfig
     {
+        private Symbol _symbol;
+        private string _mappedSymbol;
+        private readonly string _sid;
+
         /// <summary>
         /// Type of data
         /// </summary>
@@ -40,9 +44,12 @@ namespace QuantConnect.Data
         public readonly SecurityType SecurityType;
 
         /// <summary>
-        /// Symbol of the asset we're requesting.
+        /// Symbol of the asset we're requesting: this is really a perm tick!!
         /// </summary>
-        public readonly string Symbol;
+        public Symbol Symbol
+        {
+            get { return _symbol; }
+        }
 
         /// <summary>
         /// Resolution of the asset we're requesting, second minute or tick
@@ -87,7 +94,15 @@ namespace QuantConnect.Data
         /// <summary>
         /// Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
         /// </summary>
-        public string MappedSymbol;
+        public string MappedSymbol
+        {
+            get { return _mappedSymbol; }
+            set
+            {
+                _mappedSymbol = value;
+                _symbol = new Symbol(_sid, value);
+            }
+        }
 
         /// <summary>
         /// Gets the market / scope of the symbol
@@ -119,7 +134,7 @@ namespace QuantConnect.Data
         /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
         public SubscriptionDataConfig(Type objectType, 
             SecurityType securityType, 
-            string symbol, 
+            Symbol symbol, 
             Resolution resolution, 
             string market, 
             DateTimeZone timeZone,
@@ -130,11 +145,11 @@ namespace QuantConnect.Data
             Type = objectType;
             SecurityType = securityType;
             Resolution = resolution;
-            Symbol = symbol.ToUpper();
+            _sid = symbol.SID;
             FillDataForward = fillForward;
             ExtendedMarketHours = extendedHours;
             PriceScaleFactor = 1;
-            MappedSymbol = symbol;
+            MappedSymbol = symbol.Value;
             IsInternalFeed = isInternalFeed;
             Market = market;
             TimeZone = timeZone;

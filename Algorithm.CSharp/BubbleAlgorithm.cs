@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -19,8 +20,8 @@ using System.Globalization;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Securities;
 using QuantConnect.Indicators;
+using QuantConnect.Securities;
 
 namespace QuantConnect
 {

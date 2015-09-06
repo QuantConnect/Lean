@@ -123,15 +123,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="resultHandler"></param>
         /// <param name="tradeableDates">Defines the dates for which we'll request data, in order</param>
         /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
-        /// <param name="symbolResolutionDate">The date used to resolve the correct symbol</param>
         public SubscriptionDataReader(SubscriptionDataConfig config,
             Security security,
             DateTime periodStart,
             DateTime periodFinish,
             IResultHandler resultHandler,
             IEnumerable<DateTime> tradeableDates,
-            bool isLiveMode,
-            DateTime? symbolResolutionDate
+            bool isLiveMode
             )
         {
             //Save configuration of data-subscription:
@@ -177,19 +175,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             //Load the entire factor and symbol mapping tables into memory, we'll start with some defaults
-            _factorFile = new FactorFile(config.Symbol, new List<FactorFileRow>());
-            _mapFile = new MapFile(config.Symbol, new List<MapFileRow>());
+            _factorFile = new FactorFile(config.Symbol.SID, new List<FactorFileRow>());
+            _mapFile = new MapFile(config.Symbol.SID, new List<MapFileRow>());
             try
             {
                 // do we have map/factor tables? -- only applies to equities
                 if (!security.IsDynamicallyLoadedData && security.Type == SecurityType.Equity)
                 {
                     // resolve the correct map file as of the date
-                    _mapFile = MapFile.ResolveMapFile(config.Symbol, config.Market, symbolResolutionDate);
-                    _hasScaleFactors = FactorFile.HasScalingFactors(_mapFile.EntitySymbol, config.Market);
+                    _mapFile = MapFile.Read(config.Symbol.SID, config.Market);
+                    _hasScaleFactors = FactorFile.HasScalingFactors(_mapFile.Permtick, config.Market);
                     if (_hasScaleFactors)
                     {
-                        _factorFile = FactorFile.Read(config.Symbol, config.Market);
+                        _factorFile = FactorFile.Read(config.Symbol.SID, config.Market);
                     }
                 }
             }

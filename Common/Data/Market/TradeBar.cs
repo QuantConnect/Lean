@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using QuantConnect.Logging;
@@ -77,7 +76,7 @@ namespace QuantConnect.Data.Market
         //public decimal Price;
 
         //Symbol of Asset.
-        //In Base Class: public string Symbol;
+        //In Base Class: public Symbol Symbol;
 
         //In Base Class: DateTime Of this TradeBar
         //public DateTime Time;
@@ -87,7 +86,7 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public TradeBar()
         {
-            Symbol = "";
+            Symbol = Symbol.Empty;
             Time = new DateTime();
             Value = 0;
             DataType = MarketDataType.TradeBar;
@@ -129,7 +128,7 @@ namespace QuantConnect.Data.Market
         /// <param name="close">Decimal Close price of this bar</param>
         /// <param name="volume">Volume sum over day</param>
         /// <param name="period">The period of this bar, specify null for default of 1 minute</param>
-        public TradeBar(DateTime time, string symbol, decimal open, decimal high, decimal low, decimal close, long volume, TimeSpan? period = null)
+        public TradeBar(DateTime time, Symbol symbol, decimal open, decimal high, decimal low, decimal close, long volume, TimeSpan? period = null)
         {
             Time = time;
             Symbol = symbol;
@@ -324,7 +323,7 @@ namespace QuantConnect.Data.Market
             var dataType = config.SecurityType == SecurityType.Forex ? TickType.Quote : TickType.Trade; 
             var securityTypePath = config.SecurityType.ToString().ToLower();
             var resolutionPath = config.Resolution.ToString().ToLower();
-            var symbolPath = (string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol).ToLower();
+            var symbolPath = (string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol.SID : config.MappedSymbol).ToLower();
             var market = config.Market.ToLower();
             var filename = date.ToString(DateFormat.EightCharacter) + "_" + dataType.ToString().ToLower() + ".zip";
 

@@ -19,7 +19,6 @@ using System.ComponentModel;
 using System.IO;
 using QuantConnect.Data;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
-using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds

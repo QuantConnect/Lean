@@ -89,10 +89,10 @@ namespace QuantConnect.Scheduling
         /// </summary>
         /// <param name="symbol">The symbol whose exchange is used to determine tradeable dates</param>
         /// <returns>A date rule that fires every day the specified symbol trades</returns>
-        public IDateRule EveryDay(string symbol)
+        public IDateRule EveryDay(Symbol symbol)
         {
             var security = GetSecurity(symbol);
-            return new FuncDateRule(symbol + ": EveryDay", (start, end) => Time.EachTradeableDay(security, start, end));
+            return new FuncDateRule(symbol.SID + ": EveryDay", (start, end) => Time.EachTradeableDay(security, start, end));
         }
 
         /// <summary>
@@ -111,9 +111,9 @@ namespace QuantConnect.Scheduling
         /// <param name="symbol">The symbol whose exchange is used to determine the first 
         /// tradeable date of the month</param>
         /// <returns>A date rule that fires on the first tradeable date for the specified security each month</returns>
-        public IDateRule MonthStart(string symbol)
+        public IDateRule MonthStart(Symbol symbol)
         {
-            return new FuncDateRule(symbol + ": MonthStart", (start, end) => MonthStartIterator(GetSecurity(symbol), start, end));
+            return new FuncDateRule(symbol.SID + ": MonthStart", (start, end) => MonthStartIterator(GetSecurity(symbol), start, end));
         }
 
         /// <summary>
@@ -121,14 +121,12 @@ namespace QuantConnect.Scheduling
         /// </summary>
         /// <param name="symbol">The security's symbol to search for</param>
         /// <returns>The security object matching the given symbol</returns>
-        private Security GetSecurity(string symbol)
+        private Security GetSecurity(Symbol symbol)
         {
-            symbol = symbol.ToUpper();
-
             Security security;
             if (!_securities.TryGetValue(symbol, out security))
             {
-                throw new Exception(symbol + " not found in portfolio. Request this data when initializing the algorithm.");
+                throw new Exception(symbol.SID + " not found in portfolio. Request this data when initializing the algorithm.");
             }
             return security;
         }

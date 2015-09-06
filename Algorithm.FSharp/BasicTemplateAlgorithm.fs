@@ -22,6 +22,7 @@ namespace QuantConnect.Algorithm.FSharp
 open System
 open System.Collections.Generic
 open QuantConnect
+open QuantConnect.Securities
 open QuantConnect.Data.Market
 open QuantConnect.Algorithm
 open QuantConnect.Orders
@@ -32,18 +33,20 @@ type BasicTemplateAlgorithm() =
 
     //Reuse all the base class of QCAlgorithm
     inherit QCAlgorithm()
+
+        member this.symbol = new Symbol("SPY")
         
         //Implement core methods:
         override this.Initialize() = 
             this.SetCash(100000)
             this.SetStartDate(2013, 10, 07)
             this.SetEndDate(2013, 10, 11)
-            this.AddSecurity(SecurityType.Equity, "SPY", Resolution.Second)
+            this.AddSecurity(SecurityType.Equity, this.symbol, Resolution.Second)
 
         //TradeBars Data Event
         member this.OnData(bar:TradeBars) = 
             
                 if not this.Portfolio.Invested then 
-                    this.SetHoldings("SPY", 1);
+                    this.SetHoldings(this.symbol, 1);
                 else 
                     ()

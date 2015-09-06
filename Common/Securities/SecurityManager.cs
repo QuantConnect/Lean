@@ -19,8 +19,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Logging;
-
 
 namespace QuantConnect.Securities 
 {
@@ -28,12 +28,12 @@ namespace QuantConnect.Securities
     /// Enumerable security management class for grouping security objects into an array and providing any common properties.
     /// </summary>
     /// <remarks>Implements IDictionary for the index searching of securities by symbol</remarks>
-    public class SecurityManager : IDictionary<string, Security>
+    public class SecurityManager : IDictionary<Symbol, Security>
     {
         private readonly TimeKeeper _timeKeeper;
 
         //Internal dictionary implementation:
-        private readonly IDictionary<string, Security> _securityManager;
+        private readonly IDictionary<Symbol, Security> _securityManager;
         private int _minuteLimit = 500;
         private int _minuteMemory = 2;
         private int _secondLimit = 100;
@@ -57,7 +57,7 @@ namespace QuantConnect.Securities
         public SecurityManager(TimeKeeper timeKeeper)
         {
             _timeKeeper = timeKeeper;
-            _securityManager = new ConcurrentDictionary<string, Security>();
+            _securityManager = new ConcurrentDictionary<Symbol, Security>();
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace QuantConnect.Securities
         /// <param name="symbol">symbol for security we're trading</param>
         /// <param name="security">security object</param>
         /// <seealso cref="Add(string,Resolution,bool)"/>
-        public void Add(string symbol, Security security)
+        public void Add(Symbol symbol, Security security)
         {
             CheckResolutionCounts(security.Resolution);
             security.SetLocalTimeKeeper(_timeKeeper.GetLocalTimeKeeper(security.SubscriptionDataConfig.TimeZone));
@@ -112,7 +112,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <param name="pair"></param>
-        public void Add(KeyValuePair<string, Security> pair)
+        public void Add(KeyValuePair<Symbol, Security> pair)
         {
             CheckResolutionCounts(pair.Value.Resolution);
             _securityManager.Add(pair.Key, pair.Value);
@@ -133,7 +133,7 @@ namespace QuantConnect.Securities
         /// <param name="pair">Search key-value pair</param>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Bool true if contains this key-value pair</returns>
-        public bool Contains(KeyValuePair<string, Security> pair)
+        public bool Contains(KeyValuePair<Symbol, Security> pair)
         {
             return _securityManager.Contains(pair);
         }
@@ -144,7 +144,7 @@ namespace QuantConnect.Securities
         /// <param name="symbol">Symbol we're checking for.</param>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Bool true if contains this symbol pair</returns>
-        public bool ContainsKey(string symbol)
+        public bool ContainsKey(Symbol symbol)
         {
             return _securityManager.ContainsKey(symbol);
         }
@@ -155,7 +155,7 @@ namespace QuantConnect.Securities
         /// <param name="array">Array we're outputting to</param>
         /// <param name="number">Starting index of array</param>
         /// <remarks>IDictionary implementation</remarks>
-        public void CopyTo(KeyValuePair<string, Security>[] array, int number)
+        public void CopyTo(KeyValuePair<Symbol, Security>[] array, int number)
         {
             _securityManager.CopyTo(array, number);
         }
@@ -184,7 +184,7 @@ namespace QuantConnect.Securities
         /// <remarks>IDictionary implementation</remarks>
         /// <param name="pair">Key Value pair of symbol-security to remove</param>
         /// <returns>Boolean true on success</returns>
-        public bool Remove(KeyValuePair<string, Security> pair)
+        public bool Remove(KeyValuePair<Symbol, Security> pair)
         {
             return _securityManager.Remove(pair);
         }
@@ -192,9 +192,9 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Remove this symbol security: Dictionary interface implementation.
         /// </summary>
-        /// <param name="symbol">string symbol we're searching for</param>
+        /// <param name="symbol">Symbol we're searching for</param>
         /// <returns>true success</returns>
-        public bool Remove(string symbol)
+        public bool Remove(Symbol symbol)
         {
             return _securityManager.Remove(symbol);
         }
@@ -203,7 +203,7 @@ namespace QuantConnect.Securities
         /// List of the symbol-keys in the collection of securities.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        public ICollection<string> Keys
+        public ICollection<Symbol> Keys
         {
             get { return _securityManager.Keys; }
         }
@@ -215,7 +215,7 @@ namespace QuantConnect.Securities
         /// <param name="security">Output Security object</param>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>True on successfully locating the security object</returns>
-        public bool TryGetValue(string symbol, out Security security)
+        public bool TryGetValue(Symbol symbol, out Security security)
         {
             return _securityManager.TryGetValue(symbol, out security);
         }
@@ -234,7 +234,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Enumerable key value pair</returns>
-        IEnumerator<KeyValuePair<string, Security>> IEnumerable<KeyValuePair<string, Security>>.GetEnumerator() 
+        IEnumerator<KeyValuePair<Symbol, Security>> IEnumerable<KeyValuePair<Symbol, Security>>.GetEnumerator() 
         {
             return _securityManager.GetEnumerator();
         }
@@ -255,14 +255,13 @@ namespace QuantConnect.Securities
         /// <remarks>IDictionary implementation</remarks>
         /// <param name="symbol">Symbol string indexer</param>
         /// <returns>Security</returns>
-        public Security this[string symbol]
+        public Security this[Symbol symbol]
         {
             get
             {
-                symbol = symbol.ToUpper();
                 if (!_securityManager.ContainsKey(symbol))
                 {
-                    throw new Exception("This asset symbol (" + symbol + ") was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"" + symbol + "\")'");
+                    throw new Exception("This asset symbol (" + symbol.SID + ") was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"" + symbol.SID + "\")'");
                 } 
                 return _securityManager[symbol];
             }
@@ -361,7 +360,7 @@ namespace QuantConnect.Securities
             SubscriptionManager subscriptionManager,
             SecurityExchangeHoursProvider securityExchangeHoursProvider,
             SecurityType securityType,
-            string symbol,
+            Symbol symbol,
             Resolution resolution,
             string market,
             bool fillDataForward,
@@ -369,7 +368,6 @@ namespace QuantConnect.Securities
             bool extendedMarketHours,
             bool isInternalFeed)
         {
-            symbol = symbol.ToUpper();
             //If it hasn't been set, use some defaults based on the portfolio type:
             if (leverage <= 0)
             {
@@ -394,8 +392,8 @@ namespace QuantConnect.Securities
 
             //Add the symbol to Data Manager -- generate unified data streams for algorithm events
             var exchangeHours = securityExchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
-            var tradeBarType = typeof(Data.Market.TradeBar);
-            var type = resolution == Resolution.Tick ? typeof(Data.Market.Tick) : tradeBarType;
+            var tradeBarType = typeof(TradeBar);
+            var type = resolution == Resolution.Tick ? typeof(Tick) : tradeBarType;
             var config = subscriptionManager.Add(type, securityType, symbol, resolution, market, exchangeHours.TimeZone, fillDataForward, extendedMarketHours, isInternalFeed);
 
             Security security;
@@ -408,7 +406,7 @@ namespace QuantConnect.Securities
                 case SecurityType.Forex:
                     // decompose the symbol into each currency pair
                     string baseCurrency, quoteCurrency;
-                    Forex.Forex.DecomposeCurrencyPair(symbol, out baseCurrency, out quoteCurrency);
+                    Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
 
                     if (!securityPortfolioManager.CashBook.ContainsKey(baseCurrency))
                     {

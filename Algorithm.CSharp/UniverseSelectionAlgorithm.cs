@@ -15,14 +15,11 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {

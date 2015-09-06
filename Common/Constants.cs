@@ -14,6 +14,7 @@
  *
 */
 
+using System.Reflection;
 using QuantConnect.Configuration;
 
 namespace QuantConnect
@@ -41,6 +42,6 @@ namespace QuantConnect
         /// <summary>
         /// The version of lean
         /// </summary>
-        public static readonly string Version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        public static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
     }
 }

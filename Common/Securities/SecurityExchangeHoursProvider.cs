@@ -37,7 +37,7 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Gets an instant of <see cref="SecurityExchangeHoursProvider"/> that will always return <see cref="SecurityExchangeHours.AlwaysOpen"/>
-        /// for each call to <see cref="GetExchangeHours(string, string, SecurityType,DateTimeZone)"/>
+        /// for each call to <see cref="GetExchangeHours(string, Symbol, SecurityType,DateTimeZone)"/>
         /// </summary>
         public static SecurityExchangeHoursProvider AlwaysOpen
         {
@@ -83,7 +83,7 @@ namespace QuantConnect.Securities
         /// This value will also be used as the time zone for SecurityType.Base with no market hours database entry.
         /// If null is specified, no override will be performed. If null is specified, and it's SecurityType.Base, then Utc will be used.</param>
         /// <returns>The exchange hours for the specified security</returns>
-        public virtual SecurityExchangeHours GetExchangeHours(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
+        public virtual SecurityExchangeHours GetExchangeHours(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
         {
             SecurityExchangeHours hours;
             var key = new Key(market, symbol, securityType);
@@ -201,7 +201,8 @@ namespace QuantConnect.Securities
             //var market = csv[1];
             //var symbol = csv[2];
             //var type = csv[3];
-            key = new Key(csv[1], csv[2], (SecurityType)Enum.Parse(typeof(SecurityType), csv[3], true));
+            var symbol = string.IsNullOrEmpty(csv[2]) ? null : new Symbol(csv[2]);
+            key = new Key(csv[1], symbol, (SecurityType)Enum.Parse(typeof(SecurityType), csv[3], true));
 
             int csvLength = csv.Length;
             for (int i = 1; i < 8; i++)
@@ -289,18 +290,23 @@ namespace QuantConnect.Securities
         class Key : IEquatable<Key>
         {
             public readonly string Market;
-            public readonly string Symbol;
+            public readonly Symbol Symbol;
             public readonly SecurityType SecurityType;
 
-            public Key(string market, string symbol, SecurityType securityType)
+            public Key(string market, Symbol symbol, SecurityType securityType)
             {
                 Market = market;
                 SecurityType = securityType;
-                if (!string.IsNullOrWhiteSpace(symbol))
-                {
-                    // leave symbol null unless there's something of value here
-                    Symbol = symbol.ToLower();
-                }
+                Symbol = symbol;
+            }
+
+            #region Equality members
+
+            public bool Equals(Key other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return string.Equals(Market, other.Market) && Equals(Symbol, other.Symbol) && SecurityType == other.SecurityType;
             }
 
             public override bool Equals(object obj)
@@ -322,11 +328,6 @@ namespace QuantConnect.Securities
                 }
             }
 
-            public bool Equals(Key other)
-            {
-                return string.Equals(Market, other.Market) && string.Equals(Symbol, other.Symbol) && SecurityType == other.SecurityType;
-            }
-
             public static bool operator ==(Key left, Key right)
             {
                 return Equals(left, right);
@@ -337,9 +338,11 @@ namespace QuantConnect.Securities
                 return !Equals(left, right);
             }
 
+            #endregion
+
             public override string ToString()
             {
-                return string.Format("{0}-{1}-{2}", Market ?? "[null]", Symbol ?? "[null]", SecurityType);
+                return string.Format("{0}-{1}-{2}", Market ?? "[null]", Symbol == null ? "[null]" : Symbol.SID, SecurityType);
             }
         }
 
@@ -349,7 +352,7 @@ namespace QuantConnect.Securities
             {
             }
 
-            public override SecurityExchangeHours GetExchangeHours(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
+            public override SecurityExchangeHours GetExchangeHours(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
             {
                 return SecurityExchangeHours.AlwaysOpen(overrideTimeZone ?? TimeZones.Utc);
             }

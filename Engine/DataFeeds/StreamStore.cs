@@ -16,10 +16,8 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Logging;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds

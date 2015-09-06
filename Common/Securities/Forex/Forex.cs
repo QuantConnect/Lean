@@ -63,7 +63,7 @@ namespace QuantConnect.Securities.Forex
 
             // decompose the symbol into each currency pair
             string baseCurrencySymbol, quoteCurrencySymbol;
-            DecomposeCurrencyPair(config.Symbol, out baseCurrencySymbol, out quoteCurrencySymbol);
+            DecomposeCurrencyPair(config.Symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
             BaseCurrencySymbol = baseCurrencySymbol;
             QuoteCurrencySymbol = quoteCurrencySymbol;
         }

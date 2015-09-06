@@ -23,6 +23,10 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the symbol that was changed
         /// </summary>
+        /// <remarks>
+        /// This is not a <see cref="Symbol"/> object because it's coming from the brokerage
+        /// and only used in live trading where it is the symbol
+        /// </remarks>
         public string Symbol { get; private set; }
 
         /// <summary>

@@ -57,7 +57,7 @@ namespace QuantConnect.Data
             }
             if (name == "symbol")
             {
-                Symbol = (string)value;
+                Symbol = new Symbol((string) value);
             }
             // reaodnly
             //if (name == "Price")

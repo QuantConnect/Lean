@@ -18,8 +18,6 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
-using QuantConnect.Indicators;
-
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -188,7 +186,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(tb3);
 
             Assert.IsNotNull(consolidated);
-            Assert.AreEqual("SPY", consolidated.Symbol);
+            Assert.AreEqual("SPY", consolidated.Symbol.SID);
             Assert.AreEqual(10m, consolidated.Open);
             Assert.AreEqual(123m, consolidated.High);
             Assert.AreEqual(1m, consolidated.Low);

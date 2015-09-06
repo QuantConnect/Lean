@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
@@ -25,7 +26,7 @@ namespace QuantConnect.Securities
     /// Portfolio manager class groups popular properties and makes them accessible through one interface.
     /// It also provide indexing by the vehicle symbol to get the Security.Holding objects.
     /// </summary>
-    public class SecurityPortfolioManager : IDictionary<string, SecurityHolding>, IHoldingsProvider 
+    public class SecurityPortfolioManager : IDictionary<Symbol, SecurityHolding>, IHoldingsProvider 
     {
         /// <summary>
         /// Local access to the securities collection for the portfolio summation.
@@ -70,7 +71,7 @@ namespace QuantConnect.Securities
         /// <param name="holding">SecurityHoldings object</param>
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public void Add(string symbol, SecurityHolding holding) { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager. To add a new asset add the required data during initialization."); }
+        public void Add(Symbol symbol, SecurityHolding holding) { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager. To add a new asset add the required data during initialization."); }
 
         /// <summary>
         /// Add a new securities key value pair to the portfolio.
@@ -78,7 +79,7 @@ namespace QuantConnect.Securities
         /// <param name="pair">Key value pair of dictionary</param>
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public void Add(KeyValuePair<string, SecurityHolding> pair) { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager. To add a new asset add the required data during initialization."); }
+        public void Add(KeyValuePair<Symbol, SecurityHolding> pair) { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager. To add a new asset add the required data during initialization."); }
 
         /// <summary>
         /// Clear the portfolio of securities objects.
@@ -93,7 +94,7 @@ namespace QuantConnect.Securities
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <param name="pair">Key value pair of dictionary</param>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public bool Remove(KeyValuePair<string, SecurityHolding> pair) { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager and objects cannot be removed."); }
+        public bool Remove(KeyValuePair<Symbol, SecurityHolding> pair) { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager and objects cannot be removed."); }
 
         /// <summary>
         /// Remove this symbol from the portfolio.
@@ -101,14 +102,14 @@ namespace QuantConnect.Securities
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <param name="symbol">Symbol of dictionary</param>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public bool Remove(string symbol) { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager and objects cannot be removed."); }
+        public bool Remove(Symbol symbol) { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager and objects cannot be removed."); }
 
         /// <summary>
         /// Check if the portfolio contains this symbol string.
         /// </summary>
         /// <param name="symbol">String search symbol for the security</param>
         /// <returns>Boolean true if portfolio contains this symbol</returns>
-        public bool ContainsKey(string symbol)
+        public bool ContainsKey(Symbol symbol)
         {
             return Securities.ContainsKey(symbol);
         }
@@ -119,7 +120,7 @@ namespace QuantConnect.Securities
         /// <remarks>IDictionary implementation calling the underlying Securities collection</remarks>
         /// <param name="pair">Pair we're searching for</param>
         /// <returns>True if we have this object</returns>
-        public bool Contains(KeyValuePair<string, SecurityHolding> pair)
+        public bool Contains(KeyValuePair<Symbol, SecurityHolding> pair)
         {
             return Securities.ContainsKey(pair.Key);
         }
@@ -154,15 +155,15 @@ namespace QuantConnect.Securities
         /// <remarks>IDictionary implementation calling the underlying Securities collection</remarks>
         /// <param name="array">Destination array</param>
         /// <param name="index">Position in array to start copying</param>
-        public void CopyTo(KeyValuePair<string, SecurityHolding>[] array, int index)
+        public void CopyTo(KeyValuePair<Symbol, SecurityHolding>[] array, int index)
         {
-            array = new KeyValuePair<string, SecurityHolding>[Securities.Count];
+            array = new KeyValuePair<Symbol, SecurityHolding>[Securities.Count];
             var i = 0;
             foreach (var asset in Securities)
             {
                 if (i >= index)
                 {
-                    array[i] = new KeyValuePair<string, SecurityHolding>(asset.Key, asset.Value.Holdings);
+                    array[i] = new KeyValuePair<Symbol, SecurityHolding>(asset.Key, asset.Value.Holdings);
                 }
                 i++;
             }
@@ -172,7 +173,7 @@ namespace QuantConnect.Securities
         /// Symbol keys collection of the underlying assets in the portfolio.
         /// </summary>
         /// <remarks>IDictionary implementation calling the underlying securities key symbols</remarks>
-        public ICollection<string> Keys
+        public ICollection<Symbol> Keys
         {
             get
             {
@@ -200,7 +201,7 @@ namespace QuantConnect.Securities
         /// <param name="holding">Holdings object of this security</param>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Boolean true if successful locating and setting the holdings object</returns>
-        public bool TryGetValue(string symbol, out SecurityHolding holding)
+        public bool TryGetValue(Symbol symbol, out SecurityHolding holding)
         {
             Security security;
             var success = Securities.TryGetValue(symbol, out security);
@@ -213,9 +214,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Enumerable key value pair</returns>
-        IEnumerator<KeyValuePair<string, SecurityHolding>> IEnumerable<KeyValuePair<string, SecurityHolding>>.GetEnumerator()
+        IEnumerator<KeyValuePair<Symbol, SecurityHolding>> IEnumerable<KeyValuePair<Symbol, SecurityHolding>>.GetEnumerator()
         {
-            return Securities.Select(x => new KeyValuePair<string, SecurityHolding>(x.Key, x.Value.Holdings)).GetEnumerator();
+            return Securities.Select(x => new KeyValuePair<Symbol, SecurityHolding>(x.Key, x.Value.Holdings)).GetEnumerator();
         }
 
         /// <summary>
@@ -223,9 +224,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Enumerator</returns>
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            return Securities.Select(x => new KeyValuePair<string, SecurityHolding>(x.Key, x.Value.Holdings)).GetEnumerator();
+            return Securities.Select(x => new KeyValuePair<Symbol, SecurityHolding>(x.Key, x.Value.Holdings)).GetEnumerator();
         }
 
         #endregion
@@ -403,9 +404,9 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Indexer for the PortfolioManager class to access the underlying security holdings objects.
         /// </summary>
-        /// <param name="symbol">Search string symbol as indexer</param>
+        /// <param name="symbol">Symbol indexer</param>
         /// <returns>SecurityHolding class from the algorithm securities</returns>
-        public SecurityHolding this[string symbol]
+        public SecurityHolding this[Symbol symbol]
         {
             get { return Securities[symbol].Holdings; }
             set { Securities[symbol].Holdings = value; }
@@ -606,7 +607,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="symbol">The symbol to get holdings for</param>
         /// <returns>The holdings for the symbol or null if the symbol is invalid and/or not in the portfolio</returns>
-        Holding IHoldingsProvider.GetHoldings(string symbol)
+        Holding IHoldingsProvider.GetHoldings(Symbol symbol)
         {
             SecurityHolding holding;
             if (TryGetValue(symbol, out holding))

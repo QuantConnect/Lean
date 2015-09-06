@@ -15,7 +15,6 @@
 
 using NUnit.Framework;
 using QuantConnect.Logging;
-using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Util
 {

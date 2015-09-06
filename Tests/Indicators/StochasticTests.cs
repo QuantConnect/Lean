@@ -13,8 +13,10 @@
  * limitations under the License.
 */
 
-using QuantConnect.Indicators;
+using System;
 using NUnit.Framework;
+using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -74,6 +76,20 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.AssertIndicatorIsInDefaultState(stochastics.FastStoch);
             TestHelper.AssertIndicatorIsInDefaultState(stochastics.StochK);
             TestHelper.AssertIndicatorIsInDefaultState(stochastics.StochD);
+        }
+
+        [Test]
+        public void HandlesEqualMinAndMax()
+        {
+            var reference = new DateTime(2015, 09, 01);
+            var stochastics = new Stochastic("sto", 2, 2, 2);
+            for (int i = 0; i < 4; i++)
+            {
+                var bar = new TradeBar{Time = reference.AddSeconds(i)};
+                bar.Open = bar.Close = bar.High = bar.Low = bar.Volume = 1;
+                stochastics.Update(bar);
+                Assert.AreEqual(0m, stochastics.Current.Value);
+            }
         }
     }
 }

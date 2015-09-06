@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 
@@ -290,9 +289,9 @@ namespace QuantConnect
             Log.Trace("Time.TradeableDates(): Security Count: " + securities.Count);
             try 
             {
-                foreach (var day in Time.EachDay(start, finish)) 
+                foreach (var day in EachDay(start, finish)) 
                 {
-                    if (Time.TradableDate(securities, day)) 
+                    if (TradableDate(securities, day)) 
                     {
                         count++;
                     }

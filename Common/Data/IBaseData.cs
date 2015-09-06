@@ -44,7 +44,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Symbol for underlying Security
         /// </summary>
-        string Symbol
+        Symbol Symbol
         {
             get;
             set;

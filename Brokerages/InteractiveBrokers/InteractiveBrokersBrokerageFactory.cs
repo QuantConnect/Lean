@@ -20,6 +20,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -87,7 +88,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // launch the IB gateway
             InteractiveBrokersGatewayRunner.Start(ibControllerDirectory, twsDirectory, userID, password, useTws);
 
-            return new InteractiveBrokersBrokerage(algorithm.Transactions, account, host, port, agentDescription);
+            var ib = new InteractiveBrokersBrokerage(algorithm.Transactions, account, host, port, agentDescription);
+            Composer.Instance.AddPart<IDataQueueHandler>(ib);
+            return ib;
         }
 
         /// <summary>
