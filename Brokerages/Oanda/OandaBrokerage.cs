@@ -202,17 +202,6 @@ namespace QuantConnect.Brokerages.Oanda
             return cash;
         }
         
-        private static string GetCommaSeparatedList(IEnumerable<string> items)
-        {
-            var result = new StringBuilder();
-            foreach (var item in items)
-            {
-                result.Append(item + ",");
-            }
-            return result.ToString().Trim(',');
-        }
-
-
         private Dictionary<string, SecurityType> MapInstrumentToSecurityType(List<Instrument> instruments)
         {
             var result = new Dictionary<string, SecurityType>();
@@ -233,7 +222,7 @@ namespace QuantConnect.Brokerages.Oanda
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Rates) + "instruments?accountId=" + AccountId;
             if (instrumentNames != null)
             {
-                var instrumentsParam = GetCommaSeparatedList(instrumentNames);
+                var instrumentsParam = string.Join(",", instrumentNames);
                 requestString += "&instruments=" + Uri.EscapeDataString(instrumentsParam);
             }
             var instrumentResponse = MakeRequest<InstrumentsResponse>(requestString);

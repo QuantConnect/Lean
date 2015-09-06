@@ -25,30 +25,20 @@ namespace QuantConnect.Brokerages.Backtesting
     public class OandaBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
-        ///     Returns true if the brokerage could accept this order. This takes into account
-        ///     order type, security type, and order size limits.
+        /// Returns true if the brokerage would be able to execute this order at this time assuming
+        /// market prices are sufficient for the fill to take place. This is used to emulate the 
+        /// brokerage fills in backtesting and paper trading. For example some brokerages may not perform
+        /// executions during extended market hours. This is not intended to be checking whether or not
+        /// the exchange is open, that is handled in the Security.Exchange property.
         /// </summary>
-        /// <remarks>
-        ///     For example, a brokerage may have no connectivity at certain times, or an order rate/size limit
-        /// </remarks>
-        /// <param name="security">The security being ordered</param>
-        /// <param name="order">The order to be processed</param>
-        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
-        /// <returns>True if the brokerage could process the order, false otherwise</returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        /// <param name="security">The security being traded</param>
+        /// <param name="order">The order to test for execution</param>
+        /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
+        public override bool CanExecuteOrder(Security security, Order order)
         {
-            message = null;
-
-            if (order.DurationValue > DateTime.Now.AddMonths(3))
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "Oanda does not support order expiration dates more than 3 months in the future."
-                  );
-                return false;
-            }
-            return true;
+            return order.DurationValue <= DateTime.Now.AddMonths(3);
         }
-        
+
         /// <summary>
         ///     Gets a new transaction model the represents this brokerage's fee structure and fill behavior
         /// </summary>
