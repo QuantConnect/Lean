@@ -35,6 +35,65 @@ Lean outsourced key infrastructure management to plugins. The most important plu
 
 For more information on the system design and contributing please see the Lean Website Documentation.
 
+## Spinup Instructions ##
+
+### OS X
+
+Install [Mono for Mac](http://www.mono-project.com/docs/getting-started/install/mac/)
+
+Install [MonoDevelop](http://www.monodevelop.com/download/) or [Xamarin Studio](http://xamarin.com/studio)
+
+Clone the repo:
+```
+git clone git@github.com:QuantConnect/Lean.git
+cd Lean
+```
+
+In OS X `mdtool` is not added to the PATH environment. Either set up the PATH manually or reference the binary directly.
+
+If you are running Xamarin Studio:
+```
+/Applications/Xamarin\ Studio.app/Contents/MacOS/mdtool build
+```
+
+If you are running MonoDevelop:
+```
+/Applications/MonoDevelop.app/Contents/MacOS/mdtool build
+```
+
+Run the compiled `exe` file. For the time being you need to run the `exe` in the same path as your current working directory:
+```
+cd Engine/Lean/bin/Debug
+mono ./QuantConnect.Lean.exe
+```
+### Linux (Debian, Ubuntu)
+
+Setup Mono GPG signing key ([instructions here](http://www.mono-project.com/docs/getting-started/install/linux/#usage))
+
+Install dependencies:
+```
+sudo apt-get install mono-complete mono-vbnc monodevelop fsharp
+```
+Clone the repo then compile:
+```
+git clone git@github.com:QuantConnect/Lean.git
+cd Lean
+mdtool build
+```
+
+Run the compiled `exe` file. For the time being you need to run the `exe` in the same path as your current working directory:
+```
+cd Engine/Lean/bin/Debug
+./QuantConnect.Lean.exe
+```
+
+### Windows
+
+- Install [Visual Studio](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
+- Open `QuantConnect.Lean.sln` in Visual Studio
+- Press `ctrl-f5` to run without debugging
+
+
 ## Issues and Feature Requests ##
 
 Please submit bugs and feature requests as an issue to the [Lean Repository][5]. Before submitting an issue please read others to ensure it is not a duplicate.
