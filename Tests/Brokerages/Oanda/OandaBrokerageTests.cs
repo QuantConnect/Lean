@@ -28,6 +28,7 @@ using Environment = QuantConnect.Brokerages.Oanda.Environment;
 
 namespace QuantConnect.Tests.Brokerages.Oanda
 {
+    //[TestFixture, Ignore("This test requires a configured and testable Oanda practice account")]
     [TestFixture]
     public class OandaBrokerageTests : BrokerageTests
     {
@@ -37,7 +38,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         /// <returns>A connected brokerage instance</returns>
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider)
         {
-            var oandaBrokerage = new OandaBrokerage(orderProvider, holdingsProvider, 0);
+            var oandaBrokerage = new OandaBrokerage(orderProvider, 0);
             var tokens = OandaBrokerageFactory.GetTokens();
             var environment = Config.Get("oanda-environment");
             if (environment == "sandbox")
@@ -76,7 +77,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         /// </summary>
         protected override string Symbol
         {
-            get { return "EUR_USD"; }
+            get { return "EURUSD"; }
         }
 
         /// <summary>

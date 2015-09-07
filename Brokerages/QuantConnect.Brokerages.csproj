@@ -123,6 +123,7 @@
     <None Include="InteractiveBrokers\run-ib-controller.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Oanda\LICENSE.md" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

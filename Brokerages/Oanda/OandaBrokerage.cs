@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -24,7 +23,6 @@ using System.Net;
 using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using Newtonsoft.Json;
@@ -55,9 +53,6 @@ namespace QuantConnect.Brokerages.Oanda
 
         private TimeSpan _lifeSpan = TimeSpan.FromSeconds(86399); // 1 second less than a day
         
-
-        private readonly object _fillLock = new object();
-
         /// <summary>
         /// Gets or sets the instrument security type map.
         /// </summary>
@@ -76,18 +71,13 @@ namespace QuantConnect.Brokerages.Oanda
 
         private readonly object _lockAccessCredentials = new object();
 
-        //This should correlate to the Trades/Positions list in Oanda.
-        private readonly IHoldingsProvider _holdingsProvider;
-
         //This should correlate to the Orders list in Oanda.
         private readonly IOrderProvider _orderProvider;
-
-        private readonly ConcurrentDictionary<long, DataType.Order> _cachedOpenOrdersByOandaOrderId;
-
+        
         /// <summary>
         /// The QC User id, used for refreshing the session
         /// </summary>
-        public int UserId { get; private set; }
+        public int UserId { get; set; }
 
         /// <summary>
         /// Access Token Access:
@@ -99,29 +89,16 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public string RefreshToken { get; private set; }
 
-
-        /// <summary>
-        /// Creates a new Brokerage instance with the specified name
-        /// </summary>
-        /// <param name="name">The name of the brokerage</param>
-        public OandaBrokerage(string name, int userId) : base(name)
-        {
-            UserId = userId;
-        }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaBrokerage"/> class.
         /// </summary>
         /// <param name="orderProvider">The order provider.</param>
-        /// <param name="holdingsProvider">The holdings provider.</param>
         /// <param name="accountId">The account identifier.</param>
-        public OandaBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider, int accountId)
+        public OandaBrokerage(IOrderProvider orderProvider, int accountId)
             : base("Oanda Brokerage")
         {
             _orderProvider = orderProvider;
-            _holdingsProvider = holdingsProvider;
             AccountId = accountId;
-            _cachedOpenOrdersByOandaOrderId = new ConcurrentDictionary<long, DataType.Order>();
             InstrumentSecurityTypeMap =  new Dictionary<string, SecurityType>(); 
         }
 
@@ -151,10 +128,6 @@ namespace QuantConnect.Brokerages.Oanda
             var oandaOrders = GetOrderList();
 
             var orderList = oandaOrders.Select(ConvertOrder).ToList();
-            foreach (var openOrder in orderList)
-            {
-                _cachedOpenOrdersByOandaOrderId[openOrder.Id] = oandaOrders.FirstOrDefault(oo => oo.id == openOrder.Id);
-            }
             return orderList;
         }
 
@@ -177,7 +150,7 @@ namespace QuantConnect.Brokerages.Oanda
         {
             return new Holding
             {
-                Symbol = position.instrument,
+                Symbol = MapOandaInstructmentToQcSymbol(position.instrument,InstrumentSecurityTypeMap[position.instrument]),
                 Type = InstrumentSecurityTypeMap[position.instrument],
                 AveragePrice = (decimal)position.avgPrice,
                 ConversionRate = 1.0m,
@@ -186,7 +159,15 @@ namespace QuantConnect.Brokerages.Oanda
             };
         }
 
-
+        private string MapOandaInstructmentToQcSymbol(string instrument, SecurityType securityType)
+        {
+            if (securityType == SecurityType.Forex)
+            {
+                instrument = instrument.Trim('_');
+                return instrument; ;
+            }
+            return instrument;
+        }
 
         /// <summary>
         /// Gets the current cash balance for each currency held in the brokerage account
@@ -246,7 +227,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             PopulateOrderRequestParameters(order, requestParams);
 
-            Log.Trace(string.Format("OandaBrokerage.PlaceOrder(): {0} to {1} {2} units of {3}", order.Type, order.Direction, order.Quantity, order.Symbol));
+            Log.Trace(order.ToString());
 
 
             var priorOrderPositions = GetTradeList(requestParams);
@@ -448,21 +429,9 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         private void CheckForFills()
         {
-            // reentrance gaurd
-            if (!Monitor.TryEnter(_fillLock))
-            {
-                return;
-            }
-            try
-            {
-                var session = new EventsSession(AccountId);
-                session.DataReceived += OnEventReceived;
-                session.StartSession();
-            }
-            finally
-            {
-                Monitor.Exit(_fillLock);
-            }
+            var session = new EventsSession(AccountId);
+            session.DataReceived += OnEventReceived;
+            session.StartSession();
         }
 
         private void OnEventReceived(Event data)
@@ -480,10 +449,6 @@ namespace QuantConnect.Brokerages.Oanda
                     var fill = new OrderEvent(qcOrder, "Oanda Fill Event")
                     {
                         Status = OrderStatus.Filled,
-                        //    // this is guaranteed to be wrong in the event we have multiple fills within our polling interval,
-                        //    // we're able to partially cope with the fill quantity by diffing the previous info vs current info
-                        //    // but the fill price will always be the most recent fill, so if we have two fills with 1/10 of a second
-                        //    // we'll get the latter fill price, so for large orders this can lead to inconsistent state
                         FillPrice = (decimal) data.transaction.price,
                         FillQuantity = data.transaction.units
                     };
@@ -501,7 +466,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <summary>
         /// Obtain the active open Trade List from Oanda.
         /// </summary>
-        /// <param name="requestParams"></param>
+        /// <param name="requestParams">the parameters to update (name, value pairs)</param>
         /// <returns></returns>
         public TradesResponse GetTradeList(Dictionary<string, string> requestParams = null)
         {
@@ -559,11 +524,7 @@ namespace QuantConnect.Brokerages.Oanda
         public List<Price> GetRates(List<Instrument> instruments)
         {
             var requestBuilder = new StringBuilder(EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Rates) + "prices?instruments=");
-
-            foreach (var instrument in instruments)
-            {
-                requestBuilder.Append(instrument.instrument + ",");
-            }
+            requestBuilder.Append(string.Join(",", instruments.Select(i => i.instrument)));
             var requestString = requestBuilder.ToString().Trim(',');
             requestString = requestString.Replace(",", "%2C");
 
