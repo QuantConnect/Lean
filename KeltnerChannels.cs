@@ -44,14 +44,14 @@ namespace QuantConnect.Indicators
             ///Compute Lower Band
             LowerBand = new FunctionalIndicator<TradeBar>(name + "_LowerBand",
                 input => ComputeLowerBand(k, period, input),
-                fastStoch => MiddleBand.IsReady,
+                lowerBand => MiddleBand.IsReady,
                 () => MiddleBand.Reset()
                 );
 
             ///Compute Upper Band
             UpperBand = new FunctionalIndicator<TradeBar>(name + "_UpperBand",
                 input => ComputeUpperBand(k, period, input),
-                fastStoch => MiddleBand.IsReady,
+                upperBand => MiddleBand.IsReady,
                 () => MiddleBand.Reset()
                 );
         }
