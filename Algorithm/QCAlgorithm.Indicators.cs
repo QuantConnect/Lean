@@ -477,6 +477,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Keltner Channels indicator. 
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Keltner Channel we seek</param>
+        /// <param name="period">The period over which to compute the Keltner Channels</param>
+        /// <param name="k">The number of multiples of the ATR from the middle band of the Keltner Channels</param>
+        /// <param name="resolution">The resolution.</param> 
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Keltner Channel indicator for the requested symbol.</returns>
+        public KeltnerChannels KCH(Symbol symbol, int period, decimal k, MovingAverageType movingAverageType = MovingAverageType.Simple, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "KCH", resolution);
+            var keltnerChannels = new KeltnerChannels(name, period, k, movingAverageType);
+            RegisterIndicator(symbol, keltnerChannels, resolution, selector);
+            return keltnerChannels;
+        }
+
+        /// <summary>
         /// Creates a new Donchian Channel indicator which will compute the Upper Band and Lower Band.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
