@@ -83,7 +83,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override bool IsReady
         {
-            get { return MiddleBand.IsReady && UpperBand.IsReady && LowerBand.IsReady; }
+            get { return MiddleBand.IsReady && UpperBand.IsReady && LowerBand.IsReady && ATR.IsReady; }
         }
  
         /// <summary>
