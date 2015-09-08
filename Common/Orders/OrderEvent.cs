@@ -43,6 +43,11 @@ namespace QuantConnect.Orders
         public OrderStatus Status;
 
         /// <summary>
+        /// The fee associated with the order (always positive value).
+        /// </summary>
+        public decimal OrderFee;
+
+        /// <summary>
         /// Fill price information about the order
         /// </summary>
         public decimal FillPrice;
@@ -118,16 +123,20 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Helper Constructor for TradeBuilder tests
         /// </summary>
+        /// <param name="orderId">The Id of the order</param>
         /// <param name="symbol">Asset Symbol</param>
         /// <param name="time">Date/time of this event</param>
         /// <param name="fillPrice">Fill price</param>
         /// <param name="fillQuantity">Fill quantity</param>
-        public OrderEvent(string symbol, DateTime time, decimal fillPrice, int fillQuantity)
+        /// <param name="orderFee">The order fee</param>
+        public OrderEvent(int orderId, string symbol, DateTime time, decimal fillPrice, int fillQuantity, decimal orderFee)
         {
+            OrderId = orderId;
             Symbol = symbol;
             Time = time;
             FillPrice = fillPrice;
             FillQuantity = fillQuantity;
+            OrderFee = orderFee;
         }
 
         /// <summary>

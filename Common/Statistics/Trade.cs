@@ -63,6 +63,11 @@ namespace QuantConnect.Statistics
         public decimal ProfitLoss { get; set; }
 
         /// <summary>
+        /// The total fees associated with the trade (always positive value) (as symbol currency)
+        /// </summary>
+        public decimal TotalFees { get; set; }
+
+        /// <summary>
         /// The Maximum Adverse Excursion (as symbol currency)
         /// </summary>
         public decimal MAE { get; set; }

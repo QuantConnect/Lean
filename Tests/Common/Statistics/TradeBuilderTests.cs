@@ -24,6 +24,7 @@ namespace QuantConnect.Tests.Common.Statistics
     public class TradeBuilderTests
     {
         private const string Symbol = "EURUSD";
+        private const decimal OrderFee = 1;
         private const decimal ConversionRate = 1;
         private readonly DateTime _startTime = new DateTime(2015, 08, 06, 15, 30, 0);
 
@@ -41,7 +42,7 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time, fillPrice: 1.08m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbol, time, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -49,7 +50,7 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbol, 1.10m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(10), fillPrice: 1.09m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -65,6 +66,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(time.AddMinutes(10), trade.ExitTime);
             Assert.AreEqual(1.09m, trade.ExitPrice);
             Assert.AreEqual(10, trade.ProfitLoss);
+            Assert.AreEqual(2, trade.TotalFees);
             Assert.AreEqual(-5, trade.MAE);
             Assert.AreEqual(20m, trade.MFE);
         }
@@ -83,7 +85,7 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time, fillPrice: 1.08m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbol, time, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -91,7 +93,7 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbol, 1.10m);
             
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(10), fillPrice: 1.09m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -107,6 +109,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(time.AddMinutes(10), trade.ExitTime);
             Assert.AreEqual(1.09m, trade.ExitPrice);
             Assert.AreEqual(-10, trade.ProfitLoss);
+            Assert.AreEqual(2, trade.TotalFees);
             Assert.AreEqual(-20, trade.MAE);
             Assert.AreEqual(5, trade.MFE);
         }
@@ -125,14 +128,14 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time, fillPrice: 1.08m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbol, time, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             builder.SetMarketPrice(Symbol, 1.075m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(10), fillPrice: 1.07m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), fillPrice: 1.07m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -140,7 +143,7 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbol, 1.10m);
 
             // Sell 2k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: -2000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -158,6 +161,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
                 Assert.AreEqual(1.09m, trade1.ExitPrice);
                 Assert.AreEqual(10, trade1.ProfitLoss);
+                Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 2 : 1, trade1.TotalFees);
                 Assert.AreEqual(-15, trade1.MAE);
                 Assert.AreEqual(20, trade1.MFE);
 
@@ -171,6 +175,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(time.AddMinutes(20), trade2.ExitTime);
                 Assert.AreEqual(1.09m, trade2.ExitPrice);
                 Assert.AreEqual(20, trade2.ProfitLoss);
+                Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1 : 2, trade2.TotalFees);
                 Assert.AreEqual(-5, trade2.MAE);
                 Assert.AreEqual(30, trade2.MFE);
             }
@@ -188,6 +193,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(time.AddMinutes(20), trade.ExitTime);
                 Assert.AreEqual(1.09m, trade.ExitPrice);
                 Assert.AreEqual(30, trade.ProfitLoss);
+                Assert.AreEqual(3, trade.TotalFees);
                 Assert.AreEqual(-20, trade.MAE);
                 Assert.AreEqual(50, trade.MFE);
             }
@@ -207,14 +213,14 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time, fillPrice: 1.08m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbol, time, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             builder.SetMarketPrice(Symbol, 1.075m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(10), fillPrice: 1.07m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), fillPrice: 1.07m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -222,7 +228,7 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbol, 1.10m);
 
             // Buy 2k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: 2000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -240,6 +246,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
                 Assert.AreEqual(1.09m, trade1.ExitPrice);
                 Assert.AreEqual(-10, trade1.ProfitLoss);
+                Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 2 : 1, trade1.TotalFees);
                 Assert.AreEqual(-20, trade1.MAE);
                 Assert.AreEqual(15, trade1.MFE);
 
@@ -253,6 +260,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(time.AddMinutes(20), trade2.ExitTime);
                 Assert.AreEqual(1.09m, trade2.ExitPrice);
                 Assert.AreEqual(-20, trade2.ProfitLoss);
+                Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1 : 2, trade2.TotalFees);
                 Assert.AreEqual(-30, trade2.MAE);
                 Assert.AreEqual(5, trade2.MFE);
             }
@@ -270,6 +278,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(time.AddMinutes(20), trade.ExitTime);
                 Assert.AreEqual(1.09m, trade.ExitPrice);
                 Assert.AreEqual(-30, trade.ProfitLoss);
+                Assert.AreEqual(3, trade.TotalFees);
                 Assert.AreEqual(-50, trade.MAE);
                 Assert.AreEqual(20, trade.MFE);
             }
@@ -289,14 +298,14 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Buy 2k
-            builder.ProcessFill(new OrderEvent(Symbol, time, fillPrice: 1.07m, fillQuantity: 2000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbol, time, fillPrice: 1.07m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             builder.SetMarketPrice(Symbol, 1.075m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -304,7 +313,7 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbol, 1.10m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -322,6 +331,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(time.AddMinutes(20), trade.ExitTime);
                 Assert.AreEqual(1.085m, trade.ExitPrice);
                 Assert.AreEqual(30, trade.ProfitLoss);
+                Assert.AreEqual(3, trade.TotalFees);
                 Assert.AreEqual(-10, trade.MAE);
                 Assert.AreEqual(60, trade.MFE);
             }
@@ -339,6 +349,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(time.AddMinutes(10), trade1.ExitTime);
                 Assert.AreEqual(1.08m, trade1.ExitPrice);
                 Assert.AreEqual(10, trade1.ProfitLoss);
+                Assert.AreEqual(2, trade1.TotalFees);
                 Assert.AreEqual(0, trade1.MAE);
                 Assert.AreEqual(10, trade1.MFE);
 
@@ -352,6 +363,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(time.AddMinutes(20), trade2.ExitTime);
                 Assert.AreEqual(1.09m, trade2.ExitPrice);
                 Assert.AreEqual(20, trade2.ProfitLoss);
+                Assert.AreEqual(1, trade2.TotalFees);
                 Assert.AreEqual(-5, trade2.MAE);
                 Assert.AreEqual(30, trade2.MFE);
             }
@@ -371,14 +383,14 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Sell 2k
-            builder.ProcessFill(new OrderEvent(Symbol, time, fillPrice: 1.07m, fillQuantity: -2000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbol, time, fillPrice: 1.07m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             builder.SetMarketPrice(Symbol, 1.075m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -386,7 +398,7 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbol, 1.10m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -404,6 +416,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(time.AddMinutes(20), trade.ExitTime);
                 Assert.AreEqual(1.085, trade.ExitPrice);
                 Assert.AreEqual(-30, trade.ProfitLoss);
+                Assert.AreEqual(3, trade.TotalFees);
                 Assert.AreEqual(-60, trade.MAE);
                 Assert.AreEqual(10, trade.MFE);
             }
@@ -421,6 +434,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(time.AddMinutes(10), trade1.ExitTime);
                 Assert.AreEqual(1.08m, trade1.ExitPrice);
                 Assert.AreEqual(-10, trade1.ProfitLoss);
+                Assert.AreEqual(2, trade1.TotalFees);
                 Assert.AreEqual(-10, trade1.MAE);
                 Assert.AreEqual(0, trade1.MFE);
 
@@ -434,6 +448,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(time.AddMinutes(20), trade2.ExitTime);
                 Assert.AreEqual(1.09m, trade2.ExitPrice);
                 Assert.AreEqual(-20, trade2.ProfitLoss);
+                Assert.AreEqual(1, trade2.TotalFees);
                 Assert.AreEqual(-30, trade2.MAE);
                 Assert.AreEqual(5, trade2.MFE);
             }
@@ -453,14 +468,14 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time, fillPrice: 1.07m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbol, time, fillPrice: 1.07m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             builder.SetMarketPrice(Symbol, 1.075m);
 
             // Sell 2k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: -2000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -468,7 +483,7 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbol, 1.10m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -484,6 +499,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(time.AddMinutes(10), trade1.ExitTime);
             Assert.AreEqual(1.08m, trade1.ExitPrice);
             Assert.AreEqual(10, trade1.ProfitLoss);
+            Assert.AreEqual(2, trade1.TotalFees);
             Assert.AreEqual(0, trade1.MAE);
             Assert.AreEqual(10, trade1.MFE);
 
@@ -497,6 +513,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(time.AddMinutes(20), trade2.ExitTime);
             Assert.AreEqual(1.09m, trade2.ExitPrice);
             Assert.AreEqual(-10, trade2.ProfitLoss);
+            Assert.AreEqual(1, trade2.TotalFees);
             Assert.AreEqual(-20, trade2.MAE);
             Assert.AreEqual(15, trade2.MFE);
         }
@@ -515,14 +532,14 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time, fillPrice: 1.07m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbol, time, fillPrice: 1.07m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             builder.SetMarketPrice(Symbol, 1.075m);
 
             // Buy 2k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: 2000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -530,7 +547,7 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbol, 1.10m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -546,6 +563,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(time.AddMinutes(10), trade1.ExitTime);
             Assert.AreEqual(1.08m, trade1.ExitPrice);
             Assert.AreEqual(-10, trade1.ProfitLoss);
+            Assert.AreEqual(2, trade1.TotalFees);
             Assert.AreEqual(-10, trade1.MAE);
             Assert.AreEqual(0, trade1.MFE);
 
@@ -559,6 +577,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(time.AddMinutes(20), trade2.ExitTime);
             Assert.AreEqual(1.09m, trade2.ExitPrice);
             Assert.AreEqual(10, trade2.ProfitLoss);
+            Assert.AreEqual(1, trade2.TotalFees);
             Assert.AreEqual(-15, trade2.MAE);
             Assert.AreEqual(20, trade2.MFE);
         }
@@ -577,14 +596,14 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time, fillPrice: 1.07m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbol, time, fillPrice: 1.07m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             builder.SetMarketPrice(Symbol, 1.075m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -592,17 +611,17 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbol, 1.10m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(30), fillPrice: 1.08m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(4, Symbol, time.AddMinutes(30), fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             // Sell 2k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(40), fillPrice: 1.09m, fillQuantity: -2000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(5, Symbol, time.AddMinutes(40), fillPrice: 1.09m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -622,6 +641,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
                         Assert.AreEqual(1.09m, trade1.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 20 : 10, trade1.ProfitLoss);
+                        Assert.AreEqual(2, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -5 : -15, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 20, trade1.MFE);
 
@@ -635,6 +655,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(40), trade2.ExitTime);
                         Assert.AreEqual(1.09m, trade2.ExitPrice);
                         Assert.AreEqual(10, trade2.ProfitLoss);
+                        Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(-15, trade2.MAE);
                         Assert.AreEqual(20, trade2.MFE);
 
@@ -648,6 +669,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(40), trade3.ExitTime);
                         Assert.AreEqual(1.09m, trade3.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 10 : 20, trade3.ProfitLoss);
+                        Assert.AreEqual(1, trade3.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -15 : -5, trade3.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 20 : 30, trade3.MFE);
                     }
@@ -667,6 +689,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(40), trade.ExitTime);
                         Assert.AreEqual(1.09m, trade.ExitPrice);
                         Assert.AreEqual(40, trade.ProfitLoss);
+                        Assert.AreEqual(5, trade.TotalFees);
                         Assert.AreEqual(-35, trade.MAE);
                         Assert.AreEqual(70, trade.MFE);
                     }
@@ -686,6 +709,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
                         Assert.AreEqual(1.09m, trade1.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 20 : 10, trade1.ProfitLoss);
+                        Assert.AreEqual(3, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -5 : -15, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 20, trade1.MFE);
 
@@ -699,6 +723,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(40), trade2.ExitTime);
                         Assert.AreEqual(1.09m, trade2.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 20 : 30, trade2.ProfitLoss);
+                        Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -20, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 40 : 50, trade2.MFE);
                     }
@@ -720,14 +745,14 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time, fillPrice: 1.07m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbol, time, fillPrice: 1.07m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             builder.SetMarketPrice(Symbol, 1.075m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -735,17 +760,17 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbol, 1.10m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(30), fillPrice: 1.08m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(4, Symbol, time.AddMinutes(30), fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             // Buy 2k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(40), fillPrice: 1.09m, fillQuantity: 2000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(5, Symbol, time.AddMinutes(40), fillPrice: 1.09m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -765,6 +790,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
                         Assert.AreEqual(1.09m, trade1.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -20 : -10, trade1.ProfitLoss);
+                        Assert.AreEqual(2, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -20, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 5 : 15, trade1.MFE);
 
@@ -778,6 +804,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(40), trade2.ExitTime);
                         Assert.AreEqual(1.09m, trade2.ExitPrice);
                         Assert.AreEqual(-10, trade2.ProfitLoss);
+                        Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(-20, trade2.MAE);
                         Assert.AreEqual(15, trade2.MFE);
 
@@ -791,6 +818,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(40), trade3.ExitTime);
                         Assert.AreEqual(1.09m, trade3.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -10 : -20, trade3.ProfitLoss);
+                        Assert.AreEqual(1, trade3.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -20 : -30, trade3.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 15 : 5, trade3.MFE);
                     }
@@ -810,6 +838,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(40), trade.ExitTime);
                         Assert.AreEqual(1.09m, trade.ExitPrice);
                         Assert.AreEqual(-40, trade.ProfitLoss);
+                        Assert.AreEqual(5, trade.TotalFees);
                         Assert.AreEqual(-70, trade.MAE);
                         Assert.AreEqual(35, trade.MFE);
                     }
@@ -829,6 +858,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
                         Assert.AreEqual(1.09m, trade1.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -20 : -10, trade1.ProfitLoss);
+                        Assert.AreEqual(3, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -20, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 5 : 15, trade1.MFE);
 
@@ -842,6 +872,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(40), trade2.ExitTime);
                         Assert.AreEqual(1.09m, trade2.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -20 : -30, trade2.ProfitLoss);
+                        Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -40 : -50, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 20, trade2.MFE);
                     }
@@ -863,14 +894,14 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time, fillPrice: 1.07m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbol, time, fillPrice: 1.07m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             builder.SetMarketPrice(Symbol, 1.075m);
 
             // Buy 2k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: 2000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -878,17 +909,17 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbol, 1.10m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(30), fillPrice: 1.08m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(4, Symbol, time.AddMinutes(30), fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             // Sell 3k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(40), fillPrice: 1.09m, fillQuantity: -3000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(5, Symbol, time.AddMinutes(40), fillPrice: 1.09m, fillQuantity: -3000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -910,6 +941,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
                             Assert.AreEqual(1.09m, trade1.ExitPrice);
                             Assert.AreEqual(20, trade1.ProfitLoss);
+                            Assert.AreEqual(2, trade1.TotalFees);
                             Assert.AreEqual(-5, trade1.MAE);
                             Assert.AreEqual(30, trade1.MFE);
 
@@ -923,6 +955,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(time.AddMinutes(40), trade2.ExitTime);
                             Assert.AreEqual(1.09m, trade2.ExitPrice);
                             Assert.AreEqual(20, trade2.ProfitLoss);
+                            Assert.AreEqual(2, trade2.TotalFees);
                             Assert.AreEqual(-30, trade2.MAE);
                             Assert.AreEqual(40, trade2.MFE);
 
@@ -936,6 +969,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(time.AddMinutes(40), trade3.ExitTime);
                             Assert.AreEqual(1.09m, trade3.ExitPrice);
                             Assert.AreEqual(10, trade3.ProfitLoss);
+                            Assert.AreEqual(1, trade3.TotalFees);
                             Assert.AreEqual(-15, trade3.MAE);
                             Assert.AreEqual(20, trade3.MFE);
                         }
@@ -953,6 +987,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
                             Assert.AreEqual(1.09m, trade1.ExitPrice);
                             Assert.AreEqual(10, trade1.ProfitLoss);
+                            Assert.AreEqual(2, trade1.TotalFees);
                             Assert.AreEqual(-15, trade1.MAE);
                             Assert.AreEqual(20, trade1.MFE);
 
@@ -966,6 +1001,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(time.AddMinutes(40), trade2.ExitTime);
                             Assert.AreEqual(1.09m, trade2.ExitPrice);
                             Assert.AreEqual(10, trade2.ProfitLoss);
+                            Assert.AreEqual(2, trade2.TotalFees);
                             Assert.AreEqual(-15, trade2.MAE);
                             Assert.AreEqual(20, trade2.MFE);
 
@@ -979,6 +1015,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(time.AddMinutes(40), trade3.ExitTime);
                             Assert.AreEqual(1.09m, trade3.ExitPrice);
                             Assert.AreEqual(10, trade3.ProfitLoss);
+                            Assert.AreEqual(0, trade3.TotalFees);
                             Assert.AreEqual(-15, trade3.MAE);
                             Assert.AreEqual(20, trade3.MFE);
 
@@ -992,6 +1029,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(time.AddMinutes(40), trade4.ExitTime);
                             Assert.AreEqual(1.09m, trade4.ExitPrice);
                             Assert.AreEqual(20, trade4.ProfitLoss);
+                            Assert.AreEqual(1, trade4.TotalFees);
                             Assert.AreEqual(-5, trade4.MAE);
                             Assert.AreEqual(30, trade4.MFE);
                         }
@@ -1012,6 +1050,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(40), trade.ExitTime);
                         Assert.AreEqual(1.09m, trade.ExitPrice);
                         Assert.AreEqual(50, trade.ProfitLoss);
+                        Assert.AreEqual(5, trade.TotalFees);
                         Assert.AreEqual(-50, trade.MAE);
                         Assert.AreEqual(90, trade.MFE);
                     }
@@ -1031,6 +1070,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
                         Assert.AreEqual(1.09m, trade1.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 20 : 10, trade1.ProfitLoss);
+                        Assert.AreEqual(3, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -5 : -15, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 20, trade1.MFE);
 
@@ -1044,6 +1084,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(40), trade2.ExitTime);
                         Assert.AreEqual(1.09m, trade2.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 40, trade2.ProfitLoss);
+                        Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -45 : -35, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 60 : 70, trade2.MFE);
                     }
@@ -1065,14 +1106,14 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time, fillPrice: 1.07m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbol, time, fillPrice: 1.07m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             builder.SetMarketPrice(Symbol, 1.075m);
 
             // Sell 2k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: -2000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1080,17 +1121,17 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbol, 1.10m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(30), fillPrice: 1.08m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(4, Symbol, time.AddMinutes(30), fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             // Buy 3k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(40), fillPrice: 1.09m, fillQuantity: 3000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(5, Symbol, time.AddMinutes(40), fillPrice: 1.09m, fillQuantity: 3000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -1112,6 +1153,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
                             Assert.AreEqual(1.09m, trade1.ExitPrice);
                             Assert.AreEqual(-20, trade1.ProfitLoss);
+                            Assert.AreEqual(2, trade1.TotalFees);
                             Assert.AreEqual(-30, trade1.MAE);
                             Assert.AreEqual(5, trade1.MFE);
 
@@ -1125,6 +1167,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(time.AddMinutes(40), trade2.ExitTime);
                             Assert.AreEqual(1.09m, trade2.ExitPrice);
                             Assert.AreEqual(-20, trade2.ProfitLoss);
+                            Assert.AreEqual(2, trade2.TotalFees);
                             Assert.AreEqual(-40, trade2.MAE);
                             Assert.AreEqual(30, trade2.MFE);
 
@@ -1138,6 +1181,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(time.AddMinutes(40), trade3.ExitTime);
                             Assert.AreEqual(1.09m, trade3.ExitPrice);
                             Assert.AreEqual(-10, trade3.ProfitLoss);
+                            Assert.AreEqual(1, trade3.TotalFees);
                             Assert.AreEqual(-20, trade3.MAE);
                             Assert.AreEqual(15, trade3.MFE);
                         }
@@ -1155,6 +1199,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
                             Assert.AreEqual(1.09m, trade1.ExitPrice);
                             Assert.AreEqual(-10, trade1.ProfitLoss);
+                            Assert.AreEqual(2, trade1.TotalFees);
                             Assert.AreEqual(-20, trade1.MAE);
                             Assert.AreEqual(15, trade1.MFE);
 
@@ -1168,8 +1213,9 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(time.AddMinutes(40), trade2.ExitTime);
                             Assert.AreEqual(1.09m, trade2.ExitPrice);
                             Assert.AreEqual(-10, trade2.ProfitLoss);
-                            Assert.AreEqual(-20, trade1.MAE);
-                            Assert.AreEqual(15, trade1.MFE);
+                            Assert.AreEqual(2, trade2.TotalFees);
+                            Assert.AreEqual(-20, trade2.MAE);
+                            Assert.AreEqual(15, trade2.MFE);
 
                             var trade3 = builder.ClosedTrades[2];
 
@@ -1181,8 +1227,9 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(time.AddMinutes(40), trade3.ExitTime);
                             Assert.AreEqual(1.09m, trade3.ExitPrice);
                             Assert.AreEqual(-10, trade3.ProfitLoss);
-                            Assert.AreEqual(-20, trade1.MAE);
-                            Assert.AreEqual(15, trade1.MFE);
+                            Assert.AreEqual(0, trade3.TotalFees);
+                            Assert.AreEqual(-20, trade3.MAE);
+                            Assert.AreEqual(15, trade3.MFE);
 
                             var trade4 = builder.ClosedTrades[3];
 
@@ -1194,6 +1241,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(time.AddMinutes(40), trade4.ExitTime);
                             Assert.AreEqual(1.09m, trade4.ExitPrice);
                             Assert.AreEqual(-20, trade4.ProfitLoss);
+                            Assert.AreEqual(1, trade4.TotalFees);
                             Assert.AreEqual(-30, trade4.MAE);
                             Assert.AreEqual(5, trade4.MFE);
                         }
@@ -1214,6 +1262,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(40), trade.ExitTime);
                         Assert.AreEqual(1.09m, trade.ExitPrice);
                         Assert.AreEqual(-50, trade.ProfitLoss);
+                        Assert.AreEqual(5, trade.TotalFees);
                         Assert.AreEqual(-90, trade.MAE);
                         Assert.AreEqual(50, trade.MFE);
                     }
@@ -1233,6 +1282,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
                         Assert.AreEqual(1.09m, trade1.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -20 : -10, trade1.ProfitLoss);
+                        Assert.AreEqual(3, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -20, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 5 : 15, trade1.MFE);
 
@@ -1246,6 +1296,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(40), trade2.ExitTime);
                         Assert.AreEqual(1.09m, trade2.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -40, trade2.ProfitLoss);
+                        Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -60 : -70, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 45 : 35, trade2.MFE);
                     }
@@ -1267,14 +1318,14 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time, fillPrice: 1.07m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbol, time, fillPrice: 1.07m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             builder.SetMarketPrice(Symbol, 1.075m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1282,22 +1333,22 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbol, 1.10m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             // Sell 2k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(30), fillPrice: 1.10m, fillQuantity: -2000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(4, Symbol, time.AddMinutes(30), fillPrice: 1.10m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(40), fillPrice: 1.08m, fillQuantity: 1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(5, Symbol, time.AddMinutes(40), fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             // Sell 2k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(50), fillPrice: 1.09m, fillQuantity: -2000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(6, Symbol, time.AddMinutes(50), fillPrice: 1.09m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -1317,6 +1368,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(30), trade1.ExitTime);
                         Assert.AreEqual(1.10m, trade1.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 10, trade1.ProfitLoss);
+                        Assert.AreEqual(2, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -5 : -25, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 10, trade1.MFE);
 
@@ -1330,6 +1382,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(30), trade2.ExitTime);
                         Assert.AreEqual(1.10m, trade2.ExitPrice);
                         Assert.AreEqual(20, trade2.ProfitLoss);
+                        Assert.AreEqual(1, trade2.TotalFees);
                         Assert.AreEqual(-15, trade2.MAE);
                         Assert.AreEqual(20, trade2.MFE);
 
@@ -1343,6 +1396,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(50), trade3.ExitTime);
                         Assert.AreEqual(1.09m, trade3.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 0 : 10, trade3.ProfitLoss);
+                        Assert.AreEqual(2, trade3.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -25 : -15, trade3.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 10 : 20, trade3.MFE);
 
@@ -1356,6 +1410,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(50), trade4.ExitTime);
                         Assert.AreEqual(1.09m, trade4.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 10 : 20, trade4.ProfitLoss);
+                        Assert.AreEqual(1, trade4.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -15 : -5, trade4.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 20 : 30, trade4.MFE);
                     }
@@ -1375,6 +1430,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(50), trade.ExitTime);
                         Assert.AreEqual(1.095m, trade.ExitPrice);
                         Assert.AreEqual(60, trade.ProfitLoss);
+                        Assert.AreEqual(6, trade.TotalFees);
                         Assert.AreEqual(-60, trade.MAE);
                         Assert.AreEqual(80, trade.MFE);
                     }
@@ -1394,6 +1450,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(30), trade1.ExitTime);
                         Assert.AreEqual(1.10m, trade1.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 50 : 30, trade1.ProfitLoss);
+                        Assert.AreEqual(4, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -20 : -40, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 50 : 30, trade1.MFE);
 
@@ -1407,6 +1464,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(50), trade2.ExitTime);
                         Assert.AreEqual(1.09m, trade2.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 10 : 30, trade2.ProfitLoss);
+                        Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -40 : -20, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 50, trade2.MFE);
                     }
@@ -1428,14 +1486,14 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time, fillPrice: 1.07m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbol, time, fillPrice: 1.07m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             builder.SetMarketPrice(Symbol, 1.075m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
@@ -1443,22 +1501,22 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbol, 1.10m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             // Buy 2k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(30), fillPrice: 1.10m, fillQuantity: 2000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(4, Symbol, time.AddMinutes(30), fillPrice: 1.10m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(40), fillPrice: 1.08m, fillQuantity: -1000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(5, Symbol, time.AddMinutes(40), fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsTrue(builder.HasOpenPosition(Symbol));
 
             // Buy 2k
-            builder.ProcessFill(new OrderEvent(Symbol, time.AddMinutes(50), fillPrice: 1.09m, fillQuantity: 2000), ConversionRate);
+            builder.ProcessFill(new OrderEvent(6, Symbol, time.AddMinutes(50), fillPrice: 1.09m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
 
             Assert.IsFalse(builder.HasOpenPosition(Symbol));
 
@@ -1478,6 +1536,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(30), trade1.ExitTime);
                         Assert.AreEqual(1.10m, trade1.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -10, trade1.ProfitLoss);
+                        Assert.AreEqual(2, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -10, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 5 : 25, trade1.MFE);
 
@@ -1491,6 +1550,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(30), trade2.ExitTime);
                         Assert.AreEqual(1.10m, trade2.ExitPrice);
                         Assert.AreEqual(-20, trade2.ProfitLoss);
+                        Assert.AreEqual(1, trade2.TotalFees);
                         Assert.AreEqual(-20, trade2.MAE);
                         Assert.AreEqual(15, trade2.MFE);
 
@@ -1504,6 +1564,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(50), trade3.ExitTime);
                         Assert.AreEqual(1.09m, trade3.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 0 : -10, trade3.ProfitLoss);
+                        Assert.AreEqual(2, trade3.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -10 : -20, trade3.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 25 : 15, trade3.MFE);
 
@@ -1517,6 +1578,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(50), trade4.ExitTime);
                         Assert.AreEqual(1.09m, trade4.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -10 : -20, trade4.ProfitLoss);
+                        Assert.AreEqual(1, trade4.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -20 : -30, trade4.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 15 : 5, trade4.MFE);
                     }
@@ -1536,6 +1598,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(50), trade.ExitTime);
                         Assert.AreEqual(1.095m, trade.ExitPrice);
                         Assert.AreEqual(-60, trade.ProfitLoss);
+                        Assert.AreEqual(6, trade.TotalFees);
                         Assert.AreEqual(-80, trade.MAE);
                         Assert.AreEqual(60, trade.MFE);
                     }
@@ -1555,6 +1618,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(30), trade1.ExitTime);
                         Assert.AreEqual(1.10m, trade1.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -50 : -30, trade1.ProfitLoss);
+                        Assert.AreEqual(4, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -50 : -30, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 20 : 40, trade1.MFE);
 
@@ -1568,6 +1632,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(time.AddMinutes(50), trade2.ExitTime);
                         Assert.AreEqual(1.09m, trade2.ExitPrice);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -10 : -30, trade2.ProfitLoss);
+                        Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -50, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 40 : 20, trade2.MFE);
                     }
