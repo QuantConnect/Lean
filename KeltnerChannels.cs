@@ -1,4 +1,5 @@
 using System;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
