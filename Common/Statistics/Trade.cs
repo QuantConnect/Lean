@@ -48,7 +48,7 @@ namespace QuantConnect.Statistics
         public int Quantity { get; set; }
 
         /// <summary>
-        /// The date and time the trade was opened
+        /// The date and time the trade was closed
         /// </summary>
         public DateTime ExitTime { get; set; }
 
