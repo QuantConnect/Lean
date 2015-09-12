@@ -412,10 +412,10 @@ namespace QuantConnect.Lean.Engine.Results
                 //Console.WriteLine(string.Format("statistics.Add(\"{0}\",\"{1}\");", pair.Key, pair.Value));
             }
 
-            foreach (var pair in statisticsResults.RollingPerformances) 
-            {
-                Log.Trace("ROLLINGSTATS:: " + pair.Key + " SharpeRatio: " + Math.Round(pair.Value.PortfolioStatistics.SharpeRatio, 3));
-            }
+            //foreach (var pair in statisticsResults.RollingPerformances) 
+            //{
+            //    Log.Trace("ROLLINGSTATS:: " + pair.Key + " SharpeRatio: " + Math.Round(pair.Value.PortfolioStatistics.SharpeRatio, 3));
+            //}
 
             FinalStatistics = statistics;
         }

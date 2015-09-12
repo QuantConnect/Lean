@@ -109,7 +109,6 @@ namespace QuantConnect.Statistics
             var monthPeriods = new[] { 1, 3, 6, 12 };
             foreach (var monthPeriod in monthPeriods)
             {
-                //var ranges = GetPeriodRanges(monthPeriod, new DateTime(2015, 01, 01), new DateTime(2015, 03, 01));
                 var ranges = GetPeriodRanges(monthPeriod, firstDate, lastDate);
 
                 foreach (var period in ranges)
