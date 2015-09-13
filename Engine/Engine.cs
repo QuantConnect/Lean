@@ -357,15 +357,16 @@ namespace QuantConnect.Lean.Engine
                             {
                                 var equity = charts[strategyEquityKey].Series[equityKey].Values;
                                 var performance = charts[strategyEquityKey].Series[dailyPerformanceKey].Values;
-                                //var profitLoss = new SortedDictionary<DateTime, decimal>(algorithm.Transactions.TransactionRecord);
+                                var profitLoss = new SortedDictionary<DateTime, decimal>(algorithm.Transactions.TransactionRecord);
                                 var totalTransactions = algorithm.Transactions.GetOrders(x => x.Status.IsFill()).Count();
+
                                 //var benchmark = charts[benchmarkKey].Series[benchmarkKey].Values.ToDictionary(chartPoint => Time.UnixTimeStampToDateTime(chartPoint.x), chartPoint => chartPoint.y);
                                 //statistics = Statistics.Statistics.Generate(equity, profitLoss, performance, benchmark,
                                 //    _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, totalTransactions, 252);
 
                                 var benchmark = charts[benchmarkKey].Series[benchmarkKey].Values;
 
-                                var statisticsBuilder = new StatisticsBuilder(trades, equity, performance, benchmark, 
+                                var statisticsBuilder = new StatisticsBuilder(trades, profitLoss, equity, performance, benchmark,
                                     _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, totalTransactions);
 
                                 statisticsResults = statisticsBuilder.Results;

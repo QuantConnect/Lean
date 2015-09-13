@@ -44,6 +44,18 @@ namespace QuantConnect.Statistics
         public decimal ProfitLossRatio { get; private set; }
 
         /// <summary>
+        /// The ratio of the number of winning trades to the total number of trades
+        /// </summary>
+        /// <remarks>If the total number of trades is zero, WinRate is set to zero</remarks>
+        public decimal WinRate { get; private set; }
+
+        /// <summary>
+        /// The ratio of the number of losing trades to the total number of trades
+        /// </summary>
+        /// <remarks>If the total number of trades is zero, LossRate is set to zero</remarks>
+        public decimal LossRate { get; private set; }
+
+        /// <summary>
         /// The expected value of the rate of return
         /// </summary>
         public decimal Expectancy { get; private set; }
@@ -111,14 +123,14 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// Initializes a new instance of the PortfolioStatistics class
         /// </summary>
-        /// <param name="trades">The list of closed trades</param>
+        /// <param name="profitLoss">Trade record of profits and losses</param>
         /// <param name="equity">The list of daily equity values</param>
         /// <param name="listPerformance">The list of algorithm performance values</param>
         /// <param name="listBenchmark">The list of benchmark values</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year</param>
         public PortfolioStatistics(
-            List<Trade> trades,
+            SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
             List<double> listPerformance, 
             List<double> listBenchmark, 
@@ -132,31 +144,33 @@ namespace QuantConnect.Statistics
             var totalLoss = 0m;
             var totalWins = 0;
             var totalLosses = 0;
-            foreach (var trade in trades)
+            foreach (var pair in profitLoss)
             {
-                if (trade.ProfitLoss > 0)
+                var tradeProfitLoss = pair.Value;
+
+                if (tradeProfitLoss > 0)
                 {
-                    totalProfit += trade.ProfitLoss / runningCapital;
+                    totalProfit += tradeProfitLoss / runningCapital;
                     totalWins++;
                 }
                 else
                 {
-                    totalLoss += trade.ProfitLoss / runningCapital;
+                    totalLoss += tradeProfitLoss / runningCapital;
                     totalLosses++;
                 }
 
-                runningCapital += trade.ProfitLoss;
+                runningCapital += tradeProfitLoss;
             }
 
             AverageWinRate = totalWins == 0 ? 0 : totalProfit / totalWins;
             AverageLossRate = totalLosses == 0 ? 0 : totalLoss / totalLosses;
             ProfitLossRatio = AverageLossRate == 0 ? 0 : AverageWinRate / Math.Abs(AverageLossRate);
 
-            var winRate = trades.Count == 0 ? 0 : (decimal)totalWins / trades.Count;
-            var lossRate = trades.Count == 0 ? 0 : (decimal)totalWins / trades.Count;
-            Expectancy = winRate * ProfitLossRatio - lossRate;
+            WinRate = profitLoss.Count == 0 ? 0 : (decimal)totalWins / profitLoss.Count;
+            LossRate = profitLoss.Count == 0 ? 0 : (decimal)totalLosses / profitLoss.Count;
+            Expectancy = WinRate * ProfitLossRatio - LossRate;
 
-            if (trades.Count > 0)
+            if (profitLoss.Count > 0)
             {
                 TotalNetProfit = (equity.Values.LastOrDefault() / startingCapital) - 1;
             }

@@ -35,6 +35,7 @@ namespace QuantConnect.Statistics
         /// Initializes a new instance of the StatisticsBuilder class
         /// </summary>
         /// <param name="trades">The list of closed trades</param>
+        /// <param name="profitLoss">Trade record of profits and losses</param>
         /// <param name="pointsEquity">The list of daily equity values</param>
         /// <param name="pointsPerformance">The list of algorithm performance values</param>
         /// <param name="pointsBenchmark">The list of benchmark values</param>
@@ -43,6 +44,7 @@ namespace QuantConnect.Statistics
         /// <param name="totalTransactions">The total number of transactions</param>
         public StatisticsBuilder(
             List<Trade> trades, 
+            SortedDictionary<DateTime, decimal> profitLoss,
             List<ChartPoint> pointsEquity, 
             List<ChartPoint> pointsPerformance, 
             List<ChartPoint> pointsBenchmark, 
@@ -55,8 +57,8 @@ namespace QuantConnect.Statistics
             var firstDate = equity.Keys.FirstOrDefault().Date;
             var lastDate = equity.Keys.LastOrDefault().Date;
 
-            var totalPerformance = GetAlgorithmPerformance(firstDate, lastDate, trades, equity, pointsPerformance, pointsBenchmark, startingCapital);
-            var rollingPerformances = GetRollingPerformances(firstDate, lastDate, trades, equity, pointsPerformance, pointsBenchmark, startingCapital);
+            var totalPerformance = GetAlgorithmPerformance(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, startingCapital);
+            var rollingPerformances = GetRollingPerformances(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, startingCapital);
             var summary = GetSummary(totalPerformance, totalFees, totalTransactions);
 
             Results = new StatisticsResults(totalPerformance, rollingPerformances, summary);
@@ -68,14 +70,24 @@ namespace QuantConnect.Statistics
         /// <param name="fromDate">The initial date of the range</param>
         /// <param name="toDate">The final date of the range</param>
         /// <param name="trades">The list of closed trades</param>
+        /// <param name="profitLoss">Trade record of profits and losses</param>
         /// <param name="equity">The list of daily equity values</param>
         /// <param name="pointsPerformance">The list of algorithm performance values</param>
         /// <param name="pointsBenchmark">The list of benchmark values</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <returns>The algorithm performance</returns>
-        private static AlgorithmPerformance GetAlgorithmPerformance(DateTime fromDate, DateTime toDate, List<Trade> trades, SortedDictionary<DateTime, decimal> equity, List<ChartPoint> pointsPerformance, List<ChartPoint> pointsBenchmark, decimal startingCapital)
+        private static AlgorithmPerformance GetAlgorithmPerformance(
+            DateTime fromDate, 
+            DateTime toDate, 
+            List<Trade> trades, 
+            SortedDictionary<DateTime, decimal> profitLoss, 
+            SortedDictionary<DateTime, decimal> equity, 
+            List<ChartPoint> pointsPerformance, 
+            List<ChartPoint> pointsBenchmark, 
+            decimal startingCapital)
         {
             var periodTrades = trades.Where(x => x.ExitTime.Date >= fromDate && x.ExitTime < toDate.AddDays(1)).ToList();
+            var periodProfitLoss = new SortedDictionary<DateTime, decimal>(profitLoss.Where(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
             var periodEquity = new SortedDictionary<DateTime, decimal>(equity.Where(x => x.Key.Date >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
 
             var listPerformance = new List<double>();
@@ -86,9 +98,9 @@ namespace QuantConnect.Statistics
             var listBenchmark = CreateBenchmarkDifferences(benchmark, periodEquity);
             EnsureSameLength(listPerformance, listBenchmark);
 
-            var runningCapital = periodEquity.Values.FirstOrDefault();
+            var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();
 
-            return new AlgorithmPerformance(periodTrades, periodEquity, listPerformance, listBenchmark, runningCapital);
+            return new AlgorithmPerformance(periodTrades, periodProfitLoss, periodEquity, listPerformance, listBenchmark, runningCapital);
         }
 
         /// <summary>
@@ -97,12 +109,21 @@ namespace QuantConnect.Statistics
         /// <param name="firstDate">The first date of the total period</param>
         /// <param name="lastDate">The last date of the total period</param>
         /// <param name="trades">The list of closed trades</param>
+        /// <param name="profitLoss">Trade record of profits and losses</param>
         /// <param name="equity">The list of daily equity values</param>
         /// <param name="pointsPerformance">The list of algorithm performance values</param>
         /// <param name="pointsBenchmark">The list of benchmark values</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <returns>A dictionary with the rolling performances</returns>
-        private static Dictionary<string, AlgorithmPerformance> GetRollingPerformances(DateTime firstDate, DateTime lastDate, List<Trade> trades, SortedDictionary<DateTime, decimal> equity, List<ChartPoint> pointsPerformance, List<ChartPoint> pointsBenchmark, decimal startingCapital)
+        private static Dictionary<string, AlgorithmPerformance> GetRollingPerformances(
+            DateTime firstDate, 
+            DateTime lastDate, 
+            List<Trade> trades, 
+            SortedDictionary<DateTime, decimal> profitLoss, 
+            SortedDictionary<DateTime, decimal> equity, 
+            List<ChartPoint> pointsPerformance, 
+            List<ChartPoint> pointsBenchmark, 
+            decimal startingCapital)
         {
             var rollingPerformances = new Dictionary<string, AlgorithmPerformance>();
             
@@ -114,7 +135,7 @@ namespace QuantConnect.Statistics
                 foreach (var period in ranges)
                 {
                     var key = "M" + monthPeriod + "_" + period.EndDate.ToString("yyyyMMdd");
-                    var periodPerformance = GetAlgorithmPerformance(period.StartDate, period.EndDate, trades, equity, pointsPerformance, pointsBenchmark, startingCapital);
+                    var periodPerformance = GetAlgorithmPerformance(period.StartDate, period.EndDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, startingCapital);
                     rollingPerformances[key] = periodPerformance;
                 }
             }
@@ -136,17 +157,17 @@ namespace QuantConnect.Statistics
                 { "Drawdown", (Math.Round(totalPerformance.PortfolioStatistics.Drawdown * 100, 3)) + "%" },
                 { "Expectancy", Math.Round(totalPerformance.PortfolioStatistics.Expectancy, 3).ToString(CultureInfo.InvariantCulture) },
                 { "Net Profit", Math.Round(totalPerformance.PortfolioStatistics.TotalNetProfit * 100, 3) + "%"},
-                { "Sharpe Ratio", Math.Round(totalPerformance.PortfolioStatistics.SharpeRatio, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Loss Rate", Math.Round(totalPerformance.TradeStatistics.LossRate * 100) + "%" },
-                { "Win Rate", Math.Round(totalPerformance.TradeStatistics.WinRate * 100) + "%" }, 
+                { "Sharpe Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.SharpeRatio, 3).ToString(CultureInfo.InvariantCulture) },
+                { "Loss Rate", Math.Round(totalPerformance.PortfolioStatistics.LossRate * 100) + "%" },
+                { "Win Rate", Math.Round(totalPerformance.PortfolioStatistics.WinRate * 100) + "%" }, 
                 { "Profit-Loss Ratio", Math.Round(totalPerformance.PortfolioStatistics.ProfitLossRatio, 2).ToString(CultureInfo.InvariantCulture) },
-                { "Alpha", Math.Round(totalPerformance.PortfolioStatistics.Alpha, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Beta", Math.Round(totalPerformance.PortfolioStatistics.Beta, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Annual Standard Deviation", Math.Round(totalPerformance.PortfolioStatistics.AnnualStandardDeviation, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Annual Variance", Math.Round(totalPerformance.PortfolioStatistics.AnnualVariance, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Information Ratio", Math.Round(totalPerformance.PortfolioStatistics.InformationRatio, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Tracking Error", Math.Round(totalPerformance.PortfolioStatistics.TrackingError, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Treynor Ratio", Math.Round(totalPerformance.PortfolioStatistics.TreynorRatio, 3).ToString(CultureInfo.InvariantCulture) },
+                { "Alpha", Math.Round((double)totalPerformance.PortfolioStatistics.Alpha, 3).ToString(CultureInfo.InvariantCulture) },
+                { "Beta", Math.Round((double)totalPerformance.PortfolioStatistics.Beta, 3).ToString(CultureInfo.InvariantCulture) },
+                { "Annual Standard Deviation", Math.Round((double)totalPerformance.PortfolioStatistics.AnnualStandardDeviation, 3).ToString(CultureInfo.InvariantCulture) },
+                { "Annual Variance", Math.Round((double)totalPerformance.PortfolioStatistics.AnnualVariance, 3).ToString(CultureInfo.InvariantCulture) },
+                { "Information Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.InformationRatio, 3).ToString(CultureInfo.InvariantCulture) },
+                { "Tracking Error", Math.Round((double)totalPerformance.PortfolioStatistics.TrackingError, 3).ToString(CultureInfo.InvariantCulture) },
+                { "Treynor Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.TreynorRatio, 3).ToString(CultureInfo.InvariantCulture) },
                 { "Total Fees", "$" + totalFees.ToString("0.00") }
             };
         }
