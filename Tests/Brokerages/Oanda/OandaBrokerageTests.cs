@@ -28,8 +28,8 @@ using Environment = QuantConnect.Brokerages.Oanda.Environment;
 
 namespace QuantConnect.Tests.Brokerages.Oanda
 {
-    //[TestFixture, Ignore("This test requires a configured and testable Oanda practice account")]
-    [TestFixture]
+    [TestFixture, Ignore("This test requires a configured and testable Oanda practice account")]
+    //[TestFixture]
     public class OandaBrokerageTests : BrokerageTests
     {
         /// <summary>
