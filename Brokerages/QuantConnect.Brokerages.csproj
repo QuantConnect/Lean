@@ -76,6 +76,7 @@
     <Compile Include="InteractiveBrokers\InteractiveBrokersGatewayRunner.cs" />
     <Compile Include="Oanda\DataType\Account.cs" />
     <Compile Include="Oanda\DataType\Communications\AccountResponse.cs" />
+    <Compile Include="Oanda\DataType\Communications\AccountsResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\InstrumentsResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\OrdersResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\PositionsResponse.cs" />

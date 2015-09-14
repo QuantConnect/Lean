@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
                 var accountResponse = oandaBrokerage.MakeRequest<AccountResponse>(requestString, "POST");
                 oandaBrokerage.SetAccountId(accountResponse.accountId);
                 oandaBrokerage.SetEnvironment("sandbox");
-                
+                oandaBrokerage.SetUserName(accountResponse.username);
             }
             else
             {
@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             }
 
             var qcUserId = OandaBrokerageFactory.Configuration.QuantConnectUserId;
-            oandaBrokerage.SetTokens(qcUserId, tokens.AccessToken, tokens.RefreshToken, tokens.IssuedAt,
+            oandaBrokerage.SetTokens(qcUserId, tokens.AccessToken, tokens.IssuedAt,
                 TimeSpan.FromSeconds(tokens.ExpiresIn));
 
             oandaBrokerage.InitializeInstrumentSecurityTypeMap();

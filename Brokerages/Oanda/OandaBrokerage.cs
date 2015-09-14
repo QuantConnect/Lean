@@ -73,6 +73,8 @@ namespace QuantConnect.Brokerages.Oanda
 
         //This should correlate to the Orders list in Oanda.
         private readonly IOrderProvider _orderProvider;
+
+        private string _userName;
         
         /// <summary>
         /// The QC User id, used for refreshing the session
@@ -83,12 +85,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// Access Token Access:
         /// </summary>
         public static string AccessToken { get; private set; }
-
-        /// <summary>
-        /// Refresh Token Access:
-        /// </summary>
-        public string RefreshToken { get; private set; }
-
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaBrokerage"/> class.
         /// </summary>
@@ -137,7 +134,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            var holdings = GetPositions().Select(ConvertHolding).ToList();
+            var holdings = GetPositions(AccountId).Select(ConvertHolding).ToList();
             return holdings;
         }
 
@@ -164,7 +161,7 @@ namespace QuantConnect.Brokerages.Oanda
             if (securityType == SecurityType.Forex)
             {
                 instrument = instrument.Trim('_');
-                return instrument; ;
+                return instrument;
             }
             return instrument;
         }
@@ -176,10 +173,22 @@ namespace QuantConnect.Brokerages.Oanda
         public override List<Cash> GetCashBalance()
         {
             var cash = new List<Cash>();
-            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId;
-            var accountResponse = MakeRequest<Account>(requestString);
-            //TODO figure how exchange rates work in Oanda. probably need to call http://developer.oanda.com/exchange-rates-api/v1/currencies/
-            cash.Add(new Cash(accountResponse.accountCurrency, accountResponse.balance.ToDecimal(), new decimal(1.0)));
+            var getAllAccountsRequestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/";
+            if (OandaEnvironment == Environment.Sandbox)
+            {
+                getAllAccountsRequestString += "?username=" + _userName;
+            }
+
+            var accountsResponse = MakeRequest<AccountsResponse>(getAllAccountsRequestString);
+
+            foreach (var account in accountsResponse.accounts)
+            {
+                //TODO figure how exchange rates work in Oanda. probably need to call http://developer.oanda.com/exchange-rates-api/v1/currencies/
+
+                var getSpecificAccountRequestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + account.accountId;
+                var accountResponse = MakeRequest<Account>(getSpecificAccountRequestString);
+                cash.Add(new Cash(accountResponse.accountCurrency, accountResponse.balance.ToDecimal(), new decimal(1.0)));
+            }
             return cash;
         }
         
@@ -499,8 +508,8 @@ namespace QuantConnect.Brokerages.Oanda
             } 
             else
             {
-
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateFailed", "Failed to update Oanda order id: " + orderId + "."));
+                OnOrderEvent(new OrderEvent(ConvertOrder(order)) { Status = OrderStatus.Invalid, Message = string.Format("Order currently does not exist with order id: {0}.", orderId)});
             }
         }
 
@@ -577,17 +586,17 @@ namespace QuantConnect.Brokerages.Oanda
 
             foreach (var orderId in order.BrokerId)
             {
-                CancelOrderAsync(orderId);
+                CancelOrder(orderId);
                 OnOrderEvent(new OrderEvent(order, "Oanda Cancel Order Event") { Status = OrderStatus.Canceled });
             }
 
             return true;
         }
 
-        private void CancelOrderAsync(long orderId)
+        private void CancelOrder(long orderId)
         {
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
-            var response = MakeRequestAsync<Order>(requestString, "DELETE");
+            MakeRequest<Order>(requestString, "DELETE");
         }
         
 
@@ -596,7 +605,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public bool RefreshSession()
         {
-            var raw = "";
+            string raw;
             bool success;
             lock (_lockAccessCredentials)
             {
@@ -607,7 +616,6 @@ namespace QuantConnect.Brokerages.Oanda
                 var request = new RestRequest("processOanda", Method.GET);
                 request.AddParameter("uid", UserId.ToString(), ParameterType.GetOrPost);
                 request.AddParameter("accessToken", AccessToken, ParameterType.GetOrPost);
-                request.AddParameter("refreshToken", RefreshToken, ParameterType.GetOrPost);
 
                 //Submit the call:
                 var result = client.Execute(request);
@@ -618,10 +626,9 @@ namespace QuantConnect.Brokerages.Oanda
                 if (newTokens != null && newTokens.Success)
                 {
                     AccessToken = newTokens.AccessToken;
-                    RefreshToken = newTokens.RefreshToken;
                     _issuedAt = newTokens.IssuedAt;
                     _lifeSpan = TimeSpan.FromSeconds(newTokens.ExpiresIn);
-                    Log.Trace("SESSION REFRESHED: Access: " + AccessToken + " Refresh: " + RefreshToken + " Issued At: " + _lifeSpan + " JSON>>"
+                    Log.Trace("SESSION REFRESHED: Access: " + AccessToken + " Issued At: " + _lifeSpan + " JSON>>"
                         + result.Content);
                     OnSessionRefreshed(newTokens);
                     success = true;
@@ -665,7 +672,6 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void Disconnect()
         {
-            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -678,13 +684,11 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="userId">Userid for this brokerage</param>
         /// <param name="accessToken">Viable access token</param>
-        /// <param name="refreshToken">Our refresh token</param>
         /// <param name="issuedAt">When the token was issued</param>
         /// <param name="lifeSpan">Life span for our token.</param>
-        public void SetTokens(int userId, string accessToken, string refreshToken, DateTime issuedAt, TimeSpan lifeSpan)
+        public void SetTokens(int userId, string accessToken, DateTime issuedAt, TimeSpan lifeSpan)
         {
             AccessToken = accessToken;
-            RefreshToken = refreshToken;
             _issuedAt = issuedAt;
             _lifeSpan = lifeSpan;
             CheckForFills();
@@ -711,8 +715,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             if (accountId != null && accountId.Count > 0)
             {
-                var accountIds = accountId.Aggregate("", (current, account) => current + (account + ","));
-                accountIds = accountIds.Trim(',');
+                var accountIds = string.Join(",", accountId);
                 requestString += "?accountIds=" + WebUtility.UrlEncode(accountIds);
             }
 
@@ -850,23 +853,13 @@ namespace QuantConnect.Brokerages.Oanda
                 throw new Exception(result);
             }
         }
-
-        private List<Position> GetPositions()
-        {
-            using (var task = GetPositionsAsync(AccountId))
-            {
-                task.Wait();
-                var result = task.Result;
-                return result;
-            }
-        }
-
+        
         /// <summary>
         /// Retrieves the current non-zero positions for a given account
         /// </summary>
         /// <param name="accountId">positions will be retrieved for this account id</param>
         /// <returns>List of Position objects with the details for each position (or empty list iff no positions)</returns>
-        public async Task<List<Position>> GetPositionsAsync(int accountId)
+        public List<Position> GetPositions(int accountId)
         {
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + accountId + "/positions";
             var positionResponse = MakeRequest<PositionsResponse>(requestString);
@@ -882,9 +875,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>string containing all the parameters for use in requests</returns>
         private static string CreateParamString(Dictionary<string, string> requestParams)
         {
-            var requestBody = requestParams.Aggregate("", (current, pair) => current + (WebUtility.UrlEncode(pair.Key) + "=" + WebUtility.UrlEncode(pair.Value) + "&"));
-            requestBody = requestBody.Trim('&');
-            return requestBody;
+            return string.Join(",", requestParams.Select(x => x.Key + "=" + x.Value).Select(WebUtility.UrlEncode));
         }
 
         /// <summary>
@@ -895,6 +886,17 @@ namespace QuantConnect.Brokerages.Oanda
         {
             AccountId = accountId;
         }
+
+
+        /// <summary>
+        /// Sets the name of the user. Used only in the Sandbox environment
+        /// </summary>
+        /// <param name="userName">Name of the user.</param>
+        public void SetUserName(string userName)
+        {
+            _userName = userName;
+        }
+
 
         /// <summary>
         /// Sets the Brokerage environment.
@@ -920,7 +922,7 @@ namespace QuantConnect.Brokerages.Oanda
         }
         
         /// <summary>
-        /// Converts the specified tradier order into a qc order.
+        /// Converts the specified Oanda order into a qc order.
         /// The 'task' will have a value if we needed to issue a rest call for the stop price, otherwise it will be null
         /// </summary>
         protected Order ConvertOrder(DataType.Order order)
@@ -970,7 +972,7 @@ namespace QuantConnect.Brokerages.Oanda
             qcOrder.Status = OrderStatus.None;
             qcOrder.BrokerId.Add(order.id);
             qcOrder.Id = order.id;
-            qcOrder.Duration = OrderDuration.Specific;
+            qcOrder.Duration = OrderDuration.Custom;
             qcOrder.DurationValue = XmlConvert.ToDateTime(order.expiry, XmlDateTimeSerializationMode.Utc);
             qcOrder.Time = XmlConvert.ToDateTime(order.time, XmlDateTimeSerializationMode.Utc);
             

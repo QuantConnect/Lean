@@ -135,6 +135,7 @@ namespace QuantConnect.Orders
             Duration = OrderDuration.GTC;
             BrokerId = new List<long>();
             ContingentId = 0;
+            DurationValue = DateTime.MaxValue;
         }
 
         /// <summary>
@@ -157,6 +158,7 @@ namespace QuantConnect.Orders
             Duration = OrderDuration.GTC;
             BrokerId = new List<long>();
             ContingentId = 0;
+            DurationValue = DateTime.MaxValue;
         }
 
         /// <summary>
@@ -179,6 +181,7 @@ namespace QuantConnect.Orders
             Duration = OrderDuration.GTC;
             BrokerId = new List<long>();
             ContingentId = 0;
+            DurationValue = DateTime.MaxValue;
         }
 
         /// <summary>

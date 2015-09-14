@@ -129,7 +129,6 @@ namespace QuantConnect.Brokerages.Oanda
             var errors = new List<string>();
             var accountId = Read<int>(job.BrokerageData, "oanda-account-id", errors);
             var accessToken = Read<string>(job.BrokerageData, "oanda-access-token", errors);
-            var refreshToken = Read<string>(job.BrokerageData, "oanda-refresh-token", errors);
             var issuedAt = Read<DateTime>(job.BrokerageData, "oanda-issued-at", errors);
             var lifeSpan = TimeSpan.FromSeconds(Read<double>(job.BrokerageData, "oanda-lifespan", errors));
             var environment = Read<string>(job.BrokerageData, "oanda-environment", errors);
@@ -143,7 +142,7 @@ namespace QuantConnect.Brokerages.Oanda
                 };
             }
 
-            brokerage.SetTokens(job.UserId, accessToken, refreshToken, issuedAt, lifeSpan);
+            brokerage.SetTokens(job.UserId, accessToken, issuedAt, lifeSpan);
             brokerage.SetEnvironment(environment);
             return brokerage;
         }

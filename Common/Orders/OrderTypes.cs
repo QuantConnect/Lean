@@ -70,9 +70,9 @@ namespace QuantConnect.Orders
         */
 
         /// <summary>
-        /// Order valid until specific type.
+        /// Order valid until a custom set date time value.
         /// </summary>
-        Specific
+        Custom
         
     }
 
