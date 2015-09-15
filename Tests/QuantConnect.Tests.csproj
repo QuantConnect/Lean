@@ -117,6 +117,7 @@
     <Compile Include="Indicators\KeltnerChannelsTests.cs" />
     <Compile Include="Indicators\LogReturnTests.cs" />
     <Compile Include="Indicators\OnBalanceVolumeTest.cs" />
+    <Compile Include="Indicators\ParabolicStopAndReversalTests.cs" />
     <Compile Include="Indicators\WilliamsPercentRTests.cs" />
     <Compile Include="Indicators\RateOfChangePercentTests.cs" />
     <Compile Include="Indicators\RateOfChangeTests.cs" />
