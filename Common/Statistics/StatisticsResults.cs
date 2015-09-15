@@ -18,7 +18,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Statistics
 {
     /// <summary>
-    /// The StatisticsResults class represents total and rolling statistics for an algorithm
+    /// The <see cref="StatisticsResults"/> class represents total and rolling statistics for an algorithm
     /// </summary>
     public class StatisticsResults
     {
@@ -38,7 +38,7 @@ namespace QuantConnect.Statistics
         public Dictionary<string, string> Summary { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the StatisticsResults class
+        /// Initializes a new instance of the <see cref="StatisticsResults"/> class
         /// </summary>
         /// <param name="totalPerformance">The algorithm total performance</param>
         /// <param name="rollingPerformances">The algorithm rolling performances</param>
@@ -51,7 +51,7 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Initializes a new instance of the StatisticsResults class
+        /// Initializes a new instance of the <see cref="StatisticsResults"/> class
         /// </summary>
         public StatisticsResults()
         {

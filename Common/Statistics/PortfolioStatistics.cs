@@ -21,7 +21,7 @@ using MathNet.Numerics.Statistics;
 namespace QuantConnect.Statistics
 {
     /// <summary>
-    /// The PortfolioStatistics class represents a set of statistics calculated from equity and benchmark samples
+    /// The <see cref="PortfolioStatistics"/> class represents a set of statistics calculated from equity and benchmark samples
     /// </summary>
     public class PortfolioStatistics
     {
@@ -121,7 +121,7 @@ namespace QuantConnect.Statistics
 
 
         /// <summary>
-        /// Initializes a new instance of the PortfolioStatistics class
+        /// Initializes a new instance of the <see cref="PortfolioStatistics"/> class
         /// </summary>
         /// <param name="profitLoss">Trade record of profits and losses</param>
         /// <param name="equity">The list of daily equity values</param>
@@ -202,7 +202,7 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Initializes a new instance of the PortfolioStatistics class
+        /// Initializes a new instance of the <see cref="PortfolioStatistics"/> class
         /// </summary>
         public PortfolioStatistics()
         {

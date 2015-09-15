@@ -19,7 +19,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Statistics
 {
     /// <summary>
-    /// The AlgorithmPerformance is a wrapper class for TradeStatistics and PortfolioStatistics
+    /// The <see cref="AlgorithmPerformance"/> class is a wrapper for <see cref="TradeStatistics"/> and <see cref="PortfolioStatistics"/>
     /// </summary>
     public class AlgorithmPerformance
     {
@@ -39,7 +39,7 @@ namespace QuantConnect.Statistics
         public List<Trade> ClosedTrades { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the TradeStatistics class
+        /// Initializes a new instance of the <see cref="AlgorithmPerformance"/> class
         /// </summary>
         /// <param name="trades">The list of closed trades</param>
         /// <param name="profitLoss">Trade record of profits and losses</param>
@@ -61,7 +61,7 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Initializes a new instance of the TradeStatistics class
+        /// Initializes a new instance of the <see cref="AlgorithmPerformance"/> class
         /// </summary>
         public AlgorithmPerformance()
         {

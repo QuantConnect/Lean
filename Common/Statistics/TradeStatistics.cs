@@ -19,7 +19,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Statistics
 {
     /// <summary>
-    /// The TradeStatistics class represents a set of statistics calculated from a list of closed trades
+    /// The <see cref="TradeStatistics"/> class represents a set of statistics calculated from a list of closed trades
     /// </summary>
     public class TradeStatistics
     {
@@ -226,7 +226,7 @@ namespace QuantConnect.Statistics
         public decimal TotalFees { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the TradeStatistics class
+        /// Initializes a new instance of the <see cref="TradeStatistics"/> class
         /// </summary>
         /// <param name="trades">The list of closed trades</param>
         public TradeStatistics(IEnumerable<Trade> trades)
@@ -355,7 +355,7 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Initializes a new instance of the TradeStatistics class
+        /// Initializes a new instance of the <see cref="TradeStatistics"/> class
         /// </summary>
         public TradeStatistics()
         {

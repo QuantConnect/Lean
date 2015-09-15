@@ -35,7 +35,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The date and time of this event (UTC).
         /// </summary>
-        public DateTime Time;
+        public DateTime UtcTime;
 
         /// <summary>
         /// Status message of the order.
@@ -84,59 +84,48 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Order Event Constructor.
         /// </summary>
-        /// <param name="id">Id of the parent order</param>
+        /// <param name="orderId">Id of the parent order</param>
         /// <param name="symbol">Asset Symbol</param>
+        /// <param name="utcTime">Date/time of this event</param>
         /// <param name="status">Status of the order</param>
         /// <param name="direction">The direction of the order this event belongs to</param>
         /// <param name="fillPrice">Fill price information if applicable.</param>
         /// <param name="fillQuantity">Fill quantity</param>
+        /// <param name="orderFee">The order fee</param>
         /// <param name="message">Message from the exchange</param>
-        public OrderEvent(int id, Symbol symbol, OrderStatus status, OrderDirection direction, decimal fillPrice, int fillQuantity, string message = "")
+        public OrderEvent(int orderId, Symbol symbol, DateTime utcTime, OrderStatus status, OrderDirection direction, decimal fillPrice, int fillQuantity, decimal orderFee, string message = "")
         {
-            OrderId = id;
-            Status = status;
-            FillPrice = fillPrice;
-            Message = message;
-            FillQuantity = fillQuantity;
+            OrderId = orderId;
             Symbol = symbol;
+            UtcTime = utcTime;
+            Status = status;
             Direction = direction;
+            FillPrice = fillPrice;
+            FillQuantity = fillQuantity;
+            OrderFee = orderFee;
+            Message = message;
         }
 
         /// <summary>
         /// Helper Constructor using Order to Initialize.
         /// </summary>
         /// <param name="order">Order for this order status</param>
+        /// <param name="orderFee">The order fee</param>
         /// <param name="message">Message from exchange or QC.</param>
-        public OrderEvent(Order order, string message = "") 
+        public OrderEvent(Order order, decimal orderFee, string message = "") 
         {
             OrderId = order.Id;
-            Status = order.Status;
-            Message = message;
             Symbol = order.Symbol;
+            UtcTime = order.Time;
+            Status = order.Status;
             Direction = order.Direction;
 
             //Initialize to zero, manually set fill quantity
             FillQuantity = 0;
             FillPrice = 0;
-        }
 
-        /// <summary>
-        /// Helper Constructor for TradeBuilder tests
-        /// </summary>
-        /// <param name="orderId">The Id of the order</param>
-        /// <param name="symbol">Asset Symbol</param>
-        /// <param name="time">Date/time of this event</param>
-        /// <param name="fillPrice">Fill price</param>
-        /// <param name="fillQuantity">Fill quantity</param>
-        /// <param name="orderFee">The order fee</param>
-        public OrderEvent(int orderId, string symbol, DateTime time, decimal fillPrice, int fillQuantity, decimal orderFee)
-        {
-            OrderId = orderId;
-            Symbol = symbol;
-            Time = time;
-            FillPrice = fillPrice;
-            FillQuantity = fillQuantity;
             OrderFee = orderFee;
+            Message = message;
         }
 
         /// <summary>

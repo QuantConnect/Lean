@@ -43,7 +43,8 @@ namespace QuantConnect.Securities
         public virtual OrderEvent MarketFill(Security asset, MarketOrder order)
         {
             //Default order event to return.
-            var fill = new OrderEvent(order);
+            var orderFee = asset.TransactionModel.GetOrderFee(asset, order);
+            var fill = new OrderEvent(order, orderFee);
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
@@ -94,7 +95,8 @@ namespace QuantConnect.Securities
         public virtual OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
             //Default order event to return.
-            var fill = new OrderEvent(order);
+            var orderFee = asset.TransactionModel.GetOrderFee(asset, order);
+            var fill = new OrderEvent(order, orderFee);
 
             // make sure the exchange is open before filling
             if (!IsExchangeOpen(asset)) return fill;
@@ -169,7 +171,8 @@ namespace QuantConnect.Securities
         public virtual OrderEvent StopLimitFill(Security asset, StopLimitOrder order)
         {
             //Default order event to return.
-            var fill = new OrderEvent(order);
+            var orderFee = asset.TransactionModel.GetOrderFee(asset, order);
+            var fill = new OrderEvent(order, orderFee);
 
             try
             {
@@ -243,7 +246,8 @@ namespace QuantConnect.Securities
         public virtual OrderEvent LimitFill(Security asset, LimitOrder order)
         {
             //Initialise;
-            var fill = new OrderEvent(order);
+            var orderFee = asset.TransactionModel.GetOrderFee(asset, order);
+            var fill = new OrderEvent(order, orderFee);
 
             try
             {
@@ -304,7 +308,8 @@ namespace QuantConnect.Securities
         /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
         public OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order)
         {
-            var fill = new OrderEvent(order);
+            var orderFee = asset.TransactionModel.GetOrderFee(asset, order);
+            var fill = new OrderEvent(order, orderFee);
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
@@ -368,7 +373,8 @@ namespace QuantConnect.Securities
         /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
         public OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order)
         {
-            var fill = new OrderEvent(order);
+            var orderFee = asset.TransactionModel.GetOrderFee(asset, order);
+            var fill = new OrderEvent(order, orderFee);
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
@@ -498,7 +504,8 @@ namespace QuantConnect.Securities
         [Obsolete("Fill method has been made obsolete, use order type fill methods directly.")]
         public virtual OrderEvent Fill(Security vehicle, Order order)
         {
-            return new OrderEvent(order);
+            var orderFee = vehicle.TransactionModel.GetOrderFee(vehicle, order);
+            return new OrderEvent(order, orderFee);
         }
 
         /// <summary>

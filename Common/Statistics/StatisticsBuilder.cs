@@ -22,17 +22,12 @@ using QuantConnect.Logging;
 namespace QuantConnect.Statistics
 {
     /// <summary>
-    /// The StatisticsBuilder class creates summary and rolling statistics from trades, equity and benchmark points
+    /// The <see cref="StatisticsBuilder"/> class creates summary and rolling statistics from trades, equity and benchmark points
     /// </summary>
-    public class StatisticsBuilder
+    public static class StatisticsBuilder
     {
         /// <summary>
-        /// The output summary, total and rolling statistics
-        /// </summary>
-        public StatisticsResults Results { get; private set; }
-
-        /// <summary>
-        /// Initializes a new instance of the StatisticsBuilder class
+        /// Generates the statistics and returns the results
         /// </summary>
         /// <param name="trades">The list of closed trades</param>
         /// <param name="profitLoss">Trade record of profits and losses</param>
@@ -42,7 +37,8 @@ namespace QuantConnect.Statistics
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <param name="totalFees">The total fees</param>
         /// <param name="totalTransactions">The total number of transactions</param>
-        public StatisticsBuilder(
+        /// <returns>Returns a <see cref="StatisticsResults"/> object</returns>
+        public static StatisticsResults Generate(
             List<Trade> trades, 
             SortedDictionary<DateTime, decimal> profitLoss,
             List<ChartPoint> pointsEquity, 
@@ -61,7 +57,7 @@ namespace QuantConnect.Statistics
             var rollingPerformances = GetRollingPerformances(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, startingCapital);
             var summary = GetSummary(totalPerformance, totalFees, totalTransactions);
 
-            Results = new StatisticsResults(totalPerformance, rollingPerformances, summary);
+            return new StatisticsResults(totalPerformance, rollingPerformances, summary);
         }
 
         /// <summary>
