@@ -96,7 +96,6 @@
     <Compile Include="Common\Securities\SymbolTests.cs" />
     <Compile Include="Common\SeriesTests.cs" />
     <Compile Include="Common\SymbolTests.cs" />
-    <Compile Include="Common\Statistics\AlgorithmPerformanceTests.cs" />
     <Compile Include="Common\Statistics\TradeStatisticsTests.cs" />
     <Compile Include="Common\Statistics\TradeBuilderTests.cs" />
     <Compile Include="Common\TimeKeeperTests.cs" />
