@@ -15,6 +15,7 @@
 */
 
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect
 {
@@ -56,6 +57,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="sid">The security's unique identifier</param>
         /// <param name="value">The security's current ticker symbol</param>
+        [JsonConstructor]
         public Symbol(string sid, string value)
         {
             if (value == null)
