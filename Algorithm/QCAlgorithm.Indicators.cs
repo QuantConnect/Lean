@@ -574,6 +574,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Parabolic SAR indicator
+        /// </summary>
+        /// <param name="symbol">The symbol whose PSAR we seek</param>
+        /// <param name="afStart">Acceleration factor start value. Normally 0.02</param>
+        /// <param name="afIncrement">Acceleration factor increment value. Normally 0.02</param>
+        /// <param name="afMax">Acceleration factor max value. Normally 0.2</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>An AroonOscillator configured with the specied periods</returns>
+        public ParabolicStopAndReverse PSAR(Symbol symbol, decimal afStart = 0.02m, decimal afIncrement = 0.02m, decimal afMax = 0.2m, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, string.Format("PSAR({0},{1},{2})", afStart, afIncrement, afMax), resolution);
+            var psar = new ParabolicStopAndReverse(name, afStart, afIncrement, afMax);
+            RegisterIndicator(symbol, psar, resolution, selector);
+            return psar;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
