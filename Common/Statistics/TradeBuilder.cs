@@ -46,10 +46,11 @@ namespace QuantConnect.Statistics
 
         private const int LiveModeMaxTradeCount = 10000;
         private const int LiveModeMaxTradeAgeMonths = 12;
+        private const int MaxOrderIdCacheSize = 1000;
 
         private readonly List<Trade> _closedTrades = new List<Trade>();
         private readonly Dictionary<Symbol, Position> _positions = new Dictionary<Symbol, Position>();
-        private readonly FixedSizeHashQueue<int> _ordersWithFeesAssigned = new FixedSizeHashQueue<int>(LiveModeMaxTradeCount * 2);
+        private readonly FixedSizeHashQueue<int> _ordersWithFeesAssigned = new FixedSizeHashQueue<int>(MaxOrderIdCacheSize);
         private readonly FillGroupingMethod _groupingMethod;
         private readonly FillMatchingMethod _matchingMethod;
         private bool _liveMode;
