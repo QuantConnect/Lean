@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101.123m));
 
-            var fill = model.MarketFill(security, order);
+            var fill = model.MarketFill(security, order, DateTime.UtcNow);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(security.Price, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101.123m));
 
-            var fill = model.MarketFill(security, order);
+            var fill = model.MarketFill(security, order, DateTime.UtcNow);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(security.Price, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 102m));
 
-            var fill = model.LimitFill(security, order);
+            var fill = model.LimitFill(security, order, DateTime.UtcNow);
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             security.SetMarketPrice(new TradeBar(Noon, Symbol, 102m, 103m, 101m, 102.3m, 100));
 
-            fill = model.LimitFill(security, order);
+            fill = model.LimitFill(security, order, DateTime.UtcNow);
 
             // this fills worst case scenario, so it's at the limit price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101m));
 
-            var fill = model.LimitFill(security, order);
+            var fill = model.LimitFill(security, order, DateTime.UtcNow);
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -110,7 +110,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             security.SetMarketPrice(new TradeBar(Noon, Symbol, 102m, 103m, 101m, 102.3m, 100));
 
-            fill = model.LimitFill(security, order);
+            fill = model.LimitFill(security, order, DateTime.UtcNow);
 
             // this fills worst case scenario, so it's at the limit price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
@@ -129,7 +129,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 100m));
 
-            var fill = model.StopLimitFill(security, order);
+            var fill = model.StopLimitFill(security, order, DateTime.UtcNow);
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -138,7 +138,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 102m));
 
-            fill = model.StopLimitFill(security, order);
+            fill = model.StopLimitFill(security, order, DateTime.UtcNow);
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -147,7 +147,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101.66m));
 
-            fill = model.StopLimitFill(security, order);
+            fill = model.StopLimitFill(security, order, DateTime.UtcNow);
 
             // this fills worst case scenario, so it's at the limit price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
@@ -166,7 +166,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 102m));
 
-            var fill = model.StopLimitFill(security, order);
+            var fill = model.StopLimitFill(security, order, DateTime.UtcNow);
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -175,7 +175,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101m));
 
-            fill = model.StopLimitFill(security, order);
+            fill = model.StopLimitFill(security, order, DateTime.UtcNow);
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -184,7 +184,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101.66m));
 
-            fill = model.StopLimitFill(security, order);
+            fill = model.StopLimitFill(security, order, DateTime.UtcNow);
 
             // this fills worst case scenario, so it's at the limit price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
@@ -203,7 +203,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101m));
 
-            var fill = model.StopMarketFill(security, order);
+            var fill = model.StopMarketFill(security, order, DateTime.UtcNow);
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -212,7 +212,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 102.5m));
 
-            fill = model.StopMarketFill(security, order);
+            fill = model.StopMarketFill(security, order, DateTime.UtcNow);
 
             // this fills worst case scenario, so it's min of asset/stop price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
@@ -231,7 +231,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 102m));
 
-            var fill = model.StopMarketFill(security, order);
+            var fill = model.StopMarketFill(security, order, DateTime.UtcNow);
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -240,7 +240,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, Noon, 101m));
 
-            fill = model.StopMarketFill(security, order);
+            fill = model.StopMarketFill(security, order, DateTime.UtcNow);
 
             // this fills worst case scenario, so it's min of asset/stop price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
@@ -262,7 +262,7 @@ namespace QuantConnect.Tests.Common.Securities
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
             security.SetMarketPrice(new TradeBar(time, Symbol, 1m, 2m, 0.5m, 1.33m, 100));
 
-            var fill = model.MarketOnOpenFill(security, order);
+            var fill = model.MarketOnOpenFill(security, order, DateTime.UtcNow);
             Assert.AreEqual(0, fill.FillQuantity);
             
             // market opens after 30min, so this is just before market open
@@ -270,7 +270,7 @@ namespace QuantConnect.Tests.Common.Securities
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
             security.SetMarketPrice(new TradeBar(time, Symbol, 1.33m, 2.75m, 1.15m, 1.45m, 100));
 
-            fill = model.MarketOnOpenFill(security, order);
+            fill = model.MarketOnOpenFill(security, order, DateTime.UtcNow);
             Assert.AreEqual(0, fill.FillQuantity);
 
             // market opens after 30min
@@ -278,7 +278,7 @@ namespace QuantConnect.Tests.Common.Securities
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
             security.SetMarketPrice(new TradeBar(time, Symbol, 1.45m, 2.0m, 1.1m, 1.40m, 100));
 
-            fill = model.MarketOnOpenFill(security, order);
+            fill = model.MarketOnOpenFill(security, order, DateTime.UtcNow);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(security.Open, fill.FillPrice);
         }
@@ -296,7 +296,7 @@ namespace QuantConnect.Tests.Common.Securities
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
             security.SetMarketPrice(new TradeBar(time, Symbol, 1m, 2m, 0.5m, 1.33m, 100));
 
-            var fill = model.MarketOnCloseFill(security, order);
+            var fill = model.MarketOnCloseFill(security, order, DateTime.UtcNow);
             Assert.AreEqual(0, fill.FillQuantity);
 
             // market closes after 60min, so this is just before market Close
@@ -304,7 +304,7 @@ namespace QuantConnect.Tests.Common.Securities
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
             security.SetMarketPrice(new TradeBar(time, Symbol, 1.33m, 2.75m, 1.15m, 1.45m, 100));
 
-            fill = model.MarketOnCloseFill(security, order);
+            fill = model.MarketOnCloseFill(security, order, DateTime.UtcNow);
             Assert.AreEqual(0, fill.FillQuantity);
 
             // market closes
@@ -312,7 +312,7 @@ namespace QuantConnect.Tests.Common.Securities
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
             security.SetMarketPrice(new TradeBar(time, Symbol, 1.45m, 2.0m, 1.1m, 1.40m, 100));
 
-            fill = model.MarketOnCloseFill(security, order);
+            fill = model.MarketOnCloseFill(security, order, DateTime.UtcNow);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(security.Close, fill.FillPrice);
         }
