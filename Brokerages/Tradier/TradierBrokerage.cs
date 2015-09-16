@@ -1140,7 +1140,7 @@ namespace QuantConnect.Brokerages.Tradier
                     TradierOrder tradierOrder;
                     _cachedOpenOrdersByTradierOrderID.TryRemove(orderID, out tradierOrder);
                     const int orderFee = 0;
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Tradier Fill Event") { Status = OrderStatus.Canceled });
+                    OnOrderEvent(new OrderEvent(order, orderFee, "Tradier Fill Event") { Status = OrderStatus.Canceled });
                 }
             }
 
@@ -1213,7 +1213,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 // send the submitted event
                 const int orderFee = 0;
-                OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
+                OnOrderEvent(new OrderEvent(order.QCOrder, orderFee) { Status = OrderStatus.Submitted });
 
                 // mark this in our open orders before we submit so it's gauranteed to be there when we poll for updates
                 _cachedOpenOrdersByTradierOrderID.AddOrUpdate(response.Order.Id, new TradierOrderDetailed
@@ -1243,7 +1243,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 // invalidate the order, bad request
                 const int orderFee = 0;
-                OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, orderFee) { Status = OrderStatus.Invalid });
+                OnOrderEvent(new OrderEvent(order.QCOrder, orderFee) { Status = OrderStatus.Invalid });
 
                 string message = _previousResponseRaw;
                 if (response != null && response.Errors != null && !response.Errors.Errors.IsNullOrEmpty())
@@ -1440,7 +1440,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 var qcOrder = _orderProvider.GetOrderByBrokerageId((int)updatedOrder.Id);
                 const int orderFee = 0;
-                var fill = new OrderEvent(qcOrder, DateTime.UtcNow, orderFee, "Tradier Fill Event")
+                var fill = new OrderEvent(qcOrder, orderFee, "Tradier Fill Event")
                 {
                     Status = ConvertStatus(updatedOrder.Status),
                     // this is guaranteed to be wrong in the event we have multiple fills within our polling interval,
@@ -1496,14 +1496,14 @@ namespace QuantConnect.Brokerages.Tradier
                                         Log.Error("TradierBrokerage.SubmitContingentOrder(): Failed to submit contingent order.");
                                         var message = string.Format("{0} Failed submitting contingent order for QC id: {1} Filled Tradier Order id: {2}", qcOrder.Symbol, qcOrder.Id, updatedOrder.Id);
                                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "ContingentOrderFailed", message));
-                                        OnOrderEvent(new OrderEvent(qcOrder, DateTime.UtcNow, orderFee) { Status = OrderStatus.Canceled });
+                                        OnOrderEvent(new OrderEvent(qcOrder, orderFee) { Status = OrderStatus.Canceled });
                                     }
                                 }
                                 catch (Exception err)
                                 {
                                     Log.Error(err);
                                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "ContingentOrderError", "An error ocurred while trying to submit an Tradier contingent order: " + err.Message));
-                                    OnOrderEvent(new OrderEvent(qcOrder, DateTime.UtcNow, orderFee) { Status = OrderStatus.Canceled });
+                                    OnOrderEvent(new OrderEvent(qcOrder, orderFee) { Status = OrderStatus.Canceled });
                                 }
                                 finally
                                 {

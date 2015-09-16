@@ -222,7 +222,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetMarketPrice(new TradeBar(time, "AAPL", buyPrice, buyPrice, buyPrice, buyPrice, 1));
 
             var order = new MarketOrder("AAPL", quantity, time) {Price = buyPrice};
-            var fill = new OrderEvent(order, DateTime.UtcNow, 0) { FillPrice = buyPrice, FillQuantity = quantity };
+            var fill = new OrderEvent(order, 0){ FillPrice = buyPrice, FillQuantity = quantity };
 
             Assert.AreEqual(portfolio.CashBook["USD"].Quantity, fill.FillPrice*fill.FillQuantity);
 
@@ -272,7 +272,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetLeverage(leverage * 2);
 
             order = new MarketOrder("AAPL", quantity, time) { Price = buyPrice };
-            fill = new OrderEvent(order, DateTime.UtcNow, 0) { FillPrice = buyPrice, FillQuantity = quantity };
+            fill = new OrderEvent(order, 0) { FillPrice = buyPrice, FillQuantity = quantity };
 
             portfolio.ProcessFill(fill);
 
