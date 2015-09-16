@@ -37,14 +37,15 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
-        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
-        /// <seealso cref="LimitFill(Security, LimitOrder)"/>
-        public virtual OrderEvent MarketFill(Security asset, MarketOrder order)
+        /// <param name="utcTime">Date/time of this event</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <seealso cref="StopMarketFill(Security, StopMarketOrder, DateTime)"/>
+        /// <seealso cref="LimitFill(Security, LimitOrder, DateTime)"/>
+        public virtual OrderEvent MarketFill(Security asset, MarketOrder order, DateTime utcTime)
         {
             //Default order event to return.
-            var orderFee = asset.TransactionModel.GetOrderFee(asset, order);
-            var fill = new OrderEvent(order, orderFee);
+            var orderFee = GetOrderFee(asset, order);
+            var fill = new OrderEvent(order, utcTime, orderFee);
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
@@ -89,14 +90,15 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
-        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        /// <seealso cref="MarketFill(Security, MarketOrder)"/>
-        /// <seealso cref="LimitFill(Security, LimitOrder)"/>
-        public virtual OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
+        /// <param name="utcTime">Date/time of this event</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <seealso cref="MarketFill(Security, MarketOrder, DateTime)"/>
+        /// <seealso cref="LimitFill(Security, LimitOrder, DateTime)"/>
+        public virtual OrderEvent StopMarketFill(Security asset, StopMarketOrder order, DateTime utcTime)
         {
             //Default order event to return.
-            var orderFee = asset.TransactionModel.GetOrderFee(asset, order);
-            var fill = new OrderEvent(order, orderFee);
+            var orderFee = GetOrderFee(asset, order);
+            var fill = new OrderEvent(order, utcTime, orderFee);
 
             // make sure the exchange is open before filling
             if (!IsExchangeOpen(asset)) return fill;
@@ -158,9 +160,10 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
-        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
-        /// <seealso cref="LimitFill(Security, LimitOrder)"/>
+        /// <param name="utcTime">Date/time of this event</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <seealso cref="StopMarketFill(Security, StopMarketOrder, DateTime)"/>
+        /// <seealso cref="LimitFill(Security, LimitOrder, DateTime)"/>
         /// <remarks>
         ///     There is no good way to model limit orders with OHLC because we never know whether the market has 
         ///     gapped past our fill price. We have to make the assumption of a fluid, high volume market.
@@ -168,11 +171,11 @@ namespace QuantConnect.Securities
         ///     Stop limit orders we also can't be sure of the order of the H - L values for the limit fill. The assumption
         ///     was made the limit fill will be done with closing price of the bar after the stop has been triggered..
         /// </remarks>
-        public virtual OrderEvent StopLimitFill(Security asset, StopLimitOrder order)
+        public virtual OrderEvent StopLimitFill(Security asset, StopLimitOrder order, DateTime utcTime)
         {
             //Default order event to return.
-            var orderFee = asset.TransactionModel.GetOrderFee(asset, order);
-            var fill = new OrderEvent(order, orderFee);
+            var orderFee = GetOrderFee(asset, order);
+            var fill = new OrderEvent(order, utcTime, orderFee);
 
             try
             {
@@ -240,14 +243,15 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
-        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
-        /// <seealso cref="MarketFill(Security, MarketOrder)"/>
-        public virtual OrderEvent LimitFill(Security asset, LimitOrder order)
+        /// <param name="utcTime">Date/time of this event</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <seealso cref="StopMarketFill(Security, StopMarketOrder, DateTime)"/>
+        /// <seealso cref="MarketFill(Security, MarketOrder, DateTime)"/>
+        public virtual OrderEvent LimitFill(Security asset, LimitOrder order, DateTime utcTime)
         {
             //Initialise;
-            var orderFee = asset.TransactionModel.GetOrderFee(asset, order);
-            var fill = new OrderEvent(order, orderFee);
+            var orderFee = GetOrderFee(asset, order);
+            var fill = new OrderEvent(order, utcTime, orderFee);
 
             try
             {
@@ -305,11 +309,12 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="asset">Asset we're trading with this order</param>
         /// <param name="order">Order to be filled</param>
-        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        public OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order)
+        /// <param name="utcTime">Date/time of this event</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        public OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order, DateTime utcTime)
         {
-            var orderFee = asset.TransactionModel.GetOrderFee(asset, order);
-            var fill = new OrderEvent(order, orderFee);
+            var orderFee = GetOrderFee(asset, order);
+            var fill = new OrderEvent(order, utcTime, orderFee);
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
@@ -370,11 +375,12 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="asset">Asset we're trading with this order</param>
         /// <param name="order">Order to be filled</param>
-        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        public OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order)
+        /// <param name="utcTime">Date/time of this event</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        public OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order, DateTime utcTime)
         {
-            var orderFee = asset.TransactionModel.GetOrderFee(asset, order);
-            var fill = new OrderEvent(order, orderFee);
+            var orderFee = GetOrderFee(asset, order);
+            var fill = new OrderEvent(order, utcTime, orderFee);
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
@@ -500,12 +506,13 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="vehicle">Asset we're working with</param>
         /// <param name="order">Order class to check if filled.</param>
-        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
+        /// <param name="utcTime">Date/time of this event</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         [Obsolete("Fill method has been made obsolete, use order type fill methods directly.")]
-        public virtual OrderEvent Fill(Security vehicle, Order order)
+        public virtual OrderEvent Fill(Security vehicle, Order order, DateTime utcTime)
         {
-            var orderFee = vehicle.TransactionModel.GetOrderFee(vehicle, order);
-            return new OrderEvent(order, orderFee);
+            var orderFee = GetOrderFee(vehicle, order);
+            return new OrderEvent(order, utcTime, orderFee);
         }
 
         /// <summary>
@@ -513,13 +520,14 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="security">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
-        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
-        /// <seealso cref="LimitFill(Security, LimitOrder)"/>
+        /// <param name="utcTime">Date/time of this event</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <seealso cref="StopMarketFill(Security, StopMarketOrder, DateTime)"/>
+        /// <seealso cref="LimitFill(Security, LimitOrder, DateTime)"/>
         [Obsolete("MarketFill(Security, Order) method has been made obsolete, use MarketFill(Security, MarketOrder) method instead.")]
-        public virtual OrderEvent MarketFill(Security security, Order order)
+        public virtual OrderEvent MarketFill(Security security, Order order, DateTime utcTime)
         {
-            return MarketFill(security, order as MarketOrder);
+            return MarketFill(security, order as MarketOrder, utcTime);
         }
 
         /// <summary>
@@ -527,13 +535,14 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="security">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
-        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        /// <seealso cref="LimitFill(Security, LimitOrder)"/>
-        /// <seealso cref="MarketFill(Security, MarketOrder)"/>
+        /// <param name="utcTime">Date/time of this event</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <seealso cref="LimitFill(Security, LimitOrder, DateTime)"/>
+        /// <seealso cref="MarketFill(Security, MarketOrder, DateTime)"/>
         [Obsolete("StopFill(Security, Order) method has been made obsolete, use StopMarketFill(Security, StopMarketOrder) method instead.")]
-        public virtual OrderEvent StopFill(Security security, Order order)
+        public virtual OrderEvent StopFill(Security security, Order order, DateTime utcTime)
         {
-            return StopMarketFill(security, order as StopMarketOrder);
+            return StopMarketFill(security, order as StopMarketOrder, utcTime);
         }
 
         /// <summary>
@@ -541,13 +550,14 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="security">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
-        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
-        /// <seealso cref="MarketFill(Security, MarketOrder)"/>
+        /// <param name="utcTime">Date/time of this event</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <seealso cref="StopMarketFill(Security, StopMarketOrder, DateTime)"/>
+        /// <seealso cref="MarketFill(Security, MarketOrder, DateTime)"/>
         [Obsolete("LimitFill(Security, Order) method has been made obsolete, use LimitFill(Security, LimitOrder) method instead.")]
-        public virtual OrderEvent LimitFill(Security security, Order order)
+        public virtual OrderEvent LimitFill(Security security, Order order, DateTime utcTime)
         {
-            return LimitFill(security, order as LimitOrder);
+            return LimitFill(security, order as LimitOrder, utcTime);
         }
     }
 }

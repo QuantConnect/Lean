@@ -32,7 +32,8 @@ namespace QuantConnect.Securities.Interfaces
         /// </summary>
         /// <param name="asset">Asset we're trading this order</param>
         /// <param name="order">Order to update</param>
-        OrderEvent MarketFill(Security asset, MarketOrder order);
+        /// <param name="utcTime">Date/time of this event</param>
+        OrderEvent MarketFill(Security asset, MarketOrder order, DateTime utcTime);
 
 
         /// <summary>
@@ -40,38 +41,43 @@ namespace QuantConnect.Securities.Interfaces
         /// </summary>
         /// <param name="asset">Asset we're trading this order</param>
         /// <param name="order">Stop Order to Check, return filled if true</param>
-        OrderEvent StopMarketFill(Security asset, StopMarketOrder order);
+        /// <param name="utcTime">Date/time of this event</param>
+        OrderEvent StopMarketFill(Security asset, StopMarketOrder order, DateTime utcTime);
 
         /// <summary>
         /// Stop Limit Fill Model. Return an order event with the fill details.
         /// </summary>
         /// <param name="asset"></param>
         /// <param name="order"></param>
+        /// <param name="utcTime">Date/time of this event</param>
         /// <returns></returns>
-        OrderEvent StopLimitFill(Security asset, StopLimitOrder order);
+        OrderEvent StopLimitFill(Security asset, StopLimitOrder order, DateTime utcTime);
 
         /// <summary>
         /// Limit Fill Model. Return an order event with the fill details.
         /// </summary>
         /// <param name="asset">Stock Object to use to help model limit fill</param>
         /// <param name="order">Order to fill. Alter the values directly if filled.</param>
-        OrderEvent LimitFill(Security asset, LimitOrder order);
+        /// <param name="utcTime">Date/time of this event</param>
+        OrderEvent LimitFill(Security asset, LimitOrder order, DateTime utcTime);
 
         /// <summary>
         /// Market on Open Fill Model. Return an order event with the fill details
         /// </summary>
         /// <param name="asset">Asset we're trading with this order</param>
         /// <param name="order">Order to be filled</param>
-        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order);
+        /// <param name="utcTime">Date/time of this event</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order, DateTime utcTime);
 
         /// <summary>
         /// Market on Close Fill Model. Return an order event with the fill details
         /// </summary>
         /// <param name="asset">Asset we're trading with this order</param>
         /// <param name="order">Order to be filled</param>
-        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
-        OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order);
+        /// <param name="utcTime">Date/time of this event</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order, DateTime utcTime);
 
         /// <summary>
         /// Slippage Model. Return a decimal cash slippage approximation on the order.
@@ -101,31 +107,35 @@ namespace QuantConnect.Securities.Interfaces
         /// </summary>
         /// <param name="asset">Asset we're trading this order</param>
         /// <param name="order">Order class to check if filled.</param>
+        /// <param name="utcTime">Date/time of this event</param>
         [Obsolete("Fill(Security, Order) method has been made obsolete, use fill methods directly instead (e.g. MarketFill(security, marketOrder)).")]
-        OrderEvent Fill(Security asset, Order order);
+        OrderEvent Fill(Security asset, Order order, DateTime utcTime);
 
         /// <summary>
         /// Model the slippage on a market order: fixed percentage of order price
         /// </summary>
         /// <param name="asset">Asset we're trading this order</param>
         /// <param name="order">Order to update</param>
+        /// <param name="utcTime">Date/time of this event</param>
         [Obsolete("MarketFill(Security, Order) method has been made obsolete, use MarketFill(Security, MarketOrder) method instead.")]
-        OrderEvent MarketFill(Security asset, Order order);
+        OrderEvent MarketFill(Security asset, Order order, DateTime utcTime);
 
         /// <summary>
         /// Check if the model has stopped out our position yet: (Stop Market Order Type)
         /// </summary>
         /// <param name="asset">Asset we're trading this order</param>
         /// <param name="order">Stop Order to Check, return filled if true</param>
+        /// <param name="utcTime">Date/time of this event</param>
         [Obsolete("StopFill(Security, Order) method has been made obsolete, use StopMarketFill(Security, StopMarketOrder) method instead.")]
-        OrderEvent StopFill(Security asset, Order order);
+        OrderEvent StopFill(Security asset, Order order, DateTime utcTime);
 
         /// <summary>
         /// Model for a limit fill.
         /// </summary>
         /// <param name="asset">Stock Object to use to help model limit fill</param>
         /// <param name="order">Order to fill. Alter the values directly if filled.</param>
+        /// <param name="utcTime">Date/time of this event</param>
         [Obsolete("LimitFill(Security, Order) method has been made obsolete, use LimitFill(Security, LimitOrder) method instead.")]
-        OrderEvent LimitFill(Security asset, Order order);
+        OrderEvent LimitFill(Security asset, Order order, DateTime utcTime);
     }
 }

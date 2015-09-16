@@ -120,7 +120,7 @@ namespace QuantConnect.Brokerages.Backtesting
 
                 // fire off the event that says this order has been submitted
                 const int orderFee = 0;
-                var submitted = new OrderEvent(order, orderFee) { Status = OrderStatus.Submitted };
+                var submitted = new OrderEvent(order, _algorithm.UtcTime, orderFee) { Status = OrderStatus.Submitted };
                 OnOrderEvent(submitted);
 
                 return true;
@@ -154,7 +154,7 @@ namespace QuantConnect.Brokerages.Backtesting
 
                 // fire off the event that says this order has been updated
                 const int orderFee = 0;
-                var updated = new OrderEvent(order, orderFee) { Status = OrderStatus.Submitted };
+                var updated = new OrderEvent(order, _algorithm.UtcTime, orderFee) { Status = OrderStatus.Submitted };
                 OnOrderEvent(updated);
 
                 return true;
@@ -179,7 +179,7 @@ namespace QuantConnect.Brokerages.Backtesting
 
             // fire off the event that says this order has been canceled
             const int orderFee = 0;
-            var canceled = new OrderEvent(order, orderFee) { Status = OrderStatus.Canceled };
+            var canceled = new OrderEvent(order, _algorithm.UtcTime, orderFee) { Status = OrderStatus.Canceled };
             OnOrderEvent(canceled);
 
             return true;
@@ -227,7 +227,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     }
 
                     var orderFee = security.TransactionModel.GetOrderFee(security, order);
-                    var fill = new OrderEvent(order, orderFee);
+                    var fill = new OrderEvent(order, _algorithm.UtcTime, orderFee);
 
                     // verify sure we have enough cash to perform the fill
                     bool sufficientBuyingPower;
@@ -241,7 +241,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         Order pending;
                         _pending.TryRemove(order.Id, out pending);
                         order.Status = OrderStatus.Invalid;
-                        OnOrderEvent(new OrderEvent(order, orderFee, "Error in GetSufficientCapitalForOrder"));
+                        OnOrderEvent(new OrderEvent(order, _algorithm.UtcTime, orderFee, "Error in GetSufficientCapitalForOrder"));
 
                         Log.Error(err);
                         _algorithm.Error(string.Format("Order Error: id: {0}, Error executing margin models: {1}", order.Id, err.Message));
@@ -260,27 +260,27 @@ namespace QuantConnect.Brokerages.Backtesting
                             switch (order.Type)
                             {
                                 case OrderType.Limit:
-                                    fill = model.LimitFill(security, order as LimitOrder);
+                                    fill = model.LimitFill(security, order as LimitOrder, _algorithm.UtcTime);
                                     break;
 
                                 case OrderType.StopMarket:
-                                    fill = model.StopMarketFill(security, order as StopMarketOrder);
+                                    fill = model.StopMarketFill(security, order as StopMarketOrder, _algorithm.UtcTime);
                                     break;
 
                                 case OrderType.Market:
-                                    fill = model.MarketFill(security, order as MarketOrder);
+                                    fill = model.MarketFill(security, order as MarketOrder, _algorithm.UtcTime);
                                     break;
 
                                 case OrderType.StopLimit:
-                                    fill = model.StopLimitFill(security, order as StopLimitOrder);
+                                    fill = model.StopLimitFill(security, order as StopLimitOrder, _algorithm.UtcTime);
                                     break;
 
                                 case OrderType.MarketOnOpen:
-                                    fill = model.MarketOnOpenFill(security, order as MarketOnOpenOrder);
+                                    fill = model.MarketOnOpenFill(security, order as MarketOnOpenOrder, _algorithm.UtcTime);
                                     break;
 
                                 case OrderType.MarketOnClose:
-                                    fill = model.MarketOnCloseFill(security, order as MarketOnCloseOrder);
+                                    fill = model.MarketOnCloseFill(security, order as MarketOnCloseOrder, _algorithm.UtcTime);
                                     break;
                             }
                         }

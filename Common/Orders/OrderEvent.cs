@@ -110,13 +110,13 @@ namespace QuantConnect.Orders
         /// Helper Constructor using Order to Initialize.
         /// </summary>
         /// <param name="order">Order for this order status</param>
+        /// <param name="utcTime">Date/time of this event</param>
         /// <param name="orderFee">The order fee</param>
         /// <param name="message">Message from exchange or QC.</param>
-        public OrderEvent(Order order, decimal orderFee, string message = "") 
+        public OrderEvent(Order order, DateTime utcTime, decimal orderFee, string message = "") 
         {
             OrderId = order.Id;
             Symbol = order.Symbol;
-            UtcTime = order.Time;
             Status = order.Status;
             Direction = order.Direction;
 
@@ -124,6 +124,7 @@ namespace QuantConnect.Orders
             FillQuantity = 0;
             FillPrice = 0;
 
+            UtcTime = utcTime;
             OrderFee = orderFee;
             Message = message;
         }
