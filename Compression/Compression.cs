@@ -504,7 +504,7 @@ namespace QuantConnect
         {
             if (resolution == Resolution.Hour || resolution == Resolution.Daily)
             {
-                return symbol + ".zip";
+                return symbol.ToLower() + ".zip";
             }
 
             var zipFileName = date.ToString(DateFormat.EightCharacter);
