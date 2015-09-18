@@ -53,6 +53,15 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         }
 
         /// <summary>
+        /// Initializes this history provider to work for the specified job
+        /// </summary>
+        /// <param name="job">The job</param>
+        public void Initialize(AlgorithmNodePacket job)
+        {
+            // this implementation doesn't need the job data
+        }
+
+        /// <summary>
         /// Gets the history for the requested securities
         /// </summary>
         /// <param name="requests">The historical data requests</param>
