@@ -212,6 +212,7 @@ namespace QuantConnect.Lean.Engine
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
                     _algorithmHandlers.Results.SetAlgorithm(algorithm);
                     // set the history provider before setting up the algorithm
+                    _algorithmHandlers.HistoryProvider.Initialize(job);
                     algorithm.HistoryProvider = _algorithmHandlers.HistoryProvider;
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
