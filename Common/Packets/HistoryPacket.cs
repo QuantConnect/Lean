@@ -70,10 +70,56 @@ namespace QuantConnect.Packets
     }
 
     /// <summary>
+    /// Specifies various types of history results
+    /// </summary>
+    public enum HistoryResultType
+    {
+        /// <summary>
+        /// The requested file data
+        /// </summary>
+        File,
+
+        /// <summary>
+        /// The request's status
+        /// </summary>
+        Status,
+
+        /// <summary>
+        /// The request is completed
+        /// </summary>
+        Completed,
+
+        /// <summary>
+        /// The request had an error
+        /// </summary>
+        Error
+    }
+
+    /// <summary>
     /// Provides a container for results from history requests. This contains
     /// the file path relative to the /Data folder where the data can be written
     /// </summary>
-    public class HistoryResult
+    public abstract class HistoryResult
+    {
+        /// <summary>
+        /// Gets the type of history result
+        /// </summary>
+        public HistoryResultType Type { get; private set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HistoryResult"/> class
+        /// </summary>
+        /// <param name="type">The type of history result</param>
+        protected HistoryResult(HistoryResultType type)
+        {
+            Type = type;
+        }
+    }
+
+    /// <summary>
+    /// Defines requested file data for a history request
+    /// </summary>
+    public class FileHistoryResult : HistoryResult
     {
         /// <summary>
         /// The relative file path where the data should be written
@@ -88,7 +134,8 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Default constructor for serializers
         /// </summary>
-        public HistoryResult()
+        public FileHistoryResult()
+            : base(HistoryResultType.File)
         {
         }
 
@@ -97,28 +144,11 @@ namespace QuantConnect.Packets
         /// </summary>
         /// <param name="filepath">The relative file path where the file should be written</param>
         /// <param name="file">The zipped csv file content in bytes</param>
-        public HistoryResult(string filepath, byte[] file)
+        public FileHistoryResult(string filepath, byte[] file)
+            : this()
         {
             Filepath = filepath;
             File = file;
-        }
-
-        /// <summary>
-        /// Flag used to determine if this is a completed message
-        /// </summary>
-        [JsonIgnore]
-        public bool IsCompletedMessage
-        {
-            get { return this is CompletedHistoryResult; }
-        }
-
-        /// <summary>
-        /// Flag used to determine if this is an error message
-        /// </summary>
-        [JsonIgnore]
-        public bool IsErrorMessage
-        {
-            get { return this is ErrorHistoryResult; }
         }
     }
 
@@ -127,8 +157,15 @@ namespace QuantConnect.Packets
     /// </summary>
     public class CompletedHistoryResult : HistoryResult
     {
-        
+        /// <summary>
+        /// Initializes a new instance of <see cref="CompletedHistoryResult"/> class
+        /// </summary>
+        public CompletedHistoryResult()
+            : base(HistoryResultType.Completed)
+        {
+        }
     }
+
     /// <summary>
     /// Specfies an error message in a history result
     /// </summary>
@@ -139,9 +176,51 @@ namespace QuantConnect.Packets
         /// </summary>
         public string Message;
 
+        /// <summary>
+        /// Default constructor for serializers
+        /// </summary>
+        public ErrorHistoryResult()
+            : base(HistoryResultType.Error)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ErrorHistoryResult"/> class
+        /// </summary>
+        /// <param name="message">The error message</param>
         public ErrorHistoryResult(string message)
+            : this()
         {
             Message = message;
+        }
+    }
+
+    /// <summary>
+    /// Specifies the progress of a request
+    /// </summary>
+    public class StatusHistoryResult : HistoryResult
+    {
+        /// <summary>
+        /// Gets the progress of the request
+        /// </summary>
+        public int Progress;
+
+        /// <summary>
+        /// Default constructor for serializers
+        /// </summary>
+        public StatusHistoryResult()
+            : base(HistoryResultType.Status)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StatusHistoryResult"/> class
+        /// </summary>
+        /// <param name="progress">The progress, from 0 to 100</param>
+        public StatusHistoryResult(int progress)
+            : this()
+        {
+            Progress = progress;
         }
     }
 }

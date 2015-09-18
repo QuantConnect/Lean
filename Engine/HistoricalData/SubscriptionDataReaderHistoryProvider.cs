@@ -56,9 +56,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// Initializes this history provider to work for the specified job
         /// </summary>
         /// <param name="job">The job</param>
-        public void Initialize(AlgorithmNodePacket job)
+        /// <param name="statusUpdate">Function used to send status updates</param>
+        public void Initialize(AlgorithmNodePacket job, Action<int> statusUpdate)
         {
-            // this implementation doesn't need the job data
+            // this implement doesn't need job data or to send status updates
         }
 
         /// <summary>

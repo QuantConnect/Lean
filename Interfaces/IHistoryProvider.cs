@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using NodaTime;
@@ -37,7 +38,8 @@ namespace QuantConnect.Interfaces
         /// Initializes this history provider to work for the specified job
         /// </summary>
         /// <param name="job">The job</param>
-        void Initialize(AlgorithmNodePacket job);
+        /// <param name="statusUpdate">Function used to send status updates</param>
+        void Initialize(AlgorithmNodePacket job, Action<int> statusUpdate);
 
         /// <summary>
         /// Gets the history for the requested securities

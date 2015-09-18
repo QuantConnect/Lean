@@ -418,7 +418,9 @@ namespace QuantConnect
         /// The algorithm is logging into the brokerage
         LoggingIn,
         /// The algorithm is initializing
-        Initializing
+        Initializing,
+        /// History status update
+        History
     }
 
     /// <summary>

@@ -212,7 +212,11 @@ namespace QuantConnect.Lean.Engine
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
                     _algorithmHandlers.Results.SetAlgorithm(algorithm);
                     // set the history provider before setting up the algorithm
-                    _algorithmHandlers.HistoryProvider.Initialize(job);
+                    _algorithmHandlers.HistoryProvider.Initialize(job, progress =>
+                    {
+                        // send progress updates to the result handler
+                        _algorithmHandlers.Results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.History, string.Format("Processing history {0}%...", progress));
+                    });
                     algorithm.HistoryProvider = _algorithmHandlers.HistoryProvider;
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
