@@ -24,6 +24,37 @@ namespace QuantConnect.Tests.Brokerages.Tradier
     public class TradierBrokerageSerializationTests
     {
         [Test]
+        public void ProperlyHandlesNullStringValues()
+        {
+            const string rawResponse = @"{'orders':{'order':
+        {'id':69183,
+        'type':'limit',
+        'symbol':'AAPL',
+        'side':'buy',
+        'quantity':128.00000,
+        'status':'filled',
+        'duration':'gtc',
+        'price':115.83,
+        'avg_fill_price':115.83000,
+        'exec_quantity':128.00000,
+        'last_fill_price':115.83000,
+        'last_fill_quantity':128.00000,
+        'remaining_quantity':0.00000,
+        'create_date':'2015-09-14T13:52:00.450Z',
+        'transaction_date':'2015-09-14T13:52:05.000Z',
+        'class':'equity'
+        }
+    }
+}";
+            var orders = JsonConvert.DeserializeObject<TradierOrdersContainer>(rawResponse);
+
+            const string rawNullResponse = @"{'orders': null }";
+            orders = JsonConvert.DeserializeObject<TradierOrdersContainer>(rawNullResponse);
+
+            const string rawNullResponse2 = @"{'orders': 'null' }";
+            orders = JsonConvert.DeserializeObject<TradierOrdersContainer>(rawNullResponse2);
+        }
+        [Test]
         public void QuotesHandles_null_OHLC()
         {
             // response received from tradier pre-market

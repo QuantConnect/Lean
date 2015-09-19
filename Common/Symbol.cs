@@ -15,6 +15,7 @@
 */
 
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect
 {
@@ -31,15 +32,31 @@ namespace QuantConnect
         /// </summary>
         public static readonly Symbol Empty = new Symbol(string.Empty, string.Empty);
 
+        #region Properties
+
         /// <summary>
         /// Gets the current symbol for this ticker
         /// </summary>
+        [JsonProperty]
         public string Value { get; private set; }
 
         /// <summary>
         /// Gets the unique security identifier for this ticker
         /// </summary>
+        [JsonProperty]
         public string SID { get; private set; }
+
+        #endregion
+
+        #region Constructors
+
+        /// <summary>
+        /// Default constructor for serializers
+        /// </summary>
+        [JsonConstructor]
+        private Symbol()
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Symbol"/> class using the specified
@@ -69,6 +86,8 @@ namespace QuantConnect
             Value = value.ToUpper();
             SID = sid.ToUpper();
         }
+
+        #endregion
 
         #region Overrides of Object
 

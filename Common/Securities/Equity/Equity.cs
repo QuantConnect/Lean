@@ -26,8 +26,8 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
-        public Equity(SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false)
-            : this(SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(config), config, leverage, isDynamicallyLoadedData)
+        public Equity(SubscriptionDataConfig config, decimal leverage)
+            : this(SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(config), config, leverage)
         {
             // this constructor is provided for backward compatibility
 
@@ -37,8 +37,8 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
-        public Equity(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false) 
-            : base(exchangeHours, config, leverage, isDynamicallyLoadedData) 
+        public Equity(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, decimal leverage) 
+            : base(exchangeHours, config, leverage) 
         {
             //Holdings for new Vehicle:
             Cache = new EquityCache();

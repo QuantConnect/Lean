@@ -14,11 +14,14 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm
 {
@@ -477,6 +480,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Keltner Channels indicator. 
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Keltner Channel we seek</param>
+        /// <param name="period">The period over which to compute the Keltner Channels</param>
+        /// <param name="k">The number of multiples of the ATR from the middle band of the Keltner Channels</param>
+        /// <param name="resolution">The resolution.</param> 
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Keltner Channel indicator for the requested symbol.</returns>
+        public KeltnerChannels KCH(Symbol symbol, int period, decimal k, MovingAverageType movingAverageType = MovingAverageType.Simple, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "KCH", resolution);
+            var keltnerChannels = new KeltnerChannels(name, period, k, movingAverageType);
+            RegisterIndicator(symbol, keltnerChannels, resolution, selector);
+            return keltnerChannels;
+        }
+
+        /// <summary>
         /// Creates a new Donchian Channel indicator which will compute the Upper Band and Lower Band.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
@@ -550,6 +571,24 @@ namespace QuantConnect.Algorithm
             var logr = new LogReturn(name, period);
             RegisterIndicator(symbol, logr, resolution);
             return logr;
+        }
+
+        /// <summary>
+        /// Creates a new Parabolic SAR indicator
+        /// </summary>
+        /// <param name="symbol">The symbol whose PSAR we seek</param>
+        /// <param name="afStart">Acceleration factor start value. Normally 0.02</param>
+        /// <param name="afIncrement">Acceleration factor increment value. Normally 0.02</param>
+        /// <param name="afMax">Acceleration factor max value. Normally 0.2</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>An AroonOscillator configured with the specied periods</returns>
+        public ParabolicStopAndReverse PSAR(Symbol symbol, decimal afStart = 0.02m, decimal afIncrement = 0.02m, decimal afMax = 0.2m, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, string.Format("PSAR({0},{1},{2})", afStart, afIncrement, afMax), resolution);
+            var psar = new ParabolicStopAndReverse(name, afStart, afIncrement, afMax);
+            RegisterIndicator(symbol, psar, resolution, selector);
+            return psar;
         }
 
         /// <summary>

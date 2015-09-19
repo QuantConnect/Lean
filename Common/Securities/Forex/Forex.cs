@@ -31,9 +31,8 @@ namespace QuantConnect.Securities.Forex
         /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
         /// <param name="config">The subscription configuration for this security</param>
         /// <param name="leverage">The leverage used for this security</param>
-        /// <param name="isDynamicallyLoadedData">True for custom data, false otherwise</param>
-        public Forex(Cash quoteCurrency, SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false)
-            : this(SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(config), quoteCurrency, config, leverage, isDynamicallyLoadedData)
+        public Forex(Cash quoteCurrency, SubscriptionDataConfig config, decimal leverage)
+            : this(SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(config), quoteCurrency, config, leverage)
         {
             // this constructor is provided for backward compatibility
 
@@ -47,9 +46,8 @@ namespace QuantConnect.Securities.Forex
         /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
         /// <param name="config">The subscription configuration for this security</param>
         /// <param name="leverage">The leverage used for this security</param>
-        /// <param name="isDynamicallyLoadedData">True for custom data, false otherwise</param>
-        public Forex(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config, decimal leverage, bool isDynamicallyLoadedData = false)
-            : base(exchangeHours, config, leverage, isDynamicallyLoadedData)
+        public Forex(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config, decimal leverage)
+            : base(exchangeHours, config, leverage)
         {
             QuoteCurrency = quoteCurrency;
             //Holdings for new Vehicle:

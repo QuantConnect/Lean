@@ -106,6 +106,7 @@ namespace QuantConnect.Indicators
         public virtual void Reset()
         {
             Samples = 0;
+            _previousInput = null;
             Current = new IndicatorDataPoint(DateTime.MinValue, default(decimal));
         }
 

@@ -25,6 +25,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Statistics;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine 
@@ -123,6 +124,7 @@ namespace QuantConnect.Lean.Engine
             Log.Trace("         RealTime:     " + leanEngineAlgorithmHandlers.RealTime.GetType().FullName);
             Log.Trace("         Results:      " + leanEngineAlgorithmHandlers.Results.GetType().FullName);
             Log.Trace("         Transactions: " + leanEngineAlgorithmHandlers.Transactions.GetType().FullName);
+            Log.Trace("         History:      " + leanEngineAlgorithmHandlers.HistoryProvider.GetType().FullName);
 
             // if the job version doesn't match this instance version then we can't process it
             // we also don't want to reprocess redelivered jobs
@@ -208,6 +210,17 @@ namespace QuantConnect.Lean.Engine
                 {
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
+                    _algorithmHandlers.Results.SetAlgorithm(algorithm);
+                    // set the history provider before setting up the algorithm
+                    _algorithmHandlers.HistoryProvider.Initialize(job, progress =>
+                    {
+                        // send progress updates to the result handler only during initialization
+                        if (!algorithm.GetLocked())
+                        {
+                            _algorithmHandlers.Results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.History, string.Format("Processing history {0}%...", progress));
+                        }
+                    });
+                    algorithm.HistoryProvider = _algorithmHandlers.HistoryProvider;
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
                     initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, out brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime);
@@ -242,8 +255,6 @@ namespace QuantConnect.Lean.Engine
                     algorithm.SetLocked();
 
                     //Load the associated handlers for data, transaction and realtime events:
-                    _algorithmHandlers.Results.SetAlgorithm(algorithm);
-
                     _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results);
                     _algorithmHandlers.Transactions.Initialize(algorithm, brokerage, _algorithmHandlers.Results);
                     _algorithmHandlers.RealTime.Setup(algorithm, job, _algorithmHandlers.Results, _systemHandlers.Api);
@@ -331,11 +342,12 @@ namespace QuantConnect.Lean.Engine
 
                     try
                     {
+                        var trades = algorithm.TradeBuilder.ClosedTrades;
                         var charts = new Dictionary<string, Chart>(_algorithmHandlers.Results.Charts);
                         var orders = new Dictionary<int, Order>(_algorithmHandlers.Transactions.Orders);
                         var holdings = new Dictionary<string, Holding>();
-                        var statistics = new Dictionary<string, string>();
                         var banner = new Dictionary<string, string>();
+                        var statisticsResults = new StatisticsResults();
 
                         try
                         {
@@ -352,12 +364,12 @@ namespace QuantConnect.Lean.Engine
                             {
                                 var equity = charts[strategyEquityKey].Series[equityKey].Values;
                                 var performance = charts[strategyEquityKey].Series[dailyPerformanceKey].Values;
-                                var profitLoss =
-                                    new SortedDictionary<DateTime, decimal>(algorithm.Transactions.TransactionRecord);
-                                var numberOfTrades = algorithm.Transactions.GetOrders(x => x.Status.IsFill()).Count();
-                                var benchmark = charts[benchmarkKey].Series[benchmarkKey].Values.ToDictionary(chartPoint => Time.UnixTimeStampToDateTime(chartPoint.x), chartPoint => chartPoint.y);
-                                statistics = Statistics.Statistics.Generate(equity, profitLoss, performance, benchmark,
-                                    _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, numberOfTrades, 252);
+                                var profitLoss = new SortedDictionary<DateTime, decimal>(algorithm.Transactions.TransactionRecord);
+                                var totalTransactions = algorithm.Transactions.GetOrders(x => x.Status.IsFill()).Count();
+                                var benchmark = charts[benchmarkKey].Series[benchmarkKey].Values;
+
+                                statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity, performance, benchmark,
+                                    _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, totalTransactions);
                             }
                         }
                         catch (Exception err)
@@ -367,12 +379,13 @@ namespace QuantConnect.Lean.Engine
 
                         //Diagnostics Completed, Send Result Packet:
                         var totalSeconds = (DateTime.Now - startTime).TotalSeconds;
+                        var dataPoints = algorithmManager.DataPoints + _algorithmHandlers.HistoryProvider.DataPointCount;
                         _algorithmHandlers.Results.DebugMessage(
                             string.Format("Algorithm Id:({0}) completed in {1} seconds at {2}k data points per second. Processing total of {3} data points.",
-                                job.AlgorithmId, totalSeconds.ToString("F2"), ((algorithmManager.DataPoints/(double) 1000)/totalSeconds).ToString("F0"),
-                                algorithmManager.DataPoints.ToString("N0")));
+                                job.AlgorithmId, totalSeconds.ToString("F2"), ((dataPoints/(double) 1000)/totalSeconds).ToString("F0"),
+                                dataPoints.ToString("N0")));
 
-                        _algorithmHandlers.Results.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, statistics, banner);
+                        _algorithmHandlers.Results.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, statisticsResults, banner);
                     }
                     catch (Exception err)
                     {

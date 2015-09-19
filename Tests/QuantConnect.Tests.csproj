@@ -96,7 +96,11 @@
     <Compile Include="Common\Securities\SecurityTransactionModelTests.cs" />
     <Compile Include="Common\Securities\SymbolTests.cs" />
     <Compile Include="Common\SeriesTests.cs" />
+    <Compile Include="Common\SymbolTests.cs" />
+    <Compile Include="Common\Statistics\TradeStatisticsTests.cs" />
+    <Compile Include="Common\Statistics\TradeBuilderTests.cs" />
     <Compile Include="Common\TimeKeeperTests.cs" />
+    <Compile Include="Common\TimeTests.cs" />
     <Compile Include="Common\TimeZoneOffsetProviderTests.cs" />
     <Compile Include="Common\TimeZonesTest.cs" />
     <Compile Include="Common\Util\BusyBlockingCollectionTests.cs" />
@@ -113,8 +117,10 @@
     <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
     <Compile Include="Indicators\DonchianChannelTest.cs" />
     <Compile Include="Indicators\IchimokuKinkoHyoTests.cs" />
+    <Compile Include="Indicators\KeltnerChannelsTests.cs" />
     <Compile Include="Indicators\LogReturnTests.cs" />
     <Compile Include="Indicators\OnBalanceVolumeTest.cs" />
+    <Compile Include="Indicators\ParabolicStopAndReverseTests.cs" />
     <Compile Include="Indicators\WilliamsPercentRTests.cs" />
     <Compile Include="Indicators\RateOfChangePercentTests.cs" />
     <Compile Include="Indicators\RateOfChangeTests.cs" />
@@ -181,6 +187,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="TestData\spy_with_ichimoku.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestData\spy_with_keltner.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

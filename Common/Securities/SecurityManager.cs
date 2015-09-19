@@ -366,7 +366,8 @@ namespace QuantConnect.Securities
             bool fillDataForward,
             decimal leverage,
             bool extendedMarketHours,
-            bool isInternalFeed)
+            bool isInternalFeed,
+            bool isCustomData)
         {
             //If it hasn't been set, use some defaults based on the portfolio type:
             if (leverage <= 0)
@@ -394,13 +395,13 @@ namespace QuantConnect.Securities
             var exchangeHours = securityExchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
             var tradeBarType = typeof(TradeBar);
             var type = resolution == Resolution.Tick ? typeof(Tick) : tradeBarType;
-            var config = subscriptionManager.Add(type, securityType, symbol, resolution, market, exchangeHours.TimeZone, fillDataForward, extendedMarketHours, isInternalFeed);
+            var config = subscriptionManager.Add(type, securityType, symbol, resolution, market, exchangeHours.TimeZone, isCustomData, fillDataForward, extendedMarketHours, isInternalFeed);
 
             Security security;
             switch (config.SecurityType)
             {
                 case SecurityType.Equity:
-                    security = new Equity.Equity(exchangeHours, config, leverage, false);
+                    security = new Equity.Equity(exchangeHours, config, leverage);
                     break;
 
                 case SecurityType.Forex:
@@ -418,12 +419,12 @@ namespace QuantConnect.Securities
                         // since we have none it's safe to say the conversion is zero
                         securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
                     }
-                    security = new Forex.Forex(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, leverage, false);
+                    security = new Forex.Forex(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, leverage);
                     break;
 
                 default:
                 case SecurityType.Base:
-                    security = new Security(exchangeHours, config, leverage, false);
+                    security = new Security(exchangeHours, config, leverage);
                     break;
             }
             return security;

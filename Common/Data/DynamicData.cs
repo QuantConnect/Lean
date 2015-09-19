@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq.Expressions;
 using System.Reflection;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -114,6 +115,24 @@ namespace QuantConnect.Data
         public bool HasProperty(string name)
         {
             return _storage.ContainsKey(name.ToLower());
+        }
+
+        /// <summary>
+        /// Return a new instance clone of this object, used in fill forward
+        /// </summary>
+        /// <remarks>
+        /// This base implementation uses reflection to copy all public fields and properties
+        /// </remarks>
+        /// <returns>A clone of the current object</returns>
+        public override BaseData Clone()
+        {
+            var clone = ObjectActivator.Clone(this);
+            foreach (var kvp in _storage)
+            {
+                // don't forget to add the dynamic members!
+                clone._storage.Add(kvp);
+            }
+            return clone;
         }
 
         /// <summary>

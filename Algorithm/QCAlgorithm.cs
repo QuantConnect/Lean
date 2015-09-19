@@ -22,11 +22,13 @@ using NodaTime.TimeZones;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Algorithm
 {
@@ -107,6 +109,9 @@ namespace QuantConnect.Algorithm
 
             // initialize our scheduler, this acts as a liason to the real time handler
             Schedule = new ScheduleManager(Securities, TimeZone);
+
+            // initialize the trade builder
+            TradeBuilder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO);
         }
 
         /// <summary>
@@ -167,6 +172,20 @@ namespace QuantConnect.Algorithm
             get; 
             private set;
         }
+
+        /// <summary>
+        /// Gets or sets the history provider for the algorithm
+        /// </summary>
+        IHistoryProvider IAlgorithm.HistoryProvider
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets the Trade Builder to generate trades from executions
+        /// </summary>
+        public TradeBuilder TradeBuilder { get; private set; }
 
         /// <summary>
         /// Gets the date rules helper object to make specifying dates for events easier
@@ -394,7 +413,7 @@ namespace QuantConnect.Algorithm
                     // add the security as an internal feed so the algorithm doesn't receive the data
                     var resolution = _liveMode ? Resolution.Second : Resolution.Daily;
                     var market = _benchmarkSecurityType == SecurityType.Forex ? "fxcm" : "usa";
-                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider, _benchmarkSecurityType, _benchmarkSymbol, resolution, market, true, 1m, false, true);
+                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider, _benchmarkSecurityType, _benchmarkSymbol, resolution, market, true, 1m, false, true, false);
                 }
 
                 // just return the current price
@@ -849,8 +868,12 @@ namespace QuantConnect.Algorithm
             //3. Check not locked already:
             if (!_locked) 
             {
-                _startDate = start;
-                SetDateTime(_startDate);
+                // this is only or backtesting
+                if (!LiveMode)
+                {
+                    _startDate = start;
+                    SetDateTime(_startDate);
+                }
             } 
             else
             {
@@ -922,6 +945,7 @@ namespace QuantConnect.Algorithm
             {
                 _liveMode = live;
                 Notify = new NotificationManager(live);
+                TradeBuilder.SetLiveMode(live);
             }
         }
 
@@ -941,6 +965,478 @@ namespace QuantConnect.Algorithm
         public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<CoarseFundamental>> coarse)
         {
             Universe = new FuncUniverse(coarse);
+        }
+
+        /// <summary>
+        /// Get the history for all configured securities over the requested span.
+        /// This will use the resolution and other subscription settings for each security.
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="span">The span over which to request data. This is a calendar span, so take into consideration weekends and such</param>
+        /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
+        public IEnumerable<Slice> History(TimeSpan span, Resolution? resolution = null)
+        {
+            return History(Securities.Keys, Time - span, Time, resolution);
+        }
+
+        public IEnumerable<TradeBar> History(Symbol symbol, int periods, Resolution? resolution = null)
+        {
+            var security = Securities[symbol];
+            var start = GetStartTimeAlgoTz(symbol, periods, resolution);
+            return History(new[] {symbol}, start, Time.RoundDown((resolution ?? security.Resolution).ToTimeSpan()), resolution).Get(symbol);
+        }
+
+        /// <summary>
+        /// Gets the historical data for all symbols of the requested type over the requested span.
+        /// The symbol's configured values for resolution and fill forward behavior will be used
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public IEnumerable<DataDictionary<T>> History<T>(TimeSpan span, Resolution? resolution = null)
+            where T : BaseData
+        {
+            return History<T>(Securities.Keys, span, resolution);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols over the requested span.
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <typeparam name="T">The data type of the symbols</typeparam>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null)
+            where T : BaseData
+        {
+            return History<T>(symbols, Time - span, Time, resolution);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols. The exact number of bars will be returned for
+        /// each symbol. This may result in some data start earlier/later than others due to when various
+        /// exchanges are open. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <typeparam name="T">The data type of the symbols</typeparam>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null) 
+            where T : BaseData
+        {
+            var requests = symbols.Select(x =>
+            {
+                var security = Securities[x];
+                // don't make requests for symbols of the wrong type
+                if (!typeof(T).IsAssignableFrom(security.SubscriptionDataConfig.Type)) return null;
+                var start = GetStartTimeAlgoTz(x, periods, resolution).ConvertToUtc(TimeZone);
+                return new HistoryRequest(security, start, UtcTime.RoundDown((resolution ?? security.Resolution).ToTimeSpan()))
+                {
+                    Resolution = resolution ?? security.Resolution,
+                    FillForwardResolution = security.IsFillDataForward ? resolution : null
+                };
+            });
+
+            return History(requests.Where(x => x != null)).Get<T>();
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <typeparam name="T">The data type of the symbols</typeparam>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null) 
+            where T : BaseData
+        {
+            var requests = symbols.Select(x =>
+            {
+                var security = Securities[x];
+                // don't make requests for symbols of the wrong type
+                if (!typeof (T).IsAssignableFrom(security.SubscriptionDataConfig.Type)) return null;
+                return new HistoryRequest(security, start.ConvertToUtc(TimeZone), end.ConvertToUtc(TimeZone))
+                {
+                    Resolution = resolution ?? security.Resolution,
+                    FillForwardResolution = security.IsFillDataForward ? resolution : (Resolution?)null
+                };
+            });
+
+            return History(requests.Where(x => x != null)).Get<T>();
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol over the request span. The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <typeparam name="T">The data type of the symbol</typeparam>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public IEnumerable<T> History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null)
+            where T : BaseData
+        {
+            return History<T>(symbol, Time - span, Time, resolution);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol. The exact number of bars will be returned. 
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <typeparam name="T">The data type of the symbol</typeparam>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public IEnumerable<T> History<T>(Symbol symbol, int periods, Resolution? resolution = null)
+            where T : BaseData
+        {
+            if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
+            var security = Securities[symbol];
+            // verify the types match
+            var actualType = security.SubscriptionDataConfig.Type;
+            var requestedType = typeof(T);
+            if (!requestedType.IsAssignableFrom(actualType))
+            {
+                throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
+            }
+
+            var start = GetStartTimeAlgoTz(symbol, periods, resolution);
+            return History<T>(symbol, start, Time.RoundDown((resolution ?? security.Resolution).ToTimeSpan()), resolution);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol between the specified dates. The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public IEnumerable<T> History<T>(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
+            where T : BaseData
+        {
+            var security = Securities[symbol];
+
+            // verify the types match
+            var actualType = security.SubscriptionDataConfig.Type;
+            var requestedType = typeof(T);
+            if (!requestedType.IsAssignableFrom(actualType))
+            {
+                throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
+            }
+
+            var fillForwardResolution = security.IsFillDataForward ? resolution : null;
+            var request = new HistoryRequest(security, start.ConvertToUtc(TimeZone), end.ConvertToUtc(TimeZone))
+            {
+                Resolution = resolution ?? security.Resolution,
+                FillForwardResolution = fillForwardResolution
+            };
+            return History(request).Get<T>(symbol);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol over the request span. The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public IEnumerable<TradeBar> History(Symbol symbol, TimeSpan span, Resolution? resolution = null)
+        {
+            return History(new[] {symbol}, span, resolution).Get(symbol);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols over the requested span.
+        /// The symbol's configured values for resolution and fill forward behavior will be used
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null)
+        {
+            return History(symbols, Time - span, Time, resolution);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols. The exact number of bars will be returned for
+        /// each symbol. This may result in some data start earlier/later than others due to when various
+        /// exchanges are open. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
+        {
+            if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
+            return History(symbols.Select(x =>
+            {
+                var security = Securities[x];
+                var start = GetStartTimeAlgoTz(x, periods, resolution).ConvertToUtc(security.Exchange.TimeZone);
+                return new HistoryRequest(security, start, UtcTime.RoundDown((resolution ?? security.Resolution).ToTimeSpan()))
+                {
+                    Resolution = resolution ?? security.Resolution,
+                    FillForwardResolution = security.IsFillDataForward ? resolution : (Resolution?) null
+                };
+            }));
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
+        {
+            return History(symbols.Select(x =>
+            {
+                var security = Securities[x];
+                resolution = resolution ?? security.Resolution;
+                var request = new HistoryRequest(security, start.ConvertToUtc(TimeZone), end.ConvertToUtc(TimeZone))
+                {
+                    Resolution = resolution.Value,
+                    FillForwardResolution = security.IsFillDataForward ? resolution : null
+                };
+                // apply overrides
+                if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? resolution : null;
+                if (extendedMarket.HasValue) request.IncludeExtendedMarketHours = extendedMarket.Value;
+                return request;
+            }));
+        }
+
+        /// <summary>
+        /// Gets the start time required for the specified bar count in terms of the algorithm's time zone
+        /// </summary>
+        private DateTime GetStartTimeAlgoTz(Symbol symbol, int periods, Resolution? resolution = null)
+        {
+            var security = Securities[symbol];
+            var localStartTime = QuantConnect.Time.GetStartTimeForTradeBars(security.Exchange.Hours, UtcTime.ConvertFromUtc(security.Exchange.TimeZone), (resolution ?? security.Resolution).ToTimeSpan(), periods, security.IsExtendedMarketHours);
+            return localStartTime.ConvertTo(security.Exchange.TimeZone, TimeZone);
+        }
+
+        ///// <summary>
+        ///// Gets the history for the specified symbol over the requested span. This function
+        ///// requires that the specified symbol has already been configured for receiving data and
+        ///// will use the configuration for values such as fill forward and extended market hours.
+        ///// </summary>
+        ///// <param name="symbol">The symbol to request historical data for</param>
+        ///// <param name="span">The span over which to request data. This is a calendar span, so take into consideration weekends and such</param>
+        ///// <returns>An enumerable of slice containing data over the most recent span for the specified configured security</returns>
+        //public IEnumerable<Slice> History(Symbol symbol, TimeSpan span)
+        //{
+        //    return History(new HistoryRequest(Securities[symbol], UtcTime - span, UtcTime));
+        //}
+
+        ///// <summary>
+        ///// Gets the requested number of bars of history for the specified symbol. This function
+        ///// requires that the specified symbol has already been configured for receiving data and
+        ///// will use the configuration for values such as fill forward and extended market hours.
+        ///// </summary>
+        ///// <param name="symbol">The symbol to request historical data for</param>
+        ///// <param name="periods">The number of trade bars to receive at the resolution.</param>
+        ///// <param name="resolution">The requested data resolution. This must not equal <see cref="Resolution.Tick"/></param>
+        ///// <returns>An enumerable of slice containing the specified number of bars at the specified resolution for the configured security</returns>
+        //public IEnumerable<Slice> History(Symbol symbol, int periods, Resolution resolution)
+        //{
+        //    if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a bar count require that the resolution does not equal Resolution.Tick");
+        //    var security = Securities[symbol];
+        //    var config = security.SubscriptionDataConfig;
+        //    return History(symbol, periods, resolution, config.FillDataForward, config.ExtendedMarketHours);
+        //}
+
+        ///// <summary>
+        ///// Gets the requested number of bars of history for the specified symbol. This function
+        ///// requires that the specified symbol has already been configured for receiving data.
+        ///// </summary>
+        ///// <param name="symbol">The symbol to request historical data for</param>
+        ///// <param name="periods">The number of trade bars to receive at the resolution.</param>
+        ///// <param name="resolution">The requested data resolution. This must not equal <see cref="Resolution.Tick"/></param>
+        ///// <param name="fillForward">True to enable fill forward behavior, false otherwise</param>
+        ///// <param name="extendedMarket">True to receive pre and post market data, false for only normal market hours data</param>
+        ///// <returns>An enumerable of slice containing the specified number of bars at the specified resolution for the configured security</returns>
+        //public IEnumerable<Slice> History(Symbol symbol, int periods, Resolution resolution, bool fillForward, bool extendedMarket = false)
+        //{
+        //    if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a bar count require that the resolution does not equal Resolution.Tick");
+        //    var security = Securities[symbol];
+        //    var start = QuantConnect.Time.GetStartTimeForTradeBars(security.Exchange.Hours, Time, resolution.ToTimeSpan(), periods, extendedMarket);
+        //    return History(new[] {symbol}, start, Time, resolution, fillForward, extendedMarket);
+        //}
+
+        ///// <summary>
+        ///// Gets the requested number of bars of history for the specified symbol. This function
+        ///// does NOT require that the specified symbol has been configured for receiving data.
+        ///// </summary>
+        ///// <param name="symbol">The symbol to request historical data for</param>
+        ///// <param name="securityType">The security type of the symbol. This  must not equal <see cref="SecurityType.Base"/> unless the symbol has been configured.</param>
+        ///// <param name="periods">The number of trade bars to receive at the resolution.</param>
+        ///// <param name="resolution">The requested data resolution. This must not equal <see cref="Resolution.Tick"/></param>
+        ///// <param name="fillForward">True to enable fill forward behavior, false otherwise</param>
+        ///// <param name="extendedMarket">True to receive pre and post market data, false for only normal market hours data</param>
+        ///// <returns>An enumerable of slice containing the specified number of bars at the specified resolution for the specified symbol</returns>
+        //public IEnumerable<Slice> History(Symbol symbol, SecurityType securityType, int periods, Resolution resolution, bool fillForward, bool extendedMarket = false)
+        //{
+        //    if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a bar count require that the resolution does not equal Resolution.Tick");
+        //    Security security;
+        //    SecurityExchangeHours exchangeHours;
+        //    if (Securities.TryGetValue(symbol, out security) && securityType == security.Type)
+        //    {
+        //        exchangeHours = security.Exchange.Hours;
+        //    }
+        //    else if (securityType == SecurityType.Base)   exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZone);
+        //    else if (securityType == SecurityType.Equity) exchangeHours = _exchangeHoursProvider.GetExchangeHours("usa", symbol, SecurityType.Equity);
+        //    else if (securityType == SecurityType.Forex)  exchangeHours = _exchangeHoursProvider.GetExchangeHours("fxcm", symbol, SecurityType.Forex);
+        //    else throw new ArgumentException("The specified symbol/security type is not supported: " + symbol + " " + securityType);
+
+        //    var start = QuantConnect.Time.GetStartTimeForTradeBars(exchangeHours, Time, resolution.ToTimeSpan(), periods, extendedMarket);
+        //    return History(symbol, securityType, start, Time, resolution, fillForward, extendedMarket);
+        //}
+
+        ///// <summary>
+        ///// Gets the requested number of bars of history for the specified symbol. This function
+        ///// does NOT require that the specified symbol has been configured for receiving data.
+        ///// </summary>
+        ///// <param name="symbol">The symbol to request historical data for</param>
+        ///// <param name="securityType">The security type of the symbol. This  must not equal <see cref="SecurityType.Base"/> unless the symbol has been configured.</param>
+        ///// <param name="start">The start time of the historical data request</param>
+        ///// <param name="end">The end time of the historical data request</param>
+        ///// <param name="resolution">The requested data resolution. This must not equal <see cref="Resolution.Tick"/></param>
+        ///// <param name="fillForward">True to enable fill forward behavior, false otherwise</param>
+        ///// <param name="extendedMarket">True to receive pre and post market data, false for only normal market hours data</param>
+        ///// <param name="market">The market this symbol belongs to. If not specified, will default to 'usa' for equities and 'fxcm' for forex</param>
+        ///// <returns>An enumerable of slice containing the data over the requested period at the specified resolution for the specified symbol</returns>
+        //public IEnumerable<Slice> History(Symbol symbol, SecurityType securityType, DateTime start, DateTime end, Resolution resolution, bool fillForward, bool extendedMarket = false, string market = null)
+        //{
+        //    if (market == null)
+        //    {
+        //        if (securityType == SecurityType.Equity) market = "usa";
+        //        if (securityType == SecurityType.Forex)  market = "fxcm";
+        //    }
+            
+        //    Security security;
+        //    SecurityExchangeHours exchangeHours;
+        //    if (Securities.TryGetValue(symbol, out security) && security.Type == securityType) exchangeHours = security.Exchange.Hours;
+        //    else if (securityType == SecurityType.Base) throw new ArgumentException("Unable to request history for unregistered custom data. Please add using the AddData method.");
+        //    else exchangeHours = _exchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
+
+        //    var dataType = resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar);
+        //    var fillForwardResolution = fillForward && resolution != Resolution.Tick ? resolution : (Resolution?)null;
+        //    var request = new HistoryRequest(start.ConvertToUtc(TimeZone), end.ConvertToUtc(TimeZone), dataType, symbol, securityType, resolution, market, exchangeHours, fillForwardResolution, extendedMarket, false);
+        //    return History(request);
+        //}
+
+        ///// <summary>
+        ///// Gets the requested number of bars of history for the specified symbols. This function
+        ///// requires that the specified symbols have already been configured for receiving data and
+        ///// will use the configuration for values such as fill forward and extended market hours.
+        ///// </summary>
+        ///// <param name="symbols">The symbols to request historical data for</param>
+        ///// <param name="periods">The number of trade bars to receive at the resolution for each symbol.</param>
+        ///// <param name="resolution">The requested data resolution. This must not equal <see cref="Resolution.Tick"/></param>
+        ///// <returns>An enumerable of slice containing the specified number of bars at the specified resolution for the configured securities</returns>
+        //public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, int periods, Resolution resolution)
+        //{
+        //    if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a bar count require that the resolution does not equal Resolution.Tick");
+        //    return History(symbols, periods, resolution, true);
+        //}
+
+        ///// <summary>
+        ///// Gets the requested number of bars of history for the specified symbols. This function
+        ///// requires that the specified symbols have already been configured for receiving data.
+        ///// </summary>
+        ///// <param name="symbols">The symbols to request historical data for</param>
+        ///// <param name="periods">The number of trade bars to receive at the resolution for each symbol.</param>
+        ///// <param name="resolution">The requested data resolution. This must not equal <see cref="Resolution.Tick"/></param>
+        ///// <param name="fillForward">True to enable fill forward behavior, false otherwise</param>
+        ///// <param name="extendedMarket">True to receive pre and post market data, false for only normal market hours data</param>
+        ///// <returns>An enumerable of slice containing the specified number of bars at the specified resolution for the configured securities</returns>
+        //public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, int periods, Resolution resolution, bool fillForward, bool extendedMarket = false)
+        //{
+        //    if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a bar count require that the resolution does not equal Resolution.Tick");
+        //    var requests = symbols.Select(symbol =>
+        //    {
+        //        var security = Securities[symbol];
+        //        var config = security.SubscriptionDataConfig;
+        //        var securityTimeZone = config.TimeZone;
+        //        var start = QuantConnect.Time.GetStartTimeForTradeBars(security.Exchange.Hours, security.LocalTime, resolution.ToTimeSpan(), periods, extendedMarket).ConvertToUtc(securityTimeZone);
+        //        var end = security.LocalTime.ConvertToUtc(securityTimeZone);
+        //        return new HistoryRequest(start, end, config.Type, symbol, security.Type, resolution, config.Market, security.Exchange.Hours, fillForward ? resolution : (Resolution?) null, extendedMarket, config.IsCustomData);
+        //    });
+        //    return History(requests, TimeZone);
+        //}
+
+        ///// <summary>
+        ///// Gets the requested number of bars of history for the specified symbols. This function
+        ///// requires that the specified symbols have already been configured for receiving data.
+        ///// </summary>
+        ///// <param name="symbols">The symbols to request historical data for</param>
+        ///// <param name="start">The start time of the historical data request</param>
+        ///// <param name="end">The end time of the historical data request</param>
+        ///// <param name="resolution">The requested data resolution. This must not equal <see cref="Resolution.Tick"/></param>
+        ///// <param name="fillForward">True to enable fill forward behavior, false otherwise</param>
+        ///// <param name="extendedMarket">True to receive pre and post market data, false for only normal market hours data</param>
+        ///// <returns>An enumerable of slice containing the specified number of bars at the specified resolution for the configured securities</returns>
+        //public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution resolution, bool fillForward, bool extendedMarket = false)
+        //{
+        //    start = start.ConvertToUtc(TimeZone);
+        //    end = end.ConvertToUtc(TimeZone);
+        //    var requests = symbols.Select(symbol =>
+        //    {
+        //        // this overload requires that the symbols exist
+        //        var security = Securities[symbol];
+        //        var config = security.SubscriptionDataConfig;
+        //        return new HistoryRequest(start,
+        //            end,
+        //            config.Type,
+        //            symbol,
+        //            security.Type,
+        //            resolution,
+        //            config.Market,
+        //            security.Exchange.Hours,
+        //            fillForward ? resolution : (Resolution?) null,
+        //            extendedMarket,
+        //            config.IsCustomData
+        //            );
+        //    });
+        //    return History(requests, TimeZone);
+        //}
+
+        /// <summary>
+        /// Executes the specified history request
+        /// </summary>
+        /// <param name="request">the history request to execute</param>
+        /// <returns>An enumerable of slice satisfying the specified history request</returns>
+        public IEnumerable<Slice> History(HistoryRequest request)
+        {
+            return History(new[] {request});
+        }
+
+        /// <summary>
+        /// Executes the specified history requests
+        /// </summary>
+        /// <param name="requests">the history requests to execute</param>
+        /// <returns>An enumerable of slice satisfying the specified history request</returns>
+        public IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests)
+        {
+            return History(requests, TimeZone);
+        }
+
+        private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
+        {
+            return ((IAlgorithm)this).HistoryProvider.GetHistory(requests, timeZone);
         }
 
         /// <summary>
@@ -1007,7 +1503,7 @@ namespace QuantConnect.Algorithm
             {
                 var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider,
                     securityType, symbol, resolution, market,
-                    fillDataForward, leverage, extendedMarketHours, false);
+                    fillDataForward, leverage, extendedMarketHours, false, false);
 
                 //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
                 Securities.Add(security.Symbol, security);
@@ -1069,12 +1565,12 @@ namespace QuantConnect.Algorithm
             if (_locked) return;
 
             //Add this to the data-feed subscriptions
-            var config = SubscriptionManager.Add(typeof(T), SecurityType.Base, symbol, resolution, "usa", timeZone, fillDataForward, true, false);
+            var config = SubscriptionManager.Add(typeof(T), SecurityType.Base, symbol, resolution, "usa", timeZone, true, fillDataForward, true, false);
 
             var exchangeHours = _exchangeHoursProvider.GetExchangeHours(config);
 
             //Add this new generic data as a tradeable security: 
-            var security = new Security(exchangeHours, config, leverage, true);
+            var security = new Security(exchangeHours, config, leverage);
             Securities.Add(symbol, security);
         }
 

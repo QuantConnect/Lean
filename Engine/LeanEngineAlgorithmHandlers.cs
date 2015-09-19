@@ -17,6 +17,7 @@
 using System;
 using System.ComponentModel.Composition;
 using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
@@ -36,6 +37,7 @@ namespace QuantConnect.Lean.Engine
         private readonly IResultHandler _results;
         private readonly IRealTimeHandler _realTime;
         private readonly ITransactionHandler _transactions;
+        private readonly IHistoryProvider _historyProvider;
 
         /// <summary>
         /// Gets the result handler used to communicate results from the algorithm
@@ -78,6 +80,14 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
+        /// Gets the history provider used to process historical data requests within the algorithm
+        /// </summary>
+        public IHistoryProvider HistoryProvider
+        {
+            get { return _historyProvider; }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="LeanEngineAlgorithmHandlers"/> class from the specified handlers
         /// </summary>
         /// <param name="results">The result handler for communicating results from the algorithm</param>
@@ -85,11 +95,13 @@ namespace QuantConnect.Lean.Engine
         /// <param name="dataFeed">The data feed handler used to pump data to the algorithm</param>
         /// <param name="transactions">The transaction handler used to process orders from the algorithm</param>
         /// <param name="realTime">The real time handler used to process real time events</param>
+        /// <param name="historyProvider">The history provider used to process historical data requests</param>
         public LeanEngineAlgorithmHandlers(IResultHandler results,
             ISetupHandler setup,
             IDataFeed dataFeed,
             ITransactionHandler transactions,
-            IRealTimeHandler realTime)
+            IRealTimeHandler realTime,
+            IHistoryProvider historyProvider)
         {
             if (results == null)
             {
@@ -111,11 +123,16 @@ namespace QuantConnect.Lean.Engine
             {
                 throw new ArgumentNullException("realTime");
             }
+            if (historyProvider == null)
+            {
+                throw new ArgumentNullException("realTime");
+            }
             _results = results;
             _setup = setup;
             _dataFeed = dataFeed;
             _transactions = transactions;
             _realTime = realTime;
+            _historyProvider = historyProvider;
         }
         
         /// <summary>
@@ -131,13 +148,15 @@ namespace QuantConnect.Lean.Engine
             var realTimeHandlerTypeName = Config.Get("real-time-handler", "BacktestingRealTimeHandler");
             var dataFeedHandlerTypeName = Config.Get("data-feed-handler", "FileSystemDataFeed");
             var resultHandlerTypeName = Config.Get("result-handler", "ConsoleResultHandler");
+            var historyProviderTypeName = Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider");
 
             return new LeanEngineAlgorithmHandlers(
                 composer.GetExportedValueByTypeName<IResultHandler>(resultHandlerTypeName),
                 composer.GetExportedValueByTypeName<ISetupHandler>(setupHandlerTypeName),
                 composer.GetExportedValueByTypeName<IDataFeed>(dataFeedHandlerTypeName),
                 composer.GetExportedValueByTypeName<ITransactionHandler>(transactionHandlerTypeName),
-                composer.GetExportedValueByTypeName<IRealTimeHandler>(realTimeHandlerTypeName)
+                composer.GetExportedValueByTypeName<IRealTimeHandler>(realTimeHandlerTypeName),
+                composer.GetExportedValueByTypeName<IHistoryProvider>(historyProviderTypeName)
                 );
         }
 

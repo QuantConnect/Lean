@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
@@ -783,11 +784,21 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 try
                 {
                     _algorithm.Portfolio.ProcessFill(fill);
+
+                    var conversionRate = 1m;
+                    if (order.SecurityType == SecurityType.Forex)
+                    {
+                        string baseCurrency, quoteCurrency;
+                        Forex.DecomposeCurrencyPair(fill.Symbol, out baseCurrency, out quoteCurrency);
+                        conversionRate = _algorithm.Portfolio.CashBook[quoteCurrency].ConversionRate;
+                    }
+
+                    _algorithm.TradeBuilder.ProcessFill(fill, conversionRate);
                 }
                 catch (Exception err)
                 {
                     Log.Error(err);
-                    _algorithm.Error(string.Format("Order Error: id: {0}, Eror in Portfolio.ProcessFill: {1}", order.Id, err.Message));
+                    _algorithm.Error(string.Format("Order Error: id: {0}, Error in Portfolio.ProcessFill: {1}", order.Id, err.Message));
                 }
             }
 
@@ -815,6 +826,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 catch (Exception err)
                 {
                     _algorithm.Error("Order Event Handler Error: " + err.Message);
+                    // kill the algorithm
+                    _algorithm.RunTimeError = err;
                 }
             }
         }

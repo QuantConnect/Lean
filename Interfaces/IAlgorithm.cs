@@ -23,6 +23,7 @@ using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Interfaces
 {
@@ -92,6 +93,15 @@ namespace QuantConnect.Interfaces
         ScheduleManager Schedule
         {
             get;
+        }
+
+        /// <summary>
+        /// Gets or sets the history provider for the algorithm
+        /// </summary>
+        IHistoryProvider HistoryProvider
+        {
+            get; 
+            set;
         }
 
         /// <summary>
@@ -224,6 +234,11 @@ namespace QuantConnect.Interfaces
         { 
             get;
         }
+
+        /// <summary>
+        /// Gets the Trade Builder to generate trades from executions
+        /// </summary>
+        TradeBuilder TradeBuilder { get; }
 
         /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:

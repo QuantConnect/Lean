@@ -684,7 +684,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // invalidate the order
                 var order = _orderProvider.GetOrderByBrokerageId(e.TickerId);
-                var orderEvent = new OrderEvent(order) {Status = OrderStatus.Invalid};
+                const int orderFee = 0;
+                var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Invalid };
                 OnOrderEvent(orderEvent);
             }
 
@@ -777,7 +778,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // mark sells as negative quantities
                 var fillQuantity = order.Direction == OrderDirection.Buy ? update.Filled : -update.Filled;
-                var orderEvent = new OrderEvent(order, "Interactive Brokers Fill Event")
+                const int orderFee = 0;
+                var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee, "Interactive Brokers Fill Event")
                 {
                     Status = status,
                     FillPrice = update.AverageFillPrice,
@@ -1185,11 +1187,28 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return Interlocked.Increment(ref _nextClientID);
         }
 
-        private bool IsWithinScheduledServerResetTimes()
+        /// <summary>
+        /// This function is used to decide whether or not we should kill an algorithm
+        /// when we lose contact with IB servers. IB performs server resets nightly
+        /// and on Fridays they take everything down, so we'll prevent killing algos
+        /// on Saturdays completely for the time being.
+        /// </summary>
+        private static bool IsWithinScheduledServerResetTimes()
         {
-            // from 11:45 -> 12:45 is the IB reset times, we'll go from 11:30->1am for safety
-            var time = DateTime.Now.TimeOfDay;
-            var result = time > new TimeSpan(11, 30, 0) || time < new TimeSpan(1, 0, 0);
+            bool result;
+            var time = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
+            
+            // don't kill algos on Saturdays if we don't have a connection
+            if (time.DayOfWeek == DayOfWeek.Saturday)
+            {
+                result = false;
+            }
+            else
+            {
+                var timeOfDay = time.TimeOfDay;
+                // from 11:45 -> 12:45 is the IB reset times, we'll go from 11:30->1am for safety
+                result = timeOfDay > new TimeSpan(11, 30, 0) || timeOfDay < new TimeSpan(1, 0, 0);
+            }
 
             Log.Trace("InteractiveBrokersBrokerage.IsWithinScheduledServerRestTimes(): " + result);
 

@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -43,6 +44,10 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextSample;
         private readonly TimeSpan _resamplePeriod;
         private readonly TimeSpan _notificationPeriod;
+
+        /// <summary>
+        /// A dictionary containing summary statistics
+        /// </summary>
         public Dictionary<string, string> FinalStatistics { get; private set; } 
 
         /// <summary>
@@ -342,20 +347,20 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="orders">Collection of orders from the algorithm</param>
         /// <param name="profitLoss">Collection of time-profit values for the algorithm</param>
         /// <param name="holdings">Current holdings state for the algorithm</param>
-        /// <param name="statistics">Statistics information for the algorithm (empty if not finished)</param>
+        /// <param name="statisticsResults">Statistics information for the algorithm (empty if not finished)</param>
         /// <param name="banner">Runtime statistics banner information</param>
-        public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, Dictionary<string, string> statistics, Dictionary<string, string> banner)
+        public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, StatisticsResults statisticsResults, Dictionary<string, string> banner)
         {
             // uncomment these code traces to help write regression tests
             //Log.Trace("var statistics = new Dictionary<string, string>();");
             
             // Bleh. Nicely format statistical analysis on your algorithm results. Save to file etc.
-            foreach (var pair in statistics) 
+            foreach (var pair in statisticsResults.Summary) 
             {
                 DebugMessage("STATISTICS:: " + pair.Key + " " + pair.Value);
             }
 
-            FinalStatistics = statistics;
+            FinalStatistics = statisticsResults.Summary;
         }
 
         /// <summary>

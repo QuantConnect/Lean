@@ -62,7 +62,7 @@ namespace QuantConnect.Securities.Interfaces
         /// </summary>
         /// <param name="asset">Asset we're trading with this order</param>
         /// <param name="order">Order to be filled</param>
-        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order);
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace QuantConnect.Securities.Interfaces
         /// </summary>
         /// <param name="asset">Asset we're trading with this order</param>
         /// <param name="order">Order to be filled</param>
-        /// <returns>Order fill informaton detailing the average price and quantity filled.</returns>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order);
 
         /// <summary>

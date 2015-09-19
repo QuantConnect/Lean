@@ -25,7 +25,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds.Auxiliary;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
-using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -46,14 +45,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Configuration of the data-reader:
         private readonly SubscriptionDataConfig _config;
 
-        /// Subscription Securities Access
-        private readonly Security _security;
-
         /// true if we can find a scale factor file for the security of the form: ..\Lean\Data\equity\market\factor_files\{SYMBOL}.csv
         private readonly bool _hasScaleFactors;
-
-        // Subscription is for a QC type:
-        private readonly bool _isDynamicallyLoadedData;
 
         // Symbol Mapping:
         private string _mappedSymbol = "";
@@ -86,6 +79,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         // true if we're in live mode, false otherwise
         private readonly bool _isLiveMode;
+        private readonly bool _includeAuxilliaryData;
 
         private BaseData _previous;
         private readonly Queue<BaseData> _auxiliaryData;
@@ -117,19 +111,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Subscription data reader takes a subscription request, loads the type, accepts the data source and enumerate on the results.
         /// </summary>
         /// <param name="config">Subscription configuration object</param>
-        /// <param name="security">Security asset</param>
         /// <param name="periodStart">Start date for the data request/backtest</param>
         /// <param name="periodFinish">Finish date for the data request/backtest</param>
-        /// <param name="resultHandler"></param>
+        /// <param name="resultHandler">Result handler used to push error messages and perform sampling on skipped days</param>
         /// <param name="tradeableDates">Defines the dates for which we'll request data, in order</param>
         /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
+        /// <param name="includeAuxilliaryData">True if we want to emit aux data, false to only emit price data</param>
         public SubscriptionDataReader(SubscriptionDataConfig config,
-            Security security,
             DateTime periodStart,
             DateTime periodFinish,
             IResultHandler resultHandler,
             IEnumerable<DateTime> tradeableDates,
-            bool isLiveMode
+            bool isLiveMode,
+            bool includeAuxilliaryData = true
             )
         {
             //Save configuration of data-subscription:
@@ -142,9 +136,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _periodFinish = periodFinish;
 
             //Save access to securities
-            _security = security;
-            _isDynamicallyLoadedData = security.IsDynamicallyLoadedData;
             _isLiveMode = isLiveMode;
+            _includeAuxilliaryData = includeAuxilliaryData;
 
             //Save the type of data we'll be getting from the source.
 
@@ -180,7 +173,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             try
             {
                 // do we have map/factor tables? -- only applies to equities
-                if (!security.IsDynamicallyLoadedData && security.Type == SecurityType.Equity)
+                if (!_config.IsCustomData && _config.SecurityType == SecurityType.Equity)
                 {
                     // resolve the correct map file as of the date
                     _mapFile = MapFile.Read(config.Symbol.SID, config.Market);
@@ -313,6 +306,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private bool HasAuxDataBefore(BaseData instance)
         {
+            // this function is always used to check for aux data, as such, we'll implement the
+            // feature of whether to include or not here so if other aux data is added we won't
+            // need to remember this feature. this is mostly here until aux data gets moved into
+            // its own subscription class
+            if (!_includeAuxilliaryData) _auxiliaryData.Clear();
             if (_auxiliaryData.Count == 0) return false;
             if (instance == null) return true;
             return _auxiliaryData.Peek().EndTime < instance.EndTime;
@@ -420,7 +418,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             factory.CreateStreamReaderError += (sender, args) =>
             {
                 Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));
-                if (_isDynamicallyLoadedData)
+                if (_config.IsCustomData)
                 {
                     _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).", args.Source.Source));
                 }
@@ -485,11 +483,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     UpdateScaleFactors(date);
                 }
 
-                // if the exchange is open then we should look for data for this data
-                if (_security.Exchange.DateIsOpen(date))
-                {
-                    return true;
-                }
+                // we've passed initial checks,now go get data for this date!
+                return true;
             }
 
             // no more tradeable dates, we've exhausted the enumerator

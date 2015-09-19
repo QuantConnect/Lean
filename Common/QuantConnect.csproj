@@ -132,6 +132,7 @@
     <Compile Include="Data\Fundamental\FuncUniverse.cs" />
     <Compile Include="Data\Fundamental\IUniverse.cs" />
     <Compile Include="Data\Fundamental\SecurityChanges.cs" />
+    <Compile Include="Data\HistoryRequest.cs" />
     <Compile Include="Data\Market\DataDictionary.cs" />
     <Compile Include="Data\Market\Delisting.cs" />
     <Compile Include="Data\Market\Delistings.cs" />
@@ -145,6 +146,7 @@
     <Compile Include="Data\Market\SymbolChangedEvent.cs" />
     <Compile Include="Data\Market\SymbolChangedEvents.cs" />
     <Compile Include="Data\Slice.cs" />
+    <Compile Include="Data\SliceExtensions.cs" />
     <Compile Include="Data\SubscriptionDataSource.cs" />
     <Compile Include="Data\SubscriptionSettings.cs" />
     <Compile Include="Field.cs" />
@@ -173,6 +175,7 @@
     <Compile Include="Orders\UpdateOrderFields.cs" />
     <Compile Include="Orders\UpdateOrderRequest.cs" />
     <Compile Include="Packets\HandledErrorPacket.cs" />
+    <Compile Include="Packets\HistoryPacket.cs" />
     <Compile Include="Properties\SharedAssemblyInfo.cs" />
     <Compile Include="Scheduling\CompositeTimeRule.cs" />
     <Compile Include="Scheduling\DateRules.cs" />
@@ -264,9 +267,17 @@
     <Compile Include="Securities\SecurityPortfolioManager.cs" />
     <Compile Include="Securities\SecurityTransactionManager.cs" />
     <Compile Include="OS.cs" />
+    <Compile Include="Statistics\AlgorithmPerformance.cs" />
+    <Compile Include="Statistics\PortfolioStatistics.cs" />
+    <Compile Include="Statistics\StatisticsBuilder.cs" />
+    <Compile Include="Statistics\StatisticsResults.cs" />
+    <Compile Include="Statistics\TradeStatistics.cs" />
     <Compile Include="Statistics\Statistics.cs" />
     <Compile Include="RealTimeSynchronizedTimer.cs" />
     <Compile Include="Symbol.cs" />
+    <Compile Include="Statistics\Trade.cs" />
+    <Compile Include="Statistics\TradeBuilder.cs" />
+    <Compile Include="Statistics\TradeEnums.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TimeKeeper.cs" />

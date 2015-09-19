@@ -416,7 +416,11 @@ namespace QuantConnect
         /// Error in the algorithm id (not used).
         Invalid,
         /// The algorithm is logging into the brokerage
-        LoggingIn
+        LoggingIn,
+        /// The algorithm is initializing
+        Initializing,
+        /// History status update
+        History
     }
 
     /// <summary>

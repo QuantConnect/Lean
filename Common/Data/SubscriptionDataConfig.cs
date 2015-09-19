@@ -77,6 +77,11 @@ namespace QuantConnect.Data
         public readonly bool IsInternalFeed;
 
         /// <summary>
+        /// True if this subscription is for custom user data, false for QC data
+        /// </summary>
+        public readonly bool IsCustomData;
+
+        /// <summary>
         /// The sum of dividends accrued in this subscription, used for scaling total return prices
         /// </summary>
         public decimal SumOfDividends;
@@ -132,6 +137,7 @@ namespace QuantConnect.Data
         /// <param name="extendedHours">Equities only - send in data from 4am - 8pm</param>
         /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
         /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
+        /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
         public SubscriptionDataConfig(Type objectType, 
             SecurityType securityType, 
             Symbol symbol, 
@@ -140,7 +146,8 @@ namespace QuantConnect.Data
             DateTimeZone timeZone,
             bool fillForward, 
             bool extendedHours,
-            bool isInternalFeed)
+            bool isInternalFeed,
+            bool isCustom = false)
         {
             Type = objectType;
             SecurityType = securityType;
@@ -151,6 +158,7 @@ namespace QuantConnect.Data
             PriceScaleFactor = 1;
             MappedSymbol = symbol.Value;
             IsInternalFeed = isInternalFeed;
+            IsCustomData = isCustom;
             Market = market;
             TimeZone = timeZone;
             Consolidators = new HashSet<IDataConsolidator>();

@@ -81,6 +81,7 @@
     <Compile Include="IApi.cs" />
     <Compile Include="IBrokerage.cs" />
     <Compile Include="IBrokerageFactory.cs" />
+    <Compile Include="IHistoryProvider.cs" />
     <Compile Include="IMessagingHandler.cs" />
     <Compile Include="IDataQueueHandler.cs" />
     <Compile Include="IJobQueueHandler.cs" />
