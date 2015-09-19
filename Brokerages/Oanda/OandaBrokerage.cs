@@ -260,7 +260,8 @@ namespace QuantConnect.Brokerages.Oanda
                     order.BrokerId.Add(postOrderResponse.orderOpened.id);
                 }
 
-                OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Submitted });
+                const int orderFee = 0;
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
             } 
             else
             {
@@ -280,8 +281,8 @@ namespace QuantConnect.Brokerages.Oanda
                     if (tradeListResponse.trades.Any(trade => trade.id == tradeOpenedId))
                     {
                         order.BrokerId.Add(tradeOpenedId);
-                        OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Filled });
-
+                        const int orderFee = 0;
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Filled });
                     }
                 }
 
@@ -292,7 +293,8 @@ namespace QuantConnect.Brokerages.Oanda
                     var verifyClosedOrder = tradePositionClosedIds.Intersect(priorOrderPositionIds).Count() == tradePositionClosedIds.Count();
                     if (verifyClosedOrder)
                     {
-                        OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Filled });
+                        const int orderFee = 0;
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Filled });
                     }
                 }
             }
@@ -308,7 +310,8 @@ namespace QuantConnect.Brokerages.Oanda
                     if (tradeListResponse.trades.Any(trade => trade.id == tradeOpenedId))
                     {
                         order.BrokerId.Add(tradeOpenedId);
-                        OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Filled });
+                        const int orderFee = 0;
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Filled });
                     }
                 }
 
@@ -319,7 +322,8 @@ namespace QuantConnect.Brokerages.Oanda
                     var verifyClosedOrder = tradePositionClosedIds.Intersect(priorOrderPositionIds).Count() == tradePositionClosedIds.Count();
                     if (verifyClosedOrder)
                     {
-                        OnOrderEvent(new OrderEvent(order) { Status = OrderStatus.Filled });   
+                        const int orderFee = 0;
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Filled });
                     }
                 }
             }
@@ -455,7 +459,8 @@ namespace QuantConnect.Brokerages.Oanda
                 if (data.transaction.type == "ORDER_FILLED")
                 {
                     var qcOrder = _orderProvider.GetOrderByBrokerageId(data.transaction.orderId);
-                    var fill = new OrderEvent(qcOrder, "Oanda Fill Event")
+                    const int orderFee = 0;
+                    var fill = new OrderEvent(qcOrder, DateTime.UtcNow, orderFee, "Oanda Fill Event")
                     {
                         Status = OrderStatus.Filled,
                         FillPrice = (decimal) data.transaction.price,
@@ -509,7 +514,10 @@ namespace QuantConnect.Brokerages.Oanda
             else
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateFailed", "Failed to update Oanda order id: " + orderId + "."));
-                OnOrderEvent(new OrderEvent(ConvertOrder(order)) { Status = OrderStatus.Invalid, Message = string.Format("Order currently does not exist with order id: {0}.", orderId)});
+                OnOrderEvent(new OrderEvent(ConvertOrder(order), DateTime.UtcNow, 0)
+                {
+                    Status = OrderStatus.Invalid, Message = string.Format("Order currently does not exist with order id: {0}.", orderId)
+                });
             }
         }
 
@@ -587,7 +595,7 @@ namespace QuantConnect.Brokerages.Oanda
             foreach (var orderId in order.BrokerId)
             {
                 CancelOrder(orderId);
-                OnOrderEvent(new OrderEvent(order, "Oanda Cancel Order Event") { Status = OrderStatus.Canceled });
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Oanda Cancel Order Event") { Status = OrderStatus.Canceled });
             }
 
             return true;
