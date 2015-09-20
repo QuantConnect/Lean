@@ -123,6 +123,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             // this is needed to get the correct result from bar count based requests, don't permit data
             // throw whose end time is equal to local start,which the subscription data reader does allow
             // only apply this filter to non-tick subscriptions
+            reader = new SubscriptionFilterEnumerator(reader, security, end);
             reader = new FilterEnumerator<BaseData>(reader, data => config.Resolution == Resolution.Tick || data.EndTime > start);
 
             return new Subscription(security, reader, start, end, false, false);
