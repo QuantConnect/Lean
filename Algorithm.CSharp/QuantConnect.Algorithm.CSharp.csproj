@@ -72,6 +72,7 @@
     <Compile Include="MarketOnOpenOnCloseAlgorithm.cs" />
     <Compile Include="MovingAverageCrossAlgorithm.cs" />
     <Compile Include="MultipleSymbolConsolidationAlgorithm.cs" />
+    <Compile Include="ParameterizedAlgorithm.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QuandlFuturesDataAlgorithm.cs" />
     <Compile Include="QuandlImporterAlgorithm.cs" />
