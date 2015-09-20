@@ -174,7 +174,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
 
                 // end of subscriptions
-                if (earlyBirdTicks == long.MaxValue) yield break;
+                if (earlyBirdTicks == long.MaxValue) break;
 
                 if (data.Count != 0)
                 {
@@ -183,6 +183,12 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
 
                 frontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);
+            }
+
+            // make sure we clean up after ourselves
+            foreach (var subscription in subscriptions)
+            {
+                subscription.Dispose();
             }
         }
 
