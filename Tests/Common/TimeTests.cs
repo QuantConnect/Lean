@@ -59,11 +59,5 @@ namespace QuantConnect.Tests.Common
             // from noon, back up to 9am (3 hours) then skip night, so from 4pm, back up to noon, 4 more hours
             Assert.AreEqual(expectedStart, start);
         }
-
-        [Test]
-        public void GetStartTimeForTradeBarsHandlesForexStartingMonday()
-        {
-            var end = new DateTime(2013, 10, 7);
-        }
     }
 }
