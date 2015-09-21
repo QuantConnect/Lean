@@ -973,17 +973,11 @@ namespace QuantConnect.Algorithm
         /// The symbols must exist in the Securities collection.
         /// </summary>
         /// <param name="span">The span over which to request data. This is a calendar span, so take into consideration weekends and such</param>
+        /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
         public IEnumerable<Slice> History(TimeSpan span, Resolution? resolution = null)
         {
             return History(Securities.Keys, Time - span, Time, resolution);
-        }
-
-        public IEnumerable<TradeBar> History(Symbol symbol, int periods, Resolution? resolution = null)
-        {
-            var security = Securities[symbol];
-            var start = GetStartTimeAlgoTz(symbol, periods, resolution);
-            return History(new[] {symbol}, start, Time.RoundDown((resolution ?? security.Resolution).ToTimeSpan()), resolution).Get(symbol);
         }
 
         /// <summary>
@@ -992,6 +986,7 @@ namespace QuantConnect.Algorithm
         /// The symbols must exist in the Securities collection.
         /// </summary>
         /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         public IEnumerable<DataDictionary<T>> History<T>(TimeSpan span, Resolution? resolution = null)
             where T : BaseData
@@ -1086,7 +1081,22 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// Gets the historical data for the specified symbol. The exact number of bars will be returned. 
-        /// The symbols must exist in the Securities collection.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public IEnumerable<TradeBar> History(Symbol symbol, int periods, Resolution? resolution = null)
+        {
+            var security = Securities[symbol];
+            var start = GetStartTimeAlgoTz(symbol, periods, resolution);
+            return History(new[] {symbol}, start, Time.RoundDown((resolution ?? security.Resolution).ToTimeSpan()), resolution).Get(symbol);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol. The exact number of bars will be returned. 
+        /// The symbol must exist in the Securities collection.
         /// </summary>
         /// <typeparam name="T">The data type of the symbol</typeparam>
         /// <param name="symbol">The symbol to retrieve historical data for</param>
