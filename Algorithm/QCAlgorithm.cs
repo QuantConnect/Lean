@@ -68,12 +68,19 @@ namespace QuantConnect.Algorithm
         private Symbol _benchmarkSymbol = Symbol.Empty;
         private SecurityType _benchmarkSecurityType;
 
+        // warmup resolution variables
+        private TimeSpan? _warmupTimeSpan;
+        private int? _warmupBarCount;
+
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
         /// QCAlgorithm manages the transactions, portfolio, charting and security subscriptions for the users algorithms.
         /// </summary>
         public QCAlgorithm()
         {
+            // AlgorithmManager will flip this when we're caught up with realtime
+            IsWarmingUp = true;
+
             //Initialise the Algorithm Helper Classes:
             //- Note - ideally these wouldn't be here, but because of the DLL we need to make the classes shared across 
             //  the Worker & Algorithm, limiting ability to do anything else.
@@ -185,7 +192,11 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets the Trade Builder to generate trades from executions
         /// </summary>
-        public TradeBuilder TradeBuilder { get; private set; }
+        public TradeBuilder TradeBuilder
+        {
+            get; 
+            private set;
+        }
 
         /// <summary>
         /// Gets the date rules helper object to make specifying dates for events easier
@@ -201,6 +212,15 @@ namespace QuantConnect.Algorithm
         public TimeRules TimeRules
         {
             get { return Schedule.TimeRules; }
+        }
+
+        /// <summary>
+        /// Gets whether or not this algorithm is still warming up
+        /// </summary>
+        public bool IsWarmingUp
+        {
+            get; 
+            private set;
         }
 
         /// <summary>
@@ -950,6 +970,57 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Sets the warm up period to the specified value
+        /// </summary>
+        /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
+        public void SetWarmup(TimeSpan timeSpan)
+        {
+            _warmupBarCount = null;
+            _warmupTimeSpan = timeSpan;
+        }
+
+        /// <summary>
+        /// Sets the warm up period by resolving a start date that would send that amount of data into
+        /// the algorithm. The highest (smallest) resolution in the securities collection will be used.
+        /// For example, if an algorithm has minute and daily data and 200 bars are requested, that would
+        /// use 200 minute bars.
+        /// </summary>
+        /// <param name="barCount">The number of data points requested for warm up</param>
+        public void SetWarmup(int barCount)
+        {
+            _warmupTimeSpan = null;
+            _warmupBarCount = barCount;
+        }
+
+        /// <summary>
+        /// Sets <see cref="IAlgorithm.IsWarmingUp"/> to false to indicate this algorithm has finished its warm up
+        /// </summary>
+        public void SetFinishedWarmingUp()
+        {
+            IsWarmingUp = false;
+        }
+
+        /// <summary>
+        /// Gets the date/time warmup should begin in UTC
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<HistoryRequest> GetWarmupHistoryRequests()
+        {
+            if (_warmupBarCount.HasValue)
+            {
+                return CreateBarCountHistoryRequests(Securities.Keys, _warmupBarCount.Value);
+            }
+            if (_warmupTimeSpan.HasValue)
+            {
+                var start = StartDate.ConvertToUtc(TimeZone);
+                return CreateDateRangeHistoryRequests(Securities.Keys, start - _warmupTimeSpan.Value, start);
+            }
+            
+            // if not warmup requested return nothing
+            return Enumerable.Empty<HistoryRequest>();
+        }
+
+        /// <summary>
         /// Sets the current universe selector for the algorithm. This will be executed on day changes
         /// </summary>
         /// <param name="selector">The universe selector</param>
@@ -978,6 +1049,19 @@ namespace QuantConnect.Algorithm
         public IEnumerable<Slice> History(TimeSpan span, Resolution? resolution = null)
         {
             return History(Securities.Keys, Time - span, Time, resolution);
+        }
+
+        /// <summary>
+        /// Get the history for all configured securities over the requested span.
+        /// This will use the resolution and other subscription settings for each security.
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
+        public IEnumerable<Slice> History(int periods, Resolution? resolution = null)
+        {
+            return History(Securities.Keys, periods, resolution);
         }
 
         /// <summary>
@@ -1188,16 +1272,7 @@ namespace QuantConnect.Algorithm
         public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
         {
             if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
-            return History(symbols.Select(x =>
-            {
-                var security = Securities[x];
-                var start = GetStartTimeAlgoTz(x, periods, resolution).ConvertToUtc(security.Exchange.TimeZone);
-                return new HistoryRequest(security, start, UtcTime.RoundDown((resolution ?? security.Resolution).ToTimeSpan()))
-                {
-                    Resolution = resolution ?? security.Resolution,
-                    FillForwardResolution = security.IsFillDataForward ? resolution : (Resolution?) null
-                };
-            }));
+            return History(CreateBarCountHistoryRequests(symbols, periods, resolution));
         }
 
         /// <summary>
@@ -1212,20 +1287,7 @@ namespace QuantConnect.Algorithm
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
         {
-            return History(symbols.Select(x =>
-            {
-                var security = Securities[x];
-                resolution = resolution ?? security.Resolution;
-                var request = new HistoryRequest(security, start.ConvertToUtc(TimeZone), end.ConvertToUtc(TimeZone))
-                {
-                    Resolution = resolution.Value,
-                    FillForwardResolution = security.IsFillDataForward ? resolution : null
-                };
-                // apply overrides
-                if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? resolution : null;
-                if (extendedMarket.HasValue) request.IncludeExtendedMarketHours = extendedMarket.Value;
-                return request;
-            }));
+            return History(CreateDateRangeHistoryRequests(symbols, start, end, resolution, fillForward, extendedMarket));
         }
 
         /// <summary>
@@ -1450,6 +1512,44 @@ namespace QuantConnect.Algorithm
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
         {
             return ((IAlgorithm)this).HistoryProvider.GetHistory(requests, timeZone);
+        }
+
+        /// <summary>
+        /// Helper method to create history requests from a date range
+        /// </summary>
+        private IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
+        {
+            return symbols.Select(x =>
+            {
+                var security = Securities[x];
+                Resolution? res = resolution ?? security.Resolution;
+                var request = new HistoryRequest(security, start.ConvertToUtc(TimeZone), end.ConvertToUtc(TimeZone))
+                {
+                    Resolution = res.Value,
+                    FillForwardResolution = security.IsFillDataForward ? res : null
+                };
+                // apply overrides
+                if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? res : null;
+                if (extendedMarket.HasValue) request.IncludeExtendedMarketHours = extendedMarket.Value;
+                return request;
+            });
+        }
+
+        /// <summary>
+        /// Helper methods to create a history request for the specified symbols and bar count
+        /// </summary>
+        private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
+        {
+            return symbols.Select(x =>
+            {
+                var security = Securities[x];
+                var start = GetStartTimeAlgoTz(x, periods, resolution).ConvertToUtc(security.Exchange.TimeZone);
+                return new HistoryRequest(security, start, UtcTime.RoundDown((resolution ?? security.Resolution).ToTimeSpan()))
+                {
+                    Resolution = resolution ?? security.Resolution,
+                    FillForwardResolution = security.IsFillDataForward ? resolution : (Resolution?)null
+                };
+            });
         }
 
         /// <summary>

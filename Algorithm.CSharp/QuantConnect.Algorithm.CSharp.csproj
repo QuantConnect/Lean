@@ -51,6 +51,7 @@
     <Compile Include="CustomBenchmarkAlgorithm.cs" />
     <Compile Include="DelistingEventsAlgorithm.cs" />
     <Compile Include="HistoryAlgorithm.cs" />
+    <Compile Include="HistoryAndWarmupRegressionAlgorithm.cs" />
     <Compile Include="LimitFillRegressionAlgorithm.cs" />
     <Compile Include="BasicTemplateFillForwardAlgorithm.cs" />
     <Compile Include="BenchmarkAlgorithm.cs" />
@@ -66,6 +67,7 @@
     <Compile Include="ETFGlobalRotationAlgorithm.cs" />
     <Compile Include="IndicatorSuiteAlgorithm.cs" />
     <Compile Include="LiveFeaturesAlgorithm.cs" />
+    <Compile Include="WarmupAlgorithm.cs" />
     <Compile Include="WarmupHistoryAlgorithm.cs" />
     <Compile Include="MACDTrendAlgorithm.cs" />
     <Compile Include="MarginCallEventsAlgorithm.cs" />

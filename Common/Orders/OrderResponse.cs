@@ -158,6 +158,14 @@ namespace QuantConnect.Orders
             return Error(request, OrderResponseErrorCode.OrderQuantityZero, string.Format(format, request.OrderRequestType.ToString().ToLower()));
         }
 
+        /// <summary>
+        /// Helper method to create an error response due to algorithm still in warmup mode
+        /// </summary>
+        public static OrderResponse WarmingUp(OrderRequest request)
+        {
+            return Error(request, OrderResponseErrorCode.AlgorithmWarmingUp, "Algorithm in warmup.");
+        }
+
         #endregion
     }
 }

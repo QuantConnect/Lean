@@ -105,6 +105,14 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets whether or not this algorithm is still warming up
+        /// </summary>
+        bool IsWarmingUp
+        {
+            get;
+        }
+
+        /// <summary>
         /// Public name for the algorithm.
         /// </summary>
         /// <remarks>Not currently used but preserved for API integrity</remarks>
@@ -399,6 +407,17 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="live">Bool live mode flag</param>
         void SetLiveMode(bool live);
+
+        /// <summary>
+        /// Sets <see cref="IsWarmingUp"/> to false to indicate this algorithm has finished its warm up
+        /// </summary>
+        void SetFinishedWarmingUp();
+
+        /// <summary>
+        /// Gets the date/time warmup should begin
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<HistoryRequest> GetWarmupHistoryRequests();
 
         /// <summary>
         /// Set the maximum number of orders the algortihm is allowed to process.

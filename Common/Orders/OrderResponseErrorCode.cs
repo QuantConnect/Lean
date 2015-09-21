@@ -138,7 +138,12 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Request was canceled by user
         /// </summary>
-        RequestCanceled = -23
+        RequestCanceled = -23,
+
+        /// <summary>
+        /// All orders are invalidated while algorithm is warming up
+        /// </summary>
+        AlgorithmWarmingUp = -24
 
     }
 }

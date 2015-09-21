@@ -173,12 +173,28 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>New unique, increasing orderid</returns>
         public OrderTicket AddOrder(SubmitOrderRequest request)
         {
-            request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
+            var response = !_algorithm.IsWarmingUp
+                ? OrderResponse.Success(request) 
+                : OrderResponse.WarmingUp(request);
+
+            request.SetResponse(response);
             var ticket = new OrderTicket(_algorithm.Transactions, request);
             _orderTickets.TryAdd(ticket.OrderId, ticket);
 
             // send the order to be processed after creating the ticket
-            _orderRequestQueue.Enqueue(request);
+            if (response.IsSuccess)
+            {
+                _orderRequestQueue.Enqueue(request);
+            }
+            else
+            {
+                // add it to the orders collection for recall later
+                var order = Order.CreateOrder(request);
+                order.Status = OrderStatus.Invalid;
+                order.Tag = "Algorithm warming up.";
+                ticket.SetOrder(order);
+                _orders.TryAdd(request.OrderId, order);
+            }
             return ticket;
         }
 
@@ -214,6 +230,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else if (request.Quantity.HasValue && request.Quantity.Value == 0)
                 {
                     request.SetResponse(OrderResponse.ZeroQuantity(request));
+                }
+                else if (_algorithm.IsWarmingUp)
+                {
+                    request.SetResponse(OrderResponse.WarmingUp(request));
                 }
                 else
                 {
@@ -269,6 +289,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     Log.Error("BrokerageTransactionHandler.CancelOrder(): Order already " + order.Status);
                     request.SetResponse(OrderResponse.InvalidStatus(request, order));
+                }
+                else if (_algorithm.IsWarmingUp)
+                {
+                    request.SetResponse(OrderResponse.WarmingUp(request));
                 }
                 else
                 {
