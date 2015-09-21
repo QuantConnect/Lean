@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Common
 'EndTime':'2015-09-18T16:52:37.379',
 'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common',
 'Value':'EURGBP',
-'SID':'EURGBP'},'Value':0.72722,'Price':0.72722}]}";
+'Permtick':'EURGBP'},'Value':0.72722,'Price':0.72722}]}";
 
             var expected = new Symbol("EURGBP");
             var settings = Settings;
