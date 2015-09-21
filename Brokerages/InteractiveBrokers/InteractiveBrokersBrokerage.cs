@@ -414,7 +414,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     // add a blurb about TWS for connection refused errors
                     if (err.Message.Contains("Connection refused"))
                     {
-                        throw new Exception(err.Message + ". Be sure to logout of Trader Workstation. IB only allows one active log in at a time.", err);
+                        throw new Exception(err.Message + ". Be sure to logout of Trader Workstation. " +
+                            "IB only allows one active log in at a time. " +
+                            "This can also be caused by requiring two-factor authentication. " +
+                            "Be sure to disable this in IB Account Management > Security > SLS Opt out.", err);
                     }
 
                     throw;
