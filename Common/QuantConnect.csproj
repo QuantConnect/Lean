@@ -292,6 +292,7 @@
     <Compile Include="Util\FixedSizeHashQueue.cs" />
     <Compile Include="Util\FuncTextWriter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />
+    <Compile Include="Util\MemoizingEnumerable.cs" />
     <Compile Include="Util\NullStringValueConverter.cs" />
     <Compile Include="Util\ObjectActivator.cs" />
     <Compile Include="Util\SingleValueListConverter.cs" />

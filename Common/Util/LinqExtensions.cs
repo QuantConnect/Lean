@@ -184,5 +184,16 @@ namespace QuantConnect.Util
         {
             return list.BinarySearch(value, comparer.Compare);
         }
+
+        /// <summary>
+        /// Wraps the specified enumerable such that it will only be enumerated once
+        /// </summary>
+        /// <typeparam name="T">The enumerable's element type</typeparam>
+        /// <param name="enumerable">The source enumerable to be wrapped</param>
+        /// <returns>A new enumerable that can be enumerated multiple times without re-enumerating the source enumerable</returns>
+        public static IEnumerable<T> Memoize<T>(this IEnumerable<T> enumerable)
+        {
+            return new MemoizingEnumerable<T>(enumerable);
+        }
     }
 }
