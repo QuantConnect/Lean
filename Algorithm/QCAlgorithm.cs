@@ -872,7 +872,7 @@ namespace QuantConnect.Algorithm
                 if (!LiveMode)
                 {
                     _startDate = start;
-                    SetDateTime(_startDate);
+                    SetDateTime(_startDate.ConvertToUtc(TimeZone));
                 }
             } 
             else

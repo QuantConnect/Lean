@@ -172,7 +172,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Set the backtest level asset ram allocation limits
                     algorithm.SetAssetLimits(500, 100, 30);
                     //Set the algorithm time before we even initialize:
-                    algorithm.SetDateTime(job.PeriodStart);
+                    algorithm.SetDateTime(job.PeriodStart.ConvertToUtc(algorithm.TimeZone));
                     //Set the source impl for the event scheduling
                     algorithm.Schedule.SetEventSchedule(realTimeHandler);
                     //Initialise the algorithm, get the required data:
