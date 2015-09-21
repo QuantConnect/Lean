@@ -123,6 +123,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             // this is needed to get the correct result from bar count based requests, don't permit data
             // throw whose end time is equal to local start,which the subscription data reader does allow
             // only apply this filter to non-tick subscriptions
+            reader = new SubscriptionFilterEnumerator(reader, security, end);
             reader = new FilterEnumerator<BaseData>(reader, data => config.Resolution == Resolution.Tick || data.EndTime > start);
 
             return new Subscription(security, reader, start, end, false, false);
@@ -174,7 +175,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
 
                 // end of subscriptions
-                if (earlyBirdTicks == long.MaxValue) yield break;
+                if (earlyBirdTicks == long.MaxValue) break;
 
                 if (data.Count != 0)
                 {
@@ -183,6 +184,12 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
 
                 frontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);
+            }
+
+            // make sure we clean up after ourselves
+            foreach (var subscription in subscriptions)
+            {
+                subscription.Dispose();
             }
         }
 

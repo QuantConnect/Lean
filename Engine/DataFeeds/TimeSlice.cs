@@ -150,7 +150,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // this is all the custom data
                         custom.Add(kvp);
                     }
-                    if (baseData.DataType != MarketDataType.Auxiliary)
+                    // don't add internal feed data to ticks/bars objects
+                    if (!kvp.Key.SubscriptionDataConfig.IsInternalFeed && baseData.DataType != MarketDataType.Auxiliary)
                     {
                         // populate ticks and tradebars dictionaries with no aux data
                         if (baseData.DataType == MarketDataType.Tick)

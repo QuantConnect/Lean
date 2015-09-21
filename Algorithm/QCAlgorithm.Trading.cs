@@ -333,7 +333,7 @@ namespace QuantConnect.Algorithm
             if (!Securities.ContainsKey(request.Symbol) && !_sentNoDataError)
             {
                 _sentNoDataError = true;
-                return OrderResponse.Error(request, OrderResponseErrorCode.MissingSecurity, "You haven't requested " + request.Symbol.SID + " data. Add this with AddSecurity() in the Initialize() Method.");
+                return OrderResponse.Error(request, OrderResponseErrorCode.MissingSecurity, "You haven't requested " + request.Symbol.Permtick + " data. Add this with AddSecurity() in the Initialize() Method.");
             }
 
             //Set a temporary price for validating order for market orders:
@@ -349,7 +349,7 @@ namespace QuantConnect.Algorithm
             
             if (price == 0)
             {
-                return OrderResponse.Error(request, OrderResponseErrorCode.SecurityPriceZero, request.Symbol.SID + ": asset price is $0. If using custom data make sure you've set the 'Value' property.");
+                return OrderResponse.Error(request, OrderResponseErrorCode.SecurityPriceZero, request.Symbol.Permtick + ": asset price is $0. If using custom data make sure you've set the 'Value' property.");
             }
             
             if (security.Type == SecurityType.Forex)
@@ -504,7 +504,7 @@ namespace QuantConnect.Algorithm
             Security security;
             if (!Securities.TryGetValue(symbol, out security))
             {
-                Error(symbol.SID + " not found in portfolio. Request this data when initializing the algorithm.");
+                Error(symbol.Permtick + " not found in portfolio. Request this data when initializing the algorithm.");
                 return;
             }
 

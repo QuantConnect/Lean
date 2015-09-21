@@ -261,7 +261,7 @@ namespace QuantConnect.Securities
             {
                 if (!_securityManager.ContainsKey(symbol))
                 {
-                    throw new Exception("This asset symbol (" + symbol.SID + ") was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"" + symbol.SID + "\")'");
+                    throw new Exception("This asset symbol (" + symbol.Permtick + ") was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"" + symbol.Permtick + "\")'");
                 } 
                 return _securityManager[symbol];
             }

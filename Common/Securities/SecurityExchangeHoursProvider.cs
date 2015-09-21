@@ -342,7 +342,7 @@ namespace QuantConnect.Securities
 
             public override string ToString()
             {
-                return string.Format("{0}-{1}-{2}", Market ?? "[null]", Symbol == null ? "[null]" : Symbol.SID, SecurityType);
+                return string.Format("{0}-{1}-{2}", Market ?? "[null]", Symbol == null ? "[null]" : Symbol.Permtick, SecurityType);
             }
         }
 

@@ -425,7 +425,7 @@ namespace QuantConnect.Securities
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Symbol.SID;
+            return Symbol.Permtick;
         }
     }
 }

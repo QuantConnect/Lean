@@ -133,7 +133,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 where !currentUtcTime.HasValue || eventUtcTime > currentUtcTime
                 select eventUtcTime;
 
-            return new ScheduledEvent(CreateEventName(security.Symbol.SID, "EndOfDay"), times, (name, triggerTime) =>
+            return new ScheduledEvent(CreateEventName(security.Symbol.Permtick, "EndOfDay"), times, (name, triggerTime) =>
             {
                 try
                 {

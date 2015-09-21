@@ -210,7 +210,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
-                    _algorithmHandlers.Results.SetAlgorithm(algorithm);
+
                     // set the history provider before setting up the algorithm
                     _algorithmHandlers.HistoryProvider.Initialize(job, progress =>
                     {
@@ -224,6 +224,9 @@ namespace QuantConnect.Lean.Engine
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
                     initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, out brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime);
+
+                    // set this again now that we've actually added securities
+                    _algorithmHandlers.Results.SetAlgorithm(algorithm);
 
                     //If there are any reasons it failed, pass these back to the IDE.
                     if (!initializeComplete || algorithm.ErrorMessages.Count > 0 || _algorithmHandlers.Setup.Errors.Count > 0)

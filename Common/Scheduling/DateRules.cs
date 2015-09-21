@@ -92,7 +92,7 @@ namespace QuantConnect.Scheduling
         public IDateRule EveryDay(Symbol symbol)
         {
             var security = GetSecurity(symbol);
-            return new FuncDateRule(symbol.SID + ": EveryDay", (start, end) => Time.EachTradeableDay(security, start, end));
+            return new FuncDateRule(symbol.Permtick + ": EveryDay", (start, end) => Time.EachTradeableDay(security, start, end));
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires on the first tradeable date for the specified security each month</returns>
         public IDateRule MonthStart(Symbol symbol)
         {
-            return new FuncDateRule(symbol.SID + ": MonthStart", (start, end) => MonthStartIterator(GetSecurity(symbol), start, end));
+            return new FuncDateRule(symbol.Permtick + ": MonthStart", (start, end) => MonthStartIterator(GetSecurity(symbol), start, end));
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace QuantConnect.Scheduling
             Security security;
             if (!_securities.TryGetValue(symbol, out security))
             {
-                throw new Exception(symbol.SID + " not found in portfolio. Request this data when initializing the algorithm.");
+                throw new Exception(symbol.Permtick + " not found in portfolio. Request this data when initializing the algorithm.");
             }
             return security;
         }

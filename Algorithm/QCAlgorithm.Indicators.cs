@@ -849,7 +849,7 @@ namespace QuantConnect.Algorithm
                     throw new ArgumentOutOfRangeException("resolution");
             }
 
-            return string.Format("{0}({1}{2})", type, symbol.SID, res);
+            return string.Format("{0}({1}{2})", type, symbol.Permtick, res);
         }
 
     } // End Partial Algorithm Template - Indicators.

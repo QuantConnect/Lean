@@ -313,7 +313,7 @@ namespace QuantConnect.Lean.Engine
                         {
                             algorithm.Securities.Remove(ticket.Symbol);
                             delistingTickets.RemoveAt(i--);
-                            Log.Trace("AlgorithmManager.Run(): Delisted Security removed: " + ticket.Symbol.SID);
+                            Log.Trace("AlgorithmManager.Run(): Delisted Security removed: " + ticket.Symbol.Permtick);
                         }
                     }
                 }

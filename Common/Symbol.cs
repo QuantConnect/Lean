@@ -41,10 +41,10 @@ namespace QuantConnect
         public string Value { get; private set; }
 
         /// <summary>
-        /// Gets the unique security identifier for this ticker
+        /// Gets permtick used to identify securities in map files
         /// </summary>
         [JsonProperty]
-        public string SID { get; private set; }
+        public string Permtick { get; private set; }
 
         #endregion
 
@@ -71,20 +71,20 @@ namespace QuantConnect
         /// <summary>
         /// Initializes a new instance of the <see cref="Symbol"/> class
         /// </summary>
-        /// <param name="sid">The security's unique identifier</param>
+        /// <param name="permtick">The security's unique identifier</param>
         /// <param name="value">The security's current ticker symbol</param>
-        public Symbol(string sid, string value)
+        public Symbol(string permtick, string value)
         {
             if (value == null)
             {
                 throw new ArgumentNullException("value");
             }
-            if (sid == null)
+            if (permtick == null)
             {
-                throw new ArgumentNullException("sid");
+                throw new ArgumentNullException("permtick");
             }
             Value = value.ToUpper();
-            SID = sid.ToUpper();
+            Permtick = permtick.ToUpper();
         }
 
         #endregion
@@ -102,7 +102,7 @@ namespace QuantConnect
         {
             // compare strings just as you would a symbol object
             var sid = obj as string;
-            if (sid != null) return SID.Equals(sid);
+            if (sid != null) return Permtick.Equals(sid);
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
@@ -121,7 +121,7 @@ namespace QuantConnect
             unchecked
             {
                 // only SID is used for comparisons
-                return SID.GetHashCode();
+                return Permtick.GetHashCode();
             }
         }
 
@@ -134,7 +134,7 @@ namespace QuantConnect
         /// <param name="obj">An object to compare with this instance. </param><exception cref="T:System.ArgumentException"><paramref name="obj"/> is not the same type as this instance. </exception><filterpriority>2</filterpriority>
         public int CompareTo(object obj)
         {
-            return SID.CompareTo(obj);
+            return Permtick.CompareTo(obj);
         }
 
         /// <summary>
@@ -146,7 +146,7 @@ namespace QuantConnect
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return SID;
+            return Permtick;
         }
 
         #endregion
@@ -165,7 +165,7 @@ namespace QuantConnect
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             // only SID is used for comparisons
-            return string.Equals(SID, other.SID);
+            return string.Equals(Permtick, other.Permtick);
         }
 
         /// <summary>
@@ -201,7 +201,7 @@ namespace QuantConnect
         /// <returns>The SID</returns>
         public static implicit operator string(Symbol symbol)
         {
-            return symbol.SID;
+            return symbol.Permtick;
         }
         /// <summary>
         /// Creates symbol using string as sid
@@ -218,13 +218,13 @@ namespace QuantConnect
         #region String methods
 
         // in order to maintain better compile time backwards compatibility,
-        // we'll redirect a few common string methods to SID
+        // we'll redirect a few common string methods to Permtick
 #pragma warning disable 1591
-        public bool Contains(string value) { return SID.Contains(value); }
-        public bool EndsWith(string value) { return SID.EndsWith(value); }
-        public bool StartsWith(string value) { return SID.StartsWith(value); }
-        public string ToLower() { return SID.ToLower(); }
-        public string ToUpper() { return SID.ToUpper(); }
+        public bool Contains(string value) { return Permtick.Contains(value); }
+        public bool EndsWith(string value) { return Permtick.EndsWith(value); }
+        public bool StartsWith(string value) { return Permtick.StartsWith(value); }
+        public string ToLower() { return Permtick.ToLower(); }
+        public string ToUpper() { return Permtick.ToUpper(); }
 #pragma warning restore 1591
 
         #endregion
