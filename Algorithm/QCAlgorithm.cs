@@ -1234,7 +1234,10 @@ namespace QuantConnect.Algorithm
         private DateTime GetStartTimeAlgoTz(Symbol symbol, int periods, Resolution? resolution = null)
         {
             var security = Securities[symbol];
-            var localStartTime = QuantConnect.Time.GetStartTimeForTradeBars(security.Exchange.Hours, UtcTime.ConvertFromUtc(security.Exchange.TimeZone), (resolution ?? security.Resolution).ToTimeSpan(), periods, security.IsExtendedMarketHours);
+            var timeSpan = (resolution ?? security.Resolution).ToTimeSpan();
+            // make this a minimum of one second
+            timeSpan = timeSpan < QuantConnect.Time.OneSecond ? QuantConnect.Time.OneSecond : timeSpan;
+            var localStartTime = QuantConnect.Time.GetStartTimeForTradeBars(security.Exchange.Hours, UtcTime.ConvertFromUtc(security.Exchange.TimeZone), timeSpan, periods, security.IsExtendedMarketHours);
             return localStartTime.ConvertTo(security.Exchange.TimeZone, TimeZone);
         }
 
