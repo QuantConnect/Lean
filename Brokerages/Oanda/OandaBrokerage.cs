@@ -36,6 +36,7 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using RestSharp;
 using Order = QuantConnect.Orders.Order;
+using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Brokerages.Oanda
 {
@@ -183,15 +184,40 @@ namespace QuantConnect.Brokerages.Oanda
 
             foreach (var account in accountsResponse.accounts)
             {
-                //TODO figure how exchange rates work in Oanda. probably need to call http://developer.oanda.com/exchange-rates-api/v1/currencies/
-
                 var getSpecificAccountRequestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + account.accountId;
                 var accountResponse = MakeRequest<Account>(getSpecificAccountRequestString);
-                cash.Add(new Cash(accountResponse.accountCurrency, accountResponse.balance.ToDecimal(), new decimal(1.0)));
+                cash.Add(new Cash(accountResponse.accountCurrency, accountResponse.balance.ToDecimal(), GetUsdConversion(accountResponse.accountCurrency)));
             }
             return cash;
         }
         
+        
+        /// <summary>
+        /// Gets the current conversion rate into USD
+        /// </summary>
+        /// <remarks>Synchronous, blocking</remarks>
+        private decimal GetUsdConversion(string currency)
+        {
+            if (currency == "USD")
+            {
+                return 1m;
+            }
+
+            // determine the correct symbol to choose
+            var invertedSymbol = "USD_" + currency;
+            var normalSymbol = currency + "_USD";
+            var currencyPair = Forex.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
+            var inverted = invertedSymbol == currencyPair;
+
+            var getCurrencyRequestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Rates) + "prices?instruments=" +  (inverted ? invertedSymbol : normalSymbol);
+            var accountResponse = MakeRequest<PricesResponse>(getCurrencyRequestString);
+            var rate = new decimal(accountResponse.prices.First().ask);
+            if (inverted)
+            {
+                return 1 / rate;
+            }
+            return rate;
+            }
         private Dictionary<string, SecurityType> MapInstrumentToSecurityType(List<Instrument> instruments)
         {
             var result = new Dictionary<string, SecurityType>();
