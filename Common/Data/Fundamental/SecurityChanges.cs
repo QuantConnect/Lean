@@ -87,12 +87,12 @@ namespace QuantConnect.Data.Fundamental
             var added = string.Empty;
             if (AddedSecurities.Count != 0)
             {
-                added = " Added: " + string.Join(",", AddedSecurities.Select(x => x.Symbol.SID));
+                added = " Added: " + string.Join(",", AddedSecurities.Select(x => x.Symbol.Permtick));
             }
             var removed = string.Empty;
             if (RemovedSecurities.Count != 0)
             {
-                removed = " Removed: " + string.Join(",", RemovedSecurities.Select(x => x.Symbol.SID));
+                removed = " Removed: " + string.Join(",", RemovedSecurities.Select(x => x.Symbol.Permtick));
             }
 
             return "SecurityChanges: " + added + removed;

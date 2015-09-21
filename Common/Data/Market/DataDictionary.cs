@@ -207,7 +207,7 @@ namespace QuantConnect.Data.Market
                 {
                     return data;
                 }
-                throw new KeyNotFoundException(string.Format("'{0}' wasn't found in the {1} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{0}\")", key.SID, GetType().GetBetterTypeName()));
+                throw new KeyNotFoundException(string.Format("'{0}' wasn't found in the {1} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{0}\")", key.Permtick, GetType().GetBetterTypeName()));
             }
             set
             {

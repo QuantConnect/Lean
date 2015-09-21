@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(bar4);
             Assert.IsNotNull(newTradeBar);
 
-            Assert.AreEqual("SPY", newTradeBar.Symbol.SID);
+            Assert.AreEqual("SPY", newTradeBar.Symbol.Permtick);
             Assert.AreEqual(bar1.Time, newTradeBar.Time);
             Assert.AreEqual(bar1.Value, newTradeBar.Open);
             Assert.AreEqual(bar2.Value, newTradeBar.High);
@@ -131,7 +131,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(bar4);
             Assert.IsNotNull(newTradeBar);
 
-            Assert.AreEqual("SPY", newTradeBar.Symbol.SID);
+            Assert.AreEqual("SPY", newTradeBar.Symbol.Permtick);
             Assert.AreEqual(bar1.Time, newTradeBar.Time);
             Assert.AreEqual(bar1.Value, newTradeBar.Open);
             Assert.AreEqual(bar2.Value, newTradeBar.High);
@@ -187,7 +187,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(bar3);
 
             Assert.IsNotNull(consolidated);
-            Assert.AreEqual("SPY", consolidated.Symbol.SID);
+            Assert.AreEqual("SPY", consolidated.Symbol.Permtick);
             Assert.AreEqual(bar1.Open, consolidated.Open);
             Assert.AreEqual(Math.Max(bar1.High, Math.Max(bar2.High, bar3.High)), consolidated.High);
             Assert.AreEqual(Math.Min(bar1.Low, Math.Min(bar2.Low, bar3.Low)), consolidated.Low);
@@ -239,7 +239,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(bar3);
 
             Assert.IsNotNull(consolidated);
-            Assert.AreEqual("SPY", consolidated.Symbol.SID);
+            Assert.AreEqual("SPY", consolidated.Symbol.Permtick);
             Assert.AreEqual(bar1.Open, consolidated.Open);
             Assert.AreEqual(Math.Max(bar1.High, Math.Max(bar2.High, bar3.High)), consolidated.High);
             Assert.AreEqual(Math.Min(bar1.Low, Math.Min(bar2.Low, bar3.Low)), consolidated.Low);

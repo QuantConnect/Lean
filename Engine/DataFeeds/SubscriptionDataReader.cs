@@ -168,19 +168,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             //Load the entire factor and symbol mapping tables into memory, we'll start with some defaults
-            _factorFile = new FactorFile(config.Symbol.SID, new List<FactorFileRow>());
-            _mapFile = new MapFile(config.Symbol.SID, new List<MapFileRow>());
+            _factorFile = new FactorFile(config.Symbol.Permtick, new List<FactorFileRow>());
+            _mapFile = new MapFile(config.Symbol.Permtick, new List<MapFileRow>());
             try
             {
                 // do we have map/factor tables? -- only applies to equities
                 if (!_config.IsCustomData && _config.SecurityType == SecurityType.Equity)
                 {
                     // resolve the correct map file as of the date
-                    _mapFile = MapFile.Read(config.Symbol.SID, config.Market);
+                    _mapFile = MapFile.Read(config.Symbol.Permtick, config.Market);
                     _hasScaleFactors = FactorFile.HasScalingFactors(_mapFile.Permtick, config.Market);
                     if (_hasScaleFactors)
                     {
-                        _factorFile = FactorFile.Read(config.Symbol.SID, config.Market);
+                        _factorFile = FactorFile.Read(config.Symbol.Permtick, config.Market);
                     }
                 }
             }

@@ -152,7 +152,7 @@ namespace QuantConnect.Data
             Type = objectType;
             SecurityType = securityType;
             Resolution = resolution;
-            _sid = symbol.SID;
+            _sid = symbol.Permtick;
             FillDataForward = fillForward;
             ExtendedMarketHours = extendedHours;
             PriceScaleFactor = 1;

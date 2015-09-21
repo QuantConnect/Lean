@@ -248,7 +248,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var symbols = (from security in _algorithm.Securities.Values
                            where !security.SubscriptionDataConfig.IsCustomData && (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
-                           select security.Symbol.SID).ToList<string>();
+                           select security.Symbol.Permtick).ToList<string>();
 
             Log.Trace("LiveTradingDataFeed.Stream(): Market open, starting stream for " + string.Join(",", symbols));
 
@@ -495,7 +495,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
                 {
                     if (!symbols.ContainsKey(security.Type)) symbols.Add(security.Type, new List<string>());
-                    symbols[security.Type].Add(security.Symbol.SID);
+                    symbols[security.Type].Add(security.Symbol.Permtick);
                 }
             }
             return symbols;

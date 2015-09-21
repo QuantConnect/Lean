@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Common.Data
             creator.Update(bar4);
             Assert.IsNotNull(newTradeBar);
 
-            Assert.AreEqual("SPY", newTradeBar.Symbol.SID);
+            Assert.AreEqual("SPY", newTradeBar.Symbol.Permtick);
             Assert.AreEqual(bar1.Time, newTradeBar.Time);
             Assert.AreEqual(bar1.Value, newTradeBar.Open);
             Assert.AreEqual(bar2.Value, newTradeBar.High);
