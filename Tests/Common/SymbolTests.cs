@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Common
         {
             const string json = @"{'$type':'QuantConnect.Symbol, QuantConnect.Common',
 'Value':'EURGBP',
-'SID':'EURGBP'}";
+'Permtick':'EURGBP'}";
             var expected = new Symbol("EURGBP");
             var actual = JsonConvert.DeserializeObject<Symbol>(json);//, settings);
             Assert.AreEqual(expected, actual);
