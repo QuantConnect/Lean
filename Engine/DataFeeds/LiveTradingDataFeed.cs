@@ -44,9 +44,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IAlgorithm _algorithm;
         private IDataQueueHandler _dataQueue;
         private IResultHandler _resultHandler;
-        private UniverseSelection _universeSelection;
         private ConcurrentDictionary<SymbolSecurityType, LiveSubscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
+        /// <summary>
+        /// Event fired when the data feed encounters new fundamental data
+        /// </summary>
+        public event EventHandler<FundamentalEventArgs> Fundamental;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -89,7 +93,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _algorithm = algorithm;
             _resultHandler = resultHandler;
             _cancellationTokenSource = new CancellationTokenSource();
-            _universeSelection = new UniverseSelection(this, algorithm, true);
             _dataQueue = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Config.Get("data-queue-handler", "LiveDataQueue"));
             
             Bridge = new BusyBlockingCollection<TimeSlice>();
@@ -183,7 +186,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (onDay && _algorithm.Universe != null && performedUniverseSelection.Add(subscription.Configuration.Market))
                     {
                         var coarse = UniverseSelection.GetCoarseFundamentals(subscription.Configuration.Market, subscription.TimeZone, localTime.Date, true);
-                        changes = _universeSelection.ApplyUniverseSelection(localTime.Date, subscription.Configuration.Market, coarse);
+                        OnFundamental(FundamentalType.Coarse, utcTriggerTime, subscription.Configuration, coarse.ToList());
                     }
 
                     var triggerArchive = false;
@@ -509,6 +512,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData> {tick})
             }, SecurityChanges.None));
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="Fundamental"/> event
+        /// </summary>
+        protected virtual void OnFundamental(FundamentalType fundamentalType, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
+        {
+            var handler = Fundamental;
+            if (handler != null) handler(this, new FundamentalEventArgs(fundamentalType, configuration, dateTimeUtc, data));
         }
     }
 }

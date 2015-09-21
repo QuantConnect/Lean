@@ -39,9 +39,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IAlgorithm _algorithm;
         private IResultHandler _resultHandler;
         private Resolution _fillForwardResolution;
-        private UniverseSelection _universeSelection;
+        private SecurityChanges _changes = SecurityChanges.None;
         private ConcurrentDictionary<SymbolSecurityType, Subscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
+        /// <summary>
+        /// Event fired when the data feed encounters new fundamental data
+        /// </summary>
+        public event EventHandler<FundamentalEventArgs> Fundamental;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -75,7 +80,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _resultHandler = resultHandler;
             _subscriptions = new ConcurrentDictionary<SymbolSecurityType, Subscription>();
             _cancellationTokenSource = new CancellationTokenSource();
-            _universeSelection = new UniverseSelection(this, algorithm, false);
 
             IsActive = true;
             Bridge = new BusyBlockingCollection<TimeSlice>(100);
@@ -151,6 +155,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // prime the pump, run method checks current before move next calls
             PrimeSubscriptionPump(subscription, true);
+
+            _changes += new SecurityChanges(new List<Security> {security}, new List<Security>());
         }
 
         /// <summary>
@@ -164,6 +170,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + security.Symbol);
             }
+
+            _changes += new SecurityChanges(new List<Security>(), new List<Security> {security});
         }
 
         /// <summary>
@@ -193,7 +201,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // continue to loop over each subscription, enqueuing data in time order
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    var changes = SecurityChanges.None;
+                    // each time step reset our security changes
+                    _changes = SecurityChanges.None;
                     var earlyBirdTicks = long.MaxValue;
                     var data = new List<KeyValuePair<Security, List<BaseData>>>();
 
@@ -237,8 +246,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 break;
                             }
-
-                            changes += _universeSelection.ApplyUniverseSelection(cache.Value[0].EndTime.Date, subscription.Configuration.Market, cache.Value.OfType<CoarseFundamental>());
+                            
+                            OnFundamental(FundamentalType.Coarse, frontier, subscription.Configuration, cache.Value);
                         }
 
                         if (subscription.Current != null)
@@ -255,7 +264,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // enqueue our next time slice and set the frontier for the next
-                    Bridge.Add(TimeSlice.Create(frontier, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, changes), _cancellationTokenSource.Token);
+                    Bridge.Add(TimeSlice.Create(frontier, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes), _cancellationTokenSource.Token);
 
                     // never go backwards in time, so take the max between early birds and the current frontier
                     frontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);
@@ -385,6 +394,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 _subscriptions.TryRemove(new SymbolSecurityType(subscription), out subscription);
             }
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="Fundamental"/> event
+        /// </summary>
+        protected virtual void OnFundamental(FundamentalType fundamentalType, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
+        {
+            var handler = Fundamental;
+            if (handler != null) handler(this, new FundamentalEventArgs(fundamentalType, configuration, dateTimeUtc, data));
         }
     }
 }

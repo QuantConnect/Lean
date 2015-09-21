@@ -182,6 +182,7 @@
     <Compile Include="DataFeeds\Auxiliary\MapFileRow.cs" />
     <Compile Include="DataFeeds\BaseDataSubscriptionFactory.cs" />
     <Compile Include="DataFeeds\CreateStreamReaderErrorEventArgs.cs" />
+    <Compile Include="DataFeeds\FundamentalEventArgs.cs" />
     <Compile Include="DataFeeds\Subscription.cs" />
     <Compile Include="DataFeeds\FillForwardEnumerator.cs" />
     <Compile Include="DataFeeds\InvalidSourceEventArgs.cs" />

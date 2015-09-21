@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
@@ -31,6 +32,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     [InheritedExport(typeof(IDataFeed))]
     public interface IDataFeed
     {
+        /// <summary>
+        /// Event fired when the data feed encounters new fundamental data.
+        /// This event must be fired when there is nothing in the <see cref="Bridge"/>,
+        /// this can be accomplished using <see cref="BusyBlockingCollection{T}.Wait(int,CancellationToken)"/>
+        /// </summary>
+        event EventHandler<FundamentalEventArgs> Fundamental;
+        
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
         /// </summary>
