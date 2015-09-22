@@ -282,6 +282,7 @@ namespace QuantConnect.Indicators
 
                 _samples = 0;
                 _list.Clear();
+                _tail = 0;
             }
             finally
             {
