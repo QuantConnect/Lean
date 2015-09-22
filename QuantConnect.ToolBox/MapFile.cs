@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,17 +25,14 @@ namespace QuantConnect.ToolBox
     /// <summary>
     /// Represents an entire map file for a specified symbol
     /// </summary>
-    /// <remarks>
-    /// Copied with slight modification from: https://github.com/QuantConnect/Lean/blob/844a040be52353273278d21c89d69e10b8a8a24e/Engine/DataFeeds/Auxiliary/MapFile.cs
-    /// </remarks>
-    public class MapFile
+    public class MapFile : IEnumerable<MapFileRow>
     {
         private readonly SortedDictionary<DateTime, MapFileRow> _data;
 
         /// <summary>
         /// Gets the entity's unique symbol, i.e OIH.1
         /// </summary>
-        public string EntitySymbol { get; private set; }
+        public string Permtick { get; private set; }
 
         /// <summary>
         /// Gets the last date in the map file which is indicative of a delisting event
@@ -55,10 +53,10 @@ namespace QuantConnect.ToolBox
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFile"/> class.
         /// </summary>
-        public MapFile(string entitySymbol, IEnumerable<MapFileRow> data)
+        public MapFile(string permtick, IEnumerable<MapFileRow> data)
         {
-            EntitySymbol = entitySymbol;
-            _data = new SortedDictionary<DateTime, MapFileRow>(data.ToDictionary(x => x.Date));
+            Permtick = permtick.ToUpper();
+            _data = new SortedDictionary<DateTime, MapFileRow>(data.Distinct().ToDictionary(x => x.Date));
         }
 
         /// <summary>
@@ -101,77 +99,48 @@ namespace QuantConnect.ToolBox
         /// <summary>
         /// Reads in an entire map file for the requested symbol from the DataFolder
         /// </summary>
-        public static MapFile Read(string dataFolder, string symbol, string market)
+        public static MapFile Read(string permtick, string market)
         {
-            return new MapFile(symbol, MapFileRow.Read(dataFolder, symbol, market));
-        }
-
-        /// <summary>
-        /// Resolves the effective map file at the specified date. If no date is specified, then
-        /// the most recent map file will be used
-        /// </summary>
-        /// <param name="dataFolder">The LEAN root data folder /Data</param>
-        /// <param name="symbol">The symbol</param>
-        /// <param name="market">The market the symbol belongs to</param>
-        /// <param name="date">The date used to resolve, null to use the latest</param>
-        /// <returns>The map file at the requested date</returns>
-        public static MapFile ResolveMapFile(string dataFolder, string symbol, string market, DateTime? date)
-        {
-            if (!date.HasValue || IsExactSymbolMapping(symbol))
-            {
-                // don't worry about resolving the correct file if we weren't given a date or if
-                // the symbol is already mapped, that is, is of the form {symbol}.{#}
-                return Read(dataFolder, symbol, market);
-            }
-
-            // if a date was specified then we need to open up the map files and find the 'effective' one on that date
-            // the effective one is the one that either overlaps the date or the first one to start after the date
-
-            MapFile map = null;
-
-            var i = 0;
-            do
-            {
-                var s = symbol + (i == 0 ? string.Empty : "." + i);
-                if (!File.Exists(GetMapFilePath(dataFolder, s, market)))
-                {
-                    break;
-                }
-
-                // open up the map file and check the dates
-                map = Read(dataFolder, s, market);
-                i++;
-            }
-            while (map.FirstDate > date);
-
-            return map ?? new MapFile(symbol, new List<MapFileRow>());
+            return new MapFile(permtick, MapFileRow.Read(permtick, market));
         }
 
         /// <summary>
         /// Constructs the map file path for the specified market and symbol
         /// </summary>
-        /// <param name="dataFolder">The LEAN root data folder /Data</param>
-        /// <param name="symbol">The symbol as on disk, OIH or OIH.1</param>
+        /// <param name="permtick">The symbol as on disk, OIH or OIH.1</param>
         /// <param name="market">The market this symbol belongs to</param>
         /// <returns>The file path to the requested map file</returns>
-        public static string GetMapFilePath(string dataFolder, string symbol, string market)
+        public static string GetMapFilePath(string permtick, string market)
         {
-            return Path.Combine(dataFolder, "equity", market, "map_files", symbol.ToLower() + ".csv");
+            return Path.Combine(Constants.DataFolder, "equity", market, "map_files", permtick.ToLower() + ".csv");
         }
 
-        private static bool IsExactSymbolMapping(string symbol)
-        {
-            // check for a '.'
-            var dot = symbol.LastIndexOf('.');
-            if (dot == -1)
-            {
-                return false;
-            }
+        #region Implementation of IEnumerable
 
-            // check for a number behind the dot
-            int i;
-            var postDot = symbol.Substring(dot + 1);
-            return int.TryParse(postDot, out i);
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>1</filterpriority>
+        public IEnumerator<MapFileRow> GetEnumerator()
+        {
+            return _data.Values.GetEnumerator();
         }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.IEnumerator"/> object that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        #endregion
     }
 }
