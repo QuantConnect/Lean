@@ -1001,7 +1001,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Gets the date/time warmup should begin in UTC
+        /// Gets the history requests required for provide warm up data for the algorithm
         /// </summary>
         /// <returns></returns>
         public IEnumerable<HistoryRequest> GetWarmupHistoryRequests()
@@ -1012,7 +1012,7 @@ namespace QuantConnect.Algorithm
             }
             if (_warmupTimeSpan.HasValue)
             {
-                var start = StartDate.ConvertToUtc(TimeZone);
+                var start = UtcTime.ConvertToUtc(TimeZone);
                 return CreateDateRangeHistoryRequests(Securities.Keys, start - _warmupTimeSpan.Value, start);
             }
             
