@@ -340,7 +340,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var serverStatistics = OS.GetServerStatistics();
 
                     // only send holdings updates when we have changes in orders, except for first time, then we want to send all
-                    foreach (var asset in _algorithm.Securities.Values.OrderBy(x => x.Symbol))
+                    foreach (var asset in _algorithm.Securities.Values.OrderBy(x => x.Symbol.Value))
                     {
                         holdings.Add(asset.Symbol.Value, new Holding(asset.Holdings));
                     }
@@ -464,11 +464,9 @@ namespace QuantConnect.Lean.Engine.Results
             }
             catch (Exception err)
             {
-                Log.Error("LiveTradingResultHandler().Update(): " + err.Message, true);
+                Log.Error(err, "LiveTradingResultHandler().Update(): " + err.Message, true);
             }
         }
-
-
 
 
 
