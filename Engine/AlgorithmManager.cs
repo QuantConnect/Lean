@@ -649,7 +649,7 @@ namespace QuantConnect.Lean.Engine
                 foreach (var request in historyRequests)
                 {
                     start = Math.Min(request.StartTimeUtc.Ticks, start);
-                    Log.Trace(string.Format("{0}: Start: {1} End: {2} Resolution: {3}", request.Symbol, request.StartTimeUtc, request.EndTimeUtc, request.Resolution));
+                    Log.Trace(string.Format("AlgorithmManager.Stream(): WarmupHistoryRequest: {0}: Start: {1} End: {2} Resolution: {3}", request.Symbol, request.StartTimeUtc, request.EndTimeUtc, request.Resolution));
                 }
 
                 // make the history request and build time slices
@@ -705,6 +705,7 @@ namespace QuantConnect.Lean.Engine
             if (!algorithm.LiveMode || historyRequests.Count == 0)
             {
                 algorithm.SetFinishedWarmingUp();
+                results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Running);
                 if (historyRequests.Count != 0)
                 {
                     algorithm.Debug("Algorithm finished warming up.");
@@ -733,6 +734,7 @@ namespace QuantConnect.Lean.Engine
                     if (timeSlice.Time > DateTime.UtcNow.Subtract(minimumIncrement))
                     {
                         algorithm.SetFinishedWarmingUp();
+                        results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Running);
                         algorithm.Debug("Algorithm finished warming up.");
                         Log.Trace("AlgorithmManager.Stream(): Finished warmup");
                     }

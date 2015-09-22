@@ -1012,8 +1012,8 @@ namespace QuantConnect.Algorithm
             }
             if (_warmupTimeSpan.HasValue)
             {
-                var start = UtcTime.ConvertToUtc(TimeZone);
-                return CreateDateRangeHistoryRequests(Securities.Keys, start - _warmupTimeSpan.Value, start);
+                var end = UtcTime.ConvertFromUtc(TimeZone);
+                return CreateDateRangeHistoryRequests(Securities.Keys, end - _warmupTimeSpan.Value, end);
             }
             
             // if not warmup requested return nothing
