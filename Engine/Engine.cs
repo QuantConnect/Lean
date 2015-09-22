@@ -131,13 +131,12 @@ namespace QuantConnect.Lean.Engine
             if (job.Version != Constants.Version || job.Redelivered)
             {
                 Log.Error("Engine.Run(): Job Version: " + job.Version + "  Deployed Version: " + Constants.Version + " Redelivered: " + job.Redelivered);
-
                 //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
                 //In this event kill the old algorithm and leave a message so the user can later review.
-                leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
                 leanEngineSystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, _collapseMessage);
                 leanEngineSystemHandlers.Notify.SetChannel(job.Channel);
                 leanEngineSystemHandlers.Notify.RuntimeError(job.AlgorithmId, _collapseMessage);
+                leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
                 return;
             }
 
