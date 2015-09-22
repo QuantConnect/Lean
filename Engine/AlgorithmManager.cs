@@ -138,7 +138,7 @@ namespace QuantConnect.Lean.Engine
         {
             //Initialize:
             _dataPointCount = 0;
-            var startingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
+            var portfolioValue = algorithm.Portfolio.TotalPortfolioValue;
             var backtestMode = (job.Type == PacketType.BacktestNode);
             var methodInvokers = new Dictionary<Type, MethodInvoker>();
             var marginCallFrequency = TimeSpan.FromMinutes(5);
@@ -241,15 +241,15 @@ namespace QuantConnect.Lean.Engine
                         results.SampleEquity(_previousTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
 
                         //Check for divide by zero
-                        if (startingPortfolioValue == 0m)
+                        if (portfolioValue == 0m)
                         {
                             results.SamplePerformance(_previousTime.Date, 0);
                         }
                         else
                         {
-                            results.SamplePerformance(_previousTime.Date, Math.Round((algorithm.Portfolio.TotalPortfolioValue - startingPortfolioValue)*100/startingPortfolioValue, 10));
+                            results.SamplePerformance(_previousTime.Date, Math.Round((algorithm.Portfolio.TotalPortfolioValue - portfolioValue) * 100 / portfolioValue, 10));
                         }
-                        startingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
+                        portfolioValue = algorithm.Portfolio.TotalPortfolioValue;
                     }
                 }
                 else
@@ -609,7 +609,7 @@ namespace QuantConnect.Lean.Engine
             results.SampleRange(algorithm.GetChartUpdates());
             results.SampleEquity(_previousTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
             SampleBenchmark(algorithm, results, _previousTime);
-            results.SamplePerformance(_previousTime, Math.Round((algorithm.Portfolio.TotalPortfolioValue - startingPortfolioValue) * 100 / startingPortfolioValue, 10));
+            results.SamplePerformance(_previousTime, Math.Round((algorithm.Portfolio.TotalPortfolioValue - portfolioValue)*100/portfolioValue, 10));
         } // End of Run();
 
         /// <summary>
@@ -628,8 +628,9 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
-        private static IEnumerable<TimeSlice> Stream(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, IResultHandler results, CancellationToken cancellationToken)
+        private IEnumerable<TimeSlice> Stream(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, IResultHandler results, CancellationToken cancellationToken)
         {
+            bool setStartTime = false;
             var timeZone = algorithm.TimeZone;
             var history = algorithm.HistoryProvider;
 
@@ -680,6 +681,12 @@ namespace QuantConnect.Lean.Engine
 
                     if (timeSlice != null)
                     {
+                        if (!setStartTime)
+                        {
+                            setStartTime = true;
+                            _previousTime = timeSlice.Time;
+                            algorithm.Debug("Algorithm warming up...");
+                        }
                         if (DateTime.UtcNow > nextStatusTime)
                         {
                             // send some status to the user letting them know we're done history, but still warming up,
@@ -698,10 +705,20 @@ namespace QuantConnect.Lean.Engine
             if (!algorithm.LiveMode || historyRequests.Count == 0)
             {
                 algorithm.SetFinishedWarmingUp();
+                if (historyRequests.Count != 0)
+                {
+                    algorithm.Debug("Algorithm finished warming up.");
+                    Log.Trace("AlgorithmManager.Stream(): Finished warmup");
+                }
             }
 
             foreach (var timeSlice in feed.Bridge.GetConsumingEnumerable(cancellationToken))
             {
+                if (!setStartTime)
+                {
+                    setStartTime = true;
+                    _previousTime = timeSlice.Time;
+                }
                 if (algorithm.LiveMode && algorithm.IsWarmingUp)
                 {
                     // this is hand-over logic, we spin up the data feed first and then request
@@ -716,6 +733,8 @@ namespace QuantConnect.Lean.Engine
                     if (timeSlice.Time > DateTime.UtcNow.Subtract(minimumIncrement))
                     {
                         algorithm.SetFinishedWarmingUp();
+                        algorithm.Debug("Algorithm finished warming up.");
+                        Log.Trace("AlgorithmManager.Stream(): Finished warmup");
                     }
                     else if (DateTime.UtcNow > nextStatusTime)
                     {
