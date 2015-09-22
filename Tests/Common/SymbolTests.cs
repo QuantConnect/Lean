@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -31,6 +32,18 @@ namespace QuantConnect.Tests.Common
             TypeNameHandling = TypeNameHandling.All
         };
 
+        [Test]
+        public void UsesSidForDictionaryKey()
+        {
+            var dictionary = new Dictionary<Symbol, int>
+            {
+                {new Symbol("sid", "value"), 1}
+            };
+
+            var key = new Symbol("sid", "other value");
+            Assert.IsTrue(dictionary.ContainsKey(key));
+        }
+        
         [Test]
         public void SurvivesRoundtripSerialization()
         {
@@ -68,13 +81,40 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
+        public void HandlesListTicksWithDifferentSymbols()
+        {
+            // the first serialized Tick object has a Symbol of EURGBP and the second has EURUSD, but the output
+            const string json =
+                "{'$type':'System.Collections.Generic.List`1[[QuantConnect.Data.BaseData, QuantConnect.Common]], mscorlib','$values':[" +
+
+                    "{'$type':'QuantConnect.Data.Market.Tick, QuantConnect.Common'," +
+                    "'TickType':0,'Quantity':1,'Exchange':'','SaleCondition':'','Suspicious':false," +
+                    "'BidPrice':1.11895,'AskPrice':1.11898,'LastPrice':1.11895,'DataType':2,'IsFillForward':false," +
+                    "'Time':'2015-09-22T01:26:44.676','EndTime':'2015-09-22T01:26:44.676'," +
+                    "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURUSD','Permtick':'EURUSD'}," +
+                    "'Value':1.11895,'Price':1.11895}," +
+
+                    "{'$type':'QuantConnect.Data.Market.Tick, QuantConnect.Common'," +
+                    "'TickType':0,'Quantity':1,'Exchange':'','SaleCondition':'','Suspicious':false," +
+                    "'BidPrice':0.72157,'AskPrice':0.72162,'LastPrice':0.72157,'DataType':2,'IsFillForward':false," +
+                    "'Time':'2015-09-22T01:26:44.675','EndTime':'2015-09-22T01:26:44.675'," +
+                    "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURGBP','Permtick':'EURGBP'}," +
+                    "'Value':0.72157,'Price':0.72157}," +
+
+                    "]}";
+            
+            var actual = JsonConvert.DeserializeObject<List<BaseData>>(json, Settings);
+            Assert.IsFalse(actual.All(x => x.Symbol == "EURUSD"));
+        }
+
+        [Test]
         public void SymbolTypeNameHandling()
         {
             const string json = @"{'$type':'QuantConnect.Symbol, QuantConnect.Common',
 'Value':'EURGBP',
 'Permtick':'EURGBP'}";
             var expected = new Symbol("EURGBP");
-            var actual = JsonConvert.DeserializeObject<Symbol>(json);//, settings);
+            var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
             Assert.AreEqual(expected, actual);
         }
 

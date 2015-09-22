@@ -24,6 +24,7 @@ namespace QuantConnect
     /// the unique SID and the Value. The value is the current ticker symbol while
     /// the SID is constant over the life of a security
     /// </summary>
+    [JsonConverter(typeof(SymbolJsonConverter))]
     public class Symbol : IEquatable<Symbol>, IComparable
     {
         /// <summary>
@@ -37,26 +38,16 @@ namespace QuantConnect
         /// <summary>
         /// Gets the current symbol for this ticker
         /// </summary>
-        [JsonProperty]
         public string Value { get; private set; }
 
         /// <summary>
         /// Gets permtick used to identify securities in map files
         /// </summary>
-        [JsonProperty]
         public string Permtick { get; private set; }
 
         #endregion
 
         #region Constructors
-
-        /// <summary>
-        /// Default constructor for serializers
-        /// </summary>
-        [JsonConstructor]
-        private Symbol()
-        {
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Symbol"/> class using the specified
@@ -203,6 +194,7 @@ namespace QuantConnect
         {
             return symbol.Permtick;
         }
+
         /// <summary>
         /// Creates symbol using string as sid
         /// </summary>

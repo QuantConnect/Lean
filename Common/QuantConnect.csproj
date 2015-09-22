@@ -278,6 +278,7 @@
     <Compile Include="Statistics\Trade.cs" />
     <Compile Include="Statistics\TradeBuilder.cs" />
     <Compile Include="Statistics\TradeEnums.cs" />
+    <Compile Include="SymbolJsonConverter.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TimeKeeper.cs" />
