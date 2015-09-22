@@ -482,6 +482,41 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Enumerate through the files of a TAR and get a list of KVP names-byte arrays.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static IEnumerable<KeyValuePair<string, byte[]>> UnTar(string source)
+        {
+            //This is a tar.gz file.
+            var gzip = (source.Substring(Math.Max(0, source.Length - 6)) == "tar.gz");
+
+            using (var file = File.OpenRead(source))
+            {
+                var tarIn = new TarInputStream(file);
+
+                if (gzip)
+                {
+                    var gzipStream = new GZipInputStream(file);
+                    tarIn = new TarInputStream(gzipStream);
+                }
+
+                TarEntry tarEntry;
+                while ((tarEntry = tarIn.GetNextEntry()) != null)
+                {
+                    if (tarEntry.IsDirectory) continue;
+
+                    using (var stream = new MemoryStream())
+                    {
+                        tarIn.CopyEntryContents(stream);
+                        yield return new KeyValuePair<string, byte[]>(tarEntry.Name, stream.ToArray());
+                    }
+                }
+                tarIn.Close();
+            }
+        }
+
+        /// <summary>
         /// Creates the entry name for a QC zip data file
         /// </summary>
         public static string CreateZipEntryName(string symbol, SecurityType securityType, DateTime date, Resolution resolution)
