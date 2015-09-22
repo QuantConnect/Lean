@@ -49,6 +49,20 @@
     "tradier-issued-at": "",
     "trader-lifespan": "",
 
+    //Database Datafeed Connection:
+    "database-address": "localhost",
+    "database-user": "root",
+    "database-password": "",
+    "database-name": "lean",
+        
+    // oanda configuration
+    "oanda-account-id" : "" ,
+    "oanda-access-token" : "" ,
+    "oanda-refresh-token" : "" ,
+    "oanda-tokens-issued-at" : "" ,
+    "oanda-lifespan" : "" ,
+    "oanda-environment" : "sandbox",
+
     "environments": {
 
         // defines the 'backtesting' environment
