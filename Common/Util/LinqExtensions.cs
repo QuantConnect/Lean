@@ -195,34 +195,5 @@ namespace QuantConnect.Util
         {
             return new MemoizingEnumerable<T>(enumerable);
         }
-
-        /// <summary>
-        /// Produces the an enumerable of the range of values between start and end using the specified
-        /// incrementing function
-        /// </summary>
-        /// <typeparam name="T">The enumerable item type</typeparam>
-        /// <param name="start">The start of the range</param>
-        /// <param name="end">The end of the range, non-inclusive by default</param>
-        /// <param name="incrementer">The incrementing function, with argument of the current item</param>
-        /// <returns>An enumerable of the range of items between start and end</returns>
-        public static IEnumerable<T> Range<T>(T start, T end, Func<T, T> incrementer, bool includeEndPoint = false)
-            where T : IComparable
-        {
-            var current = start;
-            if (includeEndPoint)
-            {
-                while (current.CompareTo(end) <= 0)
-                {
-                    yield return current = incrementer(current);
-                }
-            }
-            else
-            {
-                while (current.CompareTo(end) < 0)
-                {
-                    yield return current = incrementer(current);
-                }
-            }
-        }
     }
 }

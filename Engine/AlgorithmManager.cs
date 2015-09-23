@@ -33,7 +33,6 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -633,23 +632,11 @@ namespace QuantConnect.Lean.Engine
         {
             bool setStartTime = false;
             var timeZone = algorithm.TimeZone;
+            var history = algorithm.HistoryProvider;
 
             // get the required history job from the algorithm
             DateTime? lastHistoryTimeUtc = null;
-
-            // create the history requests, they may throw due to being too large
-            List<HistoryRequest> historyRequests;
-            try
-            {
-                historyRequests = algorithm.GetWarmupHistoryRequests().ToList();
-            }
-            catch (Exception err)
-            {
-                algorithm.RunTimeError = err;
-                _algorithmState = AlgorithmStatus.RuntimeError;
-                Log.Error("AlgorithmManager.OnEndOfAlgorithm(): " + err.Message + " STACK >>> " + err.StackTrace);
-                yield break;
-            }
+            var historyRequests = algorithm.GetWarmupHistoryRequests().ToList();
 
             // initialize variables for progress computation
             var start = DateTime.UtcNow.Ticks;
@@ -666,7 +653,7 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 // make the history request and build time slices
-                foreach (var slice in algorithm.HistoryProvider.GetHistory(historyRequests, timeZone))
+                foreach (var slice in history.GetHistory(historyRequests, timeZone))
                 {
                     TimeSlice timeSlice;
                     try

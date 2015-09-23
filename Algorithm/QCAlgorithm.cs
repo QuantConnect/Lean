@@ -29,7 +29,6 @@ using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
-using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm
 {
@@ -1009,36 +1008,11 @@ namespace QuantConnect.Algorithm
         {
             if (_warmupBarCount.HasValue)
             {
-                var symbols = Securities.Values.Count;
-                if (symbols*_warmupBarCount.Value > 100000)
-                {
-                    throw new Exception("The requested warmup period is too large. Warmup requests are limited to 100,000 points in total.");
-                }
                 return CreateBarCountHistoryRequests(Securities.Keys, _warmupBarCount.Value);
             }
             if (_warmupTimeSpan.HasValue)
             {
-                // estimate the number of bars for this, summing up over each security
                 var end = UtcTime.ConvertFromUtc(TimeZone);
-                var barCount = Securities.Values.Sum(security =>
-                {
-                    var barSize = security.SubscriptionDataConfig.Increment == TimeSpan.Zero
-                        ? QuantConnect.Time.OneSecond
-                        : security.SubscriptionDataConfig.Increment;
-                    var localEndTime = UtcTime.ConvertFromUtc(security.Exchange.TimeZone);
-                    var localStartTime = localEndTime - _warmupTimeSpan.Value;
-
-                    // enumerate the bars within the requested range and count the ones within market hours
-                    return LinqExtensions
-                        .Range(localStartTime, localEndTime, current => current + barSize, true)
-                        .Count(current => security.Exchange.IsOpenDuringBar(current, current + barSize, security.IsExtendedMarketHours));
-                });
-
-                if (barCount > 100000)
-                {
-                    throw new Exception("The requested warmup period is too large. Warmup requests are limited to 100,000 points in total.");
-                }
-
                 return CreateDateRangeHistoryRequests(Securities.Keys, end - _warmupTimeSpan.Value, end);
             }
             
