@@ -1112,12 +1112,10 @@ namespace QuantConnect.Algorithm
                 var security = Securities[x];
                 // don't make requests for symbols of the wrong type
                 if (!typeof(T).IsAssignableFrom(security.SubscriptionDataConfig.Type)) return null;
+
+                Resolution? res = resolution ?? security.Resolution;
                 var start = GetStartTimeAlgoTz(x, periods, resolution).ConvertToUtc(TimeZone);
-                return new HistoryRequest(security, start, UtcTime.RoundDown((resolution ?? security.Resolution).ToTimeSpan()))
-                {
-                    Resolution = resolution ?? security.Resolution,
-                    FillForwardResolution = security.IsFillDataForward ? resolution : null
-                };
+                return CreateHistoryRequest(security, start, UtcTime.RoundDown(res.Value.ToTimeSpan()), resolution);
             });
 
             return History(requests.Where(x => x != null)).Get<T>();
@@ -1140,11 +1138,7 @@ namespace QuantConnect.Algorithm
                 var security = Securities[x];
                 // don't make requests for symbols of the wrong type
                 if (!typeof (T).IsAssignableFrom(security.SubscriptionDataConfig.Type)) return null;
-                return new HistoryRequest(security, start.ConvertToUtc(TimeZone), end.ConvertToUtc(TimeZone))
-                {
-                    Resolution = resolution ?? security.Resolution,
-                    FillForwardResolution = security.IsFillDataForward ? resolution : (Resolution?)null
-                };
+                return CreateHistoryRequest(security, start.ConvertToUtc(TimeZone), end.ConvertToUtc(TimeZone), resolution);
             });
 
             return History(requests.Where(x => x != null)).Get<T>();
@@ -1226,12 +1220,7 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
             }
 
-            var fillForwardResolution = security.IsFillDataForward ? resolution : null;
-            var request = new HistoryRequest(security, start.ConvertToUtc(TimeZone), end.ConvertToUtc(TimeZone))
-            {
-                Resolution = resolution ?? security.Resolution,
-                FillForwardResolution = fillForwardResolution
-            };
+            var request = CreateHistoryRequest(security, start, end, resolution);
             return History(request).Get<T>(symbol);
         }
 
@@ -1337,13 +1326,10 @@ namespace QuantConnect.Algorithm
             return symbols.Select(x =>
             {
                 var security = Securities[x];
-                Resolution? res = resolution ?? security.Resolution;
-                var request = new HistoryRequest(security, start.ConvertToUtc(TimeZone), end.ConvertToUtc(TimeZone))
-                {
-                    Resolution = res.Value,
-                    FillForwardResolution = security.IsFillDataForward ? res : null
-                };
+                var request = CreateHistoryRequest(security, start.ConvertToUtc(TimeZone), end.ConvertToUtc(TimeZone), resolution);
+
                 // apply overrides
+                Resolution? res = resolution ?? security.Resolution;
                 if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? res : null;
                 if (extendedMarket.HasValue) request.IncludeExtendedMarketHours = extendedMarket.Value;
                 return request;
@@ -1358,13 +1344,21 @@ namespace QuantConnect.Algorithm
             return symbols.Select(x =>
             {
                 var security = Securities[x];
-                var start = GetStartTimeAlgoTz(x, periods, resolution).ConvertToUtc(security.Exchange.TimeZone);
-                return new HistoryRequest(security, start, UtcTime.RoundDown((resolution ?? security.Resolution).ToTimeSpan()))
-                {
-                    Resolution = resolution ?? security.Resolution,
-                    FillForwardResolution = security.IsFillDataForward ? resolution : (Resolution?)null
-                };
+                Resolution? res = resolution ?? security.Resolution;
+                var start = GetStartTimeAlgoTz(x, periods, res).ConvertToUtc(security.Exchange.TimeZone);
+                return CreateHistoryRequest(security, start, UtcTime.RoundDown(res.Value.ToTimeSpan()), resolution);
             });
+        }
+
+        private HistoryRequest CreateHistoryRequest(Security security, DateTime start, DateTime end, Resolution? resolution)
+        {
+            resolution = resolution ?? security.Resolution;
+            var request = new HistoryRequest(security, start.ConvertToUtc(TimeZone), end.ConvertToUtc(TimeZone))
+            {
+                Resolution = resolution.Value,
+                FillForwardResolution = security.IsFillDataForward ? resolution : null
+            };
+            return request;
         }
 
         /// <summary>
