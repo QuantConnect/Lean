@@ -653,13 +653,16 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 // rewrite internal feed requests
-                var minResolution = algorithm.SubscriptionManager.Subscriptions.Min(x => x.Resolution);
+                var minResolution = algorithm.SubscriptionManager.Subscriptions.Where(x => !x.IsInternalFeed).Min(x => x.Resolution);
                 foreach (var request in historyRequests)
                 {
                     Security security;
                     if (algorithm.Securities.TryGetValue(request.Symbol, out security) && security.SubscriptionDataConfig.IsInternalFeed)
                     {
-                        request.Resolution = minResolution;
+                        if (request.Resolution < minResolution)
+                        {
+                            request.Resolution = minResolution;
+                        }
                     }
                 }
 
