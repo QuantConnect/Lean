@@ -646,12 +646,6 @@ namespace QuantConnect.Lean.Engine
 
             if (historyRequests.Count != 0)
             {
-                foreach (var request in historyRequests)
-                {
-                    start = Math.Min(request.StartTimeUtc.Ticks, start);
-                    Log.Trace(string.Format("AlgorithmManager.Stream(): WarmupHistoryRequest: {0}: Start: {1} End: {2} Resolution: {3}", request.Symbol, request.StartTimeUtc, request.EndTimeUtc, request.Resolution));
-                }
-
                 // rewrite internal feed requests
                 var minResolution = algorithm.SubscriptionManager.Subscriptions.Where(x => !x.IsInternalFeed).Min(x => x.Resolution);
                 foreach (var request in historyRequests)
@@ -662,8 +656,15 @@ namespace QuantConnect.Lean.Engine
                         if (request.Resolution < minResolution)
                         {
                             request.Resolution = minResolution;
+                            request.FillForwardResolution = request.FillForwardResolution.HasValue ? minResolution : (Resolution?) null;
                         }
                     }
+                }
+
+                foreach (var request in historyRequests)
+                {
+                    start = Math.Min(request.StartTimeUtc.Ticks, start);
+                    Log.Trace(string.Format("AlgorithmManager.Stream(): WarmupHistoryRequest: {0}: Start: {1} End: {2} Resolution: {3}", request.Symbol, request.StartTimeUtc, request.EndTimeUtc, request.Resolution));
                 }
 
                 // make the history request and build time slices
