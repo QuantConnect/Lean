@@ -101,6 +101,7 @@ namespace QuantConnect.Views.WinForms
             Config.Set("job-queue-handler", "QuantConnect.Queues.JobQueue");
             Config.Set("api-handler", "QuantConnect.Api.Api");
             Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.DesktopResultHandler");
+            Config.Set("environment", "desktop");
 
             //Start default backtest.
             var engine = LaunchLean();
