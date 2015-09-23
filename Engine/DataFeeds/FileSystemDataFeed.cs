@@ -222,6 +222,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var cache = new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData>());
                         data.Add(cache);
 
+                        var configuration = subscription.Configuration;
                         var offsetProvider = subscription.OffsetProvider;
                         var currentOffsetTicks = offsetProvider.GetOffsetTicks(frontier);
                         while (subscription.Current.EndTime.Ticks - currentOffsetTicks <= frontier.Ticks)
@@ -229,7 +230,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // we want bars rounded using their subscription times, we make a clone
                             // so we don't interfere with the enumerator's internal logic
                             var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
-                            clone.Time = clone.Time.RoundDown(subscription.Configuration.Increment);
+                            clone.Time = clone.Time.ExchangeRoundDown(configuration.Increment, subscription.Security.Exchange.Hours, configuration.ExtendedMarketHours);
                             cache.Value.Add(clone);
                             if (!subscription.MoveNext())
                             {
@@ -247,7 +248,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 break;
                             }
                             
-                            OnFundamental(FundamentalType.Coarse, frontier, subscription.Configuration, cache.Value);
+                            OnFundamental(FundamentalType.Coarse, frontier, configuration, cache.Value);
                         }
 
                         if (subscription.Current != null)

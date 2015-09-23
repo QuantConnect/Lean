@@ -108,7 +108,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (_security.Exchange.IsOpenDuringBar(barStartTime, localTriggerTime, _config.ExtendedMarketHours))
                     {
                         bar = _previous.Clone(true);
-                        bar.Time = barStartTime;
+                        bar.Time = barStartTime.ExchangeRoundDown(_increment, _security.Exchange.Hours, _security.IsExtendedMarketHours);
                     }
                 }
             }
