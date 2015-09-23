@@ -652,6 +652,17 @@ namespace QuantConnect.Lean.Engine
                     Log.Trace(string.Format("AlgorithmManager.Stream(): WarmupHistoryRequest: {0}: Start: {1} End: {2} Resolution: {3}", request.Symbol, request.StartTimeUtc, request.EndTimeUtc, request.Resolution));
                 }
 
+                // rewrite internal feed requests
+                var minResolution = algorithm.SubscriptionManager.Subscriptions.Min(x => x.Resolution);
+                foreach (var request in historyRequests)
+                {
+                    Security security;
+                    if (algorithm.Securities.TryGetValue(request.Symbol, out security) && security.SubscriptionDataConfig.IsInternalFeed)
+                    {
+                        request.Resolution = minResolution;
+                    }
+                }
+
                 // make the history request and build time slices
                 foreach (var slice in history.GetHistory(historyRequests, timeZone))
                 {
