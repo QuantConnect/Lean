@@ -661,6 +661,13 @@ namespace QuantConnect.Lean.Engine
                     }
                 }
 
+                // rewrite all to share the same fill forward resolution
+                minResolution = historyRequests.Where(x => x.FillForwardResolution.HasValue).Min(x => x.FillForwardResolution.Value);
+                foreach (var request in historyRequests.Where(x => x.FillForwardResolution.HasValue))
+                {
+                    request.FillForwardResolution = minResolution;
+                }
+
                 foreach (var request in historyRequests)
                 {
                     start = Math.Min(request.StartTimeUtc.Ticks, start);
