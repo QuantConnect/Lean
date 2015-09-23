@@ -434,6 +434,7 @@ namespace QuantConnect.Algorithm
                     var resolution = _liveMode ? Resolution.Second : Resolution.Daily;
                     var market = _benchmarkSecurityType == SecurityType.Forex ? "fxcm" : "usa";
                     security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider, _benchmarkSecurityType, _benchmarkSymbol, resolution, market, true, 1m, false, true, false);
+                    Securities.Add(_benchmarkSymbol, security);
                 }
 
                 // just return the current price
