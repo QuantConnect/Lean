@@ -68,25 +68,5 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsFalse(collection.IsBusy);
             Assert.IsTrue(collection.Wait(0));
         }
-
-        [Test]
-        public void PerformsCancellationHandlerOnCancellationRequested()
-        {
-            var unprocessed = new List<int>();
-            var collection = new BusyBlockingCollection<int>();
-            collection.Add(1);
-            collection.Add(2);
-            collection.Add(3);
-            var cts = new CancellationTokenSource();
-            foreach (var i in collection.GetConsumingEnumerable(cts.Token))
-            {
-                if (i == 2)
-                {
-                    cts.Cancel();
-                }
-            }
-            Assert.AreEqual(1, unprocessed.Count);
-            Assert.AreEqual(3, unprocessed[0]);
-        }
     }
 }
