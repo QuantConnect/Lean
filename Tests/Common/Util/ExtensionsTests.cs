@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Util
 {
@@ -65,6 +66,16 @@ namespace QuantConnect.Tests.Common.Util
             const string expected = "Dictionary<List<Int32>, Dictionary<Int32, String>>";
             var actual = type.GetBetterTypeName();
             Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void ExchangeRoundDownSkipsWeekends()
+        {
+            var time = new DateTime(2015, 05, 02, 18, 01, 00);
+            var expected = new DateTime(2015, 05, 01);
+            var hours = SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours("fxcm", null, SecurityType.Forex);
+            var exchangeRounded = time.ExchangeRoundDown(Time.OneDay, hours, false);
+            Assert.AreEqual(expected, exchangeRounded);
         }
 
         private class Super<T>
