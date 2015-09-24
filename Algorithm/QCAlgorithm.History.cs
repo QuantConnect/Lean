@@ -293,6 +293,19 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Gets the historical data for the specified symbol over the request span. The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public IEnumerable<TradeBar> History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
+        {
+            return History(new[] {symbol}, start, end, resolution).Get(symbol);
+        }
+
+        /// <summary>
         /// Gets the historical data for the specified symbols over the requested span.
         /// The symbol's configured values for resolution and fill forward behavior will be used
         /// The symbols must exist in the Securities collection.
