@@ -194,7 +194,7 @@ namespace QuantConnect.Algorithm
                 var security = Securities[x];
                 // don't make requests for symbols of the wrong type
                 if (!typeof (T).IsAssignableFrom(security.SubscriptionDataConfig.Type)) return null;
-                return CreateHistoryRequest(security, start.ConvertToUtc(TimeZone), end.ConvertToUtc(TimeZone), resolution);
+                return CreateHistoryRequest(security, start, end, resolution);
             });
 
             return History(requests.Where(x => x != null)).Get<T>();
@@ -395,7 +395,7 @@ namespace QuantConnect.Algorithm
             return symbols.Select(x =>
             {
                 var security = Securities[x];
-                var request = CreateHistoryRequest(security, start.ConvertToUtc(TimeZone), end.ConvertToUtc(TimeZone), resolution);
+                var request = CreateHistoryRequest(security, start, end, resolution);
 
                 // apply overrides
                 Resolution? res = resolution ?? security.Resolution;
