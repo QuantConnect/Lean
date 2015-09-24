@@ -384,7 +384,28 @@ namespace QuantConnect.Algorithm
 
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
         {
-            return ((IAlgorithm)this).HistoryProvider.GetHistory(requests, timeZone);
+            var sentMessage = false;
+            var reqs = requests.ToList();
+            foreach (var request in reqs)
+            {
+                // prevent future requests
+                if (request.EndTimeUtc > UtcTime)
+                {
+                    request.EndTimeUtc = UtcTime;
+                    if (request.StartTimeUtc > request.EndTimeUtc)
+                    {
+                        request.StartTimeUtc = request.EndTimeUtc;
+                    }
+                    if (!sentMessage)
+                    {
+                        sentMessage = true;
+                        Debug("Request for future history modified to end now.");
+                    }
+                }
+            }
+
+            // filter out future data to prevent look ahead bias
+            return ((IAlgorithm) this).HistoryProvider.GetHistory(reqs, timeZone);
         }
 
         /// <summary>
