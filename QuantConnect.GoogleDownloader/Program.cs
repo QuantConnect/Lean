@@ -35,17 +35,17 @@ namespace QuantConnect.GoogleDownloader
             // Strangely Google forces CHLO format instead of normal OHLC.
             const string urlPrototype = @"http://www.google.com/finance/getprices?q={0}&i={1}&p={2}d&f=d,c,h,l,o,v";
 
-            //if (args.Length != 3)
-            //{
-            //    Console.WriteLine("Usage: GoogleDownloader SYMBOL RESOLUTION PERIOD");
-            //    Console.WriteLine("SYMBOL = eg SPY");
-            //    Console.WriteLine("RESOLUTION = 60 for minute intraday data");
-            //    Console.WriteLine("PERIOD = 10 for 10 days intraday data");
-            //    Environment.Exit(1);
-            //}
-            var symbol = "SPY"; //args[0];
-            var resolution = 60; //args[1];
-            var period = 1; //args[2];
+            if (args.Length != 3)
+            {
+                Console.WriteLine("Usage: GoogleDownloader SYMBOL RESOLUTION PERIOD");
+                Console.WriteLine("SYMBOL = eg SPY");
+                Console.WriteLine("RESOLUTION = 60 for minute intraday data");
+                Console.WriteLine("PERIOD = 10 for 10 days intraday data");
+                Environment.Exit(1);
+            }
+            var symbol = args[0];
+            var resolution = int.Parse(args[1]);
+            var period = args[2];
             
             // Create the Google formatted URL.
             var url = string.Format(urlPrototype, symbol, resolution, period);
