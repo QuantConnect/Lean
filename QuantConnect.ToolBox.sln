@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.CoarseUniverse
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.YahooDownloader", "QuantConnect.YahooDownloader\QuantConnect.YahooDownloader.csproj", "{5F45D2B1-874E-4931-8401-F58FE5EC93ED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.GoogleDownloader", "QuantConnect.GoogleDownloader\QuantConnect.GoogleDownloader.csproj", "{B745B129-B0CB-4444-98E2-A35929E7613A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{5F45D2B1-874E-4931-8401-F58FE5EC93ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5F45D2B1-874E-4931-8401-F58FE5EC93ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5F45D2B1-874E-4931-8401-F58FE5EC93ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B745B129-B0CB-4444-98E2-A35929E7613A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B745B129-B0CB-4444-98E2-A35929E7613A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B745B129-B0CB-4444-98E2-A35929E7613A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B745B129-B0CB-4444-98E2-A35929E7613A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
