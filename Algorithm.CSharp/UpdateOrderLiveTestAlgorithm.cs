@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
         private const decimal LimitPercentageDelta = 0.005m;
 
         private const string Symbol = "SPY";
-        private const SecurityType SecurityType = QuantConnect.SecurityType.Equity;
+        private const SecurityType SecType = SecurityType.Equity;
 
         private readonly CircularQueue<OrderType> _orderTypesQueue = new CircularQueue<OrderType>(new []
         {
@@ -68,7 +68,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 07);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType, Symbol, Resolution.Second);
+            AddSecurity(SecType, Symbol, Resolution.Second);
             Security = Securities[Symbol];
 
             _orderTypesQueue.CircleCompleted += (sender, args) =>
@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     limitPrice = !isLong ? (1 + LimitPercentage) * Security.High : (1 - LimitPercentage) * Security.Low;
                 }
-                var request = new SubmitOrderRequest(orderType, SecurityType, Symbol, Quantity, stopPrice, limitPrice, Time, orderType.ToString());
+                var request = new SubmitOrderRequest(orderType, SecType, Symbol, Quantity, stopPrice, limitPrice, Time, orderType.ToString());
                 var ticket = Transactions.AddOrder(request);
                 _tickets.Add(ticket);
                 if ((decimal)Random.NextDouble() < ImmediateCancelPercentage)

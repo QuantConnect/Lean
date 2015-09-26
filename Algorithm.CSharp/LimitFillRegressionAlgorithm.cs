@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">TradeBars IDictionary object with your stock data</param>
         public override void OnData(Slice data)
         {
-            if (Time.TimeOfDay.Ticks%QuantConnect.Time.OneHour.Ticks == 0)
+            if (Time.TimeOfDay.Ticks%TimeSpan.FromHours(1).Ticks == 0)
             {
                 bool goLong = Time < StartDate + TimeSpan.FromTicks((EndDate - StartDate).Ticks/2);
                 int negative = goLong ? 1 : -1;
