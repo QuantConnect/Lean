@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -27,6 +27,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Notifications;  
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -43,6 +44,7 @@ namespace QuantConnect.Lean.Engine.Results
         private IAlgorithm _algorithm;
         private readonly object _chartLock;
         private IConsoleStatusHandler _algorithmNode;
+        private IMessagingHandler _messagingHandler; 
 
         //Sampling Periods:
         private DateTime _nextSample;
@@ -177,6 +179,8 @@ namespace QuantConnect.Lean.Engine.Results
                 Directory.Delete(_chartDirectory, true);
             }
             Directory.CreateDirectory(_chartDirectory);
+            _messagingHandler = messagingHandler; 
+
         }
         
         /// <summary>
@@ -619,6 +623,46 @@ namespace QuantConnect.Lean.Engine.Results
             foreach (var pair in _algorithm.RuntimeStatistics)
             {
                 RuntimeStatistic(pair.Key, pair.Value);
+            }
+            // Dequeue and processes notification messages
+            //Send all the notification messages but timeout within a second
+            var start = DateTime.Now;
+            while (_algorithm.Notify.Messages.Count > 0 && DateTime.Now < start.AddSeconds(1))
+            {
+                Notification message;
+                if (_algorithm.Notify.Messages.TryDequeue(out message))
+                {
+                    //Process the notification messages:
+                    Log.Trace("ConsoleResultHandler.ProcessSynchronousEvents(): Processing Notification...");
+
+                    switch (message.GetType().Name)
+                    {
+                        case "NotificationEmail":
+                            _messagingHandler.Email(message as NotificationEmail);
+                            break;
+
+                        case "NotificationSms":
+                            _messagingHandler.Sms(message as NotificationSms);
+                            break;
+
+                        case "NotificationWeb":
+                            _messagingHandler.Web(message as NotificationWeb);
+                            break;
+
+                        default:
+                            try
+                            {
+                                //User code.
+                                message.Send();
+                            }
+                            catch (Exception err)
+                            {
+                                Log.Error("ConsoleResultHandler.ProcessSynchronousEvents(): Custom send notification: " + err.Message);
+                                ErrorMessage("Custom send notification: " + err.Message, err.StackTrace);
+                            }
+                            break;
+                    }
+                }
             }
         }
 
