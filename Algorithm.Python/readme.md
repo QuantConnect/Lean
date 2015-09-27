@@ -11,6 +11,7 @@ WINDOWS:
 3. Run the build script (build.bat).
 
 If you install IronPython and add it to your path variable you can adjust the project settings to do the following steps automatically:
+
 4. Right click on QuantConnect.Algorithm.Python project and click properties. On Build Events tab enter "build" in the post-build events.
 
 5. Update your config file to point to the output file: "QuantConnect.Algorithm.Python.dll"
