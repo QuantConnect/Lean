@@ -633,7 +633,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (_algorithm.Notify.Messages.TryDequeue(out message))
                 {
                     //Process the notification messages:
-                    Log.Trace("LiveTradingResultHandler.ProcessSynchronousEvents(): Processing Notification...");
+                    Log.Trace("ConsoleResultHandler.ProcessSynchronousEvents(): Processing Notification...");
 
                     switch (message.GetType().Name)
                     {
@@ -657,7 +657,7 @@ namespace QuantConnect.Lean.Engine.Results
                             }
                             catch (Exception err)
                             {
-                                Log.Error("LiveTradingResultHandler.ProcessSynchronousEvents(): Custom send notification: " + err.Message);
+                                Log.Error("ConsoleResultHandler.ProcessSynchronousEvents(): Custom send notification: " + err.Message);
                                 ErrorMessage("Custom send notification: " + err.Message, err.StackTrace);
                             }
                             break;
