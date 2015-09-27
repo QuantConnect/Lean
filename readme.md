@@ -41,7 +41,7 @@ For more information on the system design and contributing please see the Lean W
 
 Install [Mono for Mac](http://www.mono-project.com/docs/getting-started/install/mac/)
 
-Install [MonoDevelop](http://www.monodevelop.com/download/) or [Xamarin Studio](http://xamarin.com/studio)
+Install [MonoDevelop](http://www.monodevelop.com/download/) or [Xamarin Studio](http://xamarin.com/studio) for your IDE.
 
 Clone the repo:
 ```
@@ -63,7 +63,7 @@ If you are running MonoDevelop:
 
 Run the compiled `exe` file. For the time being you need to run the `exe` in the same path as your current working directory:
 ```
-cd Engine/Lean/bin/Debug
+cd Lean/Engine/bin/Debug
 mono ./QuantConnect.Lean.exe
 ```
 ### Linux (Debian, Ubuntu)
@@ -83,7 +83,7 @@ mdtool build
 
 Run the compiled `exe` file. For the time being you need to run the `exe` in the same path as your current working directory:
 ```
-cd Engine/Lean/bin/Debug
+cd Lean/Engine/bin/Debug
 ./QuantConnect.Lean.exe
 ```
 
@@ -91,7 +91,8 @@ cd Engine/Lean/bin/Debug
 
 - Install [Visual Studio](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
 - Open `QuantConnect.Lean.sln` in Visual Studio
-- Press `ctrl-f5` to run without debugging
+- Press `ctrl-f5` to run without debugging.
+By default Visual Studio includes NuGet, if your version cannot find DLL references, install [Nuget](https://www.nuget.org/) and build again. 
 
 
 ## Issues and Feature Requests ##
