@@ -1204,7 +1204,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // don't kill algos on Saturdays if we don't have a connection
             if (time.DayOfWeek == DayOfWeek.Saturday)
             {
-                result = false;
+                result = true;
             }
             else
             {
