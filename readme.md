@@ -43,6 +43,8 @@ Install [Mono for Mac](http://www.mono-project.com/docs/getting-started/install/
 
 Install [MonoDevelop](http://www.monodevelop.com/download/) or [Xamarin Studio](http://xamarin.com/studio) for your IDE.
 
+OSX does not fully support Visual Basic or F#. You will need to remove these projects from the solution for them to build properly. Alternatively for Visual Basic modify the target framework as shown [here](https://groups.google.com/forum/#!topic/lean-engine/uR94evlM01g).
+
 Clone the repo:
 ```
 git clone git@github.com:QuantConnect/Lean.git
@@ -68,7 +70,7 @@ mono ./QuantConnect.Lean.exe
 ```
 ### Linux (Debian, Ubuntu)
 
-Setup Mono GPG signing key ([instructions here](http://www.mono-project.com/docs/getting-started/install/linux/#usage))
+Setup Mono GPG signing key ([instructions here](http://www.mono-project.com/docs/getting-started/install/linux/#usage)).
 
 Install dependencies:
 ```
