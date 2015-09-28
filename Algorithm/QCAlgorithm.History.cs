@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets or sets the history provider for the algorithm
         /// </summary>
-        IHistoryProvider IAlgorithm.HistoryProvider
+        public IHistoryProvider HistoryProvider
         {
             get;
             set;
