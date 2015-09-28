@@ -196,7 +196,6 @@ namespace QuantConnect.CoarseUniverseGenerator
                             //20150625.csv
                             var csv = line.Split(',');
                             var date = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
-                            if (date <= start) continue;
 
                             var close = decimal.Parse(csv[4])/scaleFactor;
                             var volume = long.Parse(csv[5]);
@@ -207,6 +206,9 @@ namespace QuantConnect.CoarseUniverseGenerator
                                 : volume;
 
                             seeded = true;
+
+                            // even though we don't need to write this data, we still need to build the ema state
+                            if (date <= start) continue;
 
                             var dollarVolume = close*runningAverageVolume;
 
