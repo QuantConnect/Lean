@@ -616,16 +616,38 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Log.Error("InteractiveBrokersBrokerage.GetUsdConversion(): Unable to resolve conversion for currency: " + currency);
                 return 1m;
             }
-            int ticker = GetNextTickerID();
-            decimal rate = 1m; 
-            var manualResetEvent = new ManualResetEvent(false);
-                
-            var priceTick = new Collection<IB.GenericTickType>();
 
-            // define and add our tick handler
+            // if this stays zero then we haven't received the conversion rate
+            var rate = 0m; 
+            var manualResetEvent = new ManualResetEvent(false);
+
+            // we're going to request both history and active ticks, we'll use the ticks first
+            // and if not present, we'll use the latest from the history request
+
+            var data = new List<IB.HistoricalDataEventArgs>();
+            int historicalTicker = GetNextTickerID();
+            var lastHistoricalData = DateTime.MaxValue;
+            EventHandler<IB.HistoricalDataEventArgs> clientOnHistoricalData = (sender, args) =>
+            {
+                if (args.RequestId == historicalTicker)
+                {
+                    data.Add(args);
+                    lastHistoricalData = DateTime.UtcNow;
+                }
+            };
+
+            _client.HistoricalData += clientOnHistoricalData;
+
+            // request some historical data, IB's api takes into account weekends/market opening hours
+            var requestSpan = TimeSpan.FromSeconds(100);
+            _client.RequestHistoricalData(historicalTicker, contract, DateTime.UtcNow, requestSpan, IB.BarSize.OneSecond, IB.HistoricalDataType.Ask, 0);
+
+            // define and add our tick handler for the ticks
+            var marketDataTicker = GetNextTickerID();
+            var priceTick = new Collection<IB.GenericTickType>();
             EventHandler<IB.TickPriceEventArgs> clientOnTickPrice = (sender, args) =>
             {
-                if (args.TickerId == ticker && args.TickType == IB.TickType.AskPrice)
+                if (args.TickerId == marketDataTicker && args.TickType == IB.TickType.AskPrice)
                 {
                     rate = args.Price;
                     manualResetEvent.Set();
@@ -634,9 +656,30 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _client.TickPrice += clientOnTickPrice;
 
-            _client.RequestMarketData(ticker, contract, priceTick, true, false);
+            _client.RequestMarketData(marketDataTicker, contract, priceTick, true, false);
 
             manualResetEvent.WaitOne(2500);
+
+            _client.TickPrice -= clientOnTickPrice;
+
+            // check to see if ticks returned something
+            if (rate == 0)
+            {
+                // history doesn't have a completed event, so we'll just wait for it to not have been called for a second
+                while (DateTime.UtcNow - lastHistoricalData < Time.OneSecond) Thread.Sleep(20);
+
+                // check for history
+                var ordered = data.OrderByDescending(x => x.Date);
+                var mostRecentQuote = ordered.FirstOrDefault();
+                if (mostRecentQuote == null)
+                {
+                    throw new Exception("Unable to get recent quote for " + currencyPair);
+                }
+                rate = mostRecentQuote.Close;
+            }
+
+            // be sure to unwire our history handler as well
+            _client.HistoricalData -= clientOnHistoricalData;
 
             if (inverted)
             {
