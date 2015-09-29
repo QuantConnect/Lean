@@ -38,6 +38,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use oanda models
         /// </summary>
-        OandaBrokerage
+        OandaBrokerage,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use fxcm models
+        /// </summary>
+        FxcmBrokerage
     }
 }

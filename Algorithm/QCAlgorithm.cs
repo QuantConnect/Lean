@@ -664,6 +664,7 @@ namespace QuantConnect.Algorithm
                 case BrokerageName.Default:
                     BrokerageModel = new DefaultBrokerageModel();
                     break;
+
                 case BrokerageName.InteractiveBrokersBrokerage:
                     BrokerageModel = new InteractiveBrokersBrokerageModel();
                     break;
@@ -674,6 +675,10 @@ namespace QuantConnect.Algorithm
 
                 case BrokerageName.OandaBrokerage:
                     BrokerageModel = new OandaBrokerageModel();
+                    break;
+
+                case BrokerageName.FxcmBrokerage:
+                    BrokerageModel = new FxcmBrokerageModel();
                     break;
 
                 default:
