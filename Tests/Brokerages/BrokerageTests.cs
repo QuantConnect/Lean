@@ -245,6 +245,14 @@ namespace QuantConnect.Tests.Brokerages
         /// </summary>
         protected abstract decimal GetAskPrice(string symbol, SecurityType securityType);
 
+        /// <summary>
+        /// Gets the default order quantity
+        /// </summary>
+        protected virtual int GetDefaultQuantity()
+        {
+            return 1; 
+        }
+
         [Test]
         public void IsConnected()
         {
@@ -257,7 +265,7 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("");
             Log.Trace("LONG FROM ZERO");
             Log.Trace("");
-            PlaceOrderWaitForStatus(parameters.CreateLongOrder(1), parameters.ExpectedStatus);
+            PlaceOrderWaitForStatus(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
         }
 
         [Test, TestCaseSource("OrderParameters")]
@@ -267,10 +275,10 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("CLOSE FROM LONG");
             Log.Trace("");
             // first go long
-            PlaceOrderWaitForStatus(parameters.CreateLongMarketOrder(1), OrderStatus.Filled);
+            PlaceOrderWaitForStatus(parameters.CreateLongMarketOrder(GetDefaultQuantity()), OrderStatus.Filled);
 
             // now close it
-            PlaceOrderWaitForStatus(parameters.CreateShortOrder(1), parameters.ExpectedStatus);
+            PlaceOrderWaitForStatus(parameters.CreateShortOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
         }
 
         [Test, TestCaseSource("OrderParameters")]
@@ -279,7 +287,7 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("");
             Log.Trace("SHORT FROM ZERO");
             Log.Trace("");
-            PlaceOrderWaitForStatus(parameters.CreateShortOrder(1), parameters.ExpectedStatus);
+            PlaceOrderWaitForStatus(parameters.CreateShortOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
         }
 
         [Test, TestCaseSource("OrderParameters")]
@@ -289,10 +297,10 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("CLOSE FROM SHORT");
             Log.Trace("");
             // first go short
-            PlaceOrderWaitForStatus(parameters.CreateShortMarketOrder(1), OrderStatus.Filled);
+            PlaceOrderWaitForStatus(parameters.CreateShortMarketOrder(GetDefaultQuantity()), OrderStatus.Filled);
 
             // now close it
-            PlaceOrderWaitForStatus(parameters.CreateLongOrder(1), parameters.ExpectedStatus);
+            PlaceOrderWaitForStatus(parameters.CreateLongOrder(GetDefaultQuantity()), parameters.ExpectedStatus);
         }
 
         [Test, TestCaseSource("OrderParameters")]
@@ -305,7 +313,7 @@ namespace QuantConnect.Tests.Brokerages
             PlaceOrderWaitForStatus(parameters.CreateLongMarketOrder(1));
 
             // now go net short
-            var order = PlaceOrderWaitForStatus(parameters.CreateShortOrder(2), parameters.ExpectedStatus);
+            var order = PlaceOrderWaitForStatus(parameters.CreateShortOrder(2 * GetDefaultQuantity()), parameters.ExpectedStatus);
 
             if (parameters.ModifyUntilFilled)
             {
@@ -320,10 +328,10 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("LONG FROM SHORT");
             Log.Trace("");
             // first fo short
-            PlaceOrderWaitForStatus(parameters.CreateShortMarketOrder(-1), OrderStatus.Filled);
+            PlaceOrderWaitForStatus(parameters.CreateShortMarketOrder(-GetDefaultQuantity()), OrderStatus.Filled);
 
             // now go long
-            var order = PlaceOrderWaitForStatus(parameters.CreateLongOrder(2), parameters.ExpectedStatus);
+            var order = PlaceOrderWaitForStatus(parameters.CreateLongOrder(2 * GetDefaultQuantity()), parameters.ExpectedStatus);
 
             if (parameters.ModifyUntilFilled)
             {
@@ -349,7 +357,7 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("");
             var before = Brokerage.GetAccountHoldings();
 
-            PlaceOrderWaitForStatus(new MarketOrder(Symbol, 1, DateTime.Now, type: SecurityType));
+            PlaceOrderWaitForStatus(new MarketOrder(Symbol, GetDefaultQuantity(), DateTime.Now, type: SecurityType));
 
             var after = Brokerage.GetAccountHoldings();
 
@@ -359,7 +367,7 @@ namespace QuantConnect.Tests.Brokerages
             var beforeQuantity = beforeHoldings == null ? 0 : beforeHoldings.Quantity;
             var afterQuantity = afterHoldings == null ? 0 : afterHoldings.Quantity;
 
-            Assert.AreEqual(1, afterQuantity - beforeQuantity);
+            Assert.AreEqual(GetDefaultQuantity(), afterQuantity - beforeQuantity);
         }
 
         /// <summary>
