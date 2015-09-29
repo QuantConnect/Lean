@@ -77,7 +77,7 @@ namespace QuantConnect.Brokerages.Fxcm
             }
             _requestAccountListEvent.WaitOne(MaximumWaitingTime);
 
-			// Hedging MUST be disabled on all accounts
+            // Hedging MUST be disabled on all accounts
             if (_accounts.Values.Any(account => account.getParties().getFXCMPositionMaintenance() != "N"))
             {
                 throw new NotSupportedException("The Lean engine does not support accounts with Hedging enabled. Please contact FXCM support to disable Hedging.");
@@ -88,7 +88,7 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             lock (_locker)
             {
-				_orders.Clear();
+                _orders.Clear();
                 _currentRequest = _gateway.requestOpenOrders();
             }
             _requestOrderEvent.WaitOne(MaximumWaitingTime);
@@ -98,7 +98,7 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             lock (_locker)
             {
-				_openPositions.Clear();
+                _openPositions.Clear();
                 _currentRequest = _gateway.requestOpenPositions();
             }
             _requestPositionListEvent.WaitOne(MaximumWaitingTime);
@@ -113,13 +113,13 @@ namespace QuantConnect.Brokerages.Fxcm
             if (currency == "USD")
                 return 1m;
 
-			// determine the correct symbol to choose
+            // determine the correct symbol to choose
             var normalSymbol = currency + "/USD";
             var invertedSymbol = "USD/" + currency;
             var isInverted = _fxcmInstruments.ContainsKey(invertedSymbol);
             var symbol = isInverted ? invertedSymbol : normalSymbol;
 
-			// get current quotes for the instrument
+            // get current quotes for the instrument
             var request = new MarketDataRequest();
             request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
             request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SNAPSHOT);
@@ -170,26 +170,26 @@ namespace QuantConnect.Brokerages.Fxcm
 
                 else if (message is UserResponse || message is CollateralInquiryAck || message is MarketDataRequestReject || message is SecurityStatus)
                 {
-					// Unused messages, no handler needed
+                    // Unused messages, no handler needed
                 }
 
                 else
                 {
-					// Should never get here, if it does log and ignore message
+                    // Should never get here, if it does log and ignore message
                     // New messages added in future api updates should be added to the unused list above
                     Log.Trace(string.Format("FxcmBrokerage.messageArrived(): Unknown message: {0}\n", message));
                 }
             }
         }
 
-		/// <summary>
+        /// <summary>
         /// TradingSessionStatus message handler
         /// </summary>
         private void OnTradingSessionStatus(TradingSessionStatus message)
         {
             if (message.getRequestID() == _currentRequest)
             {
-				// load instrument list into a dictionary
+                // load instrument list into a dictionary
                 var securities = message.getSecurities();
                 while (securities.hasMoreElements())
                 {
@@ -197,14 +197,14 @@ namespace QuantConnect.Brokerages.Fxcm
                     _fxcmInstruments[security.getSymbol()] = security;
                 }
 
-				// create map from QuantConnect symbols to FXCM symbols
+                // create map from QuantConnect symbols to FXCM symbols
                 foreach (var fxcmSymbol in _fxcmInstruments.Keys)
                 {
                     var symbol = ConvertFxcmSymbolToSymbol(fxcmSymbol);
                     _mapInstrumentSymbols[symbol] = fxcmSymbol;
                 }
 
-				// get account base currency
+                // get account base currency
                 _fxcmAccountCurrency = message.getParameter("BASE_CRNCY").getValue();
 
                 _requestTradingSessionStatusEvent.Set();
@@ -249,7 +249,7 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             var orderId = message.getOrderID();
             var orderStatus = message.getFXCMOrdStatus();
-			Debug.Print(message.toString());
+            Debug.Print(message.toString());
 
             if (orderId != "NONE")
             {

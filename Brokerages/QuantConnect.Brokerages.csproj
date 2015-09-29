@@ -79,6 +79,7 @@
     <Compile Include="BrokerageException.cs" />
     <Compile Include="BrokerageFactory.cs" />
     <Compile Include="Fxcm\FxcmBrokerage.cs" />
+    <Compile Include="Fxcm\FxcmBrokerage.Messaging.cs" />
     <Compile Include="Fxcm\FxcmBrokerage.Util.cs" />
     <Compile Include="Fxcm\FxcmBrokerageFactory.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
@@ -101,7 +102,6 @@
     <Compile Include="Tradier\UserProfile.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Fxcm\FxcmBrokerage.Messaging.cs" />
     <None Include="InteractiveBrokers\run-ib-controller.bat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
