@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Fxcm;
 using QuantConnect.Configuration;
@@ -32,17 +33,21 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
 
         protected override decimal HighPrice
         {
-            get { return 2m; }
+            // FXCM requires order prices to be not more than 5600 pips from the market price (at least for EURUSD)
+            get { return 1.5m; }
         }
 
         protected override decimal LowPrice
         {
+            // FXCM requires order prices to be not more than 5600 pips from the market price (at least for EURUSD)
             get { return 0.7m; }
         }
 
         protected override decimal GetAskPrice(string symbol, SecurityType securityType)
         {
-            throw new NotImplementedException();
+            var brokerage = (FxcmBrokerage)Brokerage;
+            var quotes = brokerage.GetQuotes(new List<string> { brokerage.ConvertSymbolToFxcmSymbol(symbol) });
+            return (decimal)quotes.Single().getAskClose();
         }
 
         protected override int GetDefaultQuantity()

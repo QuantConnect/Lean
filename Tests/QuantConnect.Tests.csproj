@@ -36,6 +36,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\CloneExtensions.1.2\lib\portable-net40+sl50+win+wp80\CloneExtensions.dll</HintPath>
     </Reference>
+    <Reference Include="IKVM.OpenJDK.Core, Version=7.2.4630.5, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Brokerages\Fxcm\lib\IKVM.OpenJDK.Core.dll</HintPath>
+    </Reference>
     <Reference Include="Krs.Ats.IBNet, Version=9.66.0.31, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Krs.Ats.IBNet.9.66.0.31\lib\net20\Krs.Ats.IBNet.dll</HintPath>

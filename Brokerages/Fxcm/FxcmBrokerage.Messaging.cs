@@ -38,22 +38,16 @@ namespace QuantConnect.Brokerages.Fxcm
         private string _currentRequest;
         private const int MaximumWaitingTime = 2500;
 
-        private readonly AutoResetEvent _requestTradingSessionStatusEvent = new AutoResetEvent(false);
-        private readonly AutoResetEvent _requestAccountListEvent = new AutoResetEvent(false);
-        private readonly AutoResetEvent _requestMarketDataEvent = new AutoResetEvent(false);
-        private readonly AutoResetEvent _requestOrderEvent = new AutoResetEvent(false);
-        private readonly AutoResetEvent _requestPositionListEvent = new AutoResetEvent(false);
-
         private readonly Dictionary<string, string> _mapInstrumentSymbols = new Dictionary<string, string>();
         private readonly Dictionary<string, TradingSecurity> _fxcmInstruments = new Dictionary<string, TradingSecurity>();
         private readonly Dictionary<string, CollateralReport> _accounts = new Dictionary<string, CollateralReport>();
         private readonly Dictionary<string, MarketDataSnapshot> _rates = new Dictionary<string, MarketDataSnapshot>();
         private readonly Dictionary<string, ExecutionReport> _orders = new Dictionary<string, ExecutionReport>();
-        private readonly Dictionary<string, ExecutionReport> _orderRequests = new Dictionary<string, ExecutionReport>();
         private readonly Dictionary<string, PositionReport> _openPositions = new Dictionary<string, PositionReport>();
 
         private readonly Dictionary<string, Order> _mapRequestsToOrders = new Dictionary<string, Order>();
-        private readonly Dictionary<Order, string> _mapOrdersToFxcmOrderIds = new Dictionary<Order, string>();
+        private readonly Dictionary<string, Order> _mapFxcmOrderIdsToOrders = new Dictionary<string, Order>();
+        private readonly Dictionary<string, AutoResetEvent> _mapRequestsToAutoResetEvents = new Dictionary<string, AutoResetEvent>();
 
         private string _fxcmAccountCurrency = "USD";
 
@@ -64,8 +58,9 @@ namespace QuantConnect.Brokerages.Fxcm
             lock (_locker)
             {
                 _currentRequest = _gateway.requestTradingSessionStatus();
+                _mapRequestsToAutoResetEvents[_currentRequest] = new AutoResetEvent(false);
             }
-            _requestTradingSessionStatusEvent.WaitOne(MaximumWaitingTime);
+            _mapRequestsToAutoResetEvents[_currentRequest].WaitOne(MaximumWaitingTime);
         }
 
         private void LoadAccounts()
@@ -74,8 +69,9 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 _accounts.Clear();
                 _currentRequest = _gateway.requestAccounts();
+                _mapRequestsToAutoResetEvents[_currentRequest] = new AutoResetEvent(false);
             }
-            _requestAccountListEvent.WaitOne(MaximumWaitingTime);
+            _mapRequestsToAutoResetEvents[_currentRequest].WaitOne(MaximumWaitingTime);
 
             // Hedging MUST be disabled on all accounts
             if (_accounts.Values.Any(account => account.getParties().getFXCMPositionMaintenance() != "N"))
@@ -90,8 +86,9 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 _orders.Clear();
                 _currentRequest = _gateway.requestOpenOrders();
+                _mapRequestsToAutoResetEvents[_currentRequest] = new AutoResetEvent(false);
             }
-            _requestOrderEvent.WaitOne(MaximumWaitingTime);
+            _mapRequestsToAutoResetEvents[_currentRequest].WaitOne(MaximumWaitingTime);
         }
 
         private void LoadOpenPositions()
@@ -100,8 +97,33 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 _openPositions.Clear();
                 _currentRequest = _gateway.requestOpenPositions();
+                _mapRequestsToAutoResetEvents[_currentRequest] = new AutoResetEvent(false);
             }
-            _requestPositionListEvent.WaitOne(MaximumWaitingTime);
+            _mapRequestsToAutoResetEvents[_currentRequest].WaitOne(MaximumWaitingTime);
+        }
+
+        /// <summary>
+        /// Gets the quotes for the symbol
+        /// </summary>
+        public List<MarketDataSnapshot> GetQuotes(List<string> symbols)
+        {
+            // get current quotes for the instrument
+            var request = new MarketDataRequest();
+            request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
+            request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SNAPSHOT);
+            foreach (var symbol in symbols)
+            {
+                request.addRelatedSymbol(_fxcmInstruments[symbol]);
+            }
+
+            lock (_locker)
+            {
+                _currentRequest = _gateway.sendMessage(request);
+                _mapRequestsToAutoResetEvents[_currentRequest] = new AutoResetEvent(false);
+            }
+            _mapRequestsToAutoResetEvents[_currentRequest].WaitOne(MaximumWaitingTime);
+
+            return _rates.Where(x => symbols.Contains(x.Key)).Select(x => x.Value).ToList();
         }
 
         /// <summary>
@@ -120,17 +142,9 @@ namespace QuantConnect.Brokerages.Fxcm
             var symbol = isInverted ? invertedSymbol : normalSymbol;
 
             // get current quotes for the instrument
-            var request = new MarketDataRequest();
-            request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
-            request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SNAPSHOT);
-            request.addRelatedSymbol(_fxcmInstruments[symbol]);
-            lock (_locker)
-            {
-                _currentRequest = _gateway.sendMessage(request);
-            }
-            _requestOrderEvent.WaitOne(MaximumWaitingTime);
+            var quotes = GetQuotes(new List<string> { symbol });
 
-            var rate = (decimal)(_rates[symbol].getBidClose() + _rates[symbol].getAskClose()) / 2;
+            var rate = (decimal)(quotes[0].getBidClose() + quotes[0].getAskClose()) / 2;
 
             return isInverted ? 1 / rate : rate;
         }
@@ -207,7 +221,8 @@ namespace QuantConnect.Brokerages.Fxcm
                 // get account base currency
                 _fxcmAccountCurrency = message.getParameter("BASE_CRNCY").getValue();
 
-                _requestTradingSessionStatusEvent.Set();
+                _mapRequestsToAutoResetEvents[_currentRequest].Set();
+                _mapRequestsToAutoResetEvents.Remove(_currentRequest);
             }
         }
 
@@ -223,7 +238,10 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 // set the state of the request to be completed only if this is the last collateral report requested
                 if (message.isLastRptRequested())
-                    _requestAccountListEvent.Set();
+                {
+                    _mapRequestsToAutoResetEvents[_currentRequest].Set();
+                    _mapRequestsToAutoResetEvents.Remove(_currentRequest);
+                }
             }
         }
 
@@ -238,7 +256,10 @@ namespace QuantConnect.Brokerages.Fxcm
             if (message.getRequestID() == _currentRequest)
             {
                 if (message.getFXCMContinuousFlag() == IFixValueDefs.__Fields.FXCMCONTINUOUS_END)
-                    _requestMarketDataEvent.Set();
+                {
+                    _mapRequestsToAutoResetEvents[_currentRequest].Set();
+                    _mapRequestsToAutoResetEvents.Remove(_currentRequest);
+                }
             }
         }
 
@@ -249,27 +270,32 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             var orderId = message.getOrderID();
             var orderStatus = message.getFXCMOrdStatus();
-            Debug.Print(message.toString());
+            //Debug.Print(message.toString());
 
             if (orderId != "NONE")
             {
                 _orders[orderId] = message;
-                _orderRequests[message.getRequestID()] = message;
 
-                var order = _mapRequestsToOrders[message.getRequestID()];
-                _mapOrdersToFxcmOrderIds[order] = orderId;
-
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0) { Status = ConvertOrderStatus(orderStatus) });
+                Order order;
+                if (_mapFxcmOrderIdsToOrders.TryGetValue(orderId, out order))
+                {
+                    // existing order
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0) { Status = ConvertOrderStatus(orderStatus) });
+                }
+                else if (_mapRequestsToOrders.TryGetValue(message.getRequestID(), out order))
+                {
+                    // new order
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0) { Status = ConvertOrderStatus(orderStatus) });
+                    _mapFxcmOrderIdsToOrders[orderId] = order;
+                }
             }
 
             if (message.getRequestID() == _currentRequest)
             {
-                if (message.isLastRptRequested() &&
-                    orderStatus.getCode() != IFixValueDefs.__Fields.FXCMORDSTATUS_PENDING_CANCEL &&
-                    orderStatus.getCode() != IFixValueDefs.__Fields.FXCMORDSTATUS_EXECUTING &&
-                    orderStatus.getCode() != IFixValueDefs.__Fields.FXCMORDSTATUS_INPROCESS)
+                if (message.isLastRptRequested())
                 {
-                    _requestOrderEvent.Set();
+                    _mapRequestsToAutoResetEvents[_currentRequest].Set();
+                    _mapRequestsToAutoResetEvents.Remove(_currentRequest);
                 }
             }
         }
@@ -283,7 +309,8 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 if (message.getTotalNumPosReports() == 0)
                 {
-                    _requestPositionListEvent.Set();
+                    _mapRequestsToAutoResetEvents[_currentRequest].Set();
+                    _mapRequestsToAutoResetEvents.Remove(_currentRequest);
                 }
             }
         }
@@ -299,7 +326,8 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 if (message.isLastRptRequested())
                 {
-                    _requestPositionListEvent.Set();
+                    _mapRequestsToAutoResetEvents[_currentRequest].Set();
+                    _mapRequestsToAutoResetEvents.Remove(_currentRequest);
                 }
             }
         }
@@ -311,7 +339,8 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             if (message.getRequestID() == _currentRequest)
             {
-                _requestOrderEvent.Set();
+                _mapRequestsToAutoResetEvents[_currentRequest].Set();
+                _mapRequestsToAutoResetEvents.Remove(_currentRequest);
             }
         }
 

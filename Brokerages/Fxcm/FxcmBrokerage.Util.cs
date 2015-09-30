@@ -72,13 +72,24 @@ namespace QuantConnect.Brokerages.Fxcm
             order.SecurityType = GetSecurityType(fxcmOrder.getInstrument());
             order.Status = ConvertOrderStatus(fxcmOrder.getFXCMOrdStatus());
             order.BrokerId.Add(Convert.ToInt64(fxcmOrder.getOrderID()));
-            order.Id = Convert.ToInt32(fxcmOrder.getOrderID());
-
-            // TODO: OrderDuration.Day ?
-            order.Duration = OrderDuration.GTC;
+            order.Duration = ConvertDuration(fxcmOrder.getTimeInForce());
             order.Time = FromJavaDate(fxcmOrder.getTransactTime().toDate());
 
             return order;
+        }
+
+        /// <summary>
+        /// Converts the tradier order duration into a qc order duration
+        /// </summary>
+        private static OrderDuration ConvertDuration(ITimeInForce timeInForce)
+        {
+            if (timeInForce == TimeInForceFactory.GOOD_TILL_CANCEL)
+                return OrderDuration.GTC;
+            
+            if (timeInForce == TimeInForceFactory.DAY)
+                return (OrderDuration)1; //.Day;
+
+            throw new ArgumentOutOfRangeException();
         }
 
         /// <summary>
@@ -94,7 +105,9 @@ namespace QuantConnect.Brokerages.Fxcm
                 AveragePrice = (decimal)fxcmPosition.getSettlPrice(),
                 ConversionRate = 1.0m,
                 CurrencySymbol = "$",
-                Quantity = (decimal)fxcmPosition.getPositionQty().getQty()
+                Quantity = (decimal)(fxcmPosition.getPositionQty().getLongQty() > 0 
+                    ? fxcmPosition.getPositionQty().getLongQty() 
+                    : -fxcmPosition.getPositionQty().getShortQty())
             };        
         }
 
@@ -120,7 +133,10 @@ namespace QuantConnect.Brokerages.Fxcm
             return symbol.Replace("/", "").ToUpper();
         }
 
-        private string ConvertSymbolToFxcmSymbol(string symbol)
+        /// <summary>
+        /// Converts a QuantConnect symbol to an FXCM symbol
+        /// </summary>
+        public string ConvertSymbolToFxcmSymbol(string symbol)
         {
             return _mapInstrumentSymbols[symbol];
         }

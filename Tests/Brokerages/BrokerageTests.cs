@@ -310,7 +310,7 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("SHORT FROM LONG");
             Log.Trace("");
             // first go long
-            PlaceOrderWaitForStatus(parameters.CreateLongMarketOrder(1));
+            PlaceOrderWaitForStatus(parameters.CreateLongMarketOrder(GetDefaultQuantity()));
 
             // now go net short
             var order = PlaceOrderWaitForStatus(parameters.CreateShortOrder(2 * GetDefaultQuantity()), parameters.ExpectedStatus);

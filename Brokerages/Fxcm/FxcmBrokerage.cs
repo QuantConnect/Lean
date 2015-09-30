@@ -16,10 +16,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using com.fxcm.external.api.transport;
 using com.fxcm.external.api.transport.listeners;
 using com.fxcm.external.api.util;
 using com.fxcm.fix;
+using com.fxcm.fix.pretrade;
 using com.fxcm.fix.trade;
 using com.fxcm.messaging.util;
 using QuantConnect.Orders;
@@ -95,8 +97,6 @@ namespace QuantConnect.Brokerages.Fxcm
             // load instruments, accounts, orders, positions
             LoadInstruments();
             LoadAccounts();
-            LoadOpenOrders();
-            LoadOpenPositions();
         }
 
         /// <summary>
@@ -131,8 +131,21 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            //LoadOpenPositions();
-            return _openPositions.Values.Select(ConvertHolding).ToList();
+            LoadOpenPositions();
+            var holdings = _openPositions.Values.Select(ConvertHolding).ToList();
+
+            var symbols = holdings.Select(x => ConvertSymbolToFxcmSymbol(x.Symbol)).ToList();
+            var quotes = GetQuotes(symbols).ToDictionary(x => x.getInstrument().getSymbol());
+            foreach (var holding in holdings)
+            {
+                MarketDataSnapshot quote;
+                if (quotes.TryGetValue(ConvertSymbolToFxcmSymbol(holding.Symbol), out quote))
+                {
+                    holding.MarketPrice = (decimal)(quote.getBidClose() + quote.getAskClose()) / 2;
+                }
+            }
+
+            return holdings;
         }
 
         /// <summary>
@@ -168,32 +181,17 @@ namespace QuantConnect.Brokerages.Fxcm
                     break;
 
                 case OrderType.Limit:
-                    {
-                        var limitPrice = (double)((LimitOrder)order).LimitPrice;
-                        orderRequest = MessageGenerator.generateOpenOrder(limitPrice, accountId, quantity, orderSide, symbol, "");
-                        orderRequest.setOrdType(OrdTypeFactory.LIMIT);
-                        orderRequest.setTimeInForce(TimeInForceFactory.GOOD_TILL_CANCEL);
-                    }
+                    var limitPrice = (double)((LimitOrder)order).LimitPrice;
+                    orderRequest = MessageGenerator.generateOpenOrder(limitPrice, accountId, quantity, orderSide, symbol, "");
+                    orderRequest.setOrdType(OrdTypeFactory.LIMIT);
+                    orderRequest.setTimeInForce(TimeInForceFactory.GOOD_TILL_CANCEL);
                     break;
 
                 case OrderType.StopMarket:
-                    {
-                        var stopPrice = (double)((StopMarketOrder)order).StopPrice;
-                        orderRequest = MessageGenerator.generateOpenOrder(stopPrice, accountId, quantity, orderSide, symbol, "");
-                        orderRequest.setOrdType(OrdTypeFactory.STOP);
-                        orderRequest.setTimeInForce(TimeInForceFactory.GOOD_TILL_CANCEL);
-                    }
-                    break;
-
-                case OrderType.StopLimit:
-                    {
-                        var stopPrice = (double)((StopLimitOrder)order).StopPrice;
-                        var limitPrice = (double)((StopLimitOrder)order).LimitPrice;
-                        orderRequest = MessageGenerator.generateOpenOrder(stopPrice, accountId, quantity, orderSide, symbol, "");
-                        orderRequest.setOrdType(OrdTypeFactory.STOP_LIMIT);
-                        orderRequest.setStopPx(limitPrice);
-                        orderRequest.setTimeInForce(TimeInForceFactory.GOOD_TILL_CANCEL);
-                    }
+                    var stopPrice = (double)((StopMarketOrder)order).StopPrice;
+                    orderRequest = MessageGenerator.generateOpenOrder(stopPrice, accountId, quantity, orderSide, symbol, "");
+                    orderRequest.setOrdType(OrdTypeFactory.STOP);
+                    orderRequest.setTimeInForce(TimeInForceFactory.GOOD_TILL_CANCEL);
                     break;
 
                 default:
@@ -204,8 +202,9 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 _currentRequest = _gateway.sendMessage(orderRequest);
                 _mapRequestsToOrders[_currentRequest] = order;
+                _mapRequestsToAutoResetEvents[_currentRequest] = new AutoResetEvent(false);
             }
-            _requestOrderEvent.WaitOne();
+            _mapRequestsToAutoResetEvents[_currentRequest].WaitOne();
 
             return true;
         }
@@ -229,9 +228,21 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            // TODO: CancelOrder
+            var fxcmOrderId = order.BrokerId[0].ToString();
 
-            throw new NotImplementedException();
+            ExecutionReport fxcmOrder;
+            if (!_orders.TryGetValue(fxcmOrderId, out fxcmOrder))
+                throw new ArgumentException("Order not found: " + fxcmOrderId);
+
+            var orderCancelRequest = MessageGenerator.generateOrderCancelRequest("", fxcmOrder.getOrderID(), fxcmOrder.getSide(), fxcmOrder.getAccount());
+            lock (_locker)
+            {
+                _currentRequest = _gateway.sendMessage(orderCancelRequest);
+                _mapRequestsToAutoResetEvents[_currentRequest] = new AutoResetEvent(false);
+            }
+            _mapRequestsToAutoResetEvents[_currentRequest].WaitOne();
+
+            return true;
         }
 
         #endregion
