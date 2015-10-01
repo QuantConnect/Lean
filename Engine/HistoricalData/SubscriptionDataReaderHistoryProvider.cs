@@ -120,11 +120,21 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 reader = new FillForwardEnumerator(reader, security.Exchange, request.FillForwardResolution.Value.ToTimeSpan(), security.IsExtendedMarketHours, end, config.Increment);
             }
 
-            // this is needed to get the correct result from bar count based requests, don't permit data
-            // throw whose end time is equal to local start,which the subscription data reader does allow
-            // only apply this filter to non-tick subscriptions
+            // since the SubscriptionDataReader performs an any overlap condition on the trade bar's entire
+            // range (time->end time) we can end up passing the incorrect data (too far past, possibly future),
+            // so to combat this we deliberately filter the results from the data reader to fix these cases
+            // which only apply to non-tick data
+
             reader = new SubscriptionFilterEnumerator(reader, security, end);
-            reader = new FilterEnumerator<BaseData>(reader, data => config.Resolution == Resolution.Tick || data.EndTime > start);
+            reader = new FilterEnumerator<BaseData>(reader, data =>
+            {
+                // allow all ticks
+                if (config.Resolution == Resolution.Tick) return true;
+                // filter out future data
+                if (data.EndTime > end) return false;
+                // filter out data before the start
+                return data.EndTime > start;
+            });
 
             return new Subscription(security, reader, start, end, false, false);
         }
