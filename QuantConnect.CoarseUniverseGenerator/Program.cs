@@ -94,15 +94,9 @@ namespace QuantConnect.CoarseUniverseGenerator
         /// </summary>
         /// <param name="dataDirectory">The Lean /Data directory</param>
         /// <param name="ignoreMaplessSymbols">Ignore symbols without a QuantQuote map file.</param>
-        private static void ProcessEquityDirectories(string dataDirectory, bool ignoreMaplessSymbols)
+        public static void ProcessEquityDirectories(string dataDirectory, bool ignoreMaplessSymbols)
         {
-            var exclusions = new HashSet<string>();
-            if (File.Exists(ExclusionsFile))
-            {
-                var excludedSymbols = File.ReadLines(ExclusionsFile).Select(x => x.Trim()).Where(x => !x.StartsWith("#"));
-                exclusions = new HashSet<string>(excludedSymbols, StringComparer.InvariantCultureIgnoreCase);
-                Log.Trace("Loaded {0} symbols into the exclusion set", exclusions.Count);
-            }
+            var exclusions = ReadExclusionsFile(ExclusionsFile);
 
             var equity = Path.Combine(dataDirectory, "equity");
             foreach (var directory in Directory.EnumerateDirectories(equity))
@@ -115,12 +109,7 @@ namespace QuantConnect.CoarseUniverseGenerator
                     Directory.CreateDirectory(coarseFolder);
                 }
 
-                var start = Directory.EnumerateFiles(coarseFolder)
-                    .Select(x => ParseDateFromCoarseFilename(Path.GetFileName(x)))
-                    .DefaultIfEmpty(DateTime.MinValue)
-                    .Max();
-
-                ProcessDailyFolder(dailyFolder, coarseFolder, mapFileFolder, start, exclusions, ignoreMaplessSymbols);
+                ProcessDailyFolder(dailyFolder, coarseFolder, MapFileResolver.Create(mapFileFolder), exclusions, ignoreMaplessSymbols);
             }
         }
 
@@ -130,11 +119,13 @@ namespace QuantConnect.CoarseUniverseGenerator
         /// </summary>
         /// <param name="dailyFolder">The folder with daily data</param>
         /// <param name="coarseFolder">The coarse output folder</param>
-        /// <param name="mapFileFolder">Location of the map file for the data</param>
-        /// <param name="start">The start time, this is resolve by finding the most recent written coarse file</param>
+        /// <param name="mapFileResolver"></param>
         /// <param name="exclusions">The symbols to be excluded from processing</param>
         /// <param name="ignoreMapless">Ignore the symbols without a map file.</param>
-        private static void ProcessDailyFolder(string dailyFolder, string coarseFolder, string mapFileFolder, DateTime start, HashSet<string> exclusions, bool ignoreMapless)
+        /// <param name="symbolResolver">Function used to provide symbol resolution. Default resolution uses the zip file name to resolve
+        /// the symbol, specify null for this behavior.</param>
+        /// <returns>A collection of the generated coarse files</returns>
+        public static ICollection<string> ProcessDailyFolder(string dailyFolder, string coarseFolder, MapFileResolver mapFileResolver, HashSet<string> exclusions, bool ignoreMapless, Func<string, string> symbolResolver = null)
         {
             const decimal scaleFactor = 10000m;
 
@@ -143,7 +134,6 @@ namespace QuantConnect.CoarseUniverseGenerator
             var stopwatch = Stopwatch.StartNew();
             
             // load map files into memory
-            var mapFileResolver = MapFileResolver.Create(mapFileFolder); 
 
             var symbols = 0;
             var maplessCount = 0;
@@ -160,8 +150,13 @@ namespace QuantConnect.CoarseUniverseGenerator
                     var symbol = Path.GetFileNameWithoutExtension(file);
                     if (symbol == null)
                     {
-                        Log.Trace("Unable to resolve symbol from file: {0}", file);
+                        Log.Trace("CoarseGenerator.ProcessDailyFolder(): Unable to resolve symbol from file: {0}", file);
                         continue;
+                    }
+
+                    if (symbolResolver != null)
+                    {
+                        symbol = symbolResolver(symbol);
                     }
 
                     symbol = symbol.ToUpper();
@@ -169,14 +164,6 @@ namespace QuantConnect.CoarseUniverseGenerator
                     if (exclusions.Contains(symbol))
                     {
                         Log.Trace("Excluded symbol: {0}", symbol);
-                        continue;
-                    }
-
-                    if (ignoreMapless && !File.Exists(Path.Combine(mapFileFolder, symbol.ToLower() + ".csv")))
-                    {
-                        maplessCount++;
-                        // Too verbose.
-                        //Log.Trace("Excluded mapless symbol: " + symbol);
                         continue;
                     }
 
@@ -189,6 +176,8 @@ namespace QuantConnect.CoarseUniverseGenerator
                         var seeded = false;
                         var runningAverageVolume = 0m;
 
+                        var checkedForMapFile = false;
+
                         symbols++;
                         string line;
                         while ((line = reader.ReadLine()) != null)
@@ -196,6 +185,17 @@ namespace QuantConnect.CoarseUniverseGenerator
                             //20150625.csv
                             var csv = line.Split(',');
                             var date = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
+
+                            if (ignoreMapless && !checkedForMapFile)
+                            {
+                                checkedForMapFile = true;
+                                if (!mapFileResolver.ResolveMapFile(symbol, date).Any())
+                                {
+                                    // if the resolved map file has zero entries then it's a mapless symbol
+                                    maplessCount++;
+                                    break;
+                                }
+                            }
 
                             var close = decimal.Parse(csv[4])/scaleFactor;
                             var volume = long.Parse(csv[5]);
@@ -206,9 +206,6 @@ namespace QuantConnect.CoarseUniverseGenerator
                                 : volume;
 
                             seeded = true;
-
-                            // even though we don't need to write this data, we still need to build the ema state
-                            if (date <= start) continue;
 
                             var dollarVolume = close*runningAverageVolume;
 
@@ -227,7 +224,8 @@ namespace QuantConnect.CoarseUniverseGenerator
                             if (mapFile == null && ignoreMapless)
                             {
                                 // if we're ignoring mapless files then we should always be able to resolve this
-                                Log.Error(string.Format("Unable to resolve map file for {0} as of {1}", symbol, date.ToShortDateString()));
+                                Log.Error(string.Format("CoarseGenerator.ProcessDailyFolder(): Unable to resolve map file for {0} as of {1}", symbol, date.ToShortDateString()));
+                                continue;
                             }
 
                             // sid,symbol,close,volume,dollar volume
@@ -245,7 +243,7 @@ namespace QuantConnect.CoarseUniverseGenerator
 
                     if (symbols%1000 == 0)
                     {
-                        Log.Trace("Completed processing {0} symbols. Current elapsed: {1} seconds", symbols, stopwatch.Elapsed.TotalSeconds.ToString("0.00"));
+                        Log.Trace("CoarseGenerator.ProcessDailyFolder(): Completed processing {0} symbols. Current elapsed: {1} seconds", symbols, stopwatch.Elapsed.TotalSeconds.ToString("0.00"));
                     }
                 }
                 catch (Exception err)
@@ -255,7 +253,7 @@ namespace QuantConnect.CoarseUniverseGenerator
                 }
             }
 
-            Log.Trace("Saving {0} coarse files to disk", dates.Count);
+            Log.Trace("CoarseGenerator.ProcessDailyFolder(): Saving {0} coarse files to disk", dates.Count);
 
             // dispose all the writers at the end of processing
             foreach (var writer in writers)
@@ -265,8 +263,26 @@ namespace QuantConnect.CoarseUniverseGenerator
 
             stopwatch.Stop();
 
-            Log.Trace("Processed {0} symbols into {1} coarse files in {2} seconds", symbols, dates.Count, stopwatch.Elapsed.TotalSeconds.ToString("0.00"));
-            Log.Trace("Excluded {0} mapless symbols.", maplessCount);
+            Log.Trace("CoarseGenerator.ProcessDailyFolder(): Processed {0} symbols into {1} coarse files in {2} seconds", symbols, dates.Count, stopwatch.Elapsed.TotalSeconds.ToString("0.00"));
+            Log.Trace("CoarseGenerator.ProcessDailyFolder(): Excluded {0} mapless symbols.", maplessCount);
+
+            return writers.Keys;
+        }
+
+        /// <summary>
+        /// Reads the specified exclusions file into a new hash set.
+        /// Returns an empty set if the file does not exist
+        /// </summary>
+        public static HashSet<string> ReadExclusionsFile(string exclusionsFile)
+        {
+            var exclusions = new HashSet<string>();
+            if (File.Exists(exclusionsFile))
+            {
+                var excludedSymbols = File.ReadLines(exclusionsFile).Select(x => x.Trim()).Where(x => !x.StartsWith("#"));
+                exclusions = new HashSet<string>(excludedSymbols, StringComparer.InvariantCultureIgnoreCase);
+                Log.Trace("CoarseGenerator.ReadExclusionsFile(): Loaded {0} symbols into the exclusion set", exclusions.Count);
+            }
+            return exclusions;
         }
 
         /// <summary>
