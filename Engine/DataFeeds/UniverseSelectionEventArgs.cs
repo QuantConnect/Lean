@@ -21,26 +21,26 @@ using QuantConnect.Data;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Specifes a type of fundamental data
+    /// Specifes a type of universe selection
     /// </summary>
-    public enum FundamentalType
+    public enum UniverseSelectionType
     {
         /// <summary>
         /// Coarse fundamental data is used for inital filtering of a larger data set.
         /// This data includes things like daily close, volume, and dollar volume.
         /// </summary>
-        Coarse
+        Fundamental
     }
 
     /// <summary>
-    /// Event arguments for the <see cref="IDataFeed.Fundamental"/> event
+    /// Event arguments for the <see cref="IDataFeed.UniverseSelection"/> event
     /// </summary>
-    public class FundamentalEventArgs : EventArgs
+    public class UniverseSelectionEventArgs : EventArgs
     {
         /// <summary>
         /// Gets the type of fundamental data in this event
         /// </summary>
-        public readonly FundamentalType FundamentalType;
+        public readonly UniverseSelectionType UniverseSelectionType;
         /// <summary>
         /// Gets the configuration for the subscription that produced this data
         /// </summary>
@@ -54,15 +54,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public readonly IReadOnlyList<BaseData> Data;
         /// <summary>
-        /// Initializes a new instance of the <see cref="FundamentalEventArgs"/> class
+        /// Initializes a new instance of the <see cref="UniverseSelectionEventArgs"/> class
         /// </summary>
-        /// <param name="fundamentalType">The type of fundamental data</param>
+        /// <param name="universeSelectionType">The type of fundamental data</param>
         /// <param name="configuration">Theconfiguration for the data</param>
         /// <param name="dateTimeUtc">The date time this event was fired in UTC</param>
         /// <param name="data">The data contained within this event</param>
-        public FundamentalEventArgs(FundamentalType fundamentalType, SubscriptionDataConfig configuration, DateTime dateTimeUtc, IReadOnlyList<BaseData> data)
+        public UniverseSelectionEventArgs(UniverseSelectionType universeSelectionType, SubscriptionDataConfig configuration, DateTime dateTimeUtc, IReadOnlyList<BaseData> data)
         {
-            FundamentalType = fundamentalType;
+            UniverseSelectionType = universeSelectionType;
             Configuration = configuration;
             DateTimeUtc = dateTimeUtc;
             Data = data;

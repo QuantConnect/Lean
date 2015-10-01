@@ -44,9 +44,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
-        /// Event fired when the data feed encounters new fundamental data
+        /// Event fired when the data feed encounters a universe selection subscripion
+        /// This event should be bound to so consumers can perform the required actions
+        /// such as adding and removing subscriptions to the data feed
         /// </summary>
-        public event EventHandler<FundamentalEventArgs> Fundamental;
+        public event EventHandler<UniverseSelectionEventArgs> UniverseSelection;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -241,7 +243,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
                         // we have new universe data to select based on
-                        if (subscription.IsFundamentalSubscription && cache.Value.Count > 0)
+                        if (subscription.IsUniverseSelectionSubscription && cache.Value.Count > 0)
                         {
                             // always wait for other thread
                             if (!Bridge.Wait(Timeout.Infinite, _cancellationTokenSource.Token))
@@ -249,7 +251,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 break;
                             }
                             
-                            OnFundamental(FundamentalType.Coarse, frontier, configuration, cache.Value);
+                            OnUniverseSelection(UniverseSelectionType.Fundamental, frontier, configuration, cache.Value);
                         }
 
                         if (subscription.Current != null)
@@ -399,12 +401,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Event invocator for the <see cref="Fundamental"/> event
+        /// Event invocator for the <see cref="UniverseSelection"/> event
         /// </summary>
-        protected virtual void OnFundamental(FundamentalType fundamentalType, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
+        protected virtual void OnUniverseSelection(UniverseSelectionType universeSelectionType, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
         {
-            var handler = Fundamental;
-            if (handler != null) handler(this, new FundamentalEventArgs(fundamentalType, configuration, dateTimeUtc, data));
+            var handler = UniverseSelection;
+            if (handler != null) handler(this, new UniverseSelectionEventArgs(universeSelectionType, configuration, dateTimeUtc, data));
         }
     }
 }

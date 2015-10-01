@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="date">The date used to get the current universe data</param>
         /// <param name="market">The market undergoing universe selection</param>
         /// <param name="coarse">The coarse data used to perform a first pass at universe selection</param>
-        public SecurityChanges ApplyUniverseSelection(DateTime date, string market, IEnumerable<CoarseFundamental> coarse)
+        public SecurityChanges ApplyFundamentalUniverseSelection(DateTime date, string market, IEnumerable<CoarseFundamental> coarse)
         {
             var selector = _algorithm.Universe;
             if (selector == null)

@@ -50,7 +50,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Event fired when the data feed encounters new fundamental data
         /// </summary>
-        public event EventHandler<FundamentalEventArgs> Fundamental;
+        public event EventHandler<UniverseSelectionEventArgs> UniverseSelection;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -186,8 +186,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // perform universe selection if requested on day changes (don't perform multiple times per market)
                     if (onDay && _algorithm.Universe != null && performedUniverseSelection.Add(subscription.Configuration.Market))
                     {
-                        var coarse = UniverseSelection.GetCoarseFundamentals(subscription.Configuration.Market, subscription.TimeZone, localTime.Date, true);
-                        OnFundamental(FundamentalType.Coarse, utcTriggerTime, subscription.Configuration, coarse.ToList());
+                        var coarse = DataFeeds.UniverseSelection.GetCoarseFundamentals(subscription.Configuration.Market, subscription.TimeZone, localTime.Date, true);
+                        OnFundamental(UniverseSelectionType.Fundamental, utcTriggerTime, subscription.Configuration, coarse.ToList());
                     }
 
                     var triggerArchive = false;
@@ -517,12 +517,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Event invocator for the <see cref="Fundamental"/> event
+        /// Event invocator for the <see cref="UniverseSelection"/> event
         /// </summary>
-        protected virtual void OnFundamental(FundamentalType fundamentalType, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
+        protected virtual void OnFundamental(UniverseSelectionType universeSelectionType, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
         {
-            var handler = Fundamental;
-            if (handler != null) handler(this, new FundamentalEventArgs(fundamentalType, configuration, dateTimeUtc, data));
+            var handler = UniverseSelection;
+            if (handler != null) handler(this, new UniverseSelectionEventArgs(universeSelectionType, configuration, dateTimeUtc, data));
         }
     }
 }

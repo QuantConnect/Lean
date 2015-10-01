@@ -196,11 +196,14 @@ namespace QuantConnect.Lean.Engine
             // wire up universe selection. it is assumed that the data feed will perform the
             // required thread synchronization.
             var universeSelection = new UniverseSelection(feed, algorithm, _liveMode);
-            feed.Fundamental += (sender, args) =>
+            feed.UniverseSelection += (sender, args) =>
             {
                 var market = args.Configuration.Market;
                 var localTime = args.DateTimeUtc.ConvertFromUtc(args.Configuration.TimeZone);
-                universeSelection.ApplyUniverseSelection(localTime, market, args.Data.OfType<CoarseFundamental>());
+                if (args.UniverseSelectionType == UniverseSelectionType.Fundamental)
+                {
+                    universeSelection.ApplyFundamentalUniverseSelection(localTime, market, args.Data.OfType<CoarseFundamental>());
+                }
             };
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.

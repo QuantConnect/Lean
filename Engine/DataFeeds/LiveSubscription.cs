@@ -61,10 +61,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
         /// <param name="isUserDefined">True if the user explicitly defined this subscription, false otherwise</param>
-        /// <param name="isFundamentalSubscription">True if this subscription is used to define the times to perform universe selection
+        /// <param name="isUniverseSelectionSubscription">True if this subscription is used to define the times to perform universe selection
         /// for a specific market, false for all other subscriptions</param>
-        public LiveSubscription(Security security, IEnumerator<BaseData> enumerator, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefined, bool isFundamentalSubscription)
-            : base(security, enumerator, utcStartTime, utcEndTime, isUserDefined, isFundamentalSubscription)
+        public LiveSubscription(Security security, IEnumerator<BaseData> enumerator, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefined, bool isUniverseSelectionSubscription)
+            : base(security, enumerator, utcStartTime, utcEndTime, isUserDefined, isUniverseSelectionSubscription)
         {
             NeedsMoveNext = true;
             IsCustomData = security.SubscriptionDataConfig.IsCustomData;

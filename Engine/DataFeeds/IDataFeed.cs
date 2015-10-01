@@ -37,7 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// This event must be fired when there is nothing in the <see cref="Bridge"/>,
         /// this can be accomplished using <see cref="BusyBlockingCollection{T}.Wait(int,CancellationToken)"/>
         /// </summary>
-        event EventHandler<FundamentalEventArgs> Fundamental;
+        event EventHandler<UniverseSelectionEventArgs> UniverseSelection;
         
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
