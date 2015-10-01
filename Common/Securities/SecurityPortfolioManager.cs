@@ -521,16 +521,14 @@ namespace QuantConnect.Securities
 
             // only apply dividends when we're in raw mode or split adjusted mode
             var mode = security.SubscriptionDataConfig.DataNormalizationMode;
-            if (mode != DataNormalizationMode.Raw || mode != DataNormalizationMode.SplitAdjusted)
+            if (mode == DataNormalizationMode.Raw || mode == DataNormalizationMode.SplitAdjusted)
             {
-                return;
+                // longs get benefits, shorts get clubbed on dividends
+                var total = security.Holdings.Quantity*dividend.Distribution;
+
+                // assuming USD, we still need to add Currency to the security object
+                _baseCurrencyCash.Quantity += total;
             }
-
-            // longs get benefits, shorts get clubbed on dividends
-            var total = security.Holdings.Quantity*dividend.Distribution;
-
-            // assuming USD, we still need to add Currency to the security object
-            _baseCurrencyCash.Quantity += total;
         }
 
         /// <summary>
