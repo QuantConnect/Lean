@@ -49,23 +49,23 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// OrderQueue holds the newly updated orders from the user algorithm waiting to be processed. Once
         /// orders are processed they are moved into the Orders queue awaiting the brokerage response.
         /// </summary>
-        private ConcurrentQueue<OrderRequest> _orderRequestQueue;
+        private readonly ConcurrentQueue<OrderRequest> _orderRequestQueue = new ConcurrentQueue<OrderRequest>();
 
         /// <summary>
         /// The orders dictionary holds orders which are sent to exchange, partially filled, completely filled or cancelled.
         /// Once the transaction thread has worked on them they get put here while witing for fill updates.
         /// </summary>
-        private ConcurrentDictionary<int, Order> _orders;
+        private readonly ConcurrentDictionary<int, Order> _orders = new ConcurrentDictionary<int, Order>();
 
         /// <summary>
         /// The orders tickets dictionary holds order tickets that the algorithm can use to reference a specific order. This
         /// includes invoking update and cancel commands. In the future, we can add more features to the ticket, such as events
         /// and async events (such as run this code when this order fills)
         /// </summary>
-        private ConcurrentDictionary<int, OrderTicket> _orderTickets;
+        private readonly ConcurrentDictionary<int, OrderTicket> _orderTickets = new ConcurrentDictionary<int, OrderTicket>();
 
         private IResultHandler _resultHandler;
-        private ManualResetEventSlim _processingCompletedEvent;
+        private readonly ManualResetEventSlim _processingCompletedEvent = new ManualResetEventSlim(false);
 
         /// <summary>
         /// Gets the permanent storage for all orders
@@ -120,12 +120,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             IsActive = true;
 
             _algorithm = algorithm;
-
-            // also save off the various order data structures locally
-            _orders = new ConcurrentDictionary<int, Order>();
-            _orderRequestQueue = new ConcurrentQueue<OrderRequest>();
-            _orderTickets = new ConcurrentDictionary<int, OrderTicket>();
-            _processingCompletedEvent = new ManualResetEventSlim(true);
         }
 
         /// <summary>
