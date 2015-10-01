@@ -27,6 +27,6 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="data">The coarse fundamental data</param>
         /// <returns>The data that passes the filter</returns>
-        IEnumerable<CoarseFundamental> SelectCoarse(IEnumerable<CoarseFundamental> data);
+        IEnumerable<Symbol> SelectCoarse(IEnumerable<CoarseFundamental> data);
     }
 }

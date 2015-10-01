@@ -94,7 +94,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol);
 
             // create a map of each selection to its 'unique' first symbol/date
-            var selectedSubscriptions = initialSelections.ToHashSet(x => x.Symbol);
+            var selectedSubscriptions = initialSelections.ToHashSet();
 
             var additions = new List<Security>();
             var removals = new List<Security>();

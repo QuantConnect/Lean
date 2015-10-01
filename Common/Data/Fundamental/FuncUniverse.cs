@@ -23,15 +23,13 @@ namespace QuantConnect.Data.Fundamental
     /// </summary>
     public class FuncUniverse : IUniverse
     {
-        private readonly Func<IEnumerable<CoarseFundamental>, IEnumerable<CoarseFundamental>> _coarse;
+        private readonly Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> _coarse;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuncUniverse"/> class
         /// </summary>
         /// <param name="coarse">Defines an initial coarse selection</param>
-        public FuncUniverse(
-            Func<IEnumerable<CoarseFundamental>, IEnumerable<CoarseFundamental>> coarse
-            )
+        public FuncUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarse)
         {
             _coarse = coarse;
         }
@@ -41,7 +39,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="data">The coarse fundamental data</param>
         /// <returns>The data that passes the filter</returns>
-        public IEnumerable<CoarseFundamental> SelectCoarse(IEnumerable<CoarseFundamental> data)
+        public IEnumerable<Symbol> SelectCoarse(IEnumerable<CoarseFundamental> data)
         {
             return _coarse(data);
         }
