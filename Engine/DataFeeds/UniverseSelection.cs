@@ -155,7 +155,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 additions.Add(security);;
 
                 // add the new subscriptions to the data feed
-                _dataFeed.AddSubscription(security, date, _algorithm.EndDate);
+                _dataFeed.AddSubscription(security, date, _algorithm.EndDate, false);
             }
 
             // return None if there's no changes, otherwise return what we've modified

@@ -142,9 +142,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="security">The security to add a subscription for</param>
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
-        public void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime)
+        /// <param name="isUserDefinedSubscription">Set to true to prevent coarse universe selection from removing this subscription</param>
+        public void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription)
         {
-            var subscription = CreateSubscription(_resultHandler, security, utcStartTime, utcEndTime, security.SubscriptionDataConfig.Resolution, false);
+            var subscription = CreateSubscription(_resultHandler, security, utcStartTime, utcEndTime, security.SubscriptionDataConfig.Resolution, isUserDefinedSubscription);
             if (subscription == null)
             {
                 // subscription will be null when there's no tradeable dates for the security between the requested times, so
@@ -190,7 +191,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // initialize subscriptions used for universe selection
                     foreach (var market in universeSelectionMarkets)
                     {
-                        AddSubscriptionForUniverseSelectionMarket(market);
+                        AddSubscriptionForFundamentalUniverseSelectionMarket(market);
                     }
                 }
 
@@ -333,7 +334,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return frontier;
         }
 
-        private void AddSubscriptionForUniverseSelectionMarket(string market)
+        private void AddSubscriptionForFundamentalUniverseSelectionMarket(string market)
         {
             var exchangeHours = SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(market, null, SecurityType.Equity);
             var symbolName = new Symbol(market + "-coarse");

@@ -102,7 +102,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var periodEnd = Time.EndOfTime;
             foreach (var security in algorithm.Securities.Values)
             {
-                var subscription = CreateSubscription(algorithm, resultHandler, security, periodStart, periodEnd);
+                var subscription = CreateSubscription(algorithm, resultHandler, security, periodStart, periodEnd, true);
                 _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription),  subscription);
             }
 
@@ -124,11 +124,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="security">The security to add a subscription for</param>
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
-        public void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime)
+        /// <param name="isUserDefinedSubscription">Set to true to prevent coarse universe selection from removing this subscription</param>
+        public void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription)
         {
             var symbols = BuildTypeSymbolList(new[] {security});
             _dataQueue.Subscribe(_job, symbols);
-            var subscription = CreateSubscription(_algorithm, _resultHandler, security, DateTime.UtcNow.ConvertFromUtc(_algorithm.TimeZone).Date, Time.EndOfTime);
+            var subscription = CreateSubscription(_algorithm, _resultHandler, security, DateTime.UtcNow.ConvertFromUtc(_algorithm.TimeZone).Date, Time.EndOfTime, isUserDefinedSubscription);
             _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription), subscription);
         }
 
@@ -463,7 +464,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IResultHandler resultHandler,
             Security security,
             DateTime periodStart,
-            DateTime periodEnd)
+            DateTime periodEnd, 
+            bool isUserDefinedSubscription)
         {
             IEnumerator<BaseData> enumerator = null;
             if (security.SubscriptionDataConfig.IsCustomData)
@@ -481,7 +483,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // wrap the subscription data reader with a filter enumerator
                 enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, subscriptionDataReader, security, periodEnd);
             }
-            return new LiveSubscription(security, enumerator, periodStart, periodEnd, true, false);
+            return new LiveSubscription(security, enumerator, periodStart, periodEnd, isUserDefinedSubscription, false);
         }
 
         /// <summary>
