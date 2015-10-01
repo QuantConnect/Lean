@@ -61,11 +61,16 @@ namespace QuantConnect.ToolBox
         /// </summary>
         public static IEnumerable<MapFileRow> Read(string path)
         {
-            foreach (var line in File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l)))
-            {
-                var csv = line.Split(',');
-                yield return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1]);
-            }
+            return File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l)).Select(Parse);
+        }
+
+        /// <summary>
+        /// Parses the specified line into a MapFileRow
+        /// </summary>
+        public static MapFileRow Parse(string line)
+        {
+            var csv = line.Split(',');
+            return new MapFileRow(DateTime.ParseExact(csv[0], DateFormat.EightCharacter, null), csv[1]);
         }
 
         #region Equality members
