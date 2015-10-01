@@ -22,8 +22,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
@@ -187,7 +187,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (onDay && _algorithm.Universe != null && performedUniverseSelection.Add(subscription.Configuration.Market))
                     {
                         var coarse = DataFeeds.UniverseSelection.GetCoarseFundamentals(subscription.Configuration.Market, subscription.TimeZone, localTime.Date, true);
-                        OnFundamental(UniverseSelectionType.Fundamental, utcTriggerTime, subscription.Configuration, coarse.ToList());
+                        OnUniverseSelection(UniverseSelectionType.Fundamental, utcTriggerTime, subscription.Configuration, coarse.ToList());
                     }
 
                     var triggerArchive = false;
@@ -519,7 +519,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Event invocator for the <see cref="UniverseSelection"/> event
         /// </summary>
-        protected virtual void OnFundamental(UniverseSelectionType universeSelectionType, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
+        protected virtual void OnUniverseSelection(UniverseSelectionType universeSelectionType, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
         {
             var handler = UniverseSelection;
             if (handler != null) handler(this, new UniverseSelectionEventArgs(universeSelectionType, configuration, dateTimeUtc, data));

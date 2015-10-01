@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Data.Fundamental
+namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
     /// Defines the additions and subtractions to the algorithm's security subscriptions

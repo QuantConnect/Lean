@@ -131,10 +131,6 @@
     <Compile Include="Data\Consolidators\TickConsolidator.cs" />
     <Compile Include="Data\Consolidators\TradeBarConsolidatorBase.cs" />
     <Compile Include="Data\FileFormat.cs" />
-    <Compile Include="Data\Fundamental\CoarseFundamental.cs" />
-    <Compile Include="Data\Fundamental\FuncUniverse.cs" />
-    <Compile Include="Data\Fundamental\IUniverse.cs" />
-    <Compile Include="Data\Fundamental\SecurityChanges.cs" />
     <Compile Include="Data\HistoryRequest.cs" />
     <Compile Include="Data\Market\DataDictionary.cs" />
     <Compile Include="Data\Market\Delisting.cs" />
@@ -152,6 +148,10 @@
     <Compile Include="Data\SliceExtensions.cs" />
     <Compile Include="Data\SubscriptionDataSource.cs" />
     <Compile Include="Data\SubscriptionSettings.cs" />
+    <Compile Include="Data\UniverseSelection\CoarseFundamental.cs" />
+    <Compile Include="Data\UniverseSelection\FuncUniverse.cs" />
+    <Compile Include="Data\UniverseSelection\IUniverse.cs" />
+    <Compile Include="Data\UniverseSelection\SecurityChanges.cs" />
     <Compile Include="Field.cs" />
     <Compile Include="LocalTimeKeeper.cs" />
     <Compile Include="Market.cs" />

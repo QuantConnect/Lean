@@ -16,7 +16,7 @@
 using System;
 using System.IO;
 
-namespace QuantConnect.Data.Fundamental
+namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
     /// Defines summary information about a single symbol for a given date

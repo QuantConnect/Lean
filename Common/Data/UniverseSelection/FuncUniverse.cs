@@ -13,20 +13,35 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 
-namespace QuantConnect.Data.Fundamental
+namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
-    /// Provides a mechanism for an algorithm to select a universe of symbols to operate on
+    /// Provides a functional implementation of <see cref="IUniverse"/>
     /// </summary>
-    public interface IUniverse
+    public class FuncUniverse : IUniverse
     {
+        private readonly Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> _coarse;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FuncUniverse"/> class
+        /// </summary>
+        /// <param name="coarse">Defines an initial coarse selection</param>
+        public FuncUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarse)
+        {
+            _coarse = coarse;
+        }
+
         /// <summary>
         /// Performs an initial, coarse filter
         /// </summary>
         /// <param name="data">The coarse fundamental data</param>
         /// <returns>The data that passes the filter</returns>
-        IEnumerable<Symbol> SelectCoarse(IEnumerable<CoarseFundamental> data);
+        public IEnumerable<Symbol> SelectCoarse(IEnumerable<CoarseFundamental> data)
+        {
+            return _coarse(data);
+        }
     }
 }

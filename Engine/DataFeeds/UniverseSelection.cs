@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
-using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;

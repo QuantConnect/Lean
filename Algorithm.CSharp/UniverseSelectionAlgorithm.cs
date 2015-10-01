@@ -17,7 +17,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
 
