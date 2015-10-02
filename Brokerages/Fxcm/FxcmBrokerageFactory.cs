@@ -80,7 +80,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 throw new Exception(string.Join(Environment.NewLine, errors));
             }
 
-            return new FxcmBrokerage(algorithm.Transactions, server, terminal, userName, password);
+            return new FxcmBrokerage(algorithm.Transactions, algorithm.Portfolio, server, terminal, userName, password);
         }
 
         /// <summary>

@@ -25,7 +25,7 @@ namespace QuantConnect.Brokerages.Fxcm
     public partial class FxcmBrokerage
     {
         /// <summary>
-        /// Converts an FXCM order into a QuantConnect order.
+        /// Converts an FXCM order to a QuantConnect order.
         /// </summary>
         /// <param name="fxcmOrder">The FXCM order</param>
         private static Order ConvertOrder(ExecutionReport fxcmOrder)
@@ -79,7 +79,7 @@ namespace QuantConnect.Brokerages.Fxcm
         }
 
         /// <summary>
-        /// Converts the tradier order duration into a qc order duration
+        /// Converts an FXCM order duration to QuantConnect order duration
         /// </summary>
         private static OrderDuration ConvertDuration(ITimeInForce timeInForce)
         {
@@ -93,7 +93,7 @@ namespace QuantConnect.Brokerages.Fxcm
         }
 
         /// <summary>
-        /// Converts an FXCM position into a QuantConnect holding.
+        /// Converts an FXCM position to a QuantConnect holding.
         /// </summary>
         /// <param name="fxcmPosition">The FXCM position</param>
         private static Holding ConvertHolding(PositionReport fxcmPosition)
@@ -123,11 +123,17 @@ namespace QuantConnect.Brokerages.Fxcm
                 : SecurityType.Cfd;
         }
 
+        /// <summary>
+        /// Converts an FXCM symbol to a QuantConnect symbol
+        /// </summary>
         private static string ConvertSymbol(Instrument instrument)
         {
             return ConvertFxcmSymbolToSymbol(instrument.getSymbol());
         }
 
+        /// <summary>
+        /// Converts an FXCM symbol to a QuantConnect symbol
+        /// </summary>
         private static string ConvertFxcmSymbolToSymbol(string symbol)
         {
             return symbol.Replace("/", "").ToUpper();
@@ -175,6 +181,38 @@ namespace QuantConnect.Brokerages.Fxcm
             return result;
         }
 
+        /// <summary>
+        /// Returns true if the specified order is considered open, otherwise false
+        /// </summary>
+        private static bool OrderIsOpen(string orderStatus)
+        {
+            return orderStatus == IFixValueDefs.__Fields.FXCMORDSTATUS_WAITING;
+        }
+
+        /// <summary>
+        /// Returns true if the specified order is considered close, otherwise false
+        /// </summary>
+        protected static bool OrderIsClosed(string orderStatus)
+        {
+            return orderStatus == IFixValueDefs.__Fields.FXCMORDSTATUS_EXECUTED
+                || orderStatus == IFixValueDefs.__Fields.FXCMORDSTATUS_CANCELLED
+                || orderStatus == IFixValueDefs.__Fields.FXCMORDSTATUS_EXPIRED
+                || orderStatus == IFixValueDefs.__Fields.FXCMORDSTATUS_REJECTED;
+        }
+
+        /// <summary>
+        /// Returns true if the specified order is being processed, otherwise false
+        /// </summary>
+        private static bool OrderIsBeingProcessed(string orderStatus)
+        {
+            return !OrderIsOpen(orderStatus) && !OrderIsClosed(orderStatus);
+        }
+
+        /// <summary>
+        /// Converts a Java Date value to a DateTime value
+        /// </summary>
+        /// <param name="javaDate">The Java date</param>
+        /// <returns></returns>
         private static DateTime FromJavaDate(java.util.Date javaDate)
         {
             var cal = java.util.Calendar.getInstance();
