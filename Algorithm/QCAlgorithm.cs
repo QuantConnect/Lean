@@ -963,15 +963,6 @@ namespace QuantConnect.Algorithm
         /// Sets the current universe selector for the algorithm. This will be executed on day changes
         /// </summary>
         /// <param name="coarse">Defines an initial coarse selection</param>
-        public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<CoarseFundamental>> coarse)
-        {
-            SetUniverse(cf => coarse(cf).Select(x => x.Symbol));
-        }
-
-        /// <summary>
-        /// Sets the current universe selector for the algorithm. This will be executed on day changes
-        /// </summary>
-        /// <param name="coarse">Defines an initial coarse selection</param>
         public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarse)
         {
             Universe = new FuncUniverse(coarse);

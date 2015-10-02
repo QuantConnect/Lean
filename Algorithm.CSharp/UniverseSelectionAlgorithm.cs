@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
                         where avg.EMA50 > avg.EMA100
                         // prefer symbols with a larger delta by percentage between the two averages
                         orderby (avg.EMA50 - avg.EMA100)/cf.Price descending
-                        select cf).Take(Count);
+                        select cf.Symbol).Take(Count);
             });
         }
 

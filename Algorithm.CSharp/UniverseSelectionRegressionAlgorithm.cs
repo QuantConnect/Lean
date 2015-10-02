@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return from c in coarse
                        let sym = c.Symbol.Value
                        where sym == "GOOG" || sym == "GOOCV" || sym == "GOOAV" || sym == "GOOGL"
-                       select c;
+                       select c.Symbol;
             });
         }
 
