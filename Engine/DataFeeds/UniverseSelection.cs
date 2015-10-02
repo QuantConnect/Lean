@@ -52,7 +52,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="args">The arguments from a universe selection event, containing the universe and
         /// the data produced for selection</param>
-        public SecurityChanges ApplyFundamentalUniverseSelection(UniverseSelectionEventArgs args)
+        public SecurityChanges ApplyUniverseSelection(UniverseSelectionEventArgs args)
         {
             var limit = 1000; //daily/hourly limit
             var resolution = _algorithm.UniverseSettings.Resolution;
@@ -80,7 +80,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // perform initial filtering and limit the result
-            var initialSelections = args.Universe.SelectCoarse(args.Data.OfType<CoarseFundamental>()).Take(limit).ToList();
+            var initialSelections = args.Universe.SelectSymbols(args.Data).Take(limit).ToList();
 
             // create a hash set of our existing subscriptions by sid
             var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol);
@@ -149,7 +149,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 additions.Add(security);;
 
-                // add the new subscriptions to the data feed -- TODO : this conversion keeps the behavior the same but sticks like a bug!
+                // add the new subscriptions to the data feed -- TODO : this conversion keeps the behavior the same but stinks like a bug!
                 _dataFeed.AddSubscription(security, args.DateTimeUtc.ConvertFromUtc(args.Configuration.TimeZone), _algorithm.EndDate, false);
             }
 

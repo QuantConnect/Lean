@@ -969,7 +969,7 @@ namespace QuantConnect.Algorithm
         public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarse)
         {
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), SecurityType.Equity, "universe-coarse-usa", Resolution.Daily, Market.USA, TimeZones.NewYork, false, false, true);
-            SetUniverse(new FuncUniverse(config, UniverseSettings, coarse));
+            SetUniverse(new FuncUniverse(config, UniverseSettings, selectionData => coarse(selectionData.OfType<CoarseFundamental>())));
         }
 
         /// <summary>

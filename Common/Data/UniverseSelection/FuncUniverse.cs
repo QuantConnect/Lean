@@ -23,7 +23,7 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class FuncUniverse : IUniverse
     {
-        private readonly Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> _coarse;
+        private readonly Func<IEnumerable<BaseData>, IEnumerable<Symbol>> _coarse;
 
         /// <summary>
         /// Gets the settings used for subscriptons added for this universe
@@ -47,7 +47,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="configuration"></param>
         /// <param name="subscriptionSettings"></param>
         /// <param name="coarse">Defines an initial coarse selection</param>
-        public FuncUniverse(SubscriptionDataConfig configuration, SubscriptionSettings subscriptionSettings, Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarse)
+        public FuncUniverse(SubscriptionDataConfig configuration, SubscriptionSettings subscriptionSettings, Func<IEnumerable<BaseData>, IEnumerable<Symbol>> coarse)
         {
             _coarse = coarse;
             Configuration = configuration;
@@ -59,7 +59,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="data">The coarse fundamental data</param>
         /// <returns>The data that passes the filter</returns>
-        public IEnumerable<Symbol> SelectCoarse(IEnumerable<CoarseFundamental> data)
+        public IEnumerable<Symbol> SelectSymbols(IEnumerable<BaseData> data)
         {
             return _coarse(data);
         }

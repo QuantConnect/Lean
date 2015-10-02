@@ -26,6 +26,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// Gets the settings used for subscriptons added for this universe
         /// </summary>
         SubscriptionSettings SubscriptionSettings { get; }
+
         /// <summary>
         /// Gets the configuration used to get universe data
         /// </summary>
@@ -36,6 +37,6 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="data">The coarse fundamental data</param>
         /// <returns>The data that passes the filter</returns>
-        IEnumerable<Symbol> SelectCoarse(IEnumerable<CoarseFundamental> data);
+        IEnumerable<Symbol> SelectSymbols(IEnumerable<BaseData> data);
     }
 }
