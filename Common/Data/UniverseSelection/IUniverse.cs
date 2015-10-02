@@ -23,6 +23,15 @@ namespace QuantConnect.Data.UniverseSelection
     public interface IUniverse
     {
         /// <summary>
+        /// Gets the settings used for subscriptons added for this universe
+        /// </summary>
+        SubscriptionSettings SubscriptionSettings { get; }
+        /// <summary>
+        /// Gets the configuration used to get universe data
+        /// </summary>
+        SubscriptionDataConfig Configuration { get; }
+
+        /// <summary>
         /// Performs an initial, coarse filter
         /// </summary>
         /// <param name="data">The coarse fundamental data</param>

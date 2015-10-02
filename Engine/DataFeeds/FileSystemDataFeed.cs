@@ -189,11 +189,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // don't initialize universe selection if it's not requested
                 if (_algorithm.Universe != null)
                 {
-                    // create a coarse equity usa subscription
-                    var coarseUsaConfig = new SubscriptionDataConfig(typeof (CoarseFundamental), SecurityType.Equity, "universe-coarse-usa",
-                        Resolution.Daily, Market.USA, TimeZones.NewYork, false, false, true);
-
-                    AddUniverseSubscription(coarseUsaConfig, _algorithm.UniverseSettings, _algorithm.StartDate, _algorithm.EndDate);
+                    AddUniverseSubscription(_algorithm.Universe, _algorithm.StartDate, _algorithm.EndDate);
                 }
 
                 // compute initial frontier time
@@ -338,36 +334,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Adds a new subscription for universe selection
         /// </summary>
-        /// <param name="universeSubscriptionConfig">The configuration that defines how to read the data for universe selection</param>
-        /// <param name="subscriptionSettings">The settings for subscriptions added by universe selection</param>
+        /// <param name="universe">The universe to add a subscription for</param>
         /// <param name="startTimeUtc">The start time of the subscription in utc</param>
         /// <param name="endTimeUtc">The end time of the subscription in utc</param>
         public void AddUniverseSubscription(
-            SubscriptionDataConfig universeSubscriptionConfig,
-            SubscriptionSettings subscriptionSettings,
+            IUniverse universe,
             DateTime startTimeUtc,
             DateTime endTimeUtc
             )
         {
             // grab the relevant exchange hours
+            SubscriptionDataConfig config = universe.Configuration;
+
             var exchangeHours = SecurityExchangeHoursProvider.FromDataFolder()
-                .GetExchangeHours(universeSubscriptionConfig.Market, null, universeSubscriptionConfig.SecurityType);
+                .GetExchangeHours(config.Market, null, config.SecurityType);
 
             // create a canonical security object
-            var security = new Security(exchangeHours, universeSubscriptionConfig, subscriptionSettings.Leverage);
+            var security = new Security(exchangeHours, config, universe.SubscriptionSettings.Leverage);
 
-            var localStartTime = startTimeUtc.ConvertFromUtc(universeSubscriptionConfig.TimeZone);
-            var localEndTime = endTimeUtc.ConvertFromUtc(universeSubscriptionConfig.TimeZone);
+            var localStartTime = startTimeUtc.ConvertFromUtc(config.TimeZone);
+            var localEndTime = endTimeUtc.ConvertFromUtc(config.TimeZone);
 
             // define our data enumerator
             var tradeableDates = Time.EachTradeableDay(security, localStartTime, localEndTime);
-            var enumerator = new SubscriptionDataReader(universeSubscriptionConfig, localStartTime, localEndTime, _resultHandler, tradeableDates, false);
+            var enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, tradeableDates, false);
 
             // create the subscription
             var subscription = new Subscription(security, enumerator, startTimeUtc, endTimeUtc, false, true);
 
             // only message the user if it's one of their universe types
-            var messageUser = universeSubscriptionConfig.Type != typeof(CoarseFundamental);
+            var messageUser = config.Type != typeof(CoarseFundamental);
             PrimeSubscriptionPump(subscription, messageUser);
             _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription), subscription);
         }

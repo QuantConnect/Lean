@@ -26,12 +26,32 @@ namespace QuantConnect.Data.UniverseSelection
         private readonly Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> _coarse;
 
         /// <summary>
+        /// Gets the settings used for subscriptons added for this universe
+        /// </summary>
+        public SubscriptionSettings SubscriptionSettings
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the configuration used to get universe data
+        /// </summary>
+        public SubscriptionDataConfig Configuration
+        {
+            get; private set;
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="FuncUniverse"/> class
         /// </summary>
+        /// <param name="configuration"></param>
+        /// <param name="subscriptionSettings"></param>
         /// <param name="coarse">Defines an initial coarse selection</param>
-        public FuncUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarse)
+        public FuncUniverse(SubscriptionDataConfig configuration, SubscriptionSettings subscriptionSettings, Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarse)
         {
             _coarse = coarse;
+            Configuration = configuration;
+            SubscriptionSettings = subscriptionSettings;
         }
 
         /// <summary>
