@@ -22,18 +22,6 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Specifes a type of universe selection
-    /// </summary>
-    public enum UniverseSelectionType
-    {
-        /// <summary>
-        /// Coarse fundamental data is used for inital filtering of a larger data set.
-        /// This data includes things like daily close, volume, and dollar volume.
-        /// </summary>
-        Fundamental
-    }
-
-    /// <summary>
     /// Event arguments for the <see cref="IDataFeed.UniverseSelection"/> event
     /// </summary>
     public class UniverseSelectionEventArgs : EventArgs
@@ -42,10 +30,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Gets the universe that raised this event
         /// </summary>
         public readonly IUniverse Universe;
-        /// <summary>
-        /// Gets the type of fundamental data in this event
-        /// </summary>
-        public readonly UniverseSelectionType UniverseSelectionType;
         /// <summary>
         /// Gets the configuration for the subscription that produced this data
         /// </summary>
@@ -63,14 +47,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Initializes a new instance of the <see cref="UniverseSelectionEventArgs"/> class
         /// </summary>
         /// <param name="universe">The universe that raised this event</param>
-        /// <param name="universeSelectionType">The type of fundamental data</param>
         /// <param name="configuration">Theconfiguration for the data</param>
         /// <param name="dateTimeUtc">The date time this event was fired in UTC</param>
         /// <param name="data">The data contained within this event</param>
-        public UniverseSelectionEventArgs(IUniverse universe, UniverseSelectionType universeSelectionType, SubscriptionDataConfig configuration, DateTime dateTimeUtc, IReadOnlyList<BaseData> data)
+        public UniverseSelectionEventArgs(IUniverse universe, SubscriptionDataConfig configuration, DateTime dateTimeUtc, IReadOnlyList<BaseData> data)
         {
             Universe = universe;
-            UniverseSelectionType = universeSelectionType;
             Configuration = configuration;
             DateTimeUtc = dateTimeUtc;
             Data = data;

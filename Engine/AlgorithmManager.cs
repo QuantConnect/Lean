@@ -198,10 +198,7 @@ namespace QuantConnect.Lean.Engine
             var universeSelection = new UniverseSelection(feed, algorithm, _liveMode);
             feed.UniverseSelection += (sender, args) =>
             {
-                if (args.UniverseSelectionType == UniverseSelectionType.Fundamental)
-                {
-                    universeSelection.ApplyFundamentalUniverseSelection(args);
-                }
+                universeSelection.ApplyFundamentalUniverseSelection(args);
             };
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.

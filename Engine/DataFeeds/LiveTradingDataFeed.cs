@@ -187,7 +187,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (onDay && _algorithm.Universes.Any() && performedUniverseSelection.Add(subscription.Configuration.Market))
                     {
                         var coarse = DataFeeds.UniverseSelection.GetCoarseFundamentals(subscription.Configuration.Market, subscription.TimeZone, localTime.Date, true);
-                        OnUniverseSelection(_algorithm.Universes[0], UniverseSelectionType.Fundamental, utcTriggerTime, subscription.Configuration, coarse.ToList());
+                        OnUniverseSelection(_algorithm.Universes[0], utcTriggerTime, subscription.Configuration, coarse.ToList());
                     }
 
                     var triggerArchive = false;
@@ -519,10 +519,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Event invocator for the <see cref="UniverseSelection"/> event
         /// </summary>
-        protected virtual void OnUniverseSelection(IUniverse universe, UniverseSelectionType universeSelectionType, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
+        protected virtual void OnUniverseSelection(IUniverse universe, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
         {
             var handler = UniverseSelection;
-            if (handler != null) handler(this, new UniverseSelectionEventArgs(universe, universeSelectionType, configuration, dateTimeUtc, data));
+            if (handler != null) handler(this, new UniverseSelectionEventArgs(universe, configuration, dateTimeUtc, data));
         }
     }
 }

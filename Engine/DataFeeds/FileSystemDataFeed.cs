@@ -248,7 +248,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 break;
                             }
                             
-                            OnUniverseSelection(universe, UniverseSelectionType.Fundamental, frontier, configuration, cache.Value);
+                            OnUniverseSelection(universe, frontier, configuration, cache.Value);
                         }
 
                         if (subscription.Current != null)
@@ -404,10 +404,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Event invocator for the <see cref="UniverseSelection"/> event
         /// </summary>
-        protected virtual void OnUniverseSelection(IUniverse universe, UniverseSelectionType universeSelectionType, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
+        protected virtual void OnUniverseSelection(IUniverse universe, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
         {
             var handler = UniverseSelection;
-            if (handler != null) handler(this, new UniverseSelectionEventArgs(universe, universeSelectionType, configuration, dateTimeUtc, data));
+            if (handler != null) handler(this, new UniverseSelectionEventArgs(universe, configuration, dateTimeUtc, data));
         }
     }
 }
