@@ -73,7 +73,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
-            if (algorithm.SubscriptionManager.Subscriptions.Count == 0 && algorithm.Universe == null)
+            if (algorithm.SubscriptionManager.Subscriptions.Count == 0 && algorithm.Universes.IsNullOrEmpty())
             {
                 throw new Exception("No subscriptions registered and no universe defined.");
             }
@@ -186,10 +186,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var frontier = DateTime.MaxValue;
             try
             {
-                // don't initialize universe selection if it's not requested
-                if (_algorithm.Universe != null)
+                // add each universe selection subscription to the feed
+                foreach (var universe in _algorithm.Universes)
                 {
-                    AddUniverseSubscription(_algorithm.Universe, _algorithm.StartDate, _algorithm.EndDate);
+                    AddUniverseSubscription(universe, _algorithm.StartDate, _algorithm.EndDate);
                 }
 
                 // compute initial frontier time
@@ -240,13 +240,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // we have new universe data to select based on
                         if (subscription.IsUniverseSelectionSubscription && cache.Value.Count > 0)
                         {
+                            var universe = ((UniverseSubscription) subscription).Universe;
+
                             // always wait for other thread
                             if (!Bridge.Wait(Timeout.Infinite, _cancellationTokenSource.Token))
                             {
                                 break;
                             }
                             
-                            OnUniverseSelection(UniverseSelectionType.Fundamental, frontier, configuration, cache.Value);
+                            OnUniverseSelection(universe, UniverseSelectionType.Fundamental, frontier, configuration, cache.Value);
                         }
 
                         if (subscription.Current != null)
@@ -360,7 +362,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, tradeableDates, false);
 
             // create the subscription
-            var subscription = new Subscription(security, enumerator, startTimeUtc, endTimeUtc, false, true);
+            var subscription = new UniverseSubscription(universe, security, enumerator, startTimeUtc, endTimeUtc);
 
             // only message the user if it's one of their universe types
             var messageUser = config.Type != typeof(CoarseFundamental);
@@ -402,10 +404,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Event invocator for the <see cref="UniverseSelection"/> event
         /// </summary>
-        protected virtual void OnUniverseSelection(UniverseSelectionType universeSelectionType, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
+        protected virtual void OnUniverseSelection(IUniverse universe, UniverseSelectionType universeSelectionType, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
         {
             var handler = UniverseSelection;
-            if (handler != null) handler(this, new UniverseSelectionEventArgs(universeSelectionType, configuration, dateTimeUtc, data));
+            if (handler != null) handler(this, new UniverseSelectionEventArgs(universe, universeSelectionType, configuration, dateTimeUtc, data));
         }
     }
 }

@@ -198,11 +198,9 @@ namespace QuantConnect.Lean.Engine
             var universeSelection = new UniverseSelection(feed, algorithm, _liveMode);
             feed.UniverseSelection += (sender, args) =>
             {
-                var market = args.Configuration.Market;
-                var localTime = args.DateTimeUtc.ConvertFromUtc(args.Configuration.TimeZone);
                 if (args.UniverseSelectionType == UniverseSelectionType.Fundamental)
                 {
-                    universeSelection.ApplyFundamentalUniverseSelection(localTime, market, args.Data.OfType<CoarseFundamental>());
+                    universeSelection.ApplyFundamentalUniverseSelection(args);
                 }
             };
 

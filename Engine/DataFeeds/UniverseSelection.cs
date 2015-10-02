@@ -50,18 +50,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Applies universe selection the the data feed and algorithm
         /// </summary>
-        /// <param name="date">The date used to get the current universe data</param>
-        /// <param name="market">The market undergoing universe selection</param>
-        /// <param name="coarse">The coarse data used to perform a first pass at universe selection</param>
-        public SecurityChanges ApplyFundamentalUniverseSelection(DateTime date, string market, IEnumerable<CoarseFundamental> coarse)
+        /// <param name="args">The arguments from a universe selection event, containing the universe and
+        /// the data produced for selection</param>
+        public SecurityChanges ApplyFundamentalUniverseSelection(UniverseSelectionEventArgs args)
         {
-            var selector = _algorithm.Universe;
-            if (selector == null)
-            {
-                // a null value is indicative of not wanting to perform universe selection
-                return SecurityChanges.None;
-            }
-
             var limit = 1000; //daily/hourly limit
             var resolution = _algorithm.UniverseSettings.Resolution;
             switch (resolution)
@@ -88,7 +80,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // perform initial filtering and limit the result
-            var initialSelections = selector.SelectCoarse(coarse).Take(limit).ToList();
+            var initialSelections = args.Universe.SelectCoarse(args.Data.OfType<CoarseFundamental>()).Take(limit).ToList();
 
             // create a hash set of our existing subscriptions by sid
             var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol);
@@ -105,13 +97,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // never remove subscriptions set explicitly by the user
                 if (subscription.IsUserDefined) continue;
 
+                // never remove universe selection subscriptions
+                if (subscription.IsUniverseSelectionSubscription) continue;
+
                 var config = subscription.Configuration;
 
                 // never remove internal feeds
                 if (config.IsInternalFeed) continue;
 
                 // don't remove subscriptions for different markets and non-equity types
-                if (config.Market != market || config.SecurityType != SecurityType.Equity) continue;
+                if (config.Market != args.Configuration.Market || config.SecurityType != SecurityType.Equity) continue;
 
                 // if we've selected this subscription again, keep it
                 if (selectedSubscriptions.Contains(config.Symbol)) continue;
@@ -145,7 +140,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     SecurityType.Equity,
                     sid,
                     settings.Resolution,
-                    market,
+                    args.Configuration.Market,
                     settings.FillForward,
                     settings.Leverage,
                     settings.ExtendedMarketHours,
@@ -154,8 +149,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 additions.Add(security);;
 
-                // add the new subscriptions to the data feed
-                _dataFeed.AddSubscription(security, date, _algorithm.EndDate, false);
+                // add the new subscriptions to the data feed -- TODO : this conversion keeps the behavior the same but sticks like a bug!
+                _dataFeed.AddSubscription(security, args.DateTimeUtc.ConvertFromUtc(args.Configuration.TimeZone), _algorithm.EndDate, false);
             }
 
             // return None if there's no changes, otherwise return what we've modified

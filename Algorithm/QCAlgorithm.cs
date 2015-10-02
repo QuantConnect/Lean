@@ -112,6 +112,8 @@ namespace QuantConnect.Algorithm
             // get exchange hours loaded from the market-hours-database.csv in /Data/market-hours
             _exchangeHoursProvider = SecurityExchangeHoursProvider.FromDataFolder();
 
+            // universe selection
+            Universes = new List<IUniverse>();
             UniverseSettings = new SubscriptionSettings(Resolution.Minute, 2m, true, false);
 
             // initialize our scheduler, this acts as a liason to the real time handler
@@ -312,7 +314,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets the current universe selector, or null if no selection is to be performed
         /// </summary>
-        public IUniverse Universe
+        public List<IUniverse> Universes
         {
             get; private set;
         }
@@ -956,7 +958,8 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">The universe selector</param>
         public void SetUniverse(IUniverse selector)
         {
-            Universe = selector;
+            Universes.Clear();
+            Universes.Add(selector);
         }
 
         /// <summary>
@@ -966,7 +969,7 @@ namespace QuantConnect.Algorithm
         public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarse)
         {
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), SecurityType.Equity, "universe-coarse-usa", Resolution.Daily, Market.USA, TimeZones.NewYork, false, false, true);
-            Universe = new FuncUniverse(config, UniverseSettings, coarse);
+            SetUniverse(new FuncUniverse(config, UniverseSettings, coarse));
         }
 
         /// <summary>

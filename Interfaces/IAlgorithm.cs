@@ -179,9 +179,9 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
-        /// Gets the current universe selector, or null if no selection is to be performed
+        /// Gets the list of universes for the algorithm
         /// </summary>
-        IUniverse Universe
+        List<IUniverse> Universes
         {
             get;
         }

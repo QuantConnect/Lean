@@ -184,10 +184,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var onDay = onHour && localTime.Hour == 0;
 
                     // perform universe selection if requested on day changes (don't perform multiple times per market)
-                    if (onDay && _algorithm.Universe != null && performedUniverseSelection.Add(subscription.Configuration.Market))
+                    if (onDay && _algorithm.Universes.Any() && performedUniverseSelection.Add(subscription.Configuration.Market))
                     {
                         var coarse = DataFeeds.UniverseSelection.GetCoarseFundamentals(subscription.Configuration.Market, subscription.TimeZone, localTime.Date, true);
-                        OnUniverseSelection(UniverseSelectionType.Fundamental, utcTriggerTime, subscription.Configuration, coarse.ToList());
+                        OnUniverseSelection(_algorithm.Universes[0], UniverseSelectionType.Fundamental, utcTriggerTime, subscription.Configuration, coarse.ToList());
                     }
 
                     var triggerArchive = false;
@@ -519,10 +519,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Event invocator for the <see cref="UniverseSelection"/> event
         /// </summary>
-        protected virtual void OnUniverseSelection(UniverseSelectionType universeSelectionType, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
+        protected virtual void OnUniverseSelection(IUniverse universe, UniverseSelectionType universeSelectionType, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
         {
             var handler = UniverseSelection;
-            if (handler != null) handler(this, new UniverseSelectionEventArgs(universeSelectionType, configuration, dateTimeUtc, data));
+            if (handler != null) handler(this, new UniverseSelectionEventArgs(universe, universeSelectionType, configuration, dateTimeUtc, data));
         }
     }
 }
