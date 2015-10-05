@@ -483,7 +483,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // wrap the subscription data reader with a filter enumerator
                 enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, subscriptionDataReader, security, periodEnd);
             }
-            return new LiveSubscription(security, enumerator, periodStart, periodEnd, isUserDefinedSubscription, false);
+            return new LiveSubscription(security, enumerator, periodStart, periodEnd, isUserDefinedSubscription);
         }
 
         /// <summary>

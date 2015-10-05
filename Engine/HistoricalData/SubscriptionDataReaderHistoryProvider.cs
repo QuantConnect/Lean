@@ -136,7 +136,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 return data.EndTime > start;
             });
 
-            return new Subscription(security, reader, start, end, false, false);
+            return new Subscription(security, reader, start, end, false);
         }
 
         /// <summary>

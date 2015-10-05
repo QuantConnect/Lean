@@ -134,7 +134,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // finally apply exchange/user filters
             enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, enumerator, security, end);
-            var subscription = new Subscription(security, enumerator, start, end, userDefined, false);
+            var subscription = new Subscription(security, enumerator, start, end, userDefined);
             return subscription;
         }
 
@@ -240,7 +240,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // we have new universe data to select based on
                         if (subscription.IsUniverseSelectionSubscription && cache.Value.Count > 0)
                         {
-                            var universe = ((UniverseSubscription) subscription).Universe;
+                            var universe = subscription.Universe;
 
                             // always wait for other thread
                             if (!Bridge.Wait(Timeout.Infinite, _cancellationTokenSource.Token))
@@ -362,7 +362,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, tradeableDates, false);
 
             // create the subscription
-            var subscription = new UniverseSubscription(universe, security, enumerator, startTimeUtc, endTimeUtc);
+            var subscription = new Subscription(universe, security, enumerator, startTimeUtc, endTimeUtc);
 
             // only message the user if it's one of their universe types
             var messageUser = config.Type != typeof(CoarseFundamental);
