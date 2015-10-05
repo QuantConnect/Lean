@@ -49,26 +49,17 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 order = new StopMarketOrder
                 {
-                    StopPrice = (decimal)fxcmOrder.getPrice()
-                };
-            }
-
-            else if (fxcmOrder.getOrdType() == OrdTypeFactory.STOP_LIMIT)
-            {
-                order = new StopLimitOrder
-                {
-                    StopPrice = (decimal)fxcmOrder.getPrice(),
-                    LimitPrice = (decimal)fxcmOrder.getStopPx()
+                    StopPrice = Convert.ToDecimal(fxcmOrder.getPrice())
                 };
             }
 
             else
             {
-                throw new NotSupportedException("The FXCM order type " + fxcmOrder.getOrdType() + " is not supported.");
+                throw new NotSupportedException("FxcmBrokerage.ConvertOrder(): The FXCM order type " + fxcmOrder.getOrdType() + " is not supported.");
             }
 
             order.Symbol = ConvertSymbol(fxcmOrder.getInstrument());
-            order.Quantity = Convert.ToInt32(fxcmOrder.getOrderQty());
+            order.Quantity = Convert.ToInt32(fxcmOrder.getOrderQty() * (fxcmOrder.getSide() == SideFactory.BUY ? +1 : -1));
             order.SecurityType = GetSecurityType(fxcmOrder.getInstrument());
             order.Status = ConvertOrderStatus(fxcmOrder.getFXCMOrdStatus());
             order.BrokerId.Add(Convert.ToInt64(fxcmOrder.getOrderID()));
@@ -102,10 +93,10 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 Symbol = ConvertSymbol(fxcmPosition.getInstrument()),
                 Type = GetSecurityType(fxcmPosition.getInstrument()),
-                AveragePrice = (decimal)fxcmPosition.getSettlPrice(),
+                AveragePrice = Convert.ToDecimal(fxcmPosition.getSettlPrice()),
                 ConversionRate = 1.0m,
                 CurrencySymbol = "$",
-                Quantity = (decimal)(fxcmPosition.getPositionQty().getLongQty() > 0 
+                Quantity = Convert.ToDecimal(fxcmPosition.getPositionQty().getLongQty() > 0 
                     ? fxcmPosition.getPositionQty().getLongQty() 
                     : -fxcmPosition.getPositionQty().getShortQty())
             };        

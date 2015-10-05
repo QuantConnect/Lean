@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -43,6 +44,10 @@ namespace QuantConnect.Brokerages.Fxcm
         private readonly string _password;
 
         private bool _isConnected;
+
+        private Thread _orderEventThread;
+        private volatile bool _orderEventThreadStopped;
+        private readonly ConcurrentQueue<OrderEvent> _orderEventQueue = new ConcurrentQueue<OrderEvent>();
 
         /// <summary>
         /// Creates a new instance of the <see cref="FxcmBrokerage"/> class
@@ -81,7 +86,25 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             if (IsConnected) return;
 
-            Log.TraceFormat("[{0}] FxcmBrokerage.Connect()", Thread.CurrentThread.ManagedThreadId);
+            Log.TraceFormat("FxcmBrokerage.Connect()");
+
+            // create new thread to fire order events in queue
+            _orderEventThread = new Thread(() =>
+            {
+                while (!_orderEventThreadStopped)
+                {
+                    OrderEvent orderEvent;
+                    if (_orderEventQueue.IsEmpty || !_orderEventQueue.TryDequeue(out orderEvent))
+                    {
+                        Thread.Sleep(1);
+                        continue;
+                    }
+
+                    OnOrderEvent(orderEvent);
+                }
+            });
+            _orderEventThread.Start();
+            while (!_orderEventThread.IsAlive) {}
 
             // create the gateway
             _gateway = GatewayFactory.createGateway();
@@ -114,7 +137,7 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             if (!IsConnected) return;
 
-            Log.TraceFormat("[{0}] FxcmBrokerage.Disconnect()", Thread.CurrentThread.ManagedThreadId);
+            Log.TraceFormat("FxcmBrokerage.Disconnect()");
 
             // log out
             _gateway.logout();
@@ -122,6 +145,10 @@ namespace QuantConnect.Brokerages.Fxcm
             // remove the message listeners
             _gateway.removeGenericMessageListener(this);
             _gateway.removeStatusMessageListener(this);
+
+            // request and wait for thread to stop
+            _orderEventThreadStopped = true;
+            _orderEventThread.Join();
         }
 
         /// <summary>
@@ -131,7 +158,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>The open orders returned from FXCM</returns>
         public override List<Order> GetOpenOrders()
         {
-            Log.TraceFormat("[{0}] FxcmBrokerage.GetOpenOrders()", Thread.CurrentThread.ManagedThreadId);
+            Log.TraceFormat("FxcmBrokerage.GetOpenOrders()");
 
             return _openOrders.Values.ToList().Where(x => OrderIsOpen(x.getFXCMOrdStatus().getCode())).Select(ConvertOrder).ToList();
         }
@@ -142,21 +169,24 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            Log.TraceFormat("[{0}] FxcmBrokerage.GetAccountHoldings()", Thread.CurrentThread.ManagedThreadId);
+            Log.TraceFormat("FxcmBrokerage.GetAccountHoldings()");
 
             var holdings = _openPositions.Values.Select(ConvertHolding).ToList();
 
-            // TODO: set MarketPrice in each Holding
-            //var symbols = holdings.Select(x => ConvertSymbolToFxcmSymbol(x.Symbol)).ToList();
-            //var quotes = GetQuotes(symbols).ToDictionary(x => x.getInstrument().getSymbol());
-            //foreach (var holding in holdings)
-            //{
-            //    MarketDataSnapshot quote;
-            //    if (quotes.TryGetValue(ConvertSymbolToFxcmSymbol(holding.Symbol), out quote))
-            //    {
-            //        holding.MarketPrice = (decimal)(quote.getBidClose() + quote.getAskClose()) / 2;
-            //    }
-            //}
+            // Set MarketPrice in each Holding
+            var symbols = holdings.Select(x => ConvertSymbolToFxcmSymbol(x.Symbol)).ToList();
+            if (symbols.Count > 0)
+            {
+                var quotes = GetQuotes(symbols).ToDictionary(x => x.getInstrument().getSymbol());
+                foreach (var holding in holdings)
+                {
+                    MarketDataSnapshot quote;
+                    if (quotes.TryGetValue(ConvertSymbolToFxcmSymbol(holding.Symbol), out quote))
+                    {
+                        holding.MarketPrice = Convert.ToDecimal((quote.getBidClose() + quote.getAskClose()) / 2);
+                    }
+                }
+            }
 
             return holdings;
         }
@@ -167,7 +197,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<Cash> GetCashBalance()
         {
-            Log.TraceFormat("[{0}] FxcmBrokerage.GetCashBalance()", Thread.CurrentThread.ManagedThreadId);
+            Log.TraceFormat("FxcmBrokerage.GetCashBalance()");
 
             return _accounts.Values.Select(account => 
                 new Cash(_fxcmAccountCurrency, Convert.ToDecimal(account.getCashOutstanding()), GetUsdConversion(_fxcmAccountCurrency))).ToList();
@@ -180,10 +210,10 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            Log.TraceFormat("[{0}] FxcmBrokerage.PlaceOrder(): {1}", Thread.CurrentThread.ManagedThreadId, order);
+            Log.TraceFormat("FxcmBrokerage.PlaceOrder(): {0}", order);
 
             if (order.Direction != OrderDirection.Buy && order.Direction != OrderDirection.Sell)
-                throw new ArgumentException("Invalid Order Direction");
+                throw new ArgumentException("FxcmBrokerage.PlaceOrder(): Invalid Order Direction");
 
             var symbol = ConvertSymbolToFxcmSymbol(order.Symbol);
             var orderSide = order.Direction == OrderDirection.Buy ? SideFactory.BUY : SideFactory.SELL;
@@ -212,7 +242,7 @@ namespace QuantConnect.Brokerages.Fxcm
                     break;
 
                 default:
-                    throw new NotSupportedException("Order type " + order.Type + " is not supported.");
+                    throw new NotSupportedException("FxcmBrokerage.PlaceOrder(): Order type " + order.Type + " is not supported.");
             }
 
             _isOrderSubmitRejected = false;
@@ -224,7 +254,8 @@ namespace QuantConnect.Brokerages.Fxcm
                 autoResetEvent = new AutoResetEvent(false);
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
-            autoResetEvent.WaitOne();
+            if (!autoResetEvent.WaitOne(ResponseTimeout))
+                throw new TimeoutException(string.Format("FxcmBrokerage.PlaceOrder(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
 
             return !_isOrderSubmitRejected;
         }
@@ -236,12 +267,12 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            Log.TraceFormat("[{0}] FxcmBrokerage.UpdateOrder(): {1}", Thread.CurrentThread.ManagedThreadId, order);
+            Log.TraceFormat("FxcmBrokerage.UpdateOrder(): {0}", order);
 
             if (!order.BrokerId.Any())
             {
                 // we need the brokerage order id in order to perform an update
-                Log.TraceFormat("[{0}] FxcmBrokerage.UpdateOrder(): Unable to update order without BrokerId.", Thread.CurrentThread.ManagedThreadId);
+                Log.TraceFormat("FxcmBrokerage.UpdateOrder(): Unable to update order without BrokerId.");
                 return false;
             }
 
@@ -249,7 +280,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
             ExecutionReport fxcmOrder;
             if (!_openOrders.TryGetValue(fxcmOrderId, out fxcmOrder))
-                throw new ArgumentException("Order not found: " + fxcmOrderId);
+                throw new ArgumentException("FxcmBrokerage.UpdateOrder(): FXCM order id not found: " + fxcmOrderId);
 
             double price;
             switch (order.Type)
@@ -263,11 +294,14 @@ namespace QuantConnect.Brokerages.Fxcm
                     break;
 
                 default:
-                    throw new NotSupportedException("UpdateOrder: Invalid order type.");
+                    throw new NotSupportedException("FxcmBrokerage.UpdateOrder(): Invalid order type.");
             }
 
             _isOrderUpdateOrCancelRejected = false;
             var orderReplaceRequest = MessageGenerator.generateOrderReplaceRequest("", fxcmOrder.getOrderID(), fxcmOrder.getSide(), fxcmOrder.getOrdType(), price, fxcmOrder.getAccount());
+            orderReplaceRequest.setInstrument(fxcmOrder.getInstrument());
+            orderReplaceRequest.setOrderQty((double)order.AbsoluteQuantity);
+
             AutoResetEvent autoResetEvent;
             lock (_locker)
             {
@@ -275,7 +309,8 @@ namespace QuantConnect.Brokerages.Fxcm
                 autoResetEvent = new AutoResetEvent(false);
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
-            autoResetEvent.WaitOne();
+            if (!autoResetEvent.WaitOne(ResponseTimeout))
+                throw new TimeoutException(string.Format("FxcmBrokerage.UpdateOrder(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
 
             return !_isOrderUpdateOrCancelRejected;
         }
@@ -287,12 +322,12 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            Log.TraceFormat("[{0}] FxcmBrokerage.CancelOrder(): {1}", Thread.CurrentThread.ManagedThreadId, order);
+            Log.TraceFormat("FxcmBrokerage.CancelOrder(): {0}", order);
 
             if (!order.BrokerId.Any())
             {
                 // we need the brokerage order id in order to perform a cancellation
-                Log.TraceFormat("[{0}] FxcmBrokerage.CancelOrder(): Unable to cancel order without BrokerId.", Thread.CurrentThread.ManagedThreadId);
+                Log.TraceFormat("FxcmBrokerage.CancelOrder(): Unable to cancel order without BrokerId.");
                 return false;
             }
 
@@ -300,7 +335,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
             ExecutionReport fxcmOrder;
             if (!_openOrders.TryGetValue(fxcmOrderId, out fxcmOrder))
-                throw new ArgumentException("Order not found: " + fxcmOrderId);
+                throw new ArgumentException("FxcmBrokerage.CancelOrder(): FXCM order id not found: " + fxcmOrderId);
 
             _isOrderUpdateOrCancelRejected = false;
             var orderCancelRequest = MessageGenerator.generateOrderCancelRequest("", fxcmOrder.getOrderID(), fxcmOrder.getSide(), fxcmOrder.getAccount());
@@ -311,7 +346,8 @@ namespace QuantConnect.Brokerages.Fxcm
                 autoResetEvent = new AutoResetEvent(false);
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
-            autoResetEvent.WaitOne();
+            if (!autoResetEvent.WaitOne(ResponseTimeout))
+                throw new TimeoutException(string.Format("FxcmBrokerage.CancelOrder(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
 
             return !_isOrderUpdateOrCancelRejected;
         }
