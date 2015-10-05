@@ -50,6 +50,7 @@
     <Compile Include="IchimokuKinkoHyo.cs" />
     <Compile Include="KeltnerChannels.cs" />
     <Compile Include="LogReturn.cs" />
+    <Compile Include="Momersion.cs" />
     <Compile Include="OnBalanceVolume.cs" />
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
