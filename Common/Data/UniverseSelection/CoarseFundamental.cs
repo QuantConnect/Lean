@@ -26,17 +26,17 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the market for this symbol
         /// </summary>
-        public string Market { get; private set; }
+        public string Market { get; set; }
 
         /// <summary>
         /// Gets the day's dollar volume for this symbol
         /// </summary>
-        public decimal DollarVolume { get; private set; }
+        public decimal DollarVolume { get; set; }
 
         /// <summary>
         /// Gets the day's total volume
         /// </summary>
-        public long Volume { get; private set; }
+        public long Volume { get; set; }
 
         /// <summary>
         /// The end time of this data.
