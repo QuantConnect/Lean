@@ -659,12 +659,17 @@ namespace QuantConnect.Algorithm
                 case BrokerageName.Default:
                     BrokerageModel = new DefaultBrokerageModel();
                     break;
+
                 case BrokerageName.InteractiveBrokersBrokerage:
                     BrokerageModel = new InteractiveBrokersBrokerageModel();
                     break;
 
                 case BrokerageName.TradierBrokerage:
                     BrokerageModel = new TradierBrokerageModel();
+                    break;
+
+                case BrokerageName.FxcmBrokerage:
+                    BrokerageModel = new FxcmBrokerageModel();
                     break;
 
                 default:
