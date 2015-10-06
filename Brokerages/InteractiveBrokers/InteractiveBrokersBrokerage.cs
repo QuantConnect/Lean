@@ -1263,12 +1263,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private DateTime GetBrokerTime()
         {
-            return DateTime.Now.Add(_brokerTimeDiff);
+            return DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork).Add(_brokerTimeDiff);
         }
         void HandleBrokerTime(object sender, IB.CurrentTimeEventArgs e)
         {
-            DateTime brokerTime = e.Time.ToLocalTime();
-            _brokerTimeDiff = brokerTime.Subtract(DateTime.Now);
+            // keep track of clock drift
+            _brokerTimeDiff = e.Time.Subtract(DateTime.UtcNow);
         }
         TimeSpan _brokerTimeDiff = new TimeSpan(0);
 
@@ -1342,6 +1342,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // new symbol to the permtick which won't be known by the algorithm
             tick.Symbol = new Symbol(symbol.Item2);
             tick.Time = GetBrokerTime();
+            if (symbol.Item1 == SecurityType.Forex)
+            {
+                // forex exchange hours are specified in UTC-05
+                tick.Time = tick.Time.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
+            }
             tick.Value = e.Price;
 
             if (e.Price <= 0 &&
@@ -1413,6 +1418,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             tick.Symbol = new Symbol(symbol.Item2);
             tick.Quantity = AdjustQuantity(symbol.Item1, e.Size);
             tick.Time = GetBrokerTime();
+            if (symbol.Item1 == SecurityType.Forex)
+            {
+                // forex exchange hours are specified in UTC-05
+                tick.Time = tick.Time.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
+            }
 
             if (tick.Quantity == 0) return;
 
