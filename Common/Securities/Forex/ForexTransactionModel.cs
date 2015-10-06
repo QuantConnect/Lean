@@ -84,7 +84,7 @@ namespace QuantConnect.Securities.Forex
                 case Resolution.Second:
                     //Get the last data packet:
                     //Assume slippage is 1/10,000th of the price
-                    slippage = security.GetLastData().Value*0.00001m;
+                    slippage = security.GetLastData().Value * 0.0001m;
                     break;
 
                 case Resolution.Tick:
