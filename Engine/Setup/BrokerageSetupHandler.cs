@@ -284,11 +284,24 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     // populate the algorithm with the account's current holdings
                     var holdings = brokerage.GetAccountHoldings();
+                    var supportedSecurityTypes = new HashSet<SecurityType> {SecurityType.Equity, SecurityType.Forex};
                     var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Min(x => x.Value.Resolution));
                     foreach (var holding in holdings)
                     {
                         var symbol = new Symbol(holding.Symbol);
                         Log.Trace("BrokerageSetupHandler.Setup(): Has existing holding: " + holding);
+
+                        // verify existing holding security type
+                        if (!supportedSecurityTypes.Contains(holding.Type))
+                        {
+                            Log.Error("BrokerageSetupHandler.Setup(): Unsupported security type: " + holding.Type + "-" + holding.Symbol.ToUpper());
+                            AddInitializationError("Found unsupported security type in existing brokerage holdings: " + holding.Type + ". " +
+                                "QuantConnect currently supports the following security types: " + string.Join(",", supportedSecurityTypes));
+
+                            // keep aggregating these errors
+                            continue;
+                        }
+
                         if (!algorithm.Portfolio.ContainsKey(symbol))
                         {
                             Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol);
