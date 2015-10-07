@@ -42,6 +42,8 @@ namespace QuantConnect.Lean.Engine.Results
     /// <remarks>Live trading result handler is quite busy. It sends constant price updates, equity updates and order/holdings updates.</remarks>
     public class LiveTradingResultHandler : IResultHandler
     {
+        private readonly DateTime _launchTimeUtc = DateTime.UtcNow;
+
         // Required properties for the cloud app.
         private bool _isActive;
         private string _compileId;
@@ -338,6 +340,8 @@ namespace QuantConnect.Lean.Engine.Results
                     var deltaStatistics = new Dictionary<string, string>();
                     var runtimeStatistics = new Dictionary<string, string>();
                     var serverStatistics = OS.GetServerStatistics();
+                    var upTime = DateTime.UtcNow - _launchTimeUtc;
+                    serverStatistics["Up Time"] = string.Format("{0} days, {1:hh\\:mm\\:ss}", upTime.Days, upTime);
 
                     // only send holdings updates when we have changes in orders, except for first time, then we want to send all
                     foreach (var asset in _algorithm.Securities.Values.OrderBy(x => x.Symbol.Value))
