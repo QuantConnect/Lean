@@ -19,6 +19,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using NodaTime;
 using NodaTime.TimeZones;
+using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
@@ -418,7 +419,7 @@ namespace QuantConnect.Algorithm
                 }
 
                 // just return the current price
-                Benchmark = dateTime => security.Price;
+                Benchmark = new SecurityBenchmark(security);
             }
         }
 
@@ -704,7 +705,7 @@ namespace QuantConnect.Algorithm
         /// <param name="benchmark">The benchmark producing function</param>
         public void SetBenchmark(Func<DateTime, decimal> benchmark)
         {
-            Benchmark = benchmark;
+            Benchmark = new FuncBenchmark(benchmark);
         }
 
         /// <summary>
@@ -712,7 +713,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <remarks>Use Benchmark to override default symbol based benchmark, and create your own benchmark. For example a custom moving average benchmark </remarks>
         /// 
-        public Func<DateTime, decimal> Benchmark
+        public IBenchmark Benchmark
         {
             get;
             private set;
