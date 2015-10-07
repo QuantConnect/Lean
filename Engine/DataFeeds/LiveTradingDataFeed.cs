@@ -93,7 +93,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _algorithm = algorithm;
             _resultHandler = resultHandler;
             _cancellationTokenSource = new CancellationTokenSource();
-            _dataQueue = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Config.Get("data-queue-handler", "LiveDataQueue"));
+            _dataQueue = GetDataQueueHandler();
             
             Bridge = new BusyBlockingCollection<TimeSlice>();
             _subscriptions = new ConcurrentDictionary<SymbolSecurityType, LiveSubscription>();
@@ -570,6 +570,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var handler = UniverseSelection;
             if (handler != null) handler(this, new UniverseSelectionEventArgs(universe, configuration, dateTimeUtc, data));
+        }
+
+        /// <summary>
+        /// Gets the data queue handler to be used by this implementation
+        /// </summary>
+        /// <remarks>
+        /// This method is defined to allow overriding, especially for test harnesses
+        /// </remarks>
+        /// <returns>The data queue handler to be used by this live trading data feed</returns>
+        protected virtual IDataQueueHandler GetDataQueueHandler()
+        {
+            return Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Config.Get("data-queue-handler", "LiveDataQueue"));
         }
     }
 }
