@@ -64,6 +64,7 @@ namespace QuantConnect.Lean.Engine.Results
         //Update loop:
         private DateTime _nextUpdate;
         private DateTime _nextChartsUpdate;
+        private DateTime _nextRunningStatus;
         private DateTime _nextLogStoreUpdate;
         private DateTime _nextStatisticsUpdate;
         private int _lastOrderId = -1;
@@ -418,7 +419,7 @@ namespace QuantConnect.Lean.Engine.Results
                         Log.Debug("LiveTradingResultHandler.Update(): Finished storing log");
                     }
 
-                    // Every 5 send usage statistics:
+                    // Every minute send usage statistics:
                     if (DateTime.Now > _nextStatisticsUpdate)
                     {
                         try
@@ -1076,6 +1077,13 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Also add the user samples / plots to the result handler tracking:
                 SampleRange(_algorithm.GetChartUpdates(true));
+            }
+
+            // wait until after we're warmed up to start sending running status each minute
+            if (!_algorithm.IsWarmingUp && time > _nextRunningStatus)
+            {
+                _nextRunningStatus = time.Add(TimeSpan.FromMinutes(1));
+                _api.SetAlgorithmStatus(_job.AlgorithmId, AlgorithmStatus.Running);
             }
 
             //Send out the debug messages:
