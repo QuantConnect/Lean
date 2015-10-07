@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using NodaTime;
+using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
@@ -238,7 +239,7 @@ namespace QuantConnect.Interfaces
         /// Gets the function used to define the benchmark. This function will return
         /// the value of the benchmark at a requested date/time
         /// </summary>
-        Func<DateTime, decimal> Benchmark
+        IBenchmark Benchmark
         { 
             get;
         }

@@ -833,7 +833,7 @@ namespace QuantConnect.Lean.Engine
             try
             {
                 // backtest mode, sample benchmark on day changes
-                results.SampleBenchmark(time, algorithm.Benchmark(time).SmartRounding());
+                results.SampleBenchmark(time, algorithm.Benchmark.Evaluate(time).SmartRounding());
             }
             catch (Exception err)
             {
