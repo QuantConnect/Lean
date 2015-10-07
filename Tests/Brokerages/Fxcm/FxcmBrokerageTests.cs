@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Fxcm;
 using QuantConnect.Configuration;
@@ -23,7 +21,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Fxcm
 {
-    [TestFixture, Ignore("These tests require a configured and active FXCM practice account")]
+    [TestFixture] //, Ignore("These tests require a configured and active FXCM practice account")]
     public class FxcmBrokerageTests : BrokerageTests
     {
         /// <summary>
@@ -47,6 +45,22 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         protected override void DisposeBrokerage(IBrokerage brokerage)
         {
             brokerage.Disconnect();
+        }
+
+        /// <summary>
+        /// Provides the data required to test each order type in various cases
+        /// </summary>
+        public override TestCaseData[] OrderParameters
+        {
+            get
+            {
+                return new[]
+                {
+                    new TestCaseData(new MarketOrderTestParameters(Symbol, SecurityType)).SetName("MarketOrder"),
+                    new TestCaseData(new FxcmLimitOrderTestParameters(this, Symbol, SecurityType, HighPrice, LowPrice)).SetName("LimitOrder"),
+                    new TestCaseData(new FxcmStopMarketOrderTestParameters(this, Symbol, SecurityType, HighPrice, LowPrice)).SetName("StopMarketOrder"),
+                };
+            }
         }
 
         /// <summary>
@@ -88,9 +102,8 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         /// </summary>
         protected override decimal GetAskPrice(string symbol, SecurityType securityType)
         {
-            var brokerage = (FxcmBrokerage)Brokerage;
-            var quotes = brokerage.GetQuotes(new List<string> { brokerage.ConvertSymbolToFxcmSymbol(symbol) });
-            return (decimal)quotes.Single().getAskClose();
+            // not used, we use bid/ask prices
+            return 0;
         }
 
         /// <summary>
