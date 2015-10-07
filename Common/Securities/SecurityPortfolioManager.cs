@@ -442,6 +442,30 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the margin available for trading a specific symbol in a specific direction.
+        /// </summary>
+        /// <param name="symbol">The symbol to compute margin remaining for</param>
+        /// <param name="direction">The order/trading direction</param>
+        /// <returns>The maximum order size that is currently executable in the specified direction</returns>
+        public decimal GetMarginRemaining(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
+        {
+            var security = Securities[symbol];
+            return security.MarginModel.GetMarginRemaining(this, security, direction);
+        }
+
+        /// <summary>
+        /// Gets the margin available for trading a specific symbol in a specific direction.
+        /// Alias for <see cref="GetMarginRemaining"/>
+        /// </summary>
+        /// <param name="symbol">The symbol to compute margin remaining for</param>
+        /// <param name="direction">The order/trading direction</param>
+        /// <returns>The maximum order size that is currently executable in the specified direction</returns>
+        public decimal GetBuyingPower(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
+        {
+            return GetMarginRemaining(symbol, direction);
+        }
+
+        /// <summary>
         /// Calculate the new average price after processing a partial/complete order fill event. 
         /// </summary>
         /// <remarks>
