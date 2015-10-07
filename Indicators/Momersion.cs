@@ -25,7 +25,7 @@ namespace QuantConnect.Indicators
     /// Source: Harris, Michael. "Momersion Indicator." Price Action Lab.,
     ///             13 Aug. 2015. Web. <http://www.priceactionlab.com/Blog/2015/08/momersion-indicator/>.
     /// </summary>
-    public class MomersionIndicator : WindowIndicator<IndicatorDataPoint>
+    public class Momersion : WindowIndicator<IndicatorDataPoint>
     {
         /// <summary>
         /// The minimum observations needed to consider the indicator ready. After that observation
@@ -34,26 +34,20 @@ namespace QuantConnect.Indicators
         private int? _minPeriod;
 
         /// <summary>
-        /// The final full period used to estimate the indicator.
-        /// </summary>
-        private int _fullPeriod;
-
-        /// <summary>
         /// The rolling window used to store the momentum.
         /// </summary>
-        private RollingWindow<decimal> _multipliedDiffWindow;
+        private readonly RollingWindow<decimal> _multipliedDiffWindow;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MomersionIndicator"/> class.
+        /// Initializes a new instance of the <see cref="Momersion"/> class.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="minPeriod">The minimum period.</param>
         /// <param name="fullPeriod">The full period.</param>
         /// <exception cref="System.ArgumentException">The minimum period should be greater of 3.;minPeriod</exception>
-        public MomersionIndicator(string name, int? minPeriod, int fullPeriod)
+        public Momersion(string name, int? minPeriod, int fullPeriod)
             : base(name, 3)
         {
-            _fullPeriod = fullPeriod;
             _multipliedDiffWindow = new RollingWindow<decimal>(fullPeriod);
             if (minPeriod < 4)
             {
@@ -63,20 +57,20 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MomersionIndicator"/> class.
+        /// Initializes a new instance of the <see cref="Momersion"/> class.
         /// </summary>
         /// <param name="minPeriod">The minimum period.</param>
         /// <param name="fullPeriod">The full period.</param>
-        public MomersionIndicator(int minPeriod, int fullPeriod)
+        public Momersion(int minPeriod, int fullPeriod)
             : this("Momersion_" + fullPeriod, minPeriod, fullPeriod)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MomersionIndicator"/> class.
+        /// Initializes a new instance of the <see cref="Momersion"/> class.
         /// </summary>
         /// <param name="fullPeriod">The full period.</param>
-        public MomersionIndicator(int fullPeriod)
+        public Momersion(int fullPeriod)
             : this("Momersion_" + fullPeriod, null, fullPeriod)
         {
         }
@@ -93,10 +87,8 @@ namespace QuantConnect.Indicators
                 {
                     return _multipliedDiffWindow.Count >= _minPeriod;
                 }
-                else
-                {
-                    return _multipliedDiffWindow.IsReady;
-                }
+                
+                return _multipliedDiffWindow.IsReady;
             }
         }
 
@@ -120,13 +112,13 @@ namespace QuantConnect.Indicators
         /// </returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            int Mc = 0;
-            int MRc = 0;
+            int Mc;
+            int MRc;
             decimal momersion;
 
             if (window.Count >= 3) _multipliedDiffWindow.Add((window[0] - window[1]) * (window[1] - window[2]));
 
-            if (this.IsReady)
+            if (IsReady)
             {
                 Mc = _multipliedDiffWindow.Count(obs => obs > 0);
                 MRc = _multipliedDiffWindow.Count(obs => obs < 0);
@@ -137,8 +129,7 @@ namespace QuantConnect.Indicators
                 momersion = 50m;
             }
 
-            Current = new IndicatorDataPoint(input.Time, momersion);
-            return this.Current;
+            return momersion;
         }
     }
 }
