@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Indicators
         public void OnlyFullPeriodTest()
         {
             int fullPeriod = 10;
-            MomersionIndicator Momersion = new MomersionIndicator(fullPeriod);
+            Momersion Momersion = new Momersion(fullPeriod);
             DateTime time = DateTime.Now;
 
             #region Array input
@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Indicators
         {
             int minPeriod = 7;
             int fullPeriod = 20;
-            MomersionIndicator Momersion = new MomersionIndicator(minPeriod, fullPeriod);
+            Momersion Momersion = new Momersion(minPeriod, fullPeriod);
             DateTime time = DateTime.Now;
 
             #region Array input
