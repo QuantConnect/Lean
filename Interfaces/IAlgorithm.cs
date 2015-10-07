@@ -19,7 +19,7 @@ using NodaTime;
 using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
-using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Scheduling;
@@ -179,9 +179,9 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
-        /// Gets the current universe selector, or null if no selection is to be performed
+        /// Gets the list of universes for the algorithm
         /// </summary>
-        IUniverse Universe
+        List<IUniverse> Universes
         {
             get;
         }

@@ -273,9 +273,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // as updating factors and symbol mapping as well as detecting aux data
                     if (instance.EndTime.Date > _tradeableDates.Current)
                     {
-                        // this will advance the date enumerator and determine if a new
-                        // instance of the subscription enumerator is required
-                        _subscriptionFactoryEnumerator = ResolveDataEnumerator(false);
+                        // this is fairly hacky and could be solved by removing the aux data from this class
+                        // the case is with coarse data files which have many daily sized data points for the
+                        // same date,
+                        if (!_config.IsInternalFeed)
+                        {
+                            // this will advance the date enumerator and determine if a new
+                            // instance of the subscription enumerator is required
+                            _subscriptionFactoryEnumerator = ResolveDataEnumerator(false);
+                        }
 
                         // we produce auxiliary data on date changes, but make sure our current instance
                         // isn't before it in time

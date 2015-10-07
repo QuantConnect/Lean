@@ -16,22 +16,42 @@
 using System;
 using System.Collections.Generic;
 
-namespace QuantConnect.Data.Fundamental
+namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
     /// Provides a functional implementation of <see cref="IUniverse"/>
     /// </summary>
     public class FuncUniverse : IUniverse
     {
-        private readonly Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> _coarse;
+        private readonly Func<IEnumerable<BaseData>, IEnumerable<Symbol>> _coarse;
+
+        /// <summary>
+        /// Gets the settings used for subscriptons added for this universe
+        /// </summary>
+        public SubscriptionSettings SubscriptionSettings
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the configuration used to get universe data
+        /// </summary>
+        public SubscriptionDataConfig Configuration
+        {
+            get; private set;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuncUniverse"/> class
         /// </summary>
+        /// <param name="configuration"></param>
+        /// <param name="subscriptionSettings"></param>
         /// <param name="coarse">Defines an initial coarse selection</param>
-        public FuncUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarse)
+        public FuncUniverse(SubscriptionDataConfig configuration, SubscriptionSettings subscriptionSettings, Func<IEnumerable<BaseData>, IEnumerable<Symbol>> coarse)
         {
             _coarse = coarse;
+            Configuration = configuration;
+            SubscriptionSettings = subscriptionSettings;
         }
 
         /// <summary>
@@ -39,7 +59,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         /// <param name="data">The coarse fundamental data</param>
         /// <returns>The data that passes the filter</returns>
-        public IEnumerable<Symbol> SelectCoarse(IEnumerable<CoarseFundamental> data)
+        public IEnumerable<Symbol> SelectSymbols(IEnumerable<BaseData> data)
         {
             return _coarse(data);
         }

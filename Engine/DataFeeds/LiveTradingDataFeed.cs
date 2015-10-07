@@ -22,8 +22,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
@@ -50,7 +50,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Event fired when the data feed encounters new fundamental data
         /// </summary>
-        public event EventHandler<FundamentalEventArgs> Fundamental;
+        public event EventHandler<UniverseSelectionEventArgs> UniverseSelection;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -102,12 +102,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var periodEnd = Time.EndOfTime;
             foreach (var security in algorithm.Securities.Values)
             {
-                var subscription = CreateSubscription(algorithm, resultHandler, security, periodStart, periodEnd);
+                var subscription = CreateSubscription(algorithm, resultHandler, security, periodStart, periodEnd, true);
                 _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription),  subscription);
             }
 
+            foreach (var universe in algorithm.Universes)
+            {
+                AddUniverseSubscription(universe, DateTime.UtcNow, Time.EndOfTime);
+            }
+
             // request for data from these symbols
-            var symbols = BuildTypeSymbolList(algorithm.Securities.Values);
+            var symbols = BuildTypeSymbolList();
             if (symbols.Any())
             {
                 // don't subscribe if there's nothing there, this allows custom data to
@@ -124,11 +129,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="security">The security to add a subscription for</param>
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
-        public void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime)
+        /// <param name="isUserDefinedSubscription">Set to true to prevent coarse universe selection from removing this subscription</param>
+        public void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription)
         {
-            var symbols = BuildTypeSymbolList(new[] {security});
+            var symbols = BuildTypeSymbolList();
             _dataQueue.Subscribe(_job, symbols);
-            var subscription = CreateSubscription(_algorithm, _resultHandler, security, DateTime.UtcNow.ConvertFromUtc(_algorithm.TimeZone).Date, Time.EndOfTime);
+            var subscription = CreateSubscription(_algorithm, _resultHandler, security, DateTime.UtcNow.ConvertFromUtc(_algorithm.TimeZone).Date, Time.EndOfTime, isUserDefinedSubscription);
             _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription), subscription);
         }
 
@@ -138,7 +144,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="security">The security to remove subscriptions for</param>
         public void RemoveSubscription(Security security)
         {
-            var symbols = BuildTypeSymbolList(new[] {security});
+            var symbols = BuildTypeSymbolList();
             _dataQueue.Unsubscribe(_job, symbols);
 
             LiveSubscription subscription;
@@ -172,7 +178,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 var changes = SecurityChanges.None;
 
-                var performedUniverseSelection = new HashSet<string>();
                 foreach (var kvp in _subscriptions)
                 {
                     var subscription = kvp.Value;
@@ -181,13 +186,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     var localTime = new DateTime(utcTriggerTime.Ticks - subscription.OffsetProvider.GetOffsetTicks(utcTriggerTime));
                     var onDay = onHour && localTime.Hour == 0;
-
-                    // perform universe selection if requested on day changes (don't perform multiple times per market)
-                    if (onDay && _algorithm.Universe != null && performedUniverseSelection.Add(subscription.Configuration.Market))
-                    {
-                        var coarse = UniverseSelection.GetCoarseFundamentals(subscription.Configuration.Market, subscription.TimeZone, localTime.Date, true);
-                        OnFundamental(FundamentalType.Coarse, utcTriggerTime, subscription.Configuration, coarse.ToList());
-                    }
 
                     var triggerArchive = false;
                     switch (subscription.Configuration.Resolution)
@@ -279,6 +277,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             var subscription = kvp.Value;
 
                             if (subscription.Configuration.Symbol != point.Symbol) continue;
+
+                            // catch the universe DTO here
+                            if (subscription.IsUniverseSelectionSubscription && point is CoarseFundamentalList)
+                            {
+                                Log.Trace("LiveTradingDataFeed.StreamStoreConsumer(): Received coarse data.");
+                                var coarse = point as CoarseFundamentalList;
+                                if (coarse.Data.Count > 0)
+                                {
+                                    // fire universe selection logic
+                                    OnUniverseSelection(subscription.Universe, DateTime.UtcNow, subscription.Configuration, coarse.Data);
+                                }
+                                continue;
+                            }
 
                             var tick = point as Tick;
                             if (tick != null)
@@ -448,7 +459,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Exit()
         {
             // Unsubscribe from these symbols
-            var symbols = BuildTypeSymbolList(_algorithm.Securities.Values);
+            var symbols = BuildTypeSymbolList();
             if (symbols.Any())
             {
                 // don't unsubscribe if there's nothing there, this allows custom data to
@@ -463,7 +474,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IResultHandler resultHandler,
             Security security,
             DateTime periodStart,
-            DateTime periodEnd)
+            DateTime periodEnd, 
+            bool isUserDefinedSubscription)
         {
             IEnumerator<BaseData> enumerator = null;
             if (security.SubscriptionDataConfig.IsCustomData)
@@ -481,24 +493,61 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // wrap the subscription data reader with a filter enumerator
                 enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, subscriptionDataReader, security, periodEnd);
             }
-            return new LiveSubscription(security, enumerator, periodStart, periodEnd, true, false);
+            return new LiveSubscription(security, enumerator, periodStart, periodEnd, isUserDefinedSubscription);
+        }
+
+
+        /// <summary>
+        /// Adds a new subscription for universe selection
+        /// </summary>
+        /// <param name="universe">The universe to add a subscription for</param>
+        /// <param name="startTimeUtc">The start time of the subscription in utc</param>
+        /// <param name="endTimeUtc">The end time of the subscription in utc</param>
+        public void AddUniverseSubscription(
+            IUniverse universe,
+            DateTime startTimeUtc,
+            DateTime endTimeUtc
+            )
+        {
+            // grab the relevant exchange hours
+            SubscriptionDataConfig config = universe.Configuration;
+
+            var exchangeHours = SecurityExchangeHoursProvider.FromDataFolder()
+                .GetExchangeHours(config.Market, null, config.SecurityType);
+
+            // create a canonical security object
+            var security = new Security(exchangeHours, config, universe.SubscriptionSettings.Leverage);
+
+            var localStartTime = startTimeUtc.ConvertFromUtc(config.TimeZone);
+            var localEndTime = endTimeUtc.ConvertFromUtc(config.TimeZone);
+
+            // define our data enumerator
+            var tradeableDates = Time.EachTradeableDay(security, localStartTime, localEndTime);
+            var enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, tradeableDates, false);
+
+            // create the subscription
+            var subscription = new LiveSubscription(universe, security, enumerator, startTimeUtc, endTimeUtc);
+
+            // only message the user if it's one of their universe types
+            _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription), subscription);
         }
 
         /// <summary>
         /// Create list of symbols grouped by security type.
         /// </summary>
-        private Dictionary<SecurityType, List<string>> BuildTypeSymbolList(IEnumerable<Security> securities)
+        private Dictionary<SecurityType, List<string>> BuildTypeSymbolList()
         {
             // create a lookup keyed by SecurityType
             var symbols = new Dictionary<SecurityType, List<string>>();
 
             // Only subscribe equities and forex symbols
-            foreach (var security in securities)
+            foreach (var subscription in _subscriptions.Values)
             {
-                if (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
+                var securityType = subscription.Security.Type;
+                if (securityType == SecurityType.Equity || securityType == SecurityType.Forex)
                 {
-                    if (!symbols.ContainsKey(security.Type)) symbols.Add(security.Type, new List<string>());
-                    symbols[security.Type].Add(security.Symbol.Permtick);
+                    if (!symbols.ContainsKey(securityType)) symbols.Add(securityType, new List<string>());
+                    symbols[securityType].Add(subscription.Configuration.Symbol.Permtick);
                 }
             }
             return symbols;
@@ -515,12 +564,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Event invocator for the <see cref="Fundamental"/> event
+        /// Event invocator for the <see cref="UniverseSelection"/> event
         /// </summary>
-        protected virtual void OnFundamental(FundamentalType fundamentalType, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
+        protected virtual void OnUniverseSelection(IUniverse universe, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
         {
-            var handler = Fundamental;
-            if (handler != null) handler(this, new FundamentalEventArgs(fundamentalType, configuration, dateTimeUtc, data));
+            var handler = UniverseSelection;
+            if (handler != null) handler(this, new UniverseSelectionEventArgs(universe, configuration, dateTimeUtc, data));
         }
     }
 }

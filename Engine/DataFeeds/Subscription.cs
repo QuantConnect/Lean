@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -29,6 +30,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class Subscription : IEnumerator<BaseData>
     {
         private readonly IEnumerator<BaseData> _enumerator;
+
+        /// <summary>
+        /// Gets the universe for this subscription
+        /// </summary>
+        public IUniverse Universe
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// Gets the security this subscription points to
@@ -70,11 +80,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool IsUserDefined { get; private set; }
 
         /// <summary>
-        /// Gets true if this subscription is used to produce dates for a given market's universe
-        /// selection logic. Data from this subscription is never intended to be forwarded into
-        /// an algorithm
+        /// Gets true if this subscription is used in universe selection
         /// </summary>
-        public bool IsFundamentalSubscription { get; private set; }
+        public bool IsUniverseSelectionSubscription { get; private set; }
 
         /// <summary>
         /// Gets the start time of this subscription in UTC
@@ -94,14 +102,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
         /// <param name="isUserDefined">True if the user explicitly defined this subscription, false otherwise</param>
-        /// <param name="isFundamentalSubscription">True if this subscription is used to define the times to perform universe selection
-        /// for a specific market, false for all other subscriptions</param>
-        public Subscription(Security security, IEnumerator<BaseData> enumerator, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefined, bool isFundamentalSubscription)
+        public Subscription(Security security, IEnumerator<BaseData> enumerator, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefined)
         {
             Security = security;
             _enumerator = enumerator;
             IsUserDefined = isUserDefined;
-            IsFundamentalSubscription = isFundamentalSubscription;
+            IsUniverseSelectionSubscription = false;
+            Configuration = security.SubscriptionDataConfig;
+            OffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, utcStartTime, utcEndTime);
+
+            UtcStartTime = utcStartTime;
+            UtcEndTime = utcEndTime;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Subscription"/> class with a universe
+        /// </summary>
+        /// <param name="universe">Specified for universe subscriptions</param>
+        /// <param name="security">The security this subscription is for</param>
+        /// <param name="enumerator">The subscription's data source</param>
+        /// <param name="utcStartTime">The start time of the subscription</param>
+        /// <param name="utcEndTime">The end time of the subscription</param>
+        public Subscription(IUniverse universe, Security security, IEnumerator<BaseData> enumerator, DateTime utcStartTime, DateTime utcEndTime)
+        {
+            Universe = universe;
+            Security = security;
+            _enumerator = enumerator;
+            IsUserDefined = false;
+            IsUniverseSelectionSubscription = true;
             Configuration = security.SubscriptionDataConfig;
             OffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, utcStartTime, utcEndTime);
 

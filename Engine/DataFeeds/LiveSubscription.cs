@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -61,10 +62,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
         /// <param name="isUserDefined">True if the user explicitly defined this subscription, false otherwise</param>
-        /// <param name="isFundamentalSubscription">True if this subscription is used to define the times to perform universe selection
-        /// for a specific market, false for all other subscriptions</param>
-        public LiveSubscription(Security security, IEnumerator<BaseData> enumerator, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefined, bool isFundamentalSubscription)
-            : base(security, enumerator, utcStartTime, utcEndTime, isUserDefined, isFundamentalSubscription)
+        public LiveSubscription(Security security, IEnumerator<BaseData> enumerator, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefined)
+            : base(security, enumerator, utcStartTime, utcEndTime, isUserDefined)
+        {
+            NeedsMoveNext = true;
+            IsCustomData = security.SubscriptionDataConfig.IsCustomData;
+            StreamStore = new StreamStore(Configuration, security);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LiveSubscription"/> class
+        /// </summary>
+        /// <param name="universe">The universe of the subscription</param>
+        /// <param name="security">The security this subscription is for</param>
+        /// <param name="enumerator">The subscription's data source</param>
+        /// <param name="utcStartTime">The start time of the subscription</param>
+        /// <param name="utcEndTime">The end time of the subscription</param>
+        public LiveSubscription(IUniverse universe, Security security, IEnumerator<BaseData> enumerator, DateTime utcStartTime, DateTime utcEndTime)
+            : base(universe, security, enumerator, utcStartTime, utcEndTime)
         {
             NeedsMoveNext = true;
             IsCustomData = security.SubscriptionDataConfig.IsCustomData;

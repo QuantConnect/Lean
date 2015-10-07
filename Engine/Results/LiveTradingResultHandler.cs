@@ -42,6 +42,8 @@ namespace QuantConnect.Lean.Engine.Results
     /// <remarks>Live trading result handler is quite busy. It sends constant price updates, equity updates and order/holdings updates.</remarks>
     public class LiveTradingResultHandler : IResultHandler
     {
+        private readonly DateTime _launchTimeUtc = DateTime.UtcNow;
+
         // Required properties for the cloud app.
         private bool _isActive;
         private string _compileId;
@@ -62,6 +64,7 @@ namespace QuantConnect.Lean.Engine.Results
         //Update loop:
         private DateTime _nextUpdate;
         private DateTime _nextChartsUpdate;
+        private DateTime _nextRunningStatus;
         private DateTime _nextLogStoreUpdate;
         private DateTime _nextStatisticsUpdate;
         private int _lastOrderId = -1;
@@ -338,6 +341,8 @@ namespace QuantConnect.Lean.Engine.Results
                     var deltaStatistics = new Dictionary<string, string>();
                     var runtimeStatistics = new Dictionary<string, string>();
                     var serverStatistics = OS.GetServerStatistics();
+                    var upTime = DateTime.UtcNow - _launchTimeUtc;
+                    serverStatistics["Up Time"] = string.Format("{0}d {1:hh\\:mm\\:ss}", upTime.Days, upTime);
 
                     // only send holdings updates when we have changes in orders, except for first time, then we want to send all
                     foreach (var asset in _algorithm.Securities.Values.OrderBy(x => x.Symbol.Value))
@@ -414,7 +419,7 @@ namespace QuantConnect.Lean.Engine.Results
                         Log.Debug("LiveTradingResultHandler.Update(): Finished storing log");
                     }
 
-                    // Every 5 send usage statistics:
+                    // Every minute send usage statistics:
                     if (DateTime.Now > _nextStatisticsUpdate)
                     {
                         try
@@ -1072,6 +1077,13 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Also add the user samples / plots to the result handler tracking:
                 SampleRange(_algorithm.GetChartUpdates(true));
+            }
+
+            // wait until after we're warmed up to start sending running status each minute
+            if (!_algorithm.IsWarmingUp && time > _nextRunningStatus)
+            {
+                _nextRunningStatus = time.Add(TimeSpan.FromMinutes(1));
+                _api.SetAlgorithmStatus(_job.AlgorithmId, AlgorithmStatus.Running);
             }
 
             //Send out the debug messages:

@@ -15,7 +15,7 @@
 
 using System.Collections.Generic;
 
-namespace QuantConnect.Data.Fundamental
+namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
     /// Provides a mechanism for an algorithm to select a universe of symbols to operate on
@@ -23,10 +23,20 @@ namespace QuantConnect.Data.Fundamental
     public interface IUniverse
     {
         /// <summary>
+        /// Gets the settings used for subscriptons added for this universe
+        /// </summary>
+        SubscriptionSettings SubscriptionSettings { get; }
+
+        /// <summary>
+        /// Gets the configuration used to get universe data
+        /// </summary>
+        SubscriptionDataConfig Configuration { get; }
+
+        /// <summary>
         /// Performs an initial, coarse filter
         /// </summary>
         /// <param name="data">The coarse fundamental data</param>
         /// <returns>The data that passes the filter</returns>
-        IEnumerable<Symbol> SelectCoarse(IEnumerable<CoarseFundamental> data);
+        IEnumerable<Symbol> SelectSymbols(IEnumerable<BaseData> data);
     }
 }

@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return from c in coarse
                        let sym = c.Symbol.Value
                        where sym == "GOOG" || sym == "GOOCV" || sym == "GOOAV" || sym == "GOOGL"
-                       select c;
+                       select c.Symbol;
             });
         }
 

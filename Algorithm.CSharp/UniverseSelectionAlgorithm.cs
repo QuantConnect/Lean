@@ -17,7 +17,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
 
@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
                         where avg.EMA50 > avg.EMA100
                         // prefer symbols with a larger delta by percentage between the two averages
                         orderby (avg.EMA50 - avg.EMA100)/cf.Price descending
-                        select cf).Take(Count);
+                        select cf.Symbol).Take(Count);
             });
         }
 

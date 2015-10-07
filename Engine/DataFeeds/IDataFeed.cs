@@ -37,7 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// This event must be fired when there is nothing in the <see cref="Bridge"/>,
         /// this can be accomplished using <see cref="BusyBlockingCollection{T}.Wait(int,CancellationToken)"/>
         /// </summary>
-        event EventHandler<FundamentalEventArgs> Fundamental;
+        event EventHandler<UniverseSelectionEventArgs> UniverseSelection;
         
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -74,7 +74,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="security">The security to add a subscription for</param>
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
-        void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime);
+        /// <param name="isUserDefinedSubscription">Set to true to prevent coarse universe selection from removing this subscription</param>
+        void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription);
 
         /// <summary>
         /// Removes the subscription from the data feed, if it exists
