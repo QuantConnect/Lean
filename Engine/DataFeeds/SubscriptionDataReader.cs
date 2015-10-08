@@ -330,9 +330,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             do
             {
                 // always advance the date enumerator, this function is intended to be
-                // called on date changes
+                // called on date changes, never return null for live mode, we'll always
+                // just keep trying to refresh the subscription
                 DateTime date;
-                if (!TryGetNextDate(out date))
+                if (!TryGetNextDate(out date) && !_isLiveMode)
                 {
                     // if we run out of dates then we're finished with this subscription
                     return null;
