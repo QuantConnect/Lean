@@ -144,8 +144,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="security">The security to remove subscriptions for</param>
         public void RemoveSubscription(Security security)
         {
-            var symbols = BuildTypeSymbolList();
-            _dataQueue.Unsubscribe(_job, symbols);
+            _dataQueue.Unsubscribe(_job, new Dictionary<SecurityType, List<string>> {{security.Type, new List<string> {security.Symbol}}});
 
             LiveSubscription subscription;
             _subscriptions.TryRemove(new SymbolSecurityType(security), out subscription);
@@ -341,6 +340,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         var repeat = true;
                         BaseData data = null;
+                        // pad the resolution so this data point can make it in time for the real time sync thread
+                        // to pull it out of the stream store via trigger archive
+                        var paddedIncrement = subscription.Configuration.Increment.Add(TimeSpan.FromSeconds(0.05));
                         while (repeat && TryMoveNext(subscription, out data))
                         {
                             if (data == null)
@@ -351,7 +353,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // check to see if the data is too far in the past
                             // this is useful when using custom remote files that may stretch far into the past,
                             // so this if block will cause us to fast forward the reader until its recent increment
-                            var earliestExpectedFirstPoint = DateTime.UtcNow.Subtract(subscription.Configuration.Increment.Add(Time.OneSecond));
+                            var earliestExpectedFirstPoint = DateTime.UtcNow.Subtract(paddedIncrement);
                             repeat = data.EndTime.ConvertToUtc(subscription.TimeZone) < earliestExpectedFirstPoint;
                         }
 
