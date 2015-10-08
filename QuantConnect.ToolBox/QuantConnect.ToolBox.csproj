@@ -37,6 +37,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="SevenZipSharp">
+      <HintPath>..\packages\SevenZipSharp.0.64\lib\SevenZipSharp.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -46,10 +49,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CoarseUniverseGenerator\Program.cs" />
     <Compile Include="Compression.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="DateFormat.cs" />
+    <Compile Include="DukascopyDownloader\ConfigSettings.cs" />
+    <Compile Include="DukascopyDownloader\DukascopyTick.cs" />
+    <Compile Include="DukascopyDownloader\Program.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="GoogleDownloader\Program.cs" />
     <Compile Include="InstrumentType.cs" />
     <Compile Include="LeanBar.cs" />
     <Compile Include="LeanInstrument.cs" />
@@ -57,12 +65,49 @@
     <Compile Include="MapFile.cs" />
     <Compile Include="MapFileResolver.cs" />
     <Compile Include="MapFileRow.cs" />
+    <Compile Include="OandaDownloader\ConfigSettings.cs" />
+    <Compile Include="OandaDownloader\OandaRestLibrary\Credentials.cs" />
+    <Compile Include="OandaDownloader\OandaRestLibrary\Rest.cs" />
+    <Compile Include="OandaDownloader\OandaRestLibrary\TradeLibrary\Candle.cs" />
+    <Compile Include="OandaDownloader\OandaRestLibrary\TradeLibrary\Communications\CandlesResponse.cs" />
+    <Compile Include="OandaDownloader\OandaRestLibrary\TradeLibrary\Communications\InstrumentsResponse.cs" />
+    <Compile Include="OandaDownloader\OandaRestLibrary\TradeLibrary\Communications\Requests\CandlesRequest.cs" />
+    <Compile Include="OandaDownloader\OandaRestLibrary\TradeLibrary\Communications\Requests\Request.cs" />
+    <Compile Include="OandaDownloader\OandaRestLibrary\TradeLibrary\Instrument.cs" />
+    <Compile Include="OandaDownloader\Program.cs" />
     <Compile Include="OS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QuantQuoteConverter\Program.cs" />
     <Compile Include="Time.cs" />
+    <Compile Include="YahooDownloader\Program.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="CoarseUniverseGenerator\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="DukascopyDownloader\config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="OandaDownloader\config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <None Include="OandaDownloader\instruments.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="DukascopyDownloader\instruments.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="CoarseUniverseGenerator\exclusions.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
