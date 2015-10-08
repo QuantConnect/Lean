@@ -5,18 +5,6 @@ VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.ToolBox", "QuantConnect.ToolBox\QuantConnect.ToolBox.csproj", "{AC9A142C-B485-44D7-91FF-015C22C43D05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.QuantQuote", "QuantConnect.QuantQuote\QuantConnect.QuantQuote.csproj", "{5C3C7291-9DF4-4398-99B8-D0E1696408E9}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.OandaDownloader", "QuantConnect.OandaDownloader\QuantConnect.OandaDownloader.csproj", "{53571A91-B351-4ACA-842A-FB16E7782A50}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.DukascopyDownloader", "QuantConnect.DukascopyDownloader\QuantConnect.DukascopyDownloader.csproj", "{6D72FCA6-CBFA-4BDB-93BD-261AE143C4AF}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.CoarseUniverseGenerator", "QuantConnect.CoarseUniverseGenerator\QuantConnect.CoarseUniverseGenerator.csproj", "{AB106088-F32A-493B-B3B8-5E28033F0002}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.YahooDownloader", "QuantConnect.YahooDownloader\QuantConnect.YahooDownloader.csproj", "{5F45D2B1-874E-4931-8401-F58FE5EC93ED}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.GoogleDownloader", "QuantConnect.GoogleDownloader\QuantConnect.GoogleDownloader.csproj", "{B745B129-B0CB-4444-98E2-A35929E7613A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,30 +15,6 @@ Global
 		{AC9A142C-B485-44D7-91FF-015C22C43D05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC9A142C-B485-44D7-91FF-015C22C43D05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC9A142C-B485-44D7-91FF-015C22C43D05}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5C3C7291-9DF4-4398-99B8-D0E1696408E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5C3C7291-9DF4-4398-99B8-D0E1696408E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5C3C7291-9DF4-4398-99B8-D0E1696408E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5C3C7291-9DF4-4398-99B8-D0E1696408E9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{53571A91-B351-4ACA-842A-FB16E7782A50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{53571A91-B351-4ACA-842A-FB16E7782A50}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{53571A91-B351-4ACA-842A-FB16E7782A50}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{53571A91-B351-4ACA-842A-FB16E7782A50}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6D72FCA6-CBFA-4BDB-93BD-261AE143C4AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6D72FCA6-CBFA-4BDB-93BD-261AE143C4AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6D72FCA6-CBFA-4BDB-93BD-261AE143C4AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6D72FCA6-CBFA-4BDB-93BD-261AE143C4AF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AB106088-F32A-493B-B3B8-5E28033F0002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AB106088-F32A-493B-B3B8-5E28033F0002}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AB106088-F32A-493B-B3B8-5E28033F0002}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AB106088-F32A-493B-B3B8-5E28033F0002}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5F45D2B1-874E-4931-8401-F58FE5EC93ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5F45D2B1-874E-4931-8401-F58FE5EC93ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5F45D2B1-874E-4931-8401-F58FE5EC93ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5F45D2B1-874E-4931-8401-F58FE5EC93ED}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B745B129-B0CB-4444-98E2-A35929E7613A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B745B129-B0CB-4444-98E2-A35929E7613A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B745B129-B0CB-4444-98E2-A35929E7613A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B745B129-B0CB-4444-98E2-A35929E7613A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
