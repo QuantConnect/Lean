@@ -1,0 +1,31 @@
+﻿{
+    //---------------------------------------
+    // Configuration for the Oanda Downloader
+    //---------------------------------------
+
+    // Oanda Credentials (Practice Environment only)
+    "access-token": "73eba38ad5b44778f9a0c0fec1a66ed1-44f47f052c897b3e1e7f24196bbc071f",
+    "account-id": 621396,
+
+    // Output folder in which files will be saved (usually the Lean data folder)
+    "output-folder": "C:\\Lean\\Data",
+
+    // List of symbols to download (if empty, all symbols are downloaded)
+    // The list of symbols can be found in the first column of the instruments.txt file
+    "instrument-list": [ "SPX500_USD", "DE30_EUR", "WTICO_USD", "XAU_USD", "EUR_USD", "USD_JPY" ],
+
+    // Starting date for download requests (in yyyy-mm-dd format)
+    "start-date": "2015-06-11",
+
+    // Ending date for download requests (in yyyy-mm-dd format)
+    "end-date": "2015-06-12",
+
+    // The number of bars to retrieve in each request (max=5000)
+    "bars-per-request": 5000,
+
+    // Supported formats: "lean"
+    "output-format": "lean",
+
+    // If set to true, enables trace information displayed in the console
+    "enable-trace": true
+}

@@ -1,0 +1,23 @@
+﻿# This file is used to indicate what symbols should not be included
+# in the coarse file generation process. By default, this file contains
+# known test symbols
+
+#https://www.nasdaqtrader.com/TraderNews.aspx?id=ETU2013-6
+	ZJZZT
+	ZVZZT
+	ZWZZT
+	ZXYZ.A
+	ZXZZT
+	CBO
+	CBX
+	IBO
+	IGZ
+	ZBZX
+	ZTEST
+	
+#http://www.nasdaq.com/symbol/zvv
+	ZVV
+	ZZZZQ
+	
+#http://www.4-traders.com/NYSE-TEST-SYMBOL-6396573/
+	ZZZ
