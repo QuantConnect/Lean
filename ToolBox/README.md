@@ -1,6 +1,6 @@
 Lean Data ToolBox 
 =========
-[![Join the chat at https://gitter.im/QuantConnect/Lean](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/QuantConnect/Lean?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) &nbsp;&nbsp;&nbsp; <img src="https://travis-ci.org/QuantConnect/ToolBox.svg?branch=master">
+[![Join the chat at https://gitter.im/QuantConnect/Lean](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/QuantConnect/Lean?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 [Lean Home][1] | [Documentation][2] | [Download Lean][3]
 ----------
@@ -26,6 +26,14 @@ Download data directly from the Oanda database using your personal access token.
 ## Dukascopy Downloader ##
 
 Download data from Dukascopy website and convert it into LEAN engine format. Save the data to your personal LEAN data directory.
+
+## Yahoo Downloader ##
+
+Download data from Yahoo into daily files and store them in your local data directory.
+
+## Google Downloader ##
+
+Download data from Google and store them in your local data directory.
 
   [1]: https://lean.quantconnect.com "Lean Open Source Home Page"
   [2]: https://lean.quantconnect.com/docs "Lean Documentation"
