@@ -16,6 +16,7 @@ using System;
 using System.Net;
 using System.IO;
 using System.IO.Compression;
+using QuantConnect.Logging;
 using QuantConnect.ToolBox;
 
 namespace QuantConnect.YahooDownloader

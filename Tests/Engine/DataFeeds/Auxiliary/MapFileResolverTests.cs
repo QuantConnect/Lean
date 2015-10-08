@@ -17,7 +17,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using QuantConnect.Lean.Engine.DataFeeds.Auxiliary;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
 {

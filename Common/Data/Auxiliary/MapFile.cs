@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace QuantConnect.ToolBox
+namespace QuantConnect.Data.Auxiliary
 {
     /// <summary>
     /// Represents an entire map file for a specified symbol

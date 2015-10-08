@@ -20,7 +20,7 @@ using System.IO;
 using System.Linq;
 using QuantConnect.Logging;
 
-namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
+namespace QuantConnect.Data.Auxiliary
 {
     /// <summary>
     /// Represents an entire factor file for a specified symbol

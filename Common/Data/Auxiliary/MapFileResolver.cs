@@ -19,8 +19,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 
-namespace QuantConnect.ToolBox
+namespace QuantConnect.Data.Auxiliary
 {
     /// <summary>
     /// Provides a means of mapping a symbol at a point in time to the map file

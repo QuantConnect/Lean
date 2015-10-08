@@ -125,6 +125,11 @@
     <Compile Include="Brokerages\InteractiveBrokersBrokerageModel.cs" />
     <Compile Include="Brokerages\TradierBrokerageModel.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="Data\Auxiliary\FactorFile.cs" />
+    <Compile Include="Data\Auxiliary\FactorFileRow.cs" />
+    <Compile Include="Data\Auxiliary\MapFile.cs" />
+    <Compile Include="Data\Auxiliary\MapFileResolver.cs" />
+    <Compile Include="Data\Auxiliary\MapFileRow.cs" />
     <Compile Include="Data\Consolidators\BaseDataConsolidator.cs" />
     <Compile Include="Data\Consolidators\DynamicDataConsolidator.cs" />
     <Compile Include="Data\Consolidators\RenkoConsolidator.cs" />

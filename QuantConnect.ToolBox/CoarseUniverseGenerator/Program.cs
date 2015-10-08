@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -21,9 +22,10 @@ using System.Linq;
 using System.Threading;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
-using QuantConnect.ToolBox;
+using QuantConnect.Data.Auxiliary;
+using Log = QuantConnect.Logging.Log;
 
-namespace QuantConnect.CoarseUniverseGenerator
+namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 {
     public static class Program
     {
@@ -41,8 +43,6 @@ namespace QuantConnect.CoarseUniverseGenerator
         /// <param name="args">Unused argument</param>
         public static void Main(string[] args)
         {
-            Constants.Initialize();
-
             // read out the configuration file
             JToken jtoken;
             var config = JObject.Parse(File.ReadAllText("config.json"));

@@ -17,9 +17,9 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
-using QuantConnect.ToolBox;
+using QuantConnect.Logging;
 
-namespace QuantConnect.GoogleDownloader
+namespace QuantConnect.ToolBox.GoogleDownloader
 {
     class Program
     {

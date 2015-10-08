@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 
-namespace QuantConnect.Lean.Engine.DataFeeds.Auxiliary
+namespace QuantConnect.Data.Auxiliary
 {
     /// <summary>
     /// Defines a single row in a factor_factor file. This is a csv file ordered as {date, price factor, split factor}

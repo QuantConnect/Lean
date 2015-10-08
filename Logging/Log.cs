@@ -124,6 +124,22 @@ namespace QuantConnect.Logging
         }
 
         /// <summary>
+        /// Writes the message in normal text
+        /// </summary>
+        public static void Trace(string format, params object[] args)
+        {
+            Trace(string.Format(format, args));
+        }
+
+        /// <summary>
+        /// Writes the message in red
+        /// </summary>
+        public static void Error(string format, params object[] args)
+        {
+            Error(string.Format(format, args));
+        }
+
+        /// <summary>
         /// Output to the console, and sleep the thread for a little period to monitor the results.
         /// </summary>
         /// <param name="text"></param>

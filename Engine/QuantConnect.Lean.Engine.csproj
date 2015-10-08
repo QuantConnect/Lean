@@ -176,11 +176,6 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AlgorithmManager.cs" />
-    <Compile Include="DataFeeds\Auxiliary\FactorFile.cs" />
-    <Compile Include="DataFeeds\Auxiliary\FactorFileRow.cs" />
-    <Compile Include="DataFeeds\Auxiliary\MapFile.cs" />
-    <Compile Include="DataFeeds\Auxiliary\MapFileResolver.cs" />
-    <Compile Include="DataFeeds\Auxiliary\MapFileRow.cs" />
     <Compile Include="DataFeeds\BaseDataSubscriptionFactory.cs" />
     <Compile Include="DataFeeds\CreateStreamReaderErrorEventArgs.cs" />
     <Compile Include="DataFeeds\UniverseSelectionEventArgs.cs" />

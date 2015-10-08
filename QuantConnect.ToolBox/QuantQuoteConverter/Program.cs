@@ -91,7 +91,7 @@ namespace QuantConnect.QuantQuote
 
                     var fileDestination = string.Format("{0}/equity/{1}/{2}/{3}_trade.zip",  destinationDirectory, resolution, symbol, date.ToString("yyyyMMdd"));
 
-                    if (!Compression.Zip(fileDestination, data))
+                    if (!Compression.ZipData(fileDestination, data))
                     {
                         Error("Error: Could not convert to Lean zip file.");
                     }
