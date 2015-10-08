@@ -56,7 +56,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{93A63A
 		.nuget\packages.config = .nuget\packages.config
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.ToolBox", "QuantConnect.ToolBox\QuantConnect.ToolBox.csproj", "{AC9A142C-B485-44D7-91FF-015C22C43D05}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.ToolBox", "ToolBox\QuantConnect.ToolBox.csproj", "{AC9A142C-B485-44D7-91FF-015C22C43D05}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
