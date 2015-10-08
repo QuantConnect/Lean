@@ -470,32 +470,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Bridge.Dispose();
         }
 
-        private static LiveSubscription CreateSubscription(IAlgorithm algorithm,
+        private LiveSubscription CreateSubscription(IAlgorithm algorithm,
             IResultHandler resultHandler,
             Security security,
             DateTime periodStart,
             DateTime periodEnd, 
             bool isUserDefinedSubscription)
         {
-            IEnumerator<BaseData> enumerator = null;
-            if (security.SubscriptionDataConfig.IsCustomData)
-            {
-                //Subscription managers for downloading user data:
-                // TODO: Update this when warmup comes in, we back up so we can get data that should have emitted at midnight today
-                var subscriptionDataReader = new SubscriptionDataReader(
-                    security.SubscriptionDataConfig,
-                    periodStart, Time.EndOfTime,
-                    resultHandler,
-                    Time.EachTradeableDay(algorithm.Securities.Values, periodStart, periodEnd),
-                    true
-                    );
-
-                // wrap the subscription data reader with a filter enumerator
-                enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, subscriptionDataReader, security, periodEnd);
-            }
+            var enumerator = CreateSubscriptionEnumerator(algorithm, resultHandler, security, periodStart, periodEnd);
             return new LiveSubscription(security, enumerator, periodStart, periodEnd, isUserDefinedSubscription);
         }
-
 
         /// <summary>
         /// Adds a new subscription for universe selection
@@ -582,6 +566,40 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected virtual IDataQueueHandler GetDataQueueHandler()
         {
             return Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Config.Get("data-queue-handler", "LiveDataQueue"));
+        }
+
+        /// <summary>
+        /// Creates the data enumerator for the specified security
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="resultHandler">The result handler used for messaging failures</param>
+        /// <param name="security">The security to create a subscription enumerator for</param>
+        /// <param name="periodStart">The start of the subscription</param>
+        /// <param name="periodEnd">The end of the subscription</param>
+        /// <returns>The subscription's data enumerator</returns>
+        protected virtual IEnumerator<BaseData> CreateSubscriptionEnumerator(IAlgorithm algorithm,
+            IResultHandler resultHandler,
+            Security security,
+            DateTime periodStart,
+            DateTime periodEnd)
+        {
+            IEnumerator<BaseData> enumerator = null;
+            if (security.SubscriptionDataConfig.IsCustomData)
+            {
+                //Subscription managers for downloading user data:
+                // TODO: Update this when warmup comes in, we back up so we can get data that should have emitted at midnight today
+                var subscriptionDataReader = new SubscriptionDataReader(
+                    security.SubscriptionDataConfig,
+                    periodStart, Time.EndOfTime,
+                    resultHandler,
+                    Time.EachTradeableDay(algorithm.Securities.Values, periodStart, periodEnd),
+                    true
+                    );
+
+                // wrap the subscription data reader with a filter enumerator
+                enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, subscriptionDataReader, security, periodEnd);
+            }
+            return enumerator;
         }
     }
 }
