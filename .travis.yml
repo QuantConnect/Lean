@@ -1,6 +1,0 @@
-language: csharp
-solution: QuantConnect.ToolBox.sln
-install:
-  - nuget restore QuantConnect.ToolBox.sln
-script:
-  - xbuild /p:Configuration=Release QuantConnect.ToolBox.sln
