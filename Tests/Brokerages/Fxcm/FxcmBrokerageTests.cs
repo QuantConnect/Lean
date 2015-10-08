@@ -21,7 +21,7 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Fxcm
 {
-    [TestFixture] //, Ignore("These tests require a configured and active FXCM practice account")]
+    [TestFixture, Ignore("These tests require a configured and active FXCM practice account")]
     public class FxcmBrokerageTests : BrokerageTests
     {
         /// <summary>
