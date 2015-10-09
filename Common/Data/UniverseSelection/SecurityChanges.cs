@@ -53,6 +53,28 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Returns a new instance of <see cref="SecurityChanges"/> with the specified securities marked as added
+        /// </summary>
+        /// <param name="securities">The added securities</param>
+        /// <returns>A new security changes instance with the specified securities marked as added</returns>
+        public static SecurityChanges Added(params Security[] securities)
+        {
+            if (securities == null || securities.Length == 0) return None;
+            return new SecurityChanges(securities.ToList(), new List<Security>());
+        }
+
+        /// <summary>
+        /// Returns a new instance of <see cref="SecurityChanges"/> with the specified securities marked as removed
+        /// </summary>
+        /// <param name="securities">The removed securities</param>
+        /// <returns>A new security changes instance with the specified securities marked as removed</returns>
+        public static SecurityChanges Removed(params Security[] securities)
+        {
+            if (securities == null || securities.Length == 0) return None;
+            return new SecurityChanges(new List<Security>(), securities.ToList());
+        }
+
+        /// <summary>
         /// Combines the results of two <see cref="SecurityChanges"/>
         /// </summary>
         /// <param name="left">The left side of the operand</param>

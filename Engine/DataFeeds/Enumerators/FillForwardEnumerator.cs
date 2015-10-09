@@ -21,7 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Lean.Engine.DataFeeds
+namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
     /// The FillForwardEnumerator wraps an existing base data enumerator and inserts extra 'base data' instances
@@ -34,12 +34,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _isFillingForward;
         private bool _emittedAuxilliaryData;
         
-        private readonly DateTime _subscriptionEndTime;
         private readonly TimeSpan _dataResolution;
-        private readonly TimeSpan _fillForwardResolution;
-        private readonly SecurityExchange _exchange;
         private readonly bool _isExtendedMarketHours;
+        private readonly DateTime _subscriptionEndTime;
         private readonly IEnumerator<BaseData> _enumerator;
+
+        protected readonly TimeSpan FillForwardResolution;
+        protected readonly SecurityExchange Exchange;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FillForwardEnumerator"/> class
@@ -55,13 +56,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             TimeSpan fillForwardResolution, 
             bool isExtendedMarketHours, 
             DateTime subscriptionEndTime, 
-            TimeSpan dataResolution)
+            TimeSpan dataResolution
+            )
         {
             _subscriptionEndTime = subscriptionEndTime;
-            _exchange = exchange;
+            Exchange = exchange;
             _enumerator = enumerator;
             _dataResolution = dataResolution;
-            _fillForwardResolution = fillForwardResolution;
+            FillForwardResolution = fillForwardResolution;
             _isExtendedMarketHours = isExtendedMarketHours;
         }
 
@@ -107,7 +109,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            if (!_emittedAuxilliaryData)
+            if (!_emittedAuxilliaryData && Current != null)
             {
                 // only set the _previous if the last item we emitted was NOT auxilliary data,
                 // since _previous is used for fill forward behavior
@@ -135,7 +137,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // we can fill forward the rest of this subscription if required
-                    var endOfSubscription = Current.Clone(true);
+                    var endOfSubscription = (Current ?? _previous).Clone(true);
                     endOfSubscription.Time = _subscriptionEndTime.RoundDown(_dataResolution);
                     if (RequiresFillForwardData(_previous, endOfSubscription, out fillForward))
                     {
@@ -147,7 +149,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // don't emit the last bar if the market isn't considered open!
-                    if (!_exchange.IsOpenDuringBar(endOfSubscription.Time, endOfSubscription.EndTime, _isExtendedMarketHours))
+                    if (!Exchange.IsOpenDuringBar(endOfSubscription.Time, endOfSubscription.EndTime, _isExtendedMarketHours))
                     {
                         return false;
                     }
@@ -158,17 +160,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
+            var underlyingCurrent = _enumerator.Current;
             if (_previous == null)
             {
                 // first data point we dutifully emit without modification
-                Current = _enumerator.Current;
+                Current = underlyingCurrent;
                 return true;
             }
 
-            if (_enumerator.Current.DataType == MarketDataType.Auxiliary)
+            if (underlyingCurrent != null && underlyingCurrent.DataType == MarketDataType.Auxiliary)
             {
                 _emittedAuxilliaryData = true;
-                Current = _enumerator.Current;
+                Current = underlyingCurrent;
                 var delisting = Current as Delisting;
                 if (delisting != null && delisting.Type == DelistingType.Delisted)
                 {
@@ -178,7 +181,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             
             _emittedAuxilliaryData = false;
-            if (RequiresFillForwardData(_previous, _enumerator.Current, out fillForward))
+            if (RequiresFillForwardData(_previous, underlyingCurrent, out fillForward))
             {
                 // we require fill forward data because the _enumerator.Current is too far in future
                 _isFillingForward = true;
@@ -187,7 +190,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             _isFillingForward = false;
-            Current = _enumerator.Current;
+            Current = underlyingCurrent;
             return true;
         }
 
@@ -216,7 +219,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="next">The next piece of data on the source enumerator</param>
         /// <param name="fillForward">When this function returns true, this will have a non-null value, null when the function returns false</param>
         /// <returns>True when a new fill forward piece of data was produced and should be emitted by this enumerator</returns>
-        private bool RequiresFillForwardData(BaseData previous, BaseData next, out BaseData fillForward)
+        protected virtual bool RequiresFillForwardData(BaseData previous, BaseData next, out BaseData fillForward)
         {
             if (next.EndTime < previous.Time)
             {
@@ -224,24 +227,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // check to see if the gap between previous and next warrants fill forward behavior
-            if (next.Time - previous.Time <= _fillForwardResolution)
+            if (next.Time - previous.Time <= FillForwardResolution)
             {
                 fillForward = null;
                 return false;
             }
 
             // is the bar after previous in market hours?
-            var barAfterPreviousEndTime = previous.EndTime + _fillForwardResolution;
-            if (_exchange.IsOpenDuringBar(previous.EndTime, barAfterPreviousEndTime, _isExtendedMarketHours))
+            var barAfterPreviousEndTime = previous.EndTime + FillForwardResolution;
+            if (Exchange.IsOpenDuringBar(previous.EndTime, barAfterPreviousEndTime, _isExtendedMarketHours))
             {
                 // this is the normal case where we had a hole in the middle of the day
                 fillForward = previous.Clone(true);
-                fillForward.Time = (previous.Time + _fillForwardResolution).RoundDown(_fillForwardResolution);
+                fillForward.Time = (previous.Time + FillForwardResolution).RoundDown(FillForwardResolution);
                 return true;
             }
 
             // find the next fill forward time after the next market open
-            var nextFillForwardTime = _exchange.Hours.GetNextMarketOpen(previous.EndTime, _isExtendedMarketHours) + _fillForwardResolution;
+            var nextFillForwardTime = Exchange.Hours.GetNextMarketOpen(previous.EndTime, _isExtendedMarketHours) + FillForwardResolution;
 
             if (_dataResolution == Time.OneDay)
             {
@@ -258,7 +261,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // if next is still in the future then we need to emit a fill forward for market open
                 fillForward = previous.Clone(true);
-                fillForward.Time = (nextFillForwardTime - _dataResolution).RoundDown(_fillForwardResolution);
+                fillForward.Time = (nextFillForwardTime - _dataResolution).RoundDown(FillForwardResolution);
                 return true;
             }
 
@@ -276,7 +279,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 date = date + Time.OneDay;
             }
-            while (!_exchange.DateIsOpen(date));
+            while (!Exchange.DateIsOpen(date));
             return date;
         }
     }

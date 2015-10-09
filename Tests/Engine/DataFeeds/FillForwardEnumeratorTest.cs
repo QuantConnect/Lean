@@ -20,6 +20,7 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Securities.Equity;
 
 namespace QuantConnect.Tests.Engine.DataFeeds

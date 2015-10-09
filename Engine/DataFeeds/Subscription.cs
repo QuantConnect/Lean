@@ -66,7 +66,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the most current value from the subscription source
         /// </summary>
-        public decimal RealtimePrice { get; protected set; }
+        public decimal RealtimePrice { get; set; }
 
         /// <summary>
         /// Gets true if this subscription is finished, false otherwise
@@ -99,17 +99,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="security">The security this subscription is for</param>
         /// <param name="enumerator">The subscription's data source</param>
+        /// <param name="timeZoneOffsetProvider">The offset provider used to convert data local times to utc</param>
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
         /// <param name="isUserDefined">True if the user explicitly defined this subscription, false otherwise</param>
-        public Subscription(Security security, IEnumerator<BaseData> enumerator, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefined)
+        public Subscription(Security security,
+            IEnumerator<BaseData> enumerator,
+            TimeZoneOffsetProvider timeZoneOffsetProvider,
+            DateTime utcStartTime,
+            DateTime utcEndTime,
+            bool isUserDefined)
         {
             Security = security;
             _enumerator = enumerator;
             IsUserDefined = isUserDefined;
             IsUniverseSelectionSubscription = false;
             Configuration = security.SubscriptionDataConfig;
-            OffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, utcStartTime, utcEndTime);
+            OffsetProvider = timeZoneOffsetProvider;
 
             UtcStartTime = utcStartTime;
             UtcEndTime = utcEndTime;
@@ -121,9 +127,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="universe">Specified for universe subscriptions</param>
         /// <param name="security">The security this subscription is for</param>
         /// <param name="enumerator">The subscription's data source</param>
+        /// <param name="timeZoneOffsetProvider">The offset provider used to convert data local times to utc</param>
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
-        public Subscription(IUniverse universe, Security security, IEnumerator<BaseData> enumerator, DateTime utcStartTime, DateTime utcEndTime)
+        public Subscription(IUniverse universe,
+            Security security,
+            IEnumerator<BaseData> enumerator,
+            TimeZoneOffsetProvider timeZoneOffsetProvider,
+            DateTime utcStartTime,
+            DateTime utcEndTime)
         {
             Universe = universe;
             Security = security;
@@ -131,7 +143,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IsUserDefined = false;
             IsUniverseSelectionSubscription = true;
             Configuration = security.SubscriptionDataConfig;
-            OffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, utcStartTime, utcEndTime);
+            OffsetProvider = timeZoneOffsetProvider;
 
             UtcStartTime = utcStartTime;
             UtcEndTime = utcEndTime;

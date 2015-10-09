@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -14,18 +14,23 @@
  *
 */
 
-using System.Collections.Generic;
+using System;
 
-namespace QuantConnect.Data.UniverseSelection
+namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// This type exists for transport of fundamental data as a single packet
+    /// Provides an implementation of <see cref="ITimeProvider"/> that
+    /// uses <see cref="DateTime.UtcNow"/> to provide the current time
     /// </summary>
-    public class CoarseFundamentalList : BaseData
+    public sealed class RealTimeProvider : ITimeProvider
     {
         /// <summary>
-        /// Gets the coarse fundamental instances in this packet
+        /// Gets the current time in UTC
         /// </summary>
-        public readonly List<CoarseFundamental> Data = new List<CoarseFundamental>(); 
+        /// <returns>The current time in UTC</returns>
+        public DateTime GetUtcNow()
+        {
+            return DateTime.UtcNow;
+        }
     }
 }

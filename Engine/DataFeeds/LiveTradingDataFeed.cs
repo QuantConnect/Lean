@@ -19,12 +19,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -34,21 +34,33 @@ using QuantConnect.Util;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Live Data Feed Streamed From QC Source.
+    /// Provides an implementation of <see cref="IDataFeed"/> that is designed to deal with
+    /// live, remote data sources
     /// </summary>
     public class LiveTradingDataFeed : IDataFeed
     {
+        private TimeSpan _emitRoundingInterval = Time.OneSecond;
+
+        private SecurityChanges _changes = SecurityChanges.None;
+
         private LiveNodePacket _job;
-        private bool _endOfBridges;
-        private bool _isActive;
         private IAlgorithm _algorithm;
-        private IDataQueueHandler _dataQueue;
+        // used to get current time
+        private ITimeProvider _timeProvider;
+        // used to keep time constant during a time sync iteration
+        private ManualTimeProvider _frontierTimeProvider;
+            
         private IResultHandler _resultHandler;
-        private ConcurrentDictionary<SymbolSecurityType, LiveSubscription> _subscriptions;
+        private IDataQueueHandler _dataQueueHandler;
+        private BaseDataExchange _exchange;
+        private BaseDataExchange _customExchange;
+        private ConcurrentDictionary<SymbolSecurityType, Subscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
-        /// Event fired when the data feed encounters new fundamental data
+        /// Event fired when the data feed encounters new fundamental data.
+        /// This event must be fired when there is nothing in the <see cref="IDataFeed.Bridge"/>,
+        /// this can be accomplished using <see cref="BusyBlockingCollection{T}.Wait(int,CancellationToken)"/>
         /// </summary>
         public event EventHandler<UniverseSelectionEventArgs> UniverseSelection;
 
@@ -73,13 +85,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public bool IsActive
         {
-            get { return _isActive; }
+            get; private set;
         }
 
         /// <summary>
-        /// Live trading datafeed handler provides a base implementation of a live trading datafeed. Derived types
-        /// need only implement the GetNextTicks() function to return unprocessed ticks from a data source.
-        /// This creates a new data feed with a DataFeedEndpoint of LiveTrading.
+        /// Initializes the data feed for the specified job and algorithm
         /// </summary>
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
         {
@@ -87,39 +97,39 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 throw new ArgumentException("The LiveTradingDataFeed requires a LiveNodePacket.");
             }
-            _job = (LiveNodePacket)job;
 
-            _isActive = true;
-            _algorithm = algorithm;
-            _resultHandler = resultHandler;
             _cancellationTokenSource = new CancellationTokenSource();
-            _dataQueue = GetDataQueueHandler();
-            
+
+            _algorithm = algorithm;
+            _job = (LiveNodePacket) job;
+            _resultHandler = resultHandler;
+            _timeProvider = GetTimeProvider();
+            _dataQueueHandler = GetDataQueueHandler();
+
+            _frontierTimeProvider = new ManualTimeProvider(_timeProvider.GetUtcNow());
+            _customExchange = new BaseDataExchange("CustomDataExchange") {SleepInterval = 10};
+            _exchange = new BaseDataExchange("DataQueueExchange", GetNextTicksEnumerator());
+            _subscriptions = new ConcurrentDictionary<SymbolSecurityType, Subscription>();
+
             Bridge = new BusyBlockingCollection<TimeSlice>();
-            _subscriptions = new ConcurrentDictionary<SymbolSecurityType, LiveSubscription>();
 
-            var periodStart = DateTime.UtcNow.ConvertFromUtc(algorithm.TimeZone).AddDays(-7);
-            var periodEnd = Time.EndOfTime;
-            foreach (var security in algorithm.Securities.Values)
+            // run the exchanges
+            _exchange.Start();
+            _customExchange.Start();
+
+            // add user defined subscriptions
+            var start = _timeProvider.GetUtcNow();
+            foreach (var kvp in _algorithm.Securities.OrderBy(x => x.Key.ToString()))
             {
-                var subscription = CreateSubscription(algorithm, resultHandler, security, periodStart, periodEnd, true);
-                _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription),  subscription);
+                var security = kvp.Value;
+                AddSubscription(security, start, Time.EndOfTime, true);
             }
 
-            foreach (var universe in algorithm.Universes)
+            // add universe subscriptions
+            foreach (var universe in _algorithm.Universes)
             {
-                AddUniverseSubscription(universe, DateTime.UtcNow, Time.EndOfTime);
-            }
-
-            // request for data from these symbols
-            var symbols = BuildTypeSymbolList();
-            if (symbols.Any())
-            {
-                // don't subscribe if there's nothing there, this allows custom data to
-                // work without an IDataQueueHandler implementation by specifying LiveDataQueue
-                // in the configuration, that implementation throws on every method, but we actually
-                // don't need it if we're only doing custom data
-                _dataQueue.Subscribe(_job, symbols);
+                var subscription = CreateUniverseSubscription(universe, start, Time.EndOfTime);
+                _subscriptions[new SymbolSecurityType(subscription)] = subscription;
             }
         }
 
@@ -132,10 +142,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="isUserDefinedSubscription">Set to true to prevent coarse universe selection from removing this subscription</param>
         public void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription)
         {
-            var symbols = BuildTypeSymbolList();
-            _dataQueue.Subscribe(_job, symbols);
-            var subscription = CreateSubscription(_algorithm, _resultHandler, security, DateTime.UtcNow.ConvertFromUtc(_algorithm.TimeZone).Date, Time.EndOfTime, isUserDefinedSubscription);
-            _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription), subscription);
+            // reduce the emit interval for tick data to 1ms, this affects time
+            // rounding and thread sleep times
+            if (security.SubscriptionDataConfig.Resolution == Resolution.Tick)
+            {
+                _emitRoundingInterval = Time.OneMillisecond;
+            }
+
+            // create and add the subscription to our collection
+            var subscription = CreateSubscription(security, utcStartTime, utcEndTime, isUserDefinedSubscription);
+            _subscriptions[new SymbolSecurityType(subscription)] = subscription;
+
+            // send the subscription for the new symbol through to the data queuehandler
+            // unless it is custom data, custom data is retrieved using the same as backtest
+            if (!subscription.Configuration.IsCustomData)
+            {
+                _dataQueueHandler.Subscribe(_job, new Dictionary<SecurityType, List<string>>
+                {
+                    {security.Type, new List<string> {security.Symbol}}
+                });
+            }
+
+            // keep track of security changes, we emit these to the algorithm
+            // as notifications, used in universe selection
+            _changes += SecurityChanges.Added(security);
         }
 
         /// <summary>
@@ -144,359 +174,286 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="security">The security to remove subscriptions for</param>
         public void RemoveSubscription(Security security)
         {
-            _dataQueue.Unsubscribe(_job, new Dictionary<SecurityType, List<string>> {{security.Type, new List<string> {security.Symbol}}});
+            // check to see if we should increase the emit interval
+            // when removing tick subscriptions
+            var isTick = security.SubscriptionDataConfig.Resolution == Resolution.Tick;
+            if (isTick && _subscriptions.All(x => x.Value.Configuration.Resolution != Resolution.Tick))
+            {
+                _emitRoundingInterval = Time.OneSecond;
+            }
 
-            LiveSubscription subscription;
+            // remove the subscription from our collection
+            Subscription subscription;
             _subscriptions.TryRemove(new SymbolSecurityType(security), out subscription);
+            _exchange.RemoveHandler(security.Symbol);
+
+            // request to unsubscribe from the subscription
+            if (!security.SubscriptionDataConfig.IsCustomData)
+            {
+                _dataQueueHandler.Unsubscribe(_job, new Dictionary<SecurityType, List<string>>
+                {
+                    {security.Type, new List<string> {security.Symbol}}
+                });
+            }
+
+            // keep track of security changes, we emit these to the algorithm
+            // as notications, used in universe selection
+            _changes += SecurityChanges.Removed(security);
         }
 
         /// <summary>
-        /// Execute the primary thread for retrieving stock data.
-        /// 1. Subscribe to the streams requested.
-        /// 2. Build bars or tick data requested, primary loop increment smallest possible.
+        /// Primary entry point.
         /// </summary>
         public void Run()
         {
-            //Initialize:
+            IsActive = true;
 
-            // Set up separate thread to handle stream and building packets:
-            var streamThread = new Thread(StreamStoreConsumer);
-            streamThread.Start();
-            Thread.Sleep(5); // Wait a little for the other thread to init.
+            // we want to emit to the bridge minimally once a second since the data feed is
+            // the heartbeat of the application, so this value will containg a second after
+            // the last emit time, and if we pass this time, we'll emit even with no data
+            var nextEmit = DateTime.MinValue;
 
-            // This thread converts data into bars "on" the second - assuring the bars are close as 
-            // possible to a second unit tradebar (starting at 0 milliseconds).
-            var realtime = new RealTimeSynchronizedTimer(TimeSpan.FromSeconds(1), utcTriggerTime =>
+            try
             {
-                // determine if we're on even time boundaries for data emit
-                var onMinute = utcTriggerTime.Second == 0;
-                var onHour = onMinute && utcTriggerTime.Minute == 0;
-
-                // Determine if this subscription needs to be archived:
-                var items = new List<KeyValuePair<Security, List<BaseData>>>();
-
-                var changes = SecurityChanges.None;
-
-                foreach (var kvp in _subscriptions)
+                var lastTimeSliceEmitUtcTime = DateTime.MinValue;
+                while (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    var subscription = kvp.Value;
+                    // perform sleeps to wake up on the second?
+                    var frontier = _timeProvider.GetUtcNow();
+                    _frontierTimeProvider.SetCurrentTime(frontier);
 
-                    if (subscription.Configuration.Resolution == Resolution.Tick) continue;
-
-                    var localTime = new DateTime(utcTriggerTime.Ticks - subscription.OffsetProvider.GetOffsetTicks(utcTriggerTime));
-                    var onDay = onHour && localTime.Hour == 0;
-
-                    var triggerArchive = false;
-                    switch (subscription.Configuration.Resolution)
-                    {
-                        case Resolution.Second:
-                            triggerArchive = true;
-                            break;
-                        case Resolution.Minute:
-                            triggerArchive = onMinute;
-                            break;
-                        case Resolution.Hour:
-                            triggerArchive = onHour;
-                            break;
-                        case Resolution.Daily:
-                            triggerArchive = onDay;
-                            break;
-                    }
-
-                    if (triggerArchive)
-                    {
-                        var data = subscription.StreamStore.TriggerArchive(utcTriggerTime);
-                        if (data != null)
-                        {
-                            items.Add(new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData> {data}));
-                        }
-                    }
-                }
-
-                // don't try to add if we're already cancelling
-                if (_cancellationTokenSource.IsCancellationRequested) return;
-                Bridge.Add(TimeSlice.Create(utcTriggerTime, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, items, changes));
-            });
-
-            //Start the realtime sampler above
-            realtime.Start();
-
-            while (!_cancellationTokenSource.IsCancellationRequested && !_endOfBridges)
-            {
-                // main work of this class is done in the realtime and stream store consumer threads
-                Thread.Sleep(1000);
-            }
-
-            //Dispose of the realtime clock.
-            realtime.Stop();
-
-            //Stop thread
-            _isActive = false;
-
-            //Exit Live DataStream Feed:
-            Log.Trace("LiveTradingDataFeed.Run(): Exiting LiveTradingDataFeed Run Method");
-        }
-
-        /// <summary>
-        /// Stream Store Consumer uses the GetNextTicks() function to get current ticks from a data source and
-        /// then uses the stream store to compile them into trade bars.
-        /// </summary>
-        public void StreamStoreConsumer()
-        {
-            //Scan for the required time period to stream:
-            Log.Trace("LiveTradingDataFeed.Stream(): Waiting for updated market hours...", true);
-
-            var symbols = (from security in _algorithm.Securities.Values
-                           where !security.SubscriptionDataConfig.IsCustomData && (security.Type == SecurityType.Equity || security.Type == SecurityType.Forex)
-                           select security.Symbol.Permtick).ToList<string>();
-
-            Log.Trace("LiveTradingDataFeed.Stream(): Market open, starting stream for " + string.Join(",", symbols));
-
-            //Micro-thread for polling for new data from data source:
-            var liveThreadTask = new Task(()=> 
-            {
-                if (_subscriptions.All(x => x.Value.IsCustomData))
-                {
-                    // if we're all custom data data don't waste CPU cycle with this thread
-                    return;
-                }
-
-                //Blocking ForEach - Should stay within this loop as long as there is a data-connection
-                while (true)
-                {
-                    var dataCollection = _dataQueue.GetNextTicks();
-
-                    int ticksCount = 0;
-                    foreach (var point in dataCollection)
-                    {
-                        ticksCount++;
-
-                        foreach (var kvp in _subscriptions)
-                        {
-                            var subscription = kvp.Value;
-
-                            if (subscription.Configuration.Symbol != point.Symbol) continue;
-
-                            // catch the universe DTO here
-                            if (subscription.IsUniverseSelectionSubscription && point is CoarseFundamentalList)
-                            {
-                                Log.Trace("LiveTradingDataFeed.StreamStoreConsumer(): Received coarse data.");
-                                var coarse = point as CoarseFundamentalList;
-                                if (coarse.Data.Count > 0)
-                                {
-                                    // fire universe selection logic
-                                    OnUniverseSelection(subscription.Universe, DateTime.UtcNow, subscription.Configuration, coarse.Data);
-                                }
-                                continue;
-                            }
-
-                            var tick = point as Tick;
-                            if (tick != null)
-                            {
-                                // Update the realtime price stream value
-                                subscription.SetRealtimePrice(point.Value);
-
-                                if (subscription.Configuration.Resolution == Resolution.Tick)
-                                {
-                                    // put ticks directly into the bridge
-                                    AddSingleItemToBridge(subscription, tick);
-                                }
-                                else
-                                {
-                                    // Update our internal counter
-                                    subscription.StreamStore.Update(tick);
-                                }
-                            }
-                            else
-                            {
-                                // reset the start time so it goes in sync with other data
-                                point.Time = DateTime.UtcNow.ConvertFromUtc(subscription.TimeZone).RoundDown(subscription.Configuration.Increment);
-
-                                //If its not a tick, inject directly into bridge for this symbol:
-                                //Bridge[i].Enqueue(new List<BaseData> {point});
-                                AddSingleItemToBridge(subscription, point);
-                            }
-                        }
-                    }
-
-                    if (_cancellationTokenSource.IsCancellationRequested) return;
-                    if (ticksCount == 0) Thread.Sleep(5);
-                }
-            }, TaskCreationOptions.LongRunning);
-
-            // Micro-thread for custom data/feeds. This only supports polling at this time. todo: Custom data sockets
-            var customFeedsTask = new Task(() =>
-            {
-                while(true)
-                {
+                    var data = new List<KeyValuePair<Security, List<BaseData>>>();
                     foreach (var kvp in _subscriptions)
                     {
                         var subscription = kvp.Value;
 
-                        // custom only thread
-                        if (!subscription.IsCustomData) continue;
-                        // wait for when it's time to update
-                        if (!subscription.NeedsUpdate) continue;
+                        var cache = new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData>());
 
-                        var repeat = true;
-                        BaseData data = null;
-                        // pad the resolution so this data point can make it in time for the real time sync thread
-                        // to pull it out of the stream store via trigger archive
-                        var paddedIncrement = subscription.Configuration.Increment.Add(TimeSpan.FromSeconds(0.05));
-                        while (repeat && TryMoveNext(subscription, out data))
+                        // dequeue data that is time stamped at or before this frontier
+                        while (subscription.MoveNext() && subscription.Current != null)
                         {
-                            if (data == null)
+                            cache.Value.Add(subscription.Current);
+                        }
+
+                        // if we have data, add it to be added to the bridge
+                        if (cache.Value.Count > 0) data.Add(cache);
+
+                        // we have new universe data to select based on
+                        if (subscription.IsUniverseSelectionSubscription && cache.Value.Count > 0)
+                        {
+                            var universe = subscription.Universe;
+
+                            // always wait for other thread to sync up
+                            if (!Bridge.Wait(Timeout.Infinite, _cancellationTokenSource.Token))
                             {
                                 break;
                             }
 
-                            // check to see if the data is too far in the past
-                            // this is useful when using custom remote files that may stretch far into the past,
-                            // so this if block will cause us to fast forward the reader until its recent increment
-                            var earliestExpectedFirstPoint = DateTime.UtcNow.Subtract(paddedIncrement);
-                            repeat = data.EndTime.ConvertToUtc(subscription.TimeZone) < earliestExpectedFirstPoint;
-                        }
-
-                        if (data == null)
-                        {
-                            continue;
-                        }
-
-                        // don't emit data in the future
-                        // TODO : Move this concern into LiveSubscription, maybe a CustomLiveSubscription, end goal just enumerate the damn thing at it works
-                        if (data.EndTime.ConvertToUtc(subscription.TimeZone) < DateTime.UtcNow)
-                        {
-                            if (subscription.Configuration.Resolution == Resolution.Tick)
-                            {
-                                // put ticks directly into the bridge
-                                AddSingleItemToBridge(subscription, data);
-                            }
-                            else
-                            {
-                                Log.Trace("LiveTradingDataFeed.Custom(): Add to stream store.");
-                                subscription.StreamStore.Update(data); //Update bar builder.
-                                subscription.SetRealtimePrice(data.Value); //Update realtime price value.
-                                subscription.NeedsMoveNext = true;
-                            }
-                        }
-                        else
-                        {
-                            // since this data is in the future and we didn't emit it,
-                            // don't call MoveNext again and we'll keep performing time checks
-                            // until its end time has passed and we can emit it into the bridge
-                            subscription.NeedsMoveNext = false;
+                            // fire the universe selection event
+                            OnUniverseSelection(universe, subscription.Configuration, frontier, cache.Value);
                         }
                     }
 
+                    // check for cancellation
                     if (_cancellationTokenSource.IsCancellationRequested) return;
-                    Thread.Sleep(10);
-                }
-            }, TaskCreationOptions.LongRunning);
 
-            //Wait for micro-threads to break before continuing
-            liveThreadTask.Start();
+                    // emit on data or if we've elapsed a full second since last emit
+                    if (data.Count != 0 || frontier >= nextEmit)
+                    {
+                        var emitTime = frontier.RoundDown(_emitRoundingInterval);
 
-            // define what tasks we're going to wait on, we use a task from result in place of the custom task, just in case we never start it
-            var tasks = new [] {liveThreadTask, Task.FromResult(1)};
+                        // prevent emitting same time twice
+                        if (data.Count != 0 || emitTime > lastTimeSliceEmitUtcTime)
+                        {
+                            Bridge.Add(TimeSlice.Create(emitTime, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes));
 
-            // if we have any dynamically loaded data, start the custom thread
-            if (_subscriptions.Any(x => x.Value.IsCustomData))
-            {
-                //Start task and set it as the second one we want to monitor:
-                customFeedsTask.Start();
-                tasks[1] = customFeedsTask;
-            }
-                
-            Task.WaitAll(tasks);
+                            // force emitting every second
+                            nextEmit = emitTime.RoundDown(Time.OneSecond).Add(Time.OneSecond);
+                            lastTimeSliceEmitUtcTime = emitTime;
+                        }
+                    }
 
-            //Once we're here the tasks have died, signal 
-            if (!_cancellationTokenSource.IsCancellationRequested) _endOfBridges = true;
+                    // reset our security changes
+                    _changes = SecurityChanges.None;
 
-            Log.Trace(string.Format("LiveTradingDataFeed.Stream(): Stream Task Completed. Exit Signal: {0}", _cancellationTokenSource.IsCancellationRequested));
-        }
-
-        private static bool TryMoveNext(LiveSubscription subscription, out BaseData data)
-        {
-            data = null;
-            if (subscription.NeedsMoveNext)
-            {
-                // if we didn't emit the previous value it's because it was in
-                // the future, so don't call MoveNext, just perform the date range
-                // checks below again
-
-                // in live mode subscription reader will move next but return null for current since nothing is there
-                if (!subscription.MoveNext())
-                {
-                    // we've exhaused this source for now, the only source that would do this is
-                    // a remote file, let's wait for five minutes and check again to see if we can
-                    // get another piece of data. sadly, in this case it does mean redownloading the
-                    // entire file and reading through all the data before getting to the end to see
-                    // if there's a new line
-                    subscription.SetNextUpdateTime(TimeSpan.FromMinutes(5));
-                    return false;
-                }
-
-                // true success defined as if we got a non-null value
-                if (subscription.Current == null)
-                {
-                    Log.Trace("LiveTradingDataFeed.Custom(): Current == null");
-                    return false;
+                    if (_emitRoundingInterval <= Time.OneMillisecond)
+                    {
+                        // this is the case when we have tick subscriptions, we'll keep this code
+                        // performant by shortcutting the sleep length logic
+                        Thread.Sleep(1);
+                    }
+                    else
+                    {
+                        // determine how long to pause to the next rounded emit time, minimum of 1 ms pause to
+                        // allow everyone else a chance to run
+                        var currentTime = _timeProvider.GetUtcNow();
+                        var nextWakeUpTime = currentTime.RoundDown(_emitRoundingInterval).Add(_emitRoundingInterval);
+                        var millis = (int)Math.Round((nextWakeUpTime - currentTime).TotalMilliseconds);
+                        Thread.Sleep(Math.Max(1, millis));
+                    }
                 }
             }
-
-            // if we didn't get anything keep going
-            data = subscription.Current;
-            if (data == null)
+            catch (Exception err)
             {
-                // heuristically speaking this should already be true, but no harm in explicitly setting it
-                subscription.NeedsMoveNext = true;
-                return false;
+                Log.Error(err);
             }
-            return true;
+            IsActive = false;
         }
 
         /// <summary>
-        /// Trigger the live trading datafeed thread to abort and stop looping.
+        /// External controller calls to signal a terminate of the thread.
         /// </summary>
         public void Exit()
         {
-            // Unsubscribe from these symbols
-            var symbols = BuildTypeSymbolList();
-            if (symbols.Any())
+            // remove each subscription from our collection
+            foreach (var kvp in _subscriptions)
             {
-                // don't unsubscribe if there's nothing there, this allows custom data to
-                // work with the LiveDataQueue default LEAN implemetation that just throws on every method.
-                _dataQueue.Unsubscribe(_job, symbols);
+                try
+                {
+                    RemoveSubscription(kvp.Value.Security);
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err, "Error removing: " + kvp.Key);
+                }
             }
-            _cancellationTokenSource.Cancel();
-            Bridge.Dispose();
-        }
-
-        private LiveSubscription CreateSubscription(IAlgorithm algorithm,
-            IResultHandler resultHandler,
-            Security security,
-            DateTime periodStart,
-            DateTime periodEnd, 
-            bool isUserDefinedSubscription)
-        {
-            var enumerator = CreateSubscriptionEnumerator(algorithm, resultHandler, security, periodStart, periodEnd);
-            return new LiveSubscription(security, enumerator, periodStart, periodEnd, isUserDefinedSubscription);
+            if (!_cancellationTokenSource.IsCancellationRequested)
+            {
+                _cancellationTokenSource.Cancel();
+                Bridge.Dispose();
+            }
         }
 
         /// <summary>
-        /// Adds a new subscription for universe selection
+        /// Gets the <see cref="IDataQueueHandler"/> to use. By default this will try to load
+        /// the type specified in the configuration via the 'data-queue-handler'
+        /// </summary>
+        /// <returns>The loaded <see cref="IDataQueueHandler"/></returns>
+        protected virtual IDataQueueHandler GetDataQueueHandler()
+        {
+            return Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Config.Get("data-queue-handler", "LiveDataQueue"));
+        }
+
+        /// <summary>
+        /// Gets the <see cref="ITimeProvider"/> to use. By default this will load the
+        /// <see cref="RealTimeProvider"/> which use's the system's <see cref="DateTime.UtcNow"/>
+        /// for the current time
+        /// </summary>
+        /// <returns>he loaded <see cref="ITimeProvider"/></returns>
+        protected virtual ITimeProvider GetTimeProvider()
+        {
+            return new RealTimeProvider();
+        }
+
+        /// <summary>
+        /// Creates a new subscription for the specified security
+        /// </summary>
+        /// <param name="security">The security to create a subscription for</param>
+        /// <param name="utcStartTime">The start time of the subscription in UTC</param>
+        /// <param name="utcEndTime">The end time of the subscription in UTC</param>
+        /// <param name="isUserDefinedSubscription">True for subscriptions manually added by user via AddSecurity</param>
+        /// <returns>A new subscription instance of the specified security</returns>
+        protected virtual Subscription CreateSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription)
+        {
+            var config = security.SubscriptionDataConfig;
+            var localStartTime = utcStartTime.ConvertFromUtc(config.TimeZone);
+            var localEndTime = utcEndTime.ConvertFromUtc(config.TimeZone);
+
+            IEnumerator<BaseData> enumerator;
+            Subscription subscription = null;
+            if (config.IsCustomData)
+            {
+                // custom data uses backtest readers
+                var tradeableDates = Time.EachTradeableDay(security, localStartTime, localEndTime);
+                var reader = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, tradeableDates, true, false);
+
+                // apply fast forwarding, this is especially important for RemoteFile types that
+                // can send in large chunks of old, irrelevant data
+                var fastForward = new FastForwardEnumerator(reader, _timeProvider, config.TimeZone, config.Increment);
+
+                // apply rate limits (2x per increment, max 30 minutes between calls)
+                // TODO : Pull limits from config file?
+                var minimumTimeBetweenCalls = Math.Min((long)(config.Increment.Ticks / (double)2), TimeSpan.FromMinutes(30).Ticks);
+                var rateLimit = new RateLimitEnumerator(fastForward, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
+                
+                // add the enumerator to the exchange
+                _customExchange.AddEnumerator(rateLimit);
+
+                // this enumerator just allows the exchange to directly dump data into the 'back' of the enumerator
+                var enqueable = new EnqueableEnumerator<BaseData>();
+                _customExchange.SetHandler(config.Symbol, data =>
+                {
+                    if (security.DataFilter.Filter(security, data))
+                    {
+                        enqueable.Enqueue(data);
+                        if (subscription != null) subscription.RealtimePrice = data.Value;
+                    }
+                });
+                enumerator = enqueable;
+            }
+            else if (config.Resolution != Resolution.Tick)
+            {
+                // this enumerator allows the exchange to pump ticks into the 'back' of the enumerator,
+                // and the time sync loop can pull aggregated trade bars off the front
+                var aggregator = new TradeBarBuilderEnumerator(config.Increment, config.TimeZone, _timeProvider);
+                _exchange.SetHandler(config.Symbol, data =>
+                {
+                    if (security.DataFilter.Filter(security, data))
+                    {
+                        aggregator.ProcessData((Tick) data);
+                        if (subscription != null) subscription.RealtimePrice = data.Value;
+                    }
+                });
+                enumerator = aggregator;
+            }
+            else
+            {
+                // tick subscriptions can pass right through
+                var tickEnumerator = new EnqueableEnumerator<BaseData>(int.MaxValue);
+                _exchange.SetHandler(config.Symbol, data =>
+                {
+                    if (security.DataFilter.Filter(security, data))
+                    {
+                        tickEnumerator.Enqueue(data);
+                        if (subscription != null) subscription.RealtimePrice = data.Value;
+                    }
+                });
+                enumerator = tickEnumerator;
+            }
+
+            if (config.FillDataForward)
+            {
+                // TODO : Properly resolve fill forward resolution like in FileSystemDataFeed (make considerations for universe-only)
+                enumerator = new LiveFillForwardEnumerator(_timeProvider, enumerator, security.Exchange, config.Increment, config.ExtendedMarketHours, localEndTime, config.Increment);
+            }
+
+            // define market hours and user filters to incoming data
+            enumerator = new SubscriptionFilterEnumerator(enumerator, security, localEndTime);
+
+            // finally, make our subscriptions aware of the frontier of the data feed, this will help
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, utcStartTime, utcEndTime);
+            enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
+
+
+            subscription = new Subscription(security, enumerator, timeZoneOffsetProvider, utcStartTime, utcEndTime, isUserDefinedSubscription);
+
+            return subscription;
+        }
+
+        /// <summary>
+        /// Creates a new subscription for universe selection
         /// </summary>
         /// <param name="universe">The universe to add a subscription for</param>
         /// <param name="startTimeUtc">The start time of the subscription in utc</param>
         /// <param name="endTimeUtc">The end time of the subscription in utc</param>
-        public void AddUniverseSubscription(
+        protected virtual Subscription CreateUniverseSubscription(
             IUniverse universe,
             DateTime startTimeUtc,
             DateTime endTimeUtc
             )
         {
             // grab the relevant exchange hours
-            SubscriptionDataConfig config = universe.Configuration;
+            var config = universe.Configuration;
 
             var exchangeHours = SecurityExchangeHoursProvider.FromDataFolder()
                 .GetExchangeHours(config.Market, null, config.SecurityType);
@@ -504,104 +461,60 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // create a canonical security object
             var security = new Security(exchangeHours, config, universe.SubscriptionSettings.Leverage);
 
-            var localStartTime = startTimeUtc.ConvertFromUtc(config.TimeZone);
-            var localEndTime = endTimeUtc.ConvertFromUtc(config.TimeZone);
+            IEnumerator<BaseData> enumerator;
+            if (config.Type == typeof (CoarseFundamental))
+            {
+                var enqueable = new EnqueableEnumerator<BaseData>(int.MaxValue);
+                _exchange.SetHandler(config.Symbol, dto =>
+                {
+                    var universeData = dto as BaseDataCollection;
+                    if (universeData != null)
+                    {
+                        enqueable.Enqueue(universeData);
+                    }
+                });
+                enumerator = enqueable;
+            }
+            else
+            {
+                var localStartTime = startTimeUtc.ConvertFromUtc(config.TimeZone);
+                var localEndTime = endTimeUtc.ConvertFromUtc(config.TimeZone);
 
-            // define our data enumerator
-            var tradeableDates = Time.EachTradeableDay(security, localStartTime, localEndTime);
-            var enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, tradeableDates, false);
+                // define our data enumerator
+                var tradeableDates = Time.EachTradeableDay(security, localStartTime, localEndTime);
+                var reader = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, tradeableDates, true);
+                _customExchange.AddEnumerator(reader);
+
+                var enqueable = new EnqueableEnumerator<BaseData>();
+                _customExchange.SetHandler(config.Symbol, data =>
+                {
+                    enqueable.Enqueue(data);
+                });
+                enumerator = enqueable;
+            }
 
             // create the subscription
-            var subscription = new LiveSubscription(universe, security, enumerator, startTimeUtc, endTimeUtc);
+            var subscription = new Subscription(universe, security, enumerator, new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, startTimeUtc, endTimeUtc), startTimeUtc, endTimeUtc);
 
-            // only message the user if it's one of their universe types
-            _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription), subscription);
+            return subscription;
         }
 
-        /// <summary>
-        /// Create list of symbols grouped by security type.
-        /// </summary>
-        private Dictionary<SecurityType, List<string>> BuildTypeSymbolList()
-        {
-            // create a lookup keyed by SecurityType
-            var symbols = new Dictionary<SecurityType, List<string>>();
-
-            // Only subscribe equities and forex symbols
-            foreach (var subscription in _subscriptions.Values)
-            {
-                var securityType = subscription.Security.Type;
-                if (securityType == SecurityType.Equity || securityType == SecurityType.Forex)
-                {
-                    if (!symbols.ContainsKey(securityType)) symbols.Add(securityType, new List<string>());
-                    symbols[securityType].Add(subscription.Configuration.Symbol.Permtick);
-                }
-            }
-            return symbols;
-        }
-
-        private void AddSingleItemToBridge(Subscription subscription, BaseData tick)
-        {
-            // don't try to add if we're already cancelling
-            if (_cancellationTokenSource.IsCancellationRequested) return;
-            Bridge.Add(TimeSlice.Create(tick.EndTime.ConvertToUtc(subscription.TimeZone), _algorithm.TimeZone, _algorithm.Portfolio.CashBook, new List<KeyValuePair<Security, List<BaseData>>>
-            {
-                new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData> {tick})
-            }, SecurityChanges.None));
-        }
-
-        /// <summary>
-        /// Event invocator for the <see cref="UniverseSelection"/> event
-        /// </summary>
-        protected virtual void OnUniverseSelection(IUniverse universe, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
+        protected virtual void OnUniverseSelection(IUniverse universe, SubscriptionDataConfig config, DateTime dateTimeUtc, IReadOnlyList<BaseData> data)
         {
             var handler = UniverseSelection;
-            if (handler != null) handler(this, new UniverseSelectionEventArgs(universe, configuration, dateTimeUtc, data));
+            if (handler != null) handler(this, new UniverseSelectionEventArgs(universe, config, dateTimeUtc, data));
         }
 
-        /// <summary>
-        /// Gets the data queue handler to be used by this implementation
-        /// </summary>
-        /// <remarks>
-        /// This method is defined to allow overriding, especially for test harnesses
-        /// </remarks>
-        /// <returns>The data queue handler to be used by this live trading data feed</returns>
-        protected virtual IDataQueueHandler GetDataQueueHandler()
-        {
-            return Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(Config.Get("data-queue-handler", "LiveDataQueue"));
-        }
 
-        /// <summary>
-        /// Creates the data enumerator for the specified security
-        /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="resultHandler">The result handler used for messaging failures</param>
-        /// <param name="security">The security to create a subscription enumerator for</param>
-        /// <param name="periodStart">The start of the subscription</param>
-        /// <param name="periodEnd">The end of the subscription</param>
-        /// <returns>The subscription's data enumerator</returns>
-        protected virtual IEnumerator<BaseData> CreateSubscriptionEnumerator(IAlgorithm algorithm,
-            IResultHandler resultHandler,
-            Security security,
-            DateTime periodStart,
-            DateTime periodEnd)
+        private IEnumerator<BaseData> GetNextTicksEnumerator()
         {
-            IEnumerator<BaseData> enumerator = null;
-            if (security.SubscriptionDataConfig.IsCustomData)
+            while (!_cancellationTokenSource.IsCancellationRequested)
             {
-                //Subscription managers for downloading user data:
-                // TODO: Update this when warmup comes in, we back up so we can get data that should have emitted at midnight today
-                var subscriptionDataReader = new SubscriptionDataReader(
-                    security.SubscriptionDataConfig,
-                    periodStart, Time.EndOfTime,
-                    resultHandler,
-                    Time.EachTradeableDay(algorithm.Securities.Values, periodStart, periodEnd),
-                    true
-                    );
-
-                // wrap the subscription data reader with a filter enumerator
-                enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, subscriptionDataReader, security, periodEnd);
+                foreach (var data in _dataQueueHandler.GetNextTicks())
+                {
+                    yield return data;
+                }
             }
-            return enumerator;
         }
     }
 }

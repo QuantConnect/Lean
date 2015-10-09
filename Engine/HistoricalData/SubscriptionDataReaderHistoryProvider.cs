@@ -25,6 +25,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
@@ -136,7 +137,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 return data.EndTime > start;
             });
 
-            return new Subscription(security, reader, start, end, false);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, start, end);
+            return new Subscription(security, reader, timeZoneOffsetProvider, start, end, false);
         }
 
         /// <summary>

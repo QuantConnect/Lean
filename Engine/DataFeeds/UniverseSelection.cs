@@ -105,8 +105,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // never remove internal feeds
                 if (config.IsInternalFeed) continue;
 
-                // don't remove subscriptions for different markets and non-equity types
-                if (config.Market != args.Configuration.Market || config.SecurityType != SecurityType.Equity) continue;
+                // don't remove subscriptions for different markets
+                if (config.Market != args.Configuration.Market || config.SecurityType != args.Configuration.SecurityType) continue;
 
                 // if we've selected this subscription again, keep it
                 if (selectedSubscriptions.Contains(config.Symbol)) continue;

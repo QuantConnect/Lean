@@ -22,6 +22,7 @@ using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -134,7 +135,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // finally apply exchange/user filters
             enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, enumerator, security, end);
-            var subscription = new Subscription(security, enumerator, start, end, userDefined);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, start, end);
+            var subscription = new Subscription(security, enumerator, timeZoneOffsetProvider, start, end, userDefined);
             return subscription;
         }
 
@@ -362,7 +364,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, tradeableDates, false);
 
             // create the subscription
-            var subscription = new Subscription(universe, security, enumerator, startTimeUtc, endTimeUtc);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, startTimeUtc, endTimeUtc);
+            var subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc);
 
             // only message the user if it's one of their universe types
             var messageUser = config.Type != typeof(CoarseFundamental);

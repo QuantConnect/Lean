@@ -7,7 +7,7 @@ using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Interfaces;
 
-namespace QuantConnect.Lean.Engine.DataFeeds
+namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
     /// Implements a wrapper around a base data enumerator to provide a final filtering step
@@ -96,30 +96,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             while (_enumerator.MoveNext())
             {
                 var current = _enumerator.Current;
-                try
+                if (current != null)
                 {
-                    // execute user data filters
-                    if (current.DataType != MarketDataType.Auxiliary && !_dataFilter.Filter(_security, current))
+                    try
+                    {
+                        // execute user data filters
+                        if (current.DataType != MarketDataType.Auxiliary && !_dataFilter.Filter(_security, current))
+                        {
+                            continue;
+                        }
+                    }
+                    catch (Exception err)
+                    {
+                        OnDataFilterError(err);
+                        continue;
+                    }
+
+                    // verify that the bar is within the exchange's market hours
+                    if (current.DataType != MarketDataType.Auxiliary && !_exchange.IsOpenDuringBar(current.Time, current.EndTime, _security.IsExtendedMarketHours))
                     {
                         continue;
                     }
-                }
-                catch (Exception err)
-                {
-                    OnDataFilterError(err);
-                    continue;
-                }
 
-                // verify that the bar is within the exchange's market hours
-                if (current.DataType != MarketDataType.Auxiliary && !_exchange.IsOpenDuringBar(current.Time, current.EndTime, _security.IsExtendedMarketHours))
-                {
-                    continue;
-                }
-
-                // make sure we haven't passed the end
-                if (current.Time > _endTime)
-                {
-                    return false;
+                    // make sure we haven't passed the end
+                    if (current.Time > _endTime)
+                    {
+                        return false;
+                    }
                 }
 
                 Current = current;

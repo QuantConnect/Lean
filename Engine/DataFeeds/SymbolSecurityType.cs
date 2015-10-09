@@ -22,7 +22,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Combines a symbol and a security type, used as subscription keys in data feeds
     /// </summary>
-    internal sealed class SymbolSecurityType
+    public sealed class SymbolSecurityType
     {
         public readonly Symbol Symbol;
         public readonly SecurityType SecurityType;

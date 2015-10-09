@@ -1,0 +1,111 @@
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using NUnit.Framework;
+using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+
+namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
+{
+    [TestFixture]
+    public class TradeBarBuilderEnumeratorTests
+    {
+        [Test]
+        public void AggregatesTicksIntoSecondBars()
+        {
+            var timeProvider = new ManualTimeProvider(TimeZones.NewYork);
+            var enumerator = new TradeBarBuilderEnumerator(Time.OneSecond, TimeZones.NewYork, timeProvider);
+
+            // noon new york time
+            var currentTime = new DateTime(2015, 10, 08, 12, 0, 0);
+            timeProvider.SetCurrentTime(currentTime);
+
+            // add some ticks
+            var ticks = new List<Tick>
+            {
+                new Tick(currentTime, "SPY", 199.55m, 199, 200) {Quantity = 10},
+                new Tick(currentTime, "SPY", 199.56m, 199.21m, 200.02m) {Quantity = 5},
+                new Tick(currentTime, "SPY", 199.53m, 198.77m, 199.75m) {Quantity = 20},
+                new Tick(currentTime, "SPY", 198.77m, 199.75m) {Quantity = 0},
+                new Tick(currentTime, "SPY", 199.73m, 198.77m, 199.75m) {Quantity = 20},
+                new Tick(currentTime, "SPY", 198.77m, 199.75m) {Quantity = 0},
+            };
+
+            foreach (var tick in ticks)
+            {
+                enumerator.ProcessData(tick);
+            }
+
+            // even though no data is here, it will still return true
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+
+            // advance a second
+            currentTime = currentTime.AddSeconds(1);
+            timeProvider.SetCurrentTime(currentTime);
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNotNull(enumerator.Current);
+            
+            // in the spirit of not duplicating the above code 5 times (OHLCV, we'll assert these ere as well)
+            var bar = (TradeBar)enumerator.Current;
+            Assert.AreEqual(currentTime.AddSeconds(-1), bar.Time);
+            Assert.AreEqual(currentTime, bar.EndTime);
+            Assert.AreEqual("SPY", bar.Symbol.Value);
+            Assert.AreEqual(ticks.First(x => x.LastPrice != 0).LastPrice, bar.Open);
+            Assert.AreEqual(ticks.Where(x => x.LastPrice != 0).Max(x => x.LastPrice), bar.High);
+            Assert.AreEqual(ticks.Where(x => x.LastPrice != 0).Min(x => x.LastPrice), bar.Low);
+            Assert.AreEqual(ticks.Last(x => x.LastPrice != 0).LastPrice, bar.Close);
+            Assert.AreEqual(ticks.Where(x => x.LastPrice != 0).Sum(x => x.Quantity), bar.Volume);
+        }
+
+        [Test]
+        public void CreatesNewBarWhenBarSizeElapses()
+        {
+            var timeProvider = new ManualTimeProvider();
+            var enumerator = new TradeBarBuilderEnumerator(Time.OneSecond, TimeZones.Utc, timeProvider);
+
+            // noon new york time
+            var startTime = new DateTime(2015, 10, 08, 12, 0, 0);
+            timeProvider.SetCurrentTime(startTime);
+
+            enumerator.ProcessData(new Tick{Time = startTime});
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+
+            timeProvider.AdvanceSeconds(0.99);
+
+            enumerator.ProcessData(new Tick {Time = timeProvider.GetUtcNow()});
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+
+            timeProvider.SetCurrentTime(startTime.AddSeconds(1));
+
+            // the second just ticked over, so it shouldn't include this tick when we move next
+            enumerator.ProcessData(new Tick {Time = timeProvider.GetUtcNow(), Quantity = 1});
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNotNull(enumerator.Current);
+            Assert.AreEqual(0, ((TradeBar)enumerator.Current).Volume);
+        }
+    }
+}

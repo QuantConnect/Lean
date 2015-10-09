@@ -176,21 +176,30 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AlgorithmManager.cs" />
+    <Compile Include="DataFeeds\Enumerators\EnqueableEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\FastForwardEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\FillForwardEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\FrontierAwareEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\LiveFillForwardEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\RateLimitEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\SubscriptionFilterEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\TradeBarBuilderEnumerator.cs" />
+    <Compile Include="DataFeeds\ITimeProvider.cs" />
+    <Compile Include="DataFeeds\ManualTimeProvider.cs" />
+    <Compile Include="DataFeeds\RealTimeProvider.cs" />
     <Compile Include="DataFeeds\BaseDataSubscriptionFactory.cs" />
     <Compile Include="DataFeeds\CreateStreamReaderErrorEventArgs.cs" />
+    <Compile Include="DataFeeds\BaseDataExchange.cs" />
+    <Compile Include="DataFeeds\LiveTradingDataFeed.cs" />
     <Compile Include="DataFeeds\UniverseSelectionEventArgs.cs" />
     <Compile Include="DataFeeds\Subscription.cs" />
-    <Compile Include="DataFeeds\FillForwardEnumerator.cs" />
     <Compile Include="DataFeeds\InvalidSourceEventArgs.cs" />
     <Compile Include="DataFeeds\ISubscriptionFactory.cs" />
-    <Compile Include="DataFeeds\LiveSubscription.cs" />
-    <Compile Include="DataFeeds\LiveTradingDataFeed.cs" />
     <Compile Include="DataFeeds\Queues\DataQueue.cs" />
     <Compile Include="DataFeeds\Queues\FakeDataQueue.cs" />
     <Compile Include="DataFeeds\ReaderErrorEventArgs.cs" />
     <Compile Include="DataFeeds\StreamStore.cs" />
     <Compile Include="DataFeeds\SubscriptionDataReader.cs" />
-    <Compile Include="DataFeeds\SubscriptionFilterEnumerator.cs" />
     <Compile Include="DataFeeds\SymbolSecurityType.cs" />
     <Compile Include="DataFeeds\TimeSlice.cs" />
     <Compile Include="DataFeeds\Transport\IStreamReader.cs" />
