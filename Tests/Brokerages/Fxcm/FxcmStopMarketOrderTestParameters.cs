@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Brokerages.Fxcm;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 
@@ -24,15 +25,12 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
 {
     public class FxcmStopMarketOrderTestParameters : StopMarketOrderTestParameters
     {
-        private readonly FxcmBrokerageTests _tests;
-
-        public FxcmStopMarketOrderTestParameters(FxcmBrokerageTests tests, string symbol, SecurityType securityType, decimal highLimit, decimal lowLimit)
+        public FxcmStopMarketOrderTestParameters(string symbol, SecurityType securityType, decimal highLimit, decimal lowLimit)
             : base(symbol, securityType, highLimit, lowLimit)
         {
-            _tests = tests;
         }
 
-        public override bool ModifyOrderToFill(Order order, decimal lastMarketPrice)
+        public override bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice)
         {
             // FXCM Buy StopMarket orders will be rejected if the stop price is below the market price
             // FXCM Sell StopMarket orders will be rejected if the stop price is above the market price
@@ -40,8 +38,8 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             var stop = (StopMarketOrder)order;
             var previousStop = stop.StopPrice;
 
-            var brokerage = (FxcmBrokerage)_tests.Brokerage;
-            var quotes = brokerage.GetQuotes(new List<string> { brokerage.ConvertSymbolToFxcmSymbol(order.Symbol) });
+            var fxcmBrokerage = (FxcmBrokerage)brokerage;
+            var quotes = fxcmBrokerage.GetQuotes(new List<string> { fxcmBrokerage.ConvertSymbolToFxcmSymbol(order.Symbol) });
             
             if (order.Quantity > 0)
             {
@@ -49,7 +47,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
                 // buy stop price must be strictly above ask price
                 var askPrice = Convert.ToDecimal(quotes.Single().getAskClose());
                 Log.Trace("FxcmStopMarketOrderTestParameters.ModifyOrderToFill(): Ask: " + askPrice);
-                stop.StopPrice = Math.Max(askPrice, stop.StopPrice / 2) + 0.00001m;
+                stop.StopPrice = Math.Min(previousStop, Math.Max(askPrice, stop.StopPrice / 2) + 0.00001m);
             }
             else
             {
@@ -57,7 +55,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
                 // sell stop price must be strictly below bid price
                 var bidPrice = Convert.ToDecimal(quotes.Single().getBidClose());
                 Log.Trace("FxcmStopMarketOrderTestParameters.ModifyOrderToFill(): Bid: " + bidPrice);
-                stop.StopPrice = Math.Min(bidPrice, stop.StopPrice * 2) - 0.00001m;
+                stop.StopPrice = Math.Max(previousStop, Math.Min(bidPrice, stop.StopPrice * 2) - 0.00001m);
             }
 
             return stop.StopPrice != previousStop;

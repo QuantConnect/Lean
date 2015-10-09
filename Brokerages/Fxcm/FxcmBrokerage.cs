@@ -24,17 +24,17 @@ using com.fxcm.external.api.util;
 using com.fxcm.fix;
 using com.fxcm.fix.pretrade;
 using com.fxcm.fix.trade;
-using com.fxcm.messaging.util;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Brokerages.Fxcm
 {
     /// <summary>
     /// The FXCM brokerage implementation
     /// </summary>
-    public partial class FxcmBrokerage : Brokerage, IGenericMessageListener, IStatusMessageListener
+    public partial class FxcmBrokerage : Brokerage, IDataQueueHandler, IGenericMessageListener, IStatusMessageListener
     {
         private readonly IOrderProvider _orderProvider;
         private readonly IHoldingsProvider _holdingsProvider;
@@ -115,9 +115,6 @@ namespace QuantConnect.Brokerages.Fxcm
 
             // create local login properties
             var loginProperties = new FXCMLoginProperties(_userName, _password, _terminal, _server);
-
-            // disable the streaming rates (default automatic subscriptions)
-            loginProperties.addProperty(IConnectionManager.__Fields.MSG_FLAGS, IFixDefs.__Fields.CHANNEL_MARKET_DATA.ToString());
 
             // log in
             _gateway.login(loginProperties);

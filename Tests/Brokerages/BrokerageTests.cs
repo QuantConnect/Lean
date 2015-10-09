@@ -426,7 +426,7 @@ namespace QuantConnect.Tests.Brokerages
                 var marketPrice = GetAskPrice(order.Symbol, order.SecurityType);
                 Log.Trace("BrokerageTests.ModifyOrderUntilFilled(): Ask: " + marketPrice);
 
-                var updateOrder = parameters.ModifyOrderToFill(order, marketPrice);
+                var updateOrder = parameters.ModifyOrderToFill(Brokerage, order, marketPrice);
                 if (updateOrder)
                 {
                     if (order.Status == OrderStatus.Filled) break;

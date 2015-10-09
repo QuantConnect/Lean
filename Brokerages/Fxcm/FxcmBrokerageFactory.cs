@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Fxcm
 {
@@ -80,7 +81,10 @@ namespace QuantConnect.Brokerages.Fxcm
                 throw new Exception(string.Join(Environment.NewLine, errors));
             }
 
-            return new FxcmBrokerage(algorithm.Transactions, algorithm.Portfolio, server, terminal, userName, password);
+            var brokerage = new FxcmBrokerage(algorithm.Transactions, algorithm.Portfolio, server, terminal, userName, password);
+            Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
+
+            return brokerage;
         }
 
         /// <summary>

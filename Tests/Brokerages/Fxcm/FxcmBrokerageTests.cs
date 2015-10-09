@@ -22,7 +22,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Tests.Brokerages.Fxcm
 {
     [TestFixture, Ignore("These tests require a configured and active FXCM practice account")]
-    public class FxcmBrokerageTests : BrokerageTests
+    public partial class FxcmBrokerageTests : BrokerageTests
     {
         /// <summary>
         /// Creates the brokerage under test
@@ -57,8 +57,8 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
                 return new[]
                 {
                     new TestCaseData(new MarketOrderTestParameters(Symbol, SecurityType)).SetName("MarketOrder"),
-                    new TestCaseData(new FxcmLimitOrderTestParameters(this, Symbol, SecurityType, HighPrice, LowPrice)).SetName("LimitOrder"),
-                    new TestCaseData(new FxcmStopMarketOrderTestParameters(this, Symbol, SecurityType, HighPrice, LowPrice)).SetName("StopMarketOrder"),
+                    new TestCaseData(new FxcmLimitOrderTestParameters(Symbol, SecurityType, HighPrice, LowPrice)).SetName("LimitOrder"),
+                    new TestCaseData(new FxcmStopMarketOrderTestParameters(Symbol, SecurityType, HighPrice, LowPrice)).SetName("StopMarketOrder"),
                 };
             }
         }

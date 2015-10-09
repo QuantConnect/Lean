@@ -24,6 +24,7 @@ using com.fxcm.fix.posttrade;
 using com.fxcm.fix.pretrade;
 using com.fxcm.fix.trade;
 using com.fxcm.messaging;
+using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 
@@ -196,8 +197,8 @@ namespace QuantConnect.Brokerages.Fxcm
                 else if (message is OrderCancelReject)
                     OnOrderCancelReject((OrderCancelReject)message);
 
-                else if (message is UserResponse || message is CollateralInquiryAck || 
-                    message is MarketDataRequestReject || message is SecurityStatus)
+                else if (message is UserResponse || message is CollateralInquiryAck ||
+                    message is MarketDataRequestReject || message is BusinessMessageReject || message is SecurityStatus)
                 {
                     // Unused messages, no handler needed
                 }
@@ -238,6 +239,16 @@ namespace QuantConnect.Brokerages.Fxcm
 
                 _mapRequestsToAutoResetEvents[_currentRequest].Set();
                 _mapRequestsToAutoResetEvents.Remove(_currentRequest);
+
+                // unsubscribe all instruments
+                var request = new MarketDataRequest();
+                foreach (var fxcmSymbol in _fxcmInstruments.Keys)
+                {
+                    request.addRelatedSymbol(_fxcmInstruments[fxcmSymbol]);
+                }
+                request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.UNSUBSCRIBE);
+                request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
+                _gateway.sendMessage(request);
             }
         }
 
@@ -267,6 +278,22 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             // update the current prices for the instrument
             _rates[message.getInstrument().getSymbol()] = message;
+
+            // if instrument is subscribed, add ticks to list
+            var symbol = ConvertFxcmSymbolToSymbol(message.getInstrument().getSymbol());
+
+            if (_subscribedSymbols.Contains(symbol))
+            {
+                var time = FromJavaDate(message.getDate().toDate());
+                var bidPrice = Convert.ToDecimal(message.getBidClose());
+                var askPrice = Convert.ToDecimal(message.getAskClose());
+                var tick = new Tick(time, symbol, bidPrice, askPrice);
+
+                lock (_ticks)
+                {
+                    _ticks.Add(tick);
+                }
+            }
 
             if (message.getRequestID() == _currentRequest)
             {
