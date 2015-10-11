@@ -56,6 +56,8 @@ namespace QuantConnect.Brokerages.Fxcm
                                       from symbol in secType.Value 
                                       where !_subscribedSymbols.Contains(symbol) 
                                       select symbol).ToList();
+            if (symbolsToSubscribe.Count == 0)
+                return;
 
             Log.TraceFormat("FxcmBrokerage.Subscribe(): {0}", string.Join(",", symbolsToSubscribe));
 
@@ -89,6 +91,8 @@ namespace QuantConnect.Brokerages.Fxcm
                                         from symbol in secType.Value 
                                         where _subscribedSymbols.Contains(symbol) 
                                         select symbol).ToList();
+            if (symbolsToUnsubscribe.Count == 0)
+                return;
 
             Log.TraceFormat("FxcmBrokerage.Unsubscribe(): {0}", string.Join(",", symbolsToUnsubscribe));
 
