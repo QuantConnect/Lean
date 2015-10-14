@@ -32,7 +32,7 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
-    [TestFixture]//, Ignore("These tests depend on a remote server")]
+    [TestFixture, Ignore("These tests depend on a remote server")]
     public class LiveTradingDataFeedTests
     {
         [Test]
@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 );
             var feed = RunDataFeed(algorithm);
 
-            ConsumeBridge(feed, TimeSpan.FromSeconds(20), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
                 var delta = (DateTime.UtcNow - ts.Time).TotalMilliseconds;
                 Console.WriteLine(((decimal)delta).SmartRounding() + "ms : " + string.Join(",", ts.Slice.Keys.Select(x => x.Value)));
@@ -115,7 +115,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var stopwatch = Stopwatch.StartNew();
             var feed = RunDataFeed(algorithm, out queue, null, fdqh => ProduceBenchmarkTicks(fdqh, count));
              
-            ConsumeBridge(feed, TimeSpan.FromSeconds(20), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
                 Console.WriteLine("Count: " + ts.Slice.Keys.Count + " " + DateTime.UtcNow.ToString("o"));
                 if (ts.Slice.Keys.Count != securitiesCount)
@@ -203,7 +203,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 if (flag) flag = false;
                 averages.Add(avg);
             }, null, Time.OneSecond, Time.OneSecond);
-            ConsumeBridge(feed, TimeSpan.FromSeconds(10), false, ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), false, ts =>
             {
                 Interlocked.Add(ref ticks, ts.Slice.Ticks.Sum(x => x.Value.Count));
             }, true);
@@ -223,7 +223,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var emittedData = false;
             var lastTime = DateTime.UtcNow;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(10), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
                 if (!emittedData)
                 {
@@ -257,7 +257,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             bool receivedData = false;
             var stopwatch = Stopwatch.StartNew();
             Console.WriteLine("start: " + DateTime.UtcNow.ToString("o"));
-            ConsumeBridge(feed, TimeSpan.FromSeconds(20), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
                 // because this is a remote file we may skip data points while the newest
                 // version of the file is downloading [internet speed] and also we decide
@@ -301,7 +301,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var timeZone = algorithm.Securities["EURUSD"].Exchange.TimeZone;
             RestApiBaseData last = null;
 
-            var timeout = new CancellationTokenSource(TimeSpan.FromHours(100));
+            var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             foreach (var ts in feed.Bridge.GetConsumingEnumerable(timeout.Token))
             {
                 //timeProvider.AdvanceSeconds(0.5);
@@ -389,7 +389,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             };
 
 
-            ConsumeBridge(feed, TimeSpan.FromSeconds(10), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
             });
 

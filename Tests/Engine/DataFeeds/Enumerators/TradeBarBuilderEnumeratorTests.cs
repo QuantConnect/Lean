@@ -69,11 +69,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(currentTime.AddSeconds(-1), bar.Time);
             Assert.AreEqual(currentTime, bar.EndTime);
             Assert.AreEqual("SPY", bar.Symbol.Value);
-            Assert.AreEqual(ticks.First(x => x.LastPrice != 0).LastPrice, bar.Open);
-            Assert.AreEqual(ticks.Where(x => x.LastPrice != 0).Max(x => x.LastPrice), bar.High);
-            Assert.AreEqual(ticks.Where(x => x.LastPrice != 0).Min(x => x.LastPrice), bar.Low);
-            Assert.AreEqual(ticks.Last(x => x.LastPrice != 0).LastPrice, bar.Close);
-            Assert.AreEqual(ticks.Where(x => x.LastPrice != 0).Sum(x => x.Quantity), bar.Volume);
+            Assert.AreEqual(ticks.First().LastPrice, bar.Open);
+            Assert.AreEqual(ticks.Max(x => x.LastPrice), bar.High);
+            Assert.AreEqual(ticks.Min(x => x.LastPrice), bar.Low);
+            Assert.AreEqual(ticks.Last().LastPrice, bar.Close);
+            Assert.AreEqual(ticks.Sum(x => x.Quantity), bar.Volume);
         }
 
         [Test]

@@ -17,6 +17,8 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -31,18 +33,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private T _current;
         private bool _end;
 
-        private readonly int _maxItemsInQueue;
-
         private readonly ConcurrentQueue<T> _queue;
+        private readonly ReaderWriterLockSlim _lock;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EnqueableEnumerator{T}"/> class
         /// </summary>
-        /// <param name="maxItemsInQueue">The maximum number of items pemitted in the queue</param>
-        public EnqueableEnumerator(int maxItemsInQueue = 1)
+        public EnqueableEnumerator()
         {
-            _maxItemsInQueue = maxItemsInQueue;
             _queue = new ConcurrentQueue<T>();
+            _lock = new ReaderWriterLockSlim();
         }
 
         /// <summary>
@@ -53,9 +53,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             if (_end) return;
             _queue.Enqueue(data);
+        }
 
-            // removes older data to limit queue size
-            while (_queue.Count > _maxItemsInQueue) _queue.TryDequeue(out data);
+        /// <summary>
+        /// Enqueues a range of data. This operation will lock this enumerator
+        /// such that it will not MoveNext until the enqueueing has completed
+        /// </summary>
+        /// <param name="data"></param>
+        public void EnqueueRange(IEnumerable<T> data)
+        {
+            if (_end) return;
+
+            // only enqueueing a batch is senstive to being locked, since we wouldn't
+            // want the feed to split up a series of data at the same timestamp that
+            // should be emitted together, this is especially the case with universe
+            // selection data, ~10k records
+
+            using (_lock.Write())
+            {
+                foreach (var datum in data)
+                {
+                    _queue.Enqueue(datum);
+                }
+            }
         }
 
         /// <summary>
@@ -76,15 +96,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
-            if (!_queue.TryDequeue(out _current))
+            using (_lock.Read())
             {
-                return !_end;
-            }
+                if (!_queue.TryDequeue(out _current))
+                {
+                    return !_end;
+                }
 
-            // even if we don't have data to return, we haven't technically
-            // passed the end of the collection, so always return true until
-            // the enumerator is explicitly disposed or ended
-            return true;
+                // even if we don't have data to return, we haven't technically
+                // passed the end of the collection, so always return true until
+                // the enumerator is explicitly disposed or ended
+                return true;
+            }
         }
 
         /// <summary>
@@ -126,7 +149,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public void Dispose()
         {
             Stop();
-            _queue.Clear();
+            if (_queue != null) _queue.Clear();
+            if (_lock != null) _lock.Dispose();
         }
     }
 }

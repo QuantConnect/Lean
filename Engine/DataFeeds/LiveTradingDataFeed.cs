@@ -409,7 +409,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 // tick subscriptions can pass right through
-                var tickEnumerator = new EnqueableEnumerator<BaseData>(int.MaxValue);
+                var tickEnumerator = new EnqueableEnumerator<BaseData>();
                 _exchange.SetHandler(config.Symbol, data =>
                 {
                     if (security.DataFilter.Filter(security, data))
@@ -464,13 +464,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IEnumerator<BaseData> enumerator;
             if (config.Type == typeof (CoarseFundamental))
             {
-                var enqueable = new EnqueableEnumerator<BaseData>(int.MaxValue);
-                _exchange.SetHandler(config.Symbol, dto =>
+                var enqueable = new EnqueableEnumerator<BaseData>();
+                _exchange.SetHandler(config.Symbol, data =>
                 {
-                    var universeData = dto as BaseDataCollection;
+                    var universeData = data as BaseDataCollection;
                     if (universeData != null)
                     {
-                        enqueable.Enqueue(universeData);
+                        enqueable.EnqueueRange(universeData.Data);
                     }
                 });
                 enumerator = enqueable;
@@ -488,7 +488,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enqueable = new EnqueableEnumerator<BaseData>();
                 _customExchange.SetHandler(config.Symbol, data =>
                 {
-                    enqueable.Enqueue(data);
+                    var universeData = data as BaseDataCollection;
+                    if (universeData != null)
+                    {
+                        enqueable.EnqueueRange(universeData.Data);
+                    }
+                    else
+                    {
+                        enqueable.Enqueue(data);
+                    }
                 });
                 enumerator = enqueable;
             }
@@ -499,13 +507,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return subscription;
         }
 
+        /// <summary>
+        /// Event invocator for the <see cref="UniverseSelection"/> event
+        /// </summary>
+        /// <param name="universe">The universe to perform selection on the data</param>
+        /// <param name="config">The configuration of the universe</param>
+        /// <param name="dateTimeUtc">The current date time in UTC</param>
+        /// <param name="data">The universe selection data to be operated on</param>
         protected virtual void OnUniverseSelection(IUniverse universe, SubscriptionDataConfig config, DateTime dateTimeUtc, IReadOnlyList<BaseData> data)
         {
             var handler = UniverseSelection;
             if (handler != null) handler(this, new UniverseSelectionEventArgs(universe, config, dateTimeUtc, data));
         }
 
-
+        /// <summary>
+        /// Provides an <see cref="IEnumerator{BaseData}"/> that will continually dequeue data
+        /// from the data queue handler while we're not cancelled
+        /// </summary>
+        /// <returns></returns>
         private IEnumerator<BaseData> GetNextTicksEnumerator()
         {
             while (!_cancellationTokenSource.IsCancellationRequested)
