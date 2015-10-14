@@ -105,7 +105,7 @@
     <Compile Include="Common\Util\MemoizingEnumerableTests.cs" />
     <Compile Include="Common\Util\ObjectActivatorTests.cs" />
     <Compile Include="Common\Util\ObjectToListJsonConverterTests.cs" />
-    <Compile Include="Common\Util\ReaderWriterLockSlimExtensions.cs" />
+    <Compile Include="Common\Util\ReaderWriterLockSlimExtensionsTests.cs" />
     <Compile Include="Common\Util\VersionHelperTests.cs" />
     <Compile Include="Common\Util\WhoCalledMeTests.cs" />
     <Compile Include="Compression\CompressionTests.cs" />
