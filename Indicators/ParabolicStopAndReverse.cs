@@ -57,7 +57,7 @@ namespace QuantConnect.Indicators
         /// <param name="afIncrement">Acceleration factor increment value</param>
         /// <param name="afMax">Acceleration factor max value</param>
         public ParabolicStopAndReverse(decimal afStart = 0.02m, decimal afIncrement = 0.02m, decimal afMax = 0.2m)
-            : this(string.Format("PSAR({0},{1},{2})", afStart, afIncrement, afMax))
+            : this(string.Format("PSAR({0},{1},{2})", afStart, afIncrement, afMax), afStart, afIncrement, afMax)
         {
         }
 
