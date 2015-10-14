@@ -25,9 +25,8 @@ using Newtonsoft.Json;
 using OANDARestLibrary;
 using OANDARestLibrary.TradeLibrary.DataTypes;
 using OANDARestLibrary.TradeLibrary.DataTypes.Communications.Requests;
-using QuantConnect.ToolBox;
 
-namespace QuantConnect.OandaDownloader
+namespace QuantConnect.ToolBox.OandaDownloader
 {
     class Program
     {

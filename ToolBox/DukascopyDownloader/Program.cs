@@ -22,10 +22,9 @@ using System.Net;
 using System.Text;
 using Ionic.Zip;
 using Newtonsoft.Json;
-using QuantConnect.ToolBox;
 using SevenZip;
 
-namespace QuantConnect.DukascopyDownloader
+namespace QuantConnect.ToolBox.DukascopyDownloader
 {
     class Program
     {
