@@ -529,9 +529,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
-                foreach (var data in _dataQueueHandler.GetNextTicks())
+                while (true)
                 {
-                    yield return data;
+                    int ticks = 0;
+                    foreach (var data in _dataQueueHandler.GetNextTicks())
+                    {
+                        ticks++;
+                        yield return data;
+                    }
+                    if (ticks == 0) Thread.Sleep(1);
                 }
             }
         }

@@ -205,10 +205,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             while (true)
             {
+                int ticks = 0;
                 foreach (var data in dataQueueHandler.GetNextTicks())
                 {
+                    ticks++;
                     yield return data;
                 }
+                if (ticks == 0) Thread.Sleep(1);
             }
         }
     }
