@@ -125,7 +125,18 @@ namespace QuantConnect
         /// <param name="obj">An object to compare with this instance. </param><exception cref="T:System.ArgumentException"><paramref name="obj"/> is not the same type as this instance. </exception><filterpriority>2</filterpriority>
         public int CompareTo(object obj)
         {
-            return Permtick.CompareTo(obj);
+            var str = obj as string;
+            if (str != null)
+            {
+                return string.Compare(Permtick, str, StringComparison.OrdinalIgnoreCase);
+            }
+            var sym = obj as Symbol;
+            if (sym != null)
+            {
+                return string.Compare(Permtick, sym.Permtick, StringComparison.OrdinalIgnoreCase);
+            }
+
+            throw new ArgumentException("Object must be of type Symbol or string.");
         }
 
         /// <summary>

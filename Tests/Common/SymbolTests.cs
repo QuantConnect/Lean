@@ -141,5 +141,46 @@ namespace QuantConnect.Tests.Common
             actual = JsonConvert.DeserializeObject<Tick>(json);
             Assert.AreEqual(tick.Symbol, actual.Symbol);
         }
+
+        [Test]
+        public void CompareToItselfReturnsZero()
+        {
+            var sym = new Symbol("sym");
+            Assert.AreEqual(0, sym.CompareTo(sym));
+        }
+
+        [Test]
+        public void ComparesTheSameAsStringCompare()
+        {
+            var a = new Symbol("a");
+            var z = new Symbol("z");
+
+            Assert.AreEqual(string.Compare("a", "z", StringComparison.Ordinal), a.CompareTo(z));
+            Assert.AreEqual(string.Compare("z", "a", StringComparison.Ordinal), z.CompareTo(a));
+        }
+
+        [Test]
+        public void ComparesTheSameAsStringCompareAndIgnoresCase()
+        {
+            var a = new Symbol("a");
+            var z = new Symbol("z");
+
+            Assert.AreEqual(string.Compare("a", "Z", StringComparison.OrdinalIgnoreCase), a.CompareTo(z));
+            Assert.AreEqual(string.Compare("z", "A", StringComparison.OrdinalIgnoreCase), z.CompareTo(a));
+        }
+
+        [Test]
+        public void ComparesAgainstStringWithoutException()
+        {
+            var a = new Symbol("a");
+            Assert.AreEqual(0, a.CompareTo("a"));
+        }
+
+        [Test]
+        public void ComparesAgainstStringIgnoringCase()
+        {
+            var a = new Symbol("a");
+            Assert.AreEqual(0, a.CompareTo("A"));
+        }
     }
 }
