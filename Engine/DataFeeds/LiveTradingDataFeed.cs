@@ -371,9 +371,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // can send in large chunks of old, irrelevant data
                 var fastForward = new FastForwardEnumerator(reader, _timeProvider, config.TimeZone, config.Increment);
 
-                // apply rate limits (2x per increment, max 30 minutes between calls)
+                // apply rate limits (1x per increment, max 30 minutes between calls)
                 // TODO : Pull limits from config file?
-                var minimumTimeBetweenCalls = Math.Min((long)(config.Increment.Ticks / (double)2), TimeSpan.FromMinutes(30).Ticks);
+                var minimumTimeBetweenCalls = Math.Min(config.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
                 var rateLimit = new RateLimitEnumerator(fastForward, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
                 
                 // add the enumerator to the exchange
