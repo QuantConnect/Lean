@@ -94,7 +94,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Sets the enumerator to its initial position, which is before the first element in the collection.
         /// </summary>
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
-        public void Reset() { _enumerator.Reset(); }
+        public void Reset()
+        {
+            _enumerator.Reset();
+        }
 
         /// <summary>
         /// Gets the element in the collection at the current position of the enumerator.
@@ -102,7 +105,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>
         /// The element in the collection at the current position of the enumerator.
         /// </returns>
-        public BaseData Current { get { return _current; } }
+        public BaseData Current
+        {
+            get { return _current; }
+        }
 
         /// <summary>
         /// Gets the current element in the collection.
@@ -111,12 +117,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// The current element in the collection.
         /// </returns>
         /// <filterpriority>2</filterpriority>
-        object IEnumerator.Current { get { return Current; } }
+        object IEnumerator.Current
+        {
+            get { return Current; }
+        }
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose() { _enumerator.Dispose(); }
+        public void Dispose()
+        {
+            _enumerator.Dispose();
+        }
     }
 }
