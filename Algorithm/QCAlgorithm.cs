@@ -953,10 +953,14 @@ namespace QuantConnect.Algorithm
             if (!_locked)
             {
                 _liveMode = live;
-                _startDate = DateTime.Today;
-                _endDate = QuantConnect.Time.EndOfTime;
                 Notify = new NotificationManager(live);
                 TradeBuilder.SetLiveMode(live);
+
+                if (live)
+                {
+                    _startDate = DateTime.Today;
+                    _endDate = QuantConnect.Time.EndOfTime;
+                }
             }
         }
 
