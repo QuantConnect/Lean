@@ -142,6 +142,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             // create and add the subscription to our collection
             var subscription = CreateSubscription(security, utcStartTime, utcEndTime, isUserDefinedSubscription);
+            
+            // for some reason we couldn't create the subscription
+            if (subscription == null)
+            {
+                Log.Trace("Unable to add subscription for: " + security.Symbol);
+                return;
+            }
+
             _subscriptions[new SymbolSecurityType(subscription)] = subscription;
 
             // send the subscription for the new symbol through to the data queuehandler
@@ -319,80 +327,87 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="utcEndTime">The end time of the subscription in UTC</param>
         /// <param name="isUserDefinedSubscription">True for subscriptions manually added by user via AddSecurity</param>
         /// <returns>A new subscription instance of the specified security</returns>
-        protected virtual Subscription CreateSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription)
+        protected Subscription CreateSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription)
         {
-            var config = security.SubscriptionDataConfig;
-            var localStartTime = utcStartTime.ConvertFromUtc(config.TimeZone);
-            var localEndTime = utcEndTime.ConvertFromUtc(config.TimeZone);
-
-            IEnumerator<BaseData> enumerator;
             Subscription subscription = null;
-            if (config.IsCustomData)
+            try
             {
-                // custom data uses backtest readers
-                var tradeableDates = Time.EachTradeableDay(security, localStartTime, localEndTime);
-                var reader = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, tradeableDates, true, false);
+                var config = security.SubscriptionDataConfig;
+                var localStartTime = utcStartTime.ConvertFromUtc(config.TimeZone);
+                var localEndTime = utcEndTime.ConvertFromUtc(config.TimeZone);
 
-                // apply fast forwarding, this is especially important for RemoteFile types that
-                // can send in large chunks of old, irrelevant data
-                var fastForward = new FastForwardEnumerator(reader, _timeProvider, config.TimeZone, config.Increment);
+                IEnumerator<BaseData> enumerator;
+                if (config.IsCustomData)
+                {
+                    // custom data uses backtest readers
+                    var tradeableDates = Time.EachTradeableDay(security, localStartTime, localEndTime);
+                    var reader = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, tradeableDates, true, false);
 
-                // apply rate limits (1x per increment, max 30 minutes between calls)
-                // TODO : Pull limits from config file?
-                var minimumTimeBetweenCalls = Math.Min(config.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
-                var rateLimit = new RateLimitEnumerator(fastForward, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
+                    // apply fast forwarding, this is especially important for RemoteFile types that
+                    // can send in large chunks of old, irrelevant data
+                    var fastForward = new FastForwardEnumerator(reader, _timeProvider, config.TimeZone, config.Increment);
+
+                    // apply rate limits (1x per increment, max 30 minutes between calls)
+                    // TODO : Pull limits from config file?
+                    var minimumTimeBetweenCalls = Math.Min(config.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
+                    var rateLimit = new RateLimitEnumerator(fastForward, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
                 
-                // add the enumerator to the exchange
-                _customExchange.AddEnumerator(rateLimit);
+                    // add the enumerator to the exchange
+                    _customExchange.AddEnumerator(rateLimit);
 
-                // this enumerator just allows the exchange to directly dump data into the 'back' of the enumerator
-                var enqueable = new EnqueableEnumerator<BaseData>();
-                _customExchange.SetHandler(config.Symbol, data =>
+                    // this enumerator just allows the exchange to directly dump data into the 'back' of the enumerator
+                    var enqueable = new EnqueableEnumerator<BaseData>();
+                    _customExchange.SetHandler(config.Symbol, data =>
+                    {
+                        enqueable.Enqueue(data);
+                        if (subscription != null) subscription.RealtimePrice = data.Value;
+                    });
+                    enumerator = enqueable;
+                }
+                else if (config.Resolution != Resolution.Tick)
                 {
-                    enqueable.Enqueue(data);
-                    if (subscription != null) subscription.RealtimePrice = data.Value;
-                });
-                enumerator = enqueable;
-            }
-            else if (config.Resolution != Resolution.Tick)
-            {
-                // this enumerator allows the exchange to pump ticks into the 'back' of the enumerator,
-                // and the time sync loop can pull aggregated trade bars off the front
-                var aggregator = new TradeBarBuilderEnumerator(config.Increment, config.TimeZone, _timeProvider);
-                _exchange.SetHandler(config.Symbol, data =>
+                    // this enumerator allows the exchange to pump ticks into the 'back' of the enumerator,
+                    // and the time sync loop can pull aggregated trade bars off the front
+                    var aggregator = new TradeBarBuilderEnumerator(config.Increment, config.TimeZone, _timeProvider);
+                    _exchange.SetHandler(config.Symbol, data =>
+                    {
+                        aggregator.ProcessData((Tick) data);
+                        if (subscription != null) subscription.RealtimePrice = data.Value;
+                    });
+                    enumerator = aggregator;
+                }
+                else
                 {
-                    aggregator.ProcessData((Tick) data);
-                    if (subscription != null) subscription.RealtimePrice = data.Value;
-                });
-                enumerator = aggregator;
-            }
-            else
-            {
-                // tick subscriptions can pass right through
-                var tickEnumerator = new EnqueableEnumerator<BaseData>();
-                _exchange.SetHandler(config.Symbol, data =>
+                    // tick subscriptions can pass right through
+                    var tickEnumerator = new EnqueableEnumerator<BaseData>();
+                    _exchange.SetHandler(config.Symbol, data =>
+                    {
+                        tickEnumerator.Enqueue(data);
+                        if (subscription != null) subscription.RealtimePrice = data.Value;
+                    });
+                    enumerator = tickEnumerator;
+                }
+
+                if (config.FillDataForward)
                 {
-                    tickEnumerator.Enqueue(data);
-                    if (subscription != null) subscription.RealtimePrice = data.Value;
-                });
-                enumerator = tickEnumerator;
-            }
+                    // TODO : Properly resolve fill forward resolution like in FileSystemDataFeed (make considerations for universe-only)
+                    enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, security.Exchange, config.Increment, config.ExtendedMarketHours, localEndTime, config.Increment);
+                }
 
-            if (config.FillDataForward)
+                // define market hours and user filters to incoming data
+                enumerator = new SubscriptionFilterEnumerator(enumerator, security, localEndTime);
+
+                // finally, make our subscriptions aware of the frontier of the data feed, this will help
+                var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, utcStartTime, utcEndTime);
+                enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
+
+
+                subscription = new Subscription(security, enumerator, timeZoneOffsetProvider, utcStartTime, utcEndTime, isUserDefinedSubscription);
+            }
+            catch (Exception err)
             {
-                // TODO : Properly resolve fill forward resolution like in FileSystemDataFeed (make considerations for universe-only)
-                enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, security.Exchange, config.Increment, config.ExtendedMarketHours, localEndTime, config.Increment);
+                Log.Error(err);
             }
-
-            // define market hours and user filters to incoming data
-            enumerator = new SubscriptionFilterEnumerator(enumerator, security, localEndTime);
-
-            // finally, make our subscriptions aware of the frontier of the data feed, this will help
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, utcStartTime, utcEndTime);
-            enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
-
-
-            subscription = new Subscription(security, enumerator, timeZoneOffsetProvider, utcStartTime, utcEndTime, isUserDefinedSubscription);
 
             return subscription;
         }
