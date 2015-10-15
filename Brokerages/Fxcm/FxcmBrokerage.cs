@@ -43,8 +43,6 @@ namespace QuantConnect.Brokerages.Fxcm
         private readonly string _userName;
         private readonly string _password;
 
-        private bool _isConnected;
-
         private Thread _orderEventThread;
         private volatile bool _orderEventThreadStopped;
         private readonly ConcurrentQueue<OrderEvent> _orderEventQueue = new ConcurrentQueue<OrderEvent>();
@@ -76,7 +74,10 @@ namespace QuantConnect.Brokerages.Fxcm
         /// </summary>
         public override bool IsConnected
         {
-            get { return _isConnected; }
+            get
+            {
+                return _gateway != null && _gateway.isConnected();
+            }
         }
 
         /// <summary>
@@ -118,7 +119,6 @@ namespace QuantConnect.Brokerages.Fxcm
 
             // log in
             _gateway.login(loginProperties);
-            _isConnected = true;
 
             // load instruments, accounts, orders, positions
             LoadInstruments();
@@ -209,6 +209,9 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             Log.TraceFormat("FxcmBrokerage.PlaceOrder(): {0}", order);
 
+            if (!IsConnected)
+                throw new InvalidOperationException("FxcmBrokerage.PlaceOrder(): Unable to place order while not connected.");
+
             if (order.Direction != OrderDirection.Buy && order.Direction != OrderDirection.Sell)
                 throw new ArgumentException("FxcmBrokerage.PlaceOrder(): Invalid Order Direction");
 
@@ -266,6 +269,9 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             Log.TraceFormat("FxcmBrokerage.UpdateOrder(): {0}", order);
 
+            if (!IsConnected)
+                throw new InvalidOperationException("FxcmBrokerage.UpdateOrder(): Unable to update order while not connected.");
+
             if (!order.BrokerId.Any())
             {
                 // we need the brokerage order id in order to perform an update
@@ -320,6 +326,9 @@ namespace QuantConnect.Brokerages.Fxcm
         public override bool CancelOrder(Order order)
         {
             Log.TraceFormat("FxcmBrokerage.CancelOrder(): {0}", order);
+
+            if (!IsConnected)
+                throw new InvalidOperationException("FxcmBrokerage.UpdateOrder(): Unable to cancel order while not connected.");
 
             if (!order.BrokerId.Any())
             {

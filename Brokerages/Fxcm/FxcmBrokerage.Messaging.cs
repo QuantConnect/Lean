@@ -435,12 +435,6 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <param name="message">Status message received</param>
         public void messageArrived(ISessionStatus message)
         {
-            switch (message.getStatusCode())
-            {
-                case ISessionStatus.__Fields.STATUSCODE_DISCONNECTED:
-                    _isConnected = false;
-                    break;
-            }
         }
 
         #endregion
