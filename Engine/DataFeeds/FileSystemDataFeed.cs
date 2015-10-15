@@ -91,6 +91,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _fillForwardResolution = algorithm.SubscriptionManager.Subscriptions
                 .Where(x => x.Resolution != Resolution.Tick)
                 .Select(x => x.Resolution)
+                .Union(algorithm.Universes.Select(x => x.SubscriptionSettings.Resolution))
                 .DefaultIfEmpty(algorithm.UniverseSettings.Resolution)
                 .Min();
 
