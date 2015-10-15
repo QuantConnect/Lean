@@ -209,7 +209,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IsActive = true;
 
             // we want to emit to the bridge minimally once a second since the data feed is
-            // the heartbeat of the application, so this value will containg a second after
+            // the heartbeat of the application, so this value will contain a second after
             // the last emit time, and if we pass this time, we'll emit even with no data
             var nextEmit = DateTime.MinValue;
 
@@ -276,21 +276,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // reset our security changes
                     _changes = SecurityChanges.None;
 
-                    if (_emitRoundingInterval <= Time.OneMillisecond)
-                    {
-                        // this is the case when we have tick subscriptions, we'll keep this code
-                        // performant by shortcutting the sleep length logic
-                        Thread.Sleep(1);
-                    }
-                    else
-                    {
-                        // determine how long to pause to the next rounded emit time, minimum of 1 ms pause to
-                        // allow everyone else a chance to run
-                        var currentTime = _timeProvider.GetUtcNow();
-                        var nextWakeUpTime = currentTime.RoundDown(_emitRoundingInterval).Add(_emitRoundingInterval);
-                        var millis = (int)Math.Round((nextWakeUpTime - currentTime).TotalMilliseconds);
-                        Thread.Sleep(Math.Max(1, millis));
-                    }
+                    // take a short nap
+                    Thread.Sleep(1);
                 }
             }
             catch (Exception err)
@@ -383,11 +370,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enqueable = new EnqueableEnumerator<BaseData>();
                 _customExchange.SetHandler(config.Symbol, data =>
                 {
-                    if (security.DataFilter.Filter(security, data))
-                    {
-                        enqueable.Enqueue(data);
-                        if (subscription != null) subscription.RealtimePrice = data.Value;
-                    }
+                    enqueable.Enqueue(data);
+                    if (subscription != null) subscription.RealtimePrice = data.Value;
                 });
                 enumerator = enqueable;
             }
@@ -398,11 +382,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var aggregator = new TradeBarBuilderEnumerator(config.Increment, config.TimeZone, _timeProvider);
                 _exchange.SetHandler(config.Symbol, data =>
                 {
-                    if (security.DataFilter.Filter(security, data))
-                    {
-                        aggregator.ProcessData((Tick) data);
-                        if (subscription != null) subscription.RealtimePrice = data.Value;
-                    }
+                    aggregator.ProcessData((Tick) data);
+                    if (subscription != null) subscription.RealtimePrice = data.Value;
                 });
                 enumerator = aggregator;
             }
@@ -412,11 +393,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var tickEnumerator = new EnqueableEnumerator<BaseData>();
                 _exchange.SetHandler(config.Symbol, data =>
                 {
-                    if (security.DataFilter.Filter(security, data))
-                    {
-                        tickEnumerator.Enqueue(data);
-                        if (subscription != null) subscription.RealtimePrice = data.Value;
-                    }
+                    tickEnumerator.Enqueue(data);
+                    if (subscription != null) subscription.RealtimePrice = data.Value;
                 });
                 enumerator = tickEnumerator;
             }
@@ -424,7 +402,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (config.FillDataForward)
             {
                 // TODO : Properly resolve fill forward resolution like in FileSystemDataFeed (make considerations for universe-only)
-                enumerator = new LiveFillForwardEnumerator(_timeProvider, enumerator, security.Exchange, config.Increment, config.ExtendedMarketHours, localEndTime, config.Increment);
+                enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, security.Exchange, config.Increment, config.ExtendedMarketHours, localEndTime, config.Increment);
             }
 
             // define market hours and user filters to incoming data
