@@ -103,6 +103,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             exchange.Start();
 
+            Thread.Sleep(1);
+
             Thread.Sleep(25);
 
             exchange.Stop();
@@ -192,8 +194,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataQueueHandler = new FuncDataQueueHandler(q =>
             {
                 BaseData data;
+                int count = 0;
                 var list = new List<BaseData>();
-                while (dataQueue.TryDequeue(out data)) list.Add(data);
+                while (++count < 10 && dataQueue.TryDequeue(out data)) list.Add(data);
                 return list;
             });
             var exchange = new BaseDataExchange();
