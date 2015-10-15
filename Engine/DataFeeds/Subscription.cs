@@ -95,33 +95,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public DateTime UtcEndTime { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Subscription"/> class
-        /// </summary>
-        /// <param name="security">The security this subscription is for</param>
-        /// <param name="enumerator">The subscription's data source</param>
-        /// <param name="timeZoneOffsetProvider">The offset provider used to convert data local times to utc</param>
-        /// <param name="utcStartTime">The start time of the subscription</param>
-        /// <param name="utcEndTime">The end time of the subscription</param>
-        /// <param name="isUserDefined">True if the user explicitly defined this subscription, false otherwise</param>
-        public Subscription(Security security,
-            IEnumerator<BaseData> enumerator,
-            TimeZoneOffsetProvider timeZoneOffsetProvider,
-            DateTime utcStartTime,
-            DateTime utcEndTime,
-            bool isUserDefined)
-        {
-            Security = security;
-            _enumerator = enumerator;
-            IsUserDefined = isUserDefined;
-            IsUniverseSelectionSubscription = false;
-            Configuration = security.SubscriptionDataConfig;
-            OffsetProvider = timeZoneOffsetProvider;
-
-            UtcStartTime = utcStartTime;
-            UtcEndTime = utcEndTime;
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="Subscription"/> class with a universe
         /// </summary>
         /// <param name="universe">Specified for universe subscriptions</param>
@@ -130,18 +103,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="timeZoneOffsetProvider">The offset provider used to convert data local times to utc</param>
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
+        /// <param name="isUserDefined">True if the user explicitly defined this subscription, false otherwise</param>
+        /// <param name="isUniverseSelectionSubscription">True if this is a subscription for universe selection,
+        /// that is, the configuration is used to produce the used to perform universe selection, false for a
+        /// normal data subscription, i.e, SPY</param>
         public Subscription(IUniverse universe,
             Security security,
             IEnumerator<BaseData> enumerator,
             TimeZoneOffsetProvider timeZoneOffsetProvider,
             DateTime utcStartTime,
-            DateTime utcEndTime)
+            DateTime utcEndTime,
+            bool isUserDefined,
+            bool isUniverseSelectionSubscription)
         {
             Universe = universe;
             Security = security;
             _enumerator = enumerator;
-            IsUserDefined = false;
-            IsUniverseSelectionSubscription = true;
+            IsUserDefined = isUserDefined;
+            IsUniverseSelectionSubscription = isUniverseSelectionSubscription;
             Configuration = security.SubscriptionDataConfig;
             OffsetProvider = timeZoneOffsetProvider;
 
