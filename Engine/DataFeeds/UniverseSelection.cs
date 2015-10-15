@@ -54,8 +54,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// the data produced for selection</param>
         public SecurityChanges ApplyUniverseSelection(UniverseSelectionEventArgs args)
         {
+            var settings = args.Universe.SubscriptionSettings;
+
             var limit = 1000; //daily/hourly limit
-            var resolution = _algorithm.UniverseSettings.Resolution;
+            var resolution = settings.Resolution;
             switch (resolution)
             {
                 case Resolution.Tick:
@@ -126,8 +128,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _dataFeed.RemoveSubscription(subscription.Security);
                 }
             }
-
-            var settings = _algorithm.UniverseSettings;
 
             // find new selections and add them to the algorithm
             foreach (var sid in selectedSubscriptions)
