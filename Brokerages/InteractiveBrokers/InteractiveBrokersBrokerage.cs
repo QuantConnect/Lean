@@ -716,7 +716,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 _disconnected1100Fired = true;
 
                 // wait a minute and see if we've been reconnected
-                Task.Delay(TimeSpan.FromMinutes(1)).ContinueWith(task => TryWaitForReconnect());
+                Task.Delay(TimeSpan.FromMinutes(15)).ContinueWith(task => TryWaitForReconnect());
             }
             else if ((int) e.ErrorCode == 1102)
             {
