@@ -818,8 +818,6 @@ namespace QuantConnect.Algorithm
         {
             try
             {
-                if (_liveMode) return;
-
                 var end = new DateTime(year, month, day);
 
                 // we want the end date to be just before the next day (last moment of the day)
@@ -849,8 +847,11 @@ namespace QuantConnect.Algorithm
         /// <param name="start">Datetime Start date for backtest</param>
         /// <remarks>Must be less than end date and within data available</remarks>
         /// <seealso cref="SetStartDate(DateTime)"/>
-        public void SetStartDate(DateTime start) 
-        { 
+        public void SetStartDate(DateTime start)
+        {
+            // no need to set this value in live mode, will be set using the current time.
+            if (_liveMode) return;
+
             //Validate the start date:
             //1. Check range;
             if (start < (new DateTime(1900, 01, 01)))
@@ -892,8 +893,11 @@ namespace QuantConnect.Algorithm
         /// <param name="end">Datetime value for end date</param>
         /// <remarks>Must be greater than the start date</remarks>
         /// <seealso cref="SetEndDate(DateTime)"/>
-        public void SetEndDate(DateTime end) 
-        { 
+        public void SetEndDate(DateTime end)
+        {
+            // no need to set this value in live mode, will be set using the current time.
+            if (_liveMode) return;
+
             //Validate:
             //1. Check Range:
             if (end > DateTime.Now.Date.AddDays(-1)) 
