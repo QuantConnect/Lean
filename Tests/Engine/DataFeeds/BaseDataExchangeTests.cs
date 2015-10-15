@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsFalse(firedHandler);
         }
 
-        [Test]
+        [Test, Category("TravisExclude")]
         public void EndsQueueConsumption()
         {
             var dataQueue = new ConcurrentQueue<BaseData>();
