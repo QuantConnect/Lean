@@ -22,6 +22,7 @@ using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
 using Ionic.Zip;
+using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using ZipEntry = ICSharpCode.SharpZipLib.Zip.ZipEntry;
 using ZipInputStream = ICSharpCode.SharpZipLib.Zip.ZipInputStream;
@@ -589,17 +590,19 @@ namespace QuantConnect
         /// <summary>
         /// Creates the entry name for a QC zip data file
         /// </summary>
-        public static string CreateZipEntryName(string symbol, SecurityType securityType, DateTime date, Resolution resolution)
+        public static string CreateZipEntryName(string symbol, SecurityType securityType, DateTime date, Resolution resolution, TickType dataType = TickType.Trade)
         {
+            symbol = symbol.ToLower();
+
             if (resolution == Resolution.Hour || resolution == Resolution.Daily)
             {
                 return symbol + ".csv";
             }
-            if (securityType == SecurityType.Forex)
-            {
-                return String.Format("{0}_{1}_{2}_quote.csv", date.ToString(DateFormat.EightCharacter), symbol.ToLower(), resolution.ToString().ToLower());
-            }
-            return String.Format("{0}_{1}_{2}_trade.csv", date.ToString(DateFormat.EightCharacter), symbol.ToLower(), resolution.ToString().ToLower());
+
+            //All fx is quote data.
+            if (securityType == SecurityType.Forex) dataType = TickType.Quote;
+
+            return String.Format("{0}_{1}_{2}_{3}.csv", date.ToString(DateFormat.EightCharacter), symbol, resolution.ToString().ToLower(), dataType.ToString().ToLower());
         }
 
         /// <summary>

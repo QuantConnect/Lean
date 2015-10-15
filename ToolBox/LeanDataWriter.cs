@@ -17,9 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
@@ -31,10 +28,10 @@ namespace QuantConnect.ToolBox
     /// </summary>
     public class LeanDataWriter
     {
-        private TickType _dataType;
         private readonly Symbol _symbol;
         private readonly string _market;
         private readonly string _dataDirectory;
+        private readonly TickType _dataType;
         private readonly Resolution _resolution;
         private readonly SecurityType _securityType;
         
@@ -117,16 +114,20 @@ namespace QuantConnect.ToolBox
         /// <summary>
         /// Write this file to disk
         /// </summary>
-        /// <param name="output"></param>
-        /// <param name="file"></param>
-        /// <param name="time"></param>
-        private void WriteFile(string output, string file, DateTime time)
+        private void WriteFile(string data, string filename, DateTime time)
         {
-            file = file.TrimEnd();
-            if (File.Exists(output)) Log.Trace("LeanDataWriter.Write(): Note - overwrote existing file.");
-            Directory.CreateDirectory(output);
-            Compression.Zip(file, output, Compression.CreateZipEntryName(_symbol, _securityType, time, _resolution));
-            Log.Trace("LeanDataWriter.Write(): Created " + output);
+            filename = filename.TrimEnd();
+            if (File.Exists(data))
+            {
+                File.Delete(data);
+                Log.Trace("LeanDataWriter.Write(): Existing deleted: " + data);
+            }
+            //Create the directory if it doesnt exist
+            Directory.CreateDirectory(Directory.GetDirectoryRoot(data));
+
+            //Write out this data string to a zip file.
+            Compression.Zip(filename, data, Compression.CreateZipEntryName(_symbol, _securityType, time, _resolution, _dataType));
+            Log.Trace("LeanDataWriter.Write(): Created: " + data);
         }
 
         /// <summary>
