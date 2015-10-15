@@ -883,7 +883,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            var holdings = GetPositions().Select(ConvertHolding).ToList();
+            var holdings = GetPositions().Select(ConvertHolding).Where(x => x.Quantity != 0).ToList();
             var symbols = holdings.Select(x => x.Symbol).ToList();
             var quotes = GetQuotes(symbols).ToDictionary(x => x.Symbol);
             foreach (var holding in holdings)
