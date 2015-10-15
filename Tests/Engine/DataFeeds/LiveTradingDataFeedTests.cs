@@ -101,9 +101,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void PerformanceBenchmark()
         {
-            var algorithm = new AlgorithmStub(
-                equities: Enumerable.Range(0, 35).Select(x => "E"+x.ToString()).ToList(),
-                forex: Enumerable.Range(0, 25).Select(x => ("F"+x.ToString()).PadRight(6, '0')).ToList()
+            var symbolCount = 600;
+            var algorithm = new AlgorithmStub(Resolution.Tick,
+                equities: Enumerable.Range(0, symbolCount).Select(x => "E"+x.ToString()).ToList()
                 );
 
             var securitiesCount = algorithm.Securities.Count;
@@ -130,6 +130,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Console.WriteLine("Total ticks: " + count.Value);
             Console.WriteLine("Elapsed time: " + stopwatch.Elapsed);
             Console.WriteLine("Ticks/sec: " + (count.Value/stopwatch.Elapsed.TotalSeconds));
+            Console.WriteLine("Ticks/sec/symbol: " + (count.Value/stopwatch.Elapsed.TotalSeconds)/symbolCount);
         }
 
         class Count

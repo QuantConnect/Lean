@@ -818,6 +818,8 @@ namespace QuantConnect.Algorithm
         {
             try
             {
+                if (_liveMode) return;
+
                 var end = new DateTime(year, month, day);
 
                 // we want the end date to be just before the next day (last moment of the day)
@@ -947,6 +949,8 @@ namespace QuantConnect.Algorithm
             if (!_locked)
             {
                 _liveMode = live;
+                _startDate = DateTime.Today;
+                _endDate = QuantConnect.Time.EndOfTime;
                 Notify = new NotificationManager(live);
                 TradeBuilder.SetLiveMode(live);
             }
@@ -968,7 +972,8 @@ namespace QuantConnect.Algorithm
         /// <param name="coarse">Defines an initial coarse selection</param>
         public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarse)
         {
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), SecurityType.Equity, "qc-universe-coarse-usa", Resolution.Daily, Market.USA, TimeZones.NewYork, false, false, true);
+            var symbol = CoarseFundamental.CreateUniverseSymbol("usa");
+            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), SecurityType.Equity, symbol, Resolution.Daily, Market.USA, TimeZones.NewYork, false, false, true);
             SetUniverse(new FuncUniverse(config, UniverseSettings, selectionData => coarse(selectionData.OfType<CoarseFundamental>())));
         }
 

@@ -115,5 +115,15 @@ namespace QuantConnect.Data.UniverseSelection
                 DataType = MarketDataType.Auxiliary
             };
         }
+
+        /// <summary>
+        /// Creates the symbol used for coarse fundamental data
+        /// </summary>
+        /// <param name="market">The market</param>
+        /// <returns>A coarse universe symbol for the specified market</returns>
+        public static Symbol CreateUniverseSymbol(string market)
+        {
+            return new Symbol("qc-universe-coarse-" + market.ToLower());
+        }
     }
 }

@@ -147,7 +147,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     false,
                     false);
 
-                additions.Add(security);;
+                additions.Add(security);
 
                 // add the new subscriptions to the data feed -- TODO : this conversion keeps the behavior the same but stinks like a bug!
                 _dataFeed.AddSubscription(security, args.DateTimeUtc.ConvertFromUtc(args.Configuration.TimeZone), _algorithm.EndDate, false);

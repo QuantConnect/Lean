@@ -1052,23 +1052,27 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     foreach (var subscription in _dataFeed.Subscriptions)
                     {
-                        var price = subscription.RealtimePrice;
 
-                        //Sample Portfolio Value:
-                        var security = _algorithm.Securities[subscription.Configuration.Symbol];
-                        var last = security.GetLastData();
-                        if (last != null)
+                        Security security;
+                        if (_algorithm.Securities.TryGetValue(subscription.Configuration.Symbol, out security))
                         {
-                            last.Value = price;
-                        }
-                        else
-                        {
-                            // we haven't gotten data yet so just spoof a tick to push through the system to start with
-                            security.SetMarketPrice(new Tick(DateTime.Now, subscription.Configuration.Symbol, price, price));
-                        }
+                            //Sample Portfolio Value:
+                            var price = subscription.RealtimePrice;
 
-                        //Sample Asset Pricing:
-                        SampleAssetPrices(subscription.Configuration.Symbol, time, price);
+                            var last = security.GetLastData();
+                            if (last != null)
+                            {
+                                last.Value = price;
+                            }
+                            else
+                            {
+                                // we haven't gotten data yet so just spoof a tick to push through the system to start with
+                                security.SetMarketPrice(new Tick(DateTime.Now, subscription.Configuration.Symbol, price, price));
+                            }
+
+                            //Sample Asset Pricing:
+                            SampleAssetPrices(subscription.Configuration.Symbol, time, price);
+                        }
                     }
                 }
 

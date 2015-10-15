@@ -39,8 +39,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class LiveTradingDataFeed : IDataFeed
     {
-        private TimeSpan _emitRoundingInterval = Time.OneSecond;
-
         private SecurityChanges _changes = SecurityChanges.None;
 
         private LiveNodePacket _job;
@@ -142,13 +140,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="isUserDefinedSubscription">Set to true to prevent coarse universe selection from removing this subscription</param>
         public void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription)
         {
-            // reduce the emit interval for tick data to 1ms, this affects time
-            // rounding and thread sleep times
-            if (security.SubscriptionDataConfig.Resolution == Resolution.Tick)
-            {
-                _emitRoundingInterval = Time.OneMillisecond;
-            }
-
             // create and add the subscription to our collection
             var subscription = CreateSubscription(security, utcStartTime, utcEndTime, isUserDefinedSubscription);
             _subscriptions[new SymbolSecurityType(subscription)] = subscription;
@@ -174,17 +165,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="security">The security to remove subscriptions for</param>
         public void RemoveSubscription(Security security)
         {
-            // check to see if we should increase the emit interval
-            // when removing tick subscriptions
-            var isTick = security.SubscriptionDataConfig.Resolution == Resolution.Tick;
-            if (isTick && _subscriptions.All(x => x.Value.Configuration.Resolution != Resolution.Tick))
-            {
-                _emitRoundingInterval = Time.OneSecond;
-            }
-
             // remove the subscription from our collection
             Subscription subscription;
-            _subscriptions.TryRemove(new SymbolSecurityType(security), out subscription);
+            if (_subscriptions.TryRemove(new SymbolSecurityType(security), out subscription))
+            {
+                subscription.Dispose();
+            }
+
             _exchange.RemoveHandler(security.Symbol);
 
             // request to unsubscribe from the subscription
@@ -215,7 +202,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             try
             {
-                var lastTimeSliceEmitUtcTime = DateTime.MinValue;
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {
                     // perform sleeps to wake up on the second?
@@ -260,17 +246,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // emit on data or if we've elapsed a full second since last emit
                     if (data.Count != 0 || frontier >= nextEmit)
                     {
-                        var emitTime = frontier.RoundDown(_emitRoundingInterval);
+                        Bridge.Add(TimeSlice.Create(frontier, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes));
 
-                        // prevent emitting same time twice
-                        if (data.Count != 0 || emitTime > lastTimeSliceEmitUtcTime)
-                        {
-                            Bridge.Add(TimeSlice.Create(emitTime, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes));
-
-                            // force emitting every second
-                            nextEmit = emitTime.RoundDown(Time.OneSecond).Add(Time.OneSecond);
-                            lastTimeSliceEmitUtcTime = emitTime;
-                        }
+                        // force emitting every second
+                        nextEmit = frontier.RoundDown(Time.OneSecond).Add(Time.OneSecond);
                     }
 
                     // reset our security changes
@@ -442,6 +421,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IEnumerator<BaseData> enumerator;
             if (config.Type == typeof (CoarseFundamental))
             {
+                // since we're binding to the data queue exchange we'll need to let him
+                // know that we expect this data
+                _dataQueueHandler.Subscribe(_job, new Dictionary<SecurityType, List<string>>
+                {
+                    {config.SecurityType, new List<string>{config.Symbol}}
+                });
+
                 var enqueable = new EnqueableEnumerator<BaseData>();
                 _exchange.SetHandler(config.Symbol, data =>
                 {
