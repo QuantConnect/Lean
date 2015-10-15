@@ -53,7 +53,7 @@
     </Reference>
     <Reference Include="QuantConnect.Fxcm, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Fxcm\lib\QuantConnect.Fxcm.dll</HintPath>
+      <HintPath>Fxcm\QuantConnect.Fxcm.dll</HintPath>
     </Reference>
     <Reference Include="RestSharp, Version=105.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -130,69 +130,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.Core.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.Security.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.Text.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.Util.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.XML.API.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Fxcm\lib\IKVM.Runtime.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Fxcm\lib\QuantConnect.Fxcm.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.Corba.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.Management.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.Remoting.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.SwingAWT.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.Naming.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.Charsets.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.Media.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.Beans.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.Jdbc.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.Misc.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Fxcm\lib\IKVM.OpenJDK.Tools.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Include="Fxcm\QuantConnect.Fxcm.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
