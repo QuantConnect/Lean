@@ -74,12 +74,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool EndOfStream { get; private set; }
 
         /// <summary>
-        /// Gets true if the user explicitly defined this subscription, false if the
-        /// system generated through some mechanism (universe selection, currency feeds, ect)
-        /// </summary>
-        public bool IsUserDefined { get; private set; }
-
-        /// <summary>
         /// Gets true if this subscription is used in universe selection
         /// </summary>
         public bool IsUniverseSelectionSubscription { get; private set; }
@@ -103,7 +97,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="timeZoneOffsetProvider">The offset provider used to convert data local times to utc</param>
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
-        /// <param name="isUserDefined">True if the user explicitly defined this subscription, false otherwise</param>
         /// <param name="isUniverseSelectionSubscription">True if this is a subscription for universe selection,
         /// that is, the configuration is used to produce the used to perform universe selection, false for a
         /// normal data subscription, i.e, SPY</param>
@@ -113,13 +106,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             TimeZoneOffsetProvider timeZoneOffsetProvider,
             DateTime utcStartTime,
             DateTime utcEndTime,
-            bool isUserDefined,
             bool isUniverseSelectionSubscription)
         {
             Universe = universe;
             Security = security;
             _enumerator = enumerator;
-            IsUserDefined = isUserDefined;
             IsUniverseSelectionSubscription = isUniverseSelectionSubscription;
             Configuration = security.SubscriptionDataConfig;
             OffsetProvider = timeZoneOffsetProvider;

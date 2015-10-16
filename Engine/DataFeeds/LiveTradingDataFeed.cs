@@ -153,7 +153,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
         /// <param name="isUserDefinedSubscription">Set to true to prevent coarse universe selection from removing this subscription</param>
-        public void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription)
+        public bool AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription)
         {
             // create and add the subscription to our collection
             var subscription = CreateSubscription(security, utcStartTime, utcEndTime, isUserDefinedSubscription);
@@ -162,7 +162,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (subscription == null)
             {
                 Log.Trace("Unable to add subscription for: " + security.Symbol);
-                return;
+                return false;
             }
 
             _subscriptions[new SymbolSecurityType(subscription)] = subscription;
@@ -180,21 +180,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // keep track of security changes, we emit these to the algorithm
             // as notifications, used in universe selection
             _changes += SecurityChanges.Added(security);
+
+            return true;
         }
 
         /// <summary>
         /// Removes the subscription from the data feed, if it exists
         /// </summary>
         /// <param name="security">The security to remove subscriptions for</param>
-        public void RemoveSubscription(Security security)
+        public bool RemoveSubscription(Security security)
         {
-            // remove the subscription from our collection
-            Subscription subscription;
-            if (_subscriptions.TryRemove(new SymbolSecurityType(security), out subscription))
-            {
-                subscription.Dispose();
-            }
-
             _exchange.RemoveHandler(security.Symbol);
 
             // request to unsubscribe from the subscription
@@ -206,9 +201,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 });
             }
 
+            // remove the subscription from our collection
+            Subscription subscription;
+            if (_subscriptions.TryRemove(new SymbolSecurityType(security), out subscription))
+            {
+                subscription.Dispose();
+            }
+            else
+            {
+                return false;
+            }
+
             // keep track of security changes, we emit these to the algorithm
             // as notications, used in universe selection
             _changes += SecurityChanges.Removed(security);
+
+            return true;
         }
 
         /// <summary>
@@ -417,7 +425,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
 
 
-                subscription = new Subscription(null, security, enumerator, timeZoneOffsetProvider, utcStartTime, utcEndTime, isUserDefinedSubscription, false);
+                subscription = new Subscription(null, security, enumerator, timeZoneOffsetProvider, utcStartTime, utcEndTime, false);
             }
             catch (Exception err)
             {
@@ -496,7 +504,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // create the subscription
-            var subscription = new Subscription(universe, security, enumerator, new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, startTimeUtc, endTimeUtc), startTimeUtc, endTimeUtc, false, true);
+            var subscription = new Subscription(universe, security, enumerator, new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, startTimeUtc, endTimeUtc), startTimeUtc, endTimeUtc, true);
 
             return subscription;
         }

@@ -137,7 +137,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // finally apply exchange/user filters
             enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, enumerator, security, end);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, start, end);
-            var subscription = new Subscription(null, security, enumerator, timeZoneOffsetProvider, start, end, userDefined, false);
+            var subscription = new Subscription(null, security, enumerator, timeZoneOffsetProvider, start, end, false);
             return subscription;
         }
 
@@ -148,14 +148,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
         /// <param name="isUserDefinedSubscription">Set to true to prevent coarse universe selection from removing this subscription</param>
-        public void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription)
+        public bool AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription)
         {
             var subscription = CreateSubscription(_resultHandler, security, utcStartTime, utcEndTime, security.SubscriptionDataConfig.Resolution, isUserDefinedSubscription);
             if (subscription == null)
             {
                 // subscription will be null when there's no tradeable dates for the security between the requested times, so
                 // don't even try to load the data
-                return;
+                return false;
             }
             _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription),  subscription);
 
@@ -163,21 +163,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             PrimeSubscriptionPump(subscription, true);
 
             _changes += new SecurityChanges(new List<Security> {security}, new List<Security>());
+            return true;
         }
 
         /// <summary>
         /// Removes the subscription from the data feed, if it exists
         /// </summary>
         /// <param name="security">The security to remove subscriptions for</param>
-        public void RemoveSubscription(Security security)
+        public bool RemoveSubscription(Security security)
         {
             Subscription subscription;
             if (!_subscriptions.TryRemove(new SymbolSecurityType(security), out subscription))
             {
                 Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + security.Symbol);
+                return false;
             }
 
             _changes += new SecurityChanges(new List<Security>(), new List<Security> {security});
+            return true;
         }
 
         /// <summary>
@@ -366,7 +369,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // create the subscription
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, startTimeUtc, endTimeUtc);
-            var subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, false, true);
+            var subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, true);
 
             // only message the user if it's one of their universe types
             var messageUser = config.Type != typeof(CoarseFundamental);

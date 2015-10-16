@@ -75,13 +75,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
         /// <param name="isUserDefinedSubscription">Set to true to prevent coarse universe selection from removing this subscription</param>
-        void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription);
+        bool AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription);
 
         /// <summary>
         /// Removes the subscription from the data feed, if it exists
         /// </summary>
         /// <param name="security">The security to remove subscriptions for</param>
-        void RemoveSubscription(Security security);
+        bool RemoveSubscription(Security security);
 
         /// <summary>
         /// Primary entry point.
