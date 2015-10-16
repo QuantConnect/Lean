@@ -48,7 +48,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public int SleepInterval
         {
             get { return _sleepInterval; }
-            set { if (value > 0) _sleepInterval = value; }
+            set { if (value > -1) _sleepInterval = value; }
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // if we didn't handle anything on this past iteration, take a nap
-                    if (!handled)
+                    if (!handled && _sleepInterval != 0)
                     {
                         Thread.Sleep(_sleepInterval);
                     }
