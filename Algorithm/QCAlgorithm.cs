@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm
             _exchangeHoursProvider = SecurityExchangeHoursProvider.FromDataFolder();
 
             // universe selection
-            Universes = new List<IUniverse>();
+            Universes = new List<Universe>();
             UniverseSettings = new SubscriptionSettings(Resolution.Minute, 2m, true, false);
 
             // initialize our scheduler, this acts as a liason to the real time handler
@@ -314,7 +314,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets the current universe selector, or null if no selection is to be performed
         /// </summary>
-        public List<IUniverse> Universes
+        public List<Universe> Universes
         {
             get; private set;
         }
@@ -968,7 +968,7 @@ namespace QuantConnect.Algorithm
         /// Sets the current universe selector for the algorithm. This will be executed on day changes
         /// </summary>
         /// <param name="selector">The universe selector</param>
-        public void SetUniverse(IUniverse selector)
+        public void SetUniverse(Universe selector)
         {
             Universes.Clear();
             Universes.Add(selector);

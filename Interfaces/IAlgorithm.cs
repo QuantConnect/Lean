@@ -181,7 +181,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets the list of universes for the algorithm
         /// </summary>
-        List<IUniverse> Universes
+        List<Universe> Universes
         {
             get;
         }

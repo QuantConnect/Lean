@@ -19,26 +19,28 @@ using System.Collections.Generic;
 namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
-    /// Provides a functional implementation of <see cref="IUniverse"/>
+    /// Provides a functional implementation of <see cref="Universe"/>
     /// </summary>
-    public class FuncUniverse : IUniverse
+    public class FuncUniverse : Universe
     {
+        private readonly SubscriptionSettings _subscriptionSettings;
+        private readonly SubscriptionDataConfig _configuration;
         private readonly Func<IEnumerable<BaseData>, IEnumerable<Symbol>> _coarse;
 
         /// <summary>
         /// Gets the settings used for subscriptons added for this universe
         /// </summary>
-        public SubscriptionSettings SubscriptionSettings
+        public override SubscriptionSettings SubscriptionSettings
         {
-            get; private set;
+            get { return _subscriptionSettings; }
         }
 
         /// <summary>
         /// Gets the configuration used to get universe data
         /// </summary>
-        public SubscriptionDataConfig Configuration
+        public override SubscriptionDataConfig Configuration
         {
-            get; private set;
+            get { return _configuration; }
         }
 
         /// <summary>
@@ -50,8 +52,8 @@ namespace QuantConnect.Data.UniverseSelection
         public FuncUniverse(SubscriptionDataConfig configuration, SubscriptionSettings subscriptionSettings, Func<IEnumerable<BaseData>, IEnumerable<Symbol>> coarse)
         {
             _coarse = coarse;
-            Configuration = configuration;
-            SubscriptionSettings = subscriptionSettings;
+            _configuration = configuration;
+            _subscriptionSettings = subscriptionSettings;
         }
 
         /// <summary>
@@ -59,7 +61,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="data">The coarse fundamental data</param>
         /// <returns>The data that passes the filter</returns>
-        public IEnumerable<Symbol> SelectSymbols(IEnumerable<BaseData> data)
+        public override IEnumerable<Symbol> SelectSymbols(IEnumerable<BaseData> data)
         {
             return _coarse(data);
         }

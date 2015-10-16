@@ -34,7 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the universe for this subscription
         /// </summary>
-        public IUniverse Universe
+        public Universe Universe
         {
             get;
             private set;
@@ -107,7 +107,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="isUniverseSelectionSubscription">True if this is a subscription for universe selection,
         /// that is, the configuration is used to produce the used to perform universe selection, false for a
         /// normal data subscription, i.e, SPY</param>
-        public Subscription(IUniverse universe,
+        public Subscription(Universe universe,
             Security security,
             IEnumerator<BaseData> enumerator,
             TimeZoneOffsetProvider timeZoneOffsetProvider,

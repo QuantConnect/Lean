@@ -18,25 +18,31 @@ using System.Collections.Generic;
 namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
-    /// Provides a mechanism for an algorithm to select a universe of symbols to operate on
+    /// Provides a base class for all universes to derive from.
     /// </summary>
-    public interface IUniverse
+    public abstract class Universe
     {
         /// <summary>
         /// Gets the settings used for subscriptons added for this universe
         /// </summary>
-        SubscriptionSettings SubscriptionSettings { get; }
+        public abstract SubscriptionSettings SubscriptionSettings
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the configuration used to get universe data
         /// </summary>
-        SubscriptionDataConfig Configuration { get; }
+        public abstract SubscriptionDataConfig Configuration
+        {
+            get;
+        }
 
         /// <summary>
-        /// Performs an initial, coarse filter
+        /// Performs universe selection using the data specified
         /// </summary>
-        /// <param name="data">The coarse fundamental data</param>
+        /// <param name="data">The symbols to remain in the universe</param>
         /// <returns>The data that passes the filter</returns>
-        IEnumerable<Symbol> SelectSymbols(IEnumerable<BaseData> data);
+        public abstract IEnumerable<Symbol> SelectSymbols(IEnumerable<BaseData> data);
     }
 }

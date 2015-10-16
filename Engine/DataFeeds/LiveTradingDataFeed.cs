@@ -434,7 +434,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="startTimeUtc">The start time of the subscription in utc</param>
         /// <param name="endTimeUtc">The end time of the subscription in utc</param>
         protected virtual Subscription CreateUniverseSubscription(
-            IUniverse universe,
+            Universe universe,
             DateTime startTimeUtc,
             DateTime endTimeUtc
             )
@@ -508,7 +508,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="config">The configuration of the universe</param>
         /// <param name="dateTimeUtc">The current date time in UTC</param>
         /// <param name="data">The universe selection data to be operated on</param>
-        protected virtual void OnUniverseSelection(IUniverse universe, SubscriptionDataConfig config, DateTime dateTimeUtc, IReadOnlyList<BaseData> data)
+        protected virtual void OnUniverseSelection(Universe universe, SubscriptionDataConfig config, DateTime dateTimeUtc, IReadOnlyList<BaseData> data)
         {
             var handler = UniverseSelection;
             if (handler != null) handler(this, new UniverseSelectionEventArgs(universe, config, dateTimeUtc, data));
