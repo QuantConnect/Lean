@@ -97,7 +97,7 @@ namespace QuantConnect.Packets
         /// </summary>
         public static MarketToday Forex(DateTime date)
         {
-            if (Configuration.Config.Get("force-exchange-always-open") != "open")
+            if (Configuration.Config.Get("force-exchange-always-open") != "true")
             {
                 // closed all day onf saturdays
                 if (date.DayOfWeek == DayOfWeek.Saturday)
@@ -135,7 +135,7 @@ namespace QuantConnect.Packets
         /// </summary>
         public static MarketToday Equity(DateTime date)
         {
-            if (Configuration.Config.Get("force-exchange-always-open") != "open")
+            if (Configuration.Config.Get("force-exchange-always-open") != "true")
             {
                 if (date.DayOfWeek == DayOfWeek.Saturday
                  || date.DayOfWeek == DayOfWeek.Sunday
