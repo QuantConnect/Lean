@@ -13,8 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using NodaTime;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -27,6 +29,22 @@ namespace QuantConnect.Data.UniverseSelection
         private readonly ConcurrentDictionary<Symbol, Security> _securities;
 
         /// <summary>
+        /// Gets the security type of this universe
+        /// </summary>
+        public SecurityType SecurityType
+        {
+            get { return Configuration.SecurityType; }
+        }
+
+        /// <summary>
+        /// Gets the market of this universe
+        /// </summary>
+        public string Market
+        {
+            get { return Configuration.Market; }
+        }
+
+        /// <summary>
         /// Gets the settings used for subscriptons added for this universe
         /// </summary>
         public abstract SubscriptionSettings SubscriptionSettings
@@ -37,9 +55,9 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the configuration used to get universe data
         /// </summary>
-        public abstract SubscriptionDataConfig Configuration
+        public SubscriptionDataConfig Configuration
         {
-            get;
+            get; private set;
         }
 
         /// <summary>
@@ -54,9 +72,16 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Initializes a new instance of the <see cref="Universe"/> class
         /// </summary>
-        protected Universe()
+        /// <param name="type">The data type to use in selection</param>
+        /// <param name="securityType">The security type of the universe</param>
+        /// <param name="symbol">A unique symbol for the universe</param>
+        /// <param name="market">The market of the universe</param>
+        /// <param name="timeZone">The time zone of the universe</param>
+        /// <param name="isCustom">True for custom data universe, false otherwise</param>
+        protected Universe(Type type, SecurityType securityType, Symbol symbol, string market, DateTimeZone timeZone, bool isCustom)
         {
             _securities = new ConcurrentDictionary<Symbol, Security>();
+            Configuration = new SubscriptionDataConfig(type, securityType, symbol, Resolution.Tick, market, timeZone, false, false, true, isCustom);
         }
 
         /// <summary>

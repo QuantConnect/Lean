@@ -137,21 +137,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (existingSubscriptions.Contains(sid)) continue;
                 
                 // create the new security, the algorithm thread will add this at the appropriate time
-                var security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _hoursProvider,
-                    SecurityType.Equity,
-                    sid,
-                    settings.Resolution,
-                    args.Configuration.Market,
-                    settings.FillForward,
-                    settings.Leverage,
-                    settings.ExtendedMarketHours,
-                    false,
-                    false);
+                Security security;
+                if (!_algorithm.Securities.TryGetValue(sid, out security))
+                {
+                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _hoursProvider,
+                        SecurityType.Equity,
+                        sid,
+                        settings.Resolution,
+                        args.Configuration.Market,
+                        settings.FillForward,
+                        settings.Leverage,
+                        settings.ExtendedMarketHours,
+                        false,
+                        false);
+                }
 
                 additions.Add(security);
 
-                // add the new subscriptions to the data feed -- TODO : this conversion keeps the behavior the same but stinks like a bug!
-                if (_dataFeed.AddSubscription(security, args.DateTimeUtc.ConvertFromUtc(args.Configuration.TimeZone), _algorithm.EndDate, false))
+                // add the new subscriptions to the data feed
+                if (_dataFeed.AddSubscription(security, args.DateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone), false))
                 {
                     universe.AddMember(security);
                 }

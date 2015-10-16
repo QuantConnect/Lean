@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -46,5 +48,23 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug("Purchased Stock");
             }
         }
+
+        #region Overrides of QCAlgorithm
+
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            Console.WriteLine(Time + ": " + changes);
+        }
+
+        #region Overrides of QCAlgorithm
+
+        public override void OnEndOfAlgorithm()
+        {
+            Console.WriteLine(Time + ": EOA");
+        }
+
+        #endregion
+
+        #endregion
     }
 }

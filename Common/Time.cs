@@ -148,6 +148,21 @@ namespace QuantConnect
         {
             return DateTimeToUnixTimeStamp(DateTime.UtcNow);
         }
+        
+        /// <summary>
+        /// Returns the timespan with the larger value
+        /// </summary>
+        public static TimeSpan Max(TimeSpan one, TimeSpan two)
+        {
+            return TimeSpan.FromTicks(Math.Max(one.Ticks, two.Ticks));
+        }
+        /// <summary>
+        /// Returns the timespan with the smaller value
+        /// </summary>
+        public static TimeSpan Min(TimeSpan one, TimeSpan two)
+        {
+            return TimeSpan.FromTicks(Math.Min(one.Ticks, two.Ticks));
+        }
 
         /// <summary>
         /// Parse a standard YY MM DD date into a DateTime. Attempt common date formats 

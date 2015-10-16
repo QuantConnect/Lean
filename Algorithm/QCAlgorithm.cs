@@ -29,6 +29,7 @@ using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
+using SecurityTypeMarket = System.Tuple<QuantConnect.SecurityType, string>;
 
 namespace QuantConnect.Algorithm
 {
@@ -71,6 +72,9 @@ namespace QuantConnect.Algorithm
         // warmup resolution variables
         private TimeSpan? _warmupTimeSpan;
         private int? _warmupBarCount;
+
+        // user defined universes by security type
+        private readonly Dictionary<SecurityTypeMarket, UserDefinedUniverse> _userDefinedUniverses;
 
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
@@ -115,6 +119,7 @@ namespace QuantConnect.Algorithm
             // universe selection
             Universes = new List<Universe>();
             UniverseSettings = new SubscriptionSettings(Resolution.Minute, 2m, true, false);
+            _userDefinedUniverses = new Dictionary<SecurityTypeMarket, UserDefinedUniverse>();
 
             // initialize our scheduler, this acts as a liason to the real time handler
             Schedule = new ScheduleManager(Securities, TimeZone);
@@ -970,7 +975,8 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">The universe selector</param>
         public void SetUniverse(Universe selector)
         {
-            Universes.Clear();
+            // don't remove user defined universes
+            Universes.RemoveAll(x => x.GetType() != typeof(UserDefinedUniverse));
             Universes.Add(selector);
         }
 
@@ -1053,6 +1059,30 @@ namespace QuantConnect.Algorithm
 
                 //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
                 Securities.Add(security.Symbol, security);
+
+                // add this security to the user defined universe
+                UserDefinedUniverse universe;
+                var key = new SecurityTypeMarket(securityType, market);
+                if (_userDefinedUniverses.TryGetValue(key, out universe))
+                {
+                    universe.Add(symbol);
+                }
+                else
+                {
+                    // create a new universe, these subscription settings don't currently get used
+                    // since universe selection proper is never invoked on this type of universe
+                    var securityConfig = security.SubscriptionDataConfig;
+                    var universeSymbol = UserDefinedUniverse.CreateSymbol(securityConfig.SecurityType, securityConfig.Market);
+                    var uconfig = new SubscriptionDataConfig(securityConfig, symbol: universeSymbol, resolution: Resolution.Tick, isInternalFeed: true);
+                    universe = new UserDefinedUniverse(uconfig,
+                        new SubscriptionSettings(security.Resolution, security.Leverage, security.IsFillDataForward, security.IsExtendedMarketHours),
+                        TimeSpan.FromDays(10*365),
+                        new List<Symbol> {symbol}
+                        );
+                    _userDefinedUniverses[key] = universe;
+
+                    Universes.Add(universe);
+                }
             }
             catch (Exception err)
             {

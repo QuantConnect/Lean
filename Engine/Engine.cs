@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -256,6 +257,10 @@ namespace QuantConnect.Lean.Engine
                     algorithm.SetAlgorithmId(job.AlgorithmId);
                     algorithm.SetLiveMode(_liveMode);
                     algorithm.SetLocked();
+
+                    //Wire up the universe selection event handler before kicking off the data feed
+                    var universeSelection = new UniverseSelection(_algorithmHandlers.DataFeed, algorithm, _liveMode);
+                    _algorithmHandlers.DataFeed.UniverseSelection += (sender, args) => universeSelection.ApplyUniverseSelection(args);
 
                     //Load the associated handlers for data, transaction and realtime events:
                     _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results);

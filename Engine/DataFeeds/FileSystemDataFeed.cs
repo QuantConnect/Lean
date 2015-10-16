@@ -40,6 +40,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IAlgorithm _algorithm;
         private IResultHandler _resultHandler;
         private Resolution _fillForwardResolution;
+        private UniverseSubscriptionCreator _universeCreator;
         private SecurityChanges _changes = SecurityChanges.None;
         private ConcurrentDictionary<SymbolSecurityType, Subscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -81,6 +82,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _algorithm = algorithm;
             _resultHandler = resultHandler;
+            _universeCreator = new UniverseSubscriptionCreator(resultHandler);
             _subscriptions = new ConcurrentDictionary<SymbolSecurityType, Subscription>();
             _cancellationTokenSource = new CancellationTokenSource();
 
@@ -96,23 +98,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 .Min();
 
             // initialize the original user defined securities
-            foreach (var security in _algorithm.Securities.Values)
-            {
-                var subscription = CreateSubscription(resultHandler, security, algorithm.StartDate, algorithm.EndDate, _fillForwardResolution, true);
-                if (subscription != null)
-                {
-                    _subscriptions.AddOrUpdate(new SymbolSecurityType(security), subscription);
+            //foreach (var security in _algorithm.Securities.Values)
+            //{
+            //    var subscription = CreateSubscription(resultHandler, security, algorithm.StartDate, algorithm.EndDate, _fillForwardResolution, true);
+            //    if (subscription != null)
+            //    {
+            //        _subscriptions.AddOrUpdate(new SymbolSecurityType(security), subscription);
 
-                    // prime the pump, run method checks current before move next calls
-                    PrimeSubscriptionPump(subscription, true);
-                }
+            //        // prime the pump, run method checks current before move next calls
+            //        PrimeSubscriptionPump(subscription, true);
+            //    }
+            //}
+
+            // add each universe selection subscription to the feed
+            foreach (var universe in _algorithm.Universes)
+            {
+                var startTimeUtc = _algorithm.StartDate.ConvertToUtc(_algorithm.TimeZone);
+                var endTimeUtc = _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone);
+                AddUniverseSubscription(universe, startTimeUtc, endTimeUtc);
             }
         }
 
-        private Subscription CreateSubscription(IResultHandler resultHandler, Security security, DateTime start, DateTime end, Resolution fillForwardResolution, bool userDefined)
+        private Subscription CreateSubscription(IResultHandler resultHandler, Security security, DateTime startTimeUtc, DateTime endTimeUtc, Resolution fillForwardResolution, bool userDefined)
         {
             var config = security.SubscriptionDataConfig;
-            var tradeableDates = Time.EachTradeableDay(security, start.Date, end.Date);
+            var localStartTime = startTimeUtc.ConvertFromUtc(config.TimeZone);
+            var localEndTime = endTimeUtc.ConvertFromUtc(config.TimeZone);
+
+            var tradeableDates = Time.EachTradeableDay(security, localStartTime, localEndTime);
 
             // ReSharper disable once PossibleMultipleEnumeration
             if (!tradeableDates.Any())
@@ -125,19 +138,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // ReSharper disable once PossibleMultipleEnumeration
-            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, start, end, resultHandler, tradeableDates, false);
+            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, resultHandler, tradeableDates, false);
 
             // optionally apply fill forward logic, but never for tick data
             if (config.FillDataForward && config.Resolution != Resolution.Tick)
             {
-                enumerator = new FillForwardEnumerator(enumerator, security.Exchange, fillForwardResolution.ToTimeSpan(), 
-                    security.IsExtendedMarketHours, end, config.Resolution.ToTimeSpan());
+                enumerator = new FillForwardEnumerator(enumerator, security.Exchange, fillForwardResolution.ToTimeSpan(),
+                    security.IsExtendedMarketHours, localEndTime, config.Resolution.ToTimeSpan());
             }
 
             // finally apply exchange/user filters
-            enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, enumerator, security, end);
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, start, end);
-            var subscription = new Subscription(null, security, enumerator, timeZoneOffsetProvider, start, end, false);
+            enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, enumerator, security, localEndTime);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, startTimeUtc, endTimeUtc);
+            var subscription = new Subscription(null, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, false);
             return subscription;
         }
 
@@ -192,12 +205,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var frontier = DateTime.MaxValue;
             try
             {
-                // add each universe selection subscription to the feed
-                foreach (var universe in _algorithm.Universes)
-                {
-                    AddUniverseSubscription(universe, _algorithm.StartDate, _algorithm.EndDate);
-                }
-
                 // compute initial frontier time
                 frontier = GetInitialFrontierTime();
 
@@ -219,7 +226,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         if (subscription.EndOfStream)
                         {
-                            // skip subscriptions that are finished
+                            // remove finished subscriptions
+                            Subscription sub;
+                            _subscriptions.TryRemove(new SymbolSecurityType(subscription), out sub);
                             continue;
                         }
 
@@ -266,13 +275,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     if (earlyBirdTicks == long.MaxValue)
                     {
-                        // there's no more data to pull off, we're done
-                        break;
+                        if (_changes == SecurityChanges.None)
+                        {
+                            // there's no more data to pull off, we're done
+                            break;
+                        }
                     }
 
                     // enqueue our next time slice and set the frontier for the next
                     Bridge.Add(TimeSlice.Create(frontier, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes), _cancellationTokenSource.Token);
 
+                    if (frontier >= new DateTime(2014, 04, 08))
+                    {
+
+                    }
                     // never go backwards in time, so take the max between early birds and the current frontier
                     frontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);
                 }
@@ -351,28 +367,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             DateTime endTimeUtc
             )
         {
-            // grab the relevant exchange hours
-            SubscriptionDataConfig config = universe.Configuration;
-
-            var exchangeHours = SecurityExchangeHoursProvider.FromDataFolder()
-                .GetExchangeHours(config.Market, null, config.SecurityType);
-
-            // create a canonical security object
-            var security = new Security(exchangeHours, config, universe.SubscriptionSettings.Leverage);
-
-            var localStartTime = startTimeUtc.ConvertFromUtc(config.TimeZone);
-            var localEndTime = endTimeUtc.ConvertFromUtc(config.TimeZone);
-
-            // define our data enumerator
-            var tradeableDates = Time.EachTradeableDay(security, localStartTime, localEndTime);
-            var enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, tradeableDates, false);
-
-            // create the subscription
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, startTimeUtc, endTimeUtc);
-            var subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, true);
+            var subscription = _universeCreator.Create(universe, startTimeUtc, endTimeUtc);
 
             // only message the user if it's one of their universe types
-            var messageUser = config.Type != typeof(CoarseFundamental);
+            var messageUser = subscription.Configuration.Type != typeof(CoarseFundamental);
             PrimeSubscriptionPump(subscription, messageUser);
             _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription), subscription);
         }
@@ -414,7 +412,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected virtual void OnUniverseSelection(Universe universe, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
         {
             var handler = UniverseSelection;
-            if (handler != null) handler(this, new UniverseSelectionEventArgs(universe, configuration, dateTimeUtc, data));
+            var eventArgs = new UniverseSelectionEventArgs(universe, configuration, dateTimeUtc, data);
+            if (handler != null) handler(this, eventArgs);
         }
     }
 }
