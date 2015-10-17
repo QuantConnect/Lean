@@ -32,7 +32,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.AlgoSeekOptionsConverter.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.GoogleDownloader.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ionic.Zip">
@@ -61,6 +61,7 @@
     <Compile Include="DukascopyDownloader\ConfigSettings.cs" />
     <Compile Include="DukascopyDownloader\DukascopyTick.cs" />
     <Compile Include="DukascopyDownloader\Program.cs" />
+    <Compile Include="GoogleDownloader\GoogleDataDownloader.cs" />
     <Compile Include="GoogleDownloader\Program.cs" />
     <Compile Include="InstrumentType.cs" />
     <Compile Include="LeanBar.cs" />
