@@ -63,7 +63,6 @@
     <Compile Include="DukascopyDownloader\Program.cs" />
     <Compile Include="GoogleDownloader\GoogleDataDownloader.cs" />
     <Compile Include="GoogleDownloader\Program.cs" />
-    <Compile Include="InstrumentType.cs" />
     <Compile Include="LeanBar.cs" />
     <Compile Include="LeanDataWriter.cs" />
     <Compile Include="LeanInstrument.cs" />
