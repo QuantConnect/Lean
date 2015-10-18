@@ -33,7 +33,7 @@ namespace QuantConnect.ToolBox
         /// <summary>
         /// The instrument type
         /// </summary>
-        public InstrumentType Type { get; set; }
+        public SecurityType Type { get; set; }
 
         /// <summary>
         /// The point value

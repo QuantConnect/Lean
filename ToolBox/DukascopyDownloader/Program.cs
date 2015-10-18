@@ -103,7 +103,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                     {
                         Symbol = tokens[0],
                         Name = tokens[1],
-                        Type = (InstrumentType)Enum.Parse(typeof(InstrumentType), tokens[2]),
+                        Type = (SecurityType)Enum.Parse(typeof(SecurityType), tokens[2]),
                         PointValue = Convert.ToInt32(tokens[3])
                     });
                 }
