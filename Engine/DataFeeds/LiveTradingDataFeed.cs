@@ -97,6 +97,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 throw new ArgumentException("The LiveTradingDataFeed requires a LiveNodePacket.");
             }
 
+            if (algorithm.SubscriptionManager.Subscriptions.Count == 0 && algorithm.Universes.IsNullOrEmpty())
+            {
+                throw new Exception("No subscriptions registered and no universe defined.");
+            }
+
             _cancellationTokenSource = new CancellationTokenSource();
 
             _algorithm = algorithm;
@@ -117,12 +122,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _exchange.Start();
             _customExchange.Start();
 
+            // verify we have something to start the data feed with
+            if (algorithm.SubscriptionManager.Subscriptions.Count(x => !x.IsInternalFeed) == 0)
+            {
+                if (algorithm.Universes.Count == 0)
+                {
+                    throw new Exception("Unable to initalize data feed, requires at least one non-internal subscription or universe.");
+                }
+            }
+
             // find the minimum resolution, ignoring ticks
             _fillForwardResolution = algorithm.SubscriptionManager.Subscriptions
-                .Where(x => x.Resolution != Resolution.Tick)
+                .Where(x => !x.IsInternalFeed)
                 .Select(x => x.Resolution)
                 .Union(algorithm.Universes.Select(x => x.SubscriptionSettings.Resolution))
-                .DefaultIfEmpty(algorithm.UniverseSettings.Resolution)
+                .Where(x => x != Resolution.Tick)
                 .Min();
 
             // add user defined subscriptions

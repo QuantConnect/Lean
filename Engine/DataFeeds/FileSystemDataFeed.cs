@@ -89,10 +89,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // find the minimum resolution, ignoring ticks
             _fillForwardResolution = algorithm.SubscriptionManager.Subscriptions
-                .Where(x => x.Resolution != Resolution.Tick)
+                .Where(x => !x.IsInternalFeed)
                 .Select(x => x.Resolution)
                 .Union(algorithm.Universes.Select(x => x.SubscriptionSettings.Resolution))
-                .DefaultIfEmpty(algorithm.UniverseSettings.Resolution)
+                .Where(x => x != Resolution.Tick)
                 .Min();
 
             // initialize the original user defined securities
