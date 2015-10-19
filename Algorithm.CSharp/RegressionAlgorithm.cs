@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Data.Market;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -67,5 +68,14 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
         }
+
+        #region Overrides of QCAlgorithm
+
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            Console.WriteLine(Time + ": " + orderEvent);
+        }
+
+        #endregion
     }
 }

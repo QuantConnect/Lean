@@ -39,7 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private IAlgorithm _algorithm;
         private IResultHandler _resultHandler;
-        private Resolution _fillForwardResolution;
+        private Ref<TimeSpan> _fillForwardResolution;
         private UniverseSubscriptionCreator _universeCreator;
         private SecurityChanges _changes = SecurityChanges.None;
         private ConcurrentDictionary<SymbolSecurityType, Subscription> _subscriptions;
@@ -89,26 +89,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IsActive = true;
             Bridge = new BusyBlockingCollection<TimeSlice>(100);
 
+            var ffres = Time.OneSecond;
+            _fillForwardResolution = new Ref<TimeSpan>(() => ffres, res => ffres = res);
+
             // find the minimum resolution, ignoring ticks
-            _fillForwardResolution = algorithm.SubscriptionManager.Subscriptions
-                .Where(x => !x.IsInternalFeed)
-                .Select(x => x.Resolution)
-                .Union(algorithm.Universes.Select(x => x.SubscriptionSettings.Resolution))
-                .Where(x => x != Resolution.Tick)
-                .Min();
-
-            // initialize the original user defined securities
-            //foreach (var security in _algorithm.Securities.Values)
-            //{
-            //    var subscription = CreateSubscription(resultHandler, security, algorithm.StartDate, algorithm.EndDate, _fillForwardResolution, true);
-            //    if (subscription != null)
-            //    {
-            //        _subscriptions.AddOrUpdate(new SymbolSecurityType(security), subscription);
-
-            //        // prime the pump, run method checks current before move next calls
-            //        PrimeSubscriptionPump(subscription, true);
-            //    }
-            //}
+            ffres = ResolveFillForwardResolution(algorithm);
 
             // add each universe selection subscription to the feed
             foreach (var universe in _algorithm.Universes)
@@ -119,7 +104,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        private Subscription CreateSubscription(IResultHandler resultHandler, Security security, DateTime startTimeUtc, DateTime endTimeUtc, Resolution fillForwardResolution, bool userDefined)
+        private Subscription CreateSubscription(IResultHandler resultHandler, Security security, DateTime startTimeUtc, DateTime endTimeUtc, IReadOnlyRef<TimeSpan> fillForwardResolution, bool userDefined)
         {
             var config = security.SubscriptionDataConfig;
             var localStartTime = startTimeUtc.ConvertFromUtc(config.TimeZone);
@@ -143,7 +128,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // optionally apply fill forward logic, but never for tick data
             if (config.FillDataForward && config.Resolution != Resolution.Tick)
             {
-                enumerator = new FillForwardEnumerator(enumerator, security.Exchange, fillForwardResolution.ToTimeSpan(),
+                enumerator = new FillForwardEnumerator(enumerator, security.Exchange, fillForwardResolution,
                     security.IsExtendedMarketHours, localEndTime, config.Resolution.ToTimeSpan());
             }
 
@@ -163,7 +148,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="isUserDefinedSubscription">Set to true to prevent coarse universe selection from removing this subscription</param>
         public bool AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription)
         {
-            var subscription = CreateSubscription(_resultHandler, security, utcStartTime, utcEndTime, security.SubscriptionDataConfig.Resolution, isUserDefinedSubscription);
+            var subscription = CreateSubscription(_resultHandler, security, utcStartTime, utcEndTime, _fillForwardResolution, isUserDefinedSubscription);
             if (subscription == null)
             {
                 // subscription will be null when there's no tradeable dates for the security between the requested times, so
@@ -175,7 +160,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // prime the pump, run method checks current before move next calls
             PrimeSubscriptionPump(subscription, true);
 
-            _changes += new SecurityChanges(new List<Security> {security}, new List<Security>());
+            _changes += SecurityChanges.Added(security);
+
+            _fillForwardResolution.Value = ResolveFillForwardResolution(_algorithm);
+
             return true;
         }
 
@@ -192,7 +180,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            _changes += new SecurityChanges(new List<Security>(), new List<Security> {security});
+            _changes += SecurityChanges.Removed(security);
+
+            _fillForwardResolution.Value = ResolveFillForwardResolution(_algorithm);
             return true;
         }
 
@@ -414,6 +404,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var handler = UniverseSelection;
             var eventArgs = new UniverseSelectionEventArgs(universe, configuration, dateTimeUtc, data);
             if (handler != null) handler(this, eventArgs);
+        }
+
+
+        private static TimeSpan ResolveFillForwardResolution(IAlgorithm algorithm)
+        {
+            return algorithm.SubscriptionManager.Subscriptions
+                .Where(x => !x.IsInternalFeed)
+                .Select(x => x.Resolution)
+                .Union(algorithm.Universes.Select(x => x.SubscriptionSettings.Resolution))
+                .Where(x => x != Resolution.Tick)
+                .Min().ToTimeSpan();
         }
     }
 }

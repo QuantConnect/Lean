@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -38,9 +39,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly bool _isExtendedMarketHours;
         private readonly DateTime _subscriptionEndTime;
         private readonly IEnumerator<BaseData> _enumerator;
+        private readonly IReadOnlyRef<TimeSpan> _fillForwardResolution;
 
-        protected readonly TimeSpan FillForwardResolution;
         protected readonly SecurityExchange Exchange;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FillForwardEnumerator"/> class that accepts
+        /// a reference to the fill forward resolution, useful if the fill forward resolution is dynamic
+        /// and changing as the enumeration progresses
+        /// </summary>
+        /// <param name="enumerator">The source enumerator to be filled forward</param>
+        /// <param name="exchange">The exchange used to determine when to insert fill forward data</param>
+        /// <param name="fillForwardResolution">The resolution we'd like to receive data on</param>
+        /// <param name="isExtendedMarketHours">True to use the exchange's extended market hours, false to use the regular market hours</param>
+        /// <param name="subscriptionEndTime">The end time of the subscrition, once passing this date the enumerator will stop</param>
+        /// <param name="dataResolution">The source enumerator's data resolution</param>
+        public FillForwardEnumerator(IEnumerator<BaseData> enumerator,
+            SecurityExchange exchange,
+            IReadOnlyRef<TimeSpan> fillForwardResolution,
+            bool isExtendedMarketHours,
+            DateTime subscriptionEndTime,
+            TimeSpan dataResolution
+            )
+        {
+            _subscriptionEndTime = subscriptionEndTime;
+            Exchange = exchange;
+            _enumerator = enumerator;
+            _dataResolution = dataResolution;
+            _fillForwardResolution = fillForwardResolution;
+            _isExtendedMarketHours = isExtendedMarketHours;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FillForwardEnumerator"/> class
@@ -51,11 +79,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="isExtendedMarketHours">True to use the exchange's extended market hours, false to use the regular market hours</param>
         /// <param name="subscriptionEndTime">The end time of the subscrition, once passing this date the enumerator will stop</param>
         /// <param name="dataResolution">The source enumerator's data resolution</param>
-        public FillForwardEnumerator(IEnumerator<BaseData> enumerator, 
-            SecurityExchange exchange, 
-            TimeSpan fillForwardResolution, 
-            bool isExtendedMarketHours, 
-            DateTime subscriptionEndTime, 
+        public FillForwardEnumerator(IEnumerator<BaseData> enumerator,
+            SecurityExchange exchange,
+            TimeSpan fillForwardResolution,
+            bool isExtendedMarketHours,
+            DateTime subscriptionEndTime,
             TimeSpan dataResolution
             )
         {
@@ -63,7 +91,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             Exchange = exchange;
             _enumerator = enumerator;
             _dataResolution = dataResolution;
-            FillForwardResolution = fillForwardResolution;
+            _fillForwardResolution = Ref.CreateReadOnly(() => fillForwardResolution);
             _isExtendedMarketHours = isExtendedMarketHours;
         }
 
@@ -139,7 +167,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     // we can fill forward the rest of this subscription if required
                     var endOfSubscription = (Current ?? _previous).Clone(true);
                     endOfSubscription.Time = _subscriptionEndTime.RoundDown(_dataResolution);
-                    if (RequiresFillForwardData(_previous, endOfSubscription, out fillForward))
+                    if (RequiresFillForwardData(_fillForwardResolution.Value, _previous, endOfSubscription, out fillForward))
                     {
                         // don't mark as filling forward so we come back into this block, subscription is done
                         //_isFillingForward = true;
@@ -181,7 +209,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
             
             _emittedAuxilliaryData = false;
-            if (RequiresFillForwardData(_previous, underlyingCurrent, out fillForward))
+            if (RequiresFillForwardData(_fillForwardResolution.Value, _previous, underlyingCurrent, out fillForward))
             {
                 // we require fill forward data because the _enumerator.Current is too far in future
                 _isFillingForward = true;
@@ -215,11 +243,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Determines whether or not fill forward is required, and if true, will produce the new fill forward data
         /// </summary>
+        /// <param name="fillForwardResolution"></param>
         /// <param name="previous">The last piece of data emitted by this enumerator</param>
         /// <param name="next">The next piece of data on the source enumerator</param>
         /// <param name="fillForward">When this function returns true, this will have a non-null value, null when the function returns false</param>
         /// <returns>True when a new fill forward piece of data was produced and should be emitted by this enumerator</returns>
-        protected virtual bool RequiresFillForwardData(BaseData previous, BaseData next, out BaseData fillForward)
+        protected virtual bool RequiresFillForwardData(TimeSpan fillForwardResolution, BaseData previous, BaseData next, out BaseData fillForward)
         {
             if (next.EndTime < previous.Time)
             {
@@ -227,24 +256,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             // check to see if the gap between previous and next warrants fill forward behavior
-            if (next.Time - previous.Time <= FillForwardResolution)
+            if (next.Time - previous.Time <= fillForwardResolution)
             {
                 fillForward = null;
                 return false;
             }
 
             // is the bar after previous in market hours?
-            var barAfterPreviousEndTime = previous.EndTime + FillForwardResolution;
+            var barAfterPreviousEndTime = previous.EndTime + fillForwardResolution;
             if (Exchange.IsOpenDuringBar(previous.EndTime, barAfterPreviousEndTime, _isExtendedMarketHours))
             {
                 // this is the normal case where we had a hole in the middle of the day
                 fillForward = previous.Clone(true);
-                fillForward.Time = (previous.Time + FillForwardResolution).RoundDown(FillForwardResolution);
+                fillForward.Time = (previous.Time + fillForwardResolution).RoundDown(fillForwardResolution);
                 return true;
             }
 
             // find the next fill forward time after the next market open
-            var nextFillForwardTime = Exchange.Hours.GetNextMarketOpen(previous.EndTime, _isExtendedMarketHours) + FillForwardResolution;
+            var nextFillForwardTime = Exchange.Hours.GetNextMarketOpen(previous.EndTime, _isExtendedMarketHours) + fillForwardResolution;
 
             if (_dataResolution == Time.OneDay)
             {
@@ -261,7 +290,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             {
                 // if next is still in the future then we need to emit a fill forward for market open
                 fillForward = previous.Clone(true);
-                fillForward.Time = (nextFillForwardTime - _dataResolution).RoundDown(FillForwardResolution);
+                fillForward.Time = (nextFillForwardTime - _dataResolution).RoundDown(fillForwardResolution);
                 return true;
             }
 

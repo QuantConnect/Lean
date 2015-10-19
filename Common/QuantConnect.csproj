@@ -306,6 +306,7 @@
     <Compile Include="Util\NullStringValueConverter.cs" />
     <Compile Include="Util\ObjectActivator.cs" />
     <Compile Include="Util\ReaderWriterLockSlimExtensions.cs" />
+    <Compile Include="Util\Ref.cs" />
     <Compile Include="Util\SingleValueListConverter.cs" />
     <Compile Include="Util\VersionHelper.cs" />
     <Compile Include="Util\XElementExtensions.cs" />

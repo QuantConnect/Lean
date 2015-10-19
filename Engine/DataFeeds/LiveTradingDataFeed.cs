@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -48,7 +49,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         // used to keep time constant during a time sync iteration
         private ManualTimeProvider _frontierTimeProvider;
 
-        private Resolution _fillForwardResolution;
+        private Ref<TimeSpan> _fillForwardResolution;
         private IResultHandler _resultHandler;
         private IDataQueueHandler _dataQueueHandler;
         private BaseDataExchange _exchange;
@@ -122,13 +123,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _exchange.Start();
             _customExchange.Start();
 
-            // find the minimum resolution, ignoring ticks
-            _fillForwardResolution = algorithm.SubscriptionManager.Subscriptions
-                .Where(x => !x.IsInternalFeed)
-                .Select(x => x.Resolution)
-                .Union(algorithm.Universes.Select(x => x.SubscriptionSettings.Resolution))
-                .Where(x => x != Resolution.Tick)
-                .Min();
+            // this value will be modified via calls to AddSubscription/RemoveSubscription
+            var ffres = Time.OneSecond;
+            _fillForwardResolution = new Ref<TimeSpan>(() => ffres, v => ffres = v);
+
+            ffres = ResolveFillForwardResolution(algorithm);
 
             // add user defined subscriptions
             var start = _timeProvider.GetUtcNow();
@@ -181,6 +180,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // as notifications, used in universe selection
             _changes += SecurityChanges.Added(security);
 
+            // update our fill forward resolution setting
+            var subscribedResolutions =
+                from s in Subscriptions
+                where s.Configuration.Resolution != Resolution.Tick
+                select s.Configuration.Resolution;
+
+            var universeResolutions =
+                from u in _algorithm.Universes
+                where u.SubscriptionSettings.Resolution != Resolution.Tick
+                select u.SubscriptionSettings.Resolution;
+
+            _fillForwardResolution.Value = subscribedResolutions
+                .Union(universeResolutions)
+                .DefaultIfEmpty(Resolution.Second)
+                .Min()
+                .ToTimeSpan();
+
             return true;
         }
 
@@ -215,6 +231,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // keep track of security changes, we emit these to the algorithm
             // as notications, used in universe selection
             _changes += SecurityChanges.Removed(security);
+
+            // update our fill forward resolution setting
+            var subscribedResolutions =
+                from s in Subscriptions
+                where s.Configuration.Resolution != Resolution.Tick
+                select s.Configuration.Resolution;
+
+            var universeResolutions =
+                from u in _algorithm.Universes
+                where u.SubscriptionSettings.Resolution != Resolution.Tick
+                select u.SubscriptionSettings.Resolution;
+
+            _fillForwardResolution.Value = subscribedResolutions
+                .Union(universeResolutions)
+                .DefaultIfEmpty(Resolution.Second)
+                .Min()
+                .ToTimeSpan();
 
             return true;
         }
@@ -414,7 +447,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (config.FillDataForward)
                 {
                     // TODO : Properly resolve fill forward resolution like in FileSystemDataFeed (make considerations for universe-only)
-                    enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, security.Exchange, _fillForwardResolution.ToTimeSpan(), config.ExtendedMarketHours, localEndTime, config.Increment);
+                    enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, security.Exchange, _fillForwardResolution, config.ExtendedMarketHours, localEndTime, config.Increment);
                 }
 
                 // define market hours and user filters to incoming data
@@ -542,6 +575,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (ticks == 0) Thread.Sleep(1);
                 }
             }
+        }
+
+        private static TimeSpan ResolveFillForwardResolution(IAlgorithm algorithm)
+        {
+            return algorithm.SubscriptionManager.Subscriptions
+                .Where(x => !x.IsInternalFeed)
+                .Select(x => x.Resolution)
+                .Union(algorithm.Universes.Select(x => x.SubscriptionSettings.Resolution))
+                .Where(x => x != Resolution.Tick)
+                .Min().ToTimeSpan();
         }
     }
 }
