@@ -122,15 +122,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _exchange.Start();
             _customExchange.Start();
 
-            // verify we have something to start the data feed with
-            if (algorithm.SubscriptionManager.Subscriptions.Count(x => !x.IsInternalFeed) == 0)
-            {
-                if (algorithm.Universes.Count == 0)
-                {
-                    throw new Exception("Unable to initalize data feed, requires at least one non-internal subscription or universe.");
-                }
-            }
-
             // find the minimum resolution, ignoring ticks
             _fillForwardResolution = algorithm.SubscriptionManager.Subscriptions
                 .Where(x => !x.IsInternalFeed)
