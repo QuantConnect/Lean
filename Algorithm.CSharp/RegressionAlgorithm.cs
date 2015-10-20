@@ -68,14 +68,5 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
         }
-
-        #region Overrides of QCAlgorithm
-
-        public override void OnOrderEvent(OrderEvent orderEvent)
-        {
-            Console.WriteLine(Time + ": " + orderEvent);
-        }
-
-        #endregion
     }
 }

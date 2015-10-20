@@ -110,7 +110,7 @@ namespace QuantConnect.Tests
                 {"Total Trades", "5433"},
                 {"Average Win", "0.00%"},
                 {"Average Loss", "0.00%"},
-                {"Compounding Annual Return", "-4.212%"},
+                {"Compounding Annual Return", "-3.886%"},
                 {"Drawdown", "0.100%"},
                 {"Expectancy", "-0.991"},
                 {"Net Profit", "-0.054%"},
