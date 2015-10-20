@@ -32,6 +32,12 @@ namespace QuantConnect
         public static readonly DateTime EndOfTime = new DateTime(2050, 12, 31);
 
         /// <summary>
+        /// Provides a value large enough that we won't hit the limit, while small enough
+        /// we can still do math against it without checking everywhere for <see cref="TimeSpan.MaxValue"/>
+        /// </summary>
+        public static readonly TimeSpan MaxTimeSpan = TimeSpan.FromDays(1000*365);
+
+        /// <summary>
         /// One Day TimeSpan Period Constant
         /// </summary>
         public static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
