@@ -32,7 +32,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.GoogleDownloader.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.DukascopyDownloader.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ionic.Zip">
@@ -57,8 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CoarseUniverseGenerator\Program.cs" />
-    <Compile Include="DukascopyDownloader\ConfigSettings.cs" />
-    <Compile Include="DukascopyDownloader\DukascopyTick.cs" />
+    <Compile Include="DukascopyDownloader\DukascopyDataDownloader.cs" />
     <Compile Include="DukascopyDownloader\Program.cs" />
     <Compile Include="GoogleDownloader\GoogleDataDownloader.cs" />
     <Compile Include="GoogleDownloader\Program.cs" />
@@ -84,9 +83,6 @@
   <ItemGroup>
     <None Include="CoarseUniverseGenerator\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="DukascopyDownloader\config.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="OandaDownloader\config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -117,7 +113,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="DukascopyDownloader\instruments.txt">
+    <None Include="instruments_dukascopy.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
