@@ -39,6 +39,11 @@ namespace QuantConnect.Util
         private readonly Func<T> _getter;
         private readonly Action<T> _setter;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Ref{T}"/> class
+        /// </summary>
+        /// <param name="getter">A function delegate to get the current value</param>
+        /// <param name="setter">A function delegate to set the current value</param>
         public Ref(Func<T> getter, Action<T> setter)
         {
             _getter = getter;

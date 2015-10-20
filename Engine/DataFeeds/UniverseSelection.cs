@@ -123,7 +123,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // so we can make direct edits to the security here
                     subscription.Security.Cache.Reset();
 
-                    if (_dataFeed.RemoveSubscription(subscription.Security))
+                    if (_dataFeed.RemoveSubscription(subscription))
                     {
                         universe.RemoveMember(subscription.Security);
                     }
@@ -155,7 +155,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 additions.Add(security);
 
                 // add the new subscriptions to the data feed
-                if (_dataFeed.AddSubscription(security, args.DateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone), false))
+                if (_dataFeed.AddSubscription(universe, security, args.DateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)))
                 {
                     universe.AddMember(security);
                 }

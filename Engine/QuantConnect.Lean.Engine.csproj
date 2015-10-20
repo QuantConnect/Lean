@@ -178,7 +178,6 @@
     <Compile Include="DataFeeds\Transport\RemoteFileSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\Transport\RestSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\UniverseSelection.cs" />
-    <Compile Include="DataFeeds\UniverseSubscriptionCreator.cs" />
     <Compile Include="HistoricalData\SubscriptionDataReaderHistoryProvider.cs" />
     <Compile Include="LeanEngineAlgorithmHandlers.cs" />
     <Compile Include="LeanEngineSystemHandlers.cs" />

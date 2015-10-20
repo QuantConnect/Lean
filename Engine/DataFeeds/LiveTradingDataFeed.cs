@@ -125,19 +125,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // this value will be modified via calls to AddSubscription/RemoveSubscription
             var ffres = Time.OneSecond;
-            _fillForwardResolution = new Ref<TimeSpan>(() => ffres, v => ffres = v);
+            _fillForwardResolution = Ref.Create(() => ffres, v => ffres = v);
 
             ffres = ResolveFillForwardResolution(algorithm);
 
-            // add user defined subscriptions
+            // add subscriptions
             var start = _timeProvider.GetUtcNow();
-            foreach (var kvp in _algorithm.Securities.OrderBy(x => x.Key.ToString()))
-            {
-                var security = kvp.Value;
-                AddSubscription(security, start, Time.EndOfTime, true);
-            }
-
-            // add universe subscriptions
             foreach (var universe in _algorithm.Universes)
             {
                 var subscription = CreateUniverseSubscription(universe, start, Time.EndOfTime);
@@ -148,14 +141,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Adds a new subscription to provide data for the specified security.
         /// </summary>
+        /// <param name="universe">The universe the subscription is to be added to</param>
         /// <param name="security">The security to add a subscription for</param>
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
-        /// <param name="isUserDefinedSubscription">Set to true to prevent coarse universe selection from removing this subscription</param>
-        public bool AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription)
+        /// <returns>True if the subscription was created and added successfully, false otherwise</returns>
+        public bool AddSubscription(Universe universe, Security security, DateTime utcStartTime, DateTime utcEndTime)
         {
             // create and add the subscription to our collection
-            var subscription = CreateSubscription(security, utcStartTime, utcEndTime, isUserDefinedSubscription);
+            var subscription = CreateSubscription(security, utcStartTime, utcEndTime);
             
             // for some reason we couldn't create the subscription
             if (subscription == null)
@@ -203,9 +197,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Removes the subscription from the data feed, if it exists
         /// </summary>
-        /// <param name="security">The security to remove subscriptions for</param>
-        public bool RemoveSubscription(Security security)
+        /// <param name="subscription">The subscription to be removed</param>
+        /// <returns>True if the subscription was successfully removed, false otherwise</returns>
+        public bool RemoveSubscription(Subscription subscription)
         {
+            var security = subscription.Security;
+
             _exchange.RemoveHandler(security.Symbol);
 
             // request to unsubscribe from the subscription
@@ -218,10 +215,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // remove the subscription from our collection
-            Subscription subscription;
-            if (_subscriptions.TryRemove(new SymbolSecurityType(security), out subscription))
+            Subscription sub;
+            if (_subscriptions.TryRemove(new SymbolSecurityType(security), out sub))
             {
-                subscription.Dispose();
+                sub.Dispose();
             }
             else
             {
@@ -340,7 +337,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 try
                 {
-                    RemoveSubscription(kvp.Value.Security);
+                    RemoveSubscription(kvp.Value);
                 }
                 catch (Exception err)
                 {
@@ -381,9 +378,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="security">The security to create a subscription for</param>
         /// <param name="utcStartTime">The start time of the subscription in UTC</param>
         /// <param name="utcEndTime">The end time of the subscription in UTC</param>
-        /// <param name="isUserDefinedSubscription">True for subscriptions manually added by user via AddSecurity</param>
         /// <returns>A new subscription instance of the specified security</returns>
-        protected Subscription CreateSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription)
+        protected Subscription CreateSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime)
         {
             Subscription subscription = null;
             try
@@ -474,12 +470,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="universe">The universe to add a subscription for</param>
         /// <param name="startTimeUtc">The start time of the subscription in utc</param>
         /// <param name="endTimeUtc">The end time of the subscription in utc</param>
-        protected virtual Subscription CreateUniverseSubscription(
-            Universe universe,
-            DateTime startTimeUtc,
-            DateTime endTimeUtc
-            )
+        protected virtual Subscription CreateUniverseSubscription(Universe universe, DateTime startTimeUtc, DateTime endTimeUtc)
         {
+            // TODO : Consider moving the creating of universe subscriptions to a separate, testable class
+
             // grab the relevant exchange hours
             var config = universe.Configuration;
 
@@ -552,7 +546,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected virtual void OnUniverseSelection(Universe universe, SubscriptionDataConfig config, DateTime dateTimeUtc, IReadOnlyList<BaseData> data)
         {
             var handler = UniverseSelection;
-            if (handler != null) handler(this, new UniverseSelectionEventArgs(universe, config, dateTimeUtc, data));
+            var eventArgs = new UniverseSelectionEventArgs(universe, config, dateTimeUtc, data);
+            if (handler != null) handler(this, eventArgs);
         }
 
         /// <summary>
