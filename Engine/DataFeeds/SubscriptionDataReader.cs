@@ -306,6 +306,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             while (_subscriptionFactoryEnumerator != null);
 
+            if (_isLiveMode)
+            {
+                Current = null;
+                return true;
+            }
+
             _endOfStream = true;
             return false;
         }
@@ -333,7 +339,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // called on date changes, never return null for live mode, we'll always
                 // just keep trying to refresh the subscription
                 DateTime date;
-                if (!TryGetNextDate(out date) && !_isLiveMode)
+                if (!TryGetNextDate(out date))
                 {
                     // if we run out of dates then we're finished with this subscription
                     return null;

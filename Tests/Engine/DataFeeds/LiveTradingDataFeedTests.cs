@@ -387,6 +387,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 universeSelectionHadAllData = args.Data.Count == coarseDataPointCount;
                 Console.WriteLine(DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork).ToString("o") + ": Fired universe selection. Count: " + args.Data.Count);
+                return SecurityChanges.None;
             };
 
 

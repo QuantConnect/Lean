@@ -28,6 +28,13 @@ using QuantConnect.Util;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
+    /// Delegate type for the <see cref="IDataFeed.UniverseSelection"/> event
+    /// </summary>
+    /// <param name="args">The event arguments</param>
+    /// <returns>Changes requested via universe selection</returns>
+    public delegate SecurityChanges UniverseSelectionHandler(IDataFeed sender, UniverseSelectionEventArgs args);
+
+    /// <summary>
     /// Datafeed interface for creating custom datafeed sources.
     /// </summary>
     [InheritedExport(typeof(IDataFeed))]
@@ -38,7 +45,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// This event must be fired when there is nothing in the <see cref="Bridge"/>,
         /// this can be accomplished using <see cref="BusyBlockingCollection{T}.Wait(int,CancellationToken)"/>
         /// </summary>
-        event EventHandler<UniverseSelectionEventArgs> UniverseSelection;
+        event UniverseSelectionHandler UniverseSelection;
         
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing

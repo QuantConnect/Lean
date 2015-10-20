@@ -147,6 +147,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AlgorithmManager.cs" />
+    <Compile Include="DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\EnqueableEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\FastForwardEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\FillForwardEnumerator.cs" />

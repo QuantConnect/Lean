@@ -50,7 +50,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// This event should be bound to so consumers can perform the required actions
         /// such as adding and removing subscriptions to the data feed
         /// </summary>
-        public event EventHandler<UniverseSelectionEventArgs> UniverseSelection;
+        public event UniverseSelectionHandler UniverseSelection;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -152,6 +152,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
+            Log.Trace("FileSystemDataFeed.AddSubscription(): Added " + security.Symbol);
+
             _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription),  subscription);
 
             // prime the pump, run method checks current before move next calls
@@ -176,6 +178,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + subscription.Security.Symbol);
                 return false;
             }
+
+            Log.Trace("FileSystemDataFeed.RemoveSubscription(): Removed " + subscription.Security.Symbol);
 
             _changes += SecurityChanges.Removed(sub.Security);
 
@@ -429,9 +433,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         protected virtual void OnUniverseSelection(Universe universe, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
         {
-            var handler = UniverseSelection;
-            var eventArgs = new UniverseSelectionEventArgs(universe, configuration, dateTimeUtc, data);
-            if (handler != null) handler(this, eventArgs);
+            if (UniverseSelection != null)
+            {
+                var eventArgs = new UniverseSelectionEventArgs(universe, configuration, dateTimeUtc, data);
+                var multicast = (MulticastDelegate) UniverseSelection;
+                foreach (UniverseSelectionHandler handler in multicast.GetInvocationList())
+                {
+                    _changes += handler(this, eventArgs);
+                }
+            }
         }
 
 

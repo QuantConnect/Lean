@@ -62,7 +62,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// This event must be fired when there is nothing in the <see cref="IDataFeed.Bridge"/>,
         /// this can be accomplished using <see cref="BusyBlockingCollection{T}.Wait(int,CancellationToken)"/>
         /// </summary>
-        public event EventHandler<UniverseSelectionEventArgs> UniverseSelection;
+        public event UniverseSelectionHandler UniverseSelection;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -158,6 +158,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
+            Log.Trace("LiveTradingDataFeed.AddSubscription(): Added " + security.Symbol);
+
             _subscriptions[new SymbolSecurityType(subscription)] = subscription;
 
             // send the subscription for the new symbol through to the data queuehandler
@@ -224,6 +226,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 return false;
             }
+
+            Log.Trace("LiveTradingDataFeed.RemovedSubscription(): Added " + security.Symbol);
 
             // keep track of security changes, we emit these to the algorithm
             // as notications, used in universe selection
@@ -512,7 +516,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // define our data enumerator
                 var tradeableDates = Time.EachTradeableDay(security, localStartTime, localEndTime);
                 var reader = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, tradeableDates, true);
-                _customExchange.AddEnumerator(reader);
+                var fastForward = new FastForwardEnumerator(reader, _timeProvider, config.TimeZone, config.Increment);
+                var minimumTimeBetweenCalls = Math.Min(config.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
+                var rateLimit = new RateLimitEnumerator(fastForward, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
+                var aggregator = new BaseDataCollectionAggregatorEnumerator(rateLimit, config.Symbol);
+                _customExchange.AddEnumerator(aggregator);
 
                 var enqueable = new EnqueableEnumerator<BaseData>();
                 _customExchange.SetHandler(config.Symbol, data =>
@@ -545,9 +553,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="data">The universe selection data to be operated on</param>
         protected virtual void OnUniverseSelection(Universe universe, SubscriptionDataConfig config, DateTime dateTimeUtc, IReadOnlyList<BaseData> data)
         {
-            var handler = UniverseSelection;
-            var eventArgs = new UniverseSelectionEventArgs(universe, config, dateTimeUtc, data);
-            if (handler != null) handler(this, eventArgs);
+            if (UniverseSelection != null)
+            {
+                var eventArgs = new UniverseSelectionEventArgs(universe, config, dateTimeUtc, data);
+                var multicast = (MulticastDelegate)UniverseSelection;
+                foreach (UniverseSelectionHandler handler in multicast.GetInvocationList())
+                {
+                    _changes += handler(this, eventArgs);
+                }
+            }
         }
 
         /// <summary>
