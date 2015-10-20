@@ -121,7 +121,7 @@ namespace QuantConnect.ToolBox
                 Log.Trace("LeanDataWriter.Write(): Existing deleted: " + data);
             }
             // Create the directory if it doesnt exist
-            Directory.CreateDirectory(Directory.GetDirectoryRoot(data));
+            Directory.CreateDirectory(Path.GetDirectoryName(data));
 
             // Write out this data string to a zip file
             Compression.Zip(filename, data, Compression.CreateZipEntryName(_symbol, _securityType, time, _resolution, _dataType));
