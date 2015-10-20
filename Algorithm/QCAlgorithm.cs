@@ -970,6 +970,49 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Adds the universe to the algorithm
+        /// </summary>
+        /// <param name="universe">The universe to be added</param>
+        public void AddUniverse(Universe universe)
+        {
+            Universes.Add(universe);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This will use the default universe settings
+        /// specified via the <see cref="UniverseSettings"/> property.
+        /// </summary>
+        /// <typeparam name="T">The data type</typeparam>
+        /// <param name="securityType">The security type the universe produces</param>
+        /// <param name="symbol">The symbol for the universe</param>
+        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="market">The market for selected symbols</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse<T>(SecurityType securityType, Symbol symbol, Resolution resolution, string market, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
+        {
+            var exchangeHours = _exchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
+            var config = new SubscriptionDataConfig(typeof(T), securityType, symbol, resolution, market, exchangeHours.TimeZone, false, false, true, true);
+            AddUniverse(new FuncUniverse(config, UniverseSettings, d => selector(d.OfType<T>())));
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm
+        /// </summary>
+        /// <typeparam name="T">The data type</typeparam>
+        /// <param name="securityType">The security type the universe produces</param>
+        /// <param name="symbol">The symbol for the universe</param>
+        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="market">The market for selected symbols</param>
+        /// <param name="subscriptionSettings">The subscription settings to use for newly created subscriptions</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse<T>(SecurityType securityType, Symbol symbol, Resolution resolution, string market, SubscriptionSettings subscriptionSettings, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
+        {
+            var exchangeHours = _exchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
+            var config = new SubscriptionDataConfig(typeof(T), securityType, symbol, resolution, market, exchangeHours.TimeZone, false, false, true, true);
+            AddUniverse(new FuncUniverse(config, subscriptionSettings, d => selector(d.OfType<T>())));
+        }
+
+        /// <summary>
         /// Sets the current universe selector for the algorithm. This will be executed on day changes
         /// </summary>
         /// <param name="selector">The universe selector</param>
@@ -983,12 +1026,12 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Sets the current universe selector for the algorithm. This will be executed on day changes
         /// </summary>
-        /// <param name="coarse">Defines an initial coarse selection</param>
-        public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarse)
+        /// <param name="selector">Defines an initial coarse selection</param>
+        public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
         {
             var symbol = CoarseFundamental.CreateUniverseSymbol("usa");
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), SecurityType.Equity, symbol, Resolution.Daily, Market.USA, TimeZones.NewYork, false, false, true);
-            SetUniverse(new FuncUniverse(config, UniverseSettings, selectionData => coarse(selectionData.OfType<CoarseFundamental>())));
+            SetUniverse(new FuncUniverse(config, UniverseSettings, selectionData => selector(selectionData.OfType<CoarseFundamental>())));
         }
 
         /// <summary>
