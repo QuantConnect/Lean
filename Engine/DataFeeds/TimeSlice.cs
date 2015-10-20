@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -216,12 +215,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 security.Add(new KeyValuePair<Security, BaseData>(kvp.Key, update));
                 consolidator.Add(new KeyValuePair<SubscriptionDataConfig, List<BaseData>>(kvp.Key.SubscriptionDataConfig, consolidatorUpdate));
-            }
-
-            var spy = security.FirstOrDefault(x => x.Key.Symbol == "SPY" && x.Value != null);
-            if (spy.Value != null)
-            {
-                
             }
 
             var slice = new Slice(utcDateTime.ConvertFromUtc(algorithmTimeZone), allDataForAlgorithm, tradeBars, ticks, splits, dividends, delistings, symbolChanges);

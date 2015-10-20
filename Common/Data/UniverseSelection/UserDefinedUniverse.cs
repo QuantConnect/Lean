@@ -57,7 +57,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="interval">The interval at which selection should be performed</param>
         /// <param name="symbols">The initial set of symbols in this universe</param>
         public UserDefinedUniverse(SubscriptionDataConfig configuration, SubscriptionSettings subscriptionSettings, TimeSpan interval, IEnumerable<Symbol> symbols)
-            : base(configuration.Type, configuration.SecurityType, configuration.Symbol, configuration.Market, configuration.TimeZone, configuration.IsCustomData)
+            : base(configuration)
         {
             _interval = interval;
             _symbols = symbols.ToHashSet();

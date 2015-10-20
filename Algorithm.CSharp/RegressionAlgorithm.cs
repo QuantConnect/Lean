@@ -15,7 +15,6 @@
 
 using System;
 using QuantConnect.Data.Market;
-using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {

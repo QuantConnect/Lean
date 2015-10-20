@@ -102,7 +102,6 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             _changes = changes;
-            Console.WriteLine(Time + ": Current Universe: " +string.Join(",", Universes[0].Members.Select(x => x.Key)));
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)

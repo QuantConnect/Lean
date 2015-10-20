@@ -1060,29 +1060,7 @@ namespace QuantConnect.Algorithm
                 //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
                 Securities.Add(security.Symbol, security);
 
-                // add this security to the user defined universe
-                UserDefinedUniverse universe;
-                var key = new SecurityTypeMarket(securityType, market);
-                if (_userDefinedUniverses.TryGetValue(key, out universe))
-                {
-                    universe.Add(symbol);
-                }
-                else
-                {
-                    // create a new universe, these subscription settings don't currently get used
-                    // since universe selection proper is never invoked on this type of universe
-                    var securityConfig = security.SubscriptionDataConfig;
-                    var universeSymbol = UserDefinedUniverse.CreateSymbol(securityConfig.SecurityType, securityConfig.Market);
-                    var uconfig = new SubscriptionDataConfig(securityConfig, symbol: universeSymbol, resolution: Resolution.Tick, isInternalFeed: true);
-                    universe = new UserDefinedUniverse(uconfig,
-                        new SubscriptionSettings(security.Resolution, security.Leverage, security.IsFillDataForward, security.IsExtendedMarketHours),
-                        QuantConnect.Time.MaxTimeSpan,
-                        new List<Symbol> {symbol}
-                        );
-                    _userDefinedUniverses[key] = universe;
-
-                    Universes.Add(universe);
-                }
+                AddToUserDefinedUniverse(security);
             }
             catch (Exception err)
             {
@@ -1148,6 +1126,8 @@ namespace QuantConnect.Algorithm
             //Add this new generic data as a tradeable security: 
             var security = new Security(exchangeHours, config, leverage);
             Securities.Add(symbol, security);
+
+            AddToUserDefinedUniverse(security);
         }
 
         /// <summary>
@@ -1234,6 +1214,36 @@ namespace QuantConnect.Algorithm
         public bool GetQuit() 
         {
             return _quit;
+        }
+
+        /// <summary>
+        /// Adds the security to the user defined universe for the specified 
+        /// </summary>
+        private void AddToUserDefinedUniverse(Security security)
+        {
+            // add this security to the user defined universe
+            UserDefinedUniverse universe;
+            var key = new SecurityTypeMarket(security.Type, security.SubscriptionDataConfig.Market);
+            if (_userDefinedUniverses.TryGetValue(key, out universe))
+            {
+                universe.Add(security.Symbol);
+            }
+            else
+            {
+                // create a new universe, these subscription settings don't currently get used
+                // since universe selection proper is never invoked on this type of universe
+                var securityConfig = security.SubscriptionDataConfig;
+                var universeSymbol = UserDefinedUniverse.CreateSymbol(securityConfig.SecurityType, securityConfig.Market);
+                var uconfig = new SubscriptionDataConfig(securityConfig, symbol: universeSymbol, isInternalFeed: true, fillForward: false);
+                universe = new UserDefinedUniverse(uconfig,
+                    new SubscriptionSettings(security.Resolution, security.Leverage, security.IsFillDataForward, security.IsExtendedMarketHours),
+                    QuantConnect.Time.MaxTimeSpan,
+                    new List<Symbol> { security.Symbol }
+                    );
+                _userDefinedUniverses[key] = universe;
+
+                Universes.Add(universe);
+            }
         }
     }
 }

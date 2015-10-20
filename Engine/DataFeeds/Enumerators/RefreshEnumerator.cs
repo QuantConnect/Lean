@@ -13,38 +13,31 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Provides an implementation of <see cref="IEnumerator{BaseDataCollection}"/>
-    /// that aggregates an underlying <see cref="IEnumerator{BaseData}"/> into a single
-    /// data packet
+    /// Provides an implementation of <see cref="IEnumerator{T}"/> that will
+    /// always return true via MoveNext.
     /// </summary>
-    public class BaseDataCollectionAggregatorEnumerator : IEnumerator<BaseDataCollection>
+    /// <typeparam name="T"></typeparam>
+    public class RefreshEnumerator<T> : IEnumerator<T>
     {
-        private bool _endOfStream;
-        private bool _needsMoveNext;
-        private readonly Symbol _symbol;
-        private readonly IEnumerator<BaseData> _enumerator;
+        private T _current;
+        private IEnumerator<T> _enumerator;
+        private readonly Func<IEnumerator<T>> _enumeratorFactory;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BaseDataCollectionAggregatorEnumerator"/> class
-        /// This will aggregate instances emitted from the underlying enumerator and tag them with the
-        /// specified symbol
+        /// Initializes a new instance of the <see cref="RefreshEnumerator{T}"/> class
         /// </summary>
-        /// <param name="enumerator">The underlying enumerator to aggregate</param>
-        /// <param name="symbol">The symbol to place on the aggregated collection</param>
-        public BaseDataCollectionAggregatorEnumerator(IEnumerator<BaseData> enumerator, Symbol symbol)
+        /// <param name="enumeratorFactory">Enumerator factory used to regenerate the underlying
+        /// enumerator when it ends</param>
+        public RefreshEnumerator(Func<IEnumerator<T>> enumeratorFactory)
         {
-            _symbol = symbol;
-            _enumerator = enumerator;
-
-            _needsMoveNext = true;
+            _enumeratorFactory = enumeratorFactory;
         }
 
         /// <summary>
@@ -56,56 +49,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
-            if (_endOfStream)
+            if (_enumerator == null)
             {
-                return false;
+                _enumerator = _enumeratorFactory.Invoke();
             }
 
-            BaseDataCollection collection = null;
-            while (true)
+            var moveNext = _enumerator.MoveNext();
+            if (moveNext)
             {
-                if (_needsMoveNext)
-                {
-                    // move next if we dequeued the last item last time we were invoked
-                    if (!_enumerator.MoveNext())
-                    {
-                        _endOfStream = true;
-                        break;
-                    }
-                }
-
-                if (_enumerator.Current == null)
-                {
-                    // the underlying returned false, stop here and start again on the next call
-                    _needsMoveNext = true;
-                    break;
-                }
-
-                if (collection == null)
-                {
-                    // we have new data, set the collection's symbol/times
-                    collection = new BaseDataCollection
-                    {
-                        Symbol = _symbol,
-                        Time = _enumerator.Current.Time,
-                        EndTime = _enumerator.Current.EndTime
-                    };
-                }
-
-                if (collection.EndTime != _enumerator.Current.EndTime)
-                {
-                    // the data from the underlying is at a different time, stop here
-                    _needsMoveNext = false;
-                    break;
-                }
-
-                // this data belongs in this collection, keep going until null or bad time
-                collection.Data.Add(_enumerator.Current);
-                _needsMoveNext = true;
+                _current = _enumerator.Current;
+            }
+            else
+            {
+                _enumerator = null;
+                _current = default(T);
             }
 
-            Current = collection;
-            return !_endOfStream;
+            return true;
         }
 
         /// <summary>
@@ -123,9 +83,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>
         /// The element in the collection at the current position of the enumerator.
         /// </returns>
-        public BaseDataCollection Current
+        public T Current
         {
-            get; private set;
+            get { return _current; }
         }
 
         /// <summary>

@@ -173,29 +173,24 @@ namespace QuantConnect.Data
                 throw new ArgumentException("The market must only contain letters A-Z.");
             }
 
-            switch ((int)resolution)
+            switch (resolution)
             {
-                case (int)Resolution.Tick:
+                case Resolution.Tick:
                     //Ticks are individual sales and fillforward doesn't apply.
                     Increment = TimeSpan.FromSeconds(0);
                     FillDataForward = false;
                     break;
-                case (int)Resolution.Second:
+                case Resolution.Second:
                     Increment = TimeSpan.FromSeconds(1);
                     break;
-                case (int)Resolution.Minute:
+                case Resolution.Minute:
                     Increment = TimeSpan.FromMinutes(1);
                     break;
-                case (int)Resolution.Hour:
+                case Resolution.Hour:
                     Increment = TimeSpan.FromHours(1);
                     break;
-                case (int)Resolution.Daily:
+                case Resolution.Daily:
                     Increment = TimeSpan.FromDays(1);
-                    break;
-                // infinity
-                case int.MaxValue:
-                    Increment = TimeSpan.MaxValue;
-                    FillDataForward = false;
                     break;
                 default:
                     throw new InvalidEnumArgumentException("Unexpected Resolution: " + resolution);

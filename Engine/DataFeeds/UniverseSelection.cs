@@ -141,10 +141,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (!_algorithm.Securities.TryGetValue(sid, out security))
                 {
                     security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _hoursProvider,
-                        SecurityType.Equity,
+                        universe.Configuration.SecurityType,
                         sid,
                         settings.Resolution,
-                        args.Configuration.Market,
+                        universe.Configuration.Market,
                         settings.FillForward,
                         settings.Leverage,
                         settings.ExtendedMarketHours,

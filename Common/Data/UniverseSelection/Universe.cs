@@ -72,16 +72,15 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Initializes a new instance of the <see cref="Universe"/> class
         /// </summary>
-        /// <param name="type">The data type to use in selection</param>
-        /// <param name="securityType">The security type of the universe</param>
-        /// <param name="symbol">A unique symbol for the universe</param>
-        /// <param name="market">The market of the universe</param>
-        /// <param name="timeZone">The time zone of the universe</param>
-        /// <param name="isCustom">True for custom data universe, false otherwise</param>
-        protected Universe(Type type, SecurityType securityType, Symbol symbol, string market, DateTimeZone timeZone, bool isCustom)
+        /// <param name="config">The configuration used to source data for this universe</param>
+        protected Universe(SubscriptionDataConfig config)
         {
             _securities = new ConcurrentDictionary<Symbol, Security>();
-            Configuration = new SubscriptionDataConfig(type, securityType, symbol, Resolution.Tick, market, timeZone, false, false, true, isCustom);
+
+            if (config.FillDataForward) throw new ArgumentException("Universe data can not be fill forward.");
+            if (!config.IsInternalFeed) throw new ArgumentException("Universe data must be marked as internal feed.");
+
+            Configuration = config;
         }
 
         /// <summary>
