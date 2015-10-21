@@ -71,12 +71,12 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 var starttime = DateTime.Now;
                 Console.WriteLine("Reading " + zipFile.Name);
 
-                var listTick = new List<Tick>();
+                var listTick = new List<TmpTick>();
 
                 using (var reader = Compression.Unzip(zipFile.FullName, out zipOut))
                     while (!reader.EndOfStream)
                     {
-                        var tick = new Tick(zipFile.Name.Split('.')[1], reader.ReadLine());
+                        var tick = new TmpTick(zipFile.Name.Split('.')[1], reader.ReadLine());
                         if (tick.IsInvalid) continue;
 
                         if (listTick.Count == 0)
@@ -169,7 +169,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// Group list of ticks, create bar and write it in a csv file
         /// <param name="listTick">List of ticks to porcess</param>
         /// </summary>
-        private static void WriteLeanCsvFiles(List<Tick> listTick)
+        private static void WriteLeanCsvFiles(List<TmpTick> listTick)
         {
             listTick.GroupBy(t => t.SetFilename(_resolution)).ToList().ForEach(g =>
             {
@@ -178,7 +178,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 
                 if (g.Key.Contains("trade"))
                 {
-                    var tradeBar = new TradeBar
+                    var tradeBar = new TmpTradeBar
                     {
                         Time = g.First().Time.RoundDown(_span),
                         Underlying = g.First().Underlying,
@@ -198,7 +198,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 }
                 else
                 {
-                    var quoteBar = new QuoteBar
+                    var quoteBar = new TmpQuoteBar
                     {
                         Time = g.First().Time.RoundDown(_span),
                         Underlying = g.First().Underlying,
@@ -275,7 +275,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
     /// <summary>
     /// Tick class
     /// </summary>
-    class Tick
+    class TmpTick
     {
         public bool IsInvalid { get; set; }
         public DateTime Time { get; set; }
@@ -288,9 +288,9 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         public long Price { get; set; }
         public long Quantity { get; set; }
 
-        public Tick() { }
+        public TmpTick() { }
 
-        public Tick(string datestr, string str)
+        public TmpTick(string datestr, string str)
         {
             if (this.IsInvalid = !(str.Contains("TRADE") || str.Contains("FIRM_QUOTE ASK NB") || str.Contains("FIRM_QUOTE BID NB"))) return;
 
@@ -340,7 +340,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
     /// <summary>
     /// QuoteBar class
     /// </summary>
-    class QuoteBar
+    class TmpQuoteBar
     {
         public DateTime Time { get; set; }
         public string Underlying { get; set; }
@@ -378,7 +378,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
     /// <summary>
     /// TradeBar class
     /// </summary>
-    class TradeBar
+    class TmpTradeBar
     {
         public DateTime Time { get; set; }
         public string Underlying { get; set; }
