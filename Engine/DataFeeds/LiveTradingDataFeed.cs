@@ -97,6 +97,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 throw new ArgumentException("The LiveTradingDataFeed requires a LiveNodePacket.");
             }
 
+            if (algorithm.SubscriptionManager.Subscriptions.Count == 0 && algorithm.Universes.IsNullOrEmpty())
+            {
+                throw new Exception("No subscriptions registered and no universe defined.");
+            }
+
             _cancellationTokenSource = new CancellationTokenSource();
 
             _algorithm = algorithm;
@@ -107,7 +112,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _frontierTimeProvider = new ManualTimeProvider(_timeProvider.GetUtcNow());
             _customExchange = new BaseDataExchange("CustomDataExchange") {SleepInterval = 10};
-            _exchange = new BaseDataExchange("DataQueueExchange", GetNextTicksEnumerator());
+            // sleep is controlled on this exchange via the GetNextTicksEnumerator
+            _exchange = new BaseDataExchange("DataQueueExchange", GetNextTicksEnumerator()){SleepInterval = 0};
             _subscriptions = new ConcurrentDictionary<SymbolSecurityType, Subscription>();
 
             Bridge = new BusyBlockingCollection<TimeSlice>();
@@ -118,10 +124,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // find the minimum resolution, ignoring ticks
             _fillForwardResolution = algorithm.SubscriptionManager.Subscriptions
-                .Where(x => x.Resolution != Resolution.Tick)
+                .Where(x => !x.IsInternalFeed)
                 .Select(x => x.Resolution)
                 .Union(algorithm.Universes.Select(x => x.SubscriptionSettings.Resolution))
-                .DefaultIfEmpty(algorithm.UniverseSettings.Resolution)
+                .Where(x => x != Resolution.Tick)
                 .Min();
 
             // add user defined subscriptions
