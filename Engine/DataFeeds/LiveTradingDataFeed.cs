@@ -364,6 +364,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var config = security.SubscriptionDataConfig;
                 var localStartTime = utcStartTime.ConvertFromUtc(config.TimeZone);
                 var localEndTime = utcEndTime.ConvertFromUtc(config.TimeZone);
+                var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, utcStartTime, utcEndTime);
 
                 IEnumerator<BaseData> enumerator;
                 if (config.IsCustomData)
@@ -376,7 +377,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var factory = new BaseDataSubscriptionFactory(config, currentLocalDate, true);
                         var source = sourceProvider.GetSource(config, currentLocalDate, true);
                         var factorEnumerator = factory.Read(source).GetEnumerator();
-                        return new FastForwardEnumerator(factorEnumerator, _timeProvider, config.TimeZone, config.Increment);
+                        var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, config.TimeZone, config.Increment);
+                        return new FrontierAwareEnumerator(fastForward, _timeProvider, timeZoneOffsetProvider);
                     });
 
                     // rate limit the refreshing of the stack to the requested interval
@@ -426,7 +428,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 enumerator = new SubscriptionFilterEnumerator(enumerator, security, localEndTime);
 
                 // finally, make our subscriptions aware of the frontier of the data feed, this will help
-                var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, utcStartTime, utcEndTime);
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
 
 
@@ -582,6 +583,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 .Select(x => x.Resolution)
                 .Union(algorithm.Universes.Select(x => x.SubscriptionSettings.Resolution))
                 .Where(x => x != Resolution.Tick)
+                .DefaultIfEmpty(Resolution.Second)
                 .Min().ToTimeSpan();
         }
     }

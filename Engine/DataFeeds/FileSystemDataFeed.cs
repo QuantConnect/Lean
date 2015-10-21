@@ -447,6 +447,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 .Select(x => x.Resolution)
                 .Union(algorithm.Universes.Select(x => x.SubscriptionSettings.Resolution))
                 .Where(x => x != Resolution.Tick)
+                .DefaultIfEmpty(Resolution.Second)
                 .Min().ToTimeSpan();
         }
     }
