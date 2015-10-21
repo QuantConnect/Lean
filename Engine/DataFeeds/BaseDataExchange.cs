@@ -193,7 +193,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (_cancellationTokenSource.IsCancellationRequested)
                 {
-                    Log.Trace("DataQueueHandlerExchange.ConsumeQueue(): Exiting...");
+                    Log.Trace("BaseDataExchange.ConsumeQueue(): Exiting...");
                     return;
                 }
 
@@ -236,7 +236,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     Log.Error(err);
                     if (_isFatalError(err))
                     {
-                        Log.Trace("DataQueueHandlerExchange.ConsumeQueue(): Fatal error encountered. Exiting...");
+                        Log.Trace("BaseDataExchange.ConsumeQueue(): Fatal error encountered. Exiting...");
                         return;
                     }
                 }

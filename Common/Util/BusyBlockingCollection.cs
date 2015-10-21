@@ -43,6 +43,14 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Gets the number of items held within this collection
+        /// </summary>
+        public int Count
+        {
+            get { return _collection.Count; }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="BusyBlockingCollection{T}"/> class
         /// with a bounded capacity of <see cref="int.MaxValue"/>
         /// </summary>

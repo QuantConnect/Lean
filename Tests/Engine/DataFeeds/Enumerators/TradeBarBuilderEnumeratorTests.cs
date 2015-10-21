@@ -75,37 +75,5 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(ticks.Last().LastPrice, bar.Close);
             Assert.AreEqual(ticks.Sum(x => x.Quantity), bar.Volume);
         }
-
-        [Test]
-        public void CreatesNewBarWhenBarSizeElapses()
-        {
-            var timeProvider = new ManualTimeProvider();
-            var enumerator = new TradeBarBuilderEnumerator(Time.OneSecond, TimeZones.Utc, timeProvider);
-
-            // noon new york time
-            var startTime = new DateTime(2015, 10, 08, 12, 0, 0);
-            timeProvider.SetCurrentTime(startTime);
-
-            enumerator.ProcessData(new Tick{Time = startTime});
-
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.IsNull(enumerator.Current);
-
-            timeProvider.AdvanceSeconds(0.99);
-
-            enumerator.ProcessData(new Tick {Time = timeProvider.GetUtcNow()});
-
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.IsNull(enumerator.Current);
-
-            timeProvider.SetCurrentTime(startTime.AddSeconds(1));
-
-            // the second just ticked over, so it shouldn't include this tick when we move next
-            enumerator.ProcessData(new Tick {Time = timeProvider.GetUtcNow(), Quantity = 1});
-
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.IsNotNull(enumerator.Current);
-            Assert.AreEqual(0, ((TradeBar)enumerator.Current).Volume);
-        }
     }
 }
