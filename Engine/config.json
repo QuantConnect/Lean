@@ -12,8 +12,8 @@
     "algorithm-type-name": "BasicTemplateAlgorithm",
 
     // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
-    "algorithm-language": "CSharp", 
-	
+    "algorithm-language": "CSharp",
+
     //Physical DLL location
     "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
     //"algorithm-location": "QuantConnect.Algorithm.Python.dll",
@@ -53,7 +53,14 @@
     "tradier-access-token": "",
     "tradier-refresh-token": "",
     "tradier-issued-at": "",
-    "trader-lifespan": "",
+    "tradier-lifespan": "",
+
+    // fxcm configuration
+    "fxcm-server": "",
+    "fxcm-terminal": "",
+    "fxcm-user-name": "",
+    "fxcm-password": "",
+    "fxcm-account-id": "",
 
     "environments": {
 
