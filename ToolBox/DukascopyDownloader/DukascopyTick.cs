@@ -15,7 +15,7 @@
 
 using System;
 
-namespace QuantConnect.DukascopyDownloader
+namespace QuantConnect.ToolBox.DukascopyDownloader
 {
     /// <summary>
     /// Represents a Dukascopy tick

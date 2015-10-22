@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,39 +13,38 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Provides an implementation of <see cref="IEnumerator{BaseData}"/> that will not emit
-    /// data ahead of the frontier as specified by an instance of <see cref="ITimeProvider"/>.
-    /// An instance of <see cref="TimeZoneOffsetProvider"/> is used to convert between UTC
-    /// and the data's native time zone
+    /// Provides an implementation of <see cref="IEnumerator{BaseDataCollection}"/>
+    /// that aggregates an underlying <see cref="IEnumerator{BaseData}"/> into a single
+    /// data packet
     /// </summary>
-    public class FrontierAwareEnumerator : IEnumerator<BaseData>
+    public class BaseDataCollectionAggregatorEnumerator : IEnumerator<BaseDataCollection>
     {
-        private BaseData _current;
-        private bool _needsMoveNext = true;
-
-        private readonly ITimeProvider _timeProvider;
+        private bool _endOfStream;
+        private bool _needsMoveNext;
+        private readonly Symbol _symbol;
         private readonly IEnumerator<BaseData> _enumerator;
-        private readonly TimeZoneOffsetProvider _offsetProvider;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FrontierAwareEnumerator"/> class
+        /// Initializes a new instance of the <see cref="BaseDataCollectionAggregatorEnumerator"/> class
+        /// This will aggregate instances emitted from the underlying enumerator and tag them with the
+        /// specified symbol
         /// </summary>
-        /// <param name="enumerator">The underlying enumerator to make frontier aware</param>
-        /// <param name="timeProvider">The time provider used for resolving the current frontier time</param>
-        /// <param name="offsetProvider">An offset provider used for converting the frontier UTC time into the data's native time zone</param>
-        public FrontierAwareEnumerator(IEnumerator<BaseData> enumerator, ITimeProvider timeProvider, TimeZoneOffsetProvider offsetProvider)
+        /// <param name="enumerator">The underlying enumerator to aggregate</param>
+        /// <param name="symbol">The symbol to place on the aggregated collection</param>
+        public BaseDataCollectionAggregatorEnumerator(IEnumerator<BaseData> enumerator, Symbol symbol)
         {
+            _symbol = symbol;
             _enumerator = enumerator;
-            _timeProvider = timeProvider;
-            _offsetProvider = offsetProvider;
+
+            _needsMoveNext = true;
         }
 
         /// <summary>
@@ -57,52 +56,56 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
-            var underlyingCurrent = _enumerator.Current;
-            var frontier = _timeProvider.GetUtcNow();
-            var localFrontier = new DateTime(frontier.Ticks + _offsetProvider.GetOffsetTicks(frontier));
-
-            // if we moved next, but didn't emit, check to see if it's time to emit yet
-            if (!_needsMoveNext && underlyingCurrent != null)
+            if (_endOfStream)
             {
-                if (underlyingCurrent.EndTime <= localFrontier)
-                {
-                    // we can now emit the underlyingCurrent as part of this time slice
-                    _current = underlyingCurrent;
-                    _needsMoveNext = true;
-                }
-                else
-                {
-                    // it's still not time to emit the underlyingCurrent, keep waiting for time to advance
-                    _current = null;
-                    _needsMoveNext = false;
-                }
-                return true;
-            }
-
-            // we've exhausted the underlying enumerator, iteration completed
-            if (_needsMoveNext && !_enumerator.MoveNext())
-            {
-                _needsMoveNext = true;
-                _current = null;
                 return false;
             }
 
-            underlyingCurrent = _enumerator.Current;
-
-            if (underlyingCurrent != null && underlyingCurrent.EndTime <= localFrontier)
+            BaseDataCollection collection = null;
+            while (true)
             {
+                if (_needsMoveNext)
+                {
+                    // move next if we dequeued the last item last time we were invoked
+                    if (!_enumerator.MoveNext())
+                    {
+                        _endOfStream = true;
+                        break;
+                    }
+                }
+
+                if (_enumerator.Current == null)
+                {
+                    // the underlying returned false, stop here and start again on the next call
+                    _needsMoveNext = true;
+                    break;
+                }
+
+                if (collection == null)
+                {
+                    // we have new data, set the collection's symbol/times
+                    collection = new BaseDataCollection
+                    {
+                        Symbol = _symbol,
+                        Time = _enumerator.Current.Time,
+                        EndTime = _enumerator.Current.EndTime
+                    };
+                }
+
+                if (collection.EndTime != _enumerator.Current.EndTime)
+                {
+                    // the data from the underlying is at a different time, stop here
+                    _needsMoveNext = false;
+                    break;
+                }
+
+                // this data belongs in this collection, keep going until null or bad time
+                collection.Data.Add(_enumerator.Current);
                 _needsMoveNext = true;
-                _current = underlyingCurrent;
-            }
-            else
-            {
-                _current = null;
-                _needsMoveNext = underlyingCurrent == null;
             }
 
-            // technically we still need to return true since the iteration is not completed,
-            // however, Current may be null follow a true result here
-            return true;
+            Current = collection;
+            return !_endOfStream;
         }
 
         /// <summary>
@@ -120,9 +123,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>
         /// The element in the collection at the current position of the enumerator.
         /// </returns>
-        public BaseData Current
+        public BaseDataCollection Current
         {
-            get { return _current; }
+            get; private set;
         }
 
         /// <summary>

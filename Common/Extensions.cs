@@ -344,6 +344,9 @@ namespace QuantConnect
         /// <returns>Rounded datetime</returns>
         public static DateTime ExchangeRoundDown(this DateTime dateTime, TimeSpan interval, SecurityExchangeHours exchangeHours, bool extendedMarket)
         {
+            // can't round against a zero interval
+            if (interval == TimeSpan.Zero) return dateTime;
+
             var rounded = dateTime.RoundDown(interval);
             while (!exchangeHours.IsOpen(rounded, rounded + interval, extendedMarket))
             {

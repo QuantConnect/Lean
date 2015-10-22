@@ -54,8 +54,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// the data produced for selection</param>
         public SecurityChanges ApplyUniverseSelection(UniverseSelectionEventArgs args)
         {
+            var universe = args.Universe;
+            var settings = universe.SubscriptionSettings;
+
             var limit = 1000; //daily/hourly limit
-            var resolution = _algorithm.UniverseSettings.Resolution;
+            var resolution = settings.Resolution;
             switch (resolution)
             {
                 case Resolution.Tick:
@@ -80,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // perform initial filtering and limit the result
-            var initialSelections = args.Universe.SelectSymbols(args.Data).Take(limit).ToHashSet();
+            var initialSelections = universe.SelectSymbols(args.Data).Take(limit).ToHashSet();
 
             // create a hash set of our existing subscriptions by sid
             var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol);
@@ -94,8 +97,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // determine which data subscriptions need to be removed for this market
             foreach (var subscription in _dataFeed.Subscriptions)
             {
-                // never remove subscriptions set explicitly by the user
-                if (subscription.IsUserDefined) continue;
+                // universes can only remove members of their own
+                if (!universe.ContainsMember(subscription.Security)) continue;
 
                 // never remove universe selection subscriptions
                 if (subscription.IsUniverseSelectionSubscription) continue;
@@ -104,9 +107,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 // never remove internal feeds
                 if (config.IsInternalFeed) continue;
-
-                // don't remove subscriptions for different markets
-                if (config.Market != args.Configuration.Market || config.SecurityType != args.Configuration.SecurityType) continue;
 
                 // if we've selected this subscription again, keep it
                 if (selectedSubscriptions.Contains(config.Symbol)) continue;
@@ -123,11 +123,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // so we can make direct edits to the security here
                     subscription.Security.Cache.Reset();
 
-                    _dataFeed.RemoveSubscription(subscription.Security);
+                    if (_dataFeed.RemoveSubscription(subscription))
+                    {
+                        universe.RemoveMember(subscription.Security);
+                    }
                 }
             }
-
-            var settings = _algorithm.UniverseSettings;
 
             // find new selections and add them to the algorithm
             foreach (var sid in selectedSubscriptions)
@@ -136,21 +137,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (existingSubscriptions.Contains(sid)) continue;
                 
                 // create the new security, the algorithm thread will add this at the appropriate time
-                var security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _hoursProvider,
-                    SecurityType.Equity,
-                    sid,
-                    settings.Resolution,
-                    args.Configuration.Market,
-                    settings.FillForward,
-                    settings.Leverage,
-                    settings.ExtendedMarketHours,
-                    false,
-                    false);
+                Security security;
+                if (!_algorithm.Securities.TryGetValue(sid, out security))
+                {
+                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _hoursProvider,
+                        universe.Configuration.SecurityType,
+                        sid,
+                        settings.Resolution,
+                        universe.Configuration.Market,
+                        settings.FillForward,
+                        settings.Leverage,
+                        settings.ExtendedMarketHours,
+                        false,
+                        false);
+                }
 
                 additions.Add(security);
 
-                // add the new subscriptions to the data feed -- TODO : this conversion keeps the behavior the same but stinks like a bug!
-                _dataFeed.AddSubscription(security, args.DateTimeUtc.ConvertFromUtc(args.Configuration.TimeZone), _algorithm.EndDate, false);
+                // add the new subscriptions to the data feed
+                if (_dataFeed.AddSubscription(universe, security, args.DateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)))
+                {
+                    universe.AddMember(security);
+                }
             }
 
             // return None if there's no changes, otherwise return what we've modified

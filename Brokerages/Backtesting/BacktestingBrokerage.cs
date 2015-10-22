@@ -218,7 +218,15 @@ namespace QuantConnect.Brokerages.Backtesting
                 {
                     var order = kvp.Value;
 
-                    var security = _algorithm.Securities[order.Symbol];
+                    Security security;
+                    if (!_algorithm.Securities.TryGetValue(order.Symbol, out security))
+                    {
+                        Log.Error("BacktestingBrokerage.Scan(): Unable to process order: " + order.Id + ". The security no longer exists.");
+                        // invalidate the order in the algorithm before removing
+                        OnOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m){Status = OrderStatus.Invalid});
+                        _pending.TryRemove(order.Id, out order);
+                        continue;
+                    }
 
                     // check if we would actually be able to fill this
                     if (!_algorithm.BrokerageModel.CanExecuteOrder(security, order))

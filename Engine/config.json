@@ -30,6 +30,12 @@
     "job-queue-handler": "QuantConnect.Queues.JobQueue",
     "api-handler": "QuantConnect.Api.Api",
 
+	// if one uses "true" as string in following token, market hours
+	// will remain open all hours and all days.
+	// Any other string beside "true" will make lean operate 
+	// only during regular market hours.
+    "force-exchange-always-open": "false",
+
     // interactive brokers configuration
     "ib-account": "DUxxxx",
     "ib-user-name": "",

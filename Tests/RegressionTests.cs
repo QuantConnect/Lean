@@ -18,7 +18,7 @@ using NUnit.Framework;
 
 namespace QuantConnect.Tests
 {
-    [TestFixture, Ignore("Travis seems to have issues running this at the moment.")]
+    [TestFixture, Category("TravisExclude")]
     public class RegressionTests
     {
         [Test]
@@ -29,7 +29,7 @@ namespace QuantConnect.Tests
                 {"Total Trades", "1"},
                 {"Average Win", "0%"},
                 {"Average Loss", "0%"},
-                {"Compounding Annual Return", "311.484%"},
+                {"Compounding Annual Return", "264.956%"},
                 {"Drawdown", "1.500%"},
                 {"Expectancy", "0"},
                 {"Net Profit", "0%"},
@@ -56,7 +56,7 @@ namespace QuantConnect.Tests
                 {"Total Trades", "35"},
                 {"Average Win", "0.02%"},
                 {"Average Loss", "-0.02%"},
-                {"Compounding Annual Return", "9.065%"},
+                {"Compounding Annual Return", "8.265%"},
                 {"Drawdown", "0.200%"},
                 {"Expectancy", "0.447"},
                 {"Net Profit", "0.102%"},
@@ -110,21 +110,21 @@ namespace QuantConnect.Tests
                 {"Total Trades", "5433"},
                 {"Average Win", "0.00%"},
                 {"Average Loss", "0.00%"},
-                {"Compounding Annual Return", "-4.216%"},
+                {"Compounding Annual Return", "-3.886%"},
                 {"Drawdown", "0.100%"},
-                {"Expectancy", "-0.994"},
+                {"Expectancy", "-0.991"},
                 {"Net Profit", "-0.054%"},
-                {"Sharpe Ratio", "-30.333"},
+                {"Sharpe Ratio", "-30.336"},
                 {"Loss Rate", "100%"},
                 {"Win Rate", "0%"},
-                {"Profit-Loss Ratio", "6.98"},
+                {"Profit-Loss Ratio", "2.40"},
                 {"Alpha", "-0.023"},
                 {"Beta", "0.001"},
                 {"Annual Standard Deviation", "0.001"},
                 {"Annual Variance", "0"},
                 {"Information Ratio", "-4.203"},
                 {"Tracking Error", "0.174"},
-                {"Treynor Ratio", "-33.871"},
+                {"Treynor Ratio", "-33.666"},
                 {"Total Fees", "$5433.00"}
             });
         }

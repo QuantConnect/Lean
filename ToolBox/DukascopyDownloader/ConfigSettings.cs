@@ -16,7 +16,7 @@
 using System;
 using Newtonsoft.Json;
 
-namespace QuantConnect.DukascopyDownloader
+namespace QuantConnect.ToolBox.DukascopyDownloader
 {
     /// <summary>
     /// Represents the configuration settings for the application

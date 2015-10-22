@@ -29,7 +29,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the universe that raised this event
         /// </summary>
-        public readonly IUniverse Universe;
+        public readonly Universe Universe;
         /// <summary>
         /// Gets the configuration for the subscription that produced this data
         /// </summary>
@@ -50,7 +50,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="configuration">Theconfiguration for the data</param>
         /// <param name="dateTimeUtc">The date time this event was fired in UTC</param>
         /// <param name="data">The data contained within this event</param>
-        public UniverseSelectionEventArgs(IUniverse universe, SubscriptionDataConfig configuration, DateTime dateTimeUtc, IReadOnlyList<BaseData> data)
+        public UniverseSelectionEventArgs(Universe universe, SubscriptionDataConfig configuration, DateTime dateTimeUtc, IReadOnlyList<BaseData> data)
         {
             Universe = universe;
             Configuration = configuration;

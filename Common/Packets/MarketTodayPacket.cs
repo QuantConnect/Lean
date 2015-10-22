@@ -35,19 +35,19 @@ namespace QuantConnect.Packets
         /// </summary>
         [JsonProperty(PropertyName = "status")]
         public string Status = "";
-        
+
         /// <summary>
         /// Premarket hours for today
         /// </summary>
         [JsonProperty(PropertyName = "premarket")]
         public MarketHours PreMarket = new MarketHours(DateTime.Now, 4, 9.5);
-        
+
         /// <summary>
         /// Normal trading market hours for today
         /// </summary>
         [JsonProperty(PropertyName = "open")]
         public MarketHours Open = new MarketHours(DateTime.Now, 9.5, 16);
-        
+
         /// <summary>
         /// Post market hours for today
         /// </summary>
@@ -97,27 +97,35 @@ namespace QuantConnect.Packets
         /// </summary>
         public static MarketToday Forex(DateTime date)
         {
-            // closed all day onf saturdays
-            if (date.DayOfWeek == DayOfWeek.Saturday)
+            if (Configuration.Config.Get("force-exchange-always-open") != "true")
             {
-                return ClosedAllDay(date);
-            }
+                // closed all day onf saturdays
+                if (date.DayOfWeek == DayOfWeek.Saturday)
+                {
+                    return ClosedAllDay(date);
+                }
 
-            // most days are always open
-            var marketToday = OpenAllDay(date);
-            if (date.DayOfWeek == DayOfWeek.Sunday)
-            {
-                // open at 5 on sundays
-                marketToday.Open = new MarketHours(date, 17, 24);
-                marketToday.PreMarket = new MarketHours(date, 17, 17);
+                // most days are always open
+                var marketToday = OpenAllDay(date);
+                if (date.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    // open at 5 on sundays
+                    marketToday.Open = new MarketHours(date, 17, 24);
+                    marketToday.PreMarket = new MarketHours(date, 17, 17);
+                }
+                else if (date.DayOfWeek == DayOfWeek.Friday)
+                {
+                    // closes at 5 on fridays
+                    marketToday.Open = new MarketHours(date, 0, 17);
+                    marketToday.PostMarket = new MarketHours(date, 17, 17);
+                }
+                return marketToday;
             }
-            else if (date.DayOfWeek == DayOfWeek.Friday)
+            else
             {
-                // closes at 5 on fridays
-                marketToday.Open = new MarketHours(date, 0, 17);
-                marketToday.PostMarket = new MarketHours(date, 17, 17);
+                var marketToday = OpenAllDay(date);
+                return marketToday;
             }
-            return marketToday;
         }
 
         /// <summary>
@@ -127,27 +135,35 @@ namespace QuantConnect.Packets
         /// </summary>
         public static MarketToday Equity(DateTime date)
         {
-            if (date.DayOfWeek == DayOfWeek.Saturday
-             || date.DayOfWeek == DayOfWeek.Sunday
-             || USHoliday.Dates.Contains(date.Date))
+            if (Configuration.Config.Get("force-exchange-always-open") != "true")
             {
-                return ClosedAllDay(date);
-            }
+                if (date.DayOfWeek == DayOfWeek.Saturday
+                 || date.DayOfWeek == DayOfWeek.Sunday
+                 || USHoliday.Dates.Contains(date.Date))
+                {
+                    return ClosedAllDay(date);
+                }
 
-            // determine if we're not within normal market hours
-            var status = "open";
-            if (date.TimeOfDay > TimeSpan.FromHours(16) || date.TimeOfDay < TimeSpan.FromHours(9.5))
-            {
-                status = "closed";
-            }
+                // determine if we're not within normal market hours
+                var status = "open";
+                if (date.TimeOfDay > TimeSpan.FromHours(16) || date.TimeOfDay < TimeSpan.FromHours(9.5))
+                {
+                    status = "closed";
+                }
 
-            return new MarketToday
+                return new MarketToday
+                {
+                    PreMarket = new MarketHours(date, 4, 9.5),
+                    Open = new MarketHours(date, 9.5, 16),
+                    PostMarket = new MarketHours(date, 16, 20),
+                    Status = status
+                };
+            }
+            else
             {
-                PreMarket = new MarketHours(date, 4, 9.5),
-                Open = new MarketHours(date, 9.5, 16),
-                PostMarket = new MarketHours(date, 16, 20),
-                Status = status
-            };
+                var marketToday = OpenAllDay(date);
+                return marketToday;
+            }
         }
     }
 

@@ -16,7 +16,7 @@
 using System;
 using Newtonsoft.Json;
 
-namespace QuantConnect.OandaDownloader
+namespace QuantConnect.ToolBox.OandaDownloader
 {
     /// <summary>
     /// Represents the configuration settings for the application
