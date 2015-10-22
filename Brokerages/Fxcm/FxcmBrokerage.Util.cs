@@ -22,6 +22,9 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Brokerages.Fxcm
 {
+    /// <summary>
+    /// FXCM brokerage - private helper functions
+    /// </summary>
     public partial class FxcmBrokerage
     {
         /// <summary>

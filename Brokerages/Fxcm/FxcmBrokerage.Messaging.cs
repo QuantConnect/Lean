@@ -30,6 +30,9 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Brokerages.Fxcm
 {
+    /// <summary>
+    /// FXCM brokerage - Java API related functions and interface implementations
+    /// </summary>
     public partial class FxcmBrokerage
     {
         private IGateway _gateway;
@@ -81,8 +84,11 @@ namespace QuantConnect.Brokerages.Fxcm
             if (!autoResetEvent.WaitOne(ResponseTimeout))
                 throw new TimeoutException(string.Format("FxcmBrokerage.LoadAccounts(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
 
-            // Hedging MUST be disabled on all accounts
-            if (_accounts.Values.Any(account => account.getParties().getFXCMPositionMaintenance() != "N"))
+            if (!_accounts.ContainsKey(_accountId))
+                throw new ArgumentException("FxcmBrokerage.LoadAccounts(): The account id is invalid: " + _accountId);
+
+            // Hedging MUST be disabled on the account
+            if (_accounts[_accountId].getParties().getFXCMPositionMaintenance() != "N")
             {
                 throw new NotSupportedException("FxcmBrokerage.LoadAccounts(): The Lean engine does not support accounts with Hedging enabled. Please contact FXCM support to disable Hedging.");
             }
@@ -93,7 +99,7 @@ namespace QuantConnect.Brokerages.Fxcm
             AutoResetEvent autoResetEvent;
             lock (_locker)
             {
-                _currentRequest = _gateway.requestOpenOrders();
+                _currentRequest = _gateway.requestOpenOrders(Convert.ToInt64(_accountId));
                 autoResetEvent = new AutoResetEvent(false);
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
@@ -106,7 +112,7 @@ namespace QuantConnect.Brokerages.Fxcm
             AutoResetEvent autoResetEvent;
             lock (_locker)
             {
-                _currentRequest = _gateway.requestOpenPositions();
+                _currentRequest = _gateway.requestOpenPositions(Convert.ToInt64(_accountId));
                 autoResetEvent = new AutoResetEvent(false);
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
@@ -117,15 +123,15 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <summary>
         /// Gets the quotes for the symbol
         /// </summary>
-        public List<MarketDataSnapshot> GetQuotes(List<string> symbols)
+        public List<MarketDataSnapshot> GetQuotes(List<string> fxcmSymbols)
         {
             // get current quotes for the instrument
             var request = new MarketDataRequest();
             request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
             request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SNAPSHOT);
-            foreach (var symbol in symbols)
+            foreach (var fxcmSymbol in fxcmSymbols)
             {
-                request.addRelatedSymbol(_fxcmInstruments[symbol]);
+                request.addRelatedSymbol(_fxcmInstruments[fxcmSymbol]);
             }
 
             AutoResetEvent autoResetEvent;
@@ -138,7 +144,7 @@ namespace QuantConnect.Brokerages.Fxcm
             if (!autoResetEvent.WaitOne(ResponseTimeout))
                 throw new TimeoutException(string.Format("FxcmBrokerage.GetQuotes(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
 
-            return _rates.Where(x => symbols.Contains(x.Key)).Select(x => x.Value).ToList();
+            return _rates.Where(x => fxcmSymbols.Contains(x.Key)).Select(x => x.Value).ToList();
         }
 
         /// <summary>
@@ -154,10 +160,10 @@ namespace QuantConnect.Brokerages.Fxcm
             var normalSymbol = currency + "/USD";
             var invertedSymbol = "USD/" + currency;
             var isInverted = _fxcmInstruments.ContainsKey(invertedSymbol);
-            var symbol = isInverted ? invertedSymbol : normalSymbol;
+            var fxcmSymbol = isInverted ? invertedSymbol : normalSymbol;
 
             // get current quotes for the instrument
-            var quotes = GetQuotes(new List<string> { symbol });
+            var quotes = GetQuotes(new List<string> { fxcmSymbol });
 
             var rate = (decimal)(quotes[0].getBidClose() + quotes[0].getAskClose()) / 2;
 
@@ -207,7 +213,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 {
                     // Should never get here, if it does log and ignore message
                     // New messages added in future api updates should be added to the unused list above
-                    Log.TraceFormat("FxcmBrokerage.messageArrived(): Unknown message: {0}", message);
+                    Log.Trace("FxcmBrokerage.messageArrived(): Unknown message: {0}", message);
                 }
             }
         }
@@ -313,7 +319,7 @@ namespace QuantConnect.Brokerages.Fxcm
             var orderId = message.getOrderID();
             var orderStatus = message.getFXCMOrdStatus();
 
-            if (orderId != "NONE")
+            if (orderId != "NONE" && message.getAccount() == _accountId)
             {
                 if (_openOrders.ContainsKey(orderId) && OrderIsClosed(orderStatus.getCode()))
                 {
@@ -361,7 +367,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 {
                     if (orderId == "NONE" && orderStatus.getCode() == IFixValueDefs.__Fields.FXCMORDSTATUS_REJECTED)
                     {
-                        Log.TraceFormat("Order submit rejected: {0}", message.getFXCMErrorDetails().Replace("\n", ""));
+                        Log.Trace("Order submit rejected: {0}", message.getFXCMErrorDetails().Replace("\n", ""));
                         _isOrderSubmitRejected = true;
                     }
 
@@ -391,13 +397,16 @@ namespace QuantConnect.Brokerages.Fxcm
         /// </summary>
         private void OnPositionReport(PositionReport message)
         {
-            if (_openPositions.ContainsKey(message.getCurrency()) && message is ClosedPositionReport)
+            if (message.getAccount() == _accountId)
             {
-                _openPositions.Remove(message.getCurrency());
-            }
-            else
-            {
-                _openPositions[message.getCurrency()] = message;
+                if (_openPositions.ContainsKey(message.getCurrency()) && message is ClosedPositionReport)
+                {
+                    _openPositions.Remove(message.getCurrency());
+                }
+                else
+                {
+                    _openPositions[message.getCurrency()] = message;
+                }
             }
 
             if (message.getRequestID() == _currentRequest)
@@ -417,7 +426,7 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             if (message.getRequestID() == _currentRequest)
             {
-                Log.TraceFormat("Order update or cancellation rejected: {0}", message.getFXCMErrorDetails().Replace("\n", ""));
+                Log.Trace("Order update or cancellation rejected: {0}", message.getFXCMErrorDetails().Replace("\n", ""));
                 _isOrderUpdateOrCancelRejected = true;
 
                 _mapRequestsToAutoResetEvents[_currentRequest].Set();

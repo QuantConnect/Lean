@@ -24,10 +24,13 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Brokerages.Fxcm
 {
+    /// <summary>
+    /// FXCM brokerage - implementation of IDataQueueHandler interface
+    /// </summary>
     public partial class FxcmBrokerage
     {
         private readonly List<Tick> _ticks = new List<Tick>();
-        private readonly HashSet<string> _subscribedSymbols = new HashSet<string>(); 
+        private readonly HashSet<Symbol> _subscribedSymbols = new HashSet<Symbol>(); 
         
         #region IDataQueueHandler implementation
 
@@ -59,7 +62,7 @@ namespace QuantConnect.Brokerages.Fxcm
             if (symbolsToSubscribe.Count == 0)
                 return;
 
-            Log.TraceFormat("FxcmBrokerage.Subscribe(): {0}", string.Join(",", symbolsToSubscribe));
+            Log.Trace("FxcmBrokerage.Subscribe(): {0}", string.Join(",", symbolsToSubscribe));
 
             var request = new MarketDataRequest();
             foreach (var symbol in symbolsToSubscribe)
@@ -94,7 +97,7 @@ namespace QuantConnect.Brokerages.Fxcm
             if (symbolsToUnsubscribe.Count == 0)
                 return;
 
-            Log.TraceFormat("FxcmBrokerage.Unsubscribe(): {0}", string.Join(",", symbolsToUnsubscribe));
+            Log.Trace("FxcmBrokerage.Unsubscribe(): {0}", string.Join(",", symbolsToUnsubscribe));
 
             var request = new MarketDataRequest();
             foreach (var symbol in symbolsToUnsubscribe)

@@ -54,7 +54,8 @@ namespace QuantConnect.Brokerages.Fxcm
                     { "fxcm-server", Config.Get("fxcm-server", DefaultServer) },
                     { "fxcm-terminal", Config.Get("fxcm-terminal", DefaultTerminal) },
                     { "fxcm-user-name", Config.Get("fxcm-user-name") },
-                    { "fxcm-password", Config.Get("fxcm-password") }
+                    { "fxcm-password", Config.Get("fxcm-password") },
+                    { "fxcm-account-id", Config.Get("fxcm-account-id") }
                 };
             }
         }
@@ -74,6 +75,7 @@ namespace QuantConnect.Brokerages.Fxcm
             var terminal = Read<string>(job.BrokerageData, "fxcm-terminal", errors);
             var userName = Read<string>(job.BrokerageData, "fxcm-user-name", errors);
             var password = Read<string>(job.BrokerageData, "fxcm-password", errors);
+            var accountId = Read<string>(job.BrokerageData, "fxcm-account-id", errors);
 
             if (errors.Count != 0)
             {
@@ -81,7 +83,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 throw new Exception(string.Join(Environment.NewLine, errors));
             }
 
-            var brokerage = new FxcmBrokerage(algorithm.Transactions, algorithm.Portfolio, server, terminal, userName, password);
+            var brokerage = new FxcmBrokerage(algorithm.Transactions, algorithm.Portfolio, server, terminal, userName, password, accountId);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;

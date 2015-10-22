@@ -34,8 +34,9 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             var terminal = Config.Get("fxcm-terminal");
             var userName = Config.Get("fxcm-user-name");
             var password = Config.Get("fxcm-password");
+            var accountId = Config.Get("fxcm-account-id");
 
-            return new FxcmBrokerage(orderProvider, holdingsProvider, server, terminal, userName, password);
+            return new FxcmBrokerage(orderProvider, holdingsProvider, server, terminal, userName, password, accountId);
         }
 
         /// <summary>

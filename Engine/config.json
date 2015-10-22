@@ -54,6 +54,7 @@
     "fxcm-terminal": "",
     "fxcm-user-name": "",
     "fxcm-password": "",
+    "fxcm-account-id": "",
 
     "environments": {
 

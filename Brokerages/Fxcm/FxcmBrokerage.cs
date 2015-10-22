@@ -32,7 +32,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Brokerages.Fxcm
 {
     /// <summary>
-    /// The FXCM brokerage implementation
+    /// FXCM brokerage - implementation of IBrokerage interface
     /// </summary>
     public partial class FxcmBrokerage : Brokerage, IDataQueueHandler, IGenericMessageListener, IStatusMessageListener
     {
@@ -42,9 +42,10 @@ namespace QuantConnect.Brokerages.Fxcm
         private readonly string _terminal;
         private readonly string _userName;
         private readonly string _password;
+        private readonly string _accountId;
 
         private Thread _orderEventThread;
-        private volatile bool _orderEventThreadStopped;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ConcurrentQueue<OrderEvent> _orderEventQueue = new ConcurrentQueue<OrderEvent>();
 
         /// <summary>
@@ -56,7 +57,8 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <param name="terminal">The terminal name</param>
         /// <param name="userName">The user name (login id)</param>
         /// <param name="password">The user password</param>
-        public FxcmBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider, string server, string terminal, string userName, string password)
+        /// <param name="accountId">The account id</param>
+        public FxcmBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider, string server, string terminal, string userName, string password, string accountId)
             : base("FXCM Brokerage")
         {
             _orderProvider = orderProvider;
@@ -65,6 +67,7 @@ namespace QuantConnect.Brokerages.Fxcm
             _terminal = terminal;
             _userName = userName;
             _password = password;
+            _accountId = accountId;
         }
 
         #region IBrokerage implementation
@@ -87,15 +90,17 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             if (IsConnected) return;
 
-            Log.TraceFormat("FxcmBrokerage.Connect()");
+            Log.Trace("FxcmBrokerage.Connect()");
+
+            _cancellationTokenSource = new CancellationTokenSource();
 
             // create new thread to fire order events in queue
             _orderEventThread = new Thread(() =>
             {
-                while (!_orderEventThreadStopped)
+                while (!_cancellationTokenSource.IsCancellationRequested)
                 {
                     OrderEvent orderEvent;
-                    if (_orderEventQueue.IsEmpty || !_orderEventQueue.TryDequeue(out orderEvent))
+                    if (!_orderEventQueue.TryDequeue(out orderEvent))
                     {
                         Thread.Sleep(1);
                         continue;
@@ -105,7 +110,10 @@ namespace QuantConnect.Brokerages.Fxcm
                 }
             });
             _orderEventThread.Start();
-            while (!_orderEventThread.IsAlive) {}
+            while (!_orderEventThread.IsAlive)
+            {
+                Thread.Sleep(1);
+            }
 
             // create the gateway
             _gateway = GatewayFactory.createGateway();
@@ -134,7 +142,7 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             if (!IsConnected) return;
 
-            Log.TraceFormat("FxcmBrokerage.Disconnect()");
+            Log.Trace("FxcmBrokerage.Disconnect()");
 
             // log out
             _gateway.logout();
@@ -144,7 +152,7 @@ namespace QuantConnect.Brokerages.Fxcm
             _gateway.removeStatusMessageListener(this);
 
             // request and wait for thread to stop
-            _orderEventThreadStopped = true;
+            _cancellationTokenSource.Cancel();
             _orderEventThread.Join();
         }
 
@@ -155,9 +163,12 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>The open orders returned from FXCM</returns>
         public override List<Order> GetOpenOrders()
         {
-            Log.TraceFormat("FxcmBrokerage.GetOpenOrders()");
+            Log.Trace("FxcmBrokerage.GetOpenOrders()");
 
-            return _openOrders.Values.ToList().Where(x => OrderIsOpen(x.getFXCMOrdStatus().getCode())).Select(ConvertOrder).ToList();
+            return _openOrders.Values.ToList()
+                .Where(x => OrderIsOpen(x.getFXCMOrdStatus().getCode()))
+                .Select(ConvertOrder)
+                .ToList();
         }
 
         /// <summary>
@@ -166,12 +177,16 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            Log.TraceFormat("FxcmBrokerage.GetAccountHoldings()");
+            Log.Trace("FxcmBrokerage.GetAccountHoldings()");
 
             var holdings = _openPositions.Values.Select(ConvertHolding).ToList();
 
             // Set MarketPrice in each Holding
-            var symbols = holdings.Select(x => ConvertSymbolToFxcmSymbol(x.Symbol)).ToList();
+            var symbols = holdings
+                .Where(x => x.Quantity != 0)
+                .Select(x => ConvertSymbolToFxcmSymbol(x.Symbol))
+                .ToList();
+
             if (symbols.Count > 0)
             {
                 var quotes = GetQuotes(symbols).ToDictionary(x => x.getInstrument().getSymbol());
@@ -194,10 +209,12 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<Cash> GetCashBalance()
         {
-            Log.TraceFormat("FxcmBrokerage.GetCashBalance()");
+            Log.Trace("FxcmBrokerage.GetCashBalance()");
 
-            return _accounts.Values.Select(account => 
-                new Cash(_fxcmAccountCurrency, Convert.ToDecimal(account.getCashOutstanding()), GetUsdConversion(_fxcmAccountCurrency))).ToList();
+            return new List<Cash>
+            {
+                new Cash(_fxcmAccountCurrency, Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()), GetUsdConversion(_fxcmAccountCurrency))
+            };
         }
 
         /// <summary>
@@ -207,7 +224,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            Log.TraceFormat("FxcmBrokerage.PlaceOrder(): {0}", order);
+            Log.Trace("FxcmBrokerage.PlaceOrder(): {0}", order);
 
             if (!IsConnected)
                 throw new InvalidOperationException("FxcmBrokerage.PlaceOrder(): Unable to place order while not connected.");
@@ -218,25 +235,24 @@ namespace QuantConnect.Brokerages.Fxcm
             var symbol = ConvertSymbolToFxcmSymbol(order.Symbol);
             var orderSide = order.Direction == OrderDirection.Buy ? SideFactory.BUY : SideFactory.SELL;
             var quantity = (double)order.AbsoluteQuantity;
-            var accountId = _accounts.Keys.First();
 
             OrderSingle orderRequest;
             switch (order.Type)
             {
                 case OrderType.Market:
-                    orderRequest = MessageGenerator.generateMarketOrder(accountId, quantity, orderSide, symbol, "");
+                    orderRequest = MessageGenerator.generateMarketOrder(_accountId, quantity, orderSide, symbol, "");
                     break;
 
                 case OrderType.Limit:
                     var limitPrice = (double)((LimitOrder)order).LimitPrice;
-                    orderRequest = MessageGenerator.generateOpenOrder(limitPrice, accountId, quantity, orderSide, symbol, "");
+                    orderRequest = MessageGenerator.generateOpenOrder(limitPrice, _accountId, quantity, orderSide, symbol, "");
                     orderRequest.setOrdType(OrdTypeFactory.LIMIT);
                     orderRequest.setTimeInForce(TimeInForceFactory.GOOD_TILL_CANCEL);
                     break;
 
                 case OrderType.StopMarket:
                     var stopPrice = (double)((StopMarketOrder)order).StopPrice;
-                    orderRequest = MessageGenerator.generateOpenOrder(stopPrice, accountId, quantity, orderSide, symbol, "");
+                    orderRequest = MessageGenerator.generateOpenOrder(stopPrice, _accountId, quantity, orderSide, symbol, "");
                     orderRequest.setOrdType(OrdTypeFactory.STOP);
                     orderRequest.setTimeInForce(TimeInForceFactory.GOOD_TILL_CANCEL);
                     break;
@@ -267,7 +283,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            Log.TraceFormat("FxcmBrokerage.UpdateOrder(): {0}", order);
+            Log.Trace("FxcmBrokerage.UpdateOrder(): {0}", order);
 
             if (!IsConnected)
                 throw new InvalidOperationException("FxcmBrokerage.UpdateOrder(): Unable to update order while not connected.");
@@ -275,7 +291,7 @@ namespace QuantConnect.Brokerages.Fxcm
             if (!order.BrokerId.Any())
             {
                 // we need the brokerage order id in order to perform an update
-                Log.TraceFormat("FxcmBrokerage.UpdateOrder(): Unable to update order without BrokerId.");
+                Log.Trace("FxcmBrokerage.UpdateOrder(): Unable to update order without BrokerId.");
                 return false;
             }
 
@@ -325,7 +341,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            Log.TraceFormat("FxcmBrokerage.CancelOrder(): {0}", order);
+            Log.Trace("FxcmBrokerage.CancelOrder(): {0}", order);
 
             if (!IsConnected)
                 throw new InvalidOperationException("FxcmBrokerage.UpdateOrder(): Unable to cancel order while not connected.");
@@ -333,7 +349,7 @@ namespace QuantConnect.Brokerages.Fxcm
             if (!order.BrokerId.Any())
             {
                 // we need the brokerage order id in order to perform a cancellation
-                Log.TraceFormat("FxcmBrokerage.CancelOrder(): Unable to cancel order without BrokerId.");
+                Log.Trace("FxcmBrokerage.CancelOrder(): Unable to cancel order without BrokerId.");
                 return false;
             }
 

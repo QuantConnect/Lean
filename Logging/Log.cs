@@ -140,25 +140,6 @@ namespace QuantConnect.Logging
         }
 
         /// <summary>
-        /// Log trace with format string
-        /// </summary>
-        public static void TraceFormat(string traceFormat, params object[] args)
-        {
-            try
-            {
-                var traceText = string.Format(traceFormat, args);
-
-                if (traceText == _lastTraceText) return;
-                _logHandler.Trace(traceText);
-                _lastTraceText = traceText;
-            }
-            catch (Exception err)
-            {
-                Console.WriteLine("Log.Trace(): Error writing trace: " + err.Message);
-            }
-        }
-
-        /// <summary>
         /// Output to the console, and sleep the thread for a little period to monitor the results.
         /// </summary>
         /// <param name="text"></param>

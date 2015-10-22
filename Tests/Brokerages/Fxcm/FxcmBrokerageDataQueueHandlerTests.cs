@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             {
                 foreach (var tick in brokerage.GetNextTicks())
                 {
-                    Log.TraceFormat("{0}: {1} - {2} / {3}", tick.Time, tick.Symbol, ((Tick)tick).BidPrice, ((Tick)tick).AskPrice);
+                    Log.Trace("{0}: {1} - {2} / {3}", tick.Time, tick.Symbol, ((Tick)tick).BidPrice, ((Tick)tick).AskPrice);
                 }
             }
         }
