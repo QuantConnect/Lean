@@ -672,6 +672,10 @@ namespace QuantConnect.Algorithm
                     BrokerageModel = new TradierBrokerageModel();
                     break;
 
+                case BrokerageName.OandaBrokerage:
+                    BrokerageModel = new OandaBrokerageModel();
+                    break;
+
                 default:
                     throw new ArgumentOutOfRangeException("brokerage", brokerage, null);
             }

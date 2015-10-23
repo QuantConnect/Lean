@@ -123,6 +123,7 @@
     <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
     <Compile Include="Brokerages\IBrokerageModel.cs" />
     <Compile Include="Brokerages\InteractiveBrokersBrokerageModel.cs" />
+    <Compile Include="Brokerages\OandaBrokerageModel.cs" />
     <Compile Include="Brokerages\TradierBrokerageModel.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Data\Auxiliary\FactorFile.cs" />

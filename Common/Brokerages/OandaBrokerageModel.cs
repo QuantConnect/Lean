@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -12,12 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Interfaces;
 
-namespace QuantConnect.Brokerages.Backtesting
+namespace QuantConnect.Brokerages
 {
     /// <summary>
     ///     Oanda Brokerage Model Implemenatation for Back Testing.
