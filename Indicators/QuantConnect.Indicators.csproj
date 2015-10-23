@@ -49,6 +49,7 @@
     <Compile Include="DonchianChannel.cs" />
     <Compile Include="IchimokuKinkoHyo.cs" />
     <Compile Include="KeltnerChannels.cs" />
+    <Compile Include="LeastSquaredMovingAverage.cs" />
     <Compile Include="LogReturn.cs" />
     <Compile Include="Momersion.cs" />
     <Compile Include="OnBalanceVolume.cs" />
