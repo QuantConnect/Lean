@@ -179,11 +179,10 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             Log.Trace("FxcmBrokerage.GetAccountHoldings()");
 
-            var holdings = _openPositions.Values.Select(ConvertHolding).ToList();
+            var holdings = _openPositions.Values.Select(ConvertHolding).Where(x => x.Quantity != 0).ToList();
 
             // Set MarketPrice in each Holding
             var symbols = holdings
-                .Where(x => x.Quantity != 0)
                 .Select(x => ConvertSymbolToFxcmSymbol(x.Symbol))
                 .ToList();
 
