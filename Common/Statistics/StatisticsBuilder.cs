@@ -287,12 +287,12 @@ namespace QuantConnect.Statistics
             while (listPerformance.Count < listBenchmark.Count)
             {
                 listPerformance.Add(0);
-                Log.Error("StatisticsBuilder.EnsureSameLength(): Padded Performance");
+                Log.Trace("StatisticsBuilder.EnsureSameLength(): Padded Performance");
             }
             while (listPerformance.Count > listBenchmark.Count)
             {
                 listBenchmark.Add(0);
-                Log.Error("StatisticsBuilder.EnsureSameLength(): Padded Benchmark");
+                Log.Trace("StatisticsBuilder.EnsureSameLength(): Padded Benchmark");
             }
         }
 
