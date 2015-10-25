@@ -55,13 +55,13 @@ namespace QuantConnect.ToolBox
             _dataType = dataType;
 
             // All fx data is quote data.
-            if (_securityType == SecurityType.Forex)
+            if (_securityType == SecurityType.Forex || _securityType == SecurityType.Cfd)
             {
                 _dataType = TickType.Quote;
             }
 
             // Can only process Fx and equity for now
-            if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex)
+            if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd)
             {
                 throw new Exception("Sorry this security type is not yet supported by the LEAN data writer: " + _securityType);
             }
@@ -172,6 +172,7 @@ namespace QuantConnect.ToolBox
                     break;
 
                 case SecurityType.Forex:
+                case SecurityType.Cfd:
                     switch (_resolution)
                     {
                         case Resolution.Tick:
@@ -226,6 +227,7 @@ namespace QuantConnect.ToolBox
             {
                 case SecurityType.Equity:
                 case SecurityType.Forex:
+                case SecurityType.Cfd:
                     // Base directory includes the market
                     file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), _symbol.ToLower(), Compression.CreateZipFileName(_symbol, _securityType, time, _resolution));
 
