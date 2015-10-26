@@ -266,7 +266,12 @@ namespace QuantConnect
         /// <summary>
         /// Contract For a Difference Security Type.
         /// </summary>
-        Cfd
+        Cfd,
+
+        /// <summary>
+        /// Bond Security
+        /// </summary>
+        Bond
     }
 
     /// <summary>
@@ -278,6 +283,8 @@ namespace QuantConnect
         Base,
         /// TradeBar market data type (OHLC summary bar)
         TradeBar,
+        /// QuoteBar market data type (Bid(OHLC) and Ask(OHLC) summary bar)
+        QuoteBar,
         /// Tick market data type (price-time pair)
         Tick,
         /// Data associated with an instrument
@@ -767,5 +774,35 @@ namespace QuantConnect
             new DateTime(2015, 12, 25),
             new DateTime(2016, 12, 25)
         };
+    }
+
+    /// <summary>
+    /// Specifies the right (buy or sell) of an option (SecurityType.Option) buyer/holder 
+    /// </summary>
+    public enum OptionRight
+    {
+        /// <summary>
+        /// Offers the buyer/holder the right, but not the obligation, to BUY the underlying security at the strike price until or at expiration
+        /// </summary>
+        Call,
+        /// <summary>
+        /// Offers the buyer/holder the right, but not the obligation, to SELL the underlying security at the strike price until or at expiration
+        /// </summary>
+        Put
+    }
+
+    /// <summary>
+    /// Specifies class into which the option falls, usually defined by the dates on which the option may be exercised 
+    /// </summary>
+    public enum OptionStyle
+    {
+        /// <summary>
+        /// Option may be exercised before or at the expiration date of the option
+        /// </summary>
+        American,
+        /// <summary>
+        /// Option may be exercised only at the expiration date of the option, i.e. at a single pre-defined point in time
+        /// </summary>
+        European
     }
 }
