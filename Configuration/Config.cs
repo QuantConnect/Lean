@@ -100,6 +100,14 @@ namespace QuantConnect.Configuration
         }
 
         /// <summary>
+        /// Gets the underlying JToken for the specified key
+        /// </summary>
+        public static JToken GetToken(string key)
+        {
+            return GetToken(Settings.Value, key);
+        }
+
+        /// <summary>
         /// Sets a configuration value. This is really only used to help testing. The key heye can be
         /// specified as {environment}.key to set a value on a specific environment
         /// </summary>

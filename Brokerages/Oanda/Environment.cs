@@ -13,30 +13,27 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
-
-namespace QuantConnect.Data.UniverseSelection
+namespace QuantConnect.Brokerages.Oanda
 {
     /// <summary>
-    /// Provides a mechanism for an algorithm to select a universe of symbols to operate on
+    /// Represents different environments available for the REST API.
     /// </summary>
-    public interface IUniverse
+    public enum Environment
     {
         /// <summary>
-        /// Gets the settings used for subscriptons added for this universe
+        /// An environment purely for testing; it is not as fast, stable and reliable as the other environments (i.e. it can go down once in a while). 
+        /// Market data returned from this environment is simulated (not real market data).
         /// </summary>
-        SubscriptionSettings SubscriptionSettings { get; }
+        Sandbox,
 
         /// <summary>
-        /// Gets the configuration used to get universe data
+        /// A stable environment; recommended for testing with your fxTrade Practice account and your personal access token.
         /// </summary>
-        SubscriptionDataConfig Configuration { get; }
+        Practice,
 
         /// <summary>
-        /// Performs an initial, coarse filter
+        /// A stable environment; recommended for production-ready code to execute with your fxTrade account and your personal access token.
         /// </summary>
-        /// <param name="data">The coarse fundamental data</param>
-        /// <returns>The data that passes the filter</returns>
-        IEnumerable<Symbol> SelectSymbols(IEnumerable<BaseData> data);
+        Trade
     }
 }

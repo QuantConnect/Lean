@@ -204,6 +204,7 @@ namespace QuantConnect.Util
         /// <param name="start">The start of the range</param>
         /// <param name="end">The end of the range, non-inclusive by default</param>
         /// <param name="incrementer">The incrementing function, with argument of the current item</param>
+        /// <param name="includeEndPoint">True to emit the end point, false otherwise</param>
         /// <returns>An enumerable of the range of items between start and end</returns>
         public static IEnumerable<T> Range<T>(T start, T end, Func<T, T> incrementer, bool includeEndPoint = false)
             where T : IComparable
@@ -213,14 +214,16 @@ namespace QuantConnect.Util
             {
                 while (current.CompareTo(end) <= 0)
                 {
-                    yield return current = incrementer(current);
+                    yield return current;
+                    current = incrementer(current);
                 }
             }
             else
             {
                 while (current.CompareTo(end) < 0)
                 {
-                    yield return current = incrementer(current);
+                    yield return current;
+                    current = incrementer(current);
                 }
             }
         }

@@ -198,6 +198,47 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Copy constructor with overrides
+        /// </summary>
+        /// <param name="config">The config to copy, then overrides are applied and all option</param>
+        /// <param name="objectType">Type of the data objects.</param>
+        /// <param name="securityType">SecurityType Enum Set Equity/FOREX/Futures etc.</param>
+        /// <param name="symbol">Symbol of the asset we're requesting</param>
+        /// <param name="resolution">Resolution of the asset we're requesting</param>
+        /// <param name="market">The market this subscription comes from</param>
+        /// <param name="timeZone">The time zone the raw data is time stamped in</param>
+        /// <param name="fillForward">Fill in gaps with historical data</param>
+        /// <param name="extendedHours">Equities only - send in data from 4am - 8pm</param>
+        /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
+        /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
+        /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
+        public SubscriptionDataConfig(SubscriptionDataConfig config,
+            Type objectType = null,
+            SecurityType? securityType = null,
+            Symbol symbol = null,
+            Resolution? resolution = null,
+            string market = null,
+            DateTimeZone timeZone = null,
+            bool? fillForward = null,
+            bool? extendedHours = null,
+            bool? isInternalFeed = null,
+            bool? isCustom = null)
+            : this(
+            objectType ?? config.Type,
+            securityType ?? config.SecurityType,
+            symbol ?? config.Symbol,
+            resolution ?? config.Resolution,
+            market ?? config.Market,
+            timeZone ?? config.TimeZone,
+            fillForward ?? config.FillDataForward,
+            extendedHours ?? config.ExtendedMarketHours,
+            isInternalFeed ?? config.IsInternalFeed,
+            isCustom ?? config.IsCustomData
+            )
+        {
+        }
+
+        /// <summary>
         /// Normalizes the specified price based on the DataNormalizationMode
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

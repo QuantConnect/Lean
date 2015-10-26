@@ -33,6 +33,16 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use tradier models
         /// </summary>
-        TradierBrokerage
+        TradierBrokerage,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use oanda models
+        /// </summary>
+        OandaBrokerage,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use fxcm models
+        /// </summary>
+        FxcmBrokerage
     }
 }

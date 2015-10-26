@@ -68,6 +68,12 @@ namespace QuantConnect.Orders
         /// </summary>
         Day
         */
+
+        /// <summary>
+        /// Order valid until a custom set date time value.
+        /// </summary>
+        Custom
+        
     }
 
 

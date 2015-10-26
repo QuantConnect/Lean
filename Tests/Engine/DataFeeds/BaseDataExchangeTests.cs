@@ -144,7 +144,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             exchange.Start();
 
-            Thread.Sleep(25);
+            Thread.Sleep(50);
 
             exchange.Stop();
 

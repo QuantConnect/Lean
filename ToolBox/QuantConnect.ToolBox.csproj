@@ -56,6 +56,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlgoSeekOptionsConverter\Program.cs" />
     <Compile Include="CoarseUniverseGenerator\Program.cs" />
     <Compile Include="DukascopyDownloader\DukascopyDataDownloader.cs" />
     <Compile Include="DukascopyDownloader\Program.cs" />

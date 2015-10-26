@@ -121,8 +121,11 @@
     <Compile Include="Benchmarks\SecurityBenchmark.cs" />
     <Compile Include="Brokerages\BrokerageName.cs" />
     <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
+    <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
+    <Compile Include="Brokerages\FxcmTransactionModel.cs" />
     <Compile Include="Brokerages\IBrokerageModel.cs" />
     <Compile Include="Brokerages\InteractiveBrokersBrokerageModel.cs" />
+    <Compile Include="Brokerages\OandaBrokerageModel.cs" />
     <Compile Include="Brokerages\TradierBrokerageModel.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Data\Auxiliary\FactorFile.cs" />
@@ -154,8 +157,9 @@
     <Compile Include="Data\SubscriptionDataSource.cs" />
     <Compile Include="Data\UniverseSelection\CoarseFundamental.cs" />
     <Compile Include="Data\UniverseSelection\BaseDataCollection.cs" />
+    <Compile Include="Data\UniverseSelection\UserDefinedUniverse.cs" />
     <Compile Include="Data\UniverseSelection\FuncUniverse.cs" />
-    <Compile Include="Data\UniverseSelection\IUniverse.cs" />
+    <Compile Include="Data\UniverseSelection\Universe.cs" />
     <Compile Include="Data\UniverseSelection\SecurityChanges.cs" />
     <Compile Include="Data\UniverseSelection\SubscriptionSettings.cs" />
     <Compile Include="Field.cs" />
@@ -305,6 +309,7 @@
     <Compile Include="Util\NullStringValueConverter.cs" />
     <Compile Include="Util\ObjectActivator.cs" />
     <Compile Include="Util\ReaderWriterLockSlimExtensions.cs" />
+    <Compile Include="Util\Ref.cs" />
     <Compile Include="Util\SingleValueListConverter.cs" />
     <Compile Include="Util\VersionHelper.cs" />
     <Compile Include="Util\XElementExtensions.cs" />

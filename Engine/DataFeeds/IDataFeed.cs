@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Threading;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
@@ -26,6 +27,13 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
+    /// <summary>
+    /// Delegate type for the <see cref="IDataFeed.UniverseSelection"/> event
+    /// </summary>
+    /// <param name="args">The event arguments</param>
+    /// <returns>Changes requested via universe selection</returns>
+    public delegate SecurityChanges UniverseSelectionHandler(IDataFeed sender, UniverseSelectionEventArgs args);
+
     /// <summary>
     /// Datafeed interface for creating custom datafeed sources.
     /// </summary>
@@ -37,7 +45,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// This event must be fired when there is nothing in the <see cref="Bridge"/>,
         /// this can be accomplished using <see cref="BusyBlockingCollection{T}.Wait(int,CancellationToken)"/>
         /// </summary>
-        event EventHandler<UniverseSelectionEventArgs> UniverseSelection;
+        event UniverseSelectionHandler UniverseSelection;
         
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -71,17 +79,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Adds a new subscription to provide data for the specified security.
         /// </summary>
+        /// <param name="universe">The universe the subscription is to be added to</param>
         /// <param name="security">The security to add a subscription for</param>
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
-        /// <param name="isUserDefinedSubscription">Set to true to prevent coarse universe selection from removing this subscription</param>
-        void AddSubscription(Security security, DateTime utcStartTime, DateTime utcEndTime, bool isUserDefinedSubscription);
+        /// <returns>True if the subscription was created and added successfully, false otherwise</returns>
+        bool AddSubscription(Universe universe, Security security, DateTime utcStartTime, DateTime utcEndTime);
 
         /// <summary>
         /// Removes the subscription from the data feed, if it exists
         /// </summary>
-        /// <param name="security">The security to remove subscriptions for</param>
-        void RemoveSubscription(Security security);
+        /// <param name="subscription">The subscription to be removed</param>
+        /// <returns>True if the subscription was successfully removed, false otherwise</returns>
+        bool RemoveSubscription(Subscription subscription);
 
         /// <summary>
         /// Primary entry point.

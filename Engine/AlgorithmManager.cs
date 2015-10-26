@@ -193,14 +193,6 @@ namespace QuantConnect.Lean.Engine
                 }
             }
 
-            // wire up universe selection. it is assumed that the data feed will perform the
-            // required thread synchronization.
-            var universeSelection = new UniverseSelection(feed, algorithm, _liveMode);
-            feed.UniverseSelection += (sender, args) =>
-            {
-                universeSelection.ApplyUniverseSelection(args);
-            };
-
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Trace("AlgorithmManager.Run(): Begin DataStream - Start: " + algorithm.StartDate + " Stop: " + algorithm.EndDate);
             foreach (var timeSlice in Stream(job, algorithm, feed, results, token))

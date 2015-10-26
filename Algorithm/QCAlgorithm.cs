@@ -29,6 +29,7 @@ using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
+using SecurityTypeMarket = System.Tuple<QuantConnect.SecurityType, string>;
 
 namespace QuantConnect.Algorithm
 {
@@ -72,6 +73,9 @@ namespace QuantConnect.Algorithm
         private TimeSpan? _warmupTimeSpan;
         private int? _warmupBarCount;
 
+        // user defined universes by security type
+        private readonly Dictionary<SecurityTypeMarket, UserDefinedUniverse> _userDefinedUniverses;
+
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
         /// QCAlgorithm manages the transactions, portfolio, charting and security subscriptions for the users algorithms.
@@ -113,8 +117,9 @@ namespace QuantConnect.Algorithm
             _exchangeHoursProvider = SecurityExchangeHoursProvider.FromDataFolder();
 
             // universe selection
-            Universes = new List<IUniverse>();
+            Universes = new List<Universe>();
             UniverseSettings = new SubscriptionSettings(Resolution.Minute, 2m, true, false);
+            _userDefinedUniverses = new Dictionary<SecurityTypeMarket, UserDefinedUniverse>();
 
             // initialize our scheduler, this acts as a liason to the real time handler
             Schedule = new ScheduleManager(Securities, TimeZone);
@@ -314,7 +319,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets the current universe selector, or null if no selection is to be performed
         /// </summary>
-        public List<IUniverse> Universes
+        public List<Universe> Universes
         {
             get; private set;
         }
@@ -659,12 +664,21 @@ namespace QuantConnect.Algorithm
                 case BrokerageName.Default:
                     BrokerageModel = new DefaultBrokerageModel();
                     break;
+
                 case BrokerageName.InteractiveBrokersBrokerage:
                     BrokerageModel = new InteractiveBrokersBrokerageModel();
                     break;
 
                 case BrokerageName.TradierBrokerage:
                     BrokerageModel = new TradierBrokerageModel();
+                    break;
+
+                case BrokerageName.OandaBrokerage:
+                    BrokerageModel = new OandaBrokerageModel();
+                    break;
+
+                case BrokerageName.FxcmBrokerage:
+                    BrokerageModel = new FxcmBrokerageModel();
                     break;
 
                 default:
@@ -965,24 +979,68 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Adds the universe to the algorithm
+        /// </summary>
+        /// <param name="universe">The universe to be added</param>
+        public void AddUniverse(Universe universe)
+        {
+            Universes.Add(universe);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This will use the default universe settings
+        /// specified via the <see cref="UniverseSettings"/> property.
+        /// </summary>
+        /// <typeparam name="T">The data type</typeparam>
+        /// <param name="securityType">The security type the universe produces</param>
+        /// <param name="symbol">The symbol for the universe</param>
+        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="market">The market for selected symbols</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse<T>(SecurityType securityType, Symbol symbol, Resolution resolution, string market, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
+        {
+            var exchangeHours = _exchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
+            var config = new SubscriptionDataConfig(typeof(T), securityType, symbol, resolution, market, exchangeHours.TimeZone, false, false, true, true);
+            AddUniverse(new FuncUniverse(config, UniverseSettings, d => selector(d.OfType<T>())));
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm
+        /// </summary>
+        /// <typeparam name="T">The data type</typeparam>
+        /// <param name="securityType">The security type the universe produces</param>
+        /// <param name="symbol">The symbol for the universe</param>
+        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="market">The market for selected symbols</param>
+        /// <param name="subscriptionSettings">The subscription settings to use for newly created subscriptions</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse<T>(SecurityType securityType, Symbol symbol, Resolution resolution, string market, SubscriptionSettings subscriptionSettings, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
+        {
+            var exchangeHours = _exchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
+            var config = new SubscriptionDataConfig(typeof(T), securityType, symbol, resolution, market, exchangeHours.TimeZone, false, false, true, true);
+            AddUniverse(new FuncUniverse(config, subscriptionSettings, d => selector(d.OfType<T>())));
+        }
+
+        /// <summary>
         /// Sets the current universe selector for the algorithm. This will be executed on day changes
         /// </summary>
         /// <param name="selector">The universe selector</param>
-        public void SetUniverse(IUniverse selector)
+        public void SetUniverse(Universe selector)
         {
-            Universes.Clear();
+            // don't remove user defined universes
+            Universes.RemoveAll(x => x.GetType() != typeof(UserDefinedUniverse));
             Universes.Add(selector);
         }
 
         /// <summary>
         /// Sets the current universe selector for the algorithm. This will be executed on day changes
         /// </summary>
-        /// <param name="coarse">Defines an initial coarse selection</param>
-        public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarse)
+        /// <param name="selector">Defines an initial coarse selection</param>
+        public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
         {
             var symbol = CoarseFundamental.CreateUniverseSymbol("usa");
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), SecurityType.Equity, symbol, Resolution.Daily, Market.USA, TimeZones.NewYork, false, false, true);
-            SetUniverse(new FuncUniverse(config, UniverseSettings, selectionData => coarse(selectionData.OfType<CoarseFundamental>())));
+            SetUniverse(new FuncUniverse(config, UniverseSettings, selectionData => selector(selectionData.OfType<CoarseFundamental>())));
         }
 
         /// <summary>
@@ -1053,6 +1111,8 @@ namespace QuantConnect.Algorithm
 
                 //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
                 Securities.Add(security.Symbol, security);
+
+                AddToUserDefinedUniverse(security);
             }
             catch (Exception err)
             {
@@ -1118,6 +1178,8 @@ namespace QuantConnect.Algorithm
             //Add this new generic data as a tradeable security: 
             var security = new Security(exchangeHours, config, leverage);
             Securities.Add(symbol, security);
+
+            AddToUserDefinedUniverse(security);
         }
 
         /// <summary>
@@ -1204,6 +1266,36 @@ namespace QuantConnect.Algorithm
         public bool GetQuit() 
         {
             return _quit;
+        }
+
+        /// <summary>
+        /// Adds the security to the user defined universe for the specified 
+        /// </summary>
+        private void AddToUserDefinedUniverse(Security security)
+        {
+            // add this security to the user defined universe
+            UserDefinedUniverse universe;
+            var key = new SecurityTypeMarket(security.Type, security.SubscriptionDataConfig.Market);
+            if (_userDefinedUniverses.TryGetValue(key, out universe))
+            {
+                universe.Add(security.Symbol);
+            }
+            else
+            {
+                // create a new universe, these subscription settings don't currently get used
+                // since universe selection proper is never invoked on this type of universe
+                var securityConfig = security.SubscriptionDataConfig;
+                var universeSymbol = UserDefinedUniverse.CreateSymbol(securityConfig.SecurityType, securityConfig.Market);
+                var uconfig = new SubscriptionDataConfig(securityConfig, symbol: universeSymbol, isInternalFeed: true, fillForward: false);
+                universe = new UserDefinedUniverse(uconfig,
+                    new SubscriptionSettings(security.Resolution, security.Leverage, security.IsFillDataForward, security.IsExtendedMarketHours),
+                    QuantConnect.Time.MaxTimeSpan,
+                    new List<Symbol> { security.Symbol }
+                    );
+                _userDefinedUniverses[key] = universe;
+
+                Universes.Add(universe);
+            }
         }
     }
 }
