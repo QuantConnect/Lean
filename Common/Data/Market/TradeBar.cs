@@ -24,78 +24,38 @@ namespace QuantConnect.Data.Market
     /// TradeBar class for second and minute resolution data: 
     /// An OHLC implementation of the QuantConnect BaseData class with parameters for candles.
     /// </summary>
-    public class TradeBar : BaseData
+    public class TradeBar : Bar
     {
-        // scale factor used in QC equity/forex data files
-        private const decimal _scaleFactor = 10000m;
-
         /// <summary>
         /// Volume:
         /// </summary>
         public long Volume { get; set; }
 
-        /// <summary>
-        /// Opening price of the bar: Defined as the price at the start of the time period.
-        /// </summary>
-        public decimal Open { get; set; }
-
-        /// <summary>
-        /// High price of the TradeBar during the time period.
-        /// </summary>
-        public decimal High { get; set; }
-
-        /// <summary>
-        /// Low price of the TradeBar during the time period.
-        /// </summary>
-        public decimal Low { get; set; }
-
-        /// <summary>
-        /// Closing price of the TradeBar. Defined as the price at Start Time + TimeSpan.
-        /// </summary>
-        public decimal Close
-        {
-            get { return Value; }
-            set { Value = value; }
-        }
-
-        /// <summary>
-        /// The closing time of this bar, computed via the Time and Period
-        /// </summary>
-        public override DateTime EndTime
-        {
-            get { return Time + Period; }
-            set { Period = value - Time; } 
-        }
-
-        /// <summary>
-        /// The period of this trade bar, (second, minute, daily, ect...)
-        /// </summary>
-        public TimeSpan Period { get; set; }
-
+        //In Base Class: Symbol of Asset.
+        //public Symbol Symbol;
+        
         //In Base Class: Alias of Closing:
         //public decimal Price;
 
-        //Symbol of Asset.
-        //In Base Class: public Symbol Symbol;
-
-        //In Base Class: DateTime Of this TradeBar
+        //In Base Class: DateTime of this TradeBar
         //public DateTime Time;
+
+        //In Bar Class: OHLC
+        //public decimal Open;
+        //public decimal High;
+        //public decimal Low;
+        //public decimal Close;
+
+        //In Bar Class: Period of this TradeBar
+        // public TimeSpan Period;
 
         /// <summary>
         /// Default initializer to setup an empty tradebar.
         /// </summary>
-        public TradeBar()
+        public TradeBar() : base()
         {
-            Symbol = Symbol.Empty;
-            Time = new DateTime();
-            Value = 0;
             DataType = MarketDataType.TradeBar;
-            Open = 0; 
-            High = 0;
-            Low = 0; 
-            Close = 0;
             Volume = 0;
-            Period = TimeSpan.FromMinutes(1);
         }
 
         /// <summary>
