@@ -32,7 +32,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.OandaDownloader.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.DukascopyDownloader.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ionic.Zip">
@@ -61,7 +61,6 @@
     <Compile Include="DukascopyDownloader\Program.cs" />
     <Compile Include="GoogleDownloader\GoogleDataDownloader.cs" />
     <Compile Include="GoogleDownloader\Program.cs" />
-    <Compile Include="LeanBar.cs" />
     <Compile Include="LeanDataWriter.cs" />
     <Compile Include="LeanInstrument.cs" />
     <Compile Include="OandaDownloader\OandaDataDownloader.cs" />

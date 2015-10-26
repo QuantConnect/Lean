@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Globalization;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 
@@ -26,12 +27,13 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// </summary>
         static void Main(string[] args)
         {
-            if (args.Length != 3)
+            if (args.Length != 4)
             {
-                Console.WriteLine("Usage: DukascopyDownloader SYMBOL RESOLUTION PERIOD");
+                Console.WriteLine("Usage: DukascopyDownloader SYMBOL RESOLUTION FROMDATE TODATE");
                 Console.WriteLine("SYMBOL = eg EURUSD");
                 Console.WriteLine("RESOLUTION = Tick/Second/Minute/Hour/Daily");
-                Console.WriteLine("PERIOD = 10 for 10 days intraday data");
+                Console.WriteLine("FROMDATE = yyyymmdd");
+                Console.WriteLine("TODATE = yyyymmdd");
                 Environment.Exit(1);
             }
 
@@ -40,16 +42,19 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                 // Load settings from command line
                 var symbol = args[0];
                 var resolution = (Resolution)Enum.Parse(typeof(Resolution), args[1]);
-                var period = args[2].ToInt32();
+                var startDate = DateTime.ParseExact(args[2], "yyyyMMdd", CultureInfo.InvariantCulture);
+                var endDate = DateTime.ParseExact(args[3], "yyyyMMdd", CultureInfo.InvariantCulture);
 
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
 
                 // Download the data
                 var downloader = new DukascopyDataDownloader();
+
+                if (!downloader.HasSymbol(symbol))
+                    throw new ArgumentException("The symbol " + symbol + " is not available.");
+
                 var securityType = downloader.GetSecurityType(symbol);
-                var startDate = DateTime.UtcNow.Date.AddDays(-period);
-                var endDate = DateTime.UtcNow.Date.AddDays(-1);
                 var data = downloader.Get(new Symbol(symbol), securityType, resolution, startDate, endDate);
 
                 // Save the data
@@ -58,7 +63,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
             }
             catch (Exception err)
             {
-                Log.Error("DukascopyDownloader(): Error: " + err.Message);
+                Log.Error("DukascopyDownloader(): {0}", err.Message);
             }
         }
 
