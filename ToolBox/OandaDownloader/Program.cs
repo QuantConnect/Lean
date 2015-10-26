@@ -107,7 +107,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                     {
                         Symbol = tokens[0],
                         Name = tokens[1],
-                        Type = (InstrumentType)Enum.Parse(typeof(InstrumentType), tokens[2])
+                        Type = (SecurityType)Enum.Parse(typeof(SecurityType), tokens[2])
                     });
                 }
             }

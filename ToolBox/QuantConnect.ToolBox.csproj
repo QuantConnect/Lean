@@ -32,7 +32,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.AlgoSeekOptionsConverter.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.BovespaConverter.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ionic.Zip">
@@ -49,6 +49,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -57,12 +58,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlgoSeekOptionsConverter\Program.cs" />
+    <Compile Include="BovespaConverter\Program.cs" />
     <Compile Include="CoarseUniverseGenerator\Program.cs" />
     <Compile Include="DukascopyDownloader\ConfigSettings.cs" />
     <Compile Include="DukascopyDownloader\DukascopyTick.cs" />
     <Compile Include="DukascopyDownloader\Program.cs" />
     <Compile Include="GoogleDownloader\Program.cs" />
-    <Compile Include="InstrumentType.cs" />
     <Compile Include="LeanBar.cs" />
     <Compile Include="LeanDataWriter.cs" />
     <Compile Include="LeanInstrument.cs" />
@@ -83,6 +84,9 @@
     <Compile Include="YahooDownloader\YahooDataDownloader.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="BovespaConverter\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="CoarseUniverseGenerator\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -123,6 +127,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="BovespaConverter\tickers.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BovespaConverter\tickerschange.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="CoarseUniverseGenerator\exclusions.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

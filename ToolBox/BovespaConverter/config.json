@@ -1,0 +1,28 @@
+﻿{
+    //----------------------------------------
+    // Configuration for the Bovespa Converter
+    //----------------------------------------
+
+    // Input folder in which zip raw files are saved
+    "input-folder": "C:\\Users\\Alexandre\\Documents\\Data",
+
+    // Output folder in which files will be saved (usually the Lean data folder)
+    "output-folder": "C:\\Users\\Alexandre\\Documents\\GitHub\\Lean\\Data",
+
+    // Security type (equity, option or future)
+    "security-type": "equity",
+
+    // List of symbols to download (if empty, all symbols are downloaded)
+    // The list of symbols can be found in the first column of the instruments.txt file
+    "instrument-list": [ "PETR4" ],
+
+    // Input data type/resolution (daily, trade, bid, ask)
+    "input-data-type": "trade",
+
+    // Output resolution (daily, hour, minute, second, tick)
+    "output-resolution": "tick",
+
+    // Starting date for processing (in yyyy-mm-dd format)
+    "start-date": "2015-01-01"
+}
+
