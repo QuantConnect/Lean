@@ -70,6 +70,15 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Contract
+        /// </summary>
+        BaseContract Contract
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Reader Method :: using set of arguements we specify read out type. Enumerate
         /// until the end of the data stream or file. E.g. Read CSV file line by line and convert
         /// into data types.

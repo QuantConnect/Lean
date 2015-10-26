@@ -123,6 +123,15 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Contract
+        /// </summary>
+        BaseContract Contract
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Constructor for initialising the dase data class
         /// </summary>
         public BaseData() 
