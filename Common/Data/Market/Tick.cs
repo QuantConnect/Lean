@@ -32,7 +32,7 @@ namespace QuantConnect.Data.Market
         public TickType TickType = TickType.Trade;
 
         /// <summary>
-        /// Quantity of the tick sale or quote offer.
+        /// Quantity exchanged in a trade.
         /// </summary>
         public int Quantity = 0;
 
@@ -74,6 +74,16 @@ namespace QuantConnect.Data.Market
             }
         }
 
+        /// <summary>
+        /// Size of bid quote.
+        /// </summary>
+        public int BidSize = 0;
+
+        /// <summary>
+        /// Size of ask quote.
+        /// </summary>
+        public int AskSize = 0;
+
         //In Base Class: Alias of Closing:
         //public decimal Price;
 
@@ -97,6 +107,9 @@ namespace QuantConnect.Data.Market
             Exchange = "";
             SaleCondition = "";
             Suspicious = false;
+            BidSize = 0;
+            AskSize = 0;
+            Contract = new BaseContract();
         }
 
         /// <summary>
@@ -115,6 +128,9 @@ namespace QuantConnect.Data.Market
             Quantity = original.Quantity;
             Suspicious = original.Suspicious;
             DataType = MarketDataType.Tick;
+            BidSize = original.BidSize;
+            AskSize = original.AskSize;
+            Contract = original.Contract;
         }
 
         /// <summary>
@@ -316,8 +332,8 @@ namespace QuantConnect.Data.Market
         public bool IsValid()
         {
             return (TickType == TickType.Trade && LastPrice > 0.0m && Quantity > 0) ||
-                   (TickType == TickType.Quote && AskPrice > 0.0m && Quantity > 0) ||
-                   (TickType == TickType.Quote && BidPrice > 0.0m && Quantity > 0);
+                   (TickType == TickType.Quote && AskPrice > 0.0m && AskSize > 0) ||
+                   (TickType == TickType.Quote && BidPrice > 0.0m && BidSize > 0);
         }
 
         /// <summary>
