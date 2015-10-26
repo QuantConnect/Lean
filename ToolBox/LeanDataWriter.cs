@@ -17,10 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
-using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox
 {
@@ -73,7 +73,7 @@ namespace QuantConnect.ToolBox
         /// <param name="source">IEnumerable source of the data: sorted from oldest to newest.</param>
         public void Write(IEnumerable<BaseData> source)
         {
-            var fileContents = string.Empty;
+            var sb = new StringBuilder();
             var lastTime = new DateTime();
             
             // Determine file path
@@ -91,21 +91,21 @@ namespace QuantConnect.ToolBox
                 {
                     // Write and clear the file contents
                     var outputFile = ZipOutputFile(baseDirectory, lastTime);
-                    WriteFile(outputFile, fileContents, lastTime);
-                    fileContents = string.Empty;
+                    WriteFile(outputFile, sb.ToString(), lastTime);
+                    sb.Clear();
                 }
 
                 lastTime = data.Time;
 
                 // Build the line and append it to the file
-                fileContents += GenerateFileLine(data) + Environment.NewLine;
+                sb.Append(GenerateFileLine(data) + Environment.NewLine);
             }
 
             // Write the last file
-            if (!fileContents.IsNullOrEmpty())
+            if (sb.Length > 0)
             {
                 var outputFile = ZipOutputFile(baseDirectory, lastTime);
-                WriteFile(outputFile, fileContents, lastTime);
+                WriteFile(outputFile, sb.ToString(), lastTime);
             }
         }
 
