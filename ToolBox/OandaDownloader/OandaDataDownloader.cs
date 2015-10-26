@@ -98,6 +98,16 @@ namespace QuantConnect.ToolBox.OandaDownloader
         }
 
         /// <summary>
+        /// Checks if downloader can get the data for the symbol
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns>Returns true if the symbol is available</returns>
+        public bool HasSymbol(Symbol symbol)
+        {
+            return _instruments.ContainsKey(symbol);
+        }
+
+        /// <summary>
         /// Gets the security type for the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol</param>
@@ -201,28 +211,28 @@ namespace QuantConnect.ToolBox.OandaDownloader
             switch (resolution)
             {
                 case Resolution.Second:
-                    foreach (var bar in AggregateBars(barsTotalInPeriod, new TimeSpan(0, 0, 1)))
+                    foreach (var bar in AggregateBars(symbol, barsTotalInPeriod, new TimeSpan(0, 0, 1)))
                     {
                         yield return bar;
                     }
                     break;
 
                 case Resolution.Minute:
-                    foreach (var bar in AggregateBars(barsTotalInPeriod, new TimeSpan(0, 1, 0)))
+                    foreach (var bar in AggregateBars(symbol, barsTotalInPeriod, new TimeSpan(0, 1, 0)))
                     {
                         yield return bar;
                     }
                     break;
 
                 case Resolution.Hour:
-                    foreach (var bar in AggregateBars(barsTotalInPeriod, new TimeSpan(1, 0, 0)))
+                    foreach (var bar in AggregateBars(symbol, barsTotalInPeriod, new TimeSpan(1, 0, 0)))
                     {
                         yield return bar;
                     }
                     break;
 
                 case Resolution.Daily:
-                    foreach (var bar in AggregateBars(barsTotalInPeriod, new TimeSpan(1, 0, 0, 0)))
+                    foreach (var bar in AggregateBars(symbol, barsTotalInPeriod, new TimeSpan(1, 0, 0, 0)))
                     {
                         yield return bar;
                     }
@@ -233,10 +243,11 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// <summary>
         /// Aggregates a list of 5-second bars at the requested resolution
         /// </summary>
+        /// <param name="symbol"></param>
         /// <param name="bars"></param>
         /// <param name="resolution"></param>
         /// <returns></returns>
-        private static IEnumerable<TradeBar> AggregateBars(List<Candle> bars, TimeSpan resolution)
+        private static IEnumerable<TradeBar> AggregateBars(Symbol symbol, List<Candle> bars, TimeSpan resolution)
         {
             return
                 (from b in bars
@@ -244,6 +255,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                      into g
                      select new TradeBar
                      {
+                         Symbol = symbol,
                          Time = g.Key,
                          Open = Convert.ToDecimal(g.First().openMid),
                          High = Convert.ToDecimal(g.Max(b => b.highMid)),
