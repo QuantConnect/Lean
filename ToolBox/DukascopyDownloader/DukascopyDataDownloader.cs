@@ -20,6 +20,7 @@ using System.Linq;
 using System.Net;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using SevenZip;
 
 namespace QuantConnect.ToolBox.DukascopyDownloader
@@ -71,6 +72,16 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         }
 
         /// <summary>
+        /// Checks if downloader can get the data for the symbol
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns>Returns true if the symbol is available</returns>
+        public bool HasSymbol(Symbol symbol)
+        {
+            return _instruments.ContainsKey(symbol);
+        }
+
+        /// <summary>
         /// Gets the security type for the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol</param>
@@ -119,28 +130,28 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                         break;
 
                     case Resolution.Second:
-                        foreach (var bar in AggregateTicks(ticks, new TimeSpan(0, 0, 1)))
+                        foreach (var bar in AggregateTicks(symbol, ticks, new TimeSpan(0, 0, 1)))
                         {
                             yield return bar;
                         }
                         break;
 
                     case Resolution.Minute:
-                        foreach (var bar in AggregateTicks(ticks, new TimeSpan(0, 1, 0)))
+                        foreach (var bar in AggregateTicks(symbol, ticks, new TimeSpan(0, 1, 0)))
                         {
                             yield return bar;
                         }
                         break;
 
                     case Resolution.Hour:
-                        foreach (var bar in AggregateTicks(ticks, new TimeSpan(1, 0, 0)))
+                        foreach (var bar in AggregateTicks(symbol, ticks, new TimeSpan(1, 0, 0)))
                         {
                             yield return bar;
                         }
                         break;
 
                     case Resolution.Daily:
-                        foreach (var bar in AggregateTicks(ticks, new TimeSpan(1, 0, 0, 0)))
+                        foreach (var bar in AggregateTicks(symbol, ticks, new TimeSpan(1, 0, 0, 0)))
                         {
                             yield return bar;
                         }
@@ -154,10 +165,11 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <summary>
         /// Aggregates a list of ticks at the requested resolution
         /// </summary>
+        /// <param name="symbol"></param>
         /// <param name="ticks"></param>
         /// <param name="resolution"></param>
         /// <returns></returns>
-        private static IEnumerable<TradeBar> AggregateTicks(IEnumerable<Tick> ticks, TimeSpan resolution)
+        private static IEnumerable<TradeBar> AggregateTicks(Symbol symbol, IEnumerable<Tick> ticks, TimeSpan resolution)
         {
             return 
                 (from t in ticks
@@ -165,6 +177,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                      into g
                      select new TradeBar
                      {
+                         Symbol = symbol,
                          Time = g.Key,
                          Open = g.First().LastPrice,
                          High = g.Max(t => t.LastPrice),
@@ -179,7 +192,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <param name="symbol">The requested symbol</param>
         /// <param name="date">The requested date</param>
         /// <returns>An enumerable of ticks</returns>
-        private IEnumerable<Tick> DownloadTicks(string symbol, DateTime date)
+        private IEnumerable<Tick> DownloadTicks(Symbol symbol, DateTime date)
         {
             var pointValue = _instruments[symbol].PointValue;
 
@@ -192,8 +205,17 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
 
                 using (var client = new WebClient())
                 {
-                    var bytes = client.DownloadData(url);
-                    if (bytes.Length > 0)
+                    byte[] bytes = null;
+                    try
+                    {
+                        bytes = client.DownloadData(url);
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.Error(exception.Message);
+                        yield break;
+                    }
+                    if (bytes != null && bytes.Length > 0)
                     {
                         var ticks = AppendTicksToList(symbol, bytes, date, timeOffset, pointValue);
                         foreach (var tick in ticks)
@@ -213,7 +235,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <param name="date">The date for the ticks</param>
         /// <param name="timeOffset">The time offset in milliseconds</param>
         /// <param name="pointValue">The price multiplier</param>
-        private static unsafe List<Tick> AppendTicksToList(string symbol, byte[] bytesBi5, DateTime date, int timeOffset, double pointValue)
+        private static unsafe List<Tick> AppendTicksToList(Symbol symbol, byte[] bytesBi5, DateTime date, int timeOffset, double pointValue)
         {
             var ticks = new List<Tick>();
 
