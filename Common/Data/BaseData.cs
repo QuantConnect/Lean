@@ -29,6 +29,7 @@ namespace QuantConnect.Data
         private Symbol _symbol = Symbol.Empty;
         private decimal _value;
         private bool _isFillForward;
+        private BaseContract _contract = new BaseContract();
 
         /// <summary>
         /// Market Data Type of this data - does it come in individual price packets or is it grouped into OHLC.
@@ -119,6 +120,21 @@ namespace QuantConnect.Data
             get 
             {
                 return Value;
+            }
+        }
+
+        /// <summary>
+        /// Contract 
+        /// </summary>
+        public BaseContract Contract
+        {
+            get
+            {
+                return _contract;
+            }
+            set
+            {
+                _contract = value;
             }
         }
 
