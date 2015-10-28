@@ -88,7 +88,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 throw new ArgumentException("FxcmBrokerage.LoadAccounts(): The account id is invalid: " + _accountId);
 
             // Hedging MUST be disabled on the account
-            if (_accounts[_accountId].getParties().getFXCMPositionMaintenance() != "N")
+            if (_accounts[_accountId].getParties().getFXCMPositionMaintenance() == "Y")
             {
                 throw new NotSupportedException("FxcmBrokerage.LoadAccounts(): The Lean engine does not support accounts with Hedging enabled. Please contact FXCM support to disable Hedging.");
             }
