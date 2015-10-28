@@ -244,6 +244,7 @@
     <Compile Include="Indicators\DonchianChannelTest.cs" />
     <Compile Include="Indicators\IchimokuKinkoHyoTests.cs" />
     <Compile Include="Indicators\KeltnerChannelsTests.cs" />
+    <Compile Include="Indicators\LeastSquaredMovingAverageTest.cs" />
     <Compile Include="Indicators\LogReturnTests.cs" />
     <Compile Include="Indicators\MomersionTests.cs" />
     <Compile Include="Indicators\OnBalanceVolumeTest.cs" />
