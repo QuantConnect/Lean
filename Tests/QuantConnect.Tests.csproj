@@ -105,6 +105,7 @@
     <Compile Include="Common\Securities\LocalMarketHoursTests.cs" />
     <Compile Include="Common\Securities\SecurityExchangeHoursProviderTests.cs" />
     <Compile Include="Common\Securities\SecurityExchangeHoursTests.cs" />
+    <Compile Include="Common\Securities\SecurityIdentifierTests.cs" />
     <Compile Include="Common\Securities\SecurityTransactionModelTests.cs" />
     <Compile Include="Common\SeriesTests.cs" />
     <Compile Include="Common\SymbolTests.cs" />
