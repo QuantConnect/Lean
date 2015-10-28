@@ -20,7 +20,7 @@ using System;
 namespace QuantConnect.Tests.Indicators
 {
     /// <summary>
-    /// Result tested vs. Python and Excel available in http://tinyurl.com/pnqakbm
+    /// Result tested vs. Python and Excel available in http://tinyurl.com/ob5tslj
     /// </summary>
     [TestFixture]
     public class MomersionTests
@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Indicators
         public void OnlyFullPeriodTest()
         {
             int fullPeriod = 10;
-            Momersion Momersion = new Momersion(fullPeriod);
+            MomersionIndicator Momersion = new MomersionIndicator(fullPeriod);
             DateTime time = DateTime.Now;
 
             #region Array input
@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Indicators
         {
             int minPeriod = 7;
             int fullPeriod = 20;
-            Momersion Momersion = new Momersion(minPeriod, fullPeriod);
+            MomersionIndicator Momersion = new MomersionIndicator(minPeriod, fullPeriod);
             DateTime time = DateTime.Now;
 
             #region Array input

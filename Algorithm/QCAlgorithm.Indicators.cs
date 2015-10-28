@@ -246,7 +246,7 @@ namespace QuantConnect.Algorithm
         /// <param name="downPeriod">The look back period for computing number of periods since minimum</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        /// <returns>An AroonOscillator configured with the specied periods</returns>
+        /// <returns>An AroonOscillator configured with the specified periods</returns>
         public AroonOscillator AROON(Symbol symbol, int upPeriod, int downPeriod, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, string.Format("AROON({0},{1})", upPeriod, downPeriod), resolution);
@@ -259,7 +259,7 @@ namespace QuantConnect.Algorithm
         /// Creates a new Momentum indicator. This will compute the absolute n-period change in the security.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
-        /// <param name="symbol">The symbol whose momentumwe want</param>
+        /// <param name="symbol">The symbol whose momentum we want</param>
         /// <param name="period">The period over which to compute the momentum</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
@@ -574,6 +574,22 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates and registers a new Least Squares Moving Average instance.
+        /// </summary>
+        /// <param name="symbol">The symbol whose LSMA we seek.</param>
+        /// <param name="period">The LSMA period. Normally 14.</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar.</param>
+        /// <returns>An LeastSquaredMovingAverage configured with the specified period</returns>
+        public LeastSquaresMovingAverage LSMA(Symbol symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "LSMA" + period, resolution);
+            var lsma = new LeastSquaresMovingAverage(name, period);
+            RegisterIndicator(symbol, lsma, resolution, selector);
+            return lsma;
+        }
+
+        /// <summary>
         /// Creates a new Parabolic SAR indicator
         /// </summary>
         /// <param name="symbol">The symbol whose PSAR we seek</param>
@@ -582,7 +598,7 @@ namespace QuantConnect.Algorithm
         /// <param name="afMax">Acceleration factor max value. Normally 0.2</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        /// <returns>An AroonOscillator configured with the specied periods</returns>
+        /// <returns>An AroonOscillator configured with the specified periods</returns>
         public ParabolicStopAndReverse PSAR(Symbol symbol, decimal afStart = 0.02m, decimal afIncrement = 0.02m, decimal afMax = 0.2m, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, string.Format("PSAR({0},{1},{2})", afStart, afIncrement, afMax), resolution);

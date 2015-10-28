@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
@@ -53,14 +54,14 @@ namespace QuantConnect.ToolBox
             _market = market.ToLower();
             _dataType = dataType;
 
-            //All fx data is quote data.
-            if (_securityType == SecurityType.Forex)
+            // All fx data is quote data.
+            if (_securityType == SecurityType.Forex || _securityType == SecurityType.Cfd)
             {
                 _dataType = TickType.Quote;
             }
 
-            //Can only process Fx and equity for now
-            if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex)
+            // Can only process Fx and equity for now
+            if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd)
             {
                 throw new Exception("Sorry this security type is not yet supported by the LEAN data writer: " + _securityType);
             }
@@ -72,42 +73,39 @@ namespace QuantConnect.ToolBox
         /// <param name="source">IEnumerable source of the data: sorted from oldest to newest.</param>
         public void Write(IEnumerable<BaseData> source)
         {
-            var file = string.Empty;
+            var sb = new StringBuilder();
             var lastTime = new DateTime();
-            var lastOutputFile = string.Empty;
             
-            //Determine file path:
+            // Determine file path
             var baseDirectory = Path.Combine(_dataDirectory, _securityType.ToString().ToLower(), _market);
 
-            //Loop through all the data and write to file as we go.
+            // Loop through all the data and write to file as we go
             foreach (var data in source)
             {
-                //Ensure the data is sorted
+                // Ensure the data is sorted
                 if (data.Time < lastTime) throw new Exception("The data must be pre-sorted from oldest to newest");
-                lastTime = data.Time;
 
-                //Based on the security type and resolution, write the data to the zip file.
-                var outputFile = ZipOutputFile(baseDirectory, data);
-                if (outputFile != lastOutputFile)
+                // Based on the security type and resolution, write the data to the zip file
+                if (lastTime != DateTime.MinValue && data.Time.Date > lastTime.Date && 
+                    _resolution != Resolution.Hour && _resolution != Resolution.Daily)
                 {
-                    //If an existing collection of data, write this before continue:
-                    if (lastOutputFile != string.Empty)
-                    {
-                        //Write and reset the file:
-                        WriteFile(lastOutputFile, file, lastTime);
-                        file = string.Empty;
-                    }
-                    lastOutputFile = outputFile;
+                    // Write and clear the file contents
+                    var outputFile = ZipOutputFile(baseDirectory, lastTime);
+                    WriteFile(outputFile, sb.ToString(), lastTime);
+                    sb.Clear();
                 }
 
-                //Build the line and append it to the file:
-                file += GenerateFileLine(data) + Environment.NewLine;
+                lastTime = data.Time;
+
+                // Build the line and append it to the file
+                sb.Append(GenerateFileLine(data) + Environment.NewLine);
             }
 
-            //Write the last file:
-            if (lastOutputFile != string.Empty)
+            // Write the last file
+            if (sb.Length > 0)
             {
-                WriteFile(lastOutputFile, file, lastTime);
+                var outputFile = ZipOutputFile(baseDirectory, lastTime);
+                WriteFile(outputFile, sb.ToString(), lastTime);
             }
         }
 
@@ -122,10 +120,10 @@ namespace QuantConnect.ToolBox
                 File.Delete(data);
                 Log.Trace("LeanDataWriter.Write(): Existing deleted: " + data);
             }
-            //Create the directory if it doesnt exist
-            Directory.CreateDirectory(Directory.GetDirectoryRoot(data));
+            // Create the directory if it doesnt exist
+            Directory.CreateDirectory(Path.GetDirectoryName(data));
 
-            //Write out this data string to a zip file.
+            // Write out this data string to a zip file
             Compression.Zip(filename, data, Compression.CreateZipEntryName(_symbol, _securityType, time, _resolution, _dataType));
             Log.Trace("LeanDataWriter.Write(): Created: " + data);
         }
@@ -174,6 +172,7 @@ namespace QuantConnect.ToolBox
                     break;
 
                 case SecurityType.Forex:
+                case SecurityType.Cfd:
                     switch (_resolution)
                     {
                         case Resolution.Tick:
@@ -217,27 +216,31 @@ namespace QuantConnect.ToolBox
         /// Get the output zip file
         /// </summary>
         /// <param name="baseDirectory">Base output directory for the zip file</param>
-        /// <param name="data">Data we're writing</param>
+        /// <param name="time">Date/time for the data we're writing</param>
         /// <returns></returns>
-        private string ZipOutputFile(string baseDirectory, IBaseData data)
+        private string ZipOutputFile(string baseDirectory, DateTime time)
         {
-            var file = string.Empty;
-            //Further determine path based on the remaining data: security type.
+            string file;
+
+            // Further determine path based on the remaining data: security type
             switch (_securityType)
             {
                 case SecurityType.Equity:
                 case SecurityType.Forex:
-                    //Base directory includes the market
-                    file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), _symbol.ToLower(), Compression.CreateZipFileName(_symbol, _securityType, data.Time, _resolution));
+                case SecurityType.Cfd:
+                    // Base directory includes the market
+                    file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), _symbol.ToLower(), Compression.CreateZipFileName(_symbol, _securityType, time, _resolution));
 
                     if (_resolution == Resolution.Daily || _resolution == Resolution.Hour)
                     {
-                        file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), Compression.CreateZipFileName(_symbol, _securityType, data.Time, _resolution));
+                        file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), Compression.CreateZipFileName(_symbol, _securityType, time, _resolution));
                     }
                     break;
+
                 default:
                     throw new Exception("Sorry this security type is not yet supported by the LEAN data writer: " + _securityType);
             }
+
             return file;
         }
 

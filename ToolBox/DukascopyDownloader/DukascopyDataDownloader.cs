@@ -1,0 +1,295 @@
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Logging;
+using SevenZip;
+
+namespace QuantConnect.ToolBox.DukascopyDownloader
+{
+    /// <summary>
+    /// Dukascopy Data Downloader class
+    /// </summary>
+    public class DukascopyDataDownloader : IDataDownloader
+    {
+        private const string InstrumentsFileName = "instruments_dukascopy.txt";
+        private const int DukascopyTickLength = 20;
+
+        private Dictionary<string, LeanInstrument> _instruments = new Dictionary<string, LeanInstrument>();
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DukascopyDataDownloader"/> class
+        /// </summary>
+        public DukascopyDataDownloader()
+        {
+            LoadInstruments();
+        }
+
+        /// <summary>
+        /// Loads the instrument list from the instruments.txt file
+        /// </summary>
+        /// <returns></returns>
+        private void LoadInstruments()
+        {
+            if (!File.Exists(InstrumentsFileName))
+                throw new FileNotFoundException(InstrumentsFileName + " file not found.");
+
+            _instruments = new Dictionary<string, LeanInstrument>();
+
+            var lines = File.ReadAllLines(InstrumentsFileName);
+            foreach (var line in lines)
+            {
+                var tokens = line.Split(',');
+                if (tokens.Length >= 4)
+                {
+                    _instruments.Add(tokens[0], new LeanInstrument
+                    {
+                        Symbol = tokens[0],
+                        Name = tokens[1],
+                        Type = (SecurityType)Enum.Parse(typeof(SecurityType), tokens[2]),
+                        PointValue = Convert.ToInt32(tokens[3])
+                    });
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if downloader can get the data for the symbol
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns>Returns true if the symbol is available</returns>
+        public bool HasSymbol(Symbol symbol)
+        {
+            return _instruments.ContainsKey(symbol);
+        }
+
+        /// <summary>
+        /// Gets the security type for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <returns>The security type</returns>
+        public SecurityType GetSecurityType(Symbol symbol)
+        {
+            return _instruments[symbol].Type;
+        }
+
+        /// <summary>
+        /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
+        /// </summary>
+        /// <param name="symbol">Symbol for the data we're looking for.</param>
+        /// <param name="type">Security type</param>
+        /// <param name="resolution">Resolution of the data request</param>
+        /// <param name="startUtc">Start time of the data in UTC</param>
+        /// <param name="endUtc">End time of the data in UTC</param>
+        /// <returns>Enumerable of base data for this symbol</returns>
+        public IEnumerable<BaseData> Get(Symbol symbol, SecurityType type, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        {
+            if (!_instruments.ContainsKey(symbol))
+                throw new ArgumentException("Invalid symbol requested: " + symbol);
+
+            if (type != SecurityType.Forex && type != SecurityType.Cfd)
+                throw new NotSupportedException("SecurityType not available: " + type);
+
+            if (endUtc < startUtc)
+                throw new ArgumentException("The end date must be greater or equal to the start date.");
+
+            // set the starting date
+            DateTime date = startUtc;
+
+            // loop until last date
+            while (date <= endUtc)
+            {
+                // request all ticks for a specific date
+                var ticks = DownloadTicks(symbol, date);
+
+                switch (resolution)
+                {
+                    case Resolution.Tick:
+                        foreach (var tick in ticks)
+                        {
+                            yield return new Tick(tick.Time, symbol, Convert.ToDecimal(tick.BidPrice), Convert.ToDecimal(tick.AskPrice));
+                        }
+                        break;
+
+                    case Resolution.Second:
+                        foreach (var bar in AggregateTicks(symbol, ticks, new TimeSpan(0, 0, 1)))
+                        {
+                            yield return bar;
+                        }
+                        break;
+
+                    case Resolution.Minute:
+                        foreach (var bar in AggregateTicks(symbol, ticks, new TimeSpan(0, 1, 0)))
+                        {
+                            yield return bar;
+                        }
+                        break;
+
+                    case Resolution.Hour:
+                        foreach (var bar in AggregateTicks(symbol, ticks, new TimeSpan(1, 0, 0)))
+                        {
+                            yield return bar;
+                        }
+                        break;
+
+                    case Resolution.Daily:
+                        foreach (var bar in AggregateTicks(symbol, ticks, new TimeSpan(1, 0, 0, 0)))
+                        {
+                            yield return bar;
+                        }
+                        break;
+                }
+
+                date = date.AddDays(1);
+            }
+        }
+
+        /// <summary>
+        /// Aggregates a list of ticks at the requested resolution
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <param name="ticks"></param>
+        /// <param name="resolution"></param>
+        /// <returns></returns>
+        private static IEnumerable<TradeBar> AggregateTicks(Symbol symbol, IEnumerable<Tick> ticks, TimeSpan resolution)
+        {
+            return 
+                (from t in ticks
+                 group t by t.Time.RoundDown(resolution)
+                     into g
+                     select new TradeBar
+                     {
+                         Symbol = symbol,
+                         Time = g.Key,
+                         Open = g.First().LastPrice,
+                         High = g.Max(t => t.LastPrice),
+                         Low = g.Min(t => t.LastPrice),
+                         Close = g.Last().LastPrice
+                     });
+        }
+
+        /// <summary>
+        /// Downloads all ticks for the specified date
+        /// </summary>
+        /// <param name="symbol">The requested symbol</param>
+        /// <param name="date">The requested date</param>
+        /// <returns>An enumerable of ticks</returns>
+        private IEnumerable<Tick> DownloadTicks(Symbol symbol, DateTime date)
+        {
+            var pointValue = _instruments[symbol].PointValue;
+
+            for (var hour = 0; hour < 24; hour++)
+            {
+                var timeOffset = hour * 3600000;
+
+                var url = string.Format(@"http://www.dukascopy.com/datafeed/{0}/{1:D4}/{2:D2}/{3:D2}/{4:D2}h_ticks.bi5",
+                    symbol, date.Year, date.Month - 1, date.Day, hour);
+
+                using (var client = new WebClient())
+                {
+                    byte[] bytes = null;
+                    try
+                    {
+                        bytes = client.DownloadData(url);
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.Error(exception.Message);
+                        yield break;
+                    }
+                    if (bytes != null && bytes.Length > 0)
+                    {
+                        var ticks = AppendTicksToList(symbol, bytes, date, timeOffset, pointValue);
+                        foreach (var tick in ticks)
+                        {
+                            yield return tick;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reads ticks from a Dukascopy binary buffer into a list
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <param name="bytesBi5">The buffer in binary format</param>
+        /// <param name="date">The date for the ticks</param>
+        /// <param name="timeOffset">The time offset in milliseconds</param>
+        /// <param name="pointValue">The price multiplier</param>
+        private static unsafe List<Tick> AppendTicksToList(Symbol symbol, byte[] bytesBi5, DateTime date, int timeOffset, double pointValue)
+        {
+            var ticks = new List<Tick>();
+
+            using (var inStream = new MemoryStream(bytesBi5))
+            {
+                using (var outStream = new MemoryStream())
+                {
+                    SevenZipExtractor.DecompressStream(inStream, outStream, (int)inStream.Length, null);
+
+                    byte[] bytes = outStream.GetBuffer();
+                    int count = bytes.Length / DukascopyTickLength;
+
+                    // Numbers are big-endian
+                    // ii1 = milliseconds within the hour
+                    // ii2 = AskPrice * point value
+                    // ii3 = BidPrice * point value
+                    // ff1 = AskVolume (not used)
+                    // ff2 = BidVolume (not used)
+
+                    fixed (byte* pBuffer = &bytes[0])
+                    {
+                        uint* p = (uint*)pBuffer;
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            ReverseBytes(p); uint time = *p++;
+                            ReverseBytes(p); uint ask = *p++;
+                            ReverseBytes(p); uint bid = *p++;
+                            p++; p++;
+
+                            if (bid > 0 && ask > 0)
+                            {
+                                ticks.Add(new Tick(
+                                    date.AddMilliseconds(timeOffset + time), 
+                                    symbol, 
+                                    Convert.ToDecimal(bid / pointValue), 
+                                    Convert.ToDecimal(ask / pointValue)));
+                            }
+                        }
+                    }
+                }
+            }
+
+            return ticks;
+        }
+
+        /// <summary>
+        /// Converts a 32-bit unsigned integer from big-endian to little-endian (and vice-versa)
+        /// </summary>
+        /// <param name="p">Pointer to the integer value</param>
+        private static unsafe void ReverseBytes(uint* p)
+        {
+            *p = (*p & 0x000000FF) << 24 | (*p & 0x0000FF00) << 8 | (*p & 0x00FF0000) >> 8 | (*p & 0xFF000000) >> 24;
+        }
+
+    }
+}
