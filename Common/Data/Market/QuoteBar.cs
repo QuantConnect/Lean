@@ -166,8 +166,8 @@ namespace QuantConnect.Data.Market
             AvgBidSize = avgbidsize;
             AvgAskSize = avgasksize;
             Period = period ?? TimeSpan.FromMinutes(1);
-            Bid = new Bar(bidopen, bidhigh, bidlow, bidclose, Period);
-            Ask = new Bar(askopen, askhigh, asklow, askclose, Period);
+            Bid = new Bar(bidopen, bidhigh, bidlow, bidclose);
+            Ask = new Bar(askopen, askhigh, asklow, askclose);
             DataType = MarketDataType.QuoteBar;
         }
 
@@ -407,6 +407,10 @@ namespace QuantConnect.Data.Market
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
+        /// <summary>
+        /// Clone
+        /// </summary>
+        /// <returns>Cloned QuoteBar</returns>
         public override BaseData Clone()
         {
             return (BaseData)MemberwiseClone();

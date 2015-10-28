@@ -18,7 +18,7 @@ using System;
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// Base Bar Class: Open, High, Low, Close and Period.
+    /// Base Bar Class: Open, High, Low and Close.
     /// </summary>
     public interface IBar
     {
@@ -41,10 +41,5 @@ namespace QuantConnect.Data.Market
         /// Closing price of the bar. Defined as the price at Start Time + TimeSpan.
         /// </summary>
         decimal Close { get; set; }
-
-        /// <summary>
-        /// The period of thee bar, (second, minute, daily, ect...)
-        /// </summary>
-        TimeSpan Period { get; set; }
     }
 }

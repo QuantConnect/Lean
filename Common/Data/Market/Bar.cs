@@ -43,11 +43,6 @@ namespace QuantConnect.Data.Market
         public decimal Close { get; set; }
 
         /// <summary>
-        /// The period of the bar, (second, minute, daily, ect...)
-        /// </summary>
-        public TimeSpan Period { get; set; }
-
-        /// <summary>
         /// Default initializer to setup an empty bar.
         /// </summary>
         public Bar()
@@ -56,20 +51,6 @@ namespace QuantConnect.Data.Market
             High = 0;
             Low = 0; 
             Close = 0;
-            Period = TimeSpan.FromMinutes(1);
-        }
-
-        /// <summary>
-        /// Initializer to setup an empty bar with a given period.
-        /// </summary>
-        /// <param name="period">The period of this bar, specify null for default of 1 minute</param>
-        public Bar(TimeSpan period)
-        {
-            Open = 0;
-            High = 0;
-            Low = 0;
-            Close = 0;
-            Period = period;
         }
 
         /// <summary>
@@ -79,14 +60,12 @@ namespace QuantConnect.Data.Market
         /// <param name="high">Decimal High Price of this bar</param>
         /// <param name="low">Decimal Low Price of this bar</param>
         /// <param name="close">Decimal Close price of this bar</param>
-        /// <param name="period">The period of this bar, specify null for default of 1 minute</param>
-        public Bar(decimal open, decimal high, decimal low, decimal close, TimeSpan period)
+        public Bar(decimal open, decimal high, decimal low, decimal close)
         {
             Open = open;
             High = high;
             Low = low;
             Close = close;
-            Period = period;
         }
     }
 }
