@@ -17,6 +17,8 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -28,6 +30,7 @@ namespace QuantConnect.Securities
     /// This includes the symbol and other data specific to the SecurityType.
     /// The symbol is limited to 12 characters
     /// </remarks>
+    [JsonConverter(typeof(SecurityIdentifierJsonConverter))]
     public struct SecurityIdentifier : IEquatable<SecurityIdentifier>
     {
         #region Empty, Invalid
@@ -514,6 +517,17 @@ namespace QuantConnect.Securities
             od = sd = ulong.MaxValue;
             exception = null;
 
+            if (value == null)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                od = sd = 0;
+                return true;
+            }
+
             if (value.StartsWith(Invalid.Symbol))
             {
                 sd = Invalid._symbolData;
@@ -540,7 +554,7 @@ namespace QuantConnect.Securities
         /// </summary>
         private ulong ExtractFromOtherData(ulong offset, ulong width)
         {
-            return (_otherData / offset) % width;
+            return (_otherData/offset)%width;
         }
 
         #endregion
@@ -610,6 +624,12 @@ namespace QuantConnect.Securities
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
+            const ulong zero = 0UL;
+            if (_symbolData == zero && _symbolData == zero)
+            {
+                return string.Empty;
+            }
+
             var od = EncodeBase36(_otherData);
             var sd = EncodeBase36(_symbolData);
             return sd + ' ' + od;

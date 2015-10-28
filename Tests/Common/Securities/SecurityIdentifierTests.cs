@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Securities;
 
@@ -184,11 +185,53 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void RoundTripEmptyParse()
+        {
+            Assert.AreEqual(SecurityIdentifier.Empty, SecurityIdentifier.Parse(SecurityIdentifier.Empty.ToString()));
+        }
+
+        [Test]
         public void UsedAsDictionaryKey()
         {
             var hash = new HashSet<SecurityIdentifier>();
             Assert.IsTrue(hash.Add(SPY));
             Assert.IsFalse(hash.Add(SPY));
+        }
+
+        [Test]
+        public void SerializesToSimpleString()
+        {
+            var sid = SPY;
+            var str = sid.ToString();
+            var serialized = JsonConvert.SerializeObject(sid);
+            Assert.AreEqual("\"" + str + "\"", serialized);
+        }
+
+        [Test]
+        public void DeserializesFromSimpleString()
+        {
+            var sid = SPY;
+            var str = "\"" + sid + "\"";
+            var deserialized = JsonConvert.DeserializeObject<SecurityIdentifier>(str);
+            Assert.AreEqual(sid, deserialized);
+        }
+
+        [Test]
+        public void DeserializesFromSimpleStringWithinContainerClass()
+        {
+            var sid = new Container{sid =SPY};
+            var str = 
+@"
+{
+    'sid': '" + SPY + @"' 
+}";
+            var deserialized = JsonConvert.DeserializeObject<Container>(str);
+            Assert.AreEqual(sid.sid, deserialized.sid);
+        }
+
+        class Container
+        {
+            public SecurityIdentifier sid;
         }
     }
 }
