@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,21 +13,38 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.ToolBox
+using System;
+
+namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// Represents the type of the instrument
+    /// Base Bar Class: Open, High, Low, Close and Period.
     /// </summary>
-    public enum InstrumentType
+    public interface IBar
     {
         /// <summary>
-        /// Foreign Exchange instrument type
+        /// Opening price of the bar: Defined as the price at the start of the time period.
         /// </summary>
-        Forex,
+        decimal Open { get; set; }
 
         /// <summary>
-        /// Contract For Difference instrument type
+        /// High price of the bar during the time period.
         /// </summary>
-        Cfd
-    };
+        decimal High { get; set; }
+
+        /// <summary>
+        /// Low price of the bar during the time period.
+        /// </summary>
+        decimal Low { get; set; }
+
+        /// <summary>
+        /// Closing price of the bar. Defined as the price at Start Time + TimeSpan.
+        /// </summary>
+        decimal Close { get; set; }
+
+        /// <summary>
+        /// The period of thee bar, (second, minute, daily, ect...)
+        /// </summary>
+        TimeSpan Period { get; set; }
+    }
 }
