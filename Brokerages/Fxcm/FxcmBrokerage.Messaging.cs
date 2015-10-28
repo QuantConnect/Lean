@@ -44,7 +44,7 @@ namespace QuantConnect.Brokerages.Fxcm
         private bool _isOrderSubmitRejected;
         private volatile bool _connectionLost;
 
-        private readonly Dictionary<string, string> _mapInstrumentSymbols = new Dictionary<string, string>();
+        private readonly Dictionary<Symbol, string> _mapInstrumentSymbols = new Dictionary<Symbol, string>();
         private readonly Dictionary<string, TradingSecurity> _fxcmInstruments = new Dictionary<string, TradingSecurity>();
         private readonly Dictionary<string, CollateralReport> _accounts = new Dictionary<string, CollateralReport>();
         private readonly Dictionary<string, MarketDataSnapshot> _rates = new Dictionary<string, MarketDataSnapshot>();

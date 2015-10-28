@@ -256,7 +256,7 @@ namespace QuantConnect.Brokerages.Oanda
         {
             var requestParams = new Dictionary<string, string>
             {
-                {"instrument", order.Symbol},
+                {"instrument", order.Symbol.Value},
                 {"units", Convert.ToInt32(order.AbsoluteQuantity).ToString()}
             };
 
@@ -375,7 +375,7 @@ namespace QuantConnect.Brokerages.Oanda
             
             var requestParams = new Dictionary<string, string>
             {
-                {"instrument", order.Symbol},
+                {"instrument", order.Symbol.Value},
                 {"units", Convert.ToInt32(order.AbsoluteQuantity).ToString()},
             };
 
@@ -1000,7 +1000,7 @@ namespace QuantConnect.Brokerages.Oanda
                 default:
                     throw new NotSupportedException("The Oanda order type " + order.type + " is not supported.");
             }
-            qcOrder.Symbol = order.instrument;
+            qcOrder.Symbol = new Symbol(order.instrument);
             qcOrder.Quantity = ConvertQuantity(order);
             qcOrder.SecurityType = InstrumentSecurityTypeMap[order.instrument];
             qcOrder.Status = OrderStatus.None;

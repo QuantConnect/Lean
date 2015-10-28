@@ -565,7 +565,7 @@ namespace QuantConnect.Algorithm
         /// <param name="period">The period of the log return.</param>
         /// <param name="resolution">The resolution.</param>
         /// <returns>log return indicator for the requested symbol.</returns>
-        public LogReturn LOGR(string symbol, int period, Resolution? resolution = null)
+        public LogReturn LOGR(Symbol symbol, int period, Resolution? resolution = null)
         {
             string name = CreateIndicatorName(symbol, "LOGR", resolution);
             var logr = new LogReturn(name, period);

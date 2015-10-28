@@ -807,7 +807,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     if (order.SecurityType == SecurityType.Forex)
                     {
                         string baseCurrency, quoteCurrency;
-                        Forex.DecomposeCurrencyPair(fill.Symbol, out baseCurrency, out quoteCurrency);
+                        Forex.DecomposeCurrencyPair(fill.Symbol.Value, out baseCurrency, out quoteCurrency);
                         conversionRate = _algorithm.Portfolio.CashBook[quoteCurrency].ConversionRate;
                     }
 

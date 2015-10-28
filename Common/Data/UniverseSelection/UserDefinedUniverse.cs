@@ -72,7 +72,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>A symbol for user defined universe of the specified security type and market</returns>
         public static Symbol CreateSymbol(SecurityType securityType, string market)
         {
-            return string.Format("qc-universe-userdefined-{0}-{1}", market.ToLower(), securityType.ToString().ToLower());
+            return new Symbol(string.Format("qc-universe-userdefined-{0}-{1}", market.ToLower(), securityType.ToString().ToLower()));
         }
 
         /// <summary>

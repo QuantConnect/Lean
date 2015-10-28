@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
             var trade = builder.ClosedTrades[0];
 
-            Assert.AreEqual(Symbol, trade.Symbol);
+            Assert.AreEqual(Symbol, trade.Symbol.Value);
             Assert.AreEqual(time, trade.EntryTime);
             Assert.AreEqual(1.08m, trade.EntryPrice);
             Assert.AreEqual(TradeDirection.Long, trade.Direction);
@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
             var trade = builder.ClosedTrades[0];
 
-            Assert.AreEqual(Symbol, trade.Symbol);
+            Assert.AreEqual(Symbol, trade.Symbol.Value);
             Assert.AreEqual(time, trade.EntryTime);
             Assert.AreEqual(1.08m, trade.EntryPrice);
             Assert.AreEqual(TradeDirection.Short, trade.Direction);
@@ -153,7 +153,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade1 = builder.ClosedTrades[matchingMethod == FillMatchingMethod.FIFO ? 0 : 1];
 
-                Assert.AreEqual(Symbol, trade1.Symbol);
+                Assert.AreEqual(Symbol, trade1.Symbol.Value);
                 Assert.AreEqual(time, trade1.EntryTime);
                 Assert.AreEqual(1.08m, trade1.EntryPrice);
                 Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -167,7 +167,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade2 = builder.ClosedTrades[matchingMethod == FillMatchingMethod.FIFO ? 1 : 0];
 
-                Assert.AreEqual(Symbol, trade2.Symbol);
+                Assert.AreEqual(Symbol, trade2.Symbol.Value);
                 Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
                 Assert.AreEqual(1.07m, trade2.EntryPrice);
                 Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -185,7 +185,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade = builder.ClosedTrades[0];
 
-                Assert.AreEqual(Symbol, trade.Symbol);
+                Assert.AreEqual(Symbol, trade.Symbol.Value);
                 Assert.AreEqual(time, trade.EntryTime);
                 Assert.AreEqual(1.075m, trade.EntryPrice);
                 Assert.AreEqual(TradeDirection.Long, trade.Direction);
@@ -238,7 +238,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade1 = builder.ClosedTrades[matchingMethod == FillMatchingMethod.FIFO ? 0 : 1];
 
-                Assert.AreEqual(Symbol, trade1.Symbol);
+                Assert.AreEqual(Symbol, trade1.Symbol.Value);
                 Assert.AreEqual(time, trade1.EntryTime);
                 Assert.AreEqual(1.08m, trade1.EntryPrice);
                 Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -252,7 +252,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade2 = builder.ClosedTrades[matchingMethod == FillMatchingMethod.FIFO ? 1 : 0];
 
-                Assert.AreEqual(Symbol, trade2.Symbol);
+                Assert.AreEqual(Symbol, trade2.Symbol.Value);
                 Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
                 Assert.AreEqual(1.07m, trade2.EntryPrice);
                 Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -270,7 +270,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade = builder.ClosedTrades[0];
 
-                Assert.AreEqual(Symbol, trade.Symbol);
+                Assert.AreEqual(Symbol, trade.Symbol.Value);
                 Assert.AreEqual(time, trade.EntryTime);
                 Assert.AreEqual(1.075m, trade.EntryPrice);
                 Assert.AreEqual(TradeDirection.Short, trade.Direction);
@@ -323,7 +323,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade = builder.ClosedTrades[0];
 
-                Assert.AreEqual(Symbol, trade.Symbol);
+                Assert.AreEqual(Symbol, trade.Symbol.Value);
                 Assert.AreEqual(time, trade.EntryTime);
                 Assert.AreEqual(1.07m, trade.EntryPrice);
                 Assert.AreEqual(TradeDirection.Long, trade.Direction);
@@ -341,7 +341,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade1 = builder.ClosedTrades[0];
 
-                Assert.AreEqual(Symbol, trade1.Symbol);
+                Assert.AreEqual(Symbol, trade1.Symbol.Value);
                 Assert.AreEqual(time, trade1.EntryTime);
                 Assert.AreEqual(1.07m, trade1.EntryPrice);
                 Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -355,7 +355,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade2 = builder.ClosedTrades[1];
 
-                Assert.AreEqual(Symbol, trade2.Symbol);
+                Assert.AreEqual(Symbol, trade2.Symbol.Value);
                 Assert.AreEqual(time, trade2.EntryTime);
                 Assert.AreEqual(1.07m, trade2.EntryPrice);
                 Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -408,7 +408,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade = builder.ClosedTrades[0];
 
-                Assert.AreEqual(Symbol, trade.Symbol);
+                Assert.AreEqual(Symbol, trade.Symbol.Value);
                 Assert.AreEqual(time, trade.EntryTime);
                 Assert.AreEqual(1.07m, trade.EntryPrice);
                 Assert.AreEqual(TradeDirection.Short, trade.Direction);
@@ -426,7 +426,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade1 = builder.ClosedTrades[0];
 
-                Assert.AreEqual(Symbol, trade1.Symbol);
+                Assert.AreEqual(Symbol, trade1.Symbol.Value);
                 Assert.AreEqual(time, trade1.EntryTime);
                 Assert.AreEqual(1.07m, trade1.EntryPrice);
                 Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -440,7 +440,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade2 = builder.ClosedTrades[1];
 
-                Assert.AreEqual(Symbol, trade2.Symbol);
+                Assert.AreEqual(Symbol, trade2.Symbol.Value);
                 Assert.AreEqual(time, trade2.EntryTime);
                 Assert.AreEqual(1.07m, trade2.EntryPrice);
                 Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -491,7 +491,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
             var trade1 = builder.ClosedTrades[0];
 
-            Assert.AreEqual(Symbol, trade1.Symbol);
+            Assert.AreEqual(Symbol, trade1.Symbol.Value);
             Assert.AreEqual(time, trade1.EntryTime);
             Assert.AreEqual(1.07m, trade1.EntryPrice);
             Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -505,7 +505,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
             var trade2 = builder.ClosedTrades[1];
 
-            Assert.AreEqual(Symbol, trade2.Symbol);
+            Assert.AreEqual(Symbol, trade2.Symbol.Value);
             Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
             Assert.AreEqual(1.08m, trade2.EntryPrice);
             Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -555,7 +555,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
             var trade1 = builder.ClosedTrades[0];
 
-            Assert.AreEqual(Symbol, trade1.Symbol);
+            Assert.AreEqual(Symbol, trade1.Symbol.Value);
             Assert.AreEqual(time, trade1.EntryTime);
             Assert.AreEqual(1.07m, trade1.EntryPrice);
             Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -569,7 +569,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
             var trade2 = builder.ClosedTrades[1];
 
-            Assert.AreEqual(Symbol, trade2.Symbol);
+            Assert.AreEqual(Symbol, trade2.Symbol.Value);
             Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
             Assert.AreEqual(1.08m, trade2.EntryPrice);
             Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -633,7 +633,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbol, trade1.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.08m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -647,7 +647,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbol, trade2.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time.AddMinutes(30), trade2.EntryTime);
                         Assert.AreEqual(1.08m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -661,7 +661,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade3 = builder.ClosedTrades[2];
 
-                        Assert.AreEqual(Symbol, trade3.Symbol);
+                        Assert.AreEqual(Symbol, trade3.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(30) : time, trade3.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.07m, trade3.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade3.Direction);
@@ -681,7 +681,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade.Symbol);
+                        Assert.AreEqual(Symbol, trade.Symbol.Value);
                         Assert.AreEqual(time, trade.EntryTime);
                         Assert.AreEqual(1.0766666666666666666666666667m, trade.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade.Direction);
@@ -701,7 +701,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbol, trade1.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.08m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -715,7 +715,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbol, trade2.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time, trade2.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.075m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -782,7 +782,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbol, trade1.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.08m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -796,7 +796,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbol, trade2.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time.AddMinutes(30), trade2.EntryTime);
                         Assert.AreEqual(1.08m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -810,7 +810,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade3 = builder.ClosedTrades[2];
 
-                        Assert.AreEqual(Symbol, trade3.Symbol);
+                        Assert.AreEqual(Symbol, trade3.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(30) : time, trade3.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.07m, trade3.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade3.Direction);
@@ -830,7 +830,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade.Symbol);
+                        Assert.AreEqual(Symbol, trade.Symbol.Value);
                         Assert.AreEqual(time, trade.EntryTime);
                         Assert.AreEqual(1.0766666666666666666666666667m, trade.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade.Direction);
@@ -850,7 +850,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbol, trade1.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.08m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -864,7 +864,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbol, trade2.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time, trade2.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.075m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -933,7 +933,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade1 = builder.ClosedTrades[0];
 
-                            Assert.AreEqual(Symbol, trade1.Symbol);
+                            Assert.AreEqual(Symbol, trade1.Symbol.Value);
                             Assert.AreEqual(time, trade1.EntryTime);
                             Assert.AreEqual(1.07m, trade1.EntryPrice);
                             Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -947,7 +947,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade2 = builder.ClosedTrades[1];
 
-                            Assert.AreEqual(Symbol, trade2.Symbol);
+                            Assert.AreEqual(Symbol, trade2.Symbol.Value);
                             Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
                             Assert.AreEqual(1.08m, trade2.EntryPrice);
                             Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -961,7 +961,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade3 = builder.ClosedTrades[2];
 
-                            Assert.AreEqual(Symbol, trade3.Symbol);
+                            Assert.AreEqual(Symbol, trade3.Symbol.Value);
                             Assert.AreEqual(time.AddMinutes(30), trade3.EntryTime);
                             Assert.AreEqual(1.08m, trade3.EntryPrice);
                             Assert.AreEqual(TradeDirection.Long, trade3.Direction);
@@ -979,7 +979,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade1 = builder.ClosedTrades[0];
 
-                            Assert.AreEqual(Symbol, trade1.Symbol);
+                            Assert.AreEqual(Symbol, trade1.Symbol.Value);
                             Assert.AreEqual(time.AddMinutes(10), trade1.EntryTime);
                             Assert.AreEqual(1.08m, trade1.EntryPrice);
                             Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -993,7 +993,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade2 = builder.ClosedTrades[1];
 
-                            Assert.AreEqual(Symbol, trade2.Symbol);
+                            Assert.AreEqual(Symbol, trade2.Symbol.Value);
                             Assert.AreEqual(time.AddMinutes(30), trade2.EntryTime);
                             Assert.AreEqual(1.08m, trade2.EntryPrice);
                             Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -1007,7 +1007,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade3 = builder.ClosedTrades[2];
 
-                            Assert.AreEqual(Symbol, trade3.Symbol);
+                            Assert.AreEqual(Symbol, trade3.Symbol.Value);
                             Assert.AreEqual(time.AddMinutes(10), trade3.EntryTime);
                             Assert.AreEqual(1.08m, trade3.EntryPrice);
                             Assert.AreEqual(TradeDirection.Long, trade3.Direction);
@@ -1021,7 +1021,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade4 = builder.ClosedTrades[3];
 
-                            Assert.AreEqual(Symbol, trade4.Symbol);
+                            Assert.AreEqual(Symbol, trade4.Symbol.Value);
                             Assert.AreEqual(time, trade4.EntryTime);
                             Assert.AreEqual(1.07m, trade4.EntryPrice);
                             Assert.AreEqual(TradeDirection.Long, trade4.Direction);
@@ -1042,7 +1042,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade.Symbol);
+                        Assert.AreEqual(Symbol, trade.Symbol.Value);
                         Assert.AreEqual(time, trade.EntryTime);
                         Assert.AreEqual(1.0775m, trade.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade.Direction);
@@ -1062,7 +1062,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbol, trade1.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.08m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -1076,7 +1076,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbol, trade2.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time, trade2.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.0766666666666666666666666667m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -1145,7 +1145,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade1 = builder.ClosedTrades[0];
 
-                            Assert.AreEqual(Symbol, trade1.Symbol);
+                            Assert.AreEqual(Symbol, trade1.Symbol.Value);
                             Assert.AreEqual(time, trade1.EntryTime);
                             Assert.AreEqual(1.07m, trade1.EntryPrice);
                             Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -1159,7 +1159,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade2 = builder.ClosedTrades[1];
 
-                            Assert.AreEqual(Symbol, trade2.Symbol);
+                            Assert.AreEqual(Symbol, trade2.Symbol.Value);
                             Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
                             Assert.AreEqual(1.08m, trade2.EntryPrice);
                             Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -1173,7 +1173,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade3 = builder.ClosedTrades[2];
 
-                            Assert.AreEqual(Symbol, trade3.Symbol);
+                            Assert.AreEqual(Symbol, trade3.Symbol.Value);
                             Assert.AreEqual(time.AddMinutes(30), trade3.EntryTime);
                             Assert.AreEqual(1.08m, trade3.EntryPrice);
                             Assert.AreEqual(TradeDirection.Short, trade3.Direction);
@@ -1191,7 +1191,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade1 = builder.ClosedTrades[0];
 
-                            Assert.AreEqual(Symbol, trade1.Symbol);
+                            Assert.AreEqual(Symbol, trade1.Symbol.Value);
                             Assert.AreEqual(time.AddMinutes(10), trade1.EntryTime);
                             Assert.AreEqual(1.08m, trade1.EntryPrice);
                             Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -1205,7 +1205,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade2 = builder.ClosedTrades[1];
 
-                            Assert.AreEqual(Symbol, trade2.Symbol);
+                            Assert.AreEqual(Symbol, trade2.Symbol.Value);
                             Assert.AreEqual(time.AddMinutes(30), trade2.EntryTime);
                             Assert.AreEqual(1.08m, trade2.EntryPrice);
                             Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -1219,7 +1219,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade3 = builder.ClosedTrades[2];
 
-                            Assert.AreEqual(Symbol, trade3.Symbol);
+                            Assert.AreEqual(Symbol, trade3.Symbol.Value);
                             Assert.AreEqual(time.AddMinutes(10), trade3.EntryTime);
                             Assert.AreEqual(1.08m, trade3.EntryPrice);
                             Assert.AreEqual(TradeDirection.Short, trade3.Direction);
@@ -1233,7 +1233,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade4 = builder.ClosedTrades[3];
 
-                            Assert.AreEqual(Symbol, trade4.Symbol);
+                            Assert.AreEqual(Symbol, trade4.Symbol.Value);
                             Assert.AreEqual(time, trade4.EntryTime);
                             Assert.AreEqual(1.07m, trade4.EntryPrice);
                             Assert.AreEqual(TradeDirection.Short, trade4.Direction);
@@ -1254,7 +1254,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade.Symbol);
+                        Assert.AreEqual(Symbol, trade.Symbol.Value);
                         Assert.AreEqual(time, trade.EntryTime);
                         Assert.AreEqual(1.0775m, trade.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade.Direction);
@@ -1274,7 +1274,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbol, trade1.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.08m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -1288,7 +1288,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbol, trade2.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time, trade2.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.0766666666666666666666666667m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -1360,7 +1360,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbol, trade1.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(20), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.09m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -1374,7 +1374,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbol, trade2.Symbol.Value);
                         Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
                         Assert.AreEqual(1.08m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -1388,7 +1388,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade3 = builder.ClosedTrades[2];
 
-                        Assert.AreEqual(Symbol, trade3.Symbol);
+                        Assert.AreEqual(Symbol, trade3.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(20) : time.AddMinutes(40), trade3.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.09m : 1.08m, trade3.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade3.Direction);
@@ -1402,7 +1402,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade4 = builder.ClosedTrades[3];
 
-                        Assert.AreEqual(Symbol, trade4.Symbol);
+                        Assert.AreEqual(Symbol, trade4.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(40) : time, trade4.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.07m, trade4.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade4.Direction);
@@ -1422,7 +1422,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade.Symbol);
+                        Assert.AreEqual(Symbol, trade.Symbol.Value);
                         Assert.AreEqual(time, trade.EntryTime);
                         Assert.AreEqual(1.08m, trade.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade.Direction);
@@ -1442,7 +1442,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbol, trade1.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.075m : 1.085m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -1456,7 +1456,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbol, trade2.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(20) : time, trade2.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.085m : 1.075m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -1528,7 +1528,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbol, trade1.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(20), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.09m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -1542,7 +1542,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbol, trade2.Symbol.Value);
                         Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
                         Assert.AreEqual(1.08m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -1556,7 +1556,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade3 = builder.ClosedTrades[2];
 
-                        Assert.AreEqual(Symbol, trade3.Symbol);
+                        Assert.AreEqual(Symbol, trade3.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(20) : time.AddMinutes(40), trade3.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.09m : 1.08m, trade3.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade3.Direction);
@@ -1570,7 +1570,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade4 = builder.ClosedTrades[3];
 
-                        Assert.AreEqual(Symbol, trade4.Symbol);
+                        Assert.AreEqual(Symbol, trade4.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(40) : time, trade4.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.07m, trade4.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade4.Direction);
@@ -1590,7 +1590,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade.Symbol);
+                        Assert.AreEqual(Symbol, trade.Symbol.Value);
                         Assert.AreEqual(time, trade.EntryTime);
                         Assert.AreEqual(1.08m, trade.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade.Direction);
@@ -1610,7 +1610,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbol, trade1.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.075m : 1.085m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -1624,7 +1624,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbol, trade2.Symbol.Value);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(20) : time, trade2.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.085m : 1.075m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade2.Direction);
