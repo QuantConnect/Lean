@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common
 {
@@ -35,19 +36,21 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void UsesSidForDictionaryKey()
         {
+            var sid = SecurityIdentifier.GenerateEquity("SPY", Market.USA);
             var dictionary = new Dictionary<Symbol, int>
             {
-                {new Symbol("sid", "value"), 1}
+                {new Symbol(sid, "value"), 1}
             };
 
-            var key = new Symbol("sid", "other value");
+            var key = new Symbol(sid, "other value");
             Assert.IsTrue(dictionary.ContainsKey(key));
         }
         
         [Test]
         public void SurvivesRoundtripSerialization()
         {
-            var expected = new Symbol("sid", "value");
+            var sid = SecurityIdentifier.GenerateEquity("SPY", Market.USA);
+            var expected = new Symbol(sid, "value");
             var json = JsonConvert.SerializeObject(expected, Settings);
             var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
             Assert.AreEqual(expected, actual);
@@ -55,7 +58,8 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void SurvivesRoundtripSerializationWithTypeNameHandling()
         {
-            var expected = new Symbol("sid", "value");
+            var sid = SecurityIdentifier.GenerateEquity("SPY", Market.USA);
+            var expected = new Symbol(sid, "value");
             var json = JsonConvert.SerializeObject(expected, Settings);
             var actual = JsonConvert.DeserializeObject<Symbol>(json);
             Assert.AreEqual(expected, actual);
@@ -68,13 +72,13 @@ namespace QuantConnect.Tests.Common
 '$values':[{'$type':'QuantConnect.Data.Market.Tick, QuantConnect.Common',
 'TickType':0,'Quantity':1,'Exchange':'',
 'SaleCondition':'',
-'Suspicious':false,'BidPrice':0.72722,'AskPrice':0.7278,'LastPrice':0.72722,'DataType':2,'IsFillForward':false,'Time':'2015-09-18T16:52:37.379',
+'Suspicious':false,'BidPrice':0.72722,'AskPrice':0.7278,'BidSize':0,'AskSize':0,'LastPrice':0.72722,'DataType':2,'IsFillForward':false,'Time':'2015-09-18T16:52:37.379',
 'EndTime':'2015-09-18T16:52:37.379',
 'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common',
 'Value':'EURGBP',
-'Permtick':'EURGBP'},'Value':0.72722,'Price':0.72722}]}";
+'Permtick':'EURGBP','ID':'EURGBP 5O'},'Value':0.72722,'Price':0.72722}]}";
 
-            var expected = new Symbol("EURGBP");
+            var expected = new Symbol(SecurityIdentifier.GenerateForex("EURGBP", Market.FXCM),  "EURGBP");
             var settings = Settings;
             var actual = JsonConvert.DeserializeObject<List<BaseData>>(json, settings);
             Assert.AreEqual(expected, actual[0].Symbol);
@@ -91,20 +95,20 @@ namespace QuantConnect.Tests.Common
                     "'TickType':0,'Quantity':1,'Exchange':'','SaleCondition':'','Suspicious':false," +
                     "'BidPrice':1.11895,'AskPrice':1.11898,'LastPrice':1.11895,'DataType':2,'IsFillForward':false," +
                     "'Time':'2015-09-22T01:26:44.676','EndTime':'2015-09-22T01:26:44.676'," +
-                    "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURUSD','Permtick':'EURUSD'}," +
+                    "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURUSD','Permtick':'EURUSD', 'ID': 'EURUSD 5O'}," +
                     "'Value':1.11895,'Price':1.11895}," +
 
                     "{'$type':'QuantConnect.Data.Market.Tick, QuantConnect.Common'," +
                     "'TickType':0,'Quantity':1,'Exchange':'','SaleCondition':'','Suspicious':false," +
                     "'BidPrice':0.72157,'AskPrice':0.72162,'LastPrice':0.72157,'DataType':2,'IsFillForward':false," +
                     "'Time':'2015-09-22T01:26:44.675','EndTime':'2015-09-22T01:26:44.675'," +
-                    "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURGBP','Permtick':'EURGBP'}," +
+                    "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURGBP','Permtick':'EURGBP', 'ID': 'EURGBP 5O'}," +
                     "'Value':0.72157,'Price':0.72157}," +
 
                     "]}";
             
             var actual = JsonConvert.DeserializeObject<List<BaseData>>(json, Settings);
-            Assert.IsFalse(actual.All(x => x.Symbol == "EURUSD"));
+            Assert.IsFalse(actual.All(x => x.Symbol == new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD")));
         }
 
         [Test]
@@ -112,8 +116,9 @@ namespace QuantConnect.Tests.Common
         {
             const string json = @"{'$type':'QuantConnect.Symbol, QuantConnect.Common',
 'Value':'EURGBP',
-'Permtick':'EURGBP'}";
-            var expected = new Symbol("EURGBP");
+'Permtick':'EURGBP',
+'ID': 'EURGBP 5O'}";
+            var expected = new Symbol(SecurityIdentifier.GenerateForex("EURGBP", Market.FXCM), "EURGBP");
             var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
             Assert.AreEqual(expected, actual);
         }
@@ -145,15 +150,15 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void CompareToItselfReturnsZero()
         {
-            var sym = new Symbol("sym");
+            var sym = new Symbol(SecurityIdentifier.GenerateForex("sym", Market.FXCM), "sym");
             Assert.AreEqual(0, sym.CompareTo(sym));
         }
 
         [Test]
         public void ComparesTheSameAsStringCompare()
         {
-            var a = new Symbol("a");
-            var z = new Symbol("z");
+            var a = new Symbol(SecurityIdentifier.GenerateForex("a", Market.FXCM), "a");
+            var z = new Symbol(SecurityIdentifier.GenerateForex("z", Market.FXCM), "z");
 
             Assert.AreEqual(string.Compare("a", "z", StringComparison.Ordinal), a.CompareTo(z));
             Assert.AreEqual(string.Compare("z", "a", StringComparison.Ordinal), z.CompareTo(a));
@@ -162,8 +167,8 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void ComparesTheSameAsStringCompareAndIgnoresCase()
         {
-            var a = new Symbol("a");
-            var z = new Symbol("z");
+            var a = new Symbol(SecurityIdentifier.GenerateForex("a", Market.FXCM), "a");
+            var z = new Symbol(SecurityIdentifier.GenerateForex("z", Market.FXCM), "z");
 
             Assert.AreEqual(string.Compare("a", "Z", StringComparison.OrdinalIgnoreCase), a.CompareTo(z));
             Assert.AreEqual(string.Compare("z", "A", StringComparison.OrdinalIgnoreCase), z.CompareTo(a));
@@ -172,14 +177,14 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void ComparesAgainstStringWithoutException()
         {
-            var a = new Symbol("a");
+            var a = new Symbol(SecurityIdentifier.GenerateForex("a", Market.FXCM), "a");
             Assert.AreEqual(0, a.CompareTo("a"));
         }
 
         [Test]
         public void ComparesAgainstStringIgnoringCase()
         {
-            var a = new Symbol("a");
+            var a = new Symbol(SecurityIdentifier.GenerateForex("a", Market.FXCM), "a");
             Assert.AreEqual(0, a.CompareTo("A"));
         }
     }

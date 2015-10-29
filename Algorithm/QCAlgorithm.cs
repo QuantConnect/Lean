@@ -22,6 +22,7 @@ using NodaTime.TimeZones;
 using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Notifications;
@@ -66,7 +67,6 @@ namespace QuantConnect.Algorithm
 
         // set by SetBenchmark helper API functions
         private Symbol _benchmarkSymbol = Symbol.Empty;
-        private SecurityType _benchmarkSecurityType;
 
         // warmup resolution variables
         private TimeSpan? _warmupTimeSpan;
@@ -437,21 +437,21 @@ namespace QuantConnect.Algorithm
             if (Benchmark == null)
             {
                 // apply the default benchmark if it hasn't been set
-                if (_benchmarkSymbol == Symbol.Empty)
+                if (_benchmarkSymbol == null || _benchmarkSymbol == Symbol.Empty)
                 {
-                    _benchmarkSymbol = new Symbol("SPY");
-                    _benchmarkSecurityType = SecurityType.Equity;
+                    _benchmarkSymbol = new Symbol(SecurityIdentifier.GenerateEquity("SPY", Market.USA), "SPY");
                 }
 
-                // if the requested benchmark system wasn't already added, then add it now
+                // if the requested benchmark symbol wasn't already added, then add it now
+                // we do a simple compare here for simplicity, also it avoids confusion over
+                // the desired market.
                 Security security;
                 if (!Securities.TryGetValue(_benchmarkSymbol, out security))
                 {
                     // add the security as an internal feed so the algorithm doesn't receive the data
                     var resolution = _liveMode ? Resolution.Second : Resolution.Daily;
-                    var market = _benchmarkSecurityType == SecurityType.Forex ? "fxcm" : "usa";
-                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider, _benchmarkSecurityType, _benchmarkSymbol, resolution, market, true, 1m, false, true, false);
-                    Securities.Add(_benchmarkSymbol, security);
+                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider, _benchmarkSymbol, resolution, true, 1m, false, true, false);
+                    Securities.Add(security.Symbol, security);
                 }
 
                 // just return the current price
@@ -588,6 +588,10 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
         /// </summary>
+        /// <remarks>
+        /// This method is left for backwards compatibility and is invoked via <see cref="OnEndOfDay(Symbol)"/>, if that method is
+        /// override then this method will not be called without a called to base.OnEndOfDay(string)
+        /// </remarks>
         /// <param name="symbol">Asset symbol for this end of day event. Forex and equities have different closing hours.</param>
         public virtual void OnEndOfDay(string symbol)
         {
@@ -599,7 +603,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">Asset symbol for this end of day event. Forex and equities have different closing hours.</param>
         public virtual void OnEndOfDay(Symbol symbol)
         {
-            OnEndOfDay(symbol.Permtick);
+            OnEndOfDay(symbol.ToString());
         }
 
         /// <summary>
@@ -750,34 +754,54 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Sets the benchmark used for computing statistics of the algorithm to the specified symbol
         /// </summary>
-        /// <param name="symbol">symbol to use as the benchmark</param>
+        /// <param name="stringSymbol">symbol to use as the benchmark</param>
         /// <param name="securityType">Is the symbol an equity, option, forex, etc. Default SecurityType.Equity</param>
         /// <remarks>
         /// Must use symbol that is available to the trade engine in your data store(not strictly enforced)
         /// </remarks>
-        public void SetBenchmark(SecurityType securityType, Symbol symbol)
+        public void SetBenchmark(SecurityType securityType, string stringSymbol)
         {
-            _benchmarkSymbol = symbol;
-            _benchmarkSecurityType = securityType;
+            SecurityIdentifier sid;
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                    sid = SecurityIdentifier.GenerateEquity(stringSymbol, Market.USA);
+                    break;
+                case SecurityType.Forex:
+                    sid = SecurityIdentifier.GenerateForex(stringSymbol, Market.FXCM);
+                    break;
+                default:
+                    throw new NotImplementedException("The specified security type has not been implemented yet: " + securityType);
+            }
+
+            _benchmarkSymbol = new Symbol(sid, stringSymbol);
         }
 
         /// <summary>
         /// Sets the benchmark used for computing statistics of the algorithm to the specified symbol, defaulting to SecurityType.Equity
         /// if the symbol doesn't exist in the algorithm
         /// </summary>
-        /// <param name="symbol">symbol to use as the benchmark</param>
+        /// <param name="stringSymbol">symbol to use as the benchmark</param>
         /// <remarks>
         /// Overload to accept symbol without passing SecurityType. If symbol is in portfolio it will use that SecurityType, otherwise will default to SecurityType.Equity
         /// </remarks>
+        public void SetBenchmark(string stringSymbol)
+        {
+            // check existence
+            stringSymbol = stringSymbol.ToUpper();
+            var security = Securities.FirstOrDefault(x => x.Key.Value == stringSymbol).Value;
+            _benchmarkSymbol = security == null 
+                ? new Symbol(SecurityIdentifier.GenerateEquity(stringSymbol, Market.USA), stringSymbol) 
+                : security.Symbol;
+        }
+
+        /// <summary>
+        /// Sets the benchmark used for computing statistics of the algorithm to the specified symbol
+        /// </summary>
+        /// <param name="symbol">symbol to use as the benchmark</param>
         public void SetBenchmark(Symbol symbol)
         {
-            Security security;
             _benchmarkSymbol = symbol;
-
-            // if we have the security, use the security type that was specified, else default to equity
-            _benchmarkSecurityType = Securities.TryGetValue(symbol, out security) 
-                ? security.Type 
-                : SecurityType.Equity;
         }
 
         /// <summary>
@@ -1132,7 +1156,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="extendedMarketHours">Show the after market data as well</param>
-        public void AddSecurity(SecurityType securityType, Symbol symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false)
+        public void AddSecurity(SecurityType securityType, string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false)
         {
             AddSecurity(securityType, symbol, resolution, fillDataForward, 0, extendedMarketHours);
         }
@@ -1147,7 +1171,7 @@ namespace QuantConnect.Algorithm
         /// <param name="leverage">Custom leverage per security</param>
         /// <param name="extendedMarketHours">Extended market hours</param>
         /// <remarks> AddSecurity(SecurityType securityType, Symbol symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours)</remarks>
-        public void AddSecurity(SecurityType securityType, Symbol symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours) 
+        public void AddSecurity(SecurityType securityType, string symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours) 
         {
             AddSecurity(securityType, symbol, resolution, null, fillDataForward, leverage, extendedMarketHours);
         }
@@ -1162,7 +1186,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
-        public void AddSecurity(SecurityType securityType, Symbol symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
+        public void AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
         {
             if (_locked)
             {
@@ -1171,9 +1195,21 @@ namespace QuantConnect.Algorithm
 
             try
             {
+                if (market == null)
+                {
+                    // set default values, use fxcm for forex, usa for everything else
+                    market = securityType == SecurityType.Forex ? "fxcm" : "usa";
+                }
+
+                // generate the symbol object
+                Symbol symbolObject;
+                if (securityType == SecurityType.Equity)     symbolObject = new Symbol(SecurityIdentifier.GenerateEquity(symbol, market), symbol);
+                else if (securityType == SecurityType.Forex) symbolObject = new Symbol(SecurityIdentifier.GenerateForex(symbol, market), symbol);
+                else if (securityType == SecurityType.Base)  symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, market), symbol);
+                else throw new NotImplementedException("The specified security type has not been implemented yet: " + securityType);
+
                 var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider,
-                    securityType, symbol, resolution, market,
-                    fillDataForward, leverage, extendedMarketHours, false, false);
+                    symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false);
 
                 //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
                 Securities.Add(security.Symbol, security);

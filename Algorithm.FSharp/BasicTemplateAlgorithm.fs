@@ -34,19 +34,17 @@ type BasicTemplateAlgorithm() =
     //Reuse all the base class of QCAlgorithm
     inherit QCAlgorithm()
 
-        member this.symbol = new Symbol("SPY")
-        
         //Implement core methods:
         override this.Initialize() = 
             this.SetCash(100000)
             this.SetStartDate(2013, 10, 07)
             this.SetEndDate(2013, 10, 11)
-            this.AddSecurity(SecurityType.Equity, this.symbol, Resolution.Second)
+            this.AddSecurity(SecurityType.Equity, "SPY", Resolution.Second)
 
         //TradeBars Data Event
         member this.OnData(bar:TradeBars) = 
             
                 if not this.Portfolio.Invested then 
-                    this.SetHoldings(this.symbol, 1);
+                    this.SetHoldings(SymbolCache.Get("SPY"), 1);
                 else 
                     ()

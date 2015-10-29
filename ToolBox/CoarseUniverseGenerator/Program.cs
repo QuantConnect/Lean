@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -23,6 +22,8 @@ using System.Threading;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.ToolBox.CoarseUniverseGenerator
@@ -45,7 +46,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         {
             // read out the configuration file
             JToken jtoken;
-            var config = JObject.Parse(File.ReadAllText("config.json"));
+            var config = JObject.Parse(File.ReadAllText("CoarseUniverseGenerator/config.json"));
 
             var ignoreMaplessSymbols = false;
             var updateMode = false;
@@ -59,6 +60,12 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                 }
             }
 
+            var dataDirectory = Constants.DataFolder;
+            if (config.TryGetValue("data-directory", out jtoken))
+            {
+                dataDirectory = jtoken.Value<string>();
+            }
+
             //Ignore symbols without a map file:
             // Typically these are nothing symbols (NASDAQ test symbols, or symbols listed for a few days who aren't actually ever traded).
             if (config.TryGetValue("ignore-mapless", out jtoken))
@@ -68,7 +75,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 
             do
             {
-                ProcessEquityDirectories(Constants.DataFolder, ignoreMaplessSymbols);
+                ProcessEquityDirectories(dataDirectory, ignoreMaplessSymbols);
             }
             while (WaitUntilTimeInUpdateMode(updateMode, updateTime));
         }
@@ -131,8 +138,8 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 
             Log.Trace("Processing: {0}", dailyFolder);
 
-            var stopwatch = Stopwatch.StartNew();
-            
+            var start = DateTime.UtcNow;
+
             // load map files into memory
 
             var symbols = 0;
@@ -141,6 +148,13 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 
             // instead of opening/closing these constantly, open them once and dispose at the end (~3x speed improvement)
             var writers = new Dictionary<string, StreamWriter>();
+
+            var dailyFolderDirectoryInfo = new DirectoryInfo(dailyFolder).Parent;
+            if (dailyFolderDirectoryInfo == null)
+            {
+                throw new Exception("Unable to resolve market for daily folder: " + dailyFolder);
+            }
+            var market = dailyFolderDirectoryInfo.Name.ToLower();
 
             // open up each daily file to get the values and append to the daily coarse files
             foreach (var file in Directory.EnumerateFiles(dailyFolder))
@@ -207,19 +221,19 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 
                             seeded = true;
 
-                            var dollarVolume = close*runningAverageVolume;
+                            var dollarVolume = close * runningAverageVolume;
 
                             var coarseFile = Path.Combine(coarseFolder, date.ToString("yyyyMMdd") + ".csv");
                             dates.Add(date);
 
-                            // try to resolve a map file and if found, use the permtick as the symbol
-                            var sid = symbol;
-                            var mapFile = mapFileResolver.ResolveMapFile(sid, date);
-                            if (mapFile != null)
+                            // try to resolve a map file and if found, regen the sid
+                            var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, symbol, market);
+                            var mapFile = mapFileResolver.ResolveMapFile(symbol, date);
+                            if (!mapFile.IsNullOrEmpty())
                             {
                                 // if available, us the permtick in the coarse files, because of this, we need
                                 // to update the coarse files each time new map files are added/permticks change
-                                sid = mapFile.Permtick;
+                                sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.OrderBy(x => x.Date).First().MappedSymbol, market);
                             }
                             if (mapFile == null && ignoreMapless)
                             {
@@ -243,7 +257,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 
                     if (symbols%1000 == 0)
                     {
-                        Log.Trace("CoarseGenerator.ProcessDailyFolder(): Completed processing {0} symbols. Current elapsed: {1} seconds", symbols, stopwatch.Elapsed.TotalSeconds.ToString("0.00"));
+                        Log.Trace("CoarseGenerator.ProcessDailyFolder(): Completed processing {0} symbols. Current elapsed: {1} seconds", symbols, (DateTime.UtcNow - start).TotalSeconds.ToString("0.00"));
                     }
                 }
                 catch (Exception err)
@@ -261,9 +275,9 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                 writer.Value.Dispose();
             }
 
-            stopwatch.Stop();
+            var stop = DateTime.UtcNow;
 
-            Log.Trace("CoarseGenerator.ProcessDailyFolder(): Processed {0} symbols into {1} coarse files in {2} seconds", symbols, dates.Count, stopwatch.Elapsed.TotalSeconds.ToString("0.00"));
+            Log.Trace("CoarseGenerator.ProcessDailyFolder(): Processed {0} symbols into {1} coarse files in {2} seconds", symbols, dates.Count, (stop - start).TotalSeconds.ToString("0.00"));
             Log.Trace("CoarseGenerator.ProcessDailyFolder(): Excluded {0} mapless symbols.", maplessCount);
 
             return writers.Keys;

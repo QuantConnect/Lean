@@ -17,6 +17,7 @@ using System;
 using System.Globalization;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.OandaDownloader
 {
@@ -57,7 +58,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                     throw new ArgumentException("The symbol " + symbol + " is not available.");
 
                 var securityType = downloader.GetSecurityType(symbol);
-                var data = downloader.Get(new Symbol(symbol), securityType, resolution, startDate, endDate);
+                var data = downloader.Get(ConvertSymbol(symbol, securityType), securityType, resolution, startDate, endDate);
 
                 // Save the data
                 var writer = new LeanDataWriter(securityType, resolution, symbol, dataDirectory, "oanda");
@@ -68,6 +69,15 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 Log.Error("OandaDownloader(): Error: " + err.Message);
             }
         }
+        
+        static Symbol ConvertSymbol(string instrument, SecurityType securityType)
+        {
+            if (securityType == SecurityType.Forex)
+            {
+                return new Symbol(SecurityIdentifier.GenerateForex(instrument, Market.Oanda), instrument);
+            }
 
+            throw new NotImplementedException("The specified security type is not yet implemented: " + securityType);
+        }
     }
 }

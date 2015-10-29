@@ -17,6 +17,7 @@
 using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using QuantConnect.Securities;
 
 namespace QuantConnect
 {
@@ -61,7 +62,7 @@ namespace QuantConnect
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             var jobject = JObject.Load(reader);
-            return new Symbol(jobject["Permtick"].ToString(), jobject["Value"].ToString());
+            return new Symbol(SecurityIdentifier.Parse(jobject["ID"].ToString()), jobject["Value"].ToString());
         }
 
         /// <summary>

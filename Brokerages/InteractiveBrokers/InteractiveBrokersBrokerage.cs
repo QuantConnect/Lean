@@ -1130,7 +1130,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Maps SecurityType enum
         /// </summary>
-        private IB.SecurityType ConvertSecurityType(SecurityType type)
+        private static IB.SecurityType ConvertSecurityType(SecurityType type)
         {
             switch (type)
             {
@@ -1160,7 +1160,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Maps SecurityType enum
         /// </summary>
-        private SecurityType ConvertSecurityType(IB.SecurityType type)
+        private static SecurityType ConvertSecurityType(IB.SecurityType type)
         {
             switch (type)
             {
@@ -1222,12 +1222,19 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private static Symbol MapSymbol(IB.Contract contract)
         {
-            if (contract.SecurityType == IB.SecurityType.Cash)
+            var securityType = ConvertSecurityType(contract.SecurityType);
+            if (securityType == SecurityType.Forex)
             {
                 // reformat for QC
-                return new Symbol(contract.Symbol + contract.Currency);
+                var symbol = contract.Symbol + contract.Currency;
+                return new Symbol(SecurityIdentifier.GenerateForex(symbol, Market.FXCM), symbol);
             }
-            return new Symbol(contract.Symbol);
+            if (securityType == SecurityType.Equity)
+            {
+                return new Symbol(SecurityIdentifier.GenerateEquity(contract.Symbol, Market.USA), contract.Symbol);
+            }
+
+            throw new NotImplementedException("The specified security type has not been implemented: " + securityType);
         }
 
         private decimal RoundPrice(decimal input, decimal minTick)
@@ -1374,7 +1381,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var tick = new Tick();
             // in the event of a symbol change this will break since we'll be assigning the
             // new symbol to the permtick which won't be known by the algorithm
-            tick.Symbol = new Symbol(symbol.Item2);
+            tick.Symbol = symbol.Item2;
             tick.Time = GetBrokerTime();
             if (symbol.Item1 == SecurityType.Forex)
             {
@@ -1449,7 +1456,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var tick = new Tick();
             // in the event of a symbol change this will break since we'll be assigning the
             // new symbol to the permtick which won't be known by the algorithm
-            tick.Symbol = new Symbol(symbol.Item2);
+            tick.Symbol = symbol.Item2;
             tick.Quantity = AdjustQuantity(symbol.Item1, e.Size);
             tick.Time = GetBrokerTime();
             if (symbol.Item1 == SecurityType.Forex)

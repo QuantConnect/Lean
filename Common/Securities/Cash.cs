@@ -136,7 +136,7 @@ namespace QuantConnect.Securities
                              select config.Market).FirstOrDefault() ?? "fxcm";
 
             // if we've made it here we didn't find a subscription, so we'll need to add one
-            var currencyPairs = Forex.Forex.CurrencyPairs.Select(x => new Symbol(x));
+            var currencyPairs = Forex.Forex.CurrencyPairs.Select(x => new Symbol(SecurityIdentifier.GenerateForex(x, market), x));
             var minimumResolution = subscriptions.Subscriptions.Min(x => x.Resolution);
             var objectType = minimumResolution == Resolution.Tick ? typeof (Tick) : typeof (TradeBar);
             foreach (var symbol in currencyPairs)

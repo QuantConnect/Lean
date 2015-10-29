@@ -17,6 +17,7 @@ using System;
 using System.Globalization;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.DukascopyDownloader
 {
@@ -55,7 +56,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                     throw new ArgumentException("The symbol " + symbol + " is not available.");
 
                 var securityType = downloader.GetSecurityType(symbol);
-                var data = downloader.Get(new Symbol(symbol), securityType, resolution, startDate, endDate);
+                var data = downloader.Get(new Symbol(GetSid(symbol, securityType), symbol), securityType, resolution, startDate, endDate);
 
                 // Save the data
                 var writer = new LeanDataWriter(securityType, resolution, symbol, dataDirectory, "dukascopy");
@@ -67,5 +68,18 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
             }
         }
 
+        static SecurityIdentifier GetSid(string symbol, SecurityType securityType)
+        {
+            if (securityType == SecurityType.Forex)
+            {
+                return SecurityIdentifier.GenerateForex(symbol, Market.Dukascopy);
+            }
+            if (securityType == SecurityType.Cfd)
+            {
+                return SecurityIdentifier.GenerateCfd(symbol, Market.Dukascopy);
+            }
+
+            throw new NotImplementedException("The specfied security type has not been implemented yet: " + securityType);
+        }
     }
 }

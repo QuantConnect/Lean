@@ -32,13 +32,13 @@ namespace QuantConnect.Brokerages
     {
         private readonly HashSet<Symbol> _groupCommissionSchedule1 = new HashSet<Symbol>
         {
-            new Symbol("EURUSD"),
-            new Symbol("GBPUSD"),
-            new Symbol("USDJPY"),
-            new Symbol("USDCHF"),
-            new Symbol("AUDUSD"),
-            new Symbol("EURJPY"),
-            new Symbol("GBPJPY")
+            new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
+            new Symbol(SecurityIdentifier.GenerateForex("GBPUSD", Market.FXCM), "GBPUSD"),
+            new Symbol(SecurityIdentifier.GenerateForex("USDJPY", Market.FXCM), "USDJPY"),
+            new Symbol(SecurityIdentifier.GenerateForex("USDCHF", Market.FXCM), "USDCHF"),
+            new Symbol(SecurityIdentifier.GenerateForex("AUDUSD", Market.FXCM), "AUDUSD"),
+            new Symbol(SecurityIdentifier.GenerateForex("EURJPY", Market.FXCM), "EURJPY"),
+            new Symbol(SecurityIdentifier.GenerateForex("GBPJPY", Market.FXCM), "GBPJPY")
         };
 
         /// <summary>

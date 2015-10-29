@@ -1599,7 +1599,7 @@ namespace QuantConnect.Brokerages.Tradier
                 default:
                     throw new NotImplementedException("The Tradier order type " + order.Type + " is not implemented.");
             }
-            qcOrder.Symbol = new Symbol(order.Symbol);
+            qcOrder.Symbol = new Symbol(SecurityIdentifier.GenerateEquity(order.Symbol, Market.USA), order.Symbol);
             qcOrder.Quantity = ConvertQuantity(order);
             qcOrder.SecurityType = SecurityType.Equity; // tradier only support equities? but also options??
             qcOrder.Status = ConvertStatus(order.Status);

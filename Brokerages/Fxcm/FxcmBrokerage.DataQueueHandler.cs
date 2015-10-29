@@ -67,7 +67,7 @@ namespace QuantConnect.Brokerages.Fxcm
             var request = new MarketDataRequest();
             foreach (var symbol in symbolsToSubscribe)
             {
-                request.addRelatedSymbol(_fxcmInstruments[ConvertSymbolToFxcmSymbol(new Symbol(symbol))]);
+                request.addRelatedSymbol(_fxcmInstruments[ConvertSymbolToFxcmSymbol(symbol)]);
             }
             request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SUBSCRIBE);
             request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
@@ -79,7 +79,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
             foreach (var symbol in symbolsToSubscribe)
             {
-                _subscribedSymbols.Add(new Symbol(symbol));
+                _subscribedSymbols.Add(symbol);
             }
         }
 
@@ -92,7 +92,7 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             var symbolsToUnsubscribe = (from secType in symbols 
                                         from symbol in secType.Value 
-                                        where _subscribedSymbols.Contains(new Symbol(symbol)) 
+                                        where _subscribedSymbols.Contains(symbol) 
                                         select symbol).ToList();
             if (symbolsToUnsubscribe.Count == 0)
                 return;
@@ -102,7 +102,7 @@ namespace QuantConnect.Brokerages.Fxcm
             var request = new MarketDataRequest();
             foreach (var symbol in symbolsToUnsubscribe)
             {
-                request.addRelatedSymbol(_fxcmInstruments[ConvertSymbolToFxcmSymbol(new Symbol(symbol))]);
+                request.addRelatedSymbol(_fxcmInstruments[ConvertSymbolToFxcmSymbol(symbol)]);
             }
             request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.UNSUBSCRIBE);
             request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
@@ -114,7 +114,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
             foreach (var symbol in symbolsToUnsubscribe)
             {
-                _subscribedSymbols.Remove(new Symbol(symbol));
+                _subscribedSymbols.Remove(symbol);
             }
         }
 

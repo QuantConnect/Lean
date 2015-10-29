@@ -15,7 +15,9 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using Newtonsoft.Json;
+using QuantConnect.Securities;
 
 namespace QuantConnect
 {
@@ -25,13 +27,13 @@ namespace QuantConnect
     /// the SID is constant over the life of a security
     /// </summary>
     [JsonConverter(typeof(SymbolJsonConverter))]
-    public class Symbol : IEquatable<Symbol>, IComparable
+    public sealed class Symbol : IEquatable<Symbol>, IComparable
     {
         /// <summary>
         /// Represents an unassigned symbol. This is intended to be used as an
         /// uninitialized, default value
         /// </summary>
-        public static readonly Symbol Empty = new Symbol(string.Empty, string.Empty);
+        public static readonly Symbol Empty = new Symbol(SecurityIdentifier.Empty, string.Empty);
 
         #region Properties
 
@@ -41,9 +43,9 @@ namespace QuantConnect
         public string Value { get; private set; }
 
         /// <summary>
-        /// Gets permtick used to identify securities in map files
+        /// Gets the security identifier for this symbol
         /// </summary>
-        public string Permtick { get; private set; }
+        public SecurityIdentifier ID { get; private set; }
 
         #endregion
 
@@ -53,29 +55,16 @@ namespace QuantConnect
         /// Initializes a new instance of the <see cref="Symbol"/> class using the specified
         /// string as both the symbol's value and sid
         /// </summary>
-        /// <param name="symbol"></param>
-        public Symbol(string symbol)
-            : this(symbol, symbol)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Symbol"/> class
-        /// </summary>
-        /// <param name="permtick">The security's unique identifier</param>
-        /// <param name="value">The security's current ticker symbol</param>
-        public Symbol(string permtick, string value)
+        /// <param name="sid">The security identifier for this symbol</param>
+        /// <param name="value">The current ticker symbol value</param>
+        public Symbol(SecurityIdentifier sid, string value)
         {
             if (value == null)
             {
                 throw new ArgumentNullException("value");
             }
-            if (permtick == null)
-            {
-                throw new ArgumentNullException("permtick");
-            }
+            ID = sid;
             Value = value.ToUpper();
-            Permtick = permtick.ToUpper();
         }
 
         #endregion
@@ -92,8 +81,15 @@ namespace QuantConnect
         public override bool Equals(object obj)
         {
             // compare strings just as you would a symbol object
-            var sid = obj as string;
-            if (sid != null) return Permtick.Equals(sid);
+            var sidString = obj as string;
+            if (sidString != null)
+            {
+                SecurityIdentifier sid;
+                if (SecurityIdentifier.TryParse(sidString, out sid))
+                {
+                    return ID.Equals(sid);
+                }
+            }
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
@@ -109,11 +105,8 @@ namespace QuantConnect
         /// <filterpriority>2</filterpriority>
         public override int GetHashCode()
         {
-            unchecked
-            {
-                // only SID is used for comparisons
-                return Permtick.GetHashCode();
-            }
+            // only SID is used for comparisons
+            unchecked { return ID.GetHashCode(); }
         }
 
         /// <summary>
@@ -128,12 +121,12 @@ namespace QuantConnect
             var str = obj as string;
             if (str != null)
             {
-                return string.Compare(Permtick, str, StringComparison.OrdinalIgnoreCase);
+                return string.Compare(Value, str, StringComparison.OrdinalIgnoreCase);
             }
             var sym = obj as Symbol;
             if (sym != null)
             {
-                return string.Compare(Permtick, sym.Permtick, StringComparison.OrdinalIgnoreCase);
+                return string.Compare(Value, sym.Value, StringComparison.OrdinalIgnoreCase);
             }
 
             throw new ArgumentException("Object must be of type Symbol or string.");
@@ -148,7 +141,7 @@ namespace QuantConnect
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Permtick;
+            return Value;
         }
 
         #endregion
@@ -167,7 +160,7 @@ namespace QuantConnect
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             // only SID is used for comparisons
-            return string.Equals(Permtick, other.Permtick);
+            return ID.Equals(other.ID);
         }
 
         /// <summary>
@@ -203,17 +196,17 @@ namespace QuantConnect
         /// <returns>The SID</returns>
         public static implicit operator string(Symbol symbol)
         {
-            return symbol.Permtick;
+            return symbol.Value;
         }
 
         /// <summary>
         /// Creates symbol using string as sid
         /// </summary>
-        /// <param name="symbol">The string</param>
+        /// <param name="ticker">The string</param>
         /// <returns>The symbol</returns>
-        public static implicit operator Symbol(string symbol)
+        public static implicit operator Symbol(string ticker)
         {
-            return new Symbol(symbol);
+            return SymbolCache.Get(ticker);
         }
 
         #endregion
@@ -223,13 +216,45 @@ namespace QuantConnect
         // in order to maintain better compile time backwards compatibility,
         // we'll redirect a few common string methods to Permtick
 #pragma warning disable 1591
-        public bool Contains(string value) { return Permtick.Contains(value); }
-        public bool EndsWith(string value) { return Permtick.EndsWith(value); }
-        public bool StartsWith(string value) { return Permtick.StartsWith(value); }
-        public string ToLower() { return Permtick.ToLower(); }
-        public string ToUpper() { return Permtick.ToUpper(); }
+        public bool Contains(string value) { return Value.Contains(value); }
+        public bool EndsWith(string value) { return Value.EndsWith(value); }
+        public bool StartsWith(string value) { return Value.StartsWith(value); }
+        public string ToLower() { return Value.ToLower(); }
+        public string ToUpper() { return Value.ToUpper(); }
 #pragma warning restore 1591
 
         #endregion
+    }
+
+    /// <summary>
+    /// Provides a string->Symbol mapping to allow for user defined strings to be lifted into a Symbol
+    /// This is mainly used via the Symbol implicit operator, but also functions that create securities
+    /// should also call Add to add the new mappings
+    /// </summary>
+    public static class SymbolCache
+    {
+        private static readonly ConcurrentDictionary<string, Symbol> Symbols = new ConcurrentDictionary<string, Symbol>();
+
+        /// <summary>
+        /// Adds a mapping for the specified ticker
+        /// </summary>
+        /// <param name="ticker">The string ticker symbol</param>
+        /// <param name="symbol">The symbol object that maps to the string ticker symbol</param>
+        public static void Add(string ticker, Symbol symbol)
+        {
+            Symbols.AddOrUpdate(ticker, symbol);
+        }
+
+        /// <summary>
+        /// Gets the Symbol object that is mapped to the specified string ticker symbol
+        /// </summary>
+        /// <param name="ticker">The string ticker symbol</param>
+        /// <returns>The symbol object that maps to the specified string ticker symbol</returns>
+        public static Symbol Get(string ticker)
+        {
+            Symbol symbol;
+            if (Symbols.TryGetValue(ticker, out symbol)) return symbol;
+            throw new Exception("Unable to resolve sid from ticker: " + ticker);
+        }
     }
 }

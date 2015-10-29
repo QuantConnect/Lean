@@ -296,7 +296,7 @@ namespace QuantConnect.Data.Market
                 dataType = TickType.Quote;
             }
 
-            var symbol = string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol.Permtick : config.MappedSymbol;
+            var symbol = string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol.ToString() : config.MappedSymbol;
             var securityType = config.SecurityType.ToString().ToLower();
             var market = config.Market.ToLower();
             var resolution = config.Resolution.ToString().ToLower();

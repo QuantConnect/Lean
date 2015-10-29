@@ -167,26 +167,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            //Load the entire factor and symbol mapping tables into memory, we'll start with some defaults
-            _factorFile = new FactorFile(config.Symbol.Permtick, new List<FactorFileRow>());
-            _mapFile = new MapFile(config.Symbol.Permtick, new List<MapFileRow>());
-            try
+            _factorFile = new FactorFile(config.Symbol.Value, new List<FactorFileRow>());
+            _mapFile = new MapFile(config.Symbol.Value, new List<MapFileRow>());
+
+            // load up the map and factor files for equities
+            if (!config.IsCustomData && config.SecurityType == SecurityType.Equity)
             {
-                // do we have map/factor tables? -- only applies to equities
-                if (!_config.IsCustomData && _config.SecurityType == SecurityType.Equity)
+                try
                 {
-                    // resolve the correct map file as of the date
-                    _mapFile = MapFile.Read(config.Symbol.Permtick, config.Market);
+                    var resolver = MapFileResolver.Create(Constants.DataFolder, config.Market);
+                    var mapFile = resolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);
+
+                    // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
+                    if (mapFile.Any()) _mapFile = mapFile;
+
                     _hasScaleFactors = FactorFile.HasScalingFactors(_mapFile.Permtick, config.Market);
                     if (_hasScaleFactors)
                     {
-                        _factorFile = FactorFile.Read(config.Symbol.Permtick, config.Market);
+                        _factorFile = FactorFile.Read(_mapFile.Permtick, config.Market);
                     }
                 }
-            }
-            catch (Exception err)
-            {
-                Log.Error("SubscriptionDataReader(): Fetching Price/Map Factors: " + err.Message);
+                catch (Exception err)
+                {
+                    Log.Error("SubscriptionDataReader(): Fetching Price/Map Factors: " + err.Message);
+                }
             }
 
             _subscriptionFactoryEnumerator = ResolveDataEnumerator(true);

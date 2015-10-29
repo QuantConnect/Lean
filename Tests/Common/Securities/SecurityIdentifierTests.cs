@@ -26,12 +26,19 @@ namespace QuantConnect.Tests.Common.Securities
     {
         private SecurityIdentifier SPY
         {
-            get { return SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 01), "SPY", "usa"); }
+            get { return SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", "usa"); }
         }
 
 
         // this is really not european style, but I'd prefer to test a value of 1 vs a value of 0
         private readonly SecurityIdentifier SPY_Put_19550 = SecurityIdentifier.GenerateOption(new DateTime(2015, 09, 18), "SPY", "usa", 195.50m, OptionRight.Put, OptionStyle.European);
+
+        [Test]
+        public void GenerateEquityProperlyResolvesFirstDate()
+        {
+            var spy = SecurityIdentifier.GenerateEquity("SPY", Market.USA);
+            Assert.AreEqual(new DateTime(1998, 01, 02), spy.Date);
+        }
 
         [Test]
         public void GeneratesIdentifiersDeterministically()
@@ -62,10 +69,10 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void GeneratesEquitySecurityIdentifier()
         {
-            var sid1 = SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 01), "SPY", "usa");
+            var sid1 = SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", "usa");
 
             // verify various values
-            Assert.AreEqual(new DateTime(1998, 01, 01), sid1.Date);
+            Assert.AreEqual(new DateTime(1998, 01, 02), sid1.Date);
             Assert.AreEqual("usa", sid1.Market);
             Assert.AreEqual(SecurityType.Equity, sid1.SecurityType);
             Assert.AreEqual("SPY", sid1.Symbol);
@@ -76,7 +83,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void GeneratesForexSecurityIdentifier()
         {
-            var eurusd = SecurityIdentifier.GenerateForex("EURUSD", "fxcm");
+            var eurusd = SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM);
 
             // verify various values
             Assert.Throws<InvalidOperationException>(() => { var x = eurusd.Date; });
@@ -153,7 +160,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void ReturnsCorrectDate()
         {
-            Assert.AreEqual(new DateTime(1998, 01, 01), SPY.Date);
+            Assert.AreEqual(new DateTime(1998, 01, 02), SPY.Date);
             Assert.AreEqual(new DateTime(2015, 09, 18), SPY_Put_19550.Date);
         }
 

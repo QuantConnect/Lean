@@ -19,6 +19,7 @@ using System.Linq;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.RealTime;
@@ -293,7 +294,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Min(x => x.Value.Resolution));
                     foreach (var holding in holdings)
                     {
-                        var symbol = new Symbol(holding.Symbol);
                         Log.Trace("BrokerageSetupHandler.Setup(): Has existing holding: " + holding);
 
                         // verify existing holding security type
@@ -307,6 +307,7 @@ namespace QuantConnect.Lean.Engine.Setup
                             continue;
                         }
 
+                        var symbol = ConvertHoldingToSymbol(holding);
                         if (!algorithm.Portfolio.ContainsKey(symbol))
                         {
                             Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol);
@@ -377,6 +378,20 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 _factory.Dispose();
             }
+        }
+
+        private Symbol ConvertHoldingToSymbol(Holding holding)
+        {
+            if (holding.Type == SecurityType.Forex)
+            {
+                return new Symbol(SecurityIdentifier.GenerateForex(holding.Symbol, Market.FXCM), holding.Symbol);
+            }
+            if (holding.Type == SecurityType.Equity)
+            {
+                return new Symbol(SecurityIdentifier.GenerateEquity(holding.Symbol, Market.USA), holding.Symbol);
+            }
+
+            return Symbol.Empty;
         }
     }
 }

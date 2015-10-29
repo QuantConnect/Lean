@@ -33,6 +33,17 @@ namespace QuantConnect.Tests.Common.Securities
     {
         private static readonly SecurityExchangeHours SecurityExchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
 
+        [SetUp]
+        public void IntiializeSymbolCache()
+        {
+            // this test uses symbol lifting, so initialize the symbol cache to expect these symbols
+            SymbolCache.Add("CASH", new Symbol(SecurityIdentifier.GenerateBase("CASH", Market.USA), "CASH"));
+            SymbolCache.Add("MCHJWB", new Symbol(SecurityIdentifier.GenerateForex("MCHJWB", Market.FXCM), "MCHJWB"));
+            SymbolCache.Add("MCHUSD", new Symbol(SecurityIdentifier.GenerateForex("MCHUSD", Market.FXCM), "MCHUSD"));
+            SymbolCache.Add("USDJWB", new Symbol(SecurityIdentifier.GenerateForex("USDJWB", Market.FXCM), "USDJWB"));
+            SymbolCache.Add("JWBUSD", new Symbol(SecurityIdentifier.GenerateForex("JWBUSD", Market.FXCM), "JWBUSD"));
+        }
+
         [Test]
         public void TestCashFills()
         {

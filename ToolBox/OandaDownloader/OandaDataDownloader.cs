@@ -23,6 +23,7 @@ using System.Net;
 using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 using QuantConnect.ToolBox.OandaDownloader.OandaRestLibrary;
 
 namespace QuantConnect.ToolBox.OandaDownloader
@@ -65,13 +66,14 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 var tokens = line.Split(',');
                 if (tokens.Length >= 3)
                 {
-                    string oandaSymbol = tokens[0];
-                    Symbol symbol = ConvertOandaSymbolToLeanSymbol(oandaSymbol);
+                    var oandaSymbol = tokens[0];
+                    var securityType = (SecurityType)Enum.Parse(typeof(SecurityType), tokens[2]);
+                    Symbol symbol = ConvertOandaSymbolToLeanSymbol(oandaSymbol, securityType);
                     _instruments.Add(symbol, new LeanInstrument
                     {
                         Symbol = symbol,
                         Name = tokens[1],
-                        Type = (SecurityType)Enum.Parse(typeof(SecurityType), tokens[2])
+                        Type = securityType
                     });
                 }
             }
@@ -81,10 +83,26 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// Converts an Oanda symbol to a Lean Symbol instance
         /// </summary>
         /// <param name="oandaSymbol">The Oanda symbol</param>
+        /// <param name="securityType">The security type of the symbol</param>
         /// <returns>A Lean symbol</returns>
-        private static Symbol ConvertOandaSymbolToLeanSymbol(string oandaSymbol)
+        private static Symbol ConvertOandaSymbolToLeanSymbol(string oandaSymbol, SecurityType securityType)
         {
-            return new Symbol(oandaSymbol.Replace("_", ""));
+            var symbol = oandaSymbol.Replace("_", "");
+            SecurityIdentifier sid;
+            if (securityType == SecurityType.Forex)
+            {
+                sid = SecurityIdentifier.GenerateForex(symbol, Market.Oanda);
+            }
+            else if (securityType == SecurityType.Cfd)
+            {
+                sid = SecurityIdentifier.GenerateCfd(symbol, oandaSymbol);
+            }
+            else
+            {
+                throw new NotImplementedException("The specified security type has not been implemented yet: " + securityType);
+            }
+
+            return new Symbol(sid, symbol);
         }
 
         /// <summary>

@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.GoogleDownloader
 {
@@ -48,7 +49,8 @@ namespace QuantConnect.ToolBox.GoogleDownloader
 
                 // Download the data
                 var downloader = new GoogleDataDownloader();
-                var data = downloader.Get(new Symbol(symbol), SecurityType.Equity, resolution, DateTime.UtcNow.AddDays(-period), DateTime.UtcNow);
+                var sid = SecurityIdentifier.GenerateEquity(symbol, Market.USA);
+                var data = downloader.Get(new Symbol(sid, symbol), SecurityType.Equity, resolution, DateTime.UtcNow.AddDays(-period), DateTime.UtcNow);
 
                 // Save the data
                 var writer = new LeanDataWriter(SecurityType.Equity, resolution, symbol, dataDirectory, "usa");

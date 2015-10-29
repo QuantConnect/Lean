@@ -183,7 +183,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
             // Set MarketPrice in each Holding
             var symbols = holdings
-                .Select(x => ConvertSymbolToFxcmSymbol(new Symbol(x.Symbol)))
+                .Select(x => ConvertSymbolToFxcmSymbol(x.Symbol))
                 .ToList();
 
             if (symbols.Count > 0)
@@ -192,7 +192,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 foreach (var holding in holdings)
                 {
                     MarketDataSnapshot quote;
-                    if (quotes.TryGetValue(ConvertSymbolToFxcmSymbol(new Symbol(holding.Symbol)), out quote))
+                    if (quotes.TryGetValue(ConvertSymbolToFxcmSymbol(holding.Symbol), out quote))
                     {
                         holding.MarketPrice = Convert.ToDecimal((quote.getBidClose() + quote.getAskClose()) / 2);
                     }

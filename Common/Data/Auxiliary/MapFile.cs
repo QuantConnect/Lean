@@ -47,7 +47,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public DateTime FirstDate
         {
-            get { return _data.Keys.Count == 0 ? new DateTime(1000, 01, 01) : _data.Keys.First(); }
+            get { return _data.Keys.Count == 0 ? Time.BeginningOfTime : _data.Keys.First(); }
         }
 
         /// <summary>

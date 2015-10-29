@@ -249,9 +249,11 @@ namespace QuantConnect.Brokerages.Fxcm
                 }
 
                 // create map from QuantConnect symbols to FXCM symbols
-                foreach (var fxcmSymbol in _fxcmInstruments.Keys)
+                foreach (var kvp in _fxcmInstruments)
                 {
-                    var symbol = ConvertFxcmSymbolToSymbol(fxcmSymbol);
+                    var fxcmSymbol = kvp.Key;
+                    var tradingSecurity = kvp.Value;
+                    var symbol = ConvertFxcmSymbolToSymbol(fxcmSymbol, GetSecurityType(tradingSecurity));
                     _mapInstrumentSymbols[symbol] = fxcmSymbol;
                 }
 
@@ -298,10 +300,11 @@ namespace QuantConnect.Brokerages.Fxcm
         private void OnMarketDataSnapshot(MarketDataSnapshot message)
         {
             // update the current prices for the instrument
-            _rates[message.getInstrument().getSymbol()] = message;
+            var instrument = message.getInstrument();
+            _rates[instrument.getSymbol()] = message;
 
             // if instrument is subscribed, add ticks to list
-            var symbol = ConvertFxcmSymbolToSymbol(message.getInstrument().getSymbol());
+            var symbol = ConvertFxcmSymbolToSymbol(instrument.getSymbol(), GetSecurityType(instrument));
 
             if (_subscribedSymbols.Contains(symbol))
             {

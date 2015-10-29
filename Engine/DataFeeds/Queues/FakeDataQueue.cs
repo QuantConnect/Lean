@@ -136,7 +136,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                     _ticks.Enqueue(new Tick
                     {
                         Time = DateTime.Now,
-                        Symbol = new Symbol(symbol),
+                        Symbol = symbol,
                         Value = 10 + (decimal)Math.Abs(Math.Sin(DateTime.Now.TimeOfDay.TotalMinutes)),
                         TickType = TickType.Trade,
                         Quantity = _random.Next(10, (int)_timer.Interval)

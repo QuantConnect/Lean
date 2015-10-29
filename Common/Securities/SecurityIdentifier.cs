@@ -15,9 +15,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities
@@ -45,6 +47,11 @@ namespace QuantConnect.Securities
         /// which is a base36 encoded form of <see cref="ulong.MaxValue"/>
         /// </summary>
         public static readonly SecurityIdentifier Invalid = new SecurityIdentifier(ulong.MaxValue, ulong.MaxValue);
+
+        /// <summary>
+        /// Gets the date to be used when it does not apply.
+        /// </summary>
+        public static readonly DateTime DefaultDate = DateTime.FromOADate(0);
 
         #endregion
 
@@ -237,18 +244,11 @@ namespace QuantConnect.Securities
         {
             _symbolData = symbolData;
             _otherData = otherData;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityIdentifier"/> class
-        /// </summary>
-        /// <param name="securityIdentifierString">The 40 digit number that represents a security identifier</param>
-        public SecurityIdentifier(string securityIdentifierString)
-        {
-            Exception exception;
-            if (!TryParseComponents(securityIdentifierString, out exception, out _otherData, out _symbolData))
+            
+            // if the symbol is specified as invalid then the entire struct is invalid
+            if (_symbolData == Invalid._symbolData)
             {
-                throw exception;
+                _otherData = Invalid._otherData;
             }
         }
 
@@ -296,7 +296,7 @@ namespace QuantConnect.Securities
         /// <param name="strike">The strike price</param>
         /// <param name="optionRight">The option type, call or put</param>
         /// <param name="optionStyle">The option style, American or European</param>
-        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified data</returns>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified option security</returns>
         public static SecurityIdentifier GenerateOption(DateTime expiry,
             string underlying,
             string market,
@@ -307,21 +307,74 @@ namespace QuantConnect.Securities
             return Generate(expiry, underlying, SecurityType.Option, market, strike, optionRight, optionStyle);
         }
 
+        /// <summary>
+        /// Helper overload that will search the mapfiles to resolve the first date
+        /// </summary>
+        /// <param name="symbol">The symbol a it is known today</param>
+        /// <param name="market">The market</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified symbol today</returns>
+        public static SecurityIdentifier GenerateEquity(string symbol, string market)
+        {
+            string dataFolder = Constants.DataFolder;
+            var resolver = MapFileResolver.Create(dataFolder, market);
+            var mapFile = resolver.ResolveMapFile(symbol, DateTime.Today);
+            var firstDate = mapFile.FirstDate;
+            if (mapFile.Any())
+            {
+                symbol = mapFile.OrderBy(x => x.Date).First().MappedSymbol;
+            }
+            return GenerateEquity(firstDate, symbol, market);
+        }
+
+        /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for an equity
+        /// </summary>
+        /// <param name="date">The first date this security traded (in LEAN this is the first date in the map_file</param>
+        /// <param name="symbol">The ticker symbol this security traded under on the <paramref name="date"/></param>
+        /// <param name="market">The security's market</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified equity security</returns>
         public static SecurityIdentifier GenerateEquity(DateTime date, string symbol, string market)
         {
             return Generate(date, symbol, SecurityType.Equity, market);
         }
 
+        /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a custom security
+        /// </summary>
+        /// <param name="symbol">The ticker symbol of this security</param>
+        /// <param name="market">The security's market</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified base security</returns>
         public static SecurityIdentifier GenerateBase(string symbol, string market)
         {
-            return Generate(DateTime.FromOADate(0), symbol, SecurityType.Base, market);
+            return Generate(DefaultDate, symbol, SecurityType.Base, market);
         }
 
+        /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a forex pair
+        /// </summary>
+        /// <param name="symbol">The currency pair in the format similar to: 'EURUSD'</param>
+        /// <param name="market">The security's market</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified forex pair</returns>
         public static SecurityIdentifier GenerateForex(string symbol, string market)
         {
-            return Generate(DateTime.FromOADate(0), symbol, SecurityType.Forex, market);
+            return Generate(DefaultDate, symbol, SecurityType.Forex, market);
         }
 
+        /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a CFD security
+        /// </summary>
+        /// <param name="symbol">The CFD contract symbol</param>
+        /// <param name="market">The security's market</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified CFD security</returns>
+        public static SecurityIdentifier GenerateCfd(string symbol, string market)
+        {
+            return Generate(DefaultDate, symbol, SecurityType.Cfd, market);
+        }
+
+        /// <summary>
+        /// Generic generate method. This method should be used carefully as some parameters are not required and
+        /// some parameters mean different things for different security types
+        /// </summary>
         private static SecurityIdentifier Generate(DateTime date,
             string symbol,
             SecurityType securityType,
@@ -373,7 +426,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Converts an upper case alpha numeric string into a long
         /// </summary>
-        public static ulong DecodeBase36(string symbol)
+        private static ulong DecodeBase36(string symbol)
         {
             int pos = 0;
             ulong result = 0;
@@ -391,7 +444,10 @@ namespace QuantConnect.Securities
             return result;
         }
 
-        public static string EncodeBase36(ulong data)
+        /// <summary>
+        /// Converts a long to an uppercase alpha numeric string
+        /// </summary>
+        private static string EncodeBase36(ulong data)
         {
             var stack = new Stack<char>();
             while (data != 0)
@@ -538,7 +594,8 @@ namespace QuantConnect.Securities
             var parts = value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length != 2)
             {
-                throw new FormatException("The string must be splittable on space into two parts.");
+                exception = new FormatException("The string must be splittable on space into two parts.");
+                return false;
             }
 
             var symbolData = parts[0];

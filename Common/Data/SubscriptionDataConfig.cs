@@ -31,7 +31,7 @@ namespace QuantConnect.Data
     {
         private Symbol _symbol;
         private string _mappedSymbol;
-        private readonly string _sid;
+        private readonly SecurityIdentifier _sid;
 
         /// <summary>
         /// Type of data
@@ -152,7 +152,7 @@ namespace QuantConnect.Data
             Type = objectType;
             SecurityType = securityType;
             Resolution = resolution;
-            _sid = symbol.Permtick;
+            _sid = symbol.ID;
             FillDataForward = fillForward;
             ExtendedMarketHours = extendedHours;
             PriceScaleFactor = 1;
