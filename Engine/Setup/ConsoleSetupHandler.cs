@@ -168,13 +168,14 @@ namespace QuantConnect.Lean.Engine.Setup
         }
 
         /// <summary>
-        /// Error handlers in event of a brokerage error.
+        /// Setup the error handler
         /// </summary>
-        /// <param name="results">Result handler for sending results on error.</param>
-        /// <param name="brokerage">Brokerage instance</param>
-        /// <remarks>Not used for local setup.</remarks>
-        /// <returns>Boolean true on successfully setting up local algorithm</returns>
-        public bool SetupErrorHandler(IResultHandler results, IBrokerage brokerage)
+        /// <param name="job"></param>
+        /// <param name="results">Result handler.</param>
+        /// <param name="api"></param>
+        /// <param name="brokerage">Brokerage endpoint.</param>
+        /// <returns>True on successfully setting up the error handlers.</returns>
+        public bool SetupErrorHandler(AlgorithmNodePacket job, IResultHandler results, IApi api, IBrokerage brokerage)
         {
             return true;
         }

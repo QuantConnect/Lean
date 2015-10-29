@@ -132,6 +132,17 @@ namespace QuantConnect.Api
             //
         }
 
+        /// <summary>
+        /// Send an email to the user associated with the specified algorithm id
+        /// </summary>
+        /// <param name="algorithmId">The algorithm id</param>
+        /// <param name="subject">The email subject</param>
+        /// <param name="body">The email message body</param>
+        public void SendUserEmail(string algorithmId, string subject, string body)
+        {
+            //
+        }
+
         public void Dispose()
         {
             // NOP

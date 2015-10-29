@@ -95,9 +95,11 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Setup the error handler for the brokerage errors.
         /// </summary>
+        /// <param name="job">The job</param>
         /// <param name="results">Result handler.</param>
+        /// <param name="api">The api implementation</param>
         /// <param name="brokerage">Brokerage endpoint.</param>
         /// <returns>True on successfully setting up the error handlers.</returns>
-        bool SetupErrorHandler(IResultHandler results, IBrokerage brokerage);
+        bool SetupErrorHandler(AlgorithmNodePacket job, IResultHandler results, IApi api, IBrokerage brokerage);
     }
 }

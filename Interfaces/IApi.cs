@@ -84,5 +84,13 @@ namespace QuantConnect.Interfaces
         /// Store the algorithm logs.
         /// </summary>
         void Store(string data, string location, StoragePermissions permissions, bool async = false);
+
+        /// <summary>
+        /// Send an email to the user associated with the specified algorithm id
+        /// </summary>
+        /// <param name="algorithmId">The algorithm id</param>
+        /// <param name="subject">The email subject</param>
+        /// <param name="body">The email message body</param>
+        void SendUserEmail(string algorithmId, string subject, string body);
     }
 }

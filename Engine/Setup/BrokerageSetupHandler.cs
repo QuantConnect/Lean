@@ -354,10 +354,12 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Setup the error handler for the brokerage errors.
         /// </summary>
+        /// <param name="job">The job to set error handlers for</param>
         /// <param name="results">Result handler.</param>
+        /// <param name="api">The api implementation used for forwarding brokerage warnings to user email</param>
         /// <param name="brokerage">Brokerage endpoint.</param>
         /// <returns>True on successfully setting up the error handlers.</returns>
-        public bool SetupErrorHandler(IResultHandler results, IBrokerage brokerage)
+        public bool SetupErrorHandler(AlgorithmNodePacket job, IResultHandler results, IApi api, IBrokerage brokerage)
         {
             brokerage.Message += (sender, message) =>
             {
@@ -369,6 +371,7 @@ namespace QuantConnect.Lean.Engine.Setup
                         break;
                     case BrokerageMessageType.Warning:
                         results.ErrorMessage("Brokerage Warning: " + message.Message);
+                        api.SendUserEmail(job.AlgorithmId, "Brokerage Warning", message.Message);
                         break;
                     case BrokerageMessageType.Error:
                         results.ErrorMessage("Brokerage Error: " + message.Message);
