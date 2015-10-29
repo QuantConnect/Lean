@@ -57,11 +57,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             TradeBar working;
             var tick = data as Tick;
             var qty = tick == null ? 0 : tick.Quantity;
-            var currentLocalTime = _timeProvider.GetUtcNow().ConvertFromUtc(_timeZone);
-            if (!_queue.TryPeek(out working) || currentLocalTime >= working.EndTime)
+            if (!_queue.TryPeek(out working))
             {
-                // the consumer took the working bar
+                // the consumer took the working bar, or time ticked over into next bar
                 var marketPrice = data.Value;
+                var currentLocalTime = _timeProvider.GetUtcNow().ConvertFromUtc(_timeZone);
                 var barStartTime = currentLocalTime.RoundDown(_barSize);
                 working = new TradeBar(barStartTime, data.Symbol, marketPrice, marketPrice, marketPrice, marketPrice, qty, _barSize);
                 _queue.Enqueue(working);

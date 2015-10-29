@@ -136,10 +136,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var moveNext = _enumerator.MoveNext();
             EndOfStream = !moveNext;
             Current = _enumerator.Current;
-            if (Current != null)
-            {
-                RealtimePrice = Current.Value;
-            }
             return moveNext;
         }
 

@@ -25,7 +25,7 @@ namespace QuantConnect.Indicators
     /// Source: Harris, Michael. "Momersion Indicator." Price Action Lab.,
     ///             13 Aug. 2015. Web. <http://www.priceactionlab.com/Blog/2015/08/momersion-indicator/>.
     /// </summary>
-    public class Momersion : WindowIndicator<IndicatorDataPoint>
+    public class MomersionIndicator : WindowIndicator<IndicatorDataPoint>
     {
         /// <summary>
         /// The minimum observations needed to consider the indicator ready. After that observation
@@ -34,20 +34,26 @@ namespace QuantConnect.Indicators
         private int? _minPeriod;
 
         /// <summary>
-        /// The rolling window used to store the momentum.
+        /// The final full period used to estimate the indicator.
         /// </summary>
-        private readonly RollingWindow<decimal> _multipliedDiffWindow;
+        private int _fullPeriod;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Momersion"/> class.
+        /// The rolling window used to store the momentum.
+        /// </summary>
+        private RollingWindow<decimal> _multipliedDiffWindow;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MomersionIndicator"/> class.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="minPeriod">The minimum period.</param>
         /// <param name="fullPeriod">The full period.</param>
         /// <exception cref="System.ArgumentException">The minimum period should be greater of 3.;minPeriod</exception>
-        public Momersion(string name, int? minPeriod, int fullPeriod)
+        public MomersionIndicator(string name, int? minPeriod, int fullPeriod)
             : base(name, 3)
         {
+            _fullPeriod = fullPeriod;
             _multipliedDiffWindow = new RollingWindow<decimal>(fullPeriod);
             if (minPeriod < 4)
             {
@@ -57,20 +63,20 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Momersion"/> class.
+        /// Initializes a new instance of the <see cref="MomersionIndicator"/> class.
         /// </summary>
         /// <param name="minPeriod">The minimum period.</param>
         /// <param name="fullPeriod">The full period.</param>
-        public Momersion(int minPeriod, int fullPeriod)
+        public MomersionIndicator(int minPeriod, int fullPeriod)
             : this("Momersion_" + fullPeriod, minPeriod, fullPeriod)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Momersion"/> class.
+        /// Initializes a new instance of the <see cref="MomersionIndicator"/> class.
         /// </summary>
         /// <param name="fullPeriod">The full period.</param>
-        public Momersion(int fullPeriod)
+        public MomersionIndicator(int fullPeriod)
             : this("Momersion_" + fullPeriod, null, fullPeriod)
         {
         }
@@ -87,8 +93,10 @@ namespace QuantConnect.Indicators
                 {
                     return _multipliedDiffWindow.Count >= _minPeriod;
                 }
-                
-                return _multipliedDiffWindow.IsReady;
+                else
+                {
+                    return _multipliedDiffWindow.IsReady;
+                }
             }
         }
 
@@ -112,23 +120,21 @@ namespace QuantConnect.Indicators
         /// </returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            int Mc;
-            int MRc;
-            decimal momersion;
+            int Mc = 0;
+            int MRc = 0;
+            decimal momersion = 50m;
 
             if (window.Count >= 3) _multipliedDiffWindow.Add((window[0] - window[1]) * (window[1] - window[2]));
 
-            if (IsReady)
+            // Estimate the indicator if less than 50% of observation are zero. Avoid division by
+            // zero and estimations with few real observations in case of forward filled data.
+            if (this.IsReady &&
+                _multipliedDiffWindow.Count(obs => obs == 0) < 0.5 * _multipliedDiffWindow.Count)
             {
                 Mc = _multipliedDiffWindow.Count(obs => obs > 0);
                 MRc = _multipliedDiffWindow.Count(obs => obs < 0);
                 momersion = 100m * Mc / (Mc + MRc);
             }
-            else
-            {
-                momersion = 50m;
-            }
-
             return momersion;
         }
     }

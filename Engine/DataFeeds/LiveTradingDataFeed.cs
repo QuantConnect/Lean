@@ -18,7 +18,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -283,7 +282,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // emit on data or if we've elapsed a full second since last emit
                     if (data.Count != 0 || frontier >= nextEmit)
                     {
-                        Bridge.Add(TimeSlice.Create(frontier, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes));
+                        Bridge.Add(TimeSlice.Create(frontier, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes), _cancellationTokenSource.Token);
 
                         // force emitting every second
                         nextEmit = frontier.RoundDown(Time.OneSecond).Add(Time.OneSecond);
@@ -299,6 +298,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             catch (Exception err)
             {
                 Log.Error(err);
+                _algorithm.RunTimeError = err;
             }
             IsActive = false;
         }
@@ -323,7 +323,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (!_cancellationTokenSource.IsCancellationRequested)
             {
                 _cancellationTokenSource.Cancel();
-                Bridge.Dispose();
+                if (Bridge != null) Bridge.Dispose();
             }
         }
 
@@ -376,8 +376,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var currentLocalDate = DateTime.UtcNow.ConvertFromUtc(config.TimeZone).Date;
                         var factory = new BaseDataSubscriptionFactory(config, currentLocalDate, true);
                         var source = sourceProvider.GetSource(config, currentLocalDate, true);
-                        var factorEnumerator = factory.Read(source).GetEnumerator();
-                        var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, config.TimeZone, config.Increment);
+                        var factoryReadEnumerator = factory.Read(source).GetEnumerator();
+                        var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, config.TimeZone, config.Increment);
                         return new FrontierAwareEnumerator(fastForward, _timeProvider, timeZoneOffsetProvider);
                     });
 
@@ -563,16 +563,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
-                while (true)
+                int ticks = 0;
+                foreach (var data in _dataQueueHandler.GetNextTicks())
                 {
-                    int ticks = 0;
-                    foreach (var data in _dataQueueHandler.GetNextTicks())
-                    {
-                        ticks++;
-                        yield return data;
-                    }
-                    if (ticks == 0) Thread.Sleep(1);
+                    ticks++;
+                    yield return data;
                 }
+                if (ticks == 0) Thread.Sleep(1);
             }
         }
 
