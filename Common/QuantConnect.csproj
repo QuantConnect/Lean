@@ -140,11 +140,14 @@
     <Compile Include="Data\Consolidators\TradeBarConsolidatorBase.cs" />
     <Compile Include="Data\FileFormat.cs" />
     <Compile Include="Data\HistoryRequest.cs" />
+    <Compile Include="Data\Market\Bar.cs" />
     <Compile Include="Data\Market\DataDictionary.cs" />
     <Compile Include="Data\Market\Delisting.cs" />
     <Compile Include="Data\Market\Delistings.cs" />
     <Compile Include="Data\Market\Dividend.cs" />
     <Compile Include="Data\Market\Dividends.cs" />
+    <Compile Include="Data\Market\IBar.cs" />
+    <Compile Include="Data\Market\QuoteBar.cs" />
     <Compile Include="Data\Market\RenkoBar.cs" />
     <Compile Include="Brokerages\BrokerageMessageEvent.cs" />
     <Compile Include="Brokerages\BrokerageMessageType.cs" />
