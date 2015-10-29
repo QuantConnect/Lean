@@ -39,13 +39,13 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             var previousLimit = limit.LimitPrice;
 
             var fxcmBrokerage = (FxcmBrokerage)brokerage;
-            var quotes = fxcmBrokerage.GetQuotes(new List<string> { fxcmBrokerage.ConvertSymbolToFxcmSymbol(order.Symbol) });
+            var quotes = fxcmBrokerage.GetBidAndAsk(new List<string> { fxcmBrokerage.ConvertSymbolToFxcmSymbol(order.Symbol) });
 
             if (order.Quantity > 0)
             {
                 // for limit buys we need to increase the limit price
                 // buy limit price must be at bid price or below
-                var bidPrice = Convert.ToDecimal(quotes.Single().getBidClose());
+                var bidPrice = Convert.ToDecimal(quotes.Single().BidPrice);
                 Log.Trace("FxcmLimitOrderTestParameters.ModifyOrderToFill(): Bid: " + bidPrice);
                 limit.LimitPrice = Math.Max(previousLimit, Math.Min(bidPrice, limit.LimitPrice * 2));
             }
@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             {
                 // for limit sells we need to decrease the limit price
                 // sell limit price must be at ask price or above
-                var askPrice = Convert.ToDecimal(quotes.Single().getAskClose());
+                var askPrice = Convert.ToDecimal(quotes.Single().AskPrice);
                 Log.Trace("FxcmLimitOrderTestParameters.ModifyOrderToFill(): Ask: " + askPrice);
                 limit.LimitPrice = Math.Min(previousLimit, Math.Max(askPrice, limit.LimitPrice / 2));
             }

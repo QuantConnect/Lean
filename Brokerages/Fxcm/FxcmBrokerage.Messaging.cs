@@ -121,9 +121,23 @@ namespace QuantConnect.Brokerages.Fxcm
         }
 
         /// <summary>
+        /// Provides as public access to this data without requiring consumers to reference
+        /// IKVM libraries
+        /// </summary>
+        public List<Tick> GetBidAndAsk(List<string> fxcmSymbols)
+        {
+            return GetQuotes(fxcmSymbols).Select(x => new Tick
+            {
+                Symbol = x.getInstrument().getSymbol(),
+                BidPrice = (decimal) x.getBidClose(),
+                AskPrice = (decimal) x.getAskClose()
+            }).ToList();
+        }
+
+        /// <summary>
         /// Gets the quotes for the symbol
         /// </summary>
-        public List<MarketDataSnapshot> GetQuotes(List<string> fxcmSymbols)
+        private List<MarketDataSnapshot> GetQuotes(List<string> fxcmSymbols)
         {
             // get current quotes for the instrument
             var request = new MarketDataRequest();
