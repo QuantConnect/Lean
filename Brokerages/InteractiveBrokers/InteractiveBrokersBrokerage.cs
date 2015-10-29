@@ -773,7 +773,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 _accountProperties[e.Currency + ":" + e.Key] = e.Value;
 
                 // we want to capture if the user's cash changes so we can reflect it in the algorithm
-                if (e.Key == AccountValueKeys.NetLiquidationByCurrency && e.Currency != "BASE")
+                if (e.Key == AccountValueKeys.CashBalance && e.Currency != "BASE")
                 {
                     var cashBalance = decimal.Parse(e.Value, CultureInfo.InvariantCulture);
                     _cashBalances.AddOrUpdate(e.Currency, cashBalance);
