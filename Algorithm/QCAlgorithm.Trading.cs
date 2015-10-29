@@ -511,12 +511,14 @@ namespace QuantConnect.Algorithm
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
-                foreach (var holdingSymbol in Portfolio.Keys)
+                foreach (var kvp in Portfolio)
                 {
-                    if (holdingSymbol != symbol && security.Holdings.AbsoluteQuantity > 0)
+                    var holdingSymbol = kvp.Key;
+                    var holdings = kvp.Value;
+                    if (holdingSymbol != symbol && holdings.AbsoluteQuantity > 0)
                     {
                         //Go through all existing holdings [synchronously], market order the inverse quantity:
-                        Order(holdingSymbol, -security.Holdings.Quantity);
+                        Order(holdingSymbol, -holdings.Quantity);
                     }
                 }
             }
