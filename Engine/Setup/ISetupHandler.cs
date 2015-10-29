@@ -91,15 +91,5 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="realTimeHandler">The configured real time handler</param>
         /// <returns>True on successfully setting up the algorithm state, or false on error.</returns>
         bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler);
-
-        /// <summary>
-        /// Setup the error handler for the brokerage errors.
-        /// </summary>
-        /// <param name="job">The job</param>
-        /// <param name="results">Result handler.</param>
-        /// <param name="api">The api implementation</param>
-        /// <param name="brokerage">Brokerage endpoint.</param>
-        /// <returns>True on successfully setting up the error handlers.</returns>
-        bool SetupErrorHandler(AlgorithmNodePacket job, IResultHandler results, IApi api, IBrokerage brokerage);
     }
 }

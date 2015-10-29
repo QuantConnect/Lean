@@ -266,8 +266,8 @@ namespace QuantConnect.Lean.Engine
                     _algorithmHandlers.Transactions.Initialize(algorithm, brokerage, _algorithmHandlers.Results);
                     _algorithmHandlers.RealTime.Setup(algorithm, job, _algorithmHandlers.Results, _systemHandlers.Api);
 
-                    //Set the error handlers for the brokerage asynchronous errors.
-                    _algorithmHandlers.Setup.SetupErrorHandler(job, _algorithmHandlers.Results, _systemHandlers.Api, brokerage);
+                    // wire up the brokerage message handler
+                    brokerage.Message += (sender, message) => algorithm.BrokerageMessageHandler.Handle(message);
 
                     //Send status to user the algorithm is now executing.
                     _algorithmHandlers.Results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Running);

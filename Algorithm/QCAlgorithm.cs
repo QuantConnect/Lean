@@ -165,8 +165,18 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public IBrokerageModel BrokerageModel
         {
-            get; 
+            get;
             set;
+        }
+
+        /// <summary>
+        /// Gets the brokerage message handler used to decide what to do
+        /// with each message sent from the brokerage
+        /// </summary>
+        public IBrokerageMessageHandler BrokerageMessageHandler
+        {
+            get;
+            private set;
         }
 
         /// <summary>
@@ -684,6 +694,23 @@ namespace QuantConnect.Algorithm
                 default:
                     throw new ArgumentOutOfRangeException("brokerage", brokerage, null);
             }
+        }
+
+        /// <summary>
+        /// Sets the implementation used to handle messages from the brokerage.
+        /// The default implementation will forward messages to debug or error
+        /// and when a <see cref="BrokerageMessageType.Error"/> ocurrs, the algorithm
+        /// is stopped.
+        /// </summary>
+        /// <param name="handler">The message handler to use</param>
+        public void SetBrokerageMessageHandler(IBrokerageMessageHandler handler)
+        {
+            if (handler == null)
+            {
+                throw new ArgumentNullException("handler");
+            }
+
+            BrokerageMessageHandler = handler;
         }
 
         /// <summary>

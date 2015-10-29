@@ -268,19 +268,6 @@ namespace QuantConnect.Lean.Engine.Setup
         }
 
         /// <summary>
-        /// Setup the error handler for backtest. NOP
-        /// </summary>
-        /// <param name="job"></param>
-        /// <param name="results">Result handler.</param>
-        /// <param name="api"></param>
-        /// <param name="brokerage">Brokerage endpoint.</param>
-        /// <returns>True on successfully setting up the error handlers.</returns>
-        public bool SetupErrorHandler(AlgorithmNodePacket job, IResultHandler results, IApi api, IBrokerage brokerage)
-        {
-            return true;
-        }
-
-        /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
