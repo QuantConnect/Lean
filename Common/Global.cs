@@ -276,14 +276,14 @@ namespace QuantConnect
     {
         /// Base market data type
         Base,
-        /// QuoteBar market data type [Bid(OHLC), Ask(OHLC) and Mid(OHLC) summary bar]
-        QuoteBar,
         /// TradeBar market data type (OHLC summary bar)
         TradeBar,
         /// Tick market data type (price-time pair)
         Tick,
         /// Data associated with an instrument
-        Auxiliary
+        Auxiliary,
+        /// QuoteBar market data type [Bid(OHLC), Ask(OHLC) and Mid(OHLC) summary bar]
+        QuoteBar
     }
 
     /// <summary>
