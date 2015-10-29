@@ -4,10 +4,14 @@
     //----------------------------------------
 
     // Input folder in which zip raw files are saved
-    "input-folder": "C:\\Users\\Alexandre\\Documents\\Data",
-
+    "input-folder": "C://Data",
+    // Save files that were downloaded from Bovespa ftp site under:
+    // "input-folder"//Equity for equities
+    // "input-folder"//Option for options
+    // "input-folder"//Future for futures
+    
     // Output folder in which files will be saved (usually the Lean data folder)
-    "output-folder": "C:\\Users\\Alexandre\\Documents\\GitHub\\Lean\\Data",
+    "output-folder": "...//...//Data",
 
     // Security type (equity, option or future)
     "security-type": "equity",
