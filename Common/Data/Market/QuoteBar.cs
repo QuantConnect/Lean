@@ -29,6 +29,10 @@ namespace QuantConnect.Data.Market
         // scale factor used in QC equity/forex data files
         private const decimal _scaleFactor = 10000m;
 
+        private decimal _open;
+        private decimal _high;
+        private decimal _low;
+        
         /// <summary>
         /// Average bid size
         /// </summary>
@@ -52,25 +56,118 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Opening price of the bar: Defined as the price at the start of the time period.
         /// </summary>
-        public decimal Open { get; set; }
+        public decimal Open
+        {
+            get
+            {
+                if (Bid != null && Ask != null)
+                {
+                    return (Bid.Open + Ask.Open) / 2m;
+                }
+                if (Bid != null)
+                {
+                    return Bid.Open;
+                }
+                if (Ask != null)
+                {
+                    return Ask.Open;
+                }
+                return _open;
+            }
+            set
+            {
+                if (value != null)
+                    _open = value;
+                else
+                    _open = 0m;
+            }
+        }
 
         /// <summary>
         /// High price of the QuoteBar during the time period.
         /// </summary>
-        public decimal High { get; set; }
+        public decimal High
+        {
+            get
+            {
+                if (Bid != null && Ask != null)
+                {
+                    return (Bid.High + Ask.High) / 2m;
+                }
+                if (Bid != null)
+                {
+                    return Bid.High;
+                }
+                if (Ask != null)
+                {
+                    return Ask.High;
+                }
+                return _high;
+            }
+            set
+            {
+                if (value != null)
+                    _high = value;
+                else
+                    _high = 0m;
+            }
+        }
 
         /// <summary>
         /// Low price of the QuoteBar during the time period.
         /// </summary>
-        public decimal Low { get; set; }
+        public decimal Low
+        {
+            get
+            {
+                if (Bid != null && Ask != null)
+                {
+                    return (Bid.Low + Ask.Low) / 2m;
+                }
+                if (Bid != null)
+                {
+                    return Bid.Low;
+                }
+                if (Ask != null)
+                {
+                    return Ask.Low;
+                }
+                return _low;
+            }
+            set
+            {
+                if (value != null)
+                    _low = value;
+                else
+                    _low = 0m;
+            }
+        }
 
         /// <summary>
         /// Closing price of the QuoteBar. Defined as the price at Start Time + TimeSpan.
         /// </summary>
         public decimal Close
         {
-            get { return Value; }
-            set { Value = value; }
+            get
+            {
+                if (Bid != null && Ask != null)
+                {
+                    return (Bid.Close + Ask.Close) / 2m;
+                }
+                if (Bid != null)
+                {
+                    return Bid.Close;
+                }
+                if (Ask != null)
+                {
+                    return Ask.Close;
+                }
+                return Value;
+            }
+            set
+            {
+                Value = value;
+            }
         }
 
         /// <summary>
@@ -103,17 +200,17 @@ namespace QuantConnect.Data.Market
         {
             Symbol = Symbol.Empty;
             Time = new DateTime();
-            Value = 0;
-            DataType = MarketDataType.QuoteBar;
+            Bid = new Bar();
+            Ask = new Bar();
+            AvgBidSize = 0;
+            AvgAskSize = 0;
             Open = 0;
             High = 0;
             Low = 0;
             Close = 0;
-            AvgBidSize = 0;
-            AvgAskSize = 0;
-            Bid = new Bar();
-            Ask = new Bar();
+            Value = 0;
             Period = TimeSpan.FromMinutes(1);
+            DataType = MarketDataType.QuoteBar;
         }
 
         /// <summary>
@@ -123,19 +220,19 @@ namespace QuantConnect.Data.Market
         /// <param name="original">Original quotebar object we seek to clone</param>
         public QuoteBar(QuoteBar original)
         {
-            DataType = MarketDataType.QuoteBar;
-            Time = new DateTime(original.Time.Ticks);
             Symbol = original.Symbol;
-            Value = original.Close;
+            Time = new DateTime(original.Time.Ticks);
+            Bid = original.Bid;
+            Ask = original.Ask;
+            AvgBidSize = original.AvgBidSize;
+            AvgAskSize = original.AvgAskSize;
             Open = original.Open;
             High = original.High;
             Low = original.Low;
             Close = original.Close;
-            AvgBidSize = original.AvgBidSize;
-            AvgAskSize = original.AvgAskSize;
-            Bid = original.Bid;
-            Ask = original.Ask;
+            Value = original.Close;
             Period = original.Period;
+            DataType = MarketDataType.QuoteBar;
         }
 
         /// <summary>
@@ -156,18 +253,18 @@ namespace QuantConnect.Data.Market
         /// <param name="period">The period of this bar, specify null for default of 1 minute</param>
         public QuoteBar(DateTime time, Symbol symbol, decimal bidopen, decimal bidhigh, decimal bidlow, decimal bidclose, long avgbidsize, decimal askopen, decimal askhigh, decimal asklow, decimal askclose, long avgasksize, TimeSpan? period = null)
         {
-            Time = time;
             Symbol = symbol;
-            Value = (bidclose + askclose) / 2;
+            Time = time;
+            Bid = new Bar(bidopen, bidhigh, bidlow, bidclose);
+            Ask = new Bar(askopen, askhigh, asklow, askclose);
+            AvgBidSize = avgbidsize;
+            AvgAskSize = avgasksize;
             Open = (bidopen + askopen) / 2;
             High = (bidhigh + askhigh) / 2;
             Low = (bidlow + asklow) / 2;
             Close = (bidclose + askclose) / 2;
-            AvgBidSize = avgbidsize;
-            AvgAskSize = avgasksize;
+            Value = Close;
             Period = period ?? TimeSpan.FromMinutes(1);
-            Bid = new Bar(bidopen, bidhigh, bidlow, bidclose);
-            Ask = new Bar(askopen, askhigh, asklow, askclose);
             DataType = MarketDataType.QuoteBar;
         }
 
@@ -186,26 +283,26 @@ namespace QuantConnect.Data.Market
             var midlow = Math.Min(lastTrade, midpoint);
 
             //Assumed not set yet. Will fail for custom time series where "price" $0 is a possibility.
-            if (Open == 0) Open = lastTrade;
             if (Bid.Open == 0) Bid.Open = bidPrice;
             if (Ask.Open == 0) Ask.Open = askPrice;
+            if (Open == 0) Open = lastTrade;
 
-            if (midhigh > High) High = midhigh;
             if (bidPrice > Bid.High) Bid.High = bidPrice;
             if (askPrice > Ask.High) Ask.High = askPrice;
+            if (midhigh > High) High = midhigh;
 
-            if (midlow < Low) Low = midlow;
             if (bidPrice < Bid.Low) Bid.Low = bidPrice;
             if (askPrice < Ask.Low) Ask.Low = askPrice;
-
+            if (midlow < Low) Low = midlow;
+            
             // Note: we are summing instead of averaging!!!
             AvgBidSize += Convert.ToInt32(bidSize);
             AvgAskSize += Convert.ToInt32(askSize);
 
             //Always set the closing price;
-            Close = lastTrade;
             Bid.Close = bidPrice;
             Ask.Close = askPrice;
+            Close = lastTrade;
             Value = lastTrade;
         }
 
@@ -348,28 +445,6 @@ namespace QuantConnect.Data.Market
             }
             return quoteBar;
         }
-
-
-        /// <summary>
-        /// Update the quotebar - build the bar from this pricing information:
-        /// </summary>
-        /// <param name="lastTrade">This trade price</param>
-        /// <param name="bidPrice">Current bid price (not used) </param>
-        /// <param name="askPrice">Current asking price (not used) </param>
-        /// <param name="volume">Volume of this trade</param>
-        public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume)
-        {
-            //Assumed not set yet. Will fail for custom time series where "price" $0 is a possibility.
-            if (Open == 0) Open = lastTrade;
-            if (lastTrade > High) High = lastTrade;
-            if (lastTrade < Low) Low = lastTrade;
-            //Volume is the total summed volume of trades in this bar:
-            AvgBidSize += Convert.ToInt32(volume);
-            //Always set the closing price;
-            Close = lastTrade;
-            Value = lastTrade;
-        }
-
 
         /// <summary>
         /// Get Source for Custom Data File

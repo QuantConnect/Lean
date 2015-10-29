@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-
 namespace QuantConnect.Data.Market
 {
     /// <summary>
@@ -25,21 +23,21 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Opening price of the bar: Defined as the price at the start of the time period.
         /// </summary>
-        decimal Open { get; set; }
+        decimal Open { get; }
 
         /// <summary>
         /// High price of the bar during the time period.
         /// </summary>
-        decimal High { get; set; }
+        decimal High { get; }
 
         /// <summary>
         /// Low price of the bar during the time period.
         /// </summary>
-        decimal Low { get; set; }
+        decimal Low { get; }
 
         /// <summary>
         /// Closing price of the bar. Defined as the price at Start Time + TimeSpan.
         /// </summary>
-        decimal Close { get; set; }
+        decimal Close { get; }
     }
 }
