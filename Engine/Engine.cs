@@ -255,7 +255,6 @@ namespace QuantConnect.Lean.Engine
 
                     //Set algorithm as locked; set it to live mode if we're trading live, and set it to locked for no further updates.
                     algorithm.SetAlgorithmId(job.AlgorithmId);
-                    algorithm.SetLiveMode(_liveMode);
                     algorithm.SetLocked();
 
                     //Wire up the universe selection event handler before kicking off the data feed

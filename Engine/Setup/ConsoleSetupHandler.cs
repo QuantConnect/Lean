@@ -119,6 +119,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Set the limits on the algorithm assets (for local no limits)
                     algorithm.SetAssetLimits(999, 999, 999);
                     algorithm.SetMaximumOrders(int.MaxValue);
+                    algorithm.SetLiveMode(false);
                     //Set the source impl for the event scheduling
                     algorithm.Schedule.SetEventSchedule(realTimeHandler);
                     //Setup Base Algorithm:
