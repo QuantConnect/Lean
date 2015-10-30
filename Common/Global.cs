@@ -281,7 +281,9 @@ namespace QuantConnect
         /// Tick market data type (price-time pair)
         Tick,
         /// Data associated with an instrument
-        Auxiliary
+        Auxiliary,
+        /// QuoteBar market data type [Bid(OHLC), Ask(OHLC) and Mid(OHLC) summary bar]
+        QuoteBar
     }
 
     /// <summary>

@@ -24,7 +24,7 @@ namespace QuantConnect.Data.Market
     /// TradeBar class for second and minute resolution data: 
     /// An OHLC implementation of the QuantConnect BaseData class with parameters for candles.
     /// </summary>
-    public class TradeBar : BaseData
+    public class TradeBar : BaseData, IBar
     {
         // scale factor used in QC equity/forex data files
         private const decimal _scaleFactor = 10000m;
