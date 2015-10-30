@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 
@@ -31,6 +32,26 @@ namespace QuantConnect.Tests.Configuration
 
             bool betaMode2 = Config.GetBool("beta-mode");
             Assert.AreNotEqual(betaMode, betaMode2);
+        }
+
+        [Test]
+        public void GetValueHandlesDateTime()
+        {
+            GetValueHandles(new DateTime(2015, 1, 2, 3, 4, 5));
+        }
+
+        [Test]
+        public void GetValueHandlesTimeSpan()
+        {
+            GetValueHandles(new TimeSpan(1, 2, 3, 4, 5));
+        }
+
+        private void GetValueHandles<T>(T value)
+        {
+            var configValue = value.ToString();
+            Config.Set("temp-value", configValue);
+            var actual = Config.GetValue<T>("temp-value");
+            Assert.AreEqual(value, actual);
         }
     }
 }

@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Logging;
 
@@ -167,7 +168,6 @@ namespace QuantConnect.Configuration
         /// <param name="defaultValue">The default value to use if not found in configuration</param>
         /// <returns>Converted value of the config setting.</returns>
         public static T GetValue<T>(string key, T defaultValue = default(T))
-            where T : IConvertible
         {
             // special case environment requests
             if (key == "environment" && typeof (T) == typeof (string)) return (T) (object) GetEnvironment();
@@ -185,7 +185,61 @@ namespace QuantConnect.Configuration
             {
                 return (T) Enum.Parse(type, value);
             }
-            return (T) Convert.ChangeType(value, type);
+
+            if (typeof(IConvertible).IsAssignableFrom(type))
+            {
+                return (T) Convert.ChangeType(value, type);
+            }
+
+            // try and find a static parse method
+            try
+            {
+                var parse = type.GetMethod("Parse", new[]{typeof(string)});
+                var result = parse.Invoke(null, new object[] {value});
+                return (T) result;
+            }
+            catch (Exception err)
+            {
+                Log.Trace("Config.GetValue<{0}>({1},{2}): Failed to parse: {3}. Using default value.", typeof (T).Name, key, defaultValue, value);
+                Log.Error(err);
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Tries to find the specified key and parse it as a T, using
+        /// default(T) if unable to locate the key or unable to parse it
+        /// </summary>
+        /// <typeparam name="T">The desired output type</typeparam>
+        /// <param name="key">The configuration key</param>
+        /// <param name="value">The output value</param>
+        /// <returns>True on successful parse, false when output value is default(T)</returns>
+        public static bool TryGetValue<T>(string key, out T value)
+        {
+            return TryGetValue(key, default(T), out value);
+        }
+
+        /// <summary>
+        /// Tries to find the specified key and parse it as a T, using
+        /// defaultValue if unable to locate the key or unable to parse it
+        /// </summary>
+        /// <typeparam name="T">The desired output type</typeparam>
+        /// <param name="key">The configuration key</param>
+        /// <param name="defaultValue">The default value to use on key not found or unsuccessful parse</param>
+        /// <param name="value">The output value</param>
+        /// <returns>True on successful parse, false when output value is defaultValue</returns>
+        public static bool TryGetValue<T>(string key, T defaultValue, out T value)
+        {
+            try
+            {
+                value = GetValue(key, defaultValue);
+                return true;
+            }
+            catch
+            {
+                value = defaultValue;
+                return false;
+            }
         }
 
         private static JToken GetToken(JToken settings, string key)
