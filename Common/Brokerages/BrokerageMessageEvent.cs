@@ -62,6 +62,26 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Creates a new <see cref="BrokerageMessageEvent"/> to represent a disconnect message
+        /// </summary>
+        /// <param name="message">The message from the brokerage</param>
+        /// <returns>A brokerage disconnect message</returns>
+        public static BrokerageMessageEvent Disconnected(string message)
+        {
+            return new BrokerageMessageEvent(BrokerageMessageType.Disconnect, "Disconnect", message);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="BrokerageMessageEvent"/> to represent a reconnect message
+        /// </summary>
+        /// <param name="message">The message from the brokerage</param>
+        /// <returns>A brokerage reconnect message</returns>
+        public static BrokerageMessageEvent Reconnected(string message)
+        {
+            return new BrokerageMessageEvent(BrokerageMessageType.Reconnect, "Reconnect", message);
+        }
+
+        /// <summary>
         /// Returns a string that represents the current object.
         /// </summary>
         /// <returns>

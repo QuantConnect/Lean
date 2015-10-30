@@ -16,7 +16,7 @@
 namespace QuantConnect.Brokerages
 {
     /// <summary>
-    /// Specifies the type of message received from a brokerage
+    /// Specifies the type of message received from an IBrokerage implementation
     /// </summary>
     public enum BrokerageMessageType
     {
@@ -33,6 +33,16 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Fatal error message, the algo will be stopped
         /// </summary>
-        Error
+        Error,
+
+        /// <summary>
+        /// Brokerage reconnected with remote server
+        /// </summary>
+        Reconnect,
+
+        /// <summary>
+        /// Brokerage disconnected from remote server
+        /// </summary>
+        Disconnect
     }
 }

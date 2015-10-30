@@ -87,6 +87,7 @@ namespace QuantConnect.Interfaces
         IBrokerageMessageHandler BrokerageMessageHandler
         {
             get;
+            set;
         }
 
         /// <summary>

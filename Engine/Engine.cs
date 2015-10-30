@@ -223,6 +223,9 @@ namespace QuantConnect.Lean.Engine
                     });
                     algorithm.HistoryProvider = _algorithmHandlers.HistoryProvider;
 
+                    // initialize the default brokerage message handler
+                    algorithm.BrokerageMessageHandler = new DefaultBrokerageMessageHandler(algorithm, job, _algorithmHandlers.Results, _systemHandlers.Api);
+
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
                     initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, out brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime);
 

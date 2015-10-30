@@ -715,13 +715,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 _disconnected1100Fired = true;
 
-                // wait a minute and see if we've been reconnected
-                Task.Delay(TimeSpan.FromMinutes(15)).ContinueWith(task => TryWaitForReconnect());
+                // begin the try wait logic
+                TryWaitForReconnect();
             }
             else if ((int) e.ErrorCode == 1102)
             {
                 // we've reconnected
                 _disconnected1100Fired = false;
+                OnMessage(BrokerageMessageEvent.Reconnected(e.ErrorMsg));
             }
 
             if (InvalidatingCodes.Contains((int)e.ErrorCode))
@@ -749,7 +750,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (_disconnected1100Fired && !IsWithinScheduledServerResetTimes())
             {
                 // if we were disconnected and we're nothing within the reset times, send the error event
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, "Connection with Interactive Brokers lost. " +
+                OnMessage(BrokerageMessageEvent.Disconnected("Connection with Interactive Brokers lost. " +
                     "This could be because of internet connectivity issues or a log in from another location."
                     ));
             }

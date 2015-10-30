@@ -176,7 +176,7 @@ namespace QuantConnect.Algorithm
         public IBrokerageMessageHandler BrokerageMessageHandler
         {
             get;
-            private set;
+            set;
         }
 
         /// <summary>
