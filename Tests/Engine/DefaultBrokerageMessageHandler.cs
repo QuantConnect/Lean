@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Engine
 
             handler.Handle(BrokerageMessageEvent.Disconnected("Disconnection!"));
 
-            Thread.Sleep(10);
+            Thread.Sleep(50);
 
             Assert.IsNotNull(algorithm.RunTimeError);
 
