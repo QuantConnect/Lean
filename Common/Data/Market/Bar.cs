@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-
 namespace QuantConnect.Data.Market
 {
     /// <summary>
@@ -66,6 +64,26 @@ namespace QuantConnect.Data.Market
             High = high;
             Low = low;
             Close = close;
+        }
+
+        /// <summary>
+        /// Updates the bar with a new value. This will aggregate the OHLC bar
+        /// </summary>
+        /// <param name="value">The new value</param>
+        public void Update(decimal value)
+        {
+            if (Open == 0) Open = value;
+            if (value > High) High = value;
+            if (value < Low) Low = value;
+            Close = value;
+        }
+
+        /// <summary>
+        /// Returns a clone of this bar
+        /// </summary>
+        public Bar Clone()
+        {
+            return new Bar(Open, High, Low, Close);
         }
     }
 }

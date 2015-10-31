@@ -290,7 +290,9 @@ namespace QuantConnect.Data.Market
         /// <param name="bidPrice">Current bid price (not used) </param>
         /// <param name="askPrice">Current asking price (not used) </param>
         /// <param name="volume">Volume of this trade</param>
-        public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume)
+        /// <param name="bidSize">The size of the current bid, if available</param>
+        /// <param name="askSize">The size of the current ask, if available</param>
+        public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume, decimal bidSize, decimal askSize)
         {
             //Assumed not set yet. Will fail for custom time series where "price" $0 is a possibility.
             if (Open == 0) Open = lastTrade;

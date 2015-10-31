@@ -68,7 +68,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 working = CreateNewTradeBar(tick.LastPrice, tick.Quantity);
                 _queue.Enqueue(working);
             }
-            working.Update(tick.LastPrice, tick.BidPrice, tick.AskPrice, tick.Quantity);
+            working.Update(tick.LastPrice, tick.BidPrice, tick.AskPrice, tick.Quantity, tick.BidSize, tick.AskSize);
         }
 
         /// <summary>

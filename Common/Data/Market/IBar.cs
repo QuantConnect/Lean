@@ -16,7 +16,7 @@
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// Base Bar Class: Open, High, Low and Close.
+    /// Generic bar interface with Open, High, Low and Close.
     /// </summary>
     public interface IBar
     {

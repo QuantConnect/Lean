@@ -316,11 +316,15 @@ namespace QuantConnect.Data.Market
         /// <param name="bidPrice">Current bid price</param>
         /// <param name="askPrice">Current asking price</param>
         /// <param name="volume">Volume of this trade</param>
-        public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume)
+        /// <param name="bidSize">The size of the current bid, if available</param>
+        /// <param name="askSize">The size of the current ask, if available</param>
+        public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume, decimal bidSize, decimal askSize)
         {
             Value = lastTrade;
             BidPrice = bidPrice;
             AskPrice = askPrice;
+            BidSize = (long) bidSize;
+            AskSize = (long) askSize;
             Quantity = Convert.ToInt32(volume);
         }
 

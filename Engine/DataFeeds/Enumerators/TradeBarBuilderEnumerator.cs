@@ -69,7 +69,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             else
             {
                 // we're still within this bar size's time
-                working.Update(data.Value, tick == null ? data.Value : tick.BidPrice, tick == null ? data.Value : tick.AskPrice, qty);
+                var bidPrice = tick == null ? data.Value : tick.BidPrice;
+                var askPrice = tick == null ? data.Value : tick.AskPrice;
+                var bidSize = tick == null ? 0m : tick.BidSize;
+                var askSize = tick == null ? 0m : tick.AskSize;
+                working.Update(data.Value, bidPrice, askPrice, qty, bidSize, askSize);
             }
         }
 
