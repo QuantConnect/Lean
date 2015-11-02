@@ -138,6 +138,9 @@ namespace QuantConnect.Lean.Engine
             var methodInvokers = new Dictionary<Type, MethodInvoker>();
             var marginCallFrequency = TimeSpan.FromMinutes(5);
             var nextMarginCallTime = DateTime.MinValue;
+            var settlementScanFrequency = TimeSpan.FromMinutes(30);
+            var nextSettlementScanTime = DateTime.MinValue;
+
             var delistingTickets = new List<OrderTicket>();
 
             //Initialize Properties:
@@ -384,6 +387,14 @@ namespace QuantConnect.Lean.Engine
                     }
 
                     nextMarginCallTime = time + marginCallFrequency;
+                }
+
+                // perform check for settlement of unsettled funds
+                if (time >= nextSettlementScanTime || (_liveMode && nextSettlementScanTime > DateTime.Now))
+                {
+                    algorithm.Portfolio.ScanForCashSettlement(algorithm.UtcTime);
+
+                    nextSettlementScanTime = time + settlementScanFrequency;
                 }
 
                 // before we call any events, let the algorithm know about universe changes

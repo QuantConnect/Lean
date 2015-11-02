@@ -192,7 +192,8 @@ namespace QuantConnect.Lean.Engine.Setup
             // this needs to be done after algorithm initialization
             brokerage = new BacktestingBrokerage(algorithm);
 
-            SetupHandler.UpdateTransactionModels(algorithm, algorithm.BrokerageModel);
+            // set the transaction and settlement models based on the brokerage properties
+            SetupHandler.UpdateModels(algorithm, algorithm.BrokerageModel);
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
             algorithm.PostInitialize();
 
