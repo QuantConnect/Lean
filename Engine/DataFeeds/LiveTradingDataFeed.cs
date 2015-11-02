@@ -308,19 +308,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Exit()
         {
-            // remove each subscription from our collection
-            foreach (var kvp in _subscriptions)
+            if (_subscriptions != null)
             {
-                try
+                // remove each subscription from our collection
+                foreach (var kvp in _subscriptions)
                 {
-                    RemoveSubscription(kvp.Value);
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err, "Error removing: " + kvp.Key);
+                    try
+                    {
+                        RemoveSubscription(kvp.Value);
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err, "Error removing: " + kvp.Key);
+                    }
                 }
             }
-            if (!_cancellationTokenSource.IsCancellationRequested)
+            if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
             {
                 _cancellationTokenSource.Cancel();
                 if (Bridge != null) Bridge.Dispose();
