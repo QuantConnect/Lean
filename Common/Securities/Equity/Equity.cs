@@ -23,6 +23,9 @@ namespace QuantConnect.Securities.Equity
     /// <seealso cref="Security"/>
     public class Equity : Security
     {
+        // The number of days required to settle an equity sale
+        private const int EquitySettlementDays = 3;
+
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
@@ -48,6 +51,7 @@ namespace QuantConnect.Securities.Equity
             TransactionModel = new EquityTransactionModel();
             PortfolioModel = new EquityPortfolioModel();
             MarginModel = new EquityMarginModel(leverage);
+            SettlementModel = new DelayedSettlementModel(EquitySettlementDays);
             Holdings = new EquityHolding(this, TransactionModel, MarginModel);
         }
     }

@@ -42,9 +42,20 @@ namespace QuantConnect.Securities
         /// Gets the cash book that keeps track of all currency holdings
         /// </summary>
         public CashBook CashBook { get; private set; }
-        
-        //Record keeping variables
+
+        /// <summary>
+        /// Gets the cash book that keeps track of all currency holdings
+        /// </summary>
+        public CashBook UnsettledCashBook { get; private set; }
+
+        /// <summary>
+        /// Gets the list of pending funds waiting for settlement time
+        /// </summary>
+        public List<UnsettledCashAmount> UnsettledCashAmounts { get; private set; }
+
+        // Record keeping variables
         private readonly Cash _baseCurrencyCash;
+        private readonly Cash _baseCurrencyUnsettledCash;
 
         /// <summary>
         /// Initialise security portfolio manager.
@@ -56,7 +67,11 @@ namespace QuantConnect.Securities
             MarginCallModel = new MarginCallModel(this);
 
             CashBook = new CashBook();
+            UnsettledCashBook = new CashBook();
+            UnsettledCashAmounts = new List<UnsettledCashAmount>();
+
             _baseCurrencyCash = CashBook[CashBook.AccountCurrency];
+            _baseCurrencyUnsettledCash = UnsettledCashBook[CashBook.AccountCurrency];
 
             // default to $100,000.00
             _baseCurrencyCash.Quantity = 100000;
@@ -232,7 +247,7 @@ namespace QuantConnect.Securities
         #endregion
 
         /// <summary>
-        /// Sum of all currencies in account in US dollars
+        /// Sum of all currencies in account in US dollars (settled + unsettled cash)
         /// </summary>
         /// <remarks>
         /// This should not be mistaken for margin available because Forex uses margin
@@ -240,7 +255,31 @@ namespace QuantConnect.Securities
         /// </remarks>
         public decimal Cash
         {
+            get { return CashBook.TotalValueInAccountCurrency + UnsettledCashBook.TotalValueInAccountCurrency; }
+        }
+
+        /// <summary>
+        /// Sum of all currencies in account in US dollars (only settled cash)
+        /// </summary>
+        /// <remarks>
+        /// This should not be mistaken for margin available because Forex uses margin
+        /// even though the total cash value is not impact
+        /// </remarks>
+        public decimal SettledCash
+        {
             get { return CashBook.TotalValueInAccountCurrency; }
+        }
+
+        /// <summary>
+        /// Sum of all currencies in account in US dollars (only unsettled cash)
+        /// </summary>
+        /// <remarks>
+        /// This should not be mistaken for margin available because Forex uses margin
+        /// even though the total cash value is not impact
+        /// </remarks>
+        public decimal UnsettledCash
+        {
+            get { return UnsettledCashBook.TotalValueInAccountCurrency; }
         }
 
         /// <summary>
@@ -335,7 +374,7 @@ namespace QuantConnect.Securities
                                                       where position.Type != SecurityType.Forex
                                                       select position.Holdings.HoldingsValue).Sum();
 
-                return CashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForex;
+                return CashBook.TotalValueInAccountCurrency + UnsettledCashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForex;
             }
         }
 
@@ -638,5 +677,28 @@ namespace QuantConnect.Securities
             }
             return null;
         }
+
+        /// <summary>
+        /// Scan the portfolio to check if unsettled funds should be settled
+        /// </summary>
+        public void ScanForCashSettlement(DateTime timeUtc)
+        {
+            foreach (var item in UnsettledCashAmounts.ToList())
+            {
+                // check if settlement time has passed
+                if (timeUtc >= item.SettlementTimeUtc)
+                {
+                    // remove item from unsettled funds list
+                    UnsettledCashAmounts.Remove(item);
+
+                    // update unsettled cashbook
+                    UnsettledCashBook[item.Currency].Quantity -= item.Amount;
+
+                    // update settled cashbook
+                    CashBook[item.Currency].Quantity += item.Amount;
+                }
+            }
+        }
+
     }
 }
