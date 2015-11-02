@@ -18,6 +18,7 @@ using com.fxcm.entity;
 using com.fxcm.fix;
 using com.fxcm.fix.posttrade;
 using com.fxcm.fix.trade;
+using com.sun.rowset;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Brokerages.Fxcm
@@ -222,5 +223,18 @@ namespace QuantConnect.Brokerages.Fxcm
                                 cal.get(java.util.Calendar.SECOND));
         }
 
+
+        //
+        // So it turns out that in order to properly load the QuantConnect.Brokerages
+        // dll we need the IKVM.OpenJdk.Jdbc referenced in other projects that use 
+        // this. By placing a hard reference to an IKVM.OpenJdk.Jdbc type, the compiler
+        // will properly copy the required dlls into other project bin directories. 
+        // Without this, consuming projects would need to hard refernce the IKVM dlls,
+        // which is less than perfect. This seems to be the better of two evils
+        //
+        private static void ManageIKVMDependency()
+        {
+            var rowset = new CachedRowSetImpl();
+        }
     }
 }
