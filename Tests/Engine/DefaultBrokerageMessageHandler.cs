@@ -21,15 +21,13 @@ using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Lean.Engine;
-using QuantConnect.Logging;
-using QuantConnect.Api;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine
 {
-    [TestFixture]
+    [TestFixture, Category("TravisExclude")]
     public class DefaultBrokerageMessageHandlerTests
     {
         [Test]
