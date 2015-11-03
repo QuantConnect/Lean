@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.Results
         private ConcurrentQueue<OrderEvent> _orderEvents; 
         private ConcurrentQueue<Packet> _messages;
         private IAlgorithm _algorithm;
-        private bool _exitTriggered;
+        private volatile bool _exitTriggered;
         private readonly DateTime _startTime;
         private readonly Dictionary<string, string> _runtimeStatistics = new Dictionary<string, string>();
 
@@ -295,7 +295,7 @@ namespace QuantConnect.Lean.Engine.Results
 
             try
             {
-                if (DateTime.Now > _nextUpdate)
+                if (DateTime.Now > _nextUpdate || _exitTriggered)
                 {
                     //Extract the orders created since last update
                     OrderEvent orderEvent;
@@ -380,7 +380,7 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     //Send full packet to storage.
-                    if (DateTime.Now > _nextChartsUpdate)
+                    if (DateTime.Now > _nextChartsUpdate || _exitTriggered)
                     {
                         Log.Debug("LiveTradingResultHandler.Update(): Pre-store result");
                         _nextChartsUpdate = DateTime.Now.AddMinutes(1);
@@ -401,7 +401,7 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     // Upload the logs every 1-2 minutes; this can be a heavy operation depending on amount of live logging and should probably be done asynchronously.
-                    if (DateTime.Now > _nextLogStoreUpdate)
+                    if (DateTime.Now > _nextLogStoreUpdate || _exitTriggered)
                     {
                         List<LogEntry> logs;
                         Log.Debug("LiveTradingResultHandler.Update(): Storing log...");
@@ -420,7 +420,7 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     // Every minute send usage statistics:
-                    if (DateTime.Now > _nextStatisticsUpdate)
+                    if (DateTime.Now > _nextStatisticsUpdate || _exitTriggered)
                     {
                         try
                         {
@@ -971,6 +971,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void Exit()
         {
             _exitTriggered = true;
+            Update();
         }
 
         /// <summary>
