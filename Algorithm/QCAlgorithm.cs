@@ -737,8 +737,13 @@ namespace QuantConnect.Algorithm
         /// </remarks>
         public void SetBenchmark(Symbol symbol)
         {
+            Security security;
             _benchmarkSymbol = symbol;
-            _benchmarkSecurityType = SecurityType.Equity;
+
+            // if we have the security, use the security type that was specified, else default to equity
+            _benchmarkSecurityType = Securities.TryGetValue(symbol, out security) 
+                ? security.Type 
+                : SecurityType.Equity;
         }
 
         /// <summary>
