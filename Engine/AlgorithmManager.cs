@@ -711,7 +711,8 @@ namespace QuantConnect.Lean.Engine
                             results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.History, string.Format("Catching up to realtime {0}%...", percent));
                         }
                         yield return timeSlice;
-                        lastHistoryTimeUtc = timeSlice.Time;
+                        // give a small buffer on the handoff
+                        lastHistoryTimeUtc = timeSlice.Time.AddSeconds(0.1);
                     } 
                 }
             }
