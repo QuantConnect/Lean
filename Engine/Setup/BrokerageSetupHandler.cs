@@ -224,7 +224,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 algorithm.Transactions.SetOrderProcessor(transactionHandler);
                 algorithm.PostInitialize();
 
-                Log.Trace("BrokerageSetupHander.Setup(): Connecting to brokerage...");
+                Log.Trace("BrokerageSetupHandler.Setup(): Connecting to brokerage...");
                 try
                 {
                     // this can fail for various reasons, such as already being logged in somewhere else
@@ -245,7 +245,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     return false;
                 }
 
-                Log.Trace("BrokerageSetupHander.Setup(): Fetching cash balance from brokerage...");
+                Log.Trace("BrokerageSetupHandler.Setup(): Fetching cash balance from brokerage...");
                 try
                 {
                     // set the algorithm's cash balance for each currency
@@ -263,7 +263,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     return false;
                 }
 
-                Log.Trace("BrokerageSetupHander.Setup(): Fetching open orders from brokerage...");
+                Log.Trace("BrokerageSetupHandler.Setup(): Fetching open orders from brokerage...");
                 try
                 {
                     // populate the algorithm with the account's outstanding orders
@@ -283,7 +283,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     return false;
                 }
 
-                Log.Trace("BrokerageSetupHander.Setup(): Fetching holdings from brokerage...");
+                Log.Trace("BrokerageSetupHandler.Setup(): Fetching holdings from brokerage...");
                 try
                 {
                     // populate the algorithm with the account's current holdings
@@ -333,7 +333,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     return false;
                 }
 
-                Log.Trace("BrokerageSetupHander.Setup(): Ensuring currency data feeds present...");
+                Log.Trace("BrokerageSetupHandler.Setup(): Ensuring currency data feeds present...");
 
                 // call this after we've initialized everything from the brokerage since we may have added some holdings/currencies
                 algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager, SecurityExchangeHoursProvider.FromDataFolder());
