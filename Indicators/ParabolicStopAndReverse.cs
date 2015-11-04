@@ -89,7 +89,9 @@ namespace QuantConnect.Indicators
             if (Samples == 1)
             {
                 _previousBar = input;
-                return 0;
+
+                // return a value that's close to where we will be, returning 0 doesn't make sense
+                return input.Close;
             }
 
             // On second iteration we initiate the position the extreme point and the SAR
