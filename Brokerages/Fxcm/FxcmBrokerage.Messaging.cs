@@ -381,7 +381,10 @@ namespace QuantConnect.Brokerages.Fxcm
                 {
                     if (orderId == "NONE" && orderStatus.getCode() == IFixValueDefs.__Fields.FXCMORDSTATUS_REJECTED)
                     {
-                        Log.Trace("Order submit rejected: {0}", message.getFXCMErrorDetails().Replace("\n", ""));
+                        var messageText = message.getFXCMErrorDetails().Replace("\n", "");
+                        Log.Trace(messageText);
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderSubmitReject", messageText));
+
                         _isOrderSubmitRejected = true;
                     }
 
@@ -440,7 +443,10 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             if (message.getRequestID() == _currentRequest)
             {
-                Log.Trace("Order update or cancellation rejected: {0}", message.getFXCMErrorDetails().Replace("\n", ""));
+                var messageText = message.getFXCMErrorDetails().Replace("\n", "");
+                Log.Trace(messageText);
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderUpdateOrCancelReject", messageText));
+
                 _isOrderUpdateOrCancelRejected = true;
 
                 _mapRequestsToAutoResetEvents[_currentRequest].Set();
