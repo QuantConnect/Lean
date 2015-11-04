@@ -711,8 +711,7 @@ namespace QuantConnect.Lean.Engine
                             results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.History, string.Format("Catching up to realtime {0}%...", percent));
                         }
                         yield return timeSlice;
-                        // give a small buffer on the handoff
-                        lastHistoryTimeUtc = timeSlice.Time.AddSeconds(0.1);
+                        lastHistoryTimeUtc = timeSlice.Time;
                     } 
                 }
             }
@@ -740,9 +739,26 @@ namespace QuantConnect.Lean.Engine
                 {
                     // this is hand-over logic, we spin up the data feed first and then request
                     // the history for warmup, so there will be some overlap between the data
-                    if (lastHistoryTimeUtc.HasValue && timeSlice.Time <= lastHistoryTimeUtc)
+                    if (lastHistoryTimeUtc.HasValue)
                     {
-                        continue;
+                        // make sure there's no historical data, this only matters for the handover
+                        var hasHistoricalData = false;
+                        foreach (var data in timeSlice.Slice.Ticks.Values.SelectMany(x => x).Concat<BaseData>(timeSlice.Slice.Bars.Values))
+                        {
+                            // check if any ticks in the list are on or after our last warmup point, if so, skip this data
+                            if (data.EndTime.ConvertToUtc(algorithm.Securities[data.Symbol].Exchange.TimeZone) >= lastHistoryTimeUtc)
+                            {
+                                hasHistoricalData = true;
+                                break;
+                            }
+                        }
+                        if (hasHistoricalData)
+                        {
+                            continue;
+                        }
+                        
+                        // prevent us from doing these checks every loop
+                        lastHistoryTimeUtc = null;
                     }
 
                     // in live mode wait to mark us as finished warming up when
