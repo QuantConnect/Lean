@@ -144,11 +144,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         // this is all the data that goes into the algorithm
                         allDataForAlgorithm.Add(baseData);
-                    }
-                    if (kvp.Key.SubscriptionDataConfig.IsCustomData)
-                    {
-                        // this is all the custom data
-                        custom.Add(kvp);
+                        if (kvp.Key.SubscriptionDataConfig.IsCustomData)
+                        {
+                            // this is all the custom data
+                            custom.Add(kvp);
+                        }
                     }
                     // don't add internal feed data to ticks/bars objects
                     if (baseData.DataType != MarketDataType.Auxiliary)
