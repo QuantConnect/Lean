@@ -458,7 +458,8 @@ namespace QuantConnect.Lean.Engine
                 foreach (var kvp in timeSlice.CustomData)
                 {
                     MethodInvoker methodInvoker;
-                    if (!methodInvokers.TryGetValue(kvp.Key.SubscriptionDataConfig.Type, out methodInvoker))
+                    var type = kvp.Key.SubscriptionDataConfig.Type;
+                    if (!methodInvokers.TryGetValue(type, out methodInvoker))
                     {
                         continue;
                     }
@@ -467,7 +468,10 @@ namespace QuantConnect.Lean.Engine
                     {
                         foreach (var dataPoint in kvp.Value)
                         {
-                            methodInvoker(algorithm, dataPoint);
+                            if (type.IsInstanceOfType(dataPoint))
+                            {
+                                methodInvoker(algorithm, dataPoint);
+                            }
                         }
                     }
                     catch (Exception err)
