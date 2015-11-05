@@ -27,8 +27,6 @@ namespace QuantConnect.ToolBox.BovespaDownloader
         /// </summary>
         static void Main(string[] args)
         {
-            args = new string[] { "PETR4", "Minute", "20150101", "20150110" };
-
             if (args.Length != 4)
             {
                 Console.WriteLine("Usage: BovespaDownloader SYMBOL RESOLUTION FROMDATE TODATE");
