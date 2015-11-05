@@ -250,9 +250,6 @@ namespace QuantConnect.ToolBox.BovespaDownloader
                                 {
                                     try
                                     {
-                                        // No support for bid/ask data
-                                        if (x.Contains("OFER")) return false;
-                                        
                                         // No bid/ask data for daily resolution
                                         if (x.Contains("OFER") && resolution == Resolution.Daily) return false;
 
@@ -359,7 +356,7 @@ namespace QuantConnect.ToolBox.BovespaDownloader
 
                                 // For QuoteBar, we want best buy and sell quote, 
                                 // therefore Priority indicator (csv[7]) ought to be zero. 
-                                if (long.Parse(csv[7]) > 0) continue;
+                                if (tickType == TickType.Quote && long.Parse(csv[7]) > 0) continue;
 
                                 if (isBid)
                                 {
@@ -404,52 +401,35 @@ namespace QuantConnect.ToolBox.BovespaDownloader
         {
             var ticks = data.Cast<Tick>().OrderBy(t => t.Time).ToList();
 
-            if (ticks.All(t => t.TickType == TickType.Trade))
+            var resolutionIncrement = resolution.ToTimeSpan();
+            var tradegroup = ticks.Where(t => t.TickType == TickType.Trade).GroupBy(t => t.Time.RoundDown(resolutionIncrement));
+            var quotegroup = ticks.Where(t => t.TickType == TickType.Quote).GroupBy(t => t.Time.RoundDown(resolutionIncrement));
+
+            foreach (var g in tradegroup)
             {
-                return
-                    (from t in ticks
-                     group t by t.Time.RoundDown(resolution.ToTimeSpan())
-                         into g
-                         select new TradeBar
-                         {
-                             DataType = MarketDataType.TradeBar,
-                             Symbol = symbol,
-                             Time = g.Key,
-                             Open = g.First().LastPrice,
-                             High = g.Max(t => t.LastPrice),
-                             Low = g.Min(t => t.LastPrice),
-                             Close = g.Last().LastPrice,
-                             Volume = g.Sum(t => t.Quantity),
-                         });
+                var bar = new TradeBar(g.First().Time, g.First().Symbol, 0, 0, 0, 0, 0, resolutionIncrement);
+                foreach (var tick in g)
+                {
+                    bar.Update(tick.LastPrice, 0, 0, tick.Quantity, tick.BidSize, tick.AskSize);
+                }
+                yield return bar;
             }
-            else
+
+            foreach (var g in quotegroup)
             {
-                return 
-                    (from t in ticks
-                     group t by t.Time.RoundDown(resolution.ToTimeSpan()) into g
-                     
-                     select new QuoteBar
-                     {
-                         DataType = MarketDataType.QuoteBar,
-                         Symbol = symbol,
-                         //Time = g.Key,
-                         //AvgBidSize = (long)g.Where(t => t.BidSize > 0).Average(t => t.BidSize),
-                         //AvgAskSize = (long)g.Where(t => t.AskSize > 0).Average(t => t.AskSize),
-                         //Bid = new Bar
-                         //(
-                         //    g.Where(t => t.BidSize > 0).First().LastPrice,
-                         //    g.Where(t => t.BidSize > 0).Max(t => t.LastPrice),
-                         //    g.Where(t => t.BidSize > 0).Min(t => t.LastPrice),
-                         //    g.Where(t => t.BidSize > 0).Last().LastPrice
-                         //),
-                         //Ask = new Bar
-                         //(
-                         //    g.Where(t => t.AskSize > 0).First().LastPrice,
-                         //    g.Where(t => t.AskSize > 0).Max(t => t.LastPrice),
-                         //    g.Where(t => t.AskSize > 0).Min(t => t.LastPrice),
-                         //    g.Where(t => t.AskSize > 0).Last().LastPrice
-                         //),         
-                     });
+                var bar = new QuoteBar(g.First().Time, g.First().Symbol, null, 0, null, 0, resolutionIncrement);
+                foreach (var tick in g)
+                {
+                    bar.Update(0, tick.BidPrice, tick.AskPrice, 0, tick.BidSize, tick.AskSize);
+                }
+
+                var bidtickcount = g.Where(t => t.BidSize > 0).Count();
+                if (bidtickcount > 0) bar.AvgBidSize /= bidtickcount;
+                
+                var asktickcount = g.Where(t => t.AskSize > 0).Count();
+                if (asktickcount > 0) bar.AvgAskSize /= asktickcount;
+                
+                //yield return bar; // Commented out because LeanDataWriter() does not support QuoteBar yet.
             }
         }
     }
