@@ -126,6 +126,7 @@ namespace QuantConnect.Lean.Engine
             Log.Trace("         Results:      " + leanEngineAlgorithmHandlers.Results.GetType().FullName);
             Log.Trace("         Transactions: " + leanEngineAlgorithmHandlers.Transactions.GetType().FullName);
             Log.Trace("         History:      " + leanEngineAlgorithmHandlers.HistoryProvider.GetType().FullName);
+            Log.Trace("         Commands:     " + leanEngineAlgorithmHandlers.CommandQueue.GetType().FullName);
 
             // if the job version doesn't match this instance version then we can't process it
             // we also don't want to reprocess redelivered jobs
@@ -210,6 +211,9 @@ namespace QuantConnect.Lean.Engine
                 {
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
+
+                    // initialize command queue system
+                    _algorithmHandlers.CommandQueue.Initialize(job, algorithm);
 
                     // set the history provider before setting up the algorithm
                     _algorithmHandlers.HistoryProvider.Initialize(job, progress =>
@@ -303,7 +307,7 @@ namespace QuantConnect.Lean.Engine
                                 // -> Using this Data Feed, 
                                 // -> Send Orders to this TransactionHandler, 
                                 // -> Send Results to ResultHandler.
-                                algorithmManager.Run(job, algorithm, _algorithmHandlers.DataFeed, _algorithmHandlers.Transactions, _algorithmHandlers.Results, _algorithmHandlers.RealTime, isolator.CancellationToken);
+                                algorithmManager.Run(job, algorithm, _algorithmHandlers.DataFeed, _algorithmHandlers.Transactions, _algorithmHandlers.Results, _algorithmHandlers.RealTime, _algorithmHandlers.CommandQueue, isolator.CancellationToken);
                             }
                             catch (Exception err)
                             {

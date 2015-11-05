@@ -450,5 +450,10 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <returns>Boolean quit flag</returns>
         bool GetQuit();
+
+        /// <summary>
+        /// Quits running the algorithm
+        /// </summary>
+        void Quit(string message = "");
     }
 }

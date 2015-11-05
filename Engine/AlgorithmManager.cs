@@ -20,6 +20,7 @@ using System.Linq;
 using System.Threading;
 using Fasterflect;
 using QuantConnect.Algorithm;
+using QuantConnect.Commands;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -132,9 +133,10 @@ namespace QuantConnect.Lean.Engine
         /// <param name="transactions">Transaction manager object</param>
         /// <param name="results">Result handler object</param>
         /// <param name="realtime">Realtime processing object</param>
+        /// <param name="commands">The command queue for relaying extenal commands to the algorithm</param>
         /// <param name="token">Cancellation token</param>
         /// <remarks>Modify with caution</remarks>
-        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, CancellationToken token) 
+        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ICommandQueueHandler commands, CancellationToken token) 
         {
             //Initialize:
             _dataPointCount = 0;
@@ -212,6 +214,14 @@ namespace QuantConnect.Lean.Engine
                 {
                     Log.Error("AlgorithmManager.Run(): CancellationRequestion at " + timeSlice.Time);
                     return;
+                }
+
+                // before doing anything, check our command queue
+                foreach (var command in commands.GetCommands())
+                {
+                    if (command == null) continue;
+                    Log.Trace("AlgorithmManager.Run(): Executing {0}", command);
+                    command.Run(algorithm);
                 }
 
                 var time = timeSlice.Time;
