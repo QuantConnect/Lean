@@ -32,11 +32,17 @@ namespace QuantConnect.ToolBox.BovespaDownloader
     /// </summary>
     public class BovespaDataDownloader : IDataDownloader
     {
+        private string _ftpsite = string.Empty;
         private string _inputDirectory = string.Empty;
-        private string _ftpsite = "ftp://ftp.bmf.com.br/MarketData/";
         private const string InstrumentsFileName = "instruments_bovespa.txt";
         private Dictionary<string, LeanInstrument> _instruments = new Dictionary<string, LeanInstrument>();
-        
+        private static readonly Dictionary<SecurityType, string> FtpSiteDic = new Dictionary<SecurityType, string>() 
+        { 
+            { SecurityType.Future, "ftp://ftp.bmf.com.br/MarketData/BMF" },
+            { SecurityType.Equity, "ftp://ftp.bmf.com.br/MarketData/Bovespa-Vista" },
+            { SecurityType.Option, "ftp://ftp.bmf.com.br/MarketData/Bovespa-Opcoes" } 
+        };
+
         /// <summary>
         /// Initializes a new instance of the <see cref="BovespaDataDownloader"/> class
         /// </summary>
@@ -117,7 +123,7 @@ namespace QuantConnect.ToolBox.BovespaDownloader
                 throw new ArgumentException("The end date must be greater or equal to the start date.");
 
             _inputDirectory = Directory.CreateDirectory(String.Format("{0}/{1}", Config.Get("input-directory", "./Data"), type)).FullName;
-            _ftpsite += (new Dictionary<SecurityType, string>() { { SecurityType.Future, "BMF" }, { SecurityType.Equity, "Bovespa-Vista" }, { SecurityType.Option, "Bovespa-Opcoes" } }[type]);
+            _ftpsite = FtpSiteDic[type];
 
             #region For equity daily files, use equity daily data!
             if (type == SecurityType.Equity && resolution == Resolution.Daily)
@@ -187,21 +193,28 @@ namespace QuantConnect.ToolBox.BovespaDownloader
                 ZipFile zip;
                 using (var reader = Compression.Unzip(localfile, out zip))
                 {
-                    var bars = reader.ReadToEnd().Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
-                        .Where(x => x.Contains(symbol + " "))
-                        .Select(x =>
-                        {
-                            return new TradeBar(x.Substring(2).ToDateTime(), symbol,
-                                Convert.ToInt64(x.Substring(56, 13)) / 100m,
-                                Convert.ToInt64(x.Substring(69, 13)) / 100m,
-                                Convert.ToInt64(x.Substring(82, 13)) / 100m,
-                                Convert.ToInt64(x.Substring(108, 13)) / 100,
-                                //Convert.ToInt64(l.Substring(152, 18)),   // QUATOT
-                                Convert.ToInt64(x.Substring(170, 16)),   // VOLTOT
-                                new TimeSpan(1, 0, 0, 0));
-                        }).OrderBy(x => x.Time);
+                    var bars = new List<TradeBar>();
 
-                    foreach (var bar in bars)
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        
+                        if (line.Contains(symbol + " "))
+                        {
+                            bars.Add(new TradeBar(
+                                line.Substring(2).ToDateTime(),
+                                symbol,
+                                Convert.ToInt64(line.Substring(56, 13)) / 100m,
+                                Convert.ToInt64(line.Substring(69, 13)) / 100m,
+                                Convert.ToInt64(line.Substring(82, 13)) / 100m,
+                                Convert.ToInt64(line.Substring(108, 13)) / 100,
+                                //Convert.ToInt64(line.Substring(152, 18)),   // QUATOT
+                                Convert.ToInt64(line.Substring(170, 16)),   // VOLTOT
+                                Resolution.Daily.ToTimeSpan()));
+                        }
+                    }
+
+                    foreach (var bar in bars.OrderBy(x => x.Time))
                     {
                         yield return bar;
                     }
@@ -374,6 +387,8 @@ namespace QuantConnect.ToolBox.BovespaDownloader
                             }
                         }
                     }
+                    // Manually dispose the ZipFile object
+                    zip.Dispose();
                 }
             }
         }
@@ -387,21 +402,13 @@ namespace QuantConnect.ToolBox.BovespaDownloader
         /// <returns>Enumerable of trade bars or quote bars</returns>
         private static IEnumerable<BaseData> AggregateTicks(Symbol symbol, IEnumerable<BaseData> data, Resolution resolution)
         {
-            var interval = new Dictionary<Resolution, TimeSpan>()
-            {
-                { Resolution.Second, new TimeSpan(0, 0, 0, 1)},
-                { Resolution.Minute, new TimeSpan(0, 0, 1, 0)},
-                { Resolution.Hour,   new TimeSpan(0, 1, 0, 0)},
-                { Resolution.Daily,  new TimeSpan(1, 0, 0, 0)}
-            }[resolution];
-
             var ticks = data.Cast<Tick>().OrderBy(t => t.Time).ToList();
 
             if (ticks.All(t => t.TickType == TickType.Trade))
             {
                 return
                     (from t in ticks
-                     group t by t.Time.RoundDown(interval)
+                     group t by t.Time.RoundDown(resolution.ToTimeSpan())
                          into g
                          select new TradeBar
                          {
@@ -419,7 +426,7 @@ namespace QuantConnect.ToolBox.BovespaDownloader
             {
                 return 
                     (from t in ticks
-                     group t by  t.Time.RoundDown(interval)  into g
+                     group t by t.Time.RoundDown(resolution.ToTimeSpan()) into g
                      
                      select new QuoteBar
                      {
