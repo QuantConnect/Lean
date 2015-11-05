@@ -29,7 +29,18 @@ namespace QuantConnect
         /// <summary>
         /// Provides a value far enough in the future the current computer hardware will have decayed :)
         /// </summary>
+        /// <value>
+        /// new DateTime(2050, 12, 31)
+        /// </value>
         public static readonly DateTime EndOfTime = new DateTime(2050, 12, 31);
+
+        /// <summary>
+        /// Provides a value far enough in the past that can be used as a lower bound on dates
+        /// </summary>
+        /// <value>
+        /// DateTime.FromOADate(0)
+        /// </value>
+        public static readonly DateTime BeginningOfTime = DateTime.FromOADate(0);
 
         /// <summary>
         /// Provides a value large enough that we won't hit the limit, while small enough
