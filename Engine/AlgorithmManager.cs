@@ -332,7 +332,7 @@ namespace QuantConnect.Lean.Engine
                 //Check if the user's signalled Quit: loop over data until day changes.
                 if (algorithm.GetQuit())
                 {
-                    _algorithmState = AlgorithmStatus.Quit;
+                    _algorithmState = AlgorithmStatus.Stopped;
                     Log.Trace("AlgorithmManager.Run(): Algorithm quit requested.");
                     break;
                 }
@@ -591,7 +591,7 @@ namespace QuantConnect.Lean.Engine
             }
 
             //Manually stopped the algorithm
-            if (_algorithmState == AlgorithmStatus.Stopped || _algorithmState == AlgorithmStatus.Quit)
+            if (_algorithmState == AlgorithmStatus.Stopped)
             {
                 Log.Trace("AlgorithmManager.Run(): Stopping algorithm...");
                 results.LogMessage("Algorithm Stopped");

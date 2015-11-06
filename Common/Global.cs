@@ -397,8 +397,6 @@ namespace QuantConnect
     /// </summary>
     public enum AlgorithmStatus
     {
-        /// User initiated a quit request
-        Quit,           //0
         /// Error compiling algorithm at start
         DeployError,    //1
         /// Waiting for a server
