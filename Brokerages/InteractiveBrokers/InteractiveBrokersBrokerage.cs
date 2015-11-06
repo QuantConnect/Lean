@@ -266,9 +266,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.RequestOpenOrders();
 
             // wait for our end signal
-            if (!manualResetEvent.WaitOne(5000))
+            if (!manualResetEvent.WaitOne(15000))
             {
-                throw new TimeoutException("InteractiveBrokersBrokerage.GetOpenOrders(): Operation took longer than 1 second.");
+                throw new TimeoutException("InteractiveBrokersBrokerage.GetOpenOrders(): Operation took longer than 15 seconds.");
             }
 
             // remove our handlers
@@ -397,6 +397,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     // we're going to try and connect several times, if successful break
                     _client.Connect(_host, _port, _clientID);
+
+                    if (!_client.Connected) throw new Exception("InteractiveBrokersBrokerage.Connect(): Connection returned but was not in connected state.");
                     break;
                 }
                 catch (Exception err)
@@ -425,9 +427,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // pause for a moment to receive next valid ID message from gateway
-            if (!_waitForNextValidID.WaitOne(5000))
+            if (!_waitForNextValidID.WaitOne(15000))
             {
-                throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 5 seconds.");
+                throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 15 seconds.");
             }
 
             // define our event handler, this acts as stop to make sure when we leave Connect we have downloaded the full account
@@ -458,9 +460,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // linux there appears to be different behavior where the account download end fires immediately.
             Thread.Sleep(2500);
 
-            if (!_accountHoldingsResetEvent.WaitOne(5000))
+            if (!_accountHoldingsResetEvent.WaitOne(15000))
             {
-                throw new TimeoutException("InteractiveBrokersBrokerage.GetAccountHoldings(): Operation took longer than 5 seconds.");
+                throw new TimeoutException("InteractiveBrokersBrokerage.GetAccountHoldings(): Operation took longer than 15 seconds.");
             }
 
             // remove our end handler
