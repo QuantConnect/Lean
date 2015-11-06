@@ -113,7 +113,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 lock (_needsScanLock)
                 {
                     _needsScan = true;
-                    _pending[order.Id] = order;
+                    SetPendingOrder(order);
                 }
 
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
@@ -147,7 +147,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 lock (_needsScanLock)
                 {
                     _needsScan = true;
-                    _pending[order.Id] = order;
+                    SetPendingOrder(order);
                 }
 
                 if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
@@ -198,25 +198,18 @@ namespace QuantConnect.Brokerages.Backtesting
                     return;
                 }
 
-                //2. NOW ALL ORDERS IN ORDER DICTIONARY::> 
-                //   Scan through Orders: Process fills. Trigger Events.
-                //   Refresh the order model: look at the orders for ones - process every time.
-
-                // find orders that still need to be processed, be sure to sort them by their id so we
-                // fill them in the proper order
-                var orders = (from order in _pending
-                              where order.Value.Status != OrderStatus.Filled &&
-                                    order.Value.Status != OrderStatus.Canceled &&
-                                    order.Value.Status != OrderStatus.Invalid
-                              orderby order.Value.Id ascending
-                              select order);
-
                 var stillNeedsScan = false;
 
-                //Now we have the orders; re-apply the order models to each order.
-                foreach (var kvp in orders)
+                // process each pending order to produce fills/fire events
+                foreach (var kvp in _pending)
                 {
                     var order = kvp.Value;
+                    if (order.Status.IsClosed())
+                    {
+                        // this should never actually happen as we always remove closed orders as they happen
+                        _pending.TryRemove(order.Id, out order);
+                        continue;
+                    }
 
                     Security security;
                     if (!_algorithm.Securities.TryGetValue(order.Symbol, out security))
@@ -314,7 +307,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         OnOrderEvent(fill);
                     }
 
-                    if (order.Status == OrderStatus.Filled || order.Status == OrderStatus.Invalid || order.Status == OrderStatus.Canceled)
+                    if (fill.Status.IsClosed())
                     {
                         _pending.TryRemove(order.Id, out order);
                     }
@@ -343,6 +336,17 @@ namespace QuantConnect.Brokerages.Backtesting
         public override void Disconnect()
         {
             //NOP
+        }
+
+        /// <summary>
+        /// Sets the pending order as a clone to prevent object reference nastiness
+        /// </summary>
+        /// <param name="order">The order to be added to the pending orders dictionary</param>
+        /// <returns></returns>
+        private void SetPendingOrder(Order order)
+        {
+            // only save off clones!
+            _pending[order.Id] = order.Clone();
         }
     }
 }
