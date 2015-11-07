@@ -591,7 +591,7 @@ namespace QuantConnect.Lean.Engine
             }
 
             //Manually stopped the algorithm
-            if (_algorithmState == AlgorithmStatus.Stopped)
+            if (_algorithmState == AlgorithmStatus.Stopped || _algorithmState == AlgorithmStatus.Quit)
             {
                 Log.Trace("AlgorithmManager.Run(): Stopping algorithm...");
                 results.LogMessage("Algorithm Stopped");

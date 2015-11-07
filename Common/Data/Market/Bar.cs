@@ -129,7 +129,7 @@ namespace QuantConnect.Data.Market
         /// <param name="value">The seed value for this bar</param>
         private void Initialize(decimal value)
         {
-            if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 0)
+            if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 0 && value != 0)
             {
                 _open = _high = _low = _close = value;
             }

@@ -52,7 +52,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(security.Price + slip, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
-            Assert.AreEqual(OrderStatus.Filled, order.Status);
         }
 
         [Test]
@@ -71,7 +70,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(security.Price - slip, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
-            Assert.AreEqual(OrderStatus.Filled, order.Status);
         }
 
         [Test]
@@ -88,7 +86,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
-            Assert.AreEqual(OrderStatus.None, order.Status);
 
             security.SetMarketPrice(new TradeBar(DateTime.Now, Symbol, 102m, 103m, 101m, 102.3m, 100));
 
@@ -98,7 +95,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(Math.Min(order.LimitPrice, security.High), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
-            Assert.AreEqual(OrderStatus.Filled, order.Status);
         }
 
         [Test]
@@ -115,7 +111,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
-            Assert.AreEqual(OrderStatus.None, order.Status);
 
             security.SetMarketPrice(new TradeBar(DateTime.Now, Symbol, 102m, 103m, 101m, 102.3m, 100));
 
@@ -125,7 +120,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(Math.Max(order.LimitPrice, security.Low), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
-            Assert.AreEqual(OrderStatus.Filled, order.Status);
         }
 
         [Test]
@@ -142,7 +136,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
-            Assert.AreEqual(OrderStatus.None, order.Status);
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, DateTime.Now, 102m));
 
@@ -151,7 +144,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
-            Assert.AreEqual(OrderStatus.None, order.Status);
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, DateTime.Now, 101.66m));
 
@@ -161,7 +153,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(order.LimitPrice, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
-            Assert.AreEqual(OrderStatus.Filled, order.Status);
         }
 
         [Test]
@@ -178,7 +169,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
-            Assert.AreEqual(OrderStatus.None, order.Status);
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, DateTime.Now, 101m));
 
@@ -187,7 +177,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
-            Assert.AreEqual(OrderStatus.None, order.Status);
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, DateTime.Now, 101.66m));
 
@@ -197,7 +186,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(order.LimitPrice, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
-            Assert.AreEqual(OrderStatus.Filled, order.Status);
         }
 
         [Test]
@@ -214,7 +202,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
-            Assert.AreEqual(OrderStatus.None, order.Status);
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, DateTime.Now, 102.5m));
 
@@ -226,7 +213,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(Math.Max(security.Price + slip, order.StopPrice), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
-            Assert.AreEqual(OrderStatus.Filled, order.Status);
         }
 
         [Test]
@@ -243,7 +229,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
-            Assert.AreEqual(OrderStatus.None, order.Status);
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbol, DateTime.Now, 101m));
 
@@ -255,7 +240,6 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(Math.Min(security.Price - slip, order.StopPrice), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
-            Assert.AreEqual(OrderStatus.Filled, order.Status);
         }
 
         private Security CreateSecurity()
