@@ -47,7 +47,6 @@ namespace QuantConnect.Algorithm
         private DateTime _endDate;     //Default end to yesterday
         private RunMode _runMode = RunMode.Series;
         private bool _locked;
-        private bool _quit;
         private bool _liveMode;
         private string _algorithmId = "";
         private List<string> _debugMessages = new List<string>();
@@ -82,6 +81,8 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public QCAlgorithm()
         {
+            Status = AlgorithmStatus.Running;
+
             // AlgorithmManager will flip this when we're caught up with realtime
             IsWarmingUp = true;
 
@@ -195,6 +196,15 @@ namespace QuantConnect.Algorithm
         {
             get; 
             private set;
+        }
+
+        /// <summary>
+        /// Gets or sets the current status of the algorithm
+        /// </summary>
+        public AlgorithmStatus Status
+        {
+            get; 
+            set;
         }
 
         /// <summary>
@@ -1273,7 +1283,7 @@ namespace QuantConnect.Algorithm
         public void Quit(string message = "") 
         {
             Debug("Quit(): " + message);
-            _quit = true;
+            Status = AlgorithmStatus.Stopped;
         }
 
         /// <summary>
@@ -1282,22 +1292,12 @@ namespace QuantConnect.Algorithm
         /// <remarks>Intended for internal use by the QuantConnect Lean Engine only.</remarks>
         /// <param name="quit">Boolean quit state</param>
         /// <seealso cref="Quit"/>
-        /// <seealso cref="GetQuit"/>
         public void SetQuit(bool quit) 
         {
-            _quit = quit;
-        }
-
-        /// <summary>
-        /// Get the quit state of the algorithm
-        /// </summary>
-        /// <returns>Boolean true if set to quit event loop.</returns>
-        /// <remarks>Intended for internal use by the QuantConnect Lean Engine only.</remarks>
-        /// <seealso cref="Quit"/>
-        /// <seealso cref="SetQuit"/>
-        public bool GetQuit() 
-        {
-            return _quit;
+            if (quit)
+            {
+                Status = AlgorithmStatus.Stopped;
+            }
         }
 
         /// <summary>

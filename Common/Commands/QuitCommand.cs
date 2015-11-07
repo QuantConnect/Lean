@@ -28,7 +28,7 @@ namespace QuantConnect.Commands
         /// <param name="algorithm">The algorithm to run this command against</param>
         public void Run(IAlgorithm algorithm)
         {
-            algorithm.Quit();
+            algorithm.Status = AlgorithmStatus.Stopped;
         }
     }
 }

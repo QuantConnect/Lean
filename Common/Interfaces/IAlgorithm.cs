@@ -116,6 +116,15 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets or sets the current status of the algorithm
+        /// </summary>
+        AlgorithmStatus Status
+        {
+            get; 
+            set;
+        }
+
+        /// <summary>
         /// Gets whether or not this algorithm is still warming up
         /// </summary>
         bool IsWarmingUp
@@ -444,16 +453,5 @@ namespace QuantConnect.Interfaces
         /// /// <param name="tickLimit">Maximum number of tick level assets the live mode can support with selected server</param>
         /// <remarks>Sets the live behaviour of the algorithm including the selected server (ram) limits.</remarks>
         void SetAssetLimits(int minuteLimit = 50, int secondLimit = 10, int tickLimit = 5);
-
-        /// <summary>
-        /// Get the quit flag state.
-        /// </summary>
-        /// <returns>Boolean quit flag</returns>
-        bool GetQuit();
-
-        /// <summary>
-        /// Quits running the algorithm
-        /// </summary>
-        void Quit(string message = "");
     }
 }
