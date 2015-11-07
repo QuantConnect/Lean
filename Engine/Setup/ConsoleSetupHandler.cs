@@ -159,8 +159,8 @@ namespace QuantConnect.Lean.Engine.Setup
             // we need to do this after algorithm initialization
             brokerage = new BacktestingBrokerage(algorithm);
 
-            // set the transaction models base on the requested brokerage properties
-            SetupHandler.UpdateTransactionModels(algorithm, algorithm.BrokerageModel);
+            // set the transaction and settlement models based on the brokerage properties
+            SetupHandler.UpdateModels(algorithm, algorithm.BrokerageModel);
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
             algorithm.PostInitialize();
 
@@ -184,10 +184,15 @@ namespace QuantConnect.Lean.Engine.Setup
                 || currentTypeFullName.Substring(currentTypeFullName.LastIndexOf('.') + 1) == expectedTypeName;
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
             // nothing to clean up
         }
+
     } // End Result Handler Thread:
 
 } // End Namespace

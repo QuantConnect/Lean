@@ -65,5 +65,13 @@ namespace QuantConnect.Brokerages
         /// <param name="security">The security to get a transaction model for</param>
         /// <returns>The transaction model for this brokerage</returns>
         ISecurityTransactionModel GetTransactionModel(Security security);
+
+        /// <summary>
+        /// Gets a new settlement model for the security
+        /// </summary>
+        /// <param name="security">The security to get a settlement model for</param>
+        /// <param name="accountType">The account type</param>
+        /// <returns>The settlement model for this brokerage</returns>
+        ISettlementModel GetSettlementModel(Security security, AccountType accountType);
     }
 }

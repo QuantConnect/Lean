@@ -433,7 +433,6 @@ namespace QuantConnect.Tests.Common.Securities
             securities.Add("AAPL", new QuantConnect.Securities.Equity.Equity(securityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, "AAPL"), 1));
             Assert.AreEqual(0, securities["AAPL"].Holdings.Quantity);
             Assert.AreEqual(1000, portfolio.Cash);
-            Assert.AreEqual(1000, portfolio.SettledCash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
             // Buy on Monday
@@ -442,7 +441,6 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.ProcessFill(fill);
             Assert.AreEqual(10, securities["AAPL"].Holdings.Quantity);
             Assert.AreEqual(-1, portfolio.Cash);
-            Assert.AreEqual(-1, portfolio.SettledCash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
             // Sell on Tuesday, cash unsettled
@@ -450,22 +448,19 @@ namespace QuantConnect.Tests.Common.Securities
             fill = new OrderEvent(2, "AAPL", timeUtc, OrderStatus.Filled, OrderDirection.Sell, 100, -10, 0);
             portfolio.ProcessFill(fill);
             Assert.AreEqual(0, securities["AAPL"].Holdings.Quantity);
-            Assert.AreEqual(998, portfolio.Cash);
-            Assert.AreEqual(-2, portfolio.SettledCash);
+            Assert.AreEqual(-2, portfolio.Cash);
             Assert.AreEqual(1000, portfolio.UnsettledCash);
 
             // Thursday, still cash unsettled
             timeUtc = timeUtc.AddDays(2);
             portfolio.ScanForCashSettlement(timeUtc);
-            Assert.AreEqual(998, portfolio.Cash);
-            Assert.AreEqual(-2, portfolio.SettledCash);
+            Assert.AreEqual(-2, portfolio.Cash);
             Assert.AreEqual(1000, portfolio.UnsettledCash);
 
             // Friday at open, cash settled
             timeUtc = timeUtc.AddDays(1).Date.Add(securityExchangeHours.MarketHours[timeUtc.DayOfWeek].MarketOpen).ConvertToUtc(securityExchangeHours.TimeZone);
             portfolio.ScanForCashSettlement(timeUtc);
             Assert.AreEqual(998, portfolio.Cash);
-            Assert.AreEqual(998, portfolio.SettledCash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
         }
 

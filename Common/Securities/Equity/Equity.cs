@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 
 namespace QuantConnect.Securities.Equity 
@@ -51,7 +52,7 @@ namespace QuantConnect.Securities.Equity
             TransactionModel = new EquityTransactionModel();
             PortfolioModel = new EquityPortfolioModel();
             MarginModel = new EquityMarginModel(leverage);
-            SettlementModel = new DelayedSettlementModel(EquitySettlementDays);
+            SettlementModel = new DelayedSettlementModel(EquitySettlementDays, new TimeSpan(8, 0, 0));
             Holdings = new EquityHolding(this, TransactionModel, MarginModel);
         }
     }

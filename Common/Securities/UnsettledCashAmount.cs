@@ -26,16 +26,26 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The settlement time (in UTC)
         /// </summary>
-        public DateTime SettlementTimeUtc { get; set; }
+        public DateTime SettlementTimeUtc { get; private set; }
 
         /// <summary>
         /// The currency symbol
         /// </summary>
-        public string Currency { get; set; }
+        public string Currency { get; private set; }
 
         /// <summary>
         /// The amount of cash
         /// </summary>
-        public decimal Amount { get; set; }
+        public decimal Amount { get; private set; }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="UnsettledCashAmount"/> class
+        /// </summary>
+        public UnsettledCashAmount(DateTime settlementTimeUtc, string currency, decimal amount)
+        {
+            SettlementTimeUtc = settlementTimeUtc;
+            Currency = currency;
+            Amount = amount;
+        }
     }
 }

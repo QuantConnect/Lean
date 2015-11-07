@@ -53,6 +53,9 @@ namespace QuantConnect.Securities
         /// </summary>
         public List<UnsettledCashAmount> UnsettledCashAmounts { get; private set; }
 
+        // The UnsettledCashAmounts list has to be synchronized because order fills are happening on a separate thread
+        private readonly object _unsettledCashAmountsLocker = new object();
+
         // Record keeping variables
         private readonly Cash _baseCurrencyCash;
         private readonly Cash _baseCurrencyUnsettledCash;
@@ -247,25 +250,13 @@ namespace QuantConnect.Securities
         #endregion
 
         /// <summary>
-        /// Sum of all currencies in account in US dollars (settled + unsettled cash)
-        /// </summary>
-        /// <remarks>
-        /// This should not be mistaken for margin available because Forex uses margin
-        /// even though the total cash value is not impact
-        /// </remarks>
-        public decimal Cash
-        {
-            get { return CashBook.TotalValueInAccountCurrency + UnsettledCashBook.TotalValueInAccountCurrency; }
-        }
-
-        /// <summary>
         /// Sum of all currencies in account in US dollars (only settled cash)
         /// </summary>
         /// <remarks>
         /// This should not be mistaken for margin available because Forex uses margin
         /// even though the total cash value is not impact
         /// </remarks>
-        public decimal SettledCash
+        public decimal Cash
         {
             get { return CashBook.TotalValueInAccountCurrency; }
         }
@@ -431,7 +422,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal MarginRemaining
         {
-            get { return TotalPortfolioValue - TotalMarginUsed; }
+            get { return TotalPortfolioValue - UnsettledCashBook.TotalValueInAccountCurrency - TotalMarginUsed; }
         }
 
         /// <summary>
@@ -679,23 +670,38 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Adds an item to the list of unsettled cash amounts
+        /// </summary>
+        /// <param name="item">The item to add</param>
+        public void AddUnsettledCashAmount(UnsettledCashAmount item)
+        {
+            lock (_unsettledCashAmountsLocker)
+            {
+                UnsettledCashAmounts.Add(item);
+            }
+        }
+
+        /// <summary>
         /// Scan the portfolio to check if unsettled funds should be settled
         /// </summary>
         public void ScanForCashSettlement(DateTime timeUtc)
         {
-            foreach (var item in UnsettledCashAmounts.ToList())
+            lock (_unsettledCashAmountsLocker)
             {
-                // check if settlement time has passed
-                if (timeUtc >= item.SettlementTimeUtc)
+                foreach (var item in UnsettledCashAmounts.ToList())
                 {
-                    // remove item from unsettled funds list
-                    UnsettledCashAmounts.Remove(item);
+                    // check if settlement time has passed
+                    if (timeUtc >= item.SettlementTimeUtc)
+                    {
+                        // remove item from unsettled funds list
+                        UnsettledCashAmounts.Remove(item);
 
-                    // update unsettled cashbook
-                    UnsettledCashBook[item.Currency].Quantity -= item.Amount;
+                        // update unsettled cashbook
+                        UnsettledCashBook[item.Currency].Quantity -= item.Amount;
 
-                    // update settled cashbook
-                    CashBook[item.Currency].Quantity += item.Amount;
+                        // update settled cashbook
+                        CashBook[item.Currency].Quantity += item.Amount;
+                    }
                 }
             }
         }

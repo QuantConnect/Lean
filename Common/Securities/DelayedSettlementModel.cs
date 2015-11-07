@@ -23,15 +23,18 @@ namespace QuantConnect.Securities
     /// <remarks>This model applies cash settlement after T+N days</remarks>
     public class DelayedSettlementModel : ISettlementModel
     {
-        private readonly int _numberOfDaysForSettlement;
+        private readonly int _numberOfDays;
+        private readonly TimeSpan _timeOfDay;
 
         /// <summary>
         /// Creates an instance of the <see cref="DelayedSettlementModel"/> class
         /// </summary>
-        /// <param name="numberOfDaysForSettlement">The number of days required for settlement</param>
-        public DelayedSettlementModel(int numberOfDaysForSettlement)
+        /// <param name="numberOfDays">The number of days required for settlement</param>
+        /// <param name="timeOfDay">The time of day used for settlement</param>
+        public DelayedSettlementModel(int numberOfDays, TimeSpan timeOfDay)
         {
-            _numberOfDaysForSettlement = numberOfDaysForSettlement;
+            _numberOfDays = numberOfDays;
+            _timeOfDay = timeOfDay;
         }
 
         /// <summary>
@@ -51,26 +54,20 @@ namespace QuantConnect.Securities
                 portfolio.UnsettledCashBook[currency].Quantity += amount;
 
                 // find the correct settlement date (usually T+3 or T+1)
-                var settlementTimeUtc = applicationTimeUtc;
-                for (var i = 0; i < _numberOfDaysForSettlement; i++)
+                var settlementDate = applicationTimeUtc.ConvertFromUtc(security.Exchange.TimeZone).Date;
+                for (var i = 0; i < _numberOfDays; i++)
                 {
-                    settlementTimeUtc = settlementTimeUtc.AddDays(1);
+                    settlementDate = settlementDate.AddDays(1);
 
-                    // weekend days don't count
-                    if (settlementTimeUtc.DayOfWeek == DayOfWeek.Saturday || settlementTimeUtc.DayOfWeek == DayOfWeek.Sunday) i--;
+                    // only count days when market is open
+                    if (!security.Exchange.Hours.IsDateOpen(settlementDate))
+                        i--;
                 }
 
-                // settlement time at market open
-                settlementTimeUtc = settlementTimeUtc.Date
-                    .Add(security.Exchange.Hours.MarketHours[settlementTimeUtc.DayOfWeek].MarketOpen)
-                    .ConvertToUtc(security.Exchange.Hours.TimeZone);
+                // use correct settlement time
+                var settlementTimeUtc = settlementDate.Add(_timeOfDay).ConvertToUtc(security.Exchange.Hours.TimeZone);
 
-                portfolio.UnsettledCashAmounts.Add(new UnsettledCashAmount
-                {
-                    SettlementTimeUtc = settlementTimeUtc,
-                    Currency = currency,
-                    Amount = amount
-                });
+                portfolio.AddUnsettledCashAmount(new UnsettledCashAmount(settlementTimeUtc, currency, amount));
             }
             else
             {

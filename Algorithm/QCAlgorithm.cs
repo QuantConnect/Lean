@@ -126,6 +126,8 @@ namespace QuantConnect.Algorithm
 
             // initialize the trade builder
             TradeBuilder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO);
+
+            AccountType = AccountType.Margin;
         }
 
         /// <summary>
@@ -148,7 +150,6 @@ namespace QuantConnect.Algorithm
             set; 
         }
 
-
         /// <summary>
         /// Generic Data Manager - Required for compiling all data feeds in order, and passing them into algorithm event methods.
         /// The subscription manager contains a list of the data feed's we're subscribed to and properties of each data feed.
@@ -158,7 +159,6 @@ namespace QuantConnect.Algorithm
             get; 
             set; 
         }
-
 
         /// <summary>
         /// Gets the brokerage model - used to model interactions with specific brokerages.
@@ -203,6 +203,15 @@ namespace QuantConnect.Algorithm
         public TradeBuilder TradeBuilder
         {
             get; 
+            private set;
+        }
+
+        /// <summary>
+        /// The account type determines which settlement model will be used (Cash or Margin).
+        /// </summary>
+        public AccountType AccountType
+        {
+            get;
             private set;
         }
 
@@ -256,7 +265,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public DateTimeZone TimeZone
         {
-            get {  return _localTimeKeeper.TimeZone; }
+            get { return _localTimeKeeper.TimeZone; }
         }
 
         /// <summary>
@@ -660,6 +669,16 @@ namespace QuantConnect.Algorithm
         {
             if (mode != RunMode.Parallel) return;
             Debug("Algorithm.SetRunMode(): RunMode-Parallel Type has been deprecated. Series analysis selected instead");
+        }
+
+        /// <summary>
+        /// Sets the account type
+        /// </summary>
+        /// <param name="accountType">The account type (Cash or Margin)</param>
+        /// <remarks>If not called, the default account type is Margin</remarks>
+        public void SetAccountType(AccountType accountType)
+        {
+            AccountType = accountType;
         }
 
         /// <summary>

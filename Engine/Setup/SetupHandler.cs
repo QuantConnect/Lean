@@ -24,9 +24,9 @@ namespace QuantConnect.Lean.Engine.Setup
     public static class SetupHandler
     {
         /// <summary>
-        /// Sets the transaction models in the algorithm based on the selected brokerage properties
+        /// Sets the transaction and settlement models in the algorithm based on the selected brokerage properties
         /// </summary>
-        public static void UpdateTransactionModels(IAlgorithm algorithm, IBrokerageModel model)
+        public static void UpdateModels(IAlgorithm algorithm, IBrokerageModel model)
         {
             if (model.GetType() == typeof (DefaultBrokerageModel))
             {
@@ -37,6 +37,7 @@ namespace QuantConnect.Lean.Engine.Setup
             foreach (var security in algorithm.Securities.Values)
             {
                 security.TransactionModel = model.GetTransactionModel(security);
+                security.SettlementModel = model.GetSettlementModel(security, algorithm.AccountType);
             }
         }
     }
