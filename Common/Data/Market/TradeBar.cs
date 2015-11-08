@@ -16,6 +16,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Data.Market
@@ -29,6 +30,11 @@ namespace QuantConnect.Data.Market
         // scale factor used in QC equity/forex data files
         private const decimal _scaleFactor = 10000m;
 
+        private int _initialized;
+        private decimal _open;
+        private decimal _high;
+        private decimal _low;
+
         /// <summary>
         /// Volume:
         /// </summary>
@@ -37,17 +43,41 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Opening price of the bar: Defined as the price at the start of the time period.
         /// </summary>
-        public decimal Open { get; set; }
+        public decimal Open
+        {
+            get { return _open; }
+            set
+            {
+                Initialize(value);
+                _open = value;
+            }
+        }
 
         /// <summary>
         /// High price of the TradeBar during the time period.
         /// </summary>
-        public decimal High { get; set; }
+        public decimal High
+        {
+            get { return _high; }
+            set
+            {
+                Initialize(value);
+                _high = value;
+            }
+        }
 
         /// <summary>
         /// Low price of the TradeBar during the time period.
         /// </summary>
-        public decimal Low { get; set; }
+        public decimal Low
+        {
+            get { return _low; }
+            set
+            {
+                Initialize(value);
+                _low = value;
+            }
+        }
 
         /// <summary>
         /// Closing price of the TradeBar. Defined as the price at Start Time + TimeSpan.
@@ -55,7 +85,11 @@ namespace QuantConnect.Data.Market
         public decimal Close
         {
             get { return Value; }
-            set { Value = value; }
+            set
+            {
+                Initialize(value);
+                Value = value;
+            }
         }
 
         /// <summary>
@@ -87,14 +121,7 @@ namespace QuantConnect.Data.Market
         public TradeBar()
         {
             Symbol = Symbol.Empty;
-            Time = new DateTime();
-            Value = 0;
             DataType = MarketDataType.TradeBar;
-            Open = 0; 
-            High = 0;
-            Low = 0; 
-            Close = 0;
-            Volume = 0;
             Period = TimeSpan.FromMinutes(1);
         }
 
@@ -115,6 +142,7 @@ namespace QuantConnect.Data.Market
             Close = original.Close;
             Volume = original.Volume;
             Period = original.Period;
+            _initialized = 1;
         }
 
         /// <summary>
@@ -140,6 +168,7 @@ namespace QuantConnect.Data.Market
             Volume = volume;
             Period = period ?? TimeSpan.FromMinutes(1);
             DataType = MarketDataType.TradeBar;
+            _initialized = 1;
         }
 
         /// <summary>
@@ -282,7 +311,6 @@ namespace QuantConnect.Data.Market
             return tradeBar;
         }
 
-
         /// <summary>
         /// Update the tradebar - build the bar from this pricing information:
         /// </summary>
@@ -294,17 +322,14 @@ namespace QuantConnect.Data.Market
         /// <param name="askSize">The size of the current ask, if available</param>
         public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume, decimal bidSize, decimal askSize)
         {
-            //Assumed not set yet. Will fail for custom time series where "price" $0 is a possibility.
-            if (Open == 0) Open = lastTrade;
+            Initialize(lastTrade);
             if (lastTrade > High) High = lastTrade;
             if (lastTrade < Low) Low = lastTrade;
             //Volume is the total summed volume of trades in this bar:
             Volume += Convert.ToInt32(volume);
             //Always set the closing price;
             Close = lastTrade;
-            Value = lastTrade;
         }
-
 
         /// <summary>
         /// Get Source for Custom Data File
@@ -347,5 +372,18 @@ namespace QuantConnect.Data.Market
             return (BaseData)MemberwiseClone();
         }
 
-    } // End Trade Bar Class
+        /// <summary>
+        /// Initializes this bar with a first data point
+        /// </summary>
+        /// <param name="value">The seed value for this bar</param>
+        private void Initialize(decimal value)
+        {
+            if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 0)
+            {
+                _open = value;
+                _low = value;
+                _high = value;
+            }
+        }
+    }
 }

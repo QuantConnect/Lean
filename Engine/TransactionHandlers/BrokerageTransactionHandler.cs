@@ -820,11 +820,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
             }
 
-            // update the ticket after we've processed the fill, but before the event, this way everything is ready for user code
+            // update the ticket and order after we've processed the fill, but before the event, this way everything is ready for user code
             OrderTicket ticket;
             if (_orderTickets.TryGetValue(fill.OrderId, out ticket))
             {
                 ticket.AddOrderEvent(fill);
+                order.Price = ticket.AverageFillPrice;
             }
             else
             {

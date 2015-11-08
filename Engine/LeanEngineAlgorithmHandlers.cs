@@ -38,6 +38,7 @@ namespace QuantConnect.Lean.Engine
         private readonly IRealTimeHandler _realTime;
         private readonly ITransactionHandler _transactions;
         private readonly IHistoryProvider _historyProvider;
+        private readonly ICommandQueueHandler _commandQueue;
 
         /// <summary>
         /// Gets the result handler used to communicate results from the algorithm
@@ -88,6 +89,14 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
+        /// Gets the command queue responsible for receiving external commands for the algorithm
+        /// </summary>
+        public ICommandQueueHandler CommandQueue
+        {
+            get { return _commandQueue; }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="LeanEngineAlgorithmHandlers"/> class from the specified handlers
         /// </summary>
         /// <param name="results">The result handler for communicating results from the algorithm</param>
@@ -96,12 +105,15 @@ namespace QuantConnect.Lean.Engine
         /// <param name="transactions">The transaction handler used to process orders from the algorithm</param>
         /// <param name="realTime">The real time handler used to process real time events</param>
         /// <param name="historyProvider">The history provider used to process historical data requests</param>
+        /// <param name="commandQueue">The command queue handler used to receive external commands for the algorithm</param>
         public LeanEngineAlgorithmHandlers(IResultHandler results,
             ISetupHandler setup,
             IDataFeed dataFeed,
             ITransactionHandler transactions,
             IRealTimeHandler realTime,
-            IHistoryProvider historyProvider)
+            IHistoryProvider historyProvider,
+            ICommandQueueHandler commandQueue
+            )
         {
             if (results == null)
             {
@@ -127,12 +139,17 @@ namespace QuantConnect.Lean.Engine
             {
                 throw new ArgumentNullException("realTime");
             }
+            if (commandQueue == null)
+            {
+                throw new ArgumentNullException("commandQueue");
+            }
             _results = results;
             _setup = setup;
             _dataFeed = dataFeed;
             _transactions = transactions;
             _realTime = realTime;
             _historyProvider = historyProvider;
+            _commandQueue = commandQueue;
         }
         
         /// <summary>
@@ -149,6 +166,7 @@ namespace QuantConnect.Lean.Engine
             var dataFeedHandlerTypeName = Config.Get("data-feed-handler", "FileSystemDataFeed");
             var resultHandlerTypeName = Config.Get("result-handler", "ConsoleResultHandler");
             var historyProviderTypeName = Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider");
+            var commandQueueHandlerTypeName = Config.Get("command-queue-handler", "EmptyCommandQueueHandler");
 
             return new LeanEngineAlgorithmHandlers(
                 composer.GetExportedValueByTypeName<IResultHandler>(resultHandlerTypeName),
@@ -156,7 +174,8 @@ namespace QuantConnect.Lean.Engine
                 composer.GetExportedValueByTypeName<IDataFeed>(dataFeedHandlerTypeName),
                 composer.GetExportedValueByTypeName<ITransactionHandler>(transactionHandlerTypeName),
                 composer.GetExportedValueByTypeName<IRealTimeHandler>(realTimeHandlerTypeName),
-                composer.GetExportedValueByTypeName<IHistoryProvider>(historyProviderTypeName)
+                composer.GetExportedValueByTypeName<IHistoryProvider>(historyProviderTypeName),
+                composer.GetExportedValueByTypeName<ICommandQueueHandler>(commandQueueHandlerTypeName)
                 );
         }
 

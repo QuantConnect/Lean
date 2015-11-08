@@ -380,7 +380,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var factory = new BaseDataSubscriptionFactory(config, currentLocalDate, true);
                         var source = sourceProvider.GetSource(config, currentLocalDate, true);
                         var factoryReadEnumerator = factory.Read(source).GetEnumerator();
-                        var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, config.TimeZone, config.Increment);
+                        var maximumDataAge = TimeSpan.FromTicks(Math.Max(config.Increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
+                        var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, config.TimeZone, maximumDataAge);
                         return new FrontierAwareEnumerator(fastForward, _timeProvider, timeZoneOffsetProvider);
                     });
 

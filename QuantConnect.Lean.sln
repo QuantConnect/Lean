@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Lean.Engine", "Engine\QuantConnect.Lean.Engine.csproj", "{12156F46-D07E-4E3D-AD2B-7409E82AB62F}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -14,8 +14,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Lean.Engine", 
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Algorithm", "Algorithm\QuantConnect.Algorithm.csproj", "{3240ACA4-BDD4-4D24-AC36-BBB651C39212}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Interfaces", "Interfaces\QuantConnect.Interfaces.csproj", "{338F614C-4CD7-418A-BD31-8C6A8690CFBF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect", "Common\QuantConnect.csproj", "{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}"
 EndProject
@@ -72,10 +70,6 @@ Global
 		{3240ACA4-BDD4-4D24-AC36-BBB651C39212}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3240ACA4-BDD4-4D24-AC36-BBB651C39212}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3240ACA4-BDD4-4D24-AC36-BBB651C39212}.Release|Any CPU.Build.0 = Release|Any CPU
-		{338F614C-4CD7-418A-BD31-8C6A8690CFBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{338F614C-4CD7-418A-BD31-8C6A8690CFBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{338F614C-4CD7-418A-BD31-8C6A8690CFBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{338F614C-4CD7-418A-BD31-8C6A8690CFBF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -177,6 +177,48 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Updates this base data with a new trade
+        /// </summary>
+        /// <param name="lastTrade">The price of the last trade</param>
+        /// <param name="tradeSize">The quantity traded</param>
+        public void UpdateTrade(decimal lastTrade, long tradeSize)
+        {
+            Update(lastTrade, 0, 0, tradeSize, 0, 0);
+        }
+
+        /// <summary>
+        /// Updates this base data with new quote information
+        /// </summary>
+        /// <param name="bidPrice">The current bid price</param>
+        /// <param name="bidSize">The current bid size</param>
+        /// <param name="askPrice">The current ask price</param>
+        /// <param name="askSize">The current ask size</param>
+        public void UpdateQuote(decimal bidPrice, long bidSize, decimal askPrice, long askSize)
+        {
+            Update(0, bidPrice, askPrice, 0, bidSize, askSize);
+        }
+
+        /// <summary>
+        /// Updates this base data with the new quote bid information
+        /// </summary>
+        /// <param name="bidPrice">The current bid price</param>
+        /// <param name="bidSize">The current bid size</param>
+        public void UpdateBid(decimal bidPrice, long bidSize)
+        {
+            Update(0, bidPrice, 0, 0, bidSize, 0);
+        }
+
+        /// <summary>
+        /// Updates this base data with the new quote ask information
+        /// </summary>
+        /// <param name="askPrice">The current ask price</param>
+        /// <param name="askSize">The current ask size</param>
+        public void UpdateAsk(decimal askPrice, long askSize)
+        {
+            Update(0, 0, askPrice, 0, 0, askSize);
+        }
+
+        /// <summary>
         /// Update routine to build a bar/tick from a data update. 
         /// </summary>
         /// <param name="lastTrade">The last trade price</param>

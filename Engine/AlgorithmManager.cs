@@ -20,6 +20,7 @@ using System.Linq;
 using System.Threading;
 using Fasterflect;
 using QuantConnect.Algorithm;
+using QuantConnect.Commands;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -132,9 +133,10 @@ namespace QuantConnect.Lean.Engine
         /// <param name="transactions">Transaction manager object</param>
         /// <param name="results">Result handler object</param>
         /// <param name="realtime">Realtime processing object</param>
+        /// <param name="commands">The command queue for relaying extenal commands to the algorithm</param>
         /// <param name="token">Cancellation token</param>
         /// <remarks>Modify with caution</remarks>
-        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, CancellationToken token) 
+        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ICommandQueueHandler commands, CancellationToken token) 
         {
             //Initialize:
             _dataPointCount = 0;
@@ -215,6 +217,14 @@ namespace QuantConnect.Lean.Engine
                 {
                     Log.Error("AlgorithmManager.Run(): CancellationRequestion at " + timeSlice.Time);
                     return;
+                }
+
+                // before doing anything, check our command queue
+                foreach (var command in commands.GetCommands())
+                {
+                    if (command == null) continue;
+                    Log.Trace("AlgorithmManager.Run(): Executing {0}", command);
+                    command.Run(algorithm);
                 }
 
                 var time = timeSlice.Time;
@@ -469,7 +479,8 @@ namespace QuantConnect.Lean.Engine
                 foreach (var kvp in timeSlice.CustomData)
                 {
                     MethodInvoker methodInvoker;
-                    if (!methodInvokers.TryGetValue(kvp.Key.SubscriptionDataConfig.Type, out methodInvoker))
+                    var type = kvp.Key.SubscriptionDataConfig.Type;
+                    if (!methodInvokers.TryGetValue(type, out methodInvoker))
                     {
                         continue;
                     }
@@ -478,7 +489,10 @@ namespace QuantConnect.Lean.Engine
                     {
                         foreach (var dataPoint in kvp.Value)
                         {
-                            methodInvoker(algorithm, dataPoint);
+                            if (type.IsInstanceOfType(dataPoint))
+                            {
+                                methodInvoker(algorithm, dataPoint);
+                            }
                         }
                     }
                     catch (Exception err)
@@ -588,7 +602,7 @@ namespace QuantConnect.Lean.Engine
             }
 
             //Manually stopped the algorithm
-            if (_algorithmState == AlgorithmStatus.Stopped)
+            if (_algorithmState == AlgorithmStatus.Stopped || _algorithmState == AlgorithmStatus.Quit)
             {
                 Log.Trace("AlgorithmManager.Run(): Stopping algorithm...");
                 results.LogMessage("Algorithm Stopped");
@@ -750,9 +764,26 @@ namespace QuantConnect.Lean.Engine
                 {
                     // this is hand-over logic, we spin up the data feed first and then request
                     // the history for warmup, so there will be some overlap between the data
-                    if (lastHistoryTimeUtc.HasValue && timeSlice.Time <= lastHistoryTimeUtc)
+                    if (lastHistoryTimeUtc.HasValue)
                     {
-                        continue;
+                        // make sure there's no historical data, this only matters for the handover
+                        var hasHistoricalData = false;
+                        foreach (var data in timeSlice.Slice.Ticks.Values.SelectMany(x => x).Concat<BaseData>(timeSlice.Slice.Bars.Values))
+                        {
+                            // check if any ticks in the list are on or after our last warmup point, if so, skip this data
+                            if (data.EndTime.ConvertToUtc(algorithm.Securities[data.Symbol].Exchange.TimeZone) >= lastHistoryTimeUtc)
+                            {
+                                hasHistoricalData = true;
+                                break;
+                            }
+                        }
+                        if (hasHistoricalData)
+                        {
+                            continue;
+                        }
+                        
+                        // prevent us from doing these checks every loop
+                        lastHistoryTimeUtc = null;
                     }
 
                     // in live mode wait to mark us as finished warming up when

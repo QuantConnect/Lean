@@ -411,12 +411,12 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Helper method to create history requests from a date range
         /// </summary>
-        private IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
+        private IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, DateTime startAlgoTz, DateTime endAlgoTz, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
         {
             return symbols.Select(x =>
             {
                 var security = Securities[x];
-                var request = CreateHistoryRequest(security, start, end, resolution);
+                var request = CreateHistoryRequest(security, startAlgoTz, endAlgoTz, resolution);
 
                 // apply overrides
                 Resolution? res = resolution ?? security.Resolution;
@@ -435,15 +435,15 @@ namespace QuantConnect.Algorithm
             {
                 var security = Securities[x];
                 Resolution? res = resolution ?? security.Resolution;
-                var start = GetStartTimeAlgoTz(x, periods, res).ConvertToUtc(security.Exchange.TimeZone);
-                return CreateHistoryRequest(security, start, UtcTime.RoundDown(res.Value.ToTimeSpan()), resolution);
+                var start = GetStartTimeAlgoTz(x, periods, res);
+                return CreateHistoryRequest(security, start, Time.RoundDown(res.Value.ToTimeSpan()), resolution);
             });
         }
 
-        private HistoryRequest CreateHistoryRequest(Security security, DateTime start, DateTime end, Resolution? resolution)
+        private HistoryRequest CreateHistoryRequest(Security security, DateTime startAlgoTz, DateTime endAlgoTz, Resolution? resolution)
         {
             resolution = resolution ?? security.Resolution;
-            var request = new HistoryRequest(security, start.ConvertToUtc(TimeZone), end.ConvertToUtc(TimeZone))
+            var request = new HistoryRequest(security, startAlgoTz.ConvertToUtc(TimeZone), endAlgoTz.ConvertToUtc(TimeZone))
             {
                 Resolution = resolution.Value,
                 FillForwardResolution = security.IsFillDataForward ? resolution : null

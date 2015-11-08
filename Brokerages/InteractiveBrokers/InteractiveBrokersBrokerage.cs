@@ -266,9 +266,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.RequestOpenOrders();
 
             // wait for our end signal
-            if (!manualResetEvent.WaitOne(5000))
+            if (!manualResetEvent.WaitOne(15000))
             {
-                throw new TimeoutException("InteractiveBrokersBrokerage.GetOpenOrders(): Operation took longer than 1 second.");
+                throw new TimeoutException("InteractiveBrokersBrokerage.GetOpenOrders(): Operation took longer than 15 seconds.");
             }
 
             // remove our handlers
@@ -397,6 +397,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     // we're going to try and connect several times, if successful break
                     _client.Connect(_host, _port, _clientID);
+
+                    if (!_client.Connected) throw new Exception("InteractiveBrokersBrokerage.Connect(): Connection returned but was not in connected state.");
                     break;
                 }
                 catch (Exception err)
@@ -425,9 +427,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // pause for a moment to receive next valid ID message from gateway
-            if (!_waitForNextValidID.WaitOne(5000))
+            if (!_waitForNextValidID.WaitOne(15000))
             {
-                throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 5 seconds.");
+                throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 15 seconds.");
             }
 
             // define our event handler, this acts as stop to make sure when we leave Connect we have downloaded the full account
@@ -458,9 +460,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // linux there appears to be different behavior where the account download end fires immediately.
             Thread.Sleep(2500);
 
-            if (!_accountHoldingsResetEvent.WaitOne(5000))
+            if (!_accountHoldingsResetEvent.WaitOne(15000))
             {
-                throw new TimeoutException("InteractiveBrokersBrokerage.GetAccountHoldings(): Operation took longer than 5 seconds.");
+                throw new TimeoutException("InteractiveBrokersBrokerage.GetAccountHoldings(): Operation took longer than 15 seconds.");
             }
 
             // remove our end handler
@@ -534,7 +536,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new ArgumentException("Expected order with populated BrokerId for updating orders.");
             }
 
-            var ibOrder = ConvertOrder(order, ibOrderID);
+            var ibOrder = ConvertOrder(order, contract, ibOrderID);
             _client.PlaceOrder(ibOrder.OrderId, contract, ibOrder);
         }
 
@@ -554,6 +556,24 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             return details.Summary.PrimaryExchange;
+        }
+
+        private decimal GetMinTick(IB.Contract contract)
+        {
+            IB.ContractDetails details;
+            if (_contractDetails.TryGetValue(contract.Symbol, out details))
+            {
+                return (decimal) details.MinTick;
+            }
+
+            details = GetContractDetails(contract);
+            if (details == null)
+            {
+                // we were unable to find the contract details
+                return 0;
+            }
+
+            return (decimal) details.MinTick;
         }
 
         private IB.ContractDetails GetContractDetails(IB.Contract contract)
@@ -868,7 +888,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Converts a QC order to an IB order
         /// </summary>
-        private IB.Order ConvertOrder(Order order, int ibOrderID)
+        private IB.Order ConvertOrder(Order order, IB.Contract contract, int ibOrderID)
         {
             var ibOrder = new IB.Order
             {
@@ -890,13 +910,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             var limitOrder = order as LimitOrder;
             var stopMarketOrder = order as StopMarketOrder;
+            var stopLimitOrder = order as StopLimitOrder;
             if (limitOrder != null)
             {
-                ibOrder.LimitPrice = limitOrder.LimitPrice;
+                ibOrder.LimitPrice = RoundPrice(limitOrder.LimitPrice, GetMinTick(contract));
             }
             else if (stopMarketOrder != null)
             {
-                ibOrder.AuxPrice = stopMarketOrder.StopPrice;
+                ibOrder.AuxPrice = RoundPrice(stopMarketOrder.StopPrice, GetMinTick(contract));
+            }
+            else if (stopLimitOrder != null)
+            {
+                var minTick = GetMinTick(contract);
+                ibOrder.LimitPrice = RoundPrice(stopLimitOrder.LimitPrice, minTick);
+                ibOrder.AuxPrice = RoundPrice(stopLimitOrder.StopPrice, minTick);
             }
 
             // not yet supported
@@ -1201,6 +1228,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return new Symbol(contract.Symbol + contract.Currency);
             }
             return new Symbol(contract.Symbol);
+        }
+
+        private decimal RoundPrice(decimal input, decimal minTick)
+        {
+            if (minTick == 0) return minTick;
+            return Math.Round(input/minTick)*minTick;
         }
 
         /// <summary>
