@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Diagnostics;
+using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Fxcm;
 using QuantConnect.Configuration;
@@ -115,5 +118,41 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             // FXCM requires a multiple of 1000 for Forex instruments
             return 1000;
         }
+
+        [Test, Ignore("This test requires disconnecting the internet to test for connection resiliency")]
+        public void ClientReconnectsAfterInternetDisconnect()
+        {
+            var brokerage = Brokerage;
+            Assert.IsTrue(brokerage.IsConnected);
+
+            var tenMinutes = TimeSpan.FromMinutes(10);
+
+            Console.WriteLine("------");
+            Console.WriteLine("Waiting for internet disconnection ");
+            Console.WriteLine("------");
+
+            // spin while we manually disconnect the internet
+            while (brokerage.IsConnected)
+            {
+                Thread.Sleep(2500);
+                Console.Write(".");
+            }
+
+            var stopwatch = Stopwatch.StartNew();
+
+            Console.WriteLine("------");
+            Console.WriteLine("Trying to reconnect ");
+            Console.WriteLine("------");
+
+            // spin until we're reconnected
+            while (!brokerage.IsConnected && stopwatch.Elapsed < tenMinutes)
+            {
+                Thread.Sleep(2500);
+                Console.Write(".");
+            }
+
+            Assert.IsTrue(brokerage.IsConnected);
+        }
+
     }
 }
