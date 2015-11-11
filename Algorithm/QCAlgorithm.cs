@@ -1160,6 +1160,9 @@ namespace QuantConnect.Algorithm
                     securityType, symbol, resolution, market,
                     fillDataForward, leverage, extendedMarketHours, false, false);
 
+                // Set the SettlementModel based on SecurityType and AccountType
+                security.SettlementModel = BrokerageModel.GetSettlementModel(security, AccountType);
+
                 //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
                 Securities.Add(security.Symbol, security);
 

@@ -117,7 +117,7 @@ namespace QuantConnect.Brokerages
         public virtual ISettlementModel GetSettlementModel(Security security, AccountType accountType)
         {
             if (security.Type == SecurityType.Equity && accountType == AccountType.Cash)
-                return new DelayedSettlementModel(3, new TimeSpan(8, 0, 0));
+                return new DelayedSettlementModel(Equity.DefaultSettlementDays, Equity.DefaultSettlementTime);
             
             return new ImmediateSettlementModel();
         }
