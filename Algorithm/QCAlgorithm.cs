@@ -166,7 +166,7 @@ namespace QuantConnect.Algorithm
         public IBrokerageModel BrokerageModel
         {
             get;
-            set;
+            private set;
         }
 
         /// <summary>
@@ -672,21 +672,12 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Sets the account type
-        /// </summary>
-        /// <param name="accountType">The account type (Cash or Margin)</param>
-        /// <remarks>If not called, the default account type is Margin</remarks>
-        public void SetAccountType(AccountType accountType)
-        {
-            AccountType = accountType;
-        }
-
-        /// <summary>
         /// Sets the brokerage to emulate in backtesting or paper trading.
         /// This can be used for brokerages that have been implemented in LEAN
         /// </summary>
         /// <param name="brokerage">The brokerage to emulate</param>
-        public void SetBrokerageModel(BrokerageName brokerage)
+        /// <param name="accountType">The account type (Cash or Margin)</param>
+        public void SetBrokerageModel(BrokerageName brokerage, AccountType accountType = AccountType.Margin)
         {
             switch (brokerage)
             {
@@ -713,6 +704,20 @@ namespace QuantConnect.Algorithm
                 default:
                     throw new ArgumentOutOfRangeException("brokerage", brokerage, null);
             }
+
+            AccountType = accountType;
+        }
+
+        /// <summary>
+        /// Sets the brokerage to emulate in backtesting or paper trading.
+        /// This can be used to set a custom brokerage model.
+        /// </summary>
+        /// <param name="model">The brokerage model to use</param>
+        /// <param name="accountType">The account type (Cash or Margin)</param>
+        public void SetBrokerageModel(IBrokerageModel model, AccountType accountType = AccountType.Margin)
+        {
+            BrokerageModel = model;
+            AccountType = accountType;
         }
 
         /// <summary>
@@ -1159,9 +1164,6 @@ namespace QuantConnect.Algorithm
                 var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider,
                     securityType, symbol, resolution, market,
                     fillDataForward, leverage, extendedMarketHours, false, false);
-
-                // Set the SettlementModel based on SecurityType and AccountType
-                security.SettlementModel = BrokerageModel.GetSettlementModel(security, AccountType);
 
                 //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
                 Securities.Add(security.Symbol, security);
