@@ -39,21 +39,21 @@ namespace QuantConnect.Securities
         public SecurityTransactionManager Transactions;
 
         /// <summary>
-        /// Gets the cash book that keeps track of all currency holdings
+        /// Gets the cash book that keeps track of all currency holdings (only settled cash)
         /// </summary>
         public CashBook CashBook { get; private set; }
 
         /// <summary>
-        /// Gets the cash book that keeps track of all currency holdings
+        /// Gets the cash book that keeps track of all currency holdings (only unsettled cash)
         /// </summary>
         public CashBook UnsettledCashBook { get; private set; }
 
         /// <summary>
-        /// Gets the list of pending funds waiting for settlement time
+        /// The list of pending funds waiting for settlement time
         /// </summary>
-        public List<UnsettledCashAmount> UnsettledCashAmounts { get; private set; }
+        private readonly List<UnsettledCashAmount> _unsettledCashAmounts;
 
-        // The UnsettledCashAmounts list has to be synchronized because order fills are happening on a separate thread
+        // The _unsettledCashAmounts list has to be synchronized because order fills are happening on a separate thread
         private readonly object _unsettledCashAmountsLocker = new object();
 
         // Record keeping variables
@@ -71,7 +71,7 @@ namespace QuantConnect.Securities
 
             CashBook = new CashBook();
             UnsettledCashBook = new CashBook();
-            UnsettledCashAmounts = new List<UnsettledCashAmount>();
+            _unsettledCashAmounts = new List<UnsettledCashAmount>();
 
             _baseCurrencyCash = CashBook[CashBook.AccountCurrency];
             _baseCurrencyUnsettledCash = UnsettledCashBook[CashBook.AccountCurrency];
@@ -677,7 +677,7 @@ namespace QuantConnect.Securities
         {
             lock (_unsettledCashAmountsLocker)
             {
-                UnsettledCashAmounts.Add(item);
+                _unsettledCashAmounts.Add(item);
             }
         }
 
@@ -688,13 +688,13 @@ namespace QuantConnect.Securities
         {
             lock (_unsettledCashAmountsLocker)
             {
-                foreach (var item in UnsettledCashAmounts.ToList())
+                foreach (var item in _unsettledCashAmounts.ToList())
                 {
                     // check if settlement time has passed
                     if (timeUtc >= item.SettlementTimeUtc)
                     {
                         // remove item from unsettled funds list
-                        UnsettledCashAmounts.Remove(item);
+                        _unsettledCashAmounts.Remove(item);
 
                         // update unsettled cashbook
                         UnsettledCashBook[item.Currency].Quantity -= item.Amount;

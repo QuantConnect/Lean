@@ -431,6 +431,7 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.SetCash(1000);
             securities.Add("AAPL", new QuantConnect.Securities.Equity.Equity(securityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, "AAPL"), 1));
+            securities["AAPL"].SettlementModel = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
             Assert.AreEqual(0, securities["AAPL"].Holdings.Quantity);
             Assert.AreEqual(1000, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
