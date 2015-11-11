@@ -50,7 +50,7 @@ namespace QuantConnect.ToolBox
             _securityType = type;
             _dataDirectory = dataDirectory;
             _resolution = resolution;
-            _symbol = symbol.ToLower();
+            _symbol = symbol;
             _market = market.ToLower();
             _dataType = dataType;
 
@@ -124,7 +124,7 @@ namespace QuantConnect.ToolBox
             Directory.CreateDirectory(Path.GetDirectoryName(data));
 
             // Write out this data string to a zip file
-            Compression.Zip(filename, data, Compression.CreateZipEntryName(_symbol, _securityType, time, _resolution, _dataType));
+            Compression.Zip(filename, data, Compression.CreateZipEntryName(_symbol.Value, _securityType, time, _resolution, _dataType));
             Log.Trace("LeanDataWriter.Write(): Created: " + data);
         }
 
@@ -229,11 +229,11 @@ namespace QuantConnect.ToolBox
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
                     // Base directory includes the market
-                    file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), _symbol.ToLower(), Compression.CreateZipFileName(_symbol, _securityType, time, _resolution));
+                    file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), _symbol.ToString().ToLower(), Compression.CreateZipFileName(_symbol.Value, _securityType, time, _resolution));
 
                     if (_resolution == Resolution.Daily || _resolution == Resolution.Hour)
                     {
-                        file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), Compression.CreateZipFileName(_symbol, _securityType, time, _resolution));
+                        file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), Compression.CreateZipFileName(_symbol.Value, _securityType, time, _resolution));
                     }
                     break;
 

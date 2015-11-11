@@ -71,7 +71,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                     Symbol symbol = ConvertOandaSymbolToLeanSymbol(oandaSymbol, securityType);
                     _instruments.Add(symbol, new LeanInstrument
                     {
-                        Symbol = symbol,
+                        Symbol = symbol.Value,
                         Name = tokens[1],
                         Type = securityType
                     });

@@ -312,7 +312,7 @@ namespace QuantConnect.Lean.Engine.Setup
                         {
                             Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol);
                             // for items not directly requested set leverage to 1 and at the min resolution
-                            algorithm.AddSecurity(holding.Type, symbol, minResolution.Value, null, true, 1.0m, false);
+                            algorithm.AddSecurity(holding.Type, symbol.Value, minResolution.Value, null, true, 1.0m, false);
                         }
                         algorithm.Portfolio[symbol].SetHoldings(holding.AveragePrice, (int) holding.Quantity);
                         algorithm.Securities[symbol].SetMarketPrice(new TradeBar

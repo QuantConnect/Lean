@@ -83,13 +83,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // perform initial filtering and limit the result
-            var initialSelections = universe.SelectSymbols(args.Data).Take(limit).ToHashSet();
+            var selections = universe.SelectSymbols(args.Data).Take(limit).ToHashSet();
 
             // create a hash set of our existing subscriptions by sid
             var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol.ID);
-
-            // create a map of each selection to its 'unique' first symbol/date
-            var selectedSubscriptions = initialSelections.ToHashSet();
 
             var additions = new List<Security>();
             var removals = new List<Security>();
@@ -109,7 +106,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (config.IsInternalFeed) continue;
 
                 // if we've selected this subscription again, keep it
-                if (selectedSubscriptions.Contains(config.Symbol)) continue;
+                if (selections.Contains(config.Symbol)) continue;
 
                 // let the algorithm know this security has been removed from the universe
                 removals.Add(subscription.Security);
@@ -131,7 +128,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // find new selections and add them to the algorithm
-            foreach (var sid in selectedSubscriptions)
+            foreach (var sid in selections)
             {
                 // we already have a subscription for this symbol so don't re-add it
                 if (existingSubscriptions.Contains(sid.ID)) continue;
@@ -163,20 +160,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return additions.Count + removals.Count != 0
                 ? new SecurityChanges(additions, removals)
                 : SecurityChanges.None;
-        }
-
-        /// <summary>
-        /// Gets the <see cref="CoarseFundamental"/> data for the specified market/date
-        /// </summary>
-        public static IEnumerable<CoarseFundamental> GetCoarseFundamentals(string market, DateTimeZone timeZone, DateTime date, bool isLiveMode)
-        {
-            var factory = new CoarseFundamental();
-            var symbol = market + "-coarse";
-            var sid = SecurityIdentifier.GenerateBase(symbol, market);
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), SecurityType.Equity, new Symbol(sid, symbol), Resolution.Daily, market, timeZone, true, false, true, false);
-            var reader = new BaseDataSubscriptionFactory(config, date, isLiveMode);
-            var source = factory.GetSource(config, date, isLiveMode);
-            return reader.Read(source).OfType<CoarseFundamental>();
         }
     }
 }

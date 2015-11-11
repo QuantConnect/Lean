@@ -78,7 +78,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <returns>Returns true if the symbol is available</returns>
         public bool HasSymbol(Symbol symbol)
         {
-            return _instruments.ContainsKey(symbol);
+            return _instruments.ContainsKey(symbol.Value);
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <returns>The security type</returns>
         public SecurityType GetSecurityType(Symbol symbol)
         {
-            return _instruments[symbol].Type;
+            return _instruments[symbol.Value].Type;
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <returns>Enumerable of base data for this symbol</returns>
         public IEnumerable<BaseData> Get(Symbol symbol, SecurityType type, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-            if (!_instruments.ContainsKey(symbol))
+            if (!_instruments.ContainsKey(symbol.Value))
                 throw new ArgumentException("Invalid symbol requested: " + symbol);
 
             if (type != SecurityType.Forex && type != SecurityType.Cfd)
@@ -194,7 +194,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <returns>An enumerable of ticks</returns>
         private IEnumerable<Tick> DownloadTicks(Symbol symbol, DateTime date)
         {
-            var pointValue = _instruments[symbol].PointValue;
+            var pointValue = _instruments[symbol.Value].PointValue;
 
             for (var hour = 0; hour < 24; hour++)
             {

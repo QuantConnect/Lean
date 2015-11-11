@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Common
 'EndTime':'2015-09-18T16:52:37.379',
 'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common',
 'Value':'EURGBP',
-'Permtick':'EURGBP','ID':'EURGBP 5O'},'Value':0.72722,'Price':0.72722}]}";
+'ID':'EURGBP 5O'},'Value':0.72722,'Price':0.72722}]}";
 
             var expected = new Symbol(SecurityIdentifier.GenerateForex("EURGBP", Market.FXCM),  "EURGBP");
             var settings = Settings;
@@ -95,14 +95,14 @@ namespace QuantConnect.Tests.Common
                     "'TickType':0,'Quantity':1,'Exchange':'','SaleCondition':'','Suspicious':false," +
                     "'BidPrice':1.11895,'AskPrice':1.11898,'LastPrice':1.11895,'DataType':2,'IsFillForward':false," +
                     "'Time':'2015-09-22T01:26:44.676','EndTime':'2015-09-22T01:26:44.676'," +
-                    "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURUSD','Permtick':'EURUSD', 'ID': 'EURUSD 5O'}," +
+                    "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURUSD', 'ID': 'EURUSD 5O'}," +
                     "'Value':1.11895,'Price':1.11895}," +
 
                     "{'$type':'QuantConnect.Data.Market.Tick, QuantConnect.Common'," +
                     "'TickType':0,'Quantity':1,'Exchange':'','SaleCondition':'','Suspicious':false," +
                     "'BidPrice':0.72157,'AskPrice':0.72162,'LastPrice':0.72157,'DataType':2,'IsFillForward':false," +
                     "'Time':'2015-09-22T01:26:44.675','EndTime':'2015-09-22T01:26:44.675'," +
-                    "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURGBP','Permtick':'EURGBP', 'ID': 'EURGBP 5O'}," +
+                    "'Symbol':{'$type':'QuantConnect.Symbol, QuantConnect.Common','Value':'EURGBP', 'ID': 'EURGBP 5O'}," +
                     "'Value':0.72157,'Price':0.72157}," +
 
                     "]}";
@@ -114,10 +114,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void SymbolTypeNameHandling()
         {
-            const string json = @"{'$type':'QuantConnect.Symbol, QuantConnect.Common',
-'Value':'EURGBP',
-'Permtick':'EURGBP',
-'ID': 'EURGBP 5O'}";
+            const string json = @"{'$type':'QuantConnect.Symbol, QuantConnect.Common', 'Value':'EURGBP', 'ID': 'EURGBP 5O'}";
             var expected = new Symbol(SecurityIdentifier.GenerateForex("EURGBP", Market.FXCM), "EURGBP");
             var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
             Assert.AreEqual(expected, actual);

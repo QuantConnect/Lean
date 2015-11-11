@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             var csv = line.Split(',');
-            if (csv[1].ToLower() != config.Symbol.ToLower())
+            if (csv[1].ToLower() != config.Symbol.ToString().ToLower())
             {
                 // this row isn't for me
                 return null;

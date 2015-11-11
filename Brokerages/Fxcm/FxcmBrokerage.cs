@@ -231,7 +231,7 @@ namespace QuantConnect.Brokerages.Fxcm
             if (order.Direction != OrderDirection.Buy && order.Direction != OrderDirection.Sell)
                 throw new ArgumentException("FxcmBrokerage.PlaceOrder(): Invalid Order Direction");
 
-            var symbol = ConvertSymbolToFxcmSymbol(order.Symbol);
+            var symbol = ConvertSymbolToFxcmSymbol(order.Symbol.Value);
             var orderSide = order.Direction == OrderDirection.Buy ? SideFactory.BUY : SideFactory.SELL;
             var quantity = (double)order.AbsoluteQuantity;
 

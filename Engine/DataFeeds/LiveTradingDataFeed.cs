@@ -167,7 +167,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 _dataQueueHandler.Subscribe(_job, new Dictionary<SecurityType, List<Symbol>>
                 {
-                    {security.Type, new List<Symbol> {security.Symbol.Value}}
+                    {security.Type, new List<Symbol> {security.Symbol}}
                 });
             }
 
@@ -197,7 +197,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 _dataQueueHandler.Unsubscribe(_job, new Dictionary<SecurityType, List<Symbol>>
                 {
-                    {security.Type, new List<Symbol> {security.Symbol.Value}}
+                    {security.Type, new List<Symbol> {security.Symbol}}
                 });
             }
 
@@ -481,7 +481,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // know that we expect this data
                 _dataQueueHandler.Subscribe(_job, new Dictionary<SecurityType, List<Symbol>>
                 {
-                    {config.SecurityType, new List<Symbol>{config.Symbol.Value}}
+                    {config.SecurityType, new List<Symbol>{config.Symbol}}
                 });
 
                 var enqueable = new EnqueableEnumerator<BaseData>();

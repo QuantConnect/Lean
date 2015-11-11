@@ -1339,7 +1339,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 foreach (var symbol in secType.Value)
                 {
                     var id = GetNextRequestID();
-                    var contract = CreateContract(symbol, secType.Key);
+                    var contract = CreateContract(symbol.Value, secType.Key);
                     Client.RequestMarketData(id, contract, null, false, false);
 
                     var symbolTuple = Tuple.Create(secType.Key, symbol);
