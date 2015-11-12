@@ -19,7 +19,7 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Data.Consolidators
 {
     /// <summary>
-    /// This consolidator can transform a stream of <see cref="BaseData"/> instances into a stream
+    /// This consolidator can transform a stream of <see cref="BaseData"/> instances into a stream of <see cref="RenkoBar"/>
     /// </summary>
     public class RenkoConsolidator : DataConsolidator<IBaseData>
     {
