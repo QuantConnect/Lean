@@ -239,10 +239,6 @@
       <Project>{7702711a-0c09-40d4-b151-e308d1520738}</Project>
       <Name>QuantConnect.Algorithm.FSharp</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Algorithm.Python\QuantConnect.Algorithm.Python.csproj">
-      <Project>{48289996-ce56-4edf-b451-4a2b1519ebc3}</Project>
-      <Name>QuantConnect.Algorithm.Python</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Algorithm.VisualBasic\QuantConnect.Algorithm.VisualBasic.vbproj">
       <Project>{af8f124b-b441-4aa7-92b7-cea72bdb4118}</Project>
       <Name>QuantConnect.Algorithm.VisualBasic</Name>
