@@ -43,12 +43,15 @@ namespace QuantConnect.ToolBox.BovespaDownloader
             { SecurityType.Option, "ftp://ftp.bmf.com.br/MarketData/Bovespa-Opcoes" } 
         };
 
+        public TickType DataType { get; set; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="BovespaDataDownloader"/> class
         /// </summary>
         public BovespaDataDownloader()
         {
             LoadInstruments();
+            DataType = TickType.Quote;
         }
 
         /// <summary>
@@ -144,16 +147,18 @@ namespace QuantConnect.ToolBox.BovespaDownloader
                 // Request all ticks for a specific date
                 var ticks = GetTickData(symbol, file);
 
+                if (DataType == TickType.Quote) ticks = GetNBBOData(ticks);
+
                 if (resolution == Resolution.Tick)
                 {
-                    foreach (var tick in ticks)
+                    foreach (var tick in ticks.OrderBy(t => t.Time))
                     {
                         yield return tick;
                     }
                 }
                 else
                 {
-                    foreach (var bar in AggregateTicks(symbol, ticks, resolution))
+                    foreach (var bar in AggregateTicks(symbol, ticks.OrderBy(t => t.Time), resolution))
                     {
                         yield return bar;
                     }
@@ -232,6 +237,8 @@ namespace QuantConnect.ToolBox.BovespaDownloader
         /// <returns>Enumerable of string with data for this symbol</returns>
         private IEnumerable<string> ListTickDataFiles(SecurityType type, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
+            var files = new DirectoryInfo(_inputDirectory).EnumerateFiles("NEG*.zip").Where(x => x.Length > 0).Select(x => x.Name);
+
             try
             {
                 var request = (FtpWebRequest)WebRequest.Create(_ftpsite);
@@ -244,52 +251,180 @@ namespace QuantConnect.ToolBox.BovespaDownloader
                     {
                         using (var reader = new StreamReader(responseStream))
                         {
-                            var startdate = startUtc.AddDays(1 - startUtc.Day);
-                            return reader.ReadToEnd().Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
-                                .Where(x =>
-                                {
-                                    try
-                                    {
-                                        // No bid/ask data for daily resolution
-                                        if (x.Contains("OFER") && resolution == Resolution.Daily) return false;
-
-                                        // No files with odd lot
-                                        if (x.Contains("FRAC")) return false;
-
-                                        // Only zip files contain data
-                                        if (!x.Contains(".zip")) return false;
-
-                                        var date = DateTime.ParseExact(x.Replace(".zip", "").Trim().Split('_')[(x.Contains("NEG") ? 0 : 1) + (type == SecurityType.Equity ? 1 : 2)], "yyyyMMdd", null);
-                                        return date >= startdate && date <= endUtc;
-                                    }
-                                    catch (Exception)
-                                    {
-                                        Log.Error(x + " is out of place!");
-                                        return false;
-                                    }
-                                });
+                            files.ToList().AddRange(reader.ReadToEnd().Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries));
                         }
                     }
                 }
             }
-            catch (Exception)
-            {
-                return new DirectoryInfo(_inputDirectory).EnumerateFiles("*.zip").Where(x => x.Length > 0 && !x.Name.Contains("COTAHIST_A") && !x.Name.Contains("OFER")).Select(x => x.Name);
-            }
+            catch (Exception) { }
+
+            var startdate = startUtc.AddDays(1 - startUtc.Day);
+
+            return files.Distinct().Where(x =>
+                 {
+                     try
+                     {
+                         // No bid/ask data
+                         if (x.Contains("OFER")) return false;
+
+                         // No files with odd lot
+                         if (x.Contains("FRAC")) return false;
+
+                         // Only zip files contain data
+                         if (!x.Contains(".zip")) return false;
+
+                         var date = DateTime.ParseExact(x.Replace(".zip", "").Trim().Split('_')[(x.Contains("NEG") ? 0 : 1) + (type == SecurityType.Equity ? 1 : 2)], "yyyyMMdd", null);
+                         return date >= startdate && date <= endUtc;
+                     }
+                     catch (Exception)
+                     {
+                         Log.Error(x + " is out of place!");
+                         return false;
+                     }
+                 });        
         }
         
         /// <summary>
-        /// Get ticks for the specified symbool from a given file.
-        /// If we do not have the file locally we download it.
+        /// Get ticks for the specified symbool from given files.
         /// </summary>
         /// <param name="symbol">The requested symbol</param>
-        /// <param name="date">The requested date</param>
+        /// <param name="file">File with desired data</param>
         /// <returns>An enumerable of ticks</returns>
-        private IEnumerable<BaseData> GetTickData(Symbol symbol, string file)
+        private IEnumerable<Tick> GetTickData(Symbol symbol, string file)
+        {
+            var ticks = new List<Tick>();
+
+            foreach (var XXX in new string[] { "NEG", "OFER_CPA", "OFER_VDA" })
+            {
+                if (!FtpFileDownload(file.Replace("NEG", XXX))) continue;
+
+                ZipFile zip;
+                var localfile = String.Format("{0}/{1}", _inputDirectory, file.Replace("NEG", XXX));
+
+                using (var toplevelreader = Compression.Unzip(localfile, out zip))
+                {
+                    for (var i = 0; i < zip.Entries.Count; i++)
+                    {
+                        using (var reader = new StreamReader(zip[i].OpenReader()))
+                        {
+                            while (!reader.EndOfStream)
+                            {
+                                var line = reader.ReadLine();
+                                if (!line.Contains(symbol)) continue;
+
+                                var csv = line.Split(';');
+
+                                if (XXX == "NEG")
+                                {
+                                    yield return new Tick
+                                    {
+                                        Symbol = symbol,
+                                        TickType = TickType.Trade,
+                                        Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", null).Add(TimeSpan.Parse(csv[5])),
+                                        Value = decimal.Parse(csv[3], NumberStyles.Any, CultureInfo.InvariantCulture),
+                                        Quantity = int.Parse(csv[4])
+                                    };
+                                }
+
+                                if (DataType == TickType.Trade || !XXX.Contains("OFER") || long.Parse(csv[7]) > 0) continue;
+
+                                if (XXX == "OFER_CPA")
+                                {
+                                    yield return new Tick
+                                    {
+                                        Symbol = symbol,
+                                        TickType = TickType.Quote,
+                                        Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", null).Add(TimeSpan.Parse(csv[6])),
+                                        BidPrice = decimal.Parse(csv[8], NumberStyles.Any, CultureInfo.InvariantCulture),
+                                        BidSize = int.Parse(csv[9]),
+                                        SaleCondition = csv[5]
+                                    };
+                                }
+
+                                if (XXX == "OFER_VDA")
+                                {
+                                    yield return new Tick
+                                    {
+                                        Symbol = symbol,
+                                        TickType = TickType.Quote,
+                                        Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", null).Add(TimeSpan.Parse(csv[6])),
+                                        BidPrice = decimal.Parse(csv[8], NumberStyles.Any, CultureInfo.InvariantCulture),
+                                        BidSize = int.Parse(csv[9]),
+                                        SaleCondition = csv[5]
+                                    };
+                                }
+                            }
+                        }
+                    }
+                }
+                // Manually dispose the ZipFile object
+                zip.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Transform level 2 data into NBBO (National Best Bid and Offer) data
+        /// </summary>
+        /// <param name="ticks"></param>
+        /// <returns></returns>
+        private IEnumerable<Tick> GetNBBOData(IEnumerable<Tick> ticks)
+        {
+            ticks = ticks.OrderBy(t => t.Time).ToList();
+            //var firsttrade = ticks.Find(t => t.SaleCondition == "004");
+
+            var bidList = new List<Tick>();
+            var askList = new List<Tick>();
+            var nbboList = new List<Tick>();
+            nbboList.Add(ticks.First());
+
+            foreach (var tick in ticks)
+            {
+                if (tick.BidSize > 0) bidList.Add(tick);
+                if (tick.AskSize > 0) askList.Add(tick);
+                var nbboLast = nbboList.Last();
+
+                //
+                if (tick.BidPrice > nbboLast.BidPrice)
+                {
+                    tick.AskPrice = nbboLast.AskPrice;
+                    nbboList.Add(tick);
+                }
+
+                //
+                if (tick.AskPrice < nbboLast.AskPrice && tick.AskPrice > 0 || (nbboLast.AskPrice == 0 && tick.BidPrice == 0))
+                {
+                    tick.BidPrice = nbboLast.BidPrice;
+                    nbboList.Add(tick);
+                }
+
+                nbboLast = nbboList.Last();
+                if (tick.Value == 9.99m)
+            //        Console.WriteLine();
+
+                // TRADE
+                if (nbboLast.BidPrice == nbboLast.AskPrice)
+                {
+                    Console.WriteLine();
+                }
+
+
+            }
+
+            foreach (var tick in ticks)
+            {
+                yield return tick;
+            }
+        }
+
+        /// <summary>
+        /// Download file from Bovespa FTP site
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns>True if file exists after download</returns>
+        private bool FtpFileDownload(string file)
         {
             var localfile = String.Format("{0}/{1}", _inputDirectory, file);
 
-            #region Download file from FTP site if it does not exist locally
             if (!File.Exists(localfile) || new FileInfo(localfile).Length == 0)
             {
                 try
@@ -316,80 +451,15 @@ namespace QuantConnect.ToolBox.BovespaDownloader
                 }
                 catch (Exception) { }
             }
-            #endregion
-
+            
             if (!File.Exists(localfile))
             {
                 Console.WriteLine("Do not have nor could download " + file);
             }
-            else
-            {
-                ZipFile zip;
-                var isBid = localfile.Contains("OFER_CPA");
-                var isAsk = localfile.Contains("OFER_VDA");
-                var tickType = localfile.Contains("NEG") ? TickType.Trade : TickType.Quote;
 
-                using (var toplevelreader = Compression.Unzip(localfile, out zip))
-                {
-                    for (var i = 0; i < zip.Entries.Count; i++)
-                    {
-                        using (var reader = new StreamReader(zip[i].OpenReader()))
-                        {
-                            while (!reader.EndOfStream)
-                            {
-                                var line = reader.ReadLine();
-                                if (!line.Contains(symbol)) continue;
-
-                                var csv = line.Split(';');
-
-                                if (tickType == TickType.Trade)
-                                {
-                                    yield return new Tick
-                                    {
-                                        Symbol = symbol,
-                                        TickType = tickType,
-                                        Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", null).Add(TimeSpan.Parse(csv[5])),
-                                        Value = decimal.Parse(csv[3], NumberStyles.Any, CultureInfo.InvariantCulture),
-                                        Quantity = int.Parse(csv[4])
-                                    };
-                                }
-
-                                // For QuoteBar, we want best buy and sell quote, 
-                                // therefore Priority indicator (csv[7]) ought to be zero. 
-                                if (tickType == TickType.Quote && long.Parse(csv[7]) > 0) continue;
-
-                                if (isBid)
-                                {
-                                    yield return new Tick
-                                    {
-                                        Symbol = symbol,
-                                        TickType = tickType,
-                                        Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", null).Add(TimeSpan.Parse(csv[6])),
-                                        BidPrice = decimal.Parse(csv[8], NumberStyles.Any, CultureInfo.InvariantCulture),
-                                        BidSize = int.Parse(csv[9])
-                                    };
-                                }
-
-                                if (isAsk)
-                                {
-                                    yield return new Tick
-                                    {
-                                        Symbol = symbol,
-                                        TickType = tickType,
-                                        Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", null).Add(TimeSpan.Parse(csv[6])),
-                                        AskPrice = decimal.Parse(csv[8], NumberStyles.Any, CultureInfo.InvariantCulture),
-                                        AskSize = int.Parse(csv[9])
-                                    };
-                                }
-                            }
-                        }
-                    }
-                    // Manually dispose the ZipFile object
-                    zip.Dispose();
-                }
-            }
+            return File.Exists(localfile);
         }
-
+        
         /// <summary>
         /// Aggregates a list of ticks at the requested resolution
         /// </summary>
@@ -397,39 +467,30 @@ namespace QuantConnect.ToolBox.BovespaDownloader
         /// <param name="ticks">Input tick data</param>
         /// <param name="resolution">Output resolution</param>
         /// <returns>Enumerable of trade bars or quote bars</returns>
-        private static IEnumerable<BaseData> AggregateTicks(Symbol symbol, IEnumerable<BaseData> data, Resolution resolution)
+        private static IEnumerable<BaseData> AggregateTicks(Symbol symbol, IEnumerable<Tick> ticks, Resolution resolution)
         {
-            var ticks = data.Cast<Tick>().OrderBy(t => t.Time).ToList();
-
             var resolutionIncrement = resolution.ToTimeSpan();
             var tradegroup = ticks.Where(t => t.TickType == TickType.Trade).GroupBy(t => t.Time.RoundDown(resolutionIncrement));
             var quotegroup = ticks.Where(t => t.TickType == TickType.Quote).GroupBy(t => t.Time.RoundDown(resolutionIncrement));
 
             foreach (var g in tradegroup)
             {
-                var bar = new TradeBar(g.First().Time, g.First().Symbol, 0, 0, 0, 0, 0, resolutionIncrement);
+                var bar = new TradeBar { Time = g.Key, Symbol = symbol, Period = resolutionIncrement };
                 foreach (var tick in g)
                 {
-                    bar.Update(tick.LastPrice, 0, 0, tick.Quantity, tick.BidSize, tick.AskSize);
+                    bar.UpdateTrade(tick.LastPrice, tick.Quantity);
                 }
                 yield return bar;
             }
 
             foreach (var g in quotegroup)
             {
-                var bar = new QuoteBar(g.First().Time, g.First().Symbol, null, 0, null, 0, resolutionIncrement);
+                var bar = new QuoteBar { Time = g.Key, Symbol = symbol, Period = resolutionIncrement };
                 foreach (var tick in g)
                 {
-                    bar.Update(0, tick.BidPrice, tick.AskPrice, 0, tick.BidSize, tick.AskSize);
+                    bar.UpdateQuote(tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize);
                 }
-
-                var bidtickcount = g.Where(t => t.BidSize > 0).Count();
-                if (bidtickcount > 0) bar.AvgBidSize /= bidtickcount;
-                
-                var asktickcount = g.Where(t => t.AskSize > 0).Count();
-                if (asktickcount > 0) bar.AvgAskSize /= asktickcount;
-                
-                //yield return bar; // Commented out because LeanDataWriter() does not support QuoteBar yet.
+                yield return bar;
             }
         }
     }
