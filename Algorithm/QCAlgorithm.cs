@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm
         private Action<Slice> _onDataSlice;
 
         // set by SetBenchmark helper API functions
-        private Symbol _benchmarkSymbol = Symbol.Empty;
+        private Symbol _benchmarkSymbol = QuantConnect.Symbol.Empty;
 
         // warmup resolution variables
         private TimeSpan? _warmupTimeSpan;
@@ -437,7 +437,7 @@ namespace QuantConnect.Algorithm
             if (Benchmark == null)
             {
                 // apply the default benchmark if it hasn't been set
-                if (_benchmarkSymbol == null || _benchmarkSymbol == Symbol.Empty)
+                if (_benchmarkSymbol == null || _benchmarkSymbol == QuantConnect.Symbol.Empty)
                 {
                     _benchmarkSymbol = new Symbol(SecurityIdentifier.GenerateEquity("SPY", Market.USA), "SPY");
                 }
@@ -1341,6 +1341,18 @@ namespace QuantConnect.Algorithm
             {
                 Status = AlgorithmStatus.Stopped;
             }
+        }
+
+        /// <summary>
+        /// Converts the string 'ticker' symbol into a full <see cref="Symbol"/> object
+        /// This requires that the string 'ticker' has been added to the algorithm
+        /// </summary>
+        /// <param name="ticker">The ticker symbol. This should be the ticker symbol
+        /// as it was added to the algorithm</param>
+        /// <returns>The symbol object mapped to the specified ticker</returns>
+        public Symbol Symbol(string ticker)
+        {
+            return SymbolCache.Get(ticker);
         }
 
         /// <summary>

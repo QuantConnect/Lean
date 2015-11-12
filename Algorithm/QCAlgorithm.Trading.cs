@@ -324,7 +324,7 @@ namespace QuantConnect.Algorithm
         private OrderResponse PreOrderChecksImpl(SubmitOrderRequest request)
         {
             //Ordering 0 is useless.
-            if (request.Quantity == 0 || request.Symbol == null || request.Symbol == Symbol.Empty)
+            if (request.Quantity == 0 || request.Symbol == null || request.Symbol == QuantConnect.Symbol.Empty)
             {
                 return OrderResponse.ZeroQuantity(request);
             }
@@ -410,12 +410,12 @@ namespace QuantConnect.Algorithm
         public List<int> Liquidate(Symbol symbolToLiquidate = null)
         {
             var orderIdList = new List<int>();
-            symbolToLiquidate = symbolToLiquidate ?? Symbol.Empty;
+            symbolToLiquidate = symbolToLiquidate ?? QuantConnect.Symbol.Empty;
 
             foreach (var symbol in Securities.Keys)
             {
                 //Send market order to liquidate if 1, we have stock, 2, symbol matches.
-                if (!Portfolio[symbol].HoldStock || (symbol != symbolToLiquidate && symbolToLiquidate != Symbol.Empty)) continue;
+                if (!Portfolio[symbol].HoldStock || (symbol != symbolToLiquidate && symbolToLiquidate != QuantConnect.Symbol.Empty)) continue;
 
                 var quantity = 0;
                 if (Portfolio[symbol].IsLong)
