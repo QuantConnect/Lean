@@ -19,7 +19,7 @@ public class BasicTemplateAlgorithm extends QCAlgorithm
      {
          if (!get_Portfolio().get_Invested())
          {
-             SetHoldings("SPY", 1, false);
+             SetHoldings(Symbol("SPY"), 1, false);
              Debug("Hello From Java");
          }
      } 
