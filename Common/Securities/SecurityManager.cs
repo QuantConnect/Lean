@@ -378,11 +378,6 @@ namespace QuantConnect.Securities
                 else leverage = 1m;
             }
 
-            if (sid == SecurityIdentifier.Invalid)
-            {
-                throw new Exception("Unable to create security for an invalid security identifier.");
-            }
-
             // add the symbol to our cache
             SymbolCache.Add(symbol.Value, symbol);
 

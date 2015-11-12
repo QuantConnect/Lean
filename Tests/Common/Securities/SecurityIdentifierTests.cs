@@ -120,7 +120,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void ReturnsCorrectMarketWhenNotFound()
         {
-            var sid = new SecurityIdentifier(098734583745983745, 0357960000000009901);
+            var sid = new SecurityIdentifier("some symbol", 0357960000000009901);
             Assert.AreEqual("99", sid.Market);
         }
 
@@ -179,13 +179,6 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void InvalidUses13SymbolCharacters()
-        {
-            Assert.AreEqual(13, SecurityIdentifier.Invalid.Symbol.Length);
-            Console.WriteLine(SecurityIdentifier.Invalid.Symbol);
-        }
-
-        [Test]
         public void EmptyUsesEmptySymbol()
         {
             Assert.AreEqual(string.Empty, SecurityIdentifier.Empty.Symbol);
@@ -234,6 +227,14 @@ namespace QuantConnect.Tests.Common.Securities
 }";
             var deserialized = JsonConvert.DeserializeObject<Container>(str);
             Assert.AreEqual(sid.sid, deserialized.sid);
+        }
+
+        [Test]
+        public void SupportsSpecialCharactersInSymbol()
+        {
+            const string symbol = "~!@#$%^&*()_+¼»`ÆÜCⁿª▓G";
+            var sid = new SecurityIdentifier(symbol, 0);
+            Assert.AreEqual(sid.Symbol, symbol);
         }
 
         class Container

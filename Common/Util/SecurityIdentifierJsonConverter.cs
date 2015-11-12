@@ -41,8 +41,7 @@ namespace QuantConnect.Util
         /// <returns>The converted value</returns>
         protected override SecurityIdentifier Convert(string value)
         {
-            SecurityIdentifier sid;
-            return SecurityIdentifier.TryParse(value, out sid) ? sid : SecurityIdentifier.Invalid;
+            return SecurityIdentifier.Parse(value);
         }
     }
 }
