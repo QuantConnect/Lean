@@ -237,6 +237,18 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(sid.Symbol, symbol);
         }
 
+        [Test]
+        public void MapsAllMarketsInMarketClass()
+        {
+            var markets = typeof (Market).GetFields();
+            foreach (var field in markets)
+            {
+                var market = (string)field.GetValue(null);
+                var code = SecurityIdentifier.GetMarketCode(market);
+                Assert.AreNotEqual(ulong.MaxValue, code);
+            }
+        }
+
         class Container
         {
             public SecurityIdentifier sid;

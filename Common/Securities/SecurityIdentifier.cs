@@ -82,17 +82,19 @@ namespace QuantConnect.Securities
         private static readonly Dictionary<string, ulong> Markets = new Dictionary<string, ulong>
         {
             {"empty", 0},
-            {"usa", 1},
-            {"fxcm", 2},
-            {"oanda", 3}
+            {QuantConnect.Market.USA, 1},
+            {QuantConnect.Market.FXCM, 2},
+            {QuantConnect.Market.Oanda, 3},
+            {QuantConnect.Market.Dukascopy, 4}
         };
 
         private static readonly Dictionary<ulong, string> ReverseMarkets = new Dictionary<ulong, string>
         {
             {0, "empty"},
-            {1, "usa"},
-            {2, "fxcm"},
-            {3, "oanda"}
+            {1, QuantConnect.Market.USA},
+            {2, QuantConnect.Market.FXCM},
+            {3, QuantConnect.Market.Oanda},
+            {4, QuantConnect.Market.Dukascopy}
         };
 
         #endregion
@@ -277,6 +279,17 @@ namespace QuantConnect.Securities
             // update our maps
             Markets[market] = identifier;
             ReverseMarkets[identifier] = market;
+        }
+
+        /// <summary>
+        /// Gets the market code for the specified market. Returns <see cref="ulong.MaxValue"/> if the market is not found
+        /// </summary>
+        /// <param name="market">The market to check for (case sensitive)</param>
+        /// <returns>The internal code used for the market. Corresponds to the value used when calling <see cref="AddMarket"/></returns>
+        public static ulong GetMarketCode(string market)
+        {
+            ulong code;
+            return !Markets.TryGetValue(market, out code) ? ulong.MaxValue : code;
         }
 
         /// <summary>
