@@ -380,7 +380,7 @@ namespace QuantConnect.Algorithm
             //We've already processed too many orders: max 100 per day or the memory usage explodes
             if (Transactions.OrdersCount > _maxOrders)
             {
-                _quit = true;
+                Status = AlgorithmStatus.Stopped;
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExceededMaximumOrders, string.Format("You have exceeded maximum number of orders ({0}), for unlimited orders upgrade your account.", _maxOrders));
             }
             

@@ -70,8 +70,9 @@ namespace QuantConnect.Securities.Forex
                 security.Holdings.AddNewFee(feeThisOrder);
                 portfolio.CashBook[CashBook.AccountCurrency].Quantity -= feeThisOrder;
 
-                baseCash.Quantity += fill.FillQuantity;
-                quoteCash.Quantity -= fill.FillQuantity*fill.FillPrice;
+                // Apply the funds using the current settlement model
+                security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, baseCurrency, fill.FillQuantity);
+                security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCurrency, -fill.FillQuantity * fill.FillPrice);
 
                 //Calculate & Update the Last Trade Profit;
                 if (isLong && fill.Direction == OrderDirection.Sell)
@@ -183,7 +184,7 @@ namespace QuantConnect.Securities.Forex
             }
             catch (Exception err)
             {
-                Log.Error("ForexPortfolioManager.ProcessFill(orderEvent): " + err.Message);
+                Log.Error("ForexPortfolioModel.ProcessFill(): " + err.Message);
             }
 
             //Set the results back to the vehicle.

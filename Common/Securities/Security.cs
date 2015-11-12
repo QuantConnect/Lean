@@ -188,6 +188,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the settlement model used for this security
+        /// </summary>
+        public ISettlementModel SettlementModel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Customizable data filter to filter outlier ticks before they are passed into user event handlers. 
         /// By default all ticks are passed into the user algorithms.
         /// </summary>
@@ -213,6 +222,7 @@ namespace QuantConnect.Securities
             PortfolioModel = new SecurityPortfolioModel();
             TransactionModel = new SecurityTransactionModel();
             MarginModel = new SecurityMarginModel(leverage);
+            SettlementModel = new ImmediateSettlementModel();
             Holdings = new SecurityHolding(this);
         }
 

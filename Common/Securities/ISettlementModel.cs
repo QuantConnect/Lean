@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,22 +13,23 @@
  * limitations under the License.
 */
 
-using QuantConnect.Interfaces;
+using System;
 
-namespace QuantConnect.Commands
+namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Represents a command that will terminate the algorithm
+    /// Represents the model responsible for applying cash settlement rules
     /// </summary>
-    public sealed class QuitCommand : ICommand
+    public interface ISettlementModel
     {
         /// <summary>
-        /// Immediately terminates the running algorithm
+        /// Applies cash settlement rules
         /// </summary>
-        /// <param name="algorithm">The algorithm to run this command against</param>
-        public void Run(IAlgorithm algorithm)
-        {
-            algorithm.Status = AlgorithmStatus.Stopped;
-        }
+        /// <param name="portfolio">The algorithm's portfolio</param>
+        /// <param name="security">The fill's security</param>
+        /// <param name="applicationTimeUtc">The fill time (in UTC)</param>
+        /// <param name="currency">The currency symbol</param>
+        /// <param name="amount">The amount of cash to apply</param>
+        void ApplyFunds(SecurityPortfolioManager portfolio, Security security, DateTime applicationTimeUtc, string currency, decimal amount);
     }
 }

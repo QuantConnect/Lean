@@ -79,7 +79,7 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             get
             {
-                return _gateway != null && _gateway.isConnected();
+                return _gateway != null && _gateway.isConnected() && !_connectionLost;
             }
         }
 
