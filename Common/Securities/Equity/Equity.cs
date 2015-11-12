@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 
 namespace QuantConnect.Securities.Equity 
@@ -23,6 +24,16 @@ namespace QuantConnect.Securities.Equity
     /// <seealso cref="Security"/>
     public class Equity : Security
     {
+        /// <summary>
+        /// The default number of days required to settle an equity sale
+        /// </summary>
+        public const int DefaultSettlementDays = 3;
+
+        /// <summary>
+        /// The default time of day for settlement
+        /// </summary>
+        public static readonly TimeSpan DefaultSettlementTime = new TimeSpan(8, 0, 0);
+
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
@@ -48,6 +59,7 @@ namespace QuantConnect.Securities.Equity
             TransactionModel = new EquityTransactionModel();
             PortfolioModel = new EquityPortfolioModel();
             MarginModel = new EquityMarginModel(leverage);
+            SettlementModel = new ImmediateSettlementModel();
             Holdings = new EquityHolding(this, TransactionModel, MarginModel);
         }
     }

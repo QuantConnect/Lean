@@ -97,7 +97,9 @@ namespace QuantConnect.Securities
                     portfolio.AddTransactionRecord(security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), lastTradeProfit - 2 * feeThisOrder);
                 }
 
-                portfolio.CashBook[CashBook.AccountCurrency].Quantity -= (fill.FillPrice * Convert.ToDecimal(fill.FillQuantity));
+                // Apply the funds using the current settlement model
+                var amount = fill.FillPrice * Convert.ToDecimal(fill.FillQuantity);
+                security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, CashBook.AccountCurrency, -amount);
 
                 //UPDATE HOLDINGS QUANTITY, AVG PRICE:
                 //Currently NO holdings. The order is ALL our holdings.

@@ -266,7 +266,18 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets the Trade Builder to generate trades from executions
         /// </summary>
-        TradeBuilder TradeBuilder { get; }
+        TradeBuilder TradeBuilder
+        {
+            get;
+        }
+
+        /// <summary>
+        /// The account type determines which settlement model will be used (Cash or Margin).
+        /// </summary>
+        AccountType AccountType
+        {
+            get;
+        }
 
         /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:

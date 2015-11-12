@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.Examples
     public class BrokerageModelAlgorithm : QCAlgorithm
     {
         /// <summary>
-        /// Initialize the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// Initialize the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must be initialized.
         /// </summary>
         public override void Initialize()
         {
@@ -39,17 +39,17 @@ namespace QuantConnect.Algorithm.Examples
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Second);
 
             // there's two ways to set your brokerage model. The easiest would be to call
-            // SetBrokerage( BrokerageName ); // BrokerageName is an enum
+            // SetBrokerageModel( BrokerageName ); // BrokerageName is an enum
             //SetBrokerageModel(BrokerageName.TradierBrokerage);
             //SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
             //SetBrokerageModel(BrokerageName.Default);
 
-            // the other way is to call SetBrokerage( IBrokerageModel ) with your
-            // own custom model. I've define a simple extension to the default brokerage
+            // the other way is to call SetBrokerageModel( IBrokerageModel ) with your
+            // own custom model. I've defined a simple extension to the default brokerage
             // model to take into account a requirement to maintain 500 cash in the account
             // at all times
 
-            BrokerageModel = new MinimumAccountBalanceBrokerageModel(this, 500.00m);
+            SetBrokerageModel(new MinimumAccountBalanceBrokerageModel(this, 500.00m));
         }
 
         private decimal last = 1.0m;
