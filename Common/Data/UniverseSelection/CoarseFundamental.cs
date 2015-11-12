@@ -125,7 +125,7 @@ namespace QuantConnect.Data.UniverseSelection
         public static Symbol CreateUniverseSymbol(string market)
         {
             market = market.ToLower();
-            var ticker = "qc-cu-" + market;
+            var ticker = "qc-universe-coarse-" + market;
             var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
             return new Symbol(sid, ticker);
         }
