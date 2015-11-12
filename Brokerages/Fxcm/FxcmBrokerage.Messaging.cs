@@ -42,7 +42,7 @@ namespace QuantConnect.Brokerages.Fxcm
         private const int ResponseTimeout = 2500;
         private bool _isOrderUpdateOrCancelRejected;
         private bool _isOrderSubmitRejected;
-        private bool _connectionLost;
+        private volatile bool _connectionLost;
 
         private readonly Dictionary<string, string> _mapInstrumentSymbols = new Dictionary<string, string>();
         private readonly Dictionary<string, TradingSecurity> _fxcmInstruments = new Dictionary<string, TradingSecurity>();
