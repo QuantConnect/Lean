@@ -100,6 +100,8 @@
     <Compile Include="Common\Securities\Equity\EquityTransactionModelTests.cs" />
     <Compile Include="Common\Securities\Forex\ForexTests.cs" />
     <Compile Include="Common\Securities\Forex\ForexTransactionModelTests.cs" />
+    <Compile Include="Common\Securities\DelayedSettlementModelTests.cs" />
+    <Compile Include="Common\Securities\ImmediateSettlementModelTests.cs" />
     <Compile Include="Common\Securities\LocalMarketHoursTests.cs" />
     <Compile Include="Common\Securities\SecurityExchangeHoursProviderTests.cs" />
     <Compile Include="Common\Securities\SecurityExchangeHoursTests.cs" />
@@ -238,10 +240,6 @@
     <ProjectReference Include="..\Algorithm.FSharp\QuantConnect.Algorithm.FSharp.fsproj">
       <Project>{7702711a-0c09-40d4-b151-e308d1520738}</Project>
       <Name>QuantConnect.Algorithm.FSharp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Algorithm.Python\QuantConnect.Algorithm.Python.csproj">
-      <Project>{48289996-ce56-4edf-b451-4a2b1519ebc3}</Project>
-      <Name>QuantConnect.Algorithm.Python</Name>
     </ProjectReference>
     <ProjectReference Include="..\Algorithm.VisualBasic\QuantConnect.Algorithm.VisualBasic.vbproj">
       <Project>{af8f124b-b441-4aa7-92b7-cea72bdb4118}</Project>
