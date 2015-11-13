@@ -67,7 +67,7 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextRunningStatus;
         private DateTime _nextLogStoreUpdate;
         private DateTime _nextStatisticsUpdate;
-        private int _lastOrderId = -1;
+        private int _lastOrderId = 0;
         private readonly object _chartLock = new Object();
         private readonly object _runtimeLock = new Object();
         private string _subscription = "Strategy Equity";
