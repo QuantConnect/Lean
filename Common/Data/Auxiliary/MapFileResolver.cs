@@ -37,7 +37,7 @@ namespace QuantConnect.Data.Auxiliary
         /// Gets an empty <see cref="MapFileResolver"/>, that is an instance that contains
         /// zero mappings
         /// </summary>
-        public static MapFileResolver Empty = new MapFileResolver(Enumerable.Empty<MapFile>());
+        public static readonly MapFileResolver Empty = new MapFileResolver(Enumerable.Empty<MapFile>());
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MapFileResolver"/> by reading
