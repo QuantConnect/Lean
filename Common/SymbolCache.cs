@@ -33,9 +33,9 @@ namespace QuantConnect
         /// </summary>
         /// <param name="ticker">The string ticker symbol</param>
         /// <param name="symbol">The symbol object that maps to the string ticker symbol</param>
-        public static void Add(string ticker, Symbol symbol)
+        public static void Set(string ticker, Symbol symbol)
         {
-            Symbols.AddOrUpdate(ticker, symbol);
+            Symbols[ticker] = symbol;
         }
 
         /// <summary>

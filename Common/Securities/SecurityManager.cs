@@ -379,7 +379,7 @@ namespace QuantConnect.Securities
             }
 
             // add the symbol to our cache
-            SymbolCache.Add(symbol.Value, symbol);
+            SymbolCache.Set(symbol.Value, symbol);
 
             var market = sid.Market;
             var securityType = sid.SecurityType;

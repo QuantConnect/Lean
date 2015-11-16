@@ -33,23 +33,21 @@ namespace QuantConnect
     public class SymbolJsonConverter : JsonConverter
     {
         /// <summary>
-        /// Gets a value indicating whether this <see cref="T:Newtonsoft.Json.JsonConverter"/> can write JSON.
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if this <see cref="T:Newtonsoft.Json.JsonConverter"/> can write JSON; otherwise, <c>false</c>.
-        /// </value>
-        public override bool CanWrite
-        {
-            get { return false; }
-        }
-
-        /// <summary>
         /// Writes the JSON representation of the object.
         /// </summary>
         /// <param name="writer">The <see cref="T:Newtonsoft.Json.JsonWriter"/> to write to.</param><param name="value">The value.</param><param name="serializer">The calling serializer.</param>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException("The SymbolJsonConverter is only for deserialization.");
+            var symbol = value as Symbol;
+            if (symbol == null) return;
+            
+            serializer.Serialize(writer, new
+            {
+                symbol.Value,
+                symbol.ID,
+                // write out the permtick for backwards compatibility with live running algorithms
+                Permtick = symbol.Value
+            });
         }
 
         /// <summary>

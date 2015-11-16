@@ -29,11 +29,11 @@ public class AssemblyInitialize
 
     private static void AddForex(string symbol)
     {
-        SymbolCache.Add(symbol, new Symbol(SecurityIdentifier.GenerateForex(symbol, Market.FXCM), symbol));
+        SymbolCache.Set(symbol, new Symbol(SecurityIdentifier.GenerateForex(symbol, Market.FXCM), symbol));
     }
 
     private static void AddEquity(string symbol)
     {
-        SymbolCache.Add(symbol, new Symbol(SecurityIdentifier.GenerateEquity(symbol, Market.USA), symbol));
+        SymbolCache.Set(symbol, new Symbol(SecurityIdentifier.GenerateEquity(symbol, Market.USA), symbol));
     }
 }

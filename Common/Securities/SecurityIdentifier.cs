@@ -19,7 +19,9 @@ using System.Linq;
 using System.Numerics;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities
@@ -313,15 +315,17 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Helper overload that will search the mapfiles to resolve the first date
+        /// Helper overload that will search the mapfiles to resolve the first date. This implementation
+        /// uses the configured <see cref="IMapFileProvider"/> via the <see cref="Composer.Instance"/>
         /// </summary>
         /// <param name="symbol">The symbol a it is known today</param>
         /// <param name="market">The market</param>
         /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified symbol today</returns>
         public static SecurityIdentifier GenerateEquity(string symbol, string market)
         {
-            string dataFolder = Constants.DataFolder;
-            var resolver = MapFileResolver.Create(dataFolder, market);
+            var mapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
+            var provider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(mapFileProviderTypeName);
+            var resolver = provider.Get(market);
             var mapFile = resolver.ResolveMapFile(symbol, DateTime.Today);
             var firstDate = mapFile.FirstDate;
             if (mapFile.Any())

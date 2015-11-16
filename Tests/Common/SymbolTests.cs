@@ -184,5 +184,21 @@ namespace QuantConnect.Tests.Common
             var a = new Symbol(SecurityIdentifier.GenerateForex("a", Market.FXCM), "a");
             Assert.AreEqual(0, a.CompareTo("A"));
         }
+
+        [Test]
+        public void BackwardsCompatibleJson()
+        {
+            var symbol = new Symbol(SecurityIdentifier.GenerateForex("a", Market.FXCM), "a");
+            var json = JsonConvert.SerializeObject(symbol);
+            var oldSymbol = JsonConvert.DeserializeObject<OldSymbol>(json);
+            Assert.AreEqual("A", oldSymbol.Value);
+            Assert.AreEqual("A", oldSymbol.Permtick);
+        }
+
+        class OldSymbol
+        {
+            public string Value { get; set; }
+            public string Permtick { get; set; }
+        }
     }
 }
