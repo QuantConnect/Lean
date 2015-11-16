@@ -248,7 +248,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             StreamWriter writer;
                             if (!writers.TryGetValue(coarseFile, out writer))
                             {
-                                writer = new StreamWriter(new FileStream(coarseFile, FileMode.Append, FileAccess.Write, FileShare.Write));
+                                writer = new StreamWriter(new FileStream(coarseFile, FileMode.Create, FileAccess.Write, FileShare.Write));
                                 writers[coarseFile] = writer;
                             }
                             writer.WriteLine(coarseFileLine);
