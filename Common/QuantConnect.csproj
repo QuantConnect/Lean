@@ -136,6 +136,7 @@
     <Compile Include="Data\Auxiliary\FactorFile.cs" />
     <Compile Include="Data\Auxiliary\FactorFileRow.cs" />
     <Compile Include="Data\Auxiliary\MapFile.cs" />
+    <Compile Include="Data\Auxiliary\LocalDiskMapFileProvider.cs" />
     <Compile Include="Data\Auxiliary\MapFileResolver.cs" />
     <Compile Include="Data\Auxiliary\MapFileRow.cs" />
     <Compile Include="Data\Consolidators\BaseDataConsolidator.cs" />
@@ -179,6 +180,7 @@
     <Compile Include="Interfaces\IDataQueueHandler.cs" />
     <Compile Include="Interfaces\IHistoryProvider.cs" />
     <Compile Include="Interfaces\IJobQueueHandler.cs" />
+    <Compile Include="Interfaces\IMapFileProvider.cs" />
     <Compile Include="Interfaces\IMessagingHandler.cs" />
     <Compile Include="LocalTimeKeeper.cs" />
     <Compile Include="Market.cs" />

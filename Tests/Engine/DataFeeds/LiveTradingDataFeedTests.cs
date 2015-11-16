@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -56,7 +57,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, timeProvider);
-            feed.Initialize(algorithm, job, resultHandler);
+            feed.Initialize(algorithm, job, resultHandler, new LocalDiskMapFileProvider());
 
             var feedThreadStarted = new ManualResetEvent(false);
             Task.Factory.StartNew(() =>
@@ -419,7 +420,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             dataQueueHandler = new FuncDataQueueHandler(getNextTicksFunction);
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, timeProvider);
-            feed.Initialize(algorithm, job, resultHandler);
+            feed.Initialize(algorithm, job, resultHandler, new LocalDiskMapFileProvider());
 
             var feedThreadStarted = new ManualResetEvent(false);
             Task.Factory.StartNew(() =>

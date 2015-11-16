@@ -378,6 +378,23 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Lazily unzips the specified stream
+        /// </summary>
+        /// <param name="stream">The zipped stream to be read</param>
+        /// <returns>An enumerable whose elements are zip entry key value pairs with
+        /// a key of the zip entry name and the value of the zip entry's file lines</returns>
+        public static IEnumerable<KeyValuePair<string, IEnumerable<string>>> Unzip(Stream stream)
+        {
+            using (var zip = ZipFile.Read(stream))
+            {
+                foreach (var entry in zip)
+                {
+                    yield return new KeyValuePair<string, IEnumerable<string>>(entry.FileName, ReadZipEntry(entry));
+                }
+            }
+        }
+
+        /// <summary>
         /// Streams each line from the first zip entry in the specified zip file
         /// </summary>
         /// <param name="filename">The zip file path to stream</param>
@@ -550,6 +567,30 @@ namespace QuantConnect
             tarArchive.Close();
             gzipStream.Close();
             inStream.Close();
+        }
+
+        /// <summary>
+        /// Enumerate through the files of a TAR and get a list of KVP names-byte arrays
+        /// </summary>
+        /// <param name="stream">The input tar stream</param>
+        /// <param name="isTarGz">True if the input stream is a .tar.gz or .tgz</param>
+        /// <returns>An enumerable containing each tar entry and it's contents</returns>
+        public static IEnumerable<KeyValuePair<string, byte[]>> UnTar(Stream stream, bool isTarGz)
+        {
+            using (var tar = new TarInputStream(isTarGz ? (Stream)new GZipInputStream(stream) : stream))
+            {
+                TarEntry entry;
+                while ((entry = tar.GetNextEntry()) != null)
+                {
+                    if (entry.IsDirectory) continue;
+
+                    using (var output = new MemoryStream())
+                    {
+                        tar.CopyEntryContents(output);
+                        yield return new KeyValuePair<string, byte[]>(entry.Name, output.ToArray());
+                    }
+                }
+            }
         }
 
         /// <summary>

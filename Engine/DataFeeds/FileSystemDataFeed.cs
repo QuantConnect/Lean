@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -42,6 +43,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IResultHandler _resultHandler;
         private Ref<TimeSpan> _fillForwardResolution;
         private SecurityChanges _changes = SecurityChanges.None;
+        private IMapFileProvider _mapFileProvider;
         private ConcurrentDictionary<SymbolSecurityType, Subscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
@@ -73,7 +75,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             get; private set;
         }
 
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider)
         {
             if (algorithm.SubscriptionManager.Subscriptions.Count == 0 && algorithm.Universes.IsNullOrEmpty())
             {
@@ -82,6 +84,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _algorithm = algorithm;
             _resultHandler = resultHandler;
+            _mapFileProvider = mapFileProvider;
             _subscriptions = new ConcurrentDictionary<SymbolSecurityType, Subscription>();
             _cancellationTokenSource = new CancellationTokenSource();
 
@@ -118,8 +121,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return null;
             }
 
+            // get the map file resolver for this market
+            var mapFileResolver = _mapFileProvider.Get(config.Market);
+
             // ReSharper disable once PossibleMultipleEnumeration
-            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, resultHandler, tradeableDates, false);
+            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, resultHandler, mapFileResolver, tradeableDates, false);
 
             // optionally apply fill forward logic, but never for tick data
             if (config.FillDataForward && config.Resolution != Resolution.Tick)
@@ -379,7 +385,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 // normal reader for all others
-                enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, tradeableDates, false);
+                enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, MapFileResolver.Empty, tradeableDates, false);
             }
 
             // create the subscription

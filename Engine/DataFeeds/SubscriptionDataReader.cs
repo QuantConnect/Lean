@@ -114,6 +114,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="periodStart">Start date for the data request/backtest</param>
         /// <param name="periodFinish">Finish date for the data request/backtest</param>
         /// <param name="resultHandler">Result handler used to push error messages and perform sampling on skipped days</param>
+        /// <param name="mapFileResolver">Used for resolving the correct map files</param>
         /// <param name="tradeableDates">Defines the dates for which we'll request data, in order</param>
         /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
         /// <param name="includeAuxilliaryData">True if we want to emit aux data, false to only emit price data</param>
@@ -121,6 +122,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             DateTime periodStart,
             DateTime periodFinish,
             IResultHandler resultHandler,
+            MapFileResolver mapFileResolver,
             IEnumerable<DateTime> tradeableDates,
             bool isLiveMode,
             bool includeAuxilliaryData = true
@@ -175,8 +177,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 try
                 {
-                    var resolver = MapFileResolver.Create(Constants.DataFolder, config.Market);
-                    var mapFile = resolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);
+                    var mapFile = mapFileResolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);
 
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any()) _mapFile = mapFile;
