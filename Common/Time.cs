@@ -113,7 +113,7 @@ namespace QuantConnect
         /// <returns>C# date timeobject</returns>
         public static DateTime UnixTimeStampToDateTime(double unixTimeStamp) 
         {
-            var time = DateTime.Now;
+            DateTime time;
             try 
             {
                 // Unix timestamp is seconds past epoch
@@ -123,6 +123,7 @@ namespace QuantConnect
             catch (Exception err)
             {
                 Log.Error("Time.UnixTimeStampToDateTime(): " + unixTimeStamp + err.Message);
+                time = DateTime.Now;
             }
             return time;
         }
