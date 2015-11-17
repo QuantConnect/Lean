@@ -162,15 +162,15 @@ namespace QuantConnect.Brokerages.Fxcm
                             try
                             {
                                 _gateway.relogin();
+
+                                _connectionLost = false;
+
+                                OnMessage(BrokerageMessageEvent.Reconnected("Connection with FXCM server restored."));
                             }
                             catch (Exception exception)
                             {
                                 Log.Error(exception);
                             }
-
-                            _connectionLost = false;
-
-                            OnMessage(BrokerageMessageEvent.Reconnected("Connection with FXCM server restored."));
                         }
                         else if (_connectionError)
                         {
