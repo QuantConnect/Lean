@@ -55,10 +55,19 @@ namespace QuantConnect.ToolBox.BovespaDownloader
                     throw new ArgumentException("The symbol " + symbol + " is not available.");
 
                 var securityType = downloader.GetSecurityType(symbol);
+                
+                // Download the data
                 var data = downloader.Get(new Symbol(symbol), securityType, resolution, startDate, endDate);
 
                 // Save the data
                 var writer = new LeanDataWriter(securityType, resolution, symbol, dataDirectory, "bra");
+                writer.Write(data);
+
+                // Process QUOTE data
+                downloader.DataType = TickType.Quote;
+
+                data = downloader.Get(new Symbol(symbol), securityType, resolution, startDate, endDate);
+                writer = new LeanDataWriter(securityType, resolution, symbol, dataDirectory, "bra");
                 writer.Write(data);
             }
             catch (Exception err)

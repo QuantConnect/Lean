@@ -59,7 +59,17 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the end time of this renko bar or the most recent update time if it <see cref="IsClosed"/>
         /// </summary>
-        public DateTime End { get; private set; }
+        public override DateTime EndTime { get; set; }
+
+        /// <summary>
+        /// Gets the end time of this renko bar or the most recent update time if it <see cref="IsClosed"/>
+        /// </summary>
+        [Obsolete("RenkoBar.End is obsolete. Please use RenkoBar.EndTime property instead.")]
+        public DateTime End
+        {
+            get { return EndTime; }
+            set { EndTime = value; }
+        }
 
         /// <summary>
         /// Gets the time this bar started
@@ -94,7 +104,7 @@ namespace QuantConnect.Data.Market
         {
             Symbol = symbol;
             Start = time;
-            End = time;
+            EndTime = time;
             BrickSize = brickSize;
             Open = open;
             Close = open;
@@ -115,7 +125,7 @@ namespace QuantConnect.Data.Market
             // can't update a closed renko bar
             if (IsClosed) return true;
             if (Start == DateTime.MinValue) Start = time;
-            End = time;
+            EndTime = time;
 
             // compute the min/max closes this renko bar can have
             decimal lowClose = Open - BrickSize;

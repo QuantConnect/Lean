@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -243,13 +243,19 @@ namespace QuantConnect.Data.Market
                 throw new InvalidOperationException("Average bid/ask size cannot be greater then zero if update counter is zero.");
             }
             
-            if (bidSize > 0) _updateBidCount++;
-            _sumBidSize += Convert.ToInt32(bidSize);
-            AvgBidSize = _sumBidSize / _updateBidCount;
+            if (bidSize > 0) 
+            {   
+                _updateBidCount++;
+                _sumBidSize += Convert.ToInt32(bidSize);
+                AvgBidSize = _sumBidSize / _updateBidCount;
+            }
             
-            if (askSize > 0) _updateAskCount++;
-            _sumAskSize += Convert.ToInt32(askSize);
-            AvgAskSize = _sumAskSize / _updateAskCount;
+            if (askSize > 0) 
+            {
+                _updateAskCount++;
+                _sumAskSize += Convert.ToInt32(askSize);
+                AvgAskSize = _sumAskSize / _updateAskCount;
+            }
 
             // be prepared for updates without trades
             if (lastTrade != 0) Value = lastTrade;

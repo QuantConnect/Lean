@@ -169,7 +169,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <param name="ticks"></param>
         /// <param name="resolution"></param>
         /// <returns></returns>
-        private static IEnumerable<TradeBar> AggregateTicks(Symbol symbol, IEnumerable<Tick> ticks, TimeSpan resolution)
+        internal static IEnumerable<TradeBar> AggregateTicks(Symbol symbol, IEnumerable<Tick> ticks, TimeSpan resolution)
         {
             return 
                 (from t in ticks

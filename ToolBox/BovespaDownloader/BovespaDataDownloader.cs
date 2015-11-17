@@ -147,7 +147,10 @@ namespace QuantConnect.ToolBox.BovespaDownloader
                 // Request all ticks for a specific date
                 var ticks = GetTickData(symbol, file);
 
-                if (DataType == TickType.Quote) ticks = GetNBBOData(ticks);
+                if (DataType == TickType.Quote)
+                {
+                    GetNBBOData(ticks);
+                }
 
                 if (resolution == Resolution.Tick)
                 {
@@ -258,30 +261,20 @@ namespace QuantConnect.ToolBox.BovespaDownloader
             }
             catch (Exception) { }
 
-            var startdate = startUtc.AddDays(1 - startUtc.Day);
-
-            return files.Distinct().Where(x =>
+            return files.Where(x => x.Contains("NEG") && x.Contains(".zip") && !x.Contains("FRAC")).Distinct()
+                .Where(x =>
                  {
                      try
                      {
-                         // No bid/ask data
-                         if (x.Contains("OFER")) return false;
-
-                         // No files with odd lot
-                         if (x.Contains("FRAC")) return false;
-
-                         // Only zip files contain data
-                         if (!x.Contains(".zip")) return false;
-
-                         var date = DateTime.ParseExact(x.Replace(".zip", "").Trim().Split('_')[(x.Contains("NEG") ? 0 : 1) + (type == SecurityType.Equity ? 1 : 2)], "yyyyMMdd", null);
+                         var startdate = x.ToUpper().Contains("_A_") ? startUtc.AddDays(1 - startUtc.Day) : startUtc;
+                         var date = DateTime.ParseExact(x.Split('_')[type == SecurityType.Equity ? 1 : 2].Substring(0, 8), "yyyyMMdd", null);
                          return date >= startdate && date <= endUtc;
                      }
                      catch (Exception)
                      {
-                         Log.Error(x + " is out of place!");
                          return false;
                      }
-                 });        
+                 });
         }
         
         /// <summary>
@@ -322,11 +315,15 @@ namespace QuantConnect.ToolBox.BovespaDownloader
                                         TickType = TickType.Trade,
                                         Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", null).Add(TimeSpan.Parse(csv[5])),
                                         Value = decimal.Parse(csv[3], NumberStyles.Any, CultureInfo.InvariantCulture),
-                                        Quantity = int.Parse(csv[4])
+                                        Quantity = int.Parse(csv[4]),
+                                        SaleCondition = string.Format("{0} {1}", csv[8], csv[12])
                                     };
                                 }
 
                                 if (DataType == TickType.Trade || !XXX.Contains("OFER") || long.Parse(csv[7]) > 0) continue;
+
+                                var execType = int.Parse(csv[5]);
+                                //if (execType == 3 || execType == 7 || execType == 8 || execType > 10) continue;
 
                                 if (XXX == "OFER_CPA")
                                 {
@@ -337,7 +334,7 @@ namespace QuantConnect.ToolBox.BovespaDownloader
                                         Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", null).Add(TimeSpan.Parse(csv[6])),
                                         BidPrice = decimal.Parse(csv[8], NumberStyles.Any, CultureInfo.InvariantCulture),
                                         BidSize = int.Parse(csv[9]),
-                                        SaleCondition = csv[5]
+                                        SaleCondition = string.Format("{0} {1}", csv[3], csv[5])
                                     };
                                 }
 
@@ -348,9 +345,9 @@ namespace QuantConnect.ToolBox.BovespaDownloader
                                         Symbol = symbol,
                                         TickType = TickType.Quote,
                                         Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", null).Add(TimeSpan.Parse(csv[6])),
-                                        BidPrice = decimal.Parse(csv[8], NumberStyles.Any, CultureInfo.InvariantCulture),
-                                        BidSize = int.Parse(csv[9]),
-                                        SaleCondition = csv[5]
+                                        AskPrice = decimal.Parse(csv[8], NumberStyles.Any, CultureInfo.InvariantCulture),
+                                        AskSize = int.Parse(csv[9]),
+                                        SaleCondition = string.Format("{0} {1} {2}", csv[3], csv[4], csv[5])
                                     };
                                 }
                             }
@@ -367,53 +364,68 @@ namespace QuantConnect.ToolBox.BovespaDownloader
         /// </summary>
         /// <param name="ticks"></param>
         /// <returns></returns>
-        private IEnumerable<Tick> GetNBBOData(IEnumerable<Tick> ticks)
+        private void GetNBBOData(IEnumerable<Tick> ticks)
         {
             ticks = ticks.OrderBy(t => t.Time).ToList();
-            //var firsttrade = ticks.Find(t => t.SaleCondition == "004");
+
+            var cancelled = ticks.Where(t => t.Quantity == 0).GroupBy(t => t.SaleCondition.Split(' ')[0])
+                .Where(g => g.Count() > 1).Select(g => g.Key).ToList();
 
             var bidList = new List<Tick>();
             var askList = new List<Tick>();
             var nbboList = new List<Tick>();
-            nbboList.Add(ticks.First());
+            var tradeList = ticks.Where(t => t.Quantity > 0).ToList();
+            nbboList.Add(ticks.First(t => t.Quantity == 0));
 
-            foreach (var tick in ticks)
+            foreach(var trade in tradeList)
             {
-                if (tick.BidSize > 0) bidList.Add(tick);
-                if (tick.AskSize > 0) askList.Add(tick);
-                var nbboLast = nbboList.Last();
+                var book = ticks.Where(t => t.Time <= trade.Time && t.Quantity == 0).ToList();
+                var bids = book.Where(t => t.BidPrice > 0).OrderBy(t => t.SaleCondition).ToList();
+                var asks = book.Where(t => t.AskPrice > 0).OrderBy(t => t.SaleCondition).ToList();
 
-                //
-                if (tick.BidPrice > nbboLast.BidPrice)
+                Console.WriteLine(bids.Max(t => t.BidPrice));
+                Console.WriteLine(asks.Min(t => t.AskPrice));
+
+                foreach (var tick in book)
                 {
-                    tick.AskPrice = nbboLast.AskPrice;
-                    nbboList.Add(tick);
-                }
+                    if (tick.BidSize > 0) bidList.Add(tick);
+                    if (tick.AskSize > 0) askList.Add(tick);
+                    var nbboLast = nbboList.Last();
 
-                //
-                if (tick.AskPrice < nbboLast.AskPrice && tick.AskPrice > 0 || (nbboLast.AskPrice == 0 && tick.BidPrice == 0))
-                {
-                    tick.BidPrice = nbboLast.BidPrice;
-                    nbboList.Add(tick);
-                }
+                    //
+                    if (tick.BidPrice > nbboLast.BidPrice)
+                    {
+                        tick.AskPrice = nbboLast.AskPrice;
+                        nbboList.Add(tick);
+                    }
 
-                nbboLast = nbboList.Last();
-                if (tick.Value == 9.99m)
-            //        Console.WriteLine();
 
-                // TRADE
-                if (nbboLast.BidPrice == nbboLast.AskPrice)
-                {
-                    Console.WriteLine();
+
+                    //
+                    if (tick.AskPrice < nbboLast.AskPrice && tick.AskPrice > 0 || (nbboLast.AskPrice == 0 && tick.BidPrice == 0))
+                    {
+                        tick.BidPrice = nbboLast.BidPrice;
+                        nbboList.Add(tick);
+                    }
+
+                    nbboLast = nbboList.Last();
+
+                    if (nbboLast.AskPrice == 0) continue;
+                    
+                    // TRADE
+                    if (nbboLast.BidPrice >= nbboLast.AskPrice)
+                    {
+                        Console.WriteLine();
+                    }
+
+
                 }
 
 
             }
 
-            foreach (var tick in ticks)
-            {
-                yield return tick;
-            }
+            
+            
         }
 
         /// <summary>
