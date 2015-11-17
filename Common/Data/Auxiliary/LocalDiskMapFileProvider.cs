@@ -16,7 +16,9 @@
 
 using System.Collections.Concurrent;
 using System.IO;
+using System.Threading;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -26,6 +28,7 @@ namespace QuantConnect.Data.Auxiliary
     /// </summary>
     public class LocalDiskMapFileProvider : IMapFileProvider
     {
+        private static int _wroteTraceStatement;
         private readonly ConcurrentDictionary<string, MapFileResolver> _cache = new ConcurrentDictionary<string, MapFileResolver>();
 
         /// <summary>
@@ -43,6 +46,15 @@ namespace QuantConnect.Data.Auxiliary
         private static MapFileResolver GetMapFileResolver(string market)
         {
             var mapFileDirectory = Path.Combine(Constants.DataFolder, "equity", market.ToLower(), "map_files");
+            if (!Directory.Exists(mapFileDirectory))
+            {
+                // only write this message once per application instance
+                if (Interlocked.CompareExchange(ref _wroteTraceStatement, 1, 0) == 0)
+                {
+                    Log.Error("LocalDiskMapFileProvider.GetMapFileResolver({0}): The specified directory does not exist: {1}", market, mapFileDirectory);
+                }
+                return MapFileResolver.Empty;
+            }
             return new MapFileResolver(MapFile.GetMapFiles(mapFileDirectory));
         }
     }

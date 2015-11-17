@@ -189,7 +189,7 @@ namespace QuantConnect.Tests.Common
         public void BackwardsCompatibleJson()
         {
             var symbol = new Symbol(SecurityIdentifier.GenerateForex("a", Market.FXCM), "a");
-            var json = JsonConvert.SerializeObject(symbol);
+            var json = JsonConvert.SerializeObject(symbol, new JsonSerializerSettings{Formatting = Formatting.Indented, TypeNameHandling = TypeNameHandling.All});
             var oldSymbol = JsonConvert.DeserializeObject<OldSymbol>(json);
             Assert.AreEqual("A", oldSymbol.Value);
             Assert.AreEqual("A", oldSymbol.Permtick);

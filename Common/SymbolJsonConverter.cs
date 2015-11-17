@@ -40,14 +40,17 @@ namespace QuantConnect
         {
             var symbol = value as Symbol;
             if (symbol == null) return;
-            
-            serializer.Serialize(writer, new
-            {
-                symbol.Value,
-                symbol.ID,
-                // write out the permtick for backwards compatibility with live running algorithms
-                Permtick = symbol.Value
-            });
+
+            writer.WriteStartObject();
+            writer.WritePropertyName("&type");
+            writer.WriteValue(typeof(Symbol).AssemblyQualifiedName);
+            writer.WritePropertyName("Value");
+            writer.WriteValue(symbol.Value);
+            writer.WritePropertyName("ID");
+            serializer.Serialize(writer, symbol.ID);
+            writer.WritePropertyName("Permtick");
+            writer.WriteValue(symbol.Value);
+            writer.WriteEndObject();
         }
 
         /// <summary>
