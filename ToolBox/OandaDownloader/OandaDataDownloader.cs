@@ -316,7 +316,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// <summary>
         /// Downloads a block of 5-second bars from a starting datetime
         /// </summary>
-        /// <param name="symbol"></param>
+        /// <param name="oandaSymbol"></param>
         /// <param name="start"></param>
         /// <param name="barsPerRequest"></param>
         /// <returns></returns>

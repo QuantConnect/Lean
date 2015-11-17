@@ -14,8 +14,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 
@@ -31,8 +34,8 @@ namespace QuantConnect.ToolBox.OandaDownloader
             if (args.Length != 4)
             {
                 Console.WriteLine("Usage: OandaDownloader SYMBOL RESOLUTION FROMDATE TODATE");
-                Console.WriteLine("SYMBOL = eg EURUSD");
-                Console.WriteLine("RESOLUTION = Second/Minute/Hour/Daily");
+                Console.WriteLine("SYMBOLS = eg EURUSD,USDJPY");
+                Console.WriteLine("RESOLUTION = Second/Minute/Hour/Daily/All");
                 Console.WriteLine("FROMDATE = yyyymmdd");
                 Console.WriteLine("TODATE = yyyymmdd");
                 Environment.Exit(1);
@@ -41,8 +44,9 @@ namespace QuantConnect.ToolBox.OandaDownloader
             try
             {
                 // Load settings from command line
-                var symbol = args[0];
-                var resolution = (Resolution)Enum.Parse(typeof(Resolution), args[1]);
+                var symbols = args[0].Split(',');
+                var allResolutions = args[1].ToLower() == "all";
+                var resolution = allResolutions ? Resolution.Second : (Resolution)Enum.Parse(typeof(Resolution), args[1]);
                 var startDate = DateTime.ParseExact(args[2], "yyyyMMdd", CultureInfo.InvariantCulture);
                 var endDate = DateTime.ParseExact(args[3], "yyyyMMdd", CultureInfo.InvariantCulture);
 
@@ -52,32 +56,84 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 var accountId = Convert.ToInt32(Config.Get("account-id", "621396"));
 
                 // Download the data
+                const string market = "oanda";
                 var downloader = new OandaDataDownloader(accessToken, accountId);
 
-                if (!downloader.HasSymbol(symbol))
-                    throw new ArgumentException("The symbol " + symbol + " is not available.");
+                foreach (var symbol in symbols)
+                {
+                    if (!downloader.HasSymbol(symbol))
+                        throw new ArgumentException("The symbol " + symbol + " is not available.");
+                }
 
-                var securityType = downloader.GetSecurityType(symbol);
-                var data = downloader.Get(ConvertSymbol(symbol, securityType), securityType, resolution, startDate, endDate);
+                foreach (var symbol in symbols)
+                {
+                    var securityType = downloader.GetSecurityType(symbol);
+                    var symbolObject = ConvertSymbol(symbol, securityType);
+                    var data = downloader.Get(symbolObject, securityType, resolution, startDate, endDate);
 
-                // Save the data
-                var writer = new LeanDataWriter(securityType, resolution, symbol, dataDirectory, "oanda");
-                writer.Write(data);
+                    if (allResolutions)
+                    {
+                        var bars = data.Cast<TradeBar>().ToList();
+
+                        // Save the data (second resolution)
+                        var writer = new LeanDataWriter(securityType, resolution, symbolObject, dataDirectory, market);
+                        writer.Write(bars);
+
+                        // Save the data (other resolutions)
+                        foreach (var res in new[] { Resolution.Minute, Resolution.Hour, Resolution.Daily })
+                        {
+                            var resData = AggregateBars(symbolObject, bars, res.ToTimeSpan());
+
+                            writer = new LeanDataWriter(securityType, res, symbolObject, dataDirectory, market);
+                            writer.Write(resData);
+                        }
+                    }
+                    else
+                    {
+                        // Save the data (single resolution)
+                        var writer = new LeanDataWriter(securityType, resolution, symbolObject, dataDirectory, market);
+                        writer.Write(data);
+                    }
+                }
             }
             catch (Exception err)
             {
                 Log.Error("OandaDownloader(): Error: " + err.Message);
             }
         }
-        
-        static Symbol ConvertSymbol(string instrument, SecurityType securityType)
+
+        /// <summary>
+        /// Aggregates a list of 5-second bars at the requested resolution
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <param name="bars"></param>
+        /// <param name="resolution"></param>
+        /// <returns></returns>
+        private static IEnumerable<TradeBar> AggregateBars(Symbol symbol, IEnumerable<TradeBar> bars, TimeSpan resolution)
+        {
+            return
+                (from b in bars
+                 group b by b.Time.RoundDown(resolution)
+                     into g
+                     select new TradeBar
+                     {
+                         Symbol = symbol,
+                         Time = g.Key,
+                         Open = g.First().Open,
+                         High = g.Max(b => b.High),
+                         Low = g.Min(b => b.Low),
+                         Close = g.Last().Close
+                     });
+        }
+
+        private static Symbol ConvertSymbol(string instrument, SecurityType securityType)
         {
             if (securityType == SecurityType.Forex)
             {
                 return new Symbol(SecurityIdentifier.GenerateForex(instrument, Market.Oanda), instrument);
             }
 
-            throw new NotImplementedException("The specified security type is not yet implemented: " + securityType);
+            throw new NotImplementedException("The specfied security type has not been implemented yet: " + securityType);
         }
     }
 }
