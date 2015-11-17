@@ -214,9 +214,10 @@ namespace QuantConnect
         /// Compress a given file and delete the original file. Automatically rename the file to name.zip.
         /// </summary>
         /// <param name="textPath">Path of the original file</param>
+        /// <param name="zipEntryName">The name of the entry inside the zip file</param>
         /// <param name="deleteOriginal">Boolean flag to delete the original file after completion</param>
         /// <returns>String path for the new zip file</returns>
-        public static string Zip(string textPath, bool deleteOriginal = true)
+        public static string Zip(string textPath, string zipEntryName, bool deleteOriginal = true)
         {
             var zipPath = "";
 
@@ -229,7 +230,7 @@ namespace QuantConnect
                 using (var stream = new ZipOutputStream(File.Create(zipPath)))
                 {
                     //Zip the text file.
-                    var entry = new ZipEntry(Path.GetFileName(textPath));
+                    var entry = new ZipEntry(zipEntryName);
                     stream.PutNextEntry(entry);
 
                     using (var fs = File.OpenRead(textPath))
@@ -254,7 +255,18 @@ namespace QuantConnect
                 Log.Error("QC.Data.Zip(): " + err.Message);
             }
             return zipPath;
-        } // End Zip:
+        }
+
+        /// <summary>
+        /// Compress a given file and delete the original file. Automatically rename the file to name.zip.
+        /// </summary>
+        /// <param name="textPath">Path of the original file</param>
+        /// <param name="deleteOriginal">Boolean flag to delete the original file after completion</param>
+        /// <returns>String path for the new zip file</returns>
+        public static string Zip(string textPath, bool deleteOriginal = true)
+        {
+            return Zip(textPath, Path.GetFileName(textPath), deleteOriginal);
+        }
 
         public static void Zip(string data, string zipPath, string zipEntry)
         {
