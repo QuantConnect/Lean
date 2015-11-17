@@ -42,7 +42,6 @@ namespace QuantConnect.Brokerages.Fxcm
         private const int ResponseTimeout = 2500;
         private bool _isOrderUpdateOrCancelRejected;
         private bool _isOrderSubmitRejected;
-        private volatile bool _connectionLost;
 
         private readonly Dictionary<Symbol, string> _mapInstrumentSymbols = new Dictionary<Symbol, string>();
         private readonly Dictionary<string, TradingSecurity> _fxcmInstruments = new Dictionary<string, TradingSecurity>();
@@ -263,15 +262,18 @@ namespace QuantConnect.Brokerages.Fxcm
                 _mapRequestsToAutoResetEvents[_currentRequest].Set();
                 _mapRequestsToAutoResetEvents.Remove(_currentRequest);
 
-                // unsubscribe all instruments
-                var request = new MarketDataRequest();
-                foreach (var fxcmSymbol in _fxcmInstruments.Keys)
+                // unsubscribe all instruments (only at first logon)
+                if (_subscribedSymbols.Count == 0)
                 {
-                    request.addRelatedSymbol(_fxcmInstruments[fxcmSymbol]);
+                    var request = new MarketDataRequest();
+                    foreach (var fxcmSymbol in _fxcmInstruments.Keys)
+                    {
+                        request.addRelatedSymbol(_fxcmInstruments[fxcmSymbol]);
+                    }
+                    request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.UNSUBSCRIBE);
+                    request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
+                    _gateway.sendMessage(request);
                 }
-                request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.UNSUBSCRIBE);
-                request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
-                _gateway.sendMessage(request);
             }
         }
 
@@ -385,9 +387,12 @@ namespace QuantConnect.Brokerages.Fxcm
                 {
                     if (orderId == "NONE" && orderStatus.getCode() == IFixValueDefs.__Fields.FXCMORDSTATUS_REJECTED)
                     {
-                        var messageText = message.getFXCMErrorDetails().Replace("\n", "");
-                        Log.Trace(messageText);
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderSubmitReject", messageText));
+                        if (message.getSide() != SideFactory.UNDISCLOSED)
+                        {
+                            var messageText = message.getFXCMErrorDetails().Replace("\n", "");
+                            Log.Trace("FxcmBrokerage.OnExecutionReport(): " + messageText);
+                            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderSubmitReject", messageText));
+                        }
 
                         _isOrderSubmitRejected = true;
                     }
@@ -448,7 +453,7 @@ namespace QuantConnect.Brokerages.Fxcm
             if (message.getRequestID() == _currentRequest)
             {
                 var messageText = message.getFXCMErrorDetails().Replace("\n", "");
-                Log.Trace(messageText);
+                Log.Trace("FxcmBrokerage.OnOrderCancelReject(): " + messageText);
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderUpdateOrCancelReject", messageText));
 
                 _isOrderUpdateOrCancelRejected = true;
@@ -468,19 +473,19 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <param name="message">Status message received</param>
         public void messageArrived(ISessionStatus message)
         {
-            if (message.getStatusCode() == ISessionStatus.__Fields.STATUSCODE_ERROR && !_connectionLost)
+            switch (message.getStatusCode())
             {
-                OnMessage(BrokerageMessageEvent.Disconnected("Connection with FXCM server lost. " +
-                    "This could be because of internet connectivity issues. " +
-                    "Error message: " + message.getStatusMessage()));
+                case ISessionStatus.__Fields.STATUSCODE_READY:
+                    lock (_lockerConnectionMonitor)
+                    {
+                        _lastReadyMessageTime = DateTime.UtcNow;
+                    }
+                    _connectionError = false;
+                    break;
 
-                _connectionLost = true;
-            }
-            else if (message.getStatusCode() == ISessionStatus.__Fields.STATUSCODE_READY && _connectionLost)
-            {
-                OnMessage(BrokerageMessageEvent.Reconnected("Connection with FXCM server restored."));
-
-                _connectionLost = false;
+                case ISessionStatus.__Fields.STATUSCODE_ERROR:
+                    _connectionError = true;
+                    break;
             }
         }
 
