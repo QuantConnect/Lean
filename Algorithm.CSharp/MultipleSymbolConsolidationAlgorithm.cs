@@ -128,7 +128,7 @@ namespace QuantConnect.Algorithm.Examples
             foreach (var symbolData in Data.Values)
             {
                 // this check proves that this symbol was JUST updated prior to this OnData function being called
-                if (symbolData.IsReady && symbolData.WasJustUpdated(data.Time))
+                if (symbolData.IsReady && symbolData.WasJustUpdated(Time))
                 {
                     if (!Portfolio[symbolData.Symbol].Invested)
                     {

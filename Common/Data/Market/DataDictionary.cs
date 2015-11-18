@@ -37,10 +37,11 @@ namespace QuantConnect.Data.Market
         /// Initializes a new instance of the <see cref="QuantConnect.Data.Market.DataDictionary{T}"/> class.
         /// </summary>
         /// <param name="time">The time this data was emitted.</param>
-        [Obsolete("The DataDictionary<T> Time property is now obsolete. All algorithms should use algorithm.Time instead.")]
         public DataDictionary(DateTime time)
         {
+#pragma warning disable 618 - This assignment is left here until the Time property is removed.
             Time = time;
+#pragma warning restore 618
         }
 
         /// <summary>

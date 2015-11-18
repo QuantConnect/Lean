@@ -112,15 +112,6 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Value of the order at limit price if a limit order, or market price if a market order.
-        /// </summary>
-        [Obsolete("Value property has been made obsolete. Use GetValue(currentMarketPrice) instead.")]
-        public abstract decimal Value 
-        { 
-            get; 
-        }
-
-        /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
         protected Order()

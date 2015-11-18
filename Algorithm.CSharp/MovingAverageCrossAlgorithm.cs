@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.Examples
             if (!slow.IsReady) return;
 
             // only once per day
-            if (previous.Date == data.Time.Date) return;
+            if (previous.Date == Time.Date) return;
 
             // define a small tolerance on our checks to avoid bouncing
             const decimal tolerance = 0.00015m;
@@ -103,7 +103,7 @@ namespace QuantConnect.Algorithm.Examples
             Plot(Symbol, fast, slow);
             Plot("Ribbon", ribbon);
 
-            previous = data.Time;
+            previous = Time;
         }
     }
 }

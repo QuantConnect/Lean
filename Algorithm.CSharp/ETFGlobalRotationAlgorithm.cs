@@ -90,14 +90,14 @@ namespace QuantConnect.Algorithm.Examples
                 if (first)
                 {
                     first = false;
-                    LastRotationTime = data.Time;
+                    LastRotationTime = Time;
                     return;
                 }
 
-                var delta = data.Time.Subtract(LastRotationTime);
+                var delta = Time.Subtract(LastRotationTime);
                 if (delta > RotationInterval)
                 {
-                    LastRotationTime = data.Time;
+                    LastRotationTime = Time;
 
                     // pick which one is best from growth and safety symbols
                     var orderedObjScores = SymbolData.OrderByDescending(x => x.ObjectiveScore).ToList();
@@ -116,7 +116,7 @@ namespace QuantConnect.Algorithm.Examples
                         }
                         Log(">>BUY>>" + bestGrowth.Symbol + "@" + (100 * bestGrowth.OneMonthPerformance).ToString("00.00"));
                         decimal qty = Portfolio.Cash / Securities[bestGrowth.Symbol].Close;
-                        Order(bestGrowth.Symbol, qty, OrderType.Market);
+                        MarketOrder(bestGrowth.Symbol, (int) qty);
                     }
                     else
                     {
