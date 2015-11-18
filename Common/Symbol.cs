@@ -195,13 +195,13 @@ namespace QuantConnect
         #region Implicit operators
 
         /// <summary>
-        /// Returns the symbol's SID
+        /// Returns the symbol's string ticker
         /// </summary>
         /// <param name="symbol">The symbol</param>
-        /// <returns>The SID</returns>
+        /// <returns>The string ticker</returns>
         public static implicit operator string(Symbol symbol)
         {
-            return symbol.Value;
+            return SymbolCache.GetTicker(symbol);
         }
 
         /// <summary>

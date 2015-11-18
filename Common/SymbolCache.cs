@@ -22,11 +22,12 @@ namespace QuantConnect
     /// <summary>
     /// Provides a string->Symbol mapping to allow for user defined strings to be lifted into a Symbol
     /// This is mainly used via the Symbol implicit operator, but also functions that create securities
-    /// should also call Add to add the new mappings
+    /// should also call Set to add new mappings
     /// </summary>
     public static class SymbolCache
     {
         private static readonly ConcurrentDictionary<string, Symbol> Symbols = new ConcurrentDictionary<string, Symbol>();
+        private static readonly ConcurrentDictionary<Symbol, string> Tickers = new ConcurrentDictionary<Symbol, string>();
 
         /// <summary>
         /// Adds a mapping for the specified ticker
@@ -36,6 +37,7 @@ namespace QuantConnect
         public static void Set(string ticker, Symbol symbol)
         {
             Symbols[ticker] = symbol;
+            Tickers[symbol] = ticker;
         }
 
         /// <summary>
@@ -48,6 +50,18 @@ namespace QuantConnect
             Symbol symbol;
             if (Symbols.TryGetValue(ticker, out symbol)) return symbol;
             throw new Exception("Unable to resolve sid from ticker: " + ticker);
+        }
+
+        /// <summary>
+        /// Gets the string ticker symbol that is mapped to the specified Symbol
+        /// </summary>
+        /// <param name="symbol">The symbol object</param>
+        /// <returns>The string ticker symbol that maps to the specified symbol object</returns>
+        public static string GetTicker(Symbol symbol)
+        {
+            string ticker;
+            if (Tickers.TryGetValue(symbol, out ticker)) return ticker;
+            throw new Exception("Unable to resolve ticker from sid: " + symbol);
         }
     }
 }
