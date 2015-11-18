@@ -78,6 +78,9 @@ namespace QuantConnect
         /// <param name="obj">The object to compare with the current object. </param><filterpriority>2</filterpriority>
         public override bool Equals(object obj)
         {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+
             // compare strings just as you would a symbol object
             var sidString = obj as string;
             if (sidString != null)
@@ -95,8 +98,6 @@ namespace QuantConnect
                 return ID.Equals((SecurityIdentifier) obj);
             }
 
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
             return Equals((Symbol)obj);
         }
@@ -176,7 +177,8 @@ namespace QuantConnect
         /// <returns>True if both symbols are equal, otherwise false</returns>
         public static bool operator ==(Symbol left, Symbol right)
         {
-            return Equals(left, right);
+            if (ReferenceEquals(left, null)) return ReferenceEquals(right, null);
+            return left.Equals(right);
         }
 
         /// <summary>
@@ -187,7 +189,8 @@ namespace QuantConnect
         /// <returns>True if both symbols are not equal, otherwise false</returns>
         public static bool operator !=(Symbol left, Symbol right)
         {
-            return !Equals(left, right);
+            if (ReferenceEquals(left, null)) return ReferenceEquals(right, null);
+            return !left.Equals(right);
         }
 
         #endregion
