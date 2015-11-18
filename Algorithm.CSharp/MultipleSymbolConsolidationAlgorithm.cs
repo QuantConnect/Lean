@@ -213,22 +213,6 @@ namespace QuantConnect.Algorithm.Examples
             {
                 return Bars.Count > 0 && Bars[0].Time == current - BarPeriod;
             }
-
-            /// <summary>
-            /// Updates indicators and other class state
-            /// </summary>
-            /// <param name="data">The data used to updated</param>
-            public void Update(TradeBar data)
-            {
-                // verify the input data matches our symbol - sanity check
-                if (!string.Equals(data.Symbol, Symbol, StringComparison.CurrentCultureIgnoreCase))
-                {
-                    throw new ArgumentException("Expected trade bar data for " + Symbol + " but received " + data.Symbol);
-                }
-
-                Bars.Add(data);
-                SMA.Update(data.Time, data.Close);
-            }
         }
     }
 }

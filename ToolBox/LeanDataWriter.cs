@@ -334,7 +334,7 @@ namespace QuantConnect.ToolBox
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
                     // Base directory includes the market
-                    file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), _symbol.ToString().ToLower(), Compression.CreateZipFileName(_symbol, _securityType, time, _resolution));
+                    file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), _symbol.ToString().ToLower(), Compression.CreateZipFileName(_symbol.Value, _securityType, time, _resolution));
 
                     if (_resolution == Resolution.Daily || _resolution == Resolution.Hour)
                     {
@@ -342,7 +342,7 @@ namespace QuantConnect.ToolBox
                     }
                     else
                     {
-                        file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), _symbol.ToString().ToLower(), Compression.CreateZipFileName(_symbol, _securityType, time, _resolution));
+                        file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), _symbol.ToString().ToLower(), Compression.CreateZipFileName(_symbol.Value, _securityType, time, _resolution));
                     }
                     break;
 

@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2002, 01, 01);    //Set End Date
             SetCash(10000000);             //Set Strategy Cash
 
-            var averages = new ConcurrentDictionary<string, SelectionData>();
+            var averages = new ConcurrentDictionary<Symbol, SelectionData>();
             SetUniverse(coarse =>
             {
                 return (from cf in coarse
