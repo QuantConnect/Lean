@@ -53,7 +53,8 @@ namespace QuantConnect
     public class Holding
     {
         /// Symbol of the Holding:
-        public string Symbol = "";
+        [JsonConverter(typeof(SymbolValueJsonConverter))]
+        public Symbol Symbol = Symbol.Empty;
 
         /// Type of the security
         public SecurityType Type;
@@ -87,7 +88,7 @@ namespace QuantConnect
         public Holding(SecurityHolding holding)
              : this()
         {
-            Symbol = holding.Symbol.Value;
+            Symbol = holding.Symbol;
             Type = holding.Type;
             Quantity = holding.Quantity;
 

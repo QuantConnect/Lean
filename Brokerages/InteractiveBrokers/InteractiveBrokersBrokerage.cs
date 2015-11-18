@@ -297,7 +297,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return null;
                 }
                 // if quote currency is in USD don't bother making the request
-                string currency = local.Symbol.Substring(3);
+                string currency = local.Symbol.Value.Substring(3);
                 if (currency == "USD")
                 {
                     local.ConversionRate = 1m;
@@ -881,8 +881,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             _accountHoldingsResetEvent.Reset();
             var holding = CreateHolding(e);
-            _accountHoldings[holding.Symbol] = holding;
-            OnPortfolioChanged(new SecurityEvent(holding.Symbol, e.Position, e.AverageCost));
+            _accountHoldings[holding.Symbol.Value] = holding;
+            OnPortfolioChanged(new SecurityEvent(holding.Symbol.Value, e.Position, e.AverageCost));
         }
 
         /// <summary>

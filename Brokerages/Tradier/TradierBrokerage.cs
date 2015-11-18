@@ -884,12 +884,12 @@ namespace QuantConnect.Brokerages.Tradier
         public override List<Holding> GetAccountHoldings()
         {
             var holdings = GetPositions().Select(ConvertHolding).Where(x => x.Quantity != 0).ToList();
-            var symbols = holdings.Select(x => x.Symbol).ToList();
+            var symbols = holdings.Select(x => x.Symbol.Value).ToList();
             var quotes = GetQuotes(symbols).ToDictionary(x => x.Symbol);
             foreach (var holding in holdings)
             {
                 TradierQuote quote;
-                if (quotes.TryGetValue(holding.Symbol, out quote))
+                if (quotes.TryGetValue(holding.Symbol.Value, out quote))
                 {
                     holding.MarketPrice = quote.Last;
                 }

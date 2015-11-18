@@ -299,7 +299,7 @@ namespace QuantConnect.Lean.Engine.Setup
                         // verify existing holding security type
                         if (!supportedSecurityTypes.Contains(holding.Type))
                         {
-                            Log.Error("BrokerageSetupHandler.Setup(): Unsupported security type: " + holding.Type + "-" + holding.Symbol.ToUpper());
+                            Log.Error("BrokerageSetupHandler.Setup(): Unsupported security type: " + holding.Type + "-" + holding.Symbol.Value);
                             AddInitializationError("Found unsupported security type in existing brokerage holdings: " + holding.Type + ". " +
                                 "QuantConnect currently supports the following security types: " + string.Join(",", supportedSecurityTypes));
 
@@ -307,15 +307,14 @@ namespace QuantConnect.Lean.Engine.Setup
                             continue;
                         }
 
-                        var symbol = ConvertHoldingToSymbol(holding);
-                        if (!algorithm.Portfolio.ContainsKey(symbol))
+                        if (!algorithm.Portfolio.ContainsKey(holding.Symbol))
                         {
                             Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol);
                             // for items not directly requested set leverage to 1 and at the min resolution
-                            algorithm.AddSecurity(holding.Type, symbol.Value, minResolution.Value, null, true, 1.0m, false);
+                            algorithm.AddSecurity(holding.Type, holding.Symbol.Value, minResolution.Value, null, true, 1.0m, false);
                         }
-                        algorithm.Portfolio[symbol].SetHoldings(holding.AveragePrice, (int) holding.Quantity);
-                        algorithm.Securities[symbol].SetMarketPrice(new TradeBar
+                        algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int) holding.Quantity);
+                        algorithm.Securities[holding.Symbol].SetMarketPrice(new TradeBar
                         {
                             Time = DateTime.Now,
                             Open = holding.MarketPrice,
@@ -323,7 +322,7 @@ namespace QuantConnect.Lean.Engine.Setup
                             Low = holding.MarketPrice,
                             Close = holding.MarketPrice,
                             Volume = 0,
-                            Symbol = symbol,
+                            Symbol = holding.Symbol,
                             DataType = MarketDataType.TradeBar
                         });
                     }
@@ -378,20 +377,6 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 _factory.Dispose();
             }
-        }
-
-        private Symbol ConvertHoldingToSymbol(Holding holding)
-        {
-            if (holding.Type == SecurityType.Forex)
-            {
-                return new Symbol(SecurityIdentifier.GenerateForex(holding.Symbol, Market.FXCM), holding.Symbol);
-            }
-            if (holding.Type == SecurityType.Equity)
-            {
-                return new Symbol(SecurityIdentifier.GenerateEquity(holding.Symbol, Market.USA), holding.Symbol);
-            }
-
-            return Symbol.Empty;
         }
     }
 }
