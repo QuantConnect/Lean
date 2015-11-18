@@ -53,6 +53,17 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets the Symbol object that is mapped to the specified string ticker symbol
+        /// </summary>
+        /// <param name="ticker">The string ticker symbol</param>
+        /// <param name="symbol">The output symbol object</param>
+        /// <returns>The symbol object that maps to the specified string ticker symbol</returns>
+        public static bool TryGetSymbol(string ticker, out Symbol symbol)
+        {
+            return Symbols.TryGetValue(ticker, out symbol);
+        }
+
+        /// <summary>
         /// Gets the string ticker symbol that is mapped to the specified Symbol
         /// </summary>
         /// <param name="symbol">The symbol object</param>
@@ -62,6 +73,17 @@ namespace QuantConnect
             string ticker;
             if (Tickers.TryGetValue(symbol, out ticker)) return ticker;
             throw new Exception("Unable to resolve ticker from sid: " + symbol);
+        }
+
+        /// <summary>
+        /// Gets the string ticker symbol that is mapped to the specified Symbol
+        /// </summary>
+        /// <param name="symbol">The symbol object</param>
+        /// <param name="ticker">The output string ticker symbol</param>
+        /// <returns>The string ticker symbol that maps to the specified symbol object</returns>
+        public static bool TryGetTicker(Symbol symbol, out string ticker)
+        {
+            return Tickers.TryGetValue(symbol, out ticker);
         }
     }
 }
