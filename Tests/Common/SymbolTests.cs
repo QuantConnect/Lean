@@ -195,6 +195,27 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual("A", oldSymbol.Permtick);
         }
 
+        [Test]
+        public void ImplicitOperatorsAreInverseFunctions()
+        {
+            var eurusd = new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD");
+            string stringEurusd = eurusd;
+            Symbol symbolEurusd = stringEurusd;
+            Assert.AreEqual(eurusd, symbolEurusd);
+        }
+
+        [Test]
+        public void ImplicitOperatorsReturnEmptyOnFailure()
+        {
+            // this doesn't exist in the symbol cace
+            var eurusd = new Symbol(SecurityIdentifier.GenerateForex("NOT A SECURITY", Market.FXCM), "EURUSD");
+            string stringEurusd = eurusd;
+            Assert.AreEqual(string.Empty, stringEurusd);
+
+            Symbol notASymbol = "this will not resolve to a proper Symbol instance";
+            Assert.AreEqual(Symbol.Empty, notASymbol);
+        }
+
         class OldSymbol
         {
             public string Value { get; set; }

@@ -204,7 +204,8 @@ namespace QuantConnect
         /// <returns>The string ticker</returns>
         public static implicit operator string(Symbol symbol)
         {
-            return SymbolCache.GetTicker(symbol);
+            string ticker;
+            return SymbolCache.TryGetTicker(symbol, out ticker) ? ticker : string.Empty;
         }
 
         /// <summary>
@@ -214,7 +215,8 @@ namespace QuantConnect
         /// <returns>The symbol</returns>
         public static implicit operator Symbol(string ticker)
         {
-            return SymbolCache.GetSymbol(ticker);
+            Symbol symbol;
+            return SymbolCache.TryGetSymbol(ticker, out symbol) ? symbol : Empty;
         }
 
         #endregion
