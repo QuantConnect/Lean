@@ -22,14 +22,9 @@ using QuantConnect.Securities;
 namespace QuantConnect
 {
     /// <summary>
-    /// Defines a <see cref="JsonConverter"/> to be used when deserializing to the <see cref="Symbol"/>
-    /// class.
+    /// Defines a <see cref="JsonConverter"/> to be used when deserializing to 
+    /// the <see cref="Symbol"/> class.
     /// </summary>
-    /// <remarks>
-    /// This was required due to an apparently shortcoming found in the json deserialization of a list of ticks
-    /// as a list of base data, when there were several symbols present, it looked like the symbol of the last
-    /// tick in the list would be applied to all ticks in the list.
-    /// </remarks>
     public class SymbolJsonConverter : JsonConverter
     {
         /// <summary>
