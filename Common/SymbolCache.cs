@@ -45,7 +45,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="ticker">The string ticker symbol</param>
         /// <returns>The symbol object that maps to the specified string ticker symbol</returns>
-        public static Symbol Get(string ticker)
+        public static Symbol GetSymbol(string ticker)
         {
             Symbol symbol;
             if (Symbols.TryGetValue(ticker, out symbol)) return symbol;

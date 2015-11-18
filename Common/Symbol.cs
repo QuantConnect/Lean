@@ -214,7 +214,7 @@ namespace QuantConnect
         /// <returns>The symbol</returns>
         public static implicit operator Symbol(string ticker)
         {
-            return SymbolCache.Get(ticker);
+            return SymbolCache.GetSymbol(ticker);
         }
 
         #endregion

@@ -1352,7 +1352,7 @@ namespace QuantConnect.Algorithm
         /// <returns>The symbol object mapped to the specified ticker</returns>
         public Symbol Symbol(string ticker)
         {
-            return SymbolCache.Get(ticker);
+            return SymbolCache.GetSymbol(ticker);
         }
 
         /// <summary>

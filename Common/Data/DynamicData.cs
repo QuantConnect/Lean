@@ -60,7 +60,7 @@ namespace QuantConnect.Data
             {
                 if (value is string)
                 {
-                    Symbol = SymbolCache.Get((string) value);
+                    Symbol = SymbolCache.GetSymbol((string) value);
                 }
                 else
                 {

@@ -17,7 +17,7 @@ namespace QuantConnect.Tests.Common
             var ticker = "ticker";
             var expected = new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), ticker);
             SymbolCache.Set(ticker, expected);
-            var actual = SymbolCache.Get(ticker);
+            var actual = SymbolCache.GetSymbol(ticker);
             Assert.AreEqual(expected, actual);
         }
 
