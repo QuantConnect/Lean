@@ -219,12 +219,17 @@ namespace QuantConnect
         #region String methods
 
         // in order to maintain better compile time backwards compatibility,
-        // we'll redirect a few common string methods to Permtick
+        // we'll redirect a few common string methods to Value, but mark obsolete
 #pragma warning disable 1591
+        [Obsolete("Symbol.Contains is a pass-through for Symbol.Value.Contains")]
         public bool Contains(string value) { return Value.Contains(value); }
+        [Obsolete("Symbol.EndsWith is a pass-through for Symbol.Value.EndsWith")]
         public bool EndsWith(string value) { return Value.EndsWith(value); }
+        [Obsolete("Symbol.StartsWith is a pass-through for Symbol.Value.StartsWith")]
         public bool StartsWith(string value) { return Value.StartsWith(value); }
+        [Obsolete("Symbol.ToLower is a pass-through for Symbol.Value.ToLower")]
         public string ToLower() { return Value.ToLower(); }
+        [Obsolete("Symbol.ToUpper is a pass-through for Symbol.Value.ToUpper")]
         public string ToUpper() { return Value.ToUpper(); }
 #pragma warning restore 1591
 
