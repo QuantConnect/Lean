@@ -216,6 +216,24 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(Symbol.Empty, notASymbol);
         }
 
+        [Test]
+        public void ImplicitFromStringChecksSymbolCache()
+        {
+            string ticker = "EURUSD";
+            Symbol actual = ticker;
+            var expected = SymbolCache.GetSymbol(ticker);
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void ImplicitFromStringParsesSid()
+        {
+            var expected = SymbolCache.GetSymbol("EURUSD");
+            string sid = expected.ID.ToString();
+            Symbol actual = sid;
+            Assert.AreEqual(expected, actual);
+        }
+
         class OldSymbol
         {
             public string Value { get; set; }

@@ -205,7 +205,7 @@ namespace QuantConnect
         public static implicit operator string(Symbol symbol)
         {
             string ticker;
-            return SymbolCache.TryGetTicker(symbol, out ticker) ? ticker : string.Empty;
+            return SymbolCache.TryGetTicker(symbol, out ticker) ? ticker : symbol.ID.ToString();
         }
 
         /// <summary>
@@ -216,7 +216,18 @@ namespace QuantConnect
         public static implicit operator Symbol(string ticker)
         {
             Symbol symbol;
-            return SymbolCache.TryGetSymbol(ticker, out symbol) ? symbol : Empty;
+            if (SymbolCache.TryGetSymbol(ticker, out symbol))
+            {
+                return symbol;
+            }
+
+            SecurityIdentifier sid;
+            if (SecurityIdentifier.TryParse(ticker, out sid))
+            {
+                return new Symbol(sid, sid.Symbol);
+            }
+            
+            return Empty;
         }
 
         #endregion
