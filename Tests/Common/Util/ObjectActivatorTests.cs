@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Common.Util
         public void IsFasterThanRawReflection()
         {
             int count = 100000;
-            var data = new TradeBar(DateTime.Now, "SPY", 1m, 2m, 3m, 4m, 5);
+            var data = new TradeBar(DateTime.Now, Symbols.SPY, 1m, 2m, 3m, 4m, 5);
             var stopwatch = Stopwatch.StartNew();
             for (int i = 0; i < count; i++)
             {
@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void ClonesBaseDataDerivedTypes()
         {
-            BaseData data = new IndicatorDataPoint("SPY", DateTime.Now, 1m);
+            BaseData data = new IndicatorDataPoint(Symbols.SPY, DateTime.Now, 1m);
             BaseData clone = ObjectActivator.Clone(data) as BaseData;
             Assert.IsNotNull(clone);
             Assert.IsInstanceOf(data.GetType(), clone);
@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(data.Time, clone.Time);
             Assert.AreEqual(data.Value, clone.Value);
 
-            data = new TradeBar(DateTime.Now, "SPY", 1m, 2m, 3m, 4m, 5);
+            data = new TradeBar(DateTime.Now, Symbols.SPY, 1m, 2m, 3m, 4m, 5);
             var bar = ObjectActivator.Clone(data) as TradeBar;
             Assert.IsNotNull(clone);
             Assert.IsInstanceOf(data.GetType(), bar);

@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Common.Securities
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
             var exchangeHours = GetSecurityExchangeHoursProvider(file);
 
-            var hours = exchangeHours.GetExchangeHours("usa", "SPY", SecurityType.Equity);
+            var hours = exchangeHours.GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
             Assert.IsNotNull(hours);
 
             Assert.AreEqual(hours, exchangeHours.GetExchangeHours("usa", null, SecurityType.Equity));
@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Common.Securities
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
             var exchangeHours = GetSecurityExchangeHoursProvider(file);
 
-            var hours = exchangeHours.GetExchangeHours("usa", null, SecurityType.Equity);
+            var hours = exchangeHours.GetExchangeHours(Market.USA, null, SecurityType.Equity);
             Assert.IsNotNull(hours);
 
             Assert.AreEqual(LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday), hours.MarketHours[DayOfWeek.Saturday]);

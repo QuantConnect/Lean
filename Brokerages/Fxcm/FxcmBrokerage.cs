@@ -277,7 +277,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
             // Set MarketPrice in each Holding
             var symbols = holdings
-                .Select(x => ConvertSymbolToFxcmSymbol(x.Symbol.Value))
+                .Select(x => ConvertSymbolToFxcmSymbol(x.Symbol))
                 .ToList();
 
             if (symbols.Count > 0)
@@ -286,7 +286,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 foreach (var holding in holdings)
                 {
                     MarketDataSnapshot quote;
-                    if (quotes.TryGetValue(ConvertSymbolToFxcmSymbol(holding.Symbol.Value), out quote))
+                    if (quotes.TryGetValue(ConvertSymbolToFxcmSymbol(holding.Symbol), out quote))
                     {
                         holding.MarketPrice = Convert.ToDecimal((quote.getBidClose() + quote.getAskClose()) / 2);
                     }
@@ -325,7 +325,7 @@ namespace QuantConnect.Brokerages.Fxcm
             if (order.Direction != OrderDirection.Buy && order.Direction != OrderDirection.Sell)
                 throw new ArgumentException("FxcmBrokerage.PlaceOrder(): Invalid Order Direction");
 
-            var symbol = ConvertSymbolToFxcmSymbol(order.Symbol.Value);
+            var symbol = ConvertSymbolToFxcmSymbol(order.Symbol);
             var orderSide = order.Direction == OrderDirection.Buy ? SideFactory.BUY : SideFactory.SELL;
             var quantity = (double)order.AbsoluteQuantity;
 

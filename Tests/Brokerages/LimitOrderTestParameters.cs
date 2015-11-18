@@ -24,8 +24,8 @@ namespace QuantConnect.Tests.Brokerages
         private readonly decimal _highLimit;
         private readonly decimal _lowLimit;
 
-        public LimitOrderTestParameters(string symbol, SecurityType securityType, decimal highLimit, decimal lowLimit)
-            : base(symbol, securityType)
+        public LimitOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit)
+            : base(symbol)
         {
             _highLimit = highLimit;
             _lowLimit = lowLimit;

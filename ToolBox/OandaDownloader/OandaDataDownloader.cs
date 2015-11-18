@@ -36,7 +36,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
         private const string InstrumentsFileName = "instruments_oanda.txt";
         private const int BarsPerRequest = 5000;
 
-        private static Dictionary<Symbol, LeanInstrument> _instruments;
+        private static Dictionary<string, LeanInstrument> _instruments;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaDataDownloader"/> class
@@ -58,7 +58,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
             if (!File.Exists(InstrumentsFileName))
                 throw new FileNotFoundException(InstrumentsFileName + " file not found.");
 
-            _instruments = new Dictionary<Symbol, LeanInstrument>();
+            _instruments = new Dictionary<string, LeanInstrument>();
 
             var lines = File.ReadAllLines(InstrumentsFileName);
             foreach (var line in lines)
@@ -68,10 +68,10 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 {
                     var oandaSymbol = tokens[0];
                     var securityType = (SecurityType)Enum.Parse(typeof(SecurityType), tokens[2]);
-                    Symbol symbol = ConvertOandaSymbolToLeanSymbol(oandaSymbol, securityType);
+                    var symbol = ConvertOandaSymbolToLeanSymbol(oandaSymbol);
                     _instruments.Add(symbol, new LeanInstrument
                     {
-                        Symbol = symbol.Value,
+                        Symbol = symbol,
                         Name = tokens[1],
                         Type = securityType
                     });
@@ -83,26 +83,10 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// Converts an Oanda symbol to a Lean Symbol instance
         /// </summary>
         /// <param name="oandaSymbol">The Oanda symbol</param>
-        /// <param name="securityType">The security type of the symbol</param>
         /// <returns>A Lean symbol</returns>
-        private static Symbol ConvertOandaSymbolToLeanSymbol(string oandaSymbol, SecurityType securityType)
+        private static string ConvertOandaSymbolToLeanSymbol(string oandaSymbol)
         {
-            var symbol = oandaSymbol.Replace("_", "");
-            SecurityIdentifier sid;
-            if (securityType == SecurityType.Forex)
-            {
-                sid = SecurityIdentifier.GenerateForex(symbol, Market.Oanda);
-            }
-            else if (securityType == SecurityType.Cfd)
-            {
-                sid = SecurityIdentifier.GenerateCfd(symbol, oandaSymbol);
-            }
-            else
-            {
-                throw new NotImplementedException("The specified security type has not been implemented yet: " + securityType);
-            }
-
-            return new Symbol(sid, symbol);
+            return oandaSymbol.Replace("_", "");
         }
 
         /// <summary>
@@ -112,6 +96,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// <returns>An Oanda symbol</returns>
         private static string ConvertLeanSymbolToOandaSymbol(Symbol symbol)
         {
+            // this will only work for forex symbols
             return symbol.Value.Insert(symbol.Value.Length - 3, "_");
         }
 
@@ -120,7 +105,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// </summary>
         /// <param name="symbol"></param>
         /// <returns>Returns true if the symbol is available</returns>
-        public bool HasSymbol(Symbol symbol)
+        public bool HasSymbol(string symbol)
         {
             return _instruments.ContainsKey(symbol);
         }
@@ -130,7 +115,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <returns>The security type</returns>
-        public SecurityType GetSecurityType(Symbol symbol)
+        public SecurityType GetSecurityType(string symbol)
         {
             return _instruments[symbol].Type;
         }
@@ -146,8 +131,8 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// <returns>Enumerable of base data for this symbol</returns>
         public IEnumerable<BaseData> Get(Symbol symbol, SecurityType type, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-            if (!_instruments.ContainsKey(symbol))
-                throw new ArgumentException("Invalid symbol requested: " + symbol);
+            if (!_instruments.ContainsKey(symbol.Value))
+                throw new ArgumentException("Invalid symbol requested: " + symbol.ToString());
 
             if (resolution == Resolution.Tick)
                 throw new NotSupportedException("Resolution not available: " + resolution);

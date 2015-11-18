@@ -154,11 +154,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // for some reason we couldn't create the subscription
             if (subscription == null)
             {
-                Log.Trace("Unable to add subscription for: " + security.Symbol);
+                Log.Trace("Unable to add subscription for: " + security.Symbol.ToString());
                 return false;
             }
 
-            Log.Trace("LiveTradingDataFeed.AddSubscription(): Added " + security.Symbol);
+            Log.Trace("LiveTradingDataFeed.AddSubscription(): Added " + security.Symbol.ToString());
 
             _subscriptions[new SymbolSecurityType(subscription)] = subscription;
 
@@ -213,7 +213,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            Log.Trace("LiveTradingDataFeed.RemoveSubscription(): Removed " + security.Symbol);
+            Log.Trace("LiveTradingDataFeed.RemoveSubscription(): Removed " + security.Symbol.ToString());
 
             // keep track of security changes, we emit these to the algorithm
             // as notications, used in universe selection

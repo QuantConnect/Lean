@@ -147,7 +147,7 @@ namespace QuantConnect
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Value;
+            return SymbolCache.GetTicker(this);
         }
 
         #endregion
@@ -202,10 +202,10 @@ namespace QuantConnect
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <returns>The string ticker</returns>
+        [Obsolete("Symbol implicit operator to string is provided for algorithm use only.")]
         public static implicit operator string(Symbol symbol)
         {
-            string ticker;
-            return SymbolCache.TryGetTicker(symbol, out ticker) ? ticker : symbol.ID.ToString();
+            return symbol.ToString();
         }
 
         /// <summary>
@@ -213,6 +213,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="ticker">The string</param>
         /// <returns>The symbol</returns>
+        [Obsolete("Symbol implicit operator from string is provided for algorithm use only.")]
         public static implicit operator Symbol(string ticker)
         {
             Symbol symbol;

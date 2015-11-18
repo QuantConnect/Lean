@@ -60,9 +60,9 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             {
                 return new[]
                 {
-                    new TestCaseData(new MarketOrderTestParameters(Symbol, SecurityType)).SetName("MarketOrder"),
-                    new TestCaseData(new FxcmLimitOrderTestParameters(Symbol, SecurityType, HighPrice, LowPrice)).SetName("LimitOrder"),
-                    new TestCaseData(new FxcmStopMarketOrderTestParameters(Symbol, SecurityType, HighPrice, LowPrice)).SetName("StopMarketOrder"),
+                    new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
+                    new TestCaseData(new FxcmLimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
+                    new TestCaseData(new FxcmStopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder"),
                 };
             }
         }
@@ -70,9 +70,9 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         /// <summary>
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected override string Symbol
+        protected override Symbol Symbol
         {
-            get { return "EURUSD"; }
+            get { return Symbols.EURUSD; }
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         /// <summary>
         /// Gets the current market price of the specified security
         /// </summary>
-        protected override decimal GetAskPrice(string symbol, SecurityType securityType)
+        protected override decimal GetAskPrice(Symbol symbol)
         {
             // not used, we use bid/ask prices
             return 0;

@@ -42,7 +42,7 @@ namespace QuantConnect
             writer.WritePropertyName("Value");
             writer.WriteValue(symbol.Value);
             writer.WritePropertyName("ID");
-            serializer.Serialize(writer, symbol.ID);
+            writer.WriteValue(symbol.ID.ToString());
             writer.WritePropertyName("Permtick");
             writer.WriteValue(symbol.Value);
             writer.WriteEndObject();

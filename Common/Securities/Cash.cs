@@ -150,7 +150,7 @@ namespace QuantConnect.Securities
                     var security = new Forex.Forex(this, config, 1m);
                     SecuritySymbol = config.Symbol;
                     securities.Add(config.Symbol, security);
-                    Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol + " for cash " + Symbol + " currency feed");
+                    Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.ToString() + " for cash " + Symbol + " currency feed");
                     return;
                 }
             }

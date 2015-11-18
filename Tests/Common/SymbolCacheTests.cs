@@ -26,32 +26,29 @@ namespace QuantConnect.Tests.Common
         public void HandlesRoundTripAccessSymbolToTicker()
         {
             var ticker = "ticker";
-            var expected = new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), ticker);
-            SymbolCache.Set(ticker, expected);
+            SymbolCache.Set(ticker, Symbols.EURUSD);
             var actual = SymbolCache.GetSymbol(ticker);
-            Assert.AreEqual(expected, actual);
+            Assert.AreEqual(Symbols.EURUSD, actual);
         }
 
         [Test]
         public void HandlesRoundTripAccessTickerToSymbol()
         {
             var expected = "ticker";
-            var symbol = new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), expected);
-            expected = symbol.Value;
-            SymbolCache.Set(expected, symbol);
-            var actual = SymbolCache.GetTicker(symbol);
+            expected = Symbols.EURUSD.Value;
+            SymbolCache.Set(expected, Symbols.EURUSD);
+            var actual = SymbolCache.GetTicker(Symbols.EURUSD);
             Assert.AreEqual(expected, actual);
         }
 
         [Test]
         public void TryGetSymbol()
         {
-            var expected = new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD");
-            SymbolCache.Set("EURUSD", expected);
+            SymbolCache.Set("EURUSD", Symbols.EURUSD);
 
             Symbol actual;
             Assert.IsTrue(SymbolCache.TryGetSymbol("EURUSD", out actual));
-            Assert.AreEqual(expected, actual);
+            Assert.AreEqual(Symbols.EURUSD, actual);
 
             Assert.IsFalse(SymbolCache.TryGetSymbol("EURUSD1", out actual));
             Assert.AreEqual(default(Symbol), actual);
@@ -60,14 +57,13 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void TryGetTicker()
         {
-            var symbol = new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD");
-            SymbolCache.Set("EURUSD", symbol);
+            SymbolCache.Set("EURUSD", Symbols.EURUSD);
 
             string ticker;
-            Assert.IsTrue(SymbolCache.TryGetTicker("EURUSD", out ticker));
-            Assert.AreEqual(symbol.Value, ticker);
+            Assert.IsTrue(SymbolCache.TryGetTicker(Symbols.EURUSD, out ticker));
+            Assert.AreEqual(Symbols.EURUSD.Value, ticker);
 
-            symbol = new Symbol(SecurityIdentifier.GenerateForex("NOT A FOREX PAIR", Market.FXCM), "EURGBP");
+            var symbol = new Symbol(SecurityIdentifier.GenerateForex("NOT A FOREX PAIR", Market.FXCM), "EURGBP");
             Assert.IsFalse(SymbolCache.TryGetTicker(symbol, out ticker));
             Assert.AreEqual(default(string), ticker);
         }

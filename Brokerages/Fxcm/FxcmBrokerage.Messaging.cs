@@ -128,7 +128,7 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             return GetQuotes(fxcmSymbols).Select(x => new Tick
             {
-                Symbol = x.getInstrument().getSymbol(),
+                Symbol = ConvertFxcmSymbolToSymbol(x.getInstrument().getSymbol(), GetSecurityType(x.getInstrument())),
                 BidPrice = (decimal) x.getBidClose(),
                 AskPrice = (decimal) x.getAskClose()
             }).ToList();

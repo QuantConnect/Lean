@@ -248,7 +248,7 @@ namespace QuantConnect.Algorithm
             var requestedType = typeof(T);
             if (!requestedType.IsAssignableFrom(actualType))
             {
-                throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
+                throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol.ToString() + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
             }
 
             var start = GetStartTimeAlgoTz(symbol, periods, resolution);
@@ -273,7 +273,7 @@ namespace QuantConnect.Algorithm
             var requestedType = typeof(T);
             if (!requestedType.IsAssignableFrom(actualType))
             {
-                throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
+                throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol.ToString() + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
             }
 
             var request = CreateHistoryRequest(security, start, end, resolution);

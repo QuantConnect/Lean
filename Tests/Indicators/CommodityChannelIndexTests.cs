@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Indicators {
             var cci = new CommodityChannelIndex(2);
             cci.Update(new TradeBar
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = DateTime.Today,
                 Open = 3m,
                 High = 7m,
@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Indicators {
             Assert.IsFalse(cci.IsReady);
             cci.Update(new TradeBar
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = DateTime.Today.AddSeconds(1),
                 Open = 3m,
                 High = 7m,

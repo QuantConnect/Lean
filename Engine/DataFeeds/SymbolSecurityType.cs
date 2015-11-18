@@ -71,7 +71,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="other">The object to compare with the current object. </param><filterpriority>2</filterpriority>
         public bool Equals(SymbolSecurityType other)
         {
-            return String.Equals(Symbol, other.Symbol) && SecurityType == other.SecurityType;
+            if (ReferenceEquals(other, null)) return false;
+            return Symbol.Equals(other.Symbol);
         }
 
         /// <summary>

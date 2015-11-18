@@ -1263,7 +1263,7 @@ namespace QuantConnect.Algorithm
 
             //Add this new generic data as a tradeable security: 
             var security = new Security(exchangeHours, config, leverage);
-            Securities.Add(symbol, security);
+            Securities.Add(symbolObject, security);
 
             AddToUserDefinedUniverse(security);
         }

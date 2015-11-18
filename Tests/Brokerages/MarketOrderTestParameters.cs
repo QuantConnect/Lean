@@ -21,8 +21,8 @@ namespace QuantConnect.Tests.Brokerages
 {
     public class MarketOrderTestParameters : OrderTestParameters
     {
-        public MarketOrderTestParameters(string symbol, SecurityType securityType)
-            : base(symbol, securityType)
+        public MarketOrderTestParameters(Symbol symbol)
+            : base(symbol)
         {
         }
 

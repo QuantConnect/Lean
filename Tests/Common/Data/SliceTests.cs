@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void AccessesBaseBySymbol()
         {
-            IndicatorDataPoint tick = new IndicatorDataPoint("SPY", DateTime.Now, 1);
+            IndicatorDataPoint tick = new IndicatorDataPoint(Symbols.SPY, DateTime.Now, 1);
             Slice slice = new Slice(DateTime.Now, new[] { tick });
 
             IndicatorDataPoint data = slice[tick.Symbol];
@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void AccessesTradeBarBySymbol()
         {
-            TradeBar tradeBar = new TradeBar {Symbol = "SPY", Time = DateTime.Now};
+            TradeBar tradeBar = new TradeBar {Symbol = Symbols.SPY, Time = DateTime.Now};
             Slice slice = new Slice(DateTime.Now, new[] { tradeBar });
 
             TradeBar data = slice[tradeBar.Symbol];
@@ -51,8 +51,8 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void AccessesTradeBarCollection()
         {
-            TradeBar tradeBar1 = new TradeBar { Symbol = "SPY", Time = DateTime.Now };
-            TradeBar tradeBar2 = new TradeBar { Symbol = "AAPL", Time = DateTime.Now };
+            TradeBar tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
+            TradeBar tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now };
             Slice slice = new Slice(DateTime.Now, new[] { tradeBar1, tradeBar2 });
 
             TradeBars tradeBars = slice.Bars;
@@ -62,8 +62,8 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void AccessesTicksBySymbol()
         {
-            Tick tick1 = new Tick(DateTime.Now, "SPY", 1, 2);
-            Tick tick2 = new Tick(DateTime.Now, "SPY", 1.1m, 2.1m);
+            Tick tick1 = new Tick(DateTime.Now, Symbols.SPY, 1, 2);
+            Tick tick2 = new Tick(DateTime.Now, Symbols.SPY, 1.1m, 2.1m);
             Slice slice = new Slice(DateTime.Now, new[] { tick1, tick2 });
 
             List<Tick> data = slice[tick1.Symbol];
@@ -74,23 +74,23 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void AccessesTicksCollection()
         {
-            Tick tick1 = new Tick(DateTime.Now, "SPY", 1, 2);
-            Tick tick2 = new Tick(DateTime.Now, "SPY", 1.1m, 2.1m);
-            Tick tick3 = new Tick(DateTime.Now, "AAPL", 1, 2);
-            Tick tick4 = new Tick(DateTime.Now, "AAPL", 1.1m, 2.1m);
+            Tick tick1 = new Tick(DateTime.Now, Symbols.SPY, 1, 2);
+            Tick tick2 = new Tick(DateTime.Now, Symbols.SPY, 1.1m, 2.1m);
+            Tick tick3 = new Tick(DateTime.Now, Symbols.AAPL, 1, 2);
+            Tick tick4 = new Tick(DateTime.Now, Symbols.AAPL, 1.1m, 2.1m);
             Slice slice = new Slice(DateTime.Now, new[] { tick1, tick2, tick3, tick4 });
 
             Ticks ticks = slice.Ticks;
             Assert.AreEqual(2, ticks.Count);
-            Assert.AreEqual(2, ticks["SPY"].Count);
-            Assert.AreEqual(2, ticks["AAPL"].Count);
+            Assert.AreEqual(2, ticks[Symbols.SPY].Count);
+            Assert.AreEqual(2, ticks[Symbols.AAPL].Count);
         }
 
         [Test]
         public void AccessesGenericallyByType()
         {
-            Quandl quandlSpy = new Quandl { Symbol = "SPY", Time = DateTime.Now };
-            Quandl quandlAapl = new Quandl { Symbol = "AAPL", Time = DateTime.Now };
+            Quandl quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now };
+            Quandl quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now };
             Slice slice = new Slice(DateTime.Now, new[] { quandlSpy, quandlAapl });
 
             DataDictionary<Quandl> quandlData = slice.Get<Quandl>();
@@ -100,11 +100,11 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void AccessesGenericallyByTypeAndSymbol()
         {
-            Quandl quandlSpy = new Quandl { Symbol = "SPY", Time = DateTime.Now };
-            Quandl quandlAapl = new Quandl { Symbol = "AAPL", Time = DateTime.Now };
+            Quandl quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now };
+            Quandl quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now };
             Slice slice = new Slice(DateTime.Now, new[] { quandlSpy, quandlAapl });
 
-            Quandl quandlData = slice.Get<Quandl>("SPY");
+            Quandl quandlData = slice.Get<Quandl>(Symbols.SPY);
             Assert.AreEqual(quandlSpy, quandlData);
         }
     }

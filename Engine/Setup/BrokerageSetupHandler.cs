@@ -273,7 +273,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     foreach (var order in openOrders)
                     {
                         // be sure to assign order IDs such that we increment from the SecurityTransactionManager to avoid ID collisions
-                        Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol + " - " + order.Quantity);
+                        Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol.ToString() + " - " + order.Quantity);
                         order.Id = algorithm.Transactions.GetIncrementOrderId();
                         transactionHandler.Orders.AddOrUpdate(order.Id, order, (i, o) => order);
                     }
@@ -309,7 +309,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                         if (!algorithm.Portfolio.ContainsKey(holding.Symbol))
                         {
-                            Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol);
+                            Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol.ToString());
                             // for items not directly requested set leverage to 1 and at the min resolution
                             algorithm.AddSecurity(holding.Type, holding.Symbol.Value, minResolution.Value, null, true, 1.0m, false);
                         }

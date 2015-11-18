@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Data.Market
             const string line = "15093000,1456300,100,P,T,0";
 
             var baseDate = new DateTime(2013, 10, 08);
-            var tick = new Tick("SPY", line, baseDate);
+            var tick = new Tick(Symbols.SPY, line, baseDate);
 
             var ms = (tick.Time - baseDate).TotalMilliseconds;
             Assert.AreEqual(15093000, ms);

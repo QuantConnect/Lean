@@ -96,7 +96,7 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             return new Holding
             {
-                Symbol = ConvertSymbol(fxcmPosition.getInstrument()).Value,
+                Symbol = ConvertFxcmSymbolToSymbol(fxcmPosition.getInstrument().getSymbol(), GetSecurityType(fxcmPosition.getInstrument())),
                 Type = GetSecurityType(fxcmPosition.getInstrument()),
                 AveragePrice = Convert.ToDecimal(fxcmPosition.getSettlPrice()),
                 ConversionRate = 1.0m,
@@ -144,7 +144,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <summary>
         /// Converts a QuantConnect symbol to an FXCM symbol
         /// </summary>
-        public string ConvertSymbolToFxcmSymbol(string symbol)
+        public string ConvertSymbolToFxcmSymbol(Symbol symbol)
         {
             return _mapInstrumentSymbols[symbol];
         }

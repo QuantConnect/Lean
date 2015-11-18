@@ -224,7 +224,7 @@ namespace QuantConnect.Lean.Engine.Results
                             case PacketType.OrderEvent:
                                 var orderEvent = packet as OrderEventPacket;
                                 DebugMessage("New Order Event: OrderId:" + orderEvent.Event.OrderId + " Symbol:" +
-                                                orderEvent.Event.Symbol + " Quantity:" + orderEvent.Event.FillQuantity +
+                                                orderEvent.Event.Symbol.ToString() + " Quantity:" + orderEvent.Event.FillQuantity +
                                                 " Status:" + orderEvent.Event.Status);
                                 _messagingHandler.Send(orderEvent);
                                 break;
@@ -962,7 +962,7 @@ namespace QuantConnect.Lean.Engine.Results
             Messages.Enqueue(new OrderEventPacket(_deployId, newEvent));
 
             //Add the order event message to the log:
-            LogMessage("New Order Event: Id:" + newEvent.OrderId + " Symbol:" + newEvent.Symbol + " Quantity:" + newEvent.FillQuantity + " Status:" + newEvent.Status);
+            LogMessage("New Order Event: Id:" + newEvent.OrderId + " Symbol:" + newEvent.Symbol.ToString() + " Quantity:" + newEvent.FillQuantity + " Status:" + newEvent.Status);
         }
 
         /// <summary>

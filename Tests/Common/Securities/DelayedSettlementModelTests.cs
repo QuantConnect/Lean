@@ -26,7 +26,6 @@ namespace QuantConnect.Tests.Common.Securities
     {
         private static readonly DateTime Noon = new DateTime(2015, 11, 2, 12, 0, 0);
         private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
-        private const string Symbol = "SPY";
 
         [Test]
         public void SellOnMondaySettleOnThursday()
@@ -36,7 +35,7 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             // settlement at T+3, 8:00 AM
             var model = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
-            var config = CreateTradeBarConfig(Symbol);
+            var config = CreateTradeBarConfig(Symbols.SPY);
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
 
             portfolio.SetCash(3000);
@@ -83,7 +82,7 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             // settlement at T+3, 8:00 AM
             var model = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
-            var config = CreateTradeBarConfig(Symbol);
+            var config = CreateTradeBarConfig(Symbols.SPY);
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
 
             portfolio.SetCash(3000);
@@ -134,7 +133,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, portfolio.UnsettledCash);
         }
 
-        private SubscriptionDataConfig CreateTradeBarConfig(string symbol)
+        private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, symbol, Resolution.Minute, "usa", TimeZones.NewYork, true, true, false);
         }

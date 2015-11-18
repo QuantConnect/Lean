@@ -76,9 +76,9 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// </summary>
         /// <param name="symbol"></param>
         /// <returns>Returns true if the symbol is available</returns>
-        public bool HasSymbol(Symbol symbol)
+        public bool HasSymbol(string symbol)
         {
-            return _instruments.ContainsKey(symbol.Value);
+            return _instruments.ContainsKey(symbol);
         }
 
         /// <summary>
@@ -86,9 +86,9 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <returns>The security type</returns>
-        public SecurityType GetSecurityType(Symbol symbol)
+        public SecurityType GetSecurityType(string symbol)
         {
-            return _instruments[symbol.Value].Type;
+            return _instruments[symbol].Type;
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         public IEnumerable<BaseData> Get(Symbol symbol, SecurityType type, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
             if (!_instruments.ContainsKey(symbol.Value))
-                throw new ArgumentException("Invalid symbol requested: " + symbol);
+                throw new ArgumentException("Invalid symbol requested: " + symbol.ToString());
 
             if (type != SecurityType.Forex && type != SecurityType.Cfd)
                 throw new NotSupportedException("SecurityType not available: " + type);

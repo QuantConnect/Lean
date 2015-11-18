@@ -25,8 +25,8 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
 {
     public class FxcmLimitOrderTestParameters : LimitOrderTestParameters
     {
-        public FxcmLimitOrderTestParameters(string symbol, SecurityType securityType, decimal highLimit, decimal lowLimit)
-            : base(symbol, securityType, highLimit, lowLimit)
+        public FxcmLimitOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit)
+            : base(symbol, highLimit, lowLimit)
         {
         }
 
@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             var previousLimit = limit.LimitPrice;
 
             var fxcmBrokerage = (FxcmBrokerage)brokerage;
-            var quotes = fxcmBrokerage.GetBidAndAsk(new List<string> { fxcmBrokerage.ConvertSymbolToFxcmSymbol(order.Symbol.Value) });
+            var quotes = fxcmBrokerage.GetBidAndAsk(new List<string> { fxcmBrokerage.ConvertSymbolToFxcmSymbol(order.Symbol) });
 
             if (order.Quantity > 0)
             {

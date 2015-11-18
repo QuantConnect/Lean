@@ -36,11 +36,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var underlying = new List<BaseData>
             {
                 // 0 seconds
-                new TradeBar(reference, "SPY", 10, 20, 5, 15, 123456, period),
+                new TradeBar(reference, Symbols.SPY, 10, 20, 5, 15, 123456, period),
                 // 1 seconds
                 null,
                 // 3 seconds
-                new TradeBar(reference.AddSeconds(2), "SPY", 100, 200, 50, 150, 1234560, period),
+                new TradeBar(reference.AddSeconds(2), Symbols.SPY, 100, 200, 50, 150, 1234560, period),
                 null,
                 null,
                 null,

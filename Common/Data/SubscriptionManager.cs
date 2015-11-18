@@ -135,7 +135,7 @@ namespace QuantConnect.Data
             }
 
             //If we made it here it is because we never found the symbol in the subscription list
-            throw new ArgumentException("Please subscribe to this symbol before adding a consolidator for it. Symbol: " + symbol);
+            throw new ArgumentException("Please subscribe to this symbol before adding a consolidator for it. Symbol: " + symbol.ToString());
         }
 
     } // End Algorithm MetaData Manager Class

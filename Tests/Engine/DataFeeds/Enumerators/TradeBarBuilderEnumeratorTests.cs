@@ -40,12 +40,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // add some ticks
             var ticks = new List<Tick>
             {
-                new Tick(currentTime, "SPY", 199.55m, 199, 200) {Quantity = 10},
-                new Tick(currentTime, "SPY", 199.56m, 199.21m, 200.02m) {Quantity = 5},
-                new Tick(currentTime, "SPY", 199.53m, 198.77m, 199.75m) {Quantity = 20},
-                new Tick(currentTime, "SPY", 198.77m, 199.75m) {Quantity = 0},
-                new Tick(currentTime, "SPY", 199.73m, 198.77m, 199.75m) {Quantity = 20},
-                new Tick(currentTime, "SPY", 198.77m, 199.75m) {Quantity = 0},
+                new Tick(currentTime, Symbols.SPY, 199.55m, 199, 200) {Quantity = 10},
+                new Tick(currentTime, Symbols.SPY, 199.56m, 199.21m, 200.02m) {Quantity = 5},
+                new Tick(currentTime, Symbols.SPY, 199.53m, 198.77m, 199.75m) {Quantity = 20},
+                new Tick(currentTime, Symbols.SPY, 198.77m, 199.75m) {Quantity = 0},
+                new Tick(currentTime, Symbols.SPY, 199.73m, 198.77m, 199.75m) {Quantity = 20},
+                new Tick(currentTime, Symbols.SPY, 198.77m, 199.75m) {Quantity = 0},
             };
 
             foreach (var tick in ticks)
@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var bar = (TradeBar)enumerator.Current;
             Assert.AreEqual(currentTime.AddSeconds(-1), bar.Time);
             Assert.AreEqual(currentTime, bar.EndTime);
-            Assert.AreEqual("SPY", bar.Symbol.Value);
+            Assert.AreEqual(Symbols.SPY, bar.Symbol);
             Assert.AreEqual(ticks.First().LastPrice, bar.Open);
             Assert.AreEqual(ticks.Max(x => x.LastPrice), bar.High);
             Assert.AreEqual(ticks.Min(x => x.LastPrice), bar.Low);

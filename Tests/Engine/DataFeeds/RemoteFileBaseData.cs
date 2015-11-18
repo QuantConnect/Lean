@@ -47,8 +47,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             // this file is only a few seconds worth of data, so it's quick to download
-            var remoteFileSource = @"http://www.quantconnect.com/live-test?type=file&symbols=" + config.Symbol;
-            remoteFileSource = @"http://beta.quantconnect.com/live-test?type=file&symbols=" + config.Symbol;
+            var remoteFileSource = @"http://www.quantconnect.com/live-test?type=file&symbols=" + config.Symbol.Value;
+            remoteFileSource = @"http://beta.quantconnect.com/live-test?type=file&symbols=" + config.Symbol.Value;
             return new SubscriptionDataSource(remoteFileSource, SubscriptionTransportMedium.RemoteFile, FileFormat.Csv);
         }
     }

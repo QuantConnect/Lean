@@ -125,7 +125,7 @@ namespace QuantConnect.Tests.Common
         {
             var tick = new Tick
             {
-                Symbol = "EURGBP",
+                Symbol = Symbols.EURGBP,
                 AskPrice = 1,
                 Time = DateTime.Now,
                 Exchange = "",
@@ -198,40 +198,48 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void ImplicitOperatorsAreInverseFunctions()
         {
+#pragma warning disable 0618 - This test requires implicit operators
             var eurusd = new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD");
             string stringEurusd = eurusd;
             Symbol symbolEurusd = stringEurusd;
             Assert.AreEqual(eurusd, symbolEurusd);
+#pragma warning restore 0618
         }
 
         [Test]
-        public void ImplicitOperatorsReturnEmptyOnFailure()
+        public void ImplicitOperatorsReturnSIDOnFailure()
         {
+#pragma warning disable 0618 - This test requires implicit operators
             // this doesn't exist in the symbol cace
             var eurusd = new Symbol(SecurityIdentifier.GenerateForex("NOT A SECURITY", Market.FXCM), "EURUSD");
             string stringEurusd = eurusd;
-            Assert.AreEqual(string.Empty, stringEurusd);
+            Assert.AreEqual(eurusd.ID.ToString(), stringEurusd);
 
             Symbol notASymbol = "this will not resolve to a proper Symbol instance";
             Assert.AreEqual(Symbol.Empty, notASymbol);
+#pragma warning restore 0618
         }
 
         [Test]
         public void ImplicitFromStringChecksSymbolCache()
         {
+#pragma warning disable 0618 - This test requires implicit operators
             string ticker = "EURUSD";
             Symbol actual = ticker;
             var expected = SymbolCache.GetSymbol(ticker);
             Assert.AreEqual(expected, actual);
+#pragma warning restore 0618
         }
 
         [Test]
         public void ImplicitFromStringParsesSid()
         {
+#pragma warning disable 0618 - This test requires implicit operators
             var expected = SymbolCache.GetSymbol("EURUSD");
             string sid = expected.ID.ToString();
             Symbol actual = sid;
             Assert.AreEqual(expected, actual);
+#pragma warning restore 0618
         }
 
         class OldSymbol

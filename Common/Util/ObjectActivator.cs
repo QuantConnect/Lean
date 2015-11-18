@@ -19,6 +19,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using CloneExtensions;
 using Fasterflect;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Util
 {
@@ -35,7 +36,8 @@ namespace QuantConnect.Util
         static ObjectActivator()
         {
             // we can reuse the symbol instance in the clone since it's immutable
-            CloneFactory.CustomInitializers.Add(typeof (Symbol), source => source);
+            ((HashSet<Type>) CloneFactory.KnownImmutableTypes).Add(typeof (Symbol));
+            ((HashSet<Type>) CloneFactory.KnownImmutableTypes).Add(typeof (SecurityIdentifier));
         }
 
         /// <summary>

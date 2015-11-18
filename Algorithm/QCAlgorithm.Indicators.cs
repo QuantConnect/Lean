@@ -822,7 +822,7 @@ namespace QuantConnect.Algorithm
             catch (InvalidOperationException)
             {
                 // this will happen if we did not find the subscription, let's give the user a decent error message
-                throw new Exception("Please register to receive data for symbol '" + symbol + "' using the AddSecurity() function.");
+                throw new Exception("Please register to receive data for symbol '" + symbol.ToString() + "' using the AddSecurity() function.");
             }
             return subscription;
         }

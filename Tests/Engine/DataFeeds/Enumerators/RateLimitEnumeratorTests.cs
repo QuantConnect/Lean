@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.AreEqual(1, delta);
 
-            Assert.AreEqual("1", data.Current.Symbol.ToString());
+            Assert.AreEqual("1", data.Current.Symbol.Value);
         }
 
         private static Symbol CreateSymbol(int x)

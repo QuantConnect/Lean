@@ -157,14 +157,15 @@ namespace QuantConnect.Brokerages.Oanda
             };
         }
 
-        private string MapOandaInstructmentToQcSymbol(string instrument, SecurityType securityType)
+        private Symbol MapOandaInstructmentToQcSymbol(string instrument, SecurityType securityType)
         {
             if (securityType == SecurityType.Forex)
             {
                 instrument = instrument.Trim('_');
-                return instrument;
+                // using fxcm market for now in all forex brokerage impls
+                return new Symbol(SecurityIdentifier.GenerateForex(instrument, Market.FXCM),  instrument);
             }
-            return instrument;
+            throw new NotImplementedException("The specified security type has not been implemented yet: " + securityType);
         }
 
         /// <summary>

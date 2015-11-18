@@ -1760,7 +1760,7 @@ namespace QuantConnect.Brokerages.Tradier
         {
             return new Holding
             {
-                Symbol = position.Symbol,
+                Symbol = new Symbol(SecurityIdentifier.GenerateEquity(position.Symbol, Market.USA), position.Symbol),
                 Type = SecurityType.Equity,
                 AveragePrice = position.CostBasis/position.Quantity,
                 ConversionRate = 1.0m,

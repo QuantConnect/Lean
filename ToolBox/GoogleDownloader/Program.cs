@@ -50,10 +50,11 @@ namespace QuantConnect.ToolBox.GoogleDownloader
                 // Download the data
                 var downloader = new GoogleDataDownloader();
                 var sid = SecurityIdentifier.GenerateEquity(symbol, Market.USA);
-                var data = downloader.Get(new Symbol(sid, symbol), SecurityType.Equity, resolution, DateTime.UtcNow.AddDays(-period), DateTime.UtcNow);
+                var symbolObject = new Symbol(sid, symbol);
+                var data = downloader.Get(symbolObject, SecurityType.Equity, resolution, DateTime.UtcNow.AddDays(-period), DateTime.UtcNow);
 
                 // Save the data
-                var writer = new LeanDataWriter(SecurityType.Equity, resolution, symbol, dataDirectory, "usa");
+                var writer = new LeanDataWriter(SecurityType.Equity, resolution, symbolObject, dataDirectory, "usa");
                 writer.Write(data);
             }
             catch (Exception err)

@@ -158,7 +158,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            Log.Trace("FileSystemDataFeed.AddSubscription(): Added " + security.Symbol);
+            Log.Trace("FileSystemDataFeed.AddSubscription(): Added " + security.Symbol.ToString());
 
             _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription),  subscription);
 
@@ -181,11 +181,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Subscription sub;
             if (!_subscriptions.TryRemove(new SymbolSecurityType(subscription), out sub))
             {
-                Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + subscription.Security.Symbol);
+                Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + subscription.Security.Symbol.ToString());
                 return false;
             }
 
-            Log.Trace("FileSystemDataFeed.RemoveSubscription(): Removed " + subscription.Security.Symbol);
+            Log.Trace("FileSystemDataFeed.RemoveSubscription(): Removed " + subscription.Security.Symbol.ToString());
 
             _changes += SecurityChanges.Removed(sub.Security);
 
@@ -244,7 +244,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             cache.Value.Add(clone);
                             if (!subscription.MoveNext())
                             {
-                                Log.Trace("FileSystemDataFeed.Run(): Finished subscription: " + subscription.Security.Symbol + " at " + frontier + " UTC");
+                                Log.Trace("FileSystemDataFeed.Run(): Finished subscription: " + subscription.Security.Symbol.ToString() + " at " + frontier + " UTC");
                                 break;
                             }
                         }
@@ -420,10 +420,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (!subscription.MoveNext())
             {
-                Log.Error("FileSystemDataFeed.PrimeSubscriptionPump(): Failed to load subscription: " + subscription.Security.Symbol);
+                Log.Error("FileSystemDataFeed.PrimeSubscriptionPump(): Failed to load subscription: " + subscription.Security.Symbol.ToString());
                 if (messageUser)
                 {
-                    _algorithm.Error("Failed to load subscription: " + subscription.Security.Symbol);
+                    _algorithm.Error("Failed to load subscription: " + subscription.Security.Symbol.ToString());
                 }
                 _subscriptions.TryRemove(new SymbolSecurityType(subscription), out subscription);
             }

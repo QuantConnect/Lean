@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Brokerages
         public Holding GetHoldings(Symbol symbol)
         {
             Holding holding;
-            _holdings.TryGetValue(symbol.Value, out holding);
+            _holdings.TryGetValue(symbol, out holding);
             return holding;
         }
 

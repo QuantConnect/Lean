@@ -26,7 +26,7 @@ namespace QuantConnect
     /// </summary>
     public static class SymbolCache
     {
-        private static readonly ConcurrentDictionary<string, Symbol> Symbols = new ConcurrentDictionary<string, Symbol>();
+        private static readonly ConcurrentDictionary<string, Symbol> Symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.OrdinalIgnoreCase);
         private static readonly ConcurrentDictionary<Symbol, string> Tickers = new ConcurrentDictionary<Symbol, string>();
 
         /// <summary>
@@ -71,8 +71,7 @@ namespace QuantConnect
         public static string GetTicker(Symbol symbol)
         {
             string ticker;
-            if (Tickers.TryGetValue(symbol, out ticker)) return ticker;
-            throw new Exception("Unable to resolve ticker from sid: " + symbol);
+            return Tickers.TryGetValue(symbol, out ticker) ? ticker : symbol.ID.ToString();
         }
 
         /// <summary>

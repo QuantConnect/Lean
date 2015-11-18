@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
 
             brokerage.Subscribe(null, new Dictionary<SecurityType, List<Symbol>>
             {
-                { SecurityType.Forex, new List<Symbol> { "USDJPY", "EURGBP" } }
+                { SecurityType.Forex, new List<Symbol> { Symbols.USDJPY, Symbols.EURGBP } }
             });
 
             Thread.Sleep(5000);

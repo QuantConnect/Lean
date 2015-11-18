@@ -44,10 +44,11 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 //Get Yahoo Downloader:
                 var yahooDownloader = new YahooDataDownloader();
                 var sid = SecurityIdentifier.GenerateEquity(symbol, Market.USA);
-                var enumerableYahoo = yahooDownloader.Get(new Symbol(sid, symbol), SecurityType.Equity, Resolution.Daily, DateTime.MinValue, DateTime.UtcNow);
+                var symbolObject = new Symbol(sid, symbol);
+                var enumerableYahoo = yahooDownloader.Get(symbolObject, SecurityType.Equity, Resolution.Daily, DateTime.MinValue, DateTime.UtcNow);
 
                 //Get LEAN Data Writer:
-                var writer = new LeanDataWriter(SecurityType.Equity, Resolution.Daily, symbol, dataDirectory, "usa");
+                var writer = new LeanDataWriter(SecurityType.Equity, Resolution.Daily, symbolObject, dataDirectory, "usa");
                 writer.Write(enumerableYahoo);
             }
             catch (Exception err)
