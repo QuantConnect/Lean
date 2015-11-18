@@ -88,6 +88,13 @@ namespace QuantConnect
                     return ID.Equals(sid);
                 }
             }
+            
+            // compare a sid just as you would a symbol object
+            if (obj is SecurityIdentifier)
+            {
+                return ID.Equals((SecurityIdentifier) obj);
+            }
+
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
