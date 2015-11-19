@@ -86,7 +86,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var selections = universe.SelectSymbols(args.Data).Take(limit).ToHashSet();
 
             // create a hash set of our existing subscriptions by sid
-            var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol.ID);
+            var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol);
 
             var additions = new List<Security>();
             var removals = new List<Security>();
@@ -128,17 +128,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // find new selections and add them to the algorithm
-            foreach (var sid in selections)
+            foreach (var symbol in selections)
             {
                 // we already have a subscription for this symbol so don't re-add it
-                if (existingSubscriptions.Contains(sid.ID)) continue;
+                if (existingSubscriptions.Contains(symbol)) continue;
                 
                 // create the new security, the algorithm thread will add this at the appropriate time
                 Security security;
-                if (!_algorithm.Securities.TryGetValue(sid, out security))
+                if (!_algorithm.Securities.TryGetValue(symbol, out security))
                 {
                     security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _hoursProvider,
-                        sid,
+                        symbol,
                         settings.Resolution,
                         settings.FillForward,
                         settings.Leverage,

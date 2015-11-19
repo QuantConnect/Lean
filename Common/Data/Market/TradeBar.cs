@@ -350,7 +350,7 @@ namespace QuantConnect.Data.Market
             var dataType = config.SecurityType == SecurityType.Forex ? TickType.Quote : TickType.Trade; 
             var securityTypePath = config.SecurityType.ToString().ToLower();
             var resolutionPath = config.Resolution.ToString().ToLower();
-            var symbolPath = (string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol.ToString() : config.MappedSymbol).ToLower();
+            var symbolPath = (string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol.Value : config.MappedSymbol).ToLower();
             var market = config.Market.ToLower();
             var filename = date.ToString(DateFormat.EightCharacter) + "_" + dataType.ToString().ToLower() + ".zip";
 

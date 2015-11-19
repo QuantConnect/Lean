@@ -261,7 +261,7 @@ namespace QuantConnect.Securities
             {
                 if (!_securityManager.ContainsKey(symbol))
                 {
-                    throw new Exception("This asset symbol (" + SymbolCache.GetTicker(symbol) + ") was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"" + SymbolCache.GetTicker(symbol) + "\")'");
+                    throw new Exception("This asset symbol (" + symbol.ToString() + ") was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"" + SymbolCache.GetTicker(symbol) + "\")'");
                 } 
                 return _securityManager[symbol];
             }

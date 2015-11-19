@@ -154,7 +154,7 @@ namespace QuantConnect.Data.Auxiliary
             return from file in Directory.EnumerateFiles(mapFileDirectory)
                    where file.EndsWith(".csv")
                    let permtick = Path.GetFileNameWithoutExtension(file)
-                   let fileRead = SafeMapFileRowRead(file) ?? new List<MapFileRow>()
+                   let fileRead = SafeMapFileRowRead(file)
                    select new MapFile(permtick, fileRead);
         }
 
@@ -170,7 +170,7 @@ namespace QuantConnect.Data.Auxiliary
             catch (Exception err)
             {
                 Log.Error("MapFileResover.Create(): " + file + " \tError: " + err.Message);
-                return null;
+                return new List<MapFileRow>();
             }
         }
     }

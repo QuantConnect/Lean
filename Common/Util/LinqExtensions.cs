@@ -229,7 +229,7 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Creates a new enumerable that will be distinc by the specified property selector
+        /// Creates a new enumerable that will be distinct by the specified property selector
         /// </summary>
         /// <typeparam name="T">The source enumerable type</typeparam>
         /// <typeparam name="TPropery">The selected property type</typeparam>

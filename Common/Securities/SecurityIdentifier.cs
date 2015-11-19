@@ -37,7 +37,7 @@ namespace QuantConnect.Securities
     [JsonConverter(typeof(SecurityIdentifierJsonConverter))]
     public struct SecurityIdentifier : IEquatable<SecurityIdentifier>
     {
-        #region Empty, Invalid
+        #region Empty, DefaultDate Fields
 
         /// <summary>
         /// Gets an instance of <see cref="SecurityIdentifier"/> that is empty, that is, one with no symbol specified
@@ -104,7 +104,7 @@ namespace QuantConnect.Securities
         #region Member variables
 
         private readonly string _symbol;
-        private readonly ulong _otherData;
+        private readonly ulong _properties;
 
         #endregion
 
@@ -128,7 +128,7 @@ namespace QuantConnect.Securities
                     case SecurityType.Equity:
                     case SecurityType.Option:
                     case SecurityType.Future:
-                        var oadate = ExtractFromOtherData(DaysOffset, DaysWidth);
+                        var oadate = ExtractFromProperties(DaysOffset, DaysWidth);
                         return DateTime.FromOADate(oadate);
                     default:
                         throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option and SecurityType.Future");
@@ -156,7 +156,7 @@ namespace QuantConnect.Securities
             get
             {
                 string market;
-                var marketIndex = ExtractFromOtherData(MarketOffset, MarketWidth);
+                var marketIndex = ExtractFromProperties(MarketOffset, MarketWidth);
                 if (ReverseMarkets.TryGetValue(marketIndex, out market))
                 {
                     return market;
@@ -172,7 +172,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public SecurityType SecurityType
         {
-            get { return (SecurityType)ExtractFromOtherData(SecurityTypeOffset, SecurityTypeWidth); }
+            get { return (SecurityType)ExtractFromProperties(SecurityTypeOffset, SecurityTypeWidth); }
         }
 
         /// <summary>
@@ -187,8 +187,8 @@ namespace QuantConnect.Securities
                 {
                     throw new InvalidOperationException("OptionType is only defined for SecurityType.Option");
                 }
-                var scale = ExtractFromOtherData(StrikeScaleOffset, StrikeScaleWidth);
-                var unscaled = ExtractFromOtherData(StrikeOffset, StrikeWidth);
+                var scale = ExtractFromProperties(StrikeScaleOffset, StrikeScaleWidth);
+                var unscaled = ExtractFromProperties(StrikeOffset, StrikeWidth);
                 var pow = Math.Pow(10, (int)scale - StrikeDefaultScale);
                 return unscaled * (decimal)pow;
             }
@@ -207,7 +207,7 @@ namespace QuantConnect.Securities
                 {
                     throw new InvalidOperationException("OptionRight is only defined for SecurityType.Option");
                 }
-                return (OptionRight)ExtractFromOtherData(PutCallOffset, PutCallWidth);
+                return (OptionRight)ExtractFromProperties(PutCallOffset, PutCallWidth);
             }
         }
 
@@ -224,7 +224,7 @@ namespace QuantConnect.Securities
                 {
                     throw new InvalidOperationException("OptionStyle is only defined for SecurityType.Option");
                 }
-                return (OptionStyle)(ExtractFromOtherData(OptionStyleOffset, OptionStyleWidth));
+                return (OptionStyle)(ExtractFromProperties(OptionStyleOffset, OptionStyleWidth));
             }
         }
 
@@ -236,21 +236,21 @@ namespace QuantConnect.Securities
         /// Initializes a new instance of the <see cref="SecurityIdentifier"/> class
         /// </summary>
         /// <param name="symbol">The base36 string encoded as a long using alpha [0-9A-Z]</param>
-        /// <param name="otherData">Other data defining properties of the symbol including market,
+        /// <param name="properties">Other data defining properties of the symbol including market,
         /// security type, listing or expiry date, strike/call/put/style for options, ect...</param>
-        public SecurityIdentifier(string symbol, ulong otherData)
+        public SecurityIdentifier(string symbol, ulong properties)
         {
             if (symbol == null)
             {
-                throw new ArgumentNullException("symbol", "SecurityIdentifier requires a non-null sting 'symbol'");
+                throw new ArgumentNullException("symbol", "SecurityIdentifier requires a non-null string 'symbol'");
             }
             _symbol = symbol;
-            _otherData = otherData;
+            _properties = properties;
         }
 
         #endregion
 
-        #region Generate and AddMarket
+        #region AddMarket, GetMarketCode, and Generate
 
         /// <summary>
         /// Adds the specified market to the map of available markets with the specified identifier.
@@ -464,6 +464,10 @@ namespace QuantConnect.Securities
             return new string(stack.ToArray());
         }
 
+        /// <summary>
+        /// The strike is normalized into deci-cents and then a scale factor
+        /// is also saved to bring it back to un-normalized
+        /// </summary>
         private static ulong NormalizeStrike(decimal strike, out ulong scale)
         {
             var str = strike;
@@ -492,19 +496,13 @@ namespace QuantConnect.Securities
             return (ulong)strike;
         }
 
+        /// <summary>
+        /// Accurately performs the integer exponentiation
+        /// </summary>
         private static ulong Pow(uint x, int pow)
         {
+            // don't use Math.Pow(double, double) due to precision issues
             return (ulong)BigInteger.Pow(x, pow);
-            //http://stackoverflow.com/a/383596/1582922
-            ulong result = 1;
-            while (pow != 0)
-            {
-                if ((pow & 1) == 1)
-                    result *= x;
-                x *= x;
-                pow >>= 1;
-            }
-            return result;
         }
 
         #endregion
@@ -541,7 +539,7 @@ namespace QuantConnect.Securities
         /// <param name="value">The string value to be parsed</param>
         /// <param name="identifier">The result of parsing, when this function returns true, <paramref name="identifier"/>
         /// was properly created and reflects the input string, when this function returns false <paramref name="identifier"/>
-        /// will equal <see cref="Invalid"/></param>
+        /// will equal default(SecurityIdentifier)</param>
         /// <returns>True on success, otherwise false</returns>
         public static bool TryParse(string value, out SecurityIdentifier identifier)
         {
@@ -554,24 +552,24 @@ namespace QuantConnect.Securities
         /// </summary>
         private static bool TryParse(string value, out SecurityIdentifier identifier, out Exception exception)
         {
-            ulong od;
+            ulong props;
             string symbol;
             identifier = default(SecurityIdentifier);
-            if (!TryParseOtherData(value, out exception, out od, out symbol))
+            if (!TryParseProperties(value, out exception, out props, out symbol))
             {
                 return false;
             }
 
-            identifier = new SecurityIdentifier(symbol, od);
+            identifier = new SecurityIdentifier(symbol, props);
             return true;
         }
 
         /// <summary>
         /// Parses the string into its component ulong pieces
         /// </summary>
-        private static bool TryParseOtherData(string value, out Exception exception, out ulong od, out string symbol)
+        private static bool TryParseProperties(string value, out Exception exception, out ulong props, out string symbol)
         {
-            od = ulong.MaxValue;
+            props = ulong.MaxValue;
             symbol = string.Empty;
             exception = null;
 
@@ -582,7 +580,7 @@ namespace QuantConnect.Securities
 
             if (string.IsNullOrWhiteSpace(value))
             {
-                od = 0;
+                props = 0;
                 return true;
             }
 
@@ -596,16 +594,16 @@ namespace QuantConnect.Securities
             symbol = parts[0];
             var otherData = parts[1];
 
-            od = DecodeBase36(otherData);
+            props = DecodeBase36(otherData);
             return true;
         }
 
         /// <summary>
         /// Extracts the embedded value from _otherData
         /// </summary>
-        private ulong ExtractFromOtherData(ulong offset, ulong width)
+        private ulong ExtractFromProperties(ulong offset, ulong width)
         {
-            return (_otherData/offset)%width;
+            return (_properties/offset)%width;
         }
 
         #endregion
@@ -621,7 +619,7 @@ namespace QuantConnect.Securities
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(SecurityIdentifier other)
         {
-            return _otherData == other._otherData && _symbol == other._symbol;
+            return _properties == other._properties && _symbol == other._symbol;
         }
 
         /// <summary>
@@ -647,7 +645,7 @@ namespace QuantConnect.Securities
         /// <filterpriority>2</filterpriority>
         public override int GetHashCode()
         {
-            unchecked { return (_symbol.GetHashCode()*397) ^ _otherData.GetHashCode(); }
+            unchecked { return (_symbol.GetHashCode()*397) ^ _properties.GetHashCode(); }
         }
 
         /// <summary>
@@ -675,8 +673,8 @@ namespace QuantConnect.Securities
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            var od = EncodeBase36(_otherData);
-            return _symbol + ' ' + od;
+            var props = EncodeBase36(_properties);
+            return _symbol + ' ' + props;
         }
 
         #endregion

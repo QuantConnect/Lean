@@ -148,24 +148,13 @@ namespace QuantConnect.Brokerages.Oanda
         {
             return new Holding
             {
-                Symbol = MapOandaInstructmentToQcSymbol(position.instrument,InstrumentSecurityTypeMap[position.instrument]),
+                Symbol = ConvertSymbol(position.instrument,InstrumentSecurityTypeMap[position.instrument]),
                 Type = InstrumentSecurityTypeMap[position.instrument],
                 AveragePrice = (decimal)position.avgPrice,
                 ConversionRate = 1.0m,
                 CurrencySymbol = "$",
                 Quantity = position.side == "sell" ? -position.units : position.units
             };
-        }
-
-        private Symbol MapOandaInstructmentToQcSymbol(string instrument, SecurityType securityType)
-        {
-            if (securityType == SecurityType.Forex)
-            {
-                instrument = instrument.Trim('_');
-                // using fxcm market for now in all forex brokerage impls
-                return new Symbol(SecurityIdentifier.GenerateForex(instrument, Market.FXCM),  instrument);
-            }
-            throw new NotImplementedException("The specified security type has not been implemented yet: " + securityType);
         }
 
         /// <summary>
@@ -1041,6 +1030,7 @@ namespace QuantConnect.Brokerages.Oanda
         {
             if (securityType == SecurityType.Forex)
             {
+                instrument = instrument.Trim('_');
                 return new Symbol(SecurityIdentifier.GenerateForex(instrument, Market.Oanda), instrument);
             }
 

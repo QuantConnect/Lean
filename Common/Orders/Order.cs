@@ -112,6 +112,15 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Gets the executed value of this order. If the order has not yet filled,
+        /// then this will return zero.
+        /// </summary>
+        public decimal Value
+        {
+            get { return Quantity*Price; }
+        }
+
+        /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
         protected Order()
