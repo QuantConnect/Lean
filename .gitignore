@@ -247,3 +247,7 @@ testrunner/
 
 # Output chart data
 Charts/
+
+# NCrunch files
+*.ncrunchsolution
+*.ncrunchproject
