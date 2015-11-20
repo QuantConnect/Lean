@@ -39,7 +39,7 @@ namespace QuantConnect.Data.Market
         /// <param name="time">The time this data was emitted.</param>
         public DataDictionary(DateTime time)
         {
-#pragma warning disable 618 - This assignment is left here until the Time property is removed.
+#pragma warning disable 618 // This assignment is left here until the Time property is removed.
             Time = time;
 #pragma warning restore 618
         }

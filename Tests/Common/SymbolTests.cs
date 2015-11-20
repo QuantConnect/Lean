@@ -198,7 +198,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void ImplicitOperatorsAreInverseFunctions()
         {
-#pragma warning disable 0618 - This test requires implicit operators
+#pragma warning disable 0618 // This test requires implicit operators
             var eurusd = new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD");
             string stringEurusd = eurusd;
             Symbol symbolEurusd = stringEurusd;
@@ -209,7 +209,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void ImplicitOperatorsReturnSIDOnFailure()
         {
-#pragma warning disable 0618 - This test requires implicit operators
+#pragma warning disable 0618 // This test requires implicit operators
             // this doesn't exist in the symbol cace
             var eurusd = new Symbol(SecurityIdentifier.GenerateForex("NOT A SECURITY", Market.FXCM), "EURUSD");
             string stringEurusd = eurusd;
@@ -223,7 +223,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void ImplicitFromStringChecksSymbolCache()
         {
-#pragma warning disable 0618 - This test requires implicit operators
+#pragma warning disable 0618 // This test requires implicit operators
             string ticker = "EURUSD";
             Symbol actual = ticker;
             var expected = SymbolCache.GetSymbol(ticker);
@@ -234,7 +234,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void ImplicitFromStringParsesSid()
         {
-#pragma warning disable 0618 - This test requires implicit operators
+#pragma warning disable 0618 // This test requires implicit operators
             var expected = SymbolCache.GetSymbol("EURUSD");
             string sid = expected.ID.ToString();
             Symbol actual = sid;
