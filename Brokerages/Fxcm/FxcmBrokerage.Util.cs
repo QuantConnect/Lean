@@ -96,7 +96,7 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             return new Holding
             {
-                Symbol = ConvertFxcmSymbolToSymbol(fxcmPosition.getInstrument().getSymbol(), GetSecurityType(fxcmPosition.getInstrument())),
+                Symbol = ConvertSymbol(fxcmPosition.getInstrument()),
                 Type = GetSecurityType(fxcmPosition.getInstrument()),
                 AveragePrice = Convert.ToDecimal(fxcmPosition.getSettlPrice()),
                 ConversionRate = 1.0m,
@@ -124,21 +124,14 @@ namespace QuantConnect.Brokerages.Fxcm
         /// </summary>
         private static Symbol ConvertSymbol(Instrument instrument)
         {
-            return ConvertFxcmSymbolToSymbol(instrument.getSymbol(), GetSecurityType(instrument));
-        }
-
-        /// <summary>
-        /// Converts an FXCM symbol to a QuantConnect symbol
-        /// </summary>
-        private static Symbol ConvertFxcmSymbolToSymbol(string symbol, SecurityType securityType)
-        {
-            symbol = symbol.Replace("/", "");
+            var symbol = instrument.getSymbol().Replace("/", "");
+            var securityType = GetSecurityType(instrument);
             if (securityType == SecurityType.Forex)
             {
                 return new Symbol(SecurityIdentifier.GenerateForex(symbol, Market.FXCM), symbol);
             }
 
-            throw new ArgumentException("The specified security type is not supported: " + securityType, "securityType");
+            throw new ArgumentException("The specified security type is not supported: " + securityType);
         }
 
         /// <summary>
