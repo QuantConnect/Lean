@@ -49,7 +49,7 @@ namespace QuantConnect
         {
             Symbol symbol;
             if (Symbols.TryGetValue(ticker, out symbol)) return symbol;
-            throw new Exception("Unable to resolve sid from ticker: " + ticker);
+            throw new Exception("We were unable to locate the ticker '" + ticker +"'.");
         }
 
         /// <summary>
