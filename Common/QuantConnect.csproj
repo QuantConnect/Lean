@@ -239,11 +239,11 @@
     <Compile Include="Securities\IOrderProvider.cs" />
     <Compile Include="Securities\ISecurityPortfolioModel.cs" />
     <Compile Include="Securities\MarginCallModel.cs" />
-    <Compile Include="Securities\SecurityIdentifier.cs" />
     <Compile Include="Securities\SecurityPortfolioModel.cs" />
     <Compile Include="Securities\SecurityMarginModel.cs" />
     <Compile Include="Securities\ImmediateSettlementModel.cs" />
     <Compile Include="Securities\UnsettledCashAmount.cs" />
+    <Compile Include="SecurityIdentifier.cs" />
     <Compile Include="SeriesSampler.cs" />
     <Compile Include="Data\Custom\Quandl.cs" />
     <Compile Include="Data\DynamicData.cs" />
