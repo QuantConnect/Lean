@@ -54,7 +54,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IDataQueueHandler _dataQueueHandler;
         private BaseDataExchange _exchange;
         private BaseDataExchange _customExchange;
-        private ConcurrentDictionary<SymbolSecurityType, Subscription> _subscriptions;
+        private ConcurrentDictionary<Symbol, Subscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _customExchange = new BaseDataExchange("CustomDataExchange") {SleepInterval = 10};
             // sleep is controlled on this exchange via the GetNextTicksEnumerator
             _exchange = new BaseDataExchange("DataQueueExchange", GetNextTicksEnumerator()){SleepInterval = 0};
-            _subscriptions = new ConcurrentDictionary<SymbolSecurityType, Subscription>();
+            _subscriptions = new ConcurrentDictionary<Symbol, Subscription>();
 
             Bridge = new BusyBlockingCollection<TimeSlice>();
 
@@ -134,7 +134,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             foreach (var universe in _algorithm.Universes)
             {
                 var subscription = CreateUniverseSubscription(universe, start, Time.EndOfTime);
-                _subscriptions[new SymbolSecurityType(subscription)] = subscription;
+                _subscriptions[subscription.Security.Symbol] = subscription;
             }
         }
 
@@ -160,7 +160,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             Log.Trace("LiveTradingDataFeed.AddSubscription(): Added " + security.Symbol.ToString());
 
-            _subscriptions[new SymbolSecurityType(subscription)] = subscription;
+            _subscriptions[subscription.Security.Symbol] = subscription;
 
             // send the subscription for the new symbol through to the data queuehandler
             // unless it is custom data, custom data is retrieved using the same as backtest
@@ -204,7 +204,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // remove the subscription from our collection
             Subscription sub;
-            if (_subscriptions.TryRemove(new SymbolSecurityType(security), out sub))
+            if (_subscriptions.TryRemove(subscription.Security.Symbol, out sub))
             {
                 sub.Dispose();
             }
@@ -320,7 +320,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                     catch (Exception err)
                     {
-                        Log.Error(err, "Error removing: " + kvp.Key);
+                        Log.Error(err, "Error removing: " + kvp.Key.ToString());
                     }
                 }
             }

@@ -44,7 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private Ref<TimeSpan> _fillForwardResolution;
         private SecurityChanges _changes = SecurityChanges.None;
         private IMapFileProvider _mapFileProvider;
-        private ConcurrentDictionary<SymbolSecurityType, Subscription> _subscriptions;
+        private ConcurrentDictionary<Symbol, Subscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _algorithm = algorithm;
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
-            _subscriptions = new ConcurrentDictionary<SymbolSecurityType, Subscription>();
+            _subscriptions = new ConcurrentDictionary<Symbol, Subscription>();
             _cancellationTokenSource = new CancellationTokenSource();
 
             IsActive = true;
@@ -160,7 +160,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             Log.Trace("FileSystemDataFeed.AddSubscription(): Added " + security.Symbol.ToString());
 
-            _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription),  subscription);
+            _subscriptions.AddOrUpdate(subscription.Security.Symbol,  subscription);
 
             // prime the pump, run method checks current before move next calls
             PrimeSubscriptionPump(subscription, true);
@@ -179,7 +179,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool RemoveSubscription(Subscription subscription)
         {
             Subscription sub;
-            if (!_subscriptions.TryRemove(new SymbolSecurityType(subscription), out sub))
+            if (!_subscriptions.TryRemove(subscription.Security.Symbol, out sub))
             {
                 Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + subscription.Security.Symbol.ToString());
                 return false;
@@ -225,7 +225,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             // remove finished subscriptions
                             Subscription sub;
-                            _subscriptions.TryRemove(new SymbolSecurityType(subscription), out sub);
+                            _subscriptions.TryRemove(subscription.Security.Symbol, out sub);
                             continue;
                         }
 
@@ -395,7 +395,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // only message the user if it's one of their universe types
             var messageUser = subscription.Configuration.Type != typeof(CoarseFundamental);
             PrimeSubscriptionPump(subscription, messageUser);
-            _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription), subscription);
+            _subscriptions.AddOrUpdate(subscription.Security.Symbol, subscription);
         }
 
         /// <summary>
@@ -425,7 +425,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     _algorithm.Error("Failed to load subscription: " + subscription.Security.Symbol.ToString());
                 }
-                _subscriptions.TryRemove(new SymbolSecurityType(subscription), out subscription);
+                _subscriptions.TryRemove(subscription.Security.Symbol, out subscription);
             }
         }
 

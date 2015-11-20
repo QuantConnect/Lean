@@ -174,7 +174,6 @@
     <Compile Include="DataFeeds\ReaderErrorEventArgs.cs" />
     <Compile Include="DataFeeds\StreamStore.cs" />
     <Compile Include="DataFeeds\SubscriptionDataReader.cs" />
-    <Compile Include="DataFeeds\SymbolSecurityType.cs" />
     <Compile Include="DataFeeds\TimeSlice.cs" />
     <Compile Include="DataFeeds\Transport\IStreamReader.cs" />
     <Compile Include="DataFeeds\Transport\LocalFileSubscriptionStreamReader.cs" />

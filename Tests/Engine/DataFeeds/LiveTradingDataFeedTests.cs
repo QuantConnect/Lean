@@ -143,10 +143,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             for (int i = 0; i < 10000; i++)
             {
-                foreach (var subscription in fdqh.Subscriptions)
+                foreach (var symbol in fdqh.Subscriptions)
                 {
                     count.Value++;
-                    yield return new Tick{Symbol = subscription.Symbol};
+                    yield return new Tick{Symbol = symbol};
                 }
             }
         }
@@ -164,9 +164,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             FuncDataQueueHandler dataQueueHandler;
             RunDataFeed(algorithm, out dataQueueHandler);
 
-            Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(new SymbolSecurityType(Symbols.SPY, SecurityType.Equity)));
-            Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(new SymbolSecurityType(Symbols.EURUSD, SecurityType.Forex)));
-            Assert.IsFalse(dataQueueHandler.Subscriptions.Contains(new SymbolSecurityType(remoteFile, SecurityType.Base)));
+            Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
+            Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
+            Assert.IsFalse(dataQueueHandler.Subscriptions.Contains(remoteFile));
             Assert.AreEqual(2, dataQueueHandler.Subscriptions.Count);
         }
 
@@ -182,9 +182,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             feed.RemoveSubscription(feed.Subscriptions.Single(x => x.Configuration.Symbol == Symbols.SPY));
 
             Assert.AreEqual(1, dataQueueHandler.Subscriptions.Count);
-            Assert.IsFalse(dataQueueHandler.Subscriptions.Contains(new SymbolSecurityType(Symbols.SPY, SecurityType.Equity)));
-            Assert.IsFalse(dataQueueHandler.Subscriptions.Contains(new SymbolSecurityType(remoteFile, SecurityType.Base)));
-            Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(new SymbolSecurityType(Symbols.EURUSD, SecurityType.Forex)));
+            Assert.IsFalse(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
+            Assert.IsFalse(dataQueueHandler.Subscriptions.Contains(remoteFile));
+            Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
         }
 
         [Test]
@@ -410,7 +410,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private IDataFeed RunDataFeed(IAlgorithm algorithm, out FuncDataQueueHandler dataQueueHandler, ITimeProvider timeProvider = null, Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null)
         {
-            getNextTicksFunction = getNextTicksFunction ?? (fdqh => fdqh.Subscriptions.Select(x => new Tick(DateTime.Now, x.Symbol, 1, 2){Quantity = 1}));
+            getNextTicksFunction = getNextTicksFunction ?? (fdqh => fdqh.Subscriptions.Select(symbol => new Tick(DateTime.Now, symbol, 1, 2){Quantity = 1}));
 
             // job is used to send into DataQueueHandler
             var job = new LiveNodePacket();
