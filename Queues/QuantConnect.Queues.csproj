@@ -11,7 +11,7 @@
     <AssemblyName>QuantConnect.Queues</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <WarningsAsErrors>618</WarningsAsErrors>
+    <WarningsAsErrors>612,618</WarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
