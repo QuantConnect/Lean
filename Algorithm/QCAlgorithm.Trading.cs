@@ -167,7 +167,7 @@ namespace QuantConnect.Algorithm
             // then convert it into a market on open order
             if (!security.Exchange.ExchangeOpen)
             {
-                var mooTicket = MarketOnOpenOrder(symbol, quantity, tag);
+                var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, tag);
                 if (mooTicket.SubmitRequest.Response.IsSuccess && security.SubscriptionDataConfig.Resolution != Resolution.Daily)
                 {
                     Debug("Converted OrderID: " + mooTicket.OrderId + " into a MarketOnOpen order.");
