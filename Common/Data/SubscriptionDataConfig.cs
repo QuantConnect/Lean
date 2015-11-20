@@ -128,10 +128,8 @@ namespace QuantConnect.Data
         /// Constructor for Data Subscriptions
         /// </summary>
         /// <param name="objectType">Type of the data objects.</param>
-        /// <param name="securityType">SecurityType Enum Set Equity/FOREX/Futures etc.</param>
         /// <param name="symbol">Symbol of the asset we're requesting</param>
         /// <param name="resolution">Resolution of the asset we're requesting</param>
-        /// <param name="market">The market this subscription comes from</param>
         /// <param name="timeZone">The time zone the raw data is time stamped in</param>
         /// <param name="fillForward">Fill in gaps with historical data</param>
         /// <param name="extendedHours">Equities only - send in data from 4am - 8pm</param>
@@ -139,10 +137,8 @@ namespace QuantConnect.Data
         /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
         /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
         public SubscriptionDataConfig(Type objectType, 
-            SecurityType securityType, 
             Symbol symbol, 
             Resolution resolution, 
-            string market, 
             DateTimeZone timeZone,
             bool fillForward, 
             bool extendedHours,
@@ -150,7 +146,7 @@ namespace QuantConnect.Data
             bool isCustom = false)
         {
             Type = objectType;
-            SecurityType = securityType;
+            SecurityType = symbol.ID.SecurityType;
             Resolution = resolution;
             _sid = symbol.ID;
             FillDataForward = fillForward;
@@ -159,19 +155,9 @@ namespace QuantConnect.Data
             MappedSymbol = symbol.Value;
             IsInternalFeed = isInternalFeed;
             IsCustomData = isCustom;
-            Market = market;
+            Market = symbol.ID.Market;
             TimeZone = timeZone;
             Consolidators = new HashSet<IDataConsolidator>();
-
-            // verify the market string contains letters a-Z
-            if (string.IsNullOrWhiteSpace(market))
-            {
-                throw new ArgumentException("The market cannot be an empty string.");
-            }
-            if (!Regex.IsMatch(market, @"^[a-zA-Z]+$"))
-            {
-                throw new ArgumentException("The market must only contain letters A-Z.");
-            }
 
             switch (resolution)
             {
@@ -225,10 +211,8 @@ namespace QuantConnect.Data
             bool? isCustom = null)
             : this(
             objectType ?? config.Type,
-            securityType ?? config.SecurityType,
             symbol ?? config.Symbol,
             resolution ?? config.Resolution,
-            market ?? config.Market,
             timeZone ?? config.TimeZone,
             fillForward ?? config.FillDataForward,
             extendedHours ?? config.ExtendedMarketHours,

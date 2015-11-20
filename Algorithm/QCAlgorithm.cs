@@ -1078,7 +1078,7 @@ namespace QuantConnect.Algorithm
         public void AddUniverse<T>(SecurityType securityType, Symbol symbol, Resolution resolution, string market, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
             var exchangeHours = _exchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
-            var config = new SubscriptionDataConfig(typeof(T), securityType, symbol, resolution, market, exchangeHours.TimeZone, false, false, true, true);
+            var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, exchangeHours.TimeZone, false, false, true, true);
             AddUniverse(new FuncUniverse(config, UniverseSettings, d => selector(d.OfType<T>())));
         }
 
@@ -1095,7 +1095,7 @@ namespace QuantConnect.Algorithm
         public void AddUniverse<T>(SecurityType securityType, Symbol symbol, Resolution resolution, string market, SubscriptionSettings subscriptionSettings, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
             var exchangeHours = _exchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
-            var config = new SubscriptionDataConfig(typeof(T), securityType, symbol, resolution, market, exchangeHours.TimeZone, false, false, true, true);
+            var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, exchangeHours.TimeZone, false, false, true, true);
             AddUniverse(new FuncUniverse(config, subscriptionSettings, d => selector(d.OfType<T>())));
         }
 
@@ -1117,7 +1117,7 @@ namespace QuantConnect.Algorithm
         public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
         {
             var symbol = CoarseFundamental.CreateUniverseSymbol("usa");
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), SecurityType.Equity, symbol, Resolution.Daily, Market.USA, TimeZones.NewYork, false, false, true);
+            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, false, false, true);
             SetUniverse(new FuncUniverse(config, UniverseSettings, selectionData => selector(selectionData.OfType<CoarseFundamental>())));
         }
 
@@ -1257,7 +1257,7 @@ namespace QuantConnect.Algorithm
 
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
-            var config = SubscriptionManager.Add(typeof(T), SecurityType.Base, symbolObject, resolution, Market.USA, timeZone, true, fillDataForward, true, false);
+            var config = SubscriptionManager.Add(typeof(T), symbolObject, resolution, timeZone, true, fillDataForward, true, false);
 
             var exchangeHours = _exchangeHoursProvider.GetExchangeHours(config);
 

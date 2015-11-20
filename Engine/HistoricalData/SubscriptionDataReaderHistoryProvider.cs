@@ -95,10 +95,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             end = end.ConvertFromUtc(request.ExchangeHours.TimeZone);
 
             var config = new SubscriptionDataConfig(request.DataType, 
-                request.SecurityType, 
                 request.Symbol, 
                 request.Resolution, 
-                request.Market, 
                 request.TimeZone, 
                 request.FillForwardResolution.HasValue, 
                 request.IncludeExtendedMarketHours, 

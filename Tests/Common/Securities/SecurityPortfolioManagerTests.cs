@@ -78,7 +78,7 @@ namespace QuantConnect.Tests.Common.Securities
             // we're going to process fills and very our equity after each fill
             var subscriptions = new SubscriptionManager(TimeKeeper);
             var securities = new SecurityManager(TimeKeeper);
-            var security = new Security(SecurityExchangeHours, subscriptions.Add(SecurityType.Base, CASH, Resolution.Daily, Market.USA, TimeZones.NewYork), leverage: 10);
+            var security = new Security(SecurityExchangeHours, subscriptions.Add(CASH, Resolution.Daily, TimeZones.NewYork), leverage: 10);
             securities.Add(CASH, security);
             var transactions = new SecurityTransactionManager(securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
@@ -150,9 +150,9 @@ namespace QuantConnect.Tests.Common.Securities
             var mchCash = portfolio.CashBook["MCH"];
             var usdCash = portfolio.CashBook["USD"];
 
-            var mchJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, jwbCash, subscriptions.Add(SecurityType.Forex, MCHJWB, Resolution.Minute, "fxcm", TimeZones.NewYork), leverage: 10);
-            var mchUsdSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, subscriptions.Add(SecurityType.Forex, MCHUSD, Resolution.Minute, "fxcm", TimeZones.NewYork), leverage: 10);
-            var usdJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, mchCash, subscriptions.Add(SecurityType.Forex, USDJWB, Resolution.Minute, "fxcm", TimeZones.NewYork), leverage: 10);
+            var mchJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, jwbCash, subscriptions.Add(MCHJWB, Resolution.Minute, TimeZones.NewYork), leverage: 10);
+            var mchUsdSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, subscriptions.Add(MCHUSD, Resolution.Minute, TimeZones.NewYork), leverage: 10);
+            var usdJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, mchCash, subscriptions.Add(USDJWB, Resolution.Minute, TimeZones.NewYork), leverage: 10);
             
             // no fee model
             mchJwbSecurity.TransactionModel = new SecurityTransactionModel();
@@ -482,9 +482,9 @@ namespace QuantConnect.Tests.Common.Securities
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
         {
             if (type == SecurityType.Equity)
-                return new SubscriptionDataConfig(typeof (TradeBar), SecurityType.Equity, symbol, Resolution.Minute, Market.USA, TimeZones.NewYork, true, true, true);
+                return new SubscriptionDataConfig(typeof (TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, true, true, true);
             if (type == SecurityType.Forex)
-                return new SubscriptionDataConfig(typeof (TradeBar), SecurityType.Forex, symbol, Resolution.Minute, Market.FXCM, TimeZones.NewYork, true, true, true);
+                return new SubscriptionDataConfig(typeof (TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, true, true, true);
             throw new NotImplementedException(type.ToString());
         }
         

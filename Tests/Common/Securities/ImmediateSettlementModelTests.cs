@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         private SubscriptionDataConfig CreateTradeBarConfig()
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, Symbols.SPY, Resolution.Minute, Market.USA, TimeZones.NewYork, true, true, false);
+            return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, true, true, false);
         }
     }
 }
