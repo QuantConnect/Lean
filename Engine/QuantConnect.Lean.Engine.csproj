@@ -31,7 +31,6 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <WarningsAsErrors>612,618</WarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -44,6 +43,7 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Debug\QuantConnect.Lean.Engine.xml</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
+    <WarningsAsErrors>612,618</WarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
