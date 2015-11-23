@@ -865,7 +865,7 @@ namespace QuantConnect.Algorithm
                     throw new ArgumentOutOfRangeException("resolution");
             }
 
-            return string.Format("{0}({1}{2})", type, symbol, res);
+            return string.Format("{0}({1}{2})", type, symbol.ToString(), res);
         }
 
     } // End Partial Algorithm Template - Indicators.
