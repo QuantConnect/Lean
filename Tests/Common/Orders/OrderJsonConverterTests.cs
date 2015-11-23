@@ -136,10 +136,41 @@ namespace QuantConnect.Tests.Common.Orders
 'Direction':0,
 'AbsoluteQuantity':999}";
 
+
             var order = DeserializeOrder<MarketOrder>(json);
             var actual = order.Symbol;
 
             Assert.AreEqual(Symbols.SPY, actual);
+        }
+
+        [Test]
+        public void WorksWithJsonConvert()
+        {
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            {
+                Converters = {new OrderJsonConverter()}
+            };
+
+            const string json = @"{'Type':0,
+'Value':99986.827413672,
+'Id':1,
+'ContingentId':0,
+'BrokerId':[1],
+'Symbol':{'Value':'SPY',
+'Permtick':'SPY'},
+'Price':100.086914328,
+'Time':'2010-03-04T14:31:00Z',
+'Quantity':999,
+'Status':3,
+'Duration':0,
+'Tag':'',
+'SecurityType':1,
+'Direction':0,
+'AbsoluteQuantity':999}";
+
+            var order = JsonConvert.DeserializeObject<Order>(json);
+            Assert.IsInstanceOf<MarketOrder>(order);
+
         }
 
         private static T TestOrderType<T>(T expected)
