@@ -48,7 +48,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 var enumerableYahoo = yahooDownloader.Get(symbolObject, SecurityType.Equity, Resolution.Daily, DateTime.MinValue, DateTime.UtcNow);
 
                 //Get LEAN Data Writer:
-                var writer = new LeanDataWriter(SecurityType.Equity, Resolution.Daily, symbolObject, dataDirectory, "usa");
+                var writer = new LeanDataWriter(SecurityType.Equity, Resolution.Daily, symbolObject, dataDirectory, Market.USA);
                 writer.Write(enumerableYahoo);
             }
             catch (Exception err)

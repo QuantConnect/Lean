@@ -26,12 +26,12 @@ namespace QuantConnect.Tests.Common.Securities
     {
         private SecurityIdentifier SPY
         {
-            get { return SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", "usa"); }
+            get { return SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", Market.USA); }
         }
 
 
         // this is really not european style, but I'd prefer to test a value of 1 vs a value of 0
-        private readonly SecurityIdentifier SPY_Put_19550 = SecurityIdentifier.GenerateOption(new DateTime(2015, 09, 18), "SPY", "usa", 195.50m, OptionRight.Put, OptionStyle.European);
+        private readonly SecurityIdentifier SPY_Put_19550 = SecurityIdentifier.GenerateOption(new DateTime(2015, 09, 18), "SPY", Market.USA, 195.50m, OptionRight.Put, OptionStyle.European);
 
         [Test]
         public void GenerateEquityProperlyResolvesFirstDate()
@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(new DateTime(2015, 09, 18), spyPut.Date); // oa date 2015.09.18
             Assert.AreEqual(OptionStyle.European, spyPut.OptionStyle); // option style
             Assert.AreEqual(195.5m, spyPut.StrikePrice); // strike/scale
-            Assert.AreEqual("usa", spyPut.Market); // market
+            Assert.AreEqual(Market.USA, spyPut.Market); // market
             Assert.AreEqual(SecurityType.Option, spyPut.SecurityType); // security type
             Assert.AreEqual("SPY", spyPut.Symbol); // SPY in base36
 
@@ -69,11 +69,11 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void GeneratesEquitySecurityIdentifier()
         {
-            var sid1 = SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", "usa");
+            var sid1 = SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", Market.USA);
 
             // verify various values
             Assert.AreEqual(new DateTime(1998, 01, 02), sid1.Date);
-            Assert.AreEqual("usa", sid1.Market);
+            Assert.AreEqual(Market.USA, sid1.Market);
             Assert.AreEqual(SecurityType.Equity, sid1.SecurityType);
             Assert.AreEqual("SPY", sid1.Symbol);
 
@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // verify various values
             Assert.Throws<InvalidOperationException>(() => { var x = eurusd.Date; });
-            Assert.AreEqual("fxcm", eurusd.Market);
+            Assert.AreEqual(Market.FXCM, eurusd.Market);
             Assert.AreEqual(SecurityType.Forex, eurusd.SecurityType);
             Assert.AreEqual("EURUSD", eurusd.Symbol);
 
@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void Generates12Character()
         {
-            var sid1 = SecurityIdentifier.GenerateBase("123456789012", "usa");
+            var sid1 = SecurityIdentifier.GenerateBase("123456789012", Market.USA);
             Assert.AreEqual("123456789012", sid1.Symbol);
             Console.WriteLine(sid1);
         }
@@ -114,7 +114,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void ReturnsCorrectMarket()
         {
-            Assert.AreEqual("usa", SPY.Market);
+            Assert.AreEqual(Market.USA, SPY.Market);
         }
 
         [Test]

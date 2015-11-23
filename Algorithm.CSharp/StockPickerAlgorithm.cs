@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             // add a custom universe data source
-            AddUniverse<NyseTopGainers>(SecurityType.Equity, "universe-nyse-top-gainers", Resolution.Daily, "usa", data =>
+            AddUniverse<NyseTopGainers>(SecurityType.Equity, "universe-nyse-top-gainers", Resolution.Daily, Market.USA, data =>
             {
                 // define our selection criteria
                 return from d in data

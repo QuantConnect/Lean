@@ -54,7 +54,7 @@ namespace QuantConnect.ToolBox.GoogleDownloader
                 var data = downloader.Get(symbolObject, SecurityType.Equity, resolution, DateTime.UtcNow.AddDays(-period), DateTime.UtcNow);
 
                 // Save the data
-                var writer = new LeanDataWriter(SecurityType.Equity, resolution, symbolObject, dataDirectory, "usa");
+                var writer = new LeanDataWriter(SecurityType.Equity, resolution, symbolObject, dataDirectory, Market.USA);
                 writer.Write(data);
             }
             catch (Exception err)

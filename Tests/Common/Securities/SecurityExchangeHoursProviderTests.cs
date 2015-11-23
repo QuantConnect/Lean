@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Common.Securities
             var hours = exchangeHours.GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
             Assert.IsNotNull(hours);
 
-            Assert.AreEqual(hours, exchangeHours.GetExchangeHours("usa", null, SecurityType.Equity));
+            Assert.AreEqual(hours, exchangeHours.GetExchangeHours(Market.USA, null, SecurityType.Equity));
         }
 
         [Test]
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Common.Securities
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
             var exchangeHours = GetSecurityExchangeHoursProvider(file);
 
-            var hours = exchangeHours.GetExchangeHours("fxcm", null, SecurityType.Forex);
+            var hours = exchangeHours.GetExchangeHours(Market.FXCM, null, SecurityType.Forex);
             Assert.IsNotNull(hours);
 
             Assert.AreEqual(LocalMarketHours.OpenAllDay(DayOfWeek.Monday), hours.MarketHours[DayOfWeek.Monday]);
@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             return SecurityExchangeHoursProvider.FromCsvFile(file, new Dictionary<string, IEnumerable<DateTime>>
             {
-                {"usa", USHoliday.Dates}
+                {Market.USA, USHoliday.Dates}
             });
         }
 
@@ -90,7 +90,7 @@ namespace QuantConnect.Tests.Common.Securities
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
             var exchangeHours = GetSecurityExchangeHoursProvider(file);
 
-            var equityHours = exchangeHours.GetExchangeHours("usa", null, SecurityType.Equity);
+            var equityHours = exchangeHours.GetExchangeHours(Market.USA, null, SecurityType.Equity);
             foreach (var day in equityHours.MarketHours.Keys)
             {
                 var marketHours = equityHours.MarketHours[day];
@@ -112,7 +112,7 @@ namespace QuantConnect.Tests.Common.Securities
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
             var exchangeHours = GetSecurityExchangeHoursProvider(file);
 
-            var equityHours = exchangeHours.GetExchangeHours("fxcm", null, SecurityType.Forex);
+            var equityHours = exchangeHours.GetExchangeHours(Market.FXCM, null, SecurityType.Forex);
             foreach (var day in equityHours.MarketHours.Keys)
             {
                 var marketHours = equityHours.MarketHours[day];

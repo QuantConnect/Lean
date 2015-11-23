@@ -1116,7 +1116,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Defines an initial coarse selection</param>
         public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
         {
-            var symbol = CoarseFundamental.CreateUniverseSymbol("usa");
+            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, false, false, true);
             SetUniverse(new FuncUniverse(config, UniverseSettings, selectionData => selector(selectionData.OfType<CoarseFundamental>())));
         }
@@ -1186,7 +1186,7 @@ namespace QuantConnect.Algorithm
                 if (market == null)
                 {
                     // set default values, use fxcm for forex, usa for everything else
-                    market = securityType == SecurityType.Forex ? "fxcm" : "usa";
+                    market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
                 }
                 
                 var symbolObject = GenerateSimpleSymbol(securityType, symbol, market);
