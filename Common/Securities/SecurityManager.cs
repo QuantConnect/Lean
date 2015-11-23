@@ -253,7 +253,7 @@ namespace QuantConnect.Securities
         /// Indexer method for the security manager to access the securities objects by their symbol.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        /// <param name="symbol">Symbol string indexer</param>
+        /// <param name="symbol">Symbol object indexer</param>
         /// <returns>Security</returns>
         public Security this[Symbol symbol]
         {
@@ -261,13 +261,41 @@ namespace QuantConnect.Securities
             {
                 if (!_securityManager.ContainsKey(symbol))
                 {
-                    throw new Exception("This asset symbol (" + symbol.ToString() + ") was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"" + SymbolCache.GetTicker(symbol) + "\")'");
+                    throw new Exception(string.Format("This asset symbol ({0}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"{1}\")'", symbol, SymbolCache.GetTicker(symbol)));
                 } 
                 return _securityManager[symbol];
             }
             set 
             {
                 _securityManager[symbol] = value;
+            }
+        }
+
+        /// <summary>
+        /// Indexer method for the security manager to access the securities objects by their symbol.
+        /// </summary>
+        /// <remarks>IDictionary implementation</remarks>
+        /// <param name="ticker">string ticker symbol indexer</param>
+        /// <returns>Security</returns>
+        public Security this[string ticker]
+        {
+            get
+            {
+                Symbol symbol;
+                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
+                {
+                    throw new Exception(string.Format("This asset symbol ({0}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"{0}\")'", ticker));
+                }
+                return this[symbol];
+            }
+            set
+            {
+                Symbol symbol;
+                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
+                {
+                    throw new Exception(string.Format("This asset symbol ({0}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"{0}\")'", ticker));
+                }
+                this[symbol] = value;
             }
         }
 

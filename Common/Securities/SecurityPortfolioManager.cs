@@ -434,12 +434,23 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Indexer for the PortfolioManager class to access the underlying security holdings objects.
         /// </summary>
-        /// <param name="symbol">Symbol indexer</param>
+        /// <param name="symbol">Symbol object indexer</param>
         /// <returns>SecurityHolding class from the algorithm securities</returns>
         public SecurityHolding this[Symbol symbol]
         {
             get { return Securities[symbol].Holdings; }
             set { Securities[symbol].Holdings = value; }
+        }
+
+        /// <summary>
+        /// Indexer for the PortfolioManager class to access the underlying security holdings objects.
+        /// </summary>
+        /// <param name="ticker">string ticker symbol indexer</param>
+        /// <returns>SecurityHolding class from the algorithm securities</returns>
+        public SecurityHolding this[string ticker]
+        {
+            get { return Securities[ticker].Holdings; }
+            set { Securities[ticker].Holdings = value; }
         }
 
         /// <summary>

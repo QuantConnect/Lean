@@ -198,21 +198,56 @@ namespace QuantConnect.Data.Market
         /// <returns>
         /// The element with the specified key.
         /// </returns>
-        /// <param name="key">The key of the element to get or set.</param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception><exception cref="T:System.Collections.Generic.KeyNotFoundException">The property is retrieved and <paramref name="key"/> is not found.</exception><exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
-        public T this[Symbol key]
+        /// <param name="symbol">The key of the element to get or set.</param>
+        /// <exception cref="T:System.ArgumentNullException"><paramref name="symbol"/> is null.</exception>
+        /// <exception cref="T:System.Collections.Generic.KeyNotFoundException">The property is retrieved and <paramref name="symbol"/> is not found.</exception>
+        /// <exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
+        public T this[Symbol symbol]
         {
             get
             {
                 T data;
-                if (TryGetValue(key, out data))
+                if (TryGetValue(symbol, out data))
                 {
                     return data;
                 }
-                throw new KeyNotFoundException(string.Format("'{0}' wasn't found in the {1} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{0}\")", key, GetType().GetBetterTypeName()));
+                throw new KeyNotFoundException(string.Format("'{0}' wasn't found in the {1} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{0}\")", symbol, GetType().GetBetterTypeName()));
             }
             set
             {
-                _data[key] = value;
+                _data[symbol] = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the element with the specified key.
+        /// </summary>
+        /// <returns>
+        /// The element with the specified key.
+        /// </returns>
+        /// <param name="ticker">The key of the element to get or set.</param>
+        /// <exception cref="T:System.ArgumentNullException"><paramref name="ticker"/> is null.</exception>
+        /// <exception cref="T:System.Collections.Generic.KeyNotFoundException">The property is retrieved and <paramref name="ticker"/> is not found.</exception>
+        /// <exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
+        public T this[string ticker]
+        {
+            get
+            {
+                Symbol symbol;
+                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
+                {
+                    throw new KeyNotFoundException(string.Format("'{0}' wasn't found in the {1} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{0}\")", ticker, GetType().GetBetterTypeName()));
+                }
+                return this[symbol];
+            }
+            set
+            {
+                Symbol symbol;
+                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
+                {
+                    throw new KeyNotFoundException(string.Format("'{0}' wasn't found in the {1} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{0}\")", ticker, GetType().GetBetterTypeName()));
+                }
+                this[symbol] = value;
             }
         }
 
