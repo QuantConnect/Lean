@@ -409,12 +409,6 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 if (fill.Status == OrderStatus.Filled) orderResetEvent.Set();
             };
 
-            var portfolioResetEvent = new ManualResetEvent(false);
-            ib.SecurityHoldingUpdated += (sender, update) =>
-            {
-                portfolioResetEvent.Set();
-            };
-
             // buy some currency
             const int quantity = -buyQuantity;
             var order = new MarketOrder(Symbols.USDJPY, quantity, DateTime.UtcNow, type: Type);
@@ -426,9 +420,6 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             // ib is slow to update tws
             Thread.Sleep(5000);
-
-            // wait for account holdings to be updated
-            portfolioResetEvent.WaitOneAssertFail(1500, "Didn't receive portfolio update event");
 
             var newHoldings = ib.GetAccountHoldings().ToDictionary(x => x.Symbol);
             Log.Trace("New Quantity: " + newHoldings[Symbols.USDJPY].Quantity);

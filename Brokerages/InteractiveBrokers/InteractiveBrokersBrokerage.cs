@@ -140,7 +140,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client = new IB.IBClient();
 
             // set up event handlers
-            _client.UpdatePortfolio += HandlePortfolioUpdates;
             _client.OrderStatus += HandleOrderStatusUpdates;
             _client.UpdateAccountValue += HandleUpdateAccountValue;
             _client.Error += HandleError;
@@ -872,17 +871,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): " + err.Message);
             }
-        }
-
-        /// <summary>
-        /// Handle portfolio changed events from IB
-        /// </summary>
-        private void HandlePortfolioUpdates(object sender, IB.UpdatePortfolioEventArgs e)
-        {
-            _accountHoldingsResetEvent.Reset();
-            var holding = CreateHolding(e);
-            _accountHoldings[holding.Symbol.Value] = holding;
-            OnPortfolioChanged(new SecurityEvent(holding.Symbol.Value, e.Position, e.AverageCost));
         }
 
         /// <summary>
