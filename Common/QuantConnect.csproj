@@ -191,6 +191,7 @@
     <Compile Include="Orders\MarketOnCloseOrder.cs" />
     <Compile Include="Orders\MarketOnOpenOrder.cs" />
     <Compile Include="Orders\OrderField.cs" />
+    <Compile Include="Orders\OrderJsonConverter.cs" />
     <Compile Include="Orders\OrderRequest.cs" />
     <Compile Include="Orders\OrderRequestStatus.cs" />
     <Compile Include="Orders\OrderRequestType.cs" />
