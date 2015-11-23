@@ -26,8 +26,8 @@ namespace QuantConnect
     /// </summary>
     public static class SymbolCache
     {
-        private static readonly ConcurrentDictionary<string, Symbol> Symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.OrdinalIgnoreCase);
-        private static readonly ConcurrentDictionary<Symbol, string> Tickers = new ConcurrentDictionary<Symbol, string>();
+        // we aggregate the two maps into a class so we can assign a new one as an atomic operation
+        private static Cache _cache = new Cache();
 
         /// <summary>
         /// Adds a mapping for the specified ticker
@@ -36,8 +36,8 @@ namespace QuantConnect
         /// <param name="symbol">The symbol object that maps to the string ticker symbol</param>
         public static void Set(string ticker, Symbol symbol)
         {
-            Symbols[ticker] = symbol;
-            Tickers[symbol] = ticker;
+            _cache.Symbols[ticker] = symbol;
+            _cache.Tickers[symbol] = ticker;
         }
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace QuantConnect
         public static Symbol GetSymbol(string ticker)
         {
             Symbol symbol;
-            if (Symbols.TryGetValue(ticker, out symbol)) return symbol;
+            if (_cache.Symbols.TryGetValue(ticker, out symbol)) return symbol;
             throw new Exception("We were unable to locate the ticker '" + ticker +"'.");
         }
 
@@ -60,7 +60,7 @@ namespace QuantConnect
         /// <returns>The symbol object that maps to the specified string ticker symbol</returns>
         public static bool TryGetSymbol(string ticker, out Symbol symbol)
         {
-            return Symbols.TryGetValue(ticker, out symbol);
+            return _cache.Symbols.TryGetValue(ticker, out symbol);
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace QuantConnect
         public static string GetTicker(Symbol symbol)
         {
             string ticker;
-            return Tickers.TryGetValue(symbol, out ticker) ? ticker : symbol.ID.ToString();
+            return _cache.Tickers.TryGetValue(symbol, out ticker) ? ticker : symbol.ID.ToString();
         }
 
         /// <summary>
@@ -82,7 +82,21 @@ namespace QuantConnect
         /// <returns>The string ticker symbol that maps to the specified symbol object</returns>
         public static bool TryGetTicker(Symbol symbol, out string ticker)
         {
-            return Tickers.TryGetValue(symbol, out ticker);
+            return _cache.Tickers.TryGetValue(symbol, out ticker);
+        }
+
+        /// <summary>
+        /// Clears the current caches
+        /// </summary>
+        public static void Clear()
+        {
+            _cache = new Cache();
+        }
+
+        class Cache
+        {
+            public readonly ConcurrentDictionary<string, Symbol> Symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.OrdinalIgnoreCase);
+            public readonly ConcurrentDictionary<Symbol, string> Tickers = new ConcurrentDictionary<Symbol, string>();
         }
     }
 }
