@@ -485,7 +485,8 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose Keltner Channel we seek</param>
         /// <param name="period">The period over which to compute the Keltner Channels</param>
-        /// <param name="k">The number of multiples of the ATR from the middle band of the Keltner Channels</param>
+        /// <param name="k">The number of multiples of the <see cref="AverageTrueRange"/> from the middle band of the Keltner Channels</param>
+        /// <param name="movingAverageType">Specifies the type of moving average to be used as the middle line of the Keltner Channel</param>
         /// <param name="resolution">The resolution.</param> 
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The Keltner Channel indicator for the requested symbol.</returns>
