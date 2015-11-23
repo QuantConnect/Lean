@@ -116,7 +116,8 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                     Directory.CreateDirectory(coarseFolder);
                 }
 
-                ProcessDailyFolder(dailyFolder, coarseFolder, MapFileResolver.Create(mapFileFolder), exclusions, ignoreMaplessSymbols);
+                var lastProcessedDate = GetStartDate(coarseFolder);
+                ProcessDailyFolder(dailyFolder, coarseFolder, MapFileResolver.Create(mapFileFolder), exclusions, ignoreMaplessSymbols, lastProcessedDate);
             }
         }
 
@@ -132,7 +133,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// <param name="symbolResolver">Function used to provide symbol resolution. Default resolution uses the zip file name to resolve
         /// the symbol, specify null for this behavior.</param>
         /// <returns>A collection of the generated coarse files</returns>
-        public static ICollection<string> ProcessDailyFolder(string dailyFolder, string coarseFolder, MapFileResolver mapFileResolver, HashSet<string> exclusions, bool ignoreMapless, Func<string, string> symbolResolver = null)
+        public static ICollection<string> ProcessDailyFolder(string dailyFolder, string coarseFolder, MapFileResolver mapFileResolver, HashSet<string> exclusions, bool ignoreMapless, DateTime lastProcessedDate, Func<string, string> symbolResolver = null)
         {
             const decimal scaleFactor = 10000m;
 
@@ -300,13 +301,35 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         }
 
         /// <summary>
-        /// Parses a date time from a coarse file name
+        /// Resolves the start date that should be used in the <see cref="ProcessDailyFolder"/>. This will
+        /// be equal to the latest file date (20150101.csv) plus one day
         /// </summary>
-        /// <param name="filename">The coarse file name to be parsed</param>
-        /// <returns>The timestamp in the filename</returns>
-        private static DateTime ParseDateFromCoarseFilename(string filename)
+        /// <param name="coarseDirectory">The directory containing the coarse files</param>
+        /// <returns>The last coarse file date plus one day if exists, else DateTime.MinValue</returns>
+        public static DateTime GetStartDate(string coarseDirectory)
         {
-            return DateTime.ParseExact(filename.Substring(0, DateFormat.EightCharacter.Length), DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+            var lastProcessedDate = (
+                from coarseFile in Directory.EnumerateFiles(coarseDirectory)
+                let date = TryParseCoarseFileDate(coarseFile)
+                where date != null
+                // we'll start on the following day
+                select date.Value.AddDays(1)
+                ).DefaultIfEmpty(DateTime.MinValue).Max();
+
+            return lastProcessedDate;
+        }
+
+        private static DateTime? TryParseCoarseFileDate(string coarseFile)
+        {
+            try
+            {
+                var dateString = Path.GetFileNameWithoutExtension(coarseFile);
+                return DateTime.ParseExact(dateString, "yyyyMMdd", null);
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }
