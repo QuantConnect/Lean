@@ -117,6 +117,8 @@ namespace QuantConnect
             }
         }
 
+        private static readonly DateTime EpochTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
+
         /// <summary>
         /// Create a C# DateTime from a UnixTimestamp
         /// </summary>
@@ -124,16 +126,16 @@ namespace QuantConnect
         /// <returns>C# date timeobject</returns>
         public static DateTime UnixTimeStampToDateTime(double unixTimeStamp) 
         {
-            var time = DateTime.Now;
+            DateTime time;
             try 
             {
                 // Unix timestamp is seconds past epoch
-                time = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-                time = time.AddSeconds(unixTimeStamp);
+                time = EpochTime.AddSeconds(unixTimeStamp);
             }
             catch (Exception err)
             {
                 Log.Error("Time.UnixTimeStampToDateTime(): " + unixTimeStamp + err.Message);
+                time = DateTime.Now;
             }
             return time;
         }
