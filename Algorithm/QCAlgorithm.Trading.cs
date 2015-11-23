@@ -472,7 +472,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="MarketOrder"/>
         public void SetHoldings(Symbol symbol, float percentage, bool liquidateExistingHoldings = false, string tag = "")
         {
-            SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings);
+            SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings, tag);
         }
 
         /// <summary>
@@ -485,7 +485,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="MarketOrder"/>
         public void SetHoldings(Symbol symbol, int percentage, bool liquidateExistingHoldings = false, string tag = "")
         {
-            SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings);
+            SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings, tag);
         }
 
         /// <summary>
@@ -518,7 +518,7 @@ namespace QuantConnect.Algorithm
                     if (holdingSymbol != symbol && holdings.AbsoluteQuantity > 0)
                     {
                         //Go through all existing holdings [synchronously], market order the inverse quantity:
-                        Order(holdingSymbol, -holdings.Quantity);
+                        Order(holdingSymbol, -holdings.Quantity, false, tag);
                     }
                 }
             }
