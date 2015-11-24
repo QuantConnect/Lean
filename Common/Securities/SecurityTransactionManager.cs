@@ -287,7 +287,7 @@ namespace QuantConnect.Securities
         /// </summary>
         private static bool Completed(Order order)
         {
-            return order.Status == OrderStatus.Filled || order.Status == OrderStatus.Invalid || order.Status == OrderStatus.Canceled;
+            return order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled || order.Status == OrderStatus.Invalid || order.Status == OrderStatus.Canceled;
         }
     }
 }
