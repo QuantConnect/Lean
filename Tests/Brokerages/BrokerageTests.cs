@@ -385,6 +385,44 @@ namespace QuantConnect.Tests.Brokerages
             Assert.AreEqual(GetDefaultQuantity(), afterQuantity - beforeQuantity);
         }
 
+        [Test, Ignore("This test requires reading the output and selection of a low volume security for the Brokerageage")]
+        public void PartialFills()
+        {
+            bool orderFilled = false;
+            var manualResetEvent = new ManualResetEvent(false);
+
+            var qty = 1000000;
+            var remaining = qty;
+            var sync = new object();
+            Brokerage.OrderStatusChanged += (sender, orderEvent) =>
+            {
+                lock (sync)
+                {
+                    remaining -= orderEvent.FillQuantity;
+                    Console.WriteLine("Remaining: " + remaining + " FillQuantity: " + orderEvent.FillQuantity);
+                    if (orderEvent.Status == OrderStatus.Filled)
+                    {
+                        orderFilled = true;
+                        manualResetEvent.Set();
+                    }
+                }
+            };
+
+            // pick a security with low, but some, volume
+            var fxe = new Symbol(SecurityIdentifier.GenerateEquity("FXE", Market.USA), "FXE");
+            var symbol = Symbols.EURUSD;
+            var order = new MarketOrder(symbol, qty, DateTime.UtcNow, type: symbol.ID.SecurityType) { Id = 1 };
+            Brokerage.PlaceOrder(order);
+
+            // pause for a while to wait for fills to come in
+            manualResetEvent.WaitOne(2500);
+            manualResetEvent.WaitOne(2500);
+            manualResetEvent.WaitOne(2500);
+
+            Console.WriteLine("Remaining: " + remaining);
+            Assert.AreEqual(0, remaining);
+        }
+
         /// <summary>
         /// Updates the specified order in the brokerage until it fills or reaches a timeout
         /// </summary>

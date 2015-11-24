@@ -598,47 +598,6 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.IsTrue(ib.IsConnected);
         }
 
-        [Test, Ignore("This test requires reading the output")]
-        public void PartialFills()
-        {
-            bool orderFilled = false;
-            var manualResetEvent = new ManualResetEvent(false);
-            var ib = _interactiveBrokersBrokerage;
-
-            var qty = -10000;
-            var remaining = qty;
-            var sync = new object();
-            ib.OrderStatusChanged += (sender, orderEvent) =>
-            {
-                lock(sync)
-                {
-                    remaining -= orderEvent.FillQuantity;
-                    Console.WriteLine("Remaining: " + remaining + " FillQuantity: " + orderEvent.FillQuantity);
-                    if (orderEvent.Status == OrderStatus.Filled)
-                    {
-                        orderFilled = true;
-                        manualResetEvent.Set();
-                    }
-                }
-            };
-
-            // pick a security with low, but some, volume
-            var fxe = new Symbol(SecurityIdentifier.GenerateEquity("FXE", Market.USA), "FXE");
-            var order = new MarketOrder(fxe, qty, DateTime.UtcNow, type: SecurityType.Equity) { Id = 1 };
-            _orders.Add(order);
-            ib.PlaceOrder(order);
-
-            // pause for a while to wait for fills to come in
-            manualResetEvent.WaitOne(2500);
-            manualResetEvent.WaitOne(2500);
-            manualResetEvent.WaitOne(2500);
-
-            Console.WriteLine("Remaining: " + remaining);
-            Assert.AreEqual(0, remaining);
-            var orderFromIB = AssertOrderOpened(orderFilled, ib, order);
-            Assert.AreEqual(OrderType.Market, orderFromIB.Type);
-        }
-
         private static Order AssertOrderOpened(bool orderFilled, InteractiveBrokersBrokerage ib, Order order)
         {
             // if the order didn't fill check for it as an open order
