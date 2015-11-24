@@ -208,6 +208,7 @@
     <Compile Include="Orders\SubmitOrderRequest.cs" />
     <Compile Include="Orders\UpdateOrderFields.cs" />
     <Compile Include="Orders\UpdateOrderRequest.cs" />
+    <Compile Include="Packets\CommandResultPacket.cs" />
     <Compile Include="Packets\HandledErrorPacket.cs" />
     <Compile Include="Packets\HistoryPacket.cs" />
     <Compile Include="Properties\SharedAssemblyInfo.cs" />
