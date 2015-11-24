@@ -184,6 +184,11 @@ namespace QuantConnect.Lean.Engine.Setup
                         algorithm.Schedule.SetEventSchedule(realTimeHandler);
                         //Initialise the algorithm, get the required data:
                         algorithm.Initialize();
+                        //Zero the CashBook - we'll populate directly from brokerage
+                        foreach (var kvp in algorithm.Portfolio.CashBook)
+                        {
+                            kvp.Value.Quantity = 0;
+                        }
                     }
                     catch (Exception err)
                     {
