@@ -65,8 +65,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         // IB likes to duplicate/triplicate some events, keep track of them and swallow the dupes
         // we're keeping track of the .ToString() of the order event here
-        private readonly FixedSizeHashQueue<string> _recentOrderEvents = new FixedSizeHashQueue<string>(50); 
+        private readonly FixedSizeHashQueue<string> _recentOrderEvents = new FixedSizeHashQueue<string>(50);
 
+        private readonly object _orderFillsLock = new object();
+        private readonly ConcurrentDictionary<Symbol, int> _orderFills = new ConcurrentDictionary<Symbol, int>(); 
         private readonly ConcurrentDictionary<string, decimal> _cashBalances = new ConcurrentDictionary<string, decimal>(); 
         private readonly ConcurrentDictionary<string, string> _accountProperties = new ConcurrentDictionary<string, string>();
         // number of shares per symbol
@@ -842,8 +844,24 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return;
                 }
 
+                int filledThisTime;
+                lock (_orderFillsLock)
+                {
+                    // lock since we're getting and updating in multiple operations
+                    var currentFilled = _orderFills.GetOrAdd(order.Symbol, 0);
+                    filledThisTime = update.Filled - currentFilled;
+                    _orderFills.AddOrUpdate(order.Symbol, currentFilled, (sym, filled) => update.Filled);
+                }
+
+                // don't send empty fill events
+                if (filledThisTime == 0 && (status == OrderStatus.PartiallyFilled || status == OrderStatus.Filled))
+                {
+                    Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Ignored zero fill event: OrderId: " + update.OrderId + " Remaining: " + update.Remaining);
+                    return;
+                }
+
                 // mark sells as negative quantities
-                var fillQuantity = order.Direction == OrderDirection.Buy ? update.Filled : -update.Filled;
+                var fillQuantity = order.Direction == OrderDirection.Buy ? filledThisTime : -filledThisTime;
                 const int orderFee = 0;
                 var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee, "Interactive Brokers Fill Event")
                 {
