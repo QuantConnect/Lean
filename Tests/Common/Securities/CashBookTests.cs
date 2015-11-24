@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void ComputesValueInAccountCurrency()
         {
             var book = new CashBook();
-            book["USD"].Quantity = 1000;
+            book["USD"].SetQuantity(1000);
             book.Add("JPY", 1000, 1/100m);
             book.Add("GBP", 1000, 2m);
 

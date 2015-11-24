@@ -187,7 +187,7 @@ namespace QuantConnect.Lean.Engine.Setup
                         //Zero the CashBook - we'll populate directly from brokerage
                         foreach (var kvp in algorithm.Portfolio.CashBook)
                         {
-                            kvp.Value.Quantity = 0;
+                            kvp.Value.SetQuantity(0);
                         }
                     }
                     catch (Exception err)

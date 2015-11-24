@@ -68,7 +68,7 @@ namespace QuantConnect.Securities.Forex
                 var order = new MarketOrder(security.Symbol, fill.FillQuantity, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), type: security.Type){Price = fill.FillPrice, Status = OrderStatus.Filled};
                 var feeThisOrder = Math.Abs(security.TransactionModel.GetOrderFee(security, order));
                 security.Holdings.AddNewFee(feeThisOrder);
-                portfolio.CashBook[CashBook.AccountCurrency].Quantity -= feeThisOrder;
+                portfolio.CashBook[CashBook.AccountCurrency].AddQuantity(-feeThisOrder);
 
                 // Apply the funds using the current settlement model
                 security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, baseCurrency, fill.FillQuantity);

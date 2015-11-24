@@ -29,6 +29,8 @@ namespace QuantConnect.Securities
         private bool _isBaseCurrency;
         private bool _invertRealTimePrice;
 
+        private readonly object _locker = new object();
+
         /// <summary>
         /// Gets the symbol of the security required to provide conversion rates.
         /// </summary>
@@ -42,7 +44,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets or sets the amount of cash held
         /// </summary>
-        public decimal Quantity { get; set; }
+        public decimal Quantity { get; private set; }
 
         /// <summary>
         /// Gets the conversion rate into account currency
@@ -88,6 +90,33 @@ namespace QuantConnect.Securities
                 rate = 1/rate;
             }
             ConversionRate = rate;
+        }
+
+        /// <summary>
+        /// Adds the specified amount of currency to this Cash instance and returns the new total.
+        /// This operation is thread-safe
+        /// </summary>
+        /// <param name="amount">The amount of currency to be added</param>
+        /// <returns>The amount of currency directly after the addition</returns>
+        public decimal AddQuantity(decimal amount)
+        {
+            lock (_locker)
+            {
+                Quantity += amount;
+                return Quantity;
+            }
+        }
+
+        /// <summary>
+        /// Sets the Quantity to the specified amount
+        /// </summary>
+        /// <param name="amount">The amount to set the quantity to</param>
+        public void SetQuantity(decimal amount)
+        {
+            lock (_locker)
+            {
+                Quantity = amount;
+            }
         }
 
         /// <summary>

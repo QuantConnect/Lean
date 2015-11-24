@@ -225,7 +225,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
-            portfolio.CashBook["USD"].Quantity = quantity;
+            portfolio.CashBook["USD"].SetQuantity(quantity);
 
             var config = CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL);
             securities.Add(new Security(SecurityExchangeHours, config, leverage));
@@ -304,7 +304,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
-            portfolio.CashBook["USD"].Quantity = 1000;
+            portfolio.CashBook["USD"].SetQuantity(1000);
             portfolio.CashBook.Add("EUR",  1000, 1.1m);
             portfolio.CashBook.Add("GBP", -1000, 2.0m);
 
