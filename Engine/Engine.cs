@@ -64,7 +64,7 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Primary Analysis Thread:
         /// </summary>
-        public static void Main(string[] args)
+        public static void Launch()
         {
             Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
 
@@ -79,9 +79,9 @@ namespace QuantConnect.Lean.Engine
 
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
-            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + Constants.Version + " Mode: " + mode);
-            Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
-            Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + +OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
+            Log.Trace("Engine.Launch(): LEAN ALGORITHMIC TRADING ENGINE v" + Constants.Version + " Mode: " + mode);
+            Log.Trace("Engine.Launch(): Started " + DateTime.Now.ToShortTimeString());
+            Log.Trace("Engine.Launch(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + +OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
 
             //Import external libraries specific to physical server location (cloud/local)
             LeanEngineSystemHandlers leanEngineSystemHandlers;
@@ -91,7 +91,7 @@ namespace QuantConnect.Lean.Engine
             }
             catch (CompositionException compositionException)
             {
-                Log.Error("Engine.Main(): Failed to load library: " + compositionException);
+                Log.Error("Engine.Launch(): Failed to load library: " + compositionException);
                 throw;
             }
 
@@ -104,7 +104,7 @@ namespace QuantConnect.Lean.Engine
 
             if (job == null)
             {
-                throw new Exception("Engine.Main(): Job was null.");
+                throw new Exception("Engine.Launch(): Job was null.");
             }
 
             LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
@@ -114,7 +114,7 @@ namespace QuantConnect.Lean.Engine
             }
             catch (CompositionException compositionException)
             {
-                Log.Error("Engine.Main(): Failed to load library: " + compositionException);
+                Log.Error("Engine.Launch(): Failed to load library: " + compositionException);
                 throw;
             }
 
@@ -151,7 +151,7 @@ namespace QuantConnect.Lean.Engine
             {
                 //Delete the message from the job queue:
                 leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
-                Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
+                Log.Trace("Engine.Launch(): Packet removed from queue: " + job.AlgorithmId);
 
                 // clean up resources
                 leanEngineSystemHandlers.Dispose();
@@ -323,7 +323,7 @@ namespace QuantConnect.Lean.Engine
 
                         if (!complete)
                         {
-                            Log.Error("Engine.Main(): Failed to complete in time: " + _algorithmHandlers.Setup.MaximumRuntime.ToString("F"));
+                            Log.Error("Engine.Launch(): Failed to complete in time: " + _algorithmHandlers.Setup.MaximumRuntime.ToString("F"));
                             throw new Exception("Failed to complete algorithm within " + _algorithmHandlers.Setup.MaximumRuntime.ToString("F")
                                 + " seconds. Please make it run faster.");
                         }
@@ -404,7 +404,7 @@ namespace QuantConnect.Lean.Engine
                     }
                     catch (Exception err)
                     {
-                        Log.Error("Engine.Main(): Error sending analysis result: " + err.Message + "  ST >> " + err.StackTrace);
+                        Log.Error("Engine.Launch(): Error sending analysis result: " + err.Message + "  ST >> " + err.StackTrace);
                     }
 
                     //Before we return, send terminate commands to close up the threads
@@ -443,11 +443,11 @@ namespace QuantConnect.Lean.Engine
                 {
                     _algorithmHandlers.Setup.Dispose();
                 }
-                Log.Trace("Engine.Main(): Analysis Completed and Results Posted.");
+                Log.Trace("Engine.Launch(): Analysis Completed and Results Posted.");
             }
             catch (Exception err)
             {
-                Log.Error("Engine.Main(): Error running algorithm: " + err.Message + " >> " + err.StackTrace);
+                Log.Error("Engine.Launch(): Error running algorithm: " + err.Message + " >> " + err.StackTrace);
             }
             finally
             {

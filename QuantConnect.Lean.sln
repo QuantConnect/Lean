@@ -1,8 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Launcher", "Launcher\QuantConnect.Launcher.csproj", "{0102998D-2E78-4692-9034-FDA3C134AAB0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{12156F46-D07E-4E3D-AD2B-7409E82AB62F} = {12156F46-D07E-4E3D-AD2B-7409E82AB62F}
+	EndProjectSection
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Lean.Engine", "Engine\QuantConnect.Lean.Engine.csproj", "{12156F46-D07E-4E3D-AD2B-7409E82AB62F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C5D44209-49A0-4505-A870-043C5EF5FDDF} = {C5D44209-49A0-4505-A870-043C5EF5FDDF}
@@ -62,6 +67,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0102998D-2E78-4692-9034-FDA3C134AAB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0102998D-2E78-4692-9034-FDA3C134AAB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0102998D-2E78-4692-9034-FDA3C134AAB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0102998D-2E78-4692-9034-FDA3C134AAB0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{12156F46-D07E-4E3D-AD2B-7409E82AB62F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{12156F46-D07E-4E3D-AD2B-7409E82AB62F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{12156F46-D07E-4E3D-AD2B-7409E82AB62F}.Release|Any CPU.ActiveCfg = Release|Any CPU

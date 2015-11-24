@@ -6,7 +6,7 @@
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{12156F46-D07E-4E3D-AD2B-7409E82AB62F}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect.Lean.Engine</RootNamespace>
     <AssemblyName>QuantConnect.Lean.Engine</AssemblyName>
@@ -56,7 +56,8 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.Lean.Engine.Engine</StartupObject>
+    <StartupObject>
+    </StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -197,9 +198,6 @@
     <Compile Include="Setup\BacktestingSetupHandler.cs" />
     <Compile Include="Setup\ISetupHandler.cs" />
     <None Include="app.config" />
-    <None Include="config.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="packages.config" />
     <Compile Include="Results\BacktestingResultHandler.cs" />
     <Compile Include="DataFeeds\FileSystemDataFeed.cs" />
@@ -216,10 +214,6 @@
     <ProjectReference Include="..\Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj">
       <Project>{39a81c16-a1e8-425e-a8f2-1433adb80228}</Project>
       <Name>QuantConnect.Algorithm.CSharp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Algorithm.FSharp\QuantConnect.Algorithm.FSharp.fsproj">
-      <Project>{7702711a-0c09-40d4-b151-e308d1520738}</Project>
-      <Name>QuantConnect.Algorithm.FSharp</Name>
     </ProjectReference>
     <ProjectReference Include="..\Algorithm.VisualBasic\QuantConnect.Algorithm.VisualBasic.vbproj">
       <Project>{af8f124b-b441-4aa7-92b7-cea72bdb4118}</Project>
