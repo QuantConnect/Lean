@@ -1310,9 +1310,11 @@ namespace QuantConnect.Brokerages.Tradier
                 foreach (var cachedOrder in _cachedOpenOrdersByTradierOrderID)
                 {
                     TradierOrder updatedOrder;
-                    if (updatedOrders.TryGetValue(cachedOrder.Key, out updatedOrder))
+                    var hasUpdatedOrder = updatedOrders.TryGetValue(cachedOrder.Key, out updatedOrder);
+                    if (hasUpdatedOrder)
                     {
                         // determine if the order has been updated and produce fills accordingly
+                        _cachedOpenOrdersByTradierOrderID[cachedOrder.Key] = updatedOrder;
                         ProcessPotentiallyUpdatedOrder(cachedOrder.Value, updatedOrder);
                         continue;
                     }
@@ -1336,7 +1338,8 @@ namespace QuantConnect.Brokerages.Tradier
                                 Log.Error(string.Format("TradierBrokerage.CheckForFills(): Unable to locate order {0} in cached open orders.", cachedOrderLocal.Key));
                                 throw new Exception("TradierBrokerage.CheckForFills(): GetOrder() return null response");
                             }
-                            
+
+                            _cachedOpenOrdersByTradierOrderID[cachedOrderLocal.Key] = updatedOrderLocal;
                             ProcessPotentiallyUpdatedOrder(cachedOrderLocal.Value, updatedOrderLocal);
                         }
                         catch (Exception err)
