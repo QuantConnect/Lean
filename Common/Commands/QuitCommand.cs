@@ -13,24 +13,19 @@
  * limitations under the License.
 */
 
-using QuantConnect.Interfaces;
-using QuantConnect.Packets;
-
 namespace QuantConnect.Commands
 {
     /// <summary>
     /// Represents a command that will terminate the algorithm
     /// </summary>
-    public sealed class QuitCommand : ICommand
+    public sealed class QuitCommand : AlgorithmStatusCommand
     {
         /// <summary>
-        /// Immediately terminates the running algorithm
+        /// Initializes a new instance of the <see cref="QuitCommand"/>
         /// </summary>
-        /// <param name="algorithm">The algorithm to run this command against</param>
-        public CommandResultPacket Run(IAlgorithm algorithm)
+        public QuitCommand()
+            : base(AlgorithmStatus.Stopped)
         {
-            algorithm.Status = AlgorithmStatus.Stopped;
-            return new CommandResultPacket(this, true);
         }
     }
 }
