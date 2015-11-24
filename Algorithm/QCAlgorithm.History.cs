@@ -55,6 +55,15 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Sets the warm up period to the specified value
+        /// </summary>
+        /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
+        public void SetWarmUp(TimeSpan timeSpan)
+        {
+            SetWarmup(timeSpan);
+        }
+
+        /// <summary>
         /// Sets the warm up period by resolving a start date that would send that amount of data into
         /// the algorithm. The highest (smallest) resolution in the securities collection will be used.
         /// For example, if an algorithm has minute and daily data and 200 bars are requested, that would
@@ -65,6 +74,18 @@ namespace QuantConnect.Algorithm
         {
             _warmupTimeSpan = null;
             _warmupBarCount = barCount;
+        }
+
+        /// <summary>
+        /// Sets the warm up period by resolving a start date that would send that amount of data into
+        /// the algorithm. The highest (smallest) resolution in the securities collection will be used.
+        /// For example, if an algorithm has minute and daily data and 200 bars are requested, that would
+        /// use 200 minute bars.
+        /// </summary>
+        /// <param name="barCount">The number of data points requested for warm up</param>
+        public void SetWarmUp(int barCount)
+        {
+            SetWarmup(barCount);
         }
 
         /// <summary>
