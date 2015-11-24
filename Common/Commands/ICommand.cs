@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Interfaces;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Commands
 {
@@ -26,6 +27,6 @@ namespace QuantConnect.Commands
         /// Runs this command against the specified algorithm instance
         /// </summary>
         /// <param name="algorithm">The algorithm to run this command against</param>
-        void Run(IAlgorithm algorithm);
+        CommandResultPacket Run(IAlgorithm algorithm);
     }
 }

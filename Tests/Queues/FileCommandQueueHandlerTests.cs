@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Commands;
 using QuantConnect.Interfaces;
+using QuantConnect.Packets;
 using QuantConnect.Queues;
 
 namespace QuantConnect.Tests.Queues
@@ -60,9 +61,10 @@ namespace QuantConnect.Tests.Queues
 
         private sealed class SpecialCommand : ICommand
         {
-            public void Run(IAlgorithm algorithm)
+            public CommandResultPacket Run(IAlgorithm algorithm)
             {
                 Console.WriteLine("This is a special command!");
+                return new CommandResultPacket(this, true);
             }
         }
     }

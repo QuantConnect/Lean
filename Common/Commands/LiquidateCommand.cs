@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Interfaces;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Commands
 {
@@ -26,9 +27,10 @@ namespace QuantConnect.Commands
         /// Submits orders to liquidate all current holdings in the algorithm
         /// </summary>
         /// <param name="algorithm">The algorithm to be liquidated</param>
-        public void Run(IAlgorithm algorithm)
+        public CommandResultPacket Run(IAlgorithm algorithm)
         {
             algorithm.Liquidate();
+            return new CommandResultPacket(this, true);
         }
     }
 }

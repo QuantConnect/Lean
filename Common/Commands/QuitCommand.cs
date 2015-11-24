@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Interfaces;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Commands
 {
@@ -26,9 +27,10 @@ namespace QuantConnect.Commands
         /// Immediately terminates the running algorithm
         /// </summary>
         /// <param name="algorithm">The algorithm to run this command against</param>
-        public void Run(IAlgorithm algorithm)
+        public CommandResultPacket Run(IAlgorithm algorithm)
         {
             algorithm.Status = AlgorithmStatus.Stopped;
+            return new CommandResultPacket(this, true);
         }
     }
 }
