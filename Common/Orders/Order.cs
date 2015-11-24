@@ -112,12 +112,12 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Value of the order at limit price if a limit order, or market price if a market order.
+        /// Gets the executed value of this order. If the order has not yet filled,
+        /// then this will return zero.
         /// </summary>
-        [Obsolete("Value property has been made obsolete. Use GetValue(currentMarketPrice) instead.")]
-        public abstract decimal Value 
-        { 
-            get; 
+        public decimal Value
+        {
+            get { return Quantity*Price; }
         }
 
         /// <summary>

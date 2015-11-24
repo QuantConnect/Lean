@@ -15,6 +15,7 @@
 using System;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.YahooDownloader
 {
@@ -42,10 +43,12 @@ namespace QuantConnect.ToolBox.YahooDownloader
             {
                 //Get Yahoo Downloader:
                 var yahooDownloader = new YahooDataDownloader();
-                var enumerableYahoo = yahooDownloader.Get(new Symbol(symbol), SecurityType.Equity, Resolution.Daily, DateTime.MinValue, DateTime.UtcNow);
+                var sid = SecurityIdentifier.GenerateEquity(symbol, Market.USA);
+                var symbolObject = new Symbol(sid, symbol);
+                var enumerableYahoo = yahooDownloader.Get(symbolObject, SecurityType.Equity, Resolution.Daily, DateTime.MinValue, DateTime.UtcNow);
 
                 //Get LEAN Data Writer:
-                var writer = new LeanDataWriter(SecurityType.Equity, Resolution.Daily, symbol, dataDirectory, "usa");
+                var writer = new LeanDataWriter(SecurityType.Equity, Resolution.Daily, symbolObject, dataDirectory, Market.USA);
                 writer.Write(enumerableYahoo);
             }
             catch (Exception err)

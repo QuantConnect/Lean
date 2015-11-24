@@ -24,19 +24,19 @@ namespace QuantConnect.Tests.Brokerages
     /// </summary>
     public class HoldingsProvider : IHoldingsProvider
     {
-        private readonly IDictionary<string, Holding> _holdings;
+        private readonly IDictionary<Symbol, Holding> _holdings;
 
-        public HoldingsProvider(IDictionary<string, Holding> holdings)
+        public HoldingsProvider(IDictionary<Symbol, Holding> holdings)
         {
             _holdings = holdings;
         }
 
         public HoldingsProvider()
         {
-            _holdings = new Dictionary<string, Holding>();
+            _holdings = new Dictionary<Symbol, Holding>();
         }
 
-        public Holding this[string symbol]
+        public Holding this[Symbol symbol]
         {
             get { return _holdings[symbol]; }
             set { _holdings[symbol] = value; }
@@ -45,11 +45,11 @@ namespace QuantConnect.Tests.Brokerages
         public Holding GetHoldings(Symbol symbol)
         {
             Holding holding;
-            _holdings.TryGetValue(symbol.Value, out holding);
+            _holdings.TryGetValue(symbol, out holding);
             return holding;
         }
 
-        public bool TryGetValue(string symbol, out Holding holding)
+        public bool TryGetValue(Symbol symbol, out Holding holding)
         {
             return _holdings.TryGetValue(symbol, out holding);
         }

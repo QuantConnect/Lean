@@ -34,6 +34,12 @@ namespace QuantConnect.Data.Auxiliary
         private readonly Dictionary<string, SortedList<DateTime, MapFileRowEntry>> _bySymbol;
 
         /// <summary>
+        /// Gets an empty <see cref="MapFileResolver"/>, that is an instance that contains
+        /// zero mappings
+        /// </summary>
+        public static readonly MapFileResolver Empty = new MapFileResolver(Enumerable.Empty<MapFile>());
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MapFileResolver"/> by reading
         /// in all files in the specified directory.
         /// </summary>
@@ -95,13 +101,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>The collection of map files capable of mapping equity symbols within the specified market</returns>
         public static MapFileResolver Create(string mapFileDirectory)
         {
-            var files = from file in Directory.EnumerateFiles(mapFileDirectory)
-                        where file.EndsWith(".csv")
-                        let entitySymbol = Path.GetFileNameWithoutExtension(file)
-                        let fileRead = SafeMapFileRowRead(file) ?? new List<MapFileRow>()
-                        select new MapFile(entitySymbol, fileRead);
-
-            return new MapFileResolver(files);
+            return new MapFileResolver(MapFile.GetMapFiles(mapFileDirectory));
         }
 
         /// <summary>
@@ -144,22 +144,6 @@ namespace QuantConnect.Data.Auxiliary
                 return new MapFile(symbol, new List<MapFileRow>());
             }
             return mapFile;
-        }
-
-        /// <summary>
-        /// Reads in the map file at the specified path, returning null if any exceptions are encountered
-        /// </summary>
-        public static List<MapFileRow> SafeMapFileRowRead(string file)
-        {
-            try
-            {
-                return MapFileRow.Read(file).ToList();
-            }
-            catch (Exception err)
-            {
-                Log.Error("MapFileResover.Create(): " + file + " \tError: " + err.Message);
-                return null;
-            }
         }
 
         /// <summary>

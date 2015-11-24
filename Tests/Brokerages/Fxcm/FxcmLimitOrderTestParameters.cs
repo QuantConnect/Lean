@@ -25,8 +25,8 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
 {
     public class FxcmLimitOrderTestParameters : LimitOrderTestParameters
     {
-        public FxcmLimitOrderTestParameters(string symbol, SecurityType securityType, decimal highLimit, decimal lowLimit)
-            : base(symbol, securityType, highLimit, lowLimit)
+        public FxcmLimitOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit)
+            : base(symbol, highLimit, lowLimit)
         {
         }
 

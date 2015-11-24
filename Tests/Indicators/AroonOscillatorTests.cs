@@ -17,6 +17,7 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -37,7 +38,7 @@ namespace QuantConnect.Tests.Indicators
             var aroon = new AroonOscillator(3, 3);
             aroon.Update(new TradeBar
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = DateTime.Today,
                 Open = 3m,
                 High = 7m,
@@ -47,7 +48,7 @@ namespace QuantConnect.Tests.Indicators
             });
             aroon.Update(new TradeBar
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = DateTime.Today.AddSeconds(1),
                 Open = 3m,
                 High = 7m,
@@ -57,7 +58,7 @@ namespace QuantConnect.Tests.Indicators
             });
             aroon.Update(new TradeBar
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = DateTime.Today.AddSeconds(2),
                 Open = 3m,
                 High = 7m,
@@ -68,7 +69,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsFalse(aroon.IsReady);
             aroon.Update(new TradeBar
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = DateTime.Today.AddSeconds(3),
                 Open = 3m,
                 High = 7m,

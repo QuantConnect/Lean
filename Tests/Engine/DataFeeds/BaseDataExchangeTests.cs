@@ -24,6 +24,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -39,16 +40,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var firedHandler = false;
             var firedWrongHandler = false;
-            exchange.SetHandler("SPY", spy =>
+            exchange.SetHandler(Symbols.SPY, spy =>
             {
                 firedHandler = true;
             });
-            exchange.SetHandler("EURUSD", eurusd =>
+            exchange.SetHandler(Symbols.EURUSD, eurusd =>
             {
                 firedWrongHandler = true;
             });
 
-            dataQueue.Enqueue(new Tick{Symbol = "SPY"});
+            dataQueue.Enqueue(new Tick{Symbol = Symbols.SPY});
 
             exchange.Start();
 
@@ -65,13 +66,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var exchange = CreateExchange(dataQueue);
 
             var firedHandler = false;
-            exchange.SetHandler("SPY", spy =>
+            exchange.SetHandler(Symbols.SPY, spy =>
             {
                 firedHandler = true;
             });
-            exchange.RemoveHandler("SPY");
+            exchange.RemoveHandler(Symbols.SPY);
 
-            dataQueue.Enqueue(new Tick {Symbol = "SPY"});
+            dataQueue.Enqueue(new Tick {Symbol = Symbols.SPY});
 
             exchange.Start();
 
@@ -85,18 +86,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var dataQueue = new ConcurrentQueue<BaseData>();
             var exchange = CreateExchange(dataQueue);
-            
+
             Task.Factory.StartNew(() =>
             {
                 while (true)
                 {
                     Thread.Sleep(1);
-                    dataQueue.Enqueue(new Tick {Symbol = "SPY", Time = DateTime.UtcNow});
+                    dataQueue.Enqueue(new Tick {Symbol = Symbols.SPY, Time = DateTime.UtcNow});
                 }
             });
 
             BaseData last = null;
-            exchange.SetHandler("SPY", spy =>
+            exchange.SetHandler(Symbols.SPY, spy =>
             {
                 last = spy;
             });
@@ -126,13 +127,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 while (true)
                 {
                     Thread.Sleep(1);
-                    dataQueue.Enqueue(new Tick { Symbol = "SPY", Time = DateTime.UtcNow });
+                    dataQueue.Enqueue(new Tick { Symbol = Symbols.SPY, Time = DateTime.UtcNow });
                 }
             });
 
             var first = true;
             BaseData last = null;
-            exchange.SetHandler("SPY", spy =>
+            exchange.SetHandler(Symbols.SPY, spy =>
             {
                 if (first)
                 {
@@ -162,13 +163,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 while (true)
                 {
                     Thread.Sleep(1);
-                    dataQueue.Enqueue(new Tick { Symbol = "SPY", Time = DateTime.UtcNow });
+                    dataQueue.Enqueue(new Tick { Symbol = Symbols.SPY, Time = DateTime.UtcNow });
                 }
             });
 
             var first = true;
             BaseData last = null;
-            exchange.SetHandler("SPY", spy =>
+            exchange.SetHandler(Symbols.SPY, spy =>
             {
                 if (first)
                 {

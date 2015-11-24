@@ -86,7 +86,8 @@ namespace QuantConnect.Securities
         public virtual SecurityExchangeHours GetExchangeHours(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
         {
             SecurityExchangeHours hours;
-            var key = new Key(market, symbol, securityType);
+            var stringSymbol = symbol == null ? string.Empty : symbol.ToString();
+            var key = new Key(market, stringSymbol, securityType);
             if (!_exchangeHours.TryGetValue(key, out hours))
             {
                 // now check with a null symbol
@@ -98,7 +99,7 @@ namespace QuantConnect.Securities
                         if (overrideTimeZone == null)
                         {
                             overrideTimeZone = TimeZones.Utc;
-                            Log.Trace("SecurityExchangeHoursProvider.GetExchangeHours(): Custom data no time zone specified, default to UTC. " + new Key(market, symbol, securityType));
+                            Log.Trace("SecurityExchangeHoursProvider.GetExchangeHours(): Custom data no time zone specified, default to UTC. " + new Key(market, stringSymbol, securityType));
                         }
                         // base securities are always open by default
                         return SecurityExchangeHours.AlwaysOpen(overrideTimeZone);
@@ -201,7 +202,7 @@ namespace QuantConnect.Securities
             //var market = csv[1];
             //var symbol = csv[2];
             //var type = csv[3];
-            var symbol = string.IsNullOrEmpty(csv[2]) ? null : new Symbol(csv[2]);
+            var symbol = string.IsNullOrEmpty(csv[2]) ? null : csv[2];
             key = new Key(csv[1], symbol, (SecurityType)Enum.Parse(typeof(SecurityType), csv[3], true));
 
             int csvLength = csv.Length;
@@ -290,10 +291,10 @@ namespace QuantConnect.Securities
         class Key : IEquatable<Key>
         {
             public readonly string Market;
-            public readonly Symbol Symbol;
+            public readonly string Symbol;
             public readonly SecurityType SecurityType;
 
-            public Key(string market, Symbol symbol, SecurityType securityType)
+            public Key(string market, string symbol, SecurityType securityType)
             {
                 Market = market;
                 SecurityType = securityType;
@@ -342,7 +343,7 @@ namespace QuantConnect.Securities
 
             public override string ToString()
             {
-                return string.Format("{0}-{1}-{2}", Market ?? "[null]", Symbol == null ? "[null]" : Symbol.Permtick, SecurityType);
+                return string.Format("{0}-{1}-{2}", Market ?? "[null]", Symbol == null ? "[null]" : Symbol, SecurityType);
             }
         }
 

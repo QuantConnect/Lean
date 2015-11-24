@@ -120,6 +120,9 @@ namespace QuantConnect.Packets
         Success,
 
         /// History live job packets
-        History
+        History,
+
+        /// Result from a command
+        CommandResult
     }
 }

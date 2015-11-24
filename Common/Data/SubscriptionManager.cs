@@ -56,16 +56,14 @@ namespace QuantConnect.Data
         /// <summary>
         /// Add Market Data Required (Overloaded method for backwards compatibility).
         /// </summary>
-        /// <param name="security">Market Data Asset</param>
         /// <param name="symbol">Symbol of the asset we're like</param>
         /// <param name="resolution">Resolution of Asset Required</param>
-        /// <param name="market">The market this security resides in</param>
         /// <param name="timeZone">The time zone the subscription's data is time stamped in</param>
         /// <param name="isCustomData">True if this is custom user supplied data, false for normal QC data</param>
         /// <param name="fillDataForward">when there is no data pass the last tradebar forward</param>
         /// <param name="extendedMarketHours">Request premarket data as well when true </param>
         /// <returns>The newly created <see cref="SubscriptionDataConfig"/></returns>
-        public SubscriptionDataConfig Add(SecurityType security, Symbol symbol, Resolution resolution, string market, DateTimeZone timeZone, bool isCustomData = false, bool fillDataForward = true, bool extendedMarketHours = false)
+        public SubscriptionDataConfig Add(Symbol symbol, Resolution resolution, DateTimeZone timeZone, bool isCustomData = false, bool fillDataForward = true, bool extendedMarketHours = false)
         {
             //Set the type: market data only comes in two forms -- ticks(trade by trade) or tradebar(time summaries)
             var dataType = typeof(TradeBar);
@@ -73,24 +71,22 @@ namespace QuantConnect.Data
             {
                 dataType = typeof(Tick);
             }
-            return Add(dataType, security, symbol, resolution, market, timeZone, isCustomData, fillDataForward, extendedMarketHours, false);
+            return Add(dataType, symbol, resolution, timeZone, isCustomData, fillDataForward, extendedMarketHours, false);
         }
 
         /// <summary>
         /// Add Market Data Required - generic data typing support as long as Type implements BaseData.
         /// </summary>
         /// <param name="dataType">Set the type of the data we're subscribing to.</param>
-        /// <param name="security">Market Data Asset</param>
         /// <param name="symbol">Symbol of the asset we're like</param>
         /// <param name="resolution">Resolution of Asset Required</param>
-        /// <param name="market">The market this security resides in</param>
         /// <param name="timeZone">The time zone the subscription's data is time stamped in</param>
         /// <param name="isCustomData">True if this is custom user supplied data, false for normal QC data</param>
         /// <param name="fillDataForward">when there is no data pass the last tradebar forward</param>
         /// <param name="extendedMarketHours">Request premarket data as well when true </param>
         /// <param name="isInternalFeed">Set to true to prevent data from this subscription from being sent into the algorithm's OnData events</param>
         /// <returns>The newly created <see cref="SubscriptionDataConfig"/></returns>
-        public SubscriptionDataConfig Add(Type dataType, SecurityType security, Symbol symbol, Resolution resolution, string market, DateTimeZone timeZone, bool isCustomData, bool fillDataForward = true, bool extendedMarketHours = false, bool isInternalFeed = false) 
+        public SubscriptionDataConfig Add(Type dataType, Symbol symbol, Resolution resolution, DateTimeZone timeZone, bool isCustomData, bool fillDataForward = true, bool extendedMarketHours = false, bool isInternalFeed = false) 
         {
             if (timeZone == null)
             {
@@ -98,7 +94,7 @@ namespace QuantConnect.Data
             }
             
             //Create:
-            var newConfig = new SubscriptionDataConfig(dataType, security, symbol, resolution, market, timeZone, fillDataForward, extendedMarketHours, isInternalFeed, isCustomData);
+            var newConfig = new SubscriptionDataConfig(dataType, symbol, resolution, timeZone, fillDataForward, extendedMarketHours, isInternalFeed, isCustomData);
 
             //Add to subscription list: make sure we don't have his symbol:
             Subscriptions.Add(newConfig);
@@ -135,7 +131,7 @@ namespace QuantConnect.Data
             }
 
             //If we made it here it is because we never found the symbol in the subscription list
-            throw new ArgumentException("Please subscribe to this symbol before adding a consolidator for it. Symbol: " + symbol);
+            throw new ArgumentException("Please subscribe to this symbol before adding a consolidator for it. Symbol: " + symbol.ToString());
         }
 
     } // End Algorithm MetaData Manager Class

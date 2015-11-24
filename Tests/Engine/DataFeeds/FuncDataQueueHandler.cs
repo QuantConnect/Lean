@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
@@ -31,13 +30,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     public class FuncDataQueueHandler : IDataQueueHandler
     {
         private readonly object _lock = new object();
-        private readonly HashSet<SymbolSecurityType> _subscriptions = new HashSet<SymbolSecurityType>();
+        private readonly HashSet<Symbol> _subscriptions = new HashSet<Symbol>();
         private readonly Func<FuncDataQueueHandler, IEnumerable<BaseData>> _getNextTicksFunction;
 
         /// <summary>
         /// Gets the subscriptions currently being managed by the queue handler
         /// </summary>
-        public List<SymbolSecurityType> Subscriptions
+        public List<Symbol> Subscriptions
         {
             get { lock (_lock) return _subscriptions.ToList(); }
         }
@@ -65,13 +64,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// </summary>
         /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IDictionary<SecurityType, List<string>> symbols)
+        public void Subscribe(LiveNodePacket job, IDictionary<SecurityType, List<Symbol>> symbols)
         {
             foreach (var kvp in symbols)
             {
-                foreach (var item in kvp.Value)
+                foreach (var symbol in kvp.Value)
                 {
-                    lock (_lock) _subscriptions.Add(new SymbolSecurityType(item, kvp.Key));
+                    lock (_lock) _subscriptions.Add(symbol);
                 }
             }
         }
@@ -81,13 +80,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// </summary>
         /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IDictionary<SecurityType, List<string>> symbols)
+        public void Unsubscribe(LiveNodePacket job, IDictionary<SecurityType, List<Symbol>> symbols)
         {
             foreach (var kvp in symbols)
             {
-                foreach (var item in kvp.Value)
+                foreach (var symbol in kvp.Value)
                 {
-                    lock (_lock) _subscriptions.Remove(new SymbolSecurityType(item, kvp.Key));
+                    lock (_lock) _subscriptions.Remove(symbol);
                 }
             }
         }

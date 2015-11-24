@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Diagnostics;
+using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Fxcm;
 using QuantConnect.Configuration;
@@ -57,9 +60,9 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             {
                 return new[]
                 {
-                    new TestCaseData(new MarketOrderTestParameters(Symbol, SecurityType)).SetName("MarketOrder"),
-                    new TestCaseData(new FxcmLimitOrderTestParameters(Symbol, SecurityType, HighPrice, LowPrice)).SetName("LimitOrder"),
-                    new TestCaseData(new FxcmStopMarketOrderTestParameters(Symbol, SecurityType, HighPrice, LowPrice)).SetName("StopMarketOrder"),
+                    new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
+                    new TestCaseData(new FxcmLimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
+                    new TestCaseData(new FxcmStopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder"),
                 };
             }
         }
@@ -67,9 +70,9 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         /// <summary>
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected override string Symbol
+        protected override Symbol Symbol
         {
-            get { return "EURUSD"; }
+            get { return Symbols.EURUSD; }
         }
 
         /// <summary>
@@ -101,7 +104,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         /// <summary>
         /// Gets the current market price of the specified security
         /// </summary>
-        protected override decimal GetAskPrice(string symbol, SecurityType securityType)
+        protected override decimal GetAskPrice(Symbol symbol)
         {
             // not used, we use bid/ask prices
             return 0;
@@ -115,5 +118,41 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             // FXCM requires a multiple of 1000 for Forex instruments
             return 1000;
         }
+
+        [Test, Ignore("This test requires disconnecting the internet to test for connection resiliency")]
+        public void ClientReconnectsAfterInternetDisconnect()
+        {
+            var brokerage = Brokerage;
+            Assert.IsTrue(brokerage.IsConnected);
+
+            var tenMinutes = TimeSpan.FromMinutes(10);
+
+            Console.WriteLine("------");
+            Console.WriteLine("Waiting for internet disconnection ");
+            Console.WriteLine("------");
+
+            // spin while we manually disconnect the internet
+            while (brokerage.IsConnected)
+            {
+                Thread.Sleep(2500);
+                Console.Write(".");
+            }
+
+            var stopwatch = Stopwatch.StartNew();
+
+            Console.WriteLine("------");
+            Console.WriteLine("Trying to reconnect ");
+            Console.WriteLine("------");
+
+            // spin until we're reconnected
+            while (!brokerage.IsConnected && stopwatch.Elapsed < tenMinutes)
+            {
+                Thread.Sleep(2500);
+                Console.Write(".");
+            }
+
+            Assert.IsTrue(brokerage.IsConnected);
+        }
+
     }
 }

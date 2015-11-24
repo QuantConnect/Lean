@@ -107,5 +107,20 @@ namespace QuantConnect.Brokerages
                     throw new ArgumentOutOfRangeException("securityType", security.Type, null);
             }
         }
+
+        /// <summary>
+        /// Gets a new settlement model for the security
+        /// </summary>
+        /// <param name="security">The security to get a settlement model for</param>
+        /// <param name="accountType">The account type</param>
+        /// <returns>The settlement model for this brokerage</returns>
+        public virtual ISettlementModel GetSettlementModel(Security security, AccountType accountType)
+        {
+            if (security.Type == SecurityType.Equity && accountType == AccountType.Cash)
+                return new DelayedSettlementModel(Equity.DefaultSettlementDays, Equity.DefaultSettlementTime);
+            
+            return new ImmediateSettlementModel();
+        }
+
     }
 }

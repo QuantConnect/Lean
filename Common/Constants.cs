@@ -24,7 +24,7 @@ namespace QuantConnect
     /// </summary>
     public static class Constants
     {
-        private static readonly string DataFolderPath = Config.Get("data-folder", @"../../../Data/");
+        private static readonly string DataFolderPath = Config.Get("data-folder", Config.Get("data-directory", @"../../../Data/"));
 
         /// <summary>
         /// The root directory of the data folder for this application

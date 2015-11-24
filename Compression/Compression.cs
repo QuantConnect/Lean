@@ -214,9 +214,10 @@ namespace QuantConnect
         /// Compress a given file and delete the original file. Automatically rename the file to name.zip.
         /// </summary>
         /// <param name="textPath">Path of the original file</param>
+        /// <param name="zipEntryName">The name of the entry inside the zip file</param>
         /// <param name="deleteOriginal">Boolean flag to delete the original file after completion</param>
         /// <returns>String path for the new zip file</returns>
-        public static string Zip(string textPath, bool deleteOriginal = true)
+        public static string Zip(string textPath, string zipEntryName, bool deleteOriginal = true)
         {
             var zipPath = "";
 
@@ -229,7 +230,7 @@ namespace QuantConnect
                 using (var stream = new ZipOutputStream(File.Create(zipPath)))
                 {
                     //Zip the text file.
-                    var entry = new ZipEntry(Path.GetFileName(textPath));
+                    var entry = new ZipEntry(zipEntryName);
                     stream.PutNextEntry(entry);
 
                     using (var fs = File.OpenRead(textPath))
@@ -254,7 +255,18 @@ namespace QuantConnect
                 Log.Error("QC.Data.Zip(): " + err.Message);
             }
             return zipPath;
-        } // End Zip:
+        }
+
+        /// <summary>
+        /// Compress a given file and delete the original file. Automatically rename the file to name.zip.
+        /// </summary>
+        /// <param name="textPath">Path of the original file</param>
+        /// <param name="deleteOriginal">Boolean flag to delete the original file after completion</param>
+        /// <returns>String path for the new zip file</returns>
+        public static string Zip(string textPath, bool deleteOriginal = true)
+        {
+            return Zip(textPath, Path.GetFileName(textPath), deleteOriginal);
+        }
 
         public static void Zip(string data, string zipPath, string zipEntry)
         {
@@ -375,6 +387,23 @@ namespace QuantConnect
                 Log.Error(err);
             }
             return Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>();
+        }
+
+        /// <summary>
+        /// Lazily unzips the specified stream
+        /// </summary>
+        /// <param name="stream">The zipped stream to be read</param>
+        /// <returns>An enumerable whose elements are zip entry key value pairs with
+        /// a key of the zip entry name and the value of the zip entry's file lines</returns>
+        public static IEnumerable<KeyValuePair<string, IEnumerable<string>>> Unzip(Stream stream)
+        {
+            using (var zip = ZipFile.Read(stream))
+            {
+                foreach (var entry in zip)
+                {
+                    yield return new KeyValuePair<string, IEnumerable<string>>(entry.FileName, ReadZipEntry(entry));
+                }
+            }
         }
 
         /// <summary>
@@ -550,6 +579,30 @@ namespace QuantConnect
             tarArchive.Close();
             gzipStream.Close();
             inStream.Close();
+        }
+
+        /// <summary>
+        /// Enumerate through the files of a TAR and get a list of KVP names-byte arrays
+        /// </summary>
+        /// <param name="stream">The input tar stream</param>
+        /// <param name="isTarGz">True if the input stream is a .tar.gz or .tgz</param>
+        /// <returns>An enumerable containing each tar entry and it's contents</returns>
+        public static IEnumerable<KeyValuePair<string, byte[]>> UnTar(Stream stream, bool isTarGz)
+        {
+            using (var tar = new TarInputStream(isTarGz ? (Stream)new GZipInputStream(stream) : stream))
+            {
+                TarEntry entry;
+                while ((entry = tar.GetNextEntry()) != null)
+                {
+                    if (entry.IsDirectory) continue;
+
+                    using (var output = new MemoryStream())
+                    {
+                        tar.CopyEntryContents(output);
+                        yield return new KeyValuePair<string, byte[]>(entry.Name, output.ToArray());
+                    }
+                }
+            }
         }
 
         /// <summary>

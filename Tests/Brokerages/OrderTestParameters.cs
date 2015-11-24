@@ -24,13 +24,13 @@ namespace QuantConnect.Tests.Brokerages
     /// </summary>
     public abstract class OrderTestParameters
     {
-        public string Symbol { get; private set; }
+        public Symbol Symbol { get; private set; }
         public SecurityType SecurityType { get; private set; }
 
-        protected OrderTestParameters(string symbol, SecurityType securityType)
+        protected OrderTestParameters(Symbol symbol)
         {
             Symbol = symbol;
-            SecurityType = securityType;
+            SecurityType = symbol.ID.SecurityType;
         }
 
         public MarketOrder CreateLongMarketOrder(int quantity)

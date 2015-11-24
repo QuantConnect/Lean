@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -72,7 +73,34 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>A symbol for user defined universe of the specified security type and market</returns>
         public static Symbol CreateSymbol(SecurityType securityType, string market)
         {
-            return string.Format("qc-universe-userdefined-{0}-{1}", market.ToLower(), securityType.ToString().ToLower());
+            var ticker = string.Format("qc-universe-userdefined-{0}-{1}", market.ToLower(), securityType);
+            SecurityIdentifier sid;
+            switch (securityType)
+            {
+                case SecurityType.Base:
+                    sid = SecurityIdentifier.GenerateBase(ticker, market);
+                    break;
+                
+                case SecurityType.Equity:
+                    sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
+                    break;
+                
+                case SecurityType.Option:
+                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, ticker, market, 0, 0, 0);
+                    break;
+                
+                case SecurityType.Forex:
+                    sid = SecurityIdentifier.GenerateForex(ticker, market);
+                    break;
+
+                case SecurityType.Commodity:
+                case SecurityType.Future:
+                case SecurityType.Cfd:
+                default:
+                    throw new NotImplementedException("The specified security type is not implemented yet: " + securityType);
+            }
+
+            return new Symbol(sid, ticker);
         }
 
         /// <summary>

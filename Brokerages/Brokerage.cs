@@ -33,11 +33,6 @@ namespace QuantConnect.Brokerages
         public event EventHandler<OrderEvent> OrderStatusChanged;
 
         /// <summary>
-        /// Event that fires each time portfolio holdings have changed
-        /// </summary>
-        public event EventHandler<SecurityEvent> SecurityHoldingUpdated;
-
-        /// <summary>
         /// Event that fires each time a user's brokerage account is changed
         /// </summary>
         public event EventHandler<AccountEvent> AccountChanged;
@@ -113,25 +108,6 @@ namespace QuantConnect.Brokerages
             catch (Exception error)
             {
                 Log.Error("Brokerage.OnOrderEvent(): Caught Error: " + error.Message);
-            }
-        }
-
-        /// <summary>
-        /// Event invocator for the PortfolioChanged event
-        /// </summary>
-        /// <param name="e">The PortfolioEvent</param>
-        protected virtual void OnPortfolioChanged(SecurityEvent e)
-        {
-            try
-            {
-                Log.Trace("Brokerage.OnPortfolioChanged(): " + e);
-
-                var handler = SecurityHoldingUpdated;
-                if (handler != null) handler(this, e);
-            }
-            catch (Exception error)
-            {
-                Log.Error("Brokerage.OnPortfolioChanged(): Caught Error: " + error.Message);
             }
         }
 

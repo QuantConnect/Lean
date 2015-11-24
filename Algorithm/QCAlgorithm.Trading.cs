@@ -167,7 +167,7 @@ namespace QuantConnect.Algorithm
             // then convert it into a market on open order
             if (!security.Exchange.ExchangeOpen)
             {
-                var mooTicket = MarketOnOpenOrder(symbol, quantity, tag);
+                var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, tag);
                 if (mooTicket.SubmitRequest.Response.IsSuccess && security.SubscriptionDataConfig.Resolution != Resolution.Daily)
                 {
                     Debug("Converted OrderID: " + mooTicket.OrderId + " into a MarketOnOpen order.");
@@ -324,7 +324,7 @@ namespace QuantConnect.Algorithm
         private OrderResponse PreOrderChecksImpl(SubmitOrderRequest request)
         {
             //Ordering 0 is useless.
-            if (request.Quantity == 0 || request.Symbol == null || request.Symbol == Symbol.Empty)
+            if (request.Quantity == 0 || request.Symbol == null || request.Symbol == QuantConnect.Symbol.Empty)
             {
                 return OrderResponse.ZeroQuantity(request);
             }
@@ -333,7 +333,7 @@ namespace QuantConnect.Algorithm
             if (!Securities.ContainsKey(request.Symbol) && !_sentNoDataError)
             {
                 _sentNoDataError = true;
-                return OrderResponse.Error(request, OrderResponseErrorCode.MissingSecurity, "You haven't requested " + request.Symbol.Permtick + " data. Add this with AddSecurity() in the Initialize() Method.");
+                return OrderResponse.Error(request, OrderResponseErrorCode.MissingSecurity, "You haven't requested " + request.Symbol.ToString() + " data. Add this with AddSecurity() in the Initialize() Method.");
             }
 
             //Set a temporary price for validating order for market orders:
@@ -349,7 +349,7 @@ namespace QuantConnect.Algorithm
             
             if (price == 0)
             {
-                return OrderResponse.Error(request, OrderResponseErrorCode.SecurityPriceZero, request.Symbol.Permtick + ": asset price is $0. If using custom data make sure you've set the 'Value' property.");
+                return OrderResponse.Error(request, OrderResponseErrorCode.SecurityPriceZero, request.Symbol.ToString() + ": asset price is $0. If using custom data make sure you've set the 'Value' property.");
             }
             
             if (security.Type == SecurityType.Forex)
@@ -410,12 +410,12 @@ namespace QuantConnect.Algorithm
         public List<int> Liquidate(Symbol symbolToLiquidate = null)
         {
             var orderIdList = new List<int>();
-            symbolToLiquidate = symbolToLiquidate ?? Symbol.Empty;
+            symbolToLiquidate = symbolToLiquidate ?? QuantConnect.Symbol.Empty;
 
             foreach (var symbol in Securities.Keys)
             {
                 //Send market order to liquidate if 1, we have stock, 2, symbol matches.
-                if (!Portfolio[symbol].HoldStock || (symbol != symbolToLiquidate && symbolToLiquidate != Symbol.Empty)) continue;
+                if (!Portfolio[symbol].HoldStock || (symbol != symbolToLiquidate && symbolToLiquidate != QuantConnect.Symbol.Empty)) continue;
 
                 var quantity = 0;
                 if (Portfolio[symbol].IsLong)
@@ -472,7 +472,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="MarketOrder"/>
         public void SetHoldings(Symbol symbol, float percentage, bool liquidateExistingHoldings = false, string tag = "")
         {
-            SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings);
+            SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings, tag);
         }
 
         /// <summary>
@@ -485,7 +485,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="MarketOrder"/>
         public void SetHoldings(Symbol symbol, int percentage, bool liquidateExistingHoldings = false, string tag = "")
         {
-            SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings);
+            SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings, tag);
         }
 
         /// <summary>
@@ -504,7 +504,7 @@ namespace QuantConnect.Algorithm
             Security security;
             if (!Securities.TryGetValue(symbol, out security))
             {
-                Error(symbol.Permtick + " not found in portfolio. Request this data when initializing the algorithm.");
+                Error(symbol.ToString() + " not found in portfolio. Request this data when initializing the algorithm.");
                 return;
             }
 
@@ -518,7 +518,7 @@ namespace QuantConnect.Algorithm
                     if (holdingSymbol != symbol && holdings.AbsoluteQuantity > 0)
                     {
                         //Go through all existing holdings [synchronously], market order the inverse quantity:
-                        Order(holdingSymbol, -holdings.Quantity);
+                        Order(holdingSymbol, -holdings.Quantity, false, tag);
                     }
                 }
             }

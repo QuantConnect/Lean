@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -47,7 +48,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public DateTime FirstDate
         {
-            get { return _data.Keys.Count == 0 ? new DateTime(1000, 01, 01) : _data.Keys.First(); }
+            get { return _data.Keys.Count == 0 ? Time.BeginningOfTime : _data.Keys.First(); }
         }
 
         /// <summary>
@@ -142,5 +143,35 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         #endregion
+
+        /// <summary>
+        /// Reads all the map files in the specified directory
+        /// </summary>
+        /// <param name="mapFileDirectory">The map file directory path</param>
+        /// <returns>An enumerable of all map files</returns>
+        public static IEnumerable<MapFile> GetMapFiles(string mapFileDirectory)
+        {
+            return from file in Directory.EnumerateFiles(mapFileDirectory)
+                   where file.EndsWith(".csv")
+                   let permtick = Path.GetFileNameWithoutExtension(file)
+                   let fileRead = SafeMapFileRowRead(file)
+                   select new MapFile(permtick, fileRead);
+        }
+
+        /// <summary>
+        /// Reads in the map file at the specified path, returning null if any exceptions are encountered
+        /// </summary>
+        private static List<MapFileRow> SafeMapFileRowRead(string file)
+        {
+            try
+            {
+                return MapFileRow.Read(file).ToList();
+            }
+            catch (Exception err)
+            {
+                Log.Error("MapFileResover.Create(): " + file + " \tError: " + err.Message);
+                return new List<MapFileRow>();
+            }
+        }
     }
 }

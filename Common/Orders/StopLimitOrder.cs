@@ -46,14 +46,6 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Maximum value of the order at is the stop limit price
-        /// </summary>
-        public override decimal Value
-        {
-            get { return Quantity*LimitPrice; }
-        }
-
-        /// <summary>
         /// Default constructor for JSON Deserialization:
         /// </summary>
         public StopLimitOrder()

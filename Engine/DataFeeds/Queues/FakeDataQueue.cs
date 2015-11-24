@@ -36,8 +36,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         private readonly Random _random = new Random();
 
         private readonly Timer _timer;
-        private readonly ConcurrentQueue<BaseData> _ticks; 
-        private readonly Dictionary<SecurityType, List<string>> _symbols;
+        private readonly ConcurrentQueue<BaseData> _ticks;
+        private readonly Dictionary<SecurityType, List<Symbol>> _symbols;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FakeDataQueue"/> class to randomly emit data for each symbol
@@ -45,7 +45,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         public FakeDataQueue()
         {
             _ticks = new ConcurrentQueue<BaseData>();
-            _symbols = new Dictionary<SecurityType, List<string>>();
+            _symbols = new Dictionary<SecurityType, List<Symbol>>();
             
             // load it up to start
             PopulateQueue();
@@ -92,14 +92,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// </summary>
         /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IDictionary<SecurityType, List<string>> symbols)
+        public void Subscribe(LiveNodePacket job, IDictionary<SecurityType, List<Symbol>> symbols)
         {
             foreach (var securityType in symbols)
             {
-                List<string> securities;
+                List<Symbol> securities;
                 if (!_symbols.TryGetValue(securityType.Key, out securities))
                 {
-                    securities = new List<string>();
+                    securities = new List<Symbol>();
                     _symbols[securityType.Key] = securities;
                 }
                 securities.AddRange(securityType.Value);
@@ -111,11 +111,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// </summary>
         /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IDictionary<SecurityType, List<string>> symbols)
+        public void Unsubscribe(LiveNodePacket job, IDictionary<SecurityType, List<Symbol>> symbols)
         {
             foreach (var securityType in symbols)
             {
-                List<string> securities;
+                List<Symbol> securities;
                 if (_symbols.TryGetValue(securityType.Key, out securities))
                 {
                     securities.RemoveAll(x => securityType.Value.Contains(x));
@@ -136,7 +136,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                     _ticks.Enqueue(new Tick
                     {
                         Time = DateTime.Now,
-                        Symbol = new Symbol(symbol),
+                        Symbol = symbol,
                         Value = 10 + (decimal)Math.Abs(Math.Sin(DateTime.Now.TimeOfDay.TotalMinutes)),
                         TickType = TickType.Trade,
                         Quantity = _random.Next(10, (int)_timer.Interval)

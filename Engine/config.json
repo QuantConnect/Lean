@@ -34,6 +34,7 @@
     //"command-queue-handler": "QuantConnect.Queues.FileCommandQueueHandler",
     // used by the FileComandQueueHandler, serialize a ICommand and it will be run against algorithm
     "command-json-file": "command.json",
+    "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
 
     // if one uses "true" as string in following token, market hours
     // will remain open all hours and all days.

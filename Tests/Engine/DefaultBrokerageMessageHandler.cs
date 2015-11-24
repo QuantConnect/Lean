@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Engine
         public void SetsAlgorithmRunTimeErrorOnDisconnectIfNonCustomSecurityIsOpen()
         {
             var algorithm = new AlgorithmStub(equities: new List<string> { "SPY" });
-            algorithm.Securities["SPY"].Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            algorithm.Securities[Symbols.SPY].Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
             var job = new LiveNodePacket();
             var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
             var api = new Api.Api();
@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Engine
             var referenceTime = DateTime.UtcNow;
             var algorithm = new AlgorithmStub(equities: new List<string> { "SPY" });
             algorithm.SetDateTime(referenceTime);
-            algorithm.Securities["SPY"].Exchange.SetMarketHours(TimeSpan.Zero, TimeSpan.Zero, referenceTime.ConvertFromUtc(TimeZones.NewYork).DayOfWeek);
+            algorithm.Securities[Symbols.SPY].Exchange.SetMarketHours(TimeSpan.Zero, TimeSpan.Zero, referenceTime.ConvertFromUtc(TimeZones.NewYork).DayOfWeek);
             var job = new LiveNodePacket();
             var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
             var api = new Api.Api();
@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Engine
             var referenceTime = DateTime.UtcNow;
             algorithm.SetDateTime(referenceTime);
             var localReferenceTime = referenceTime.ConvertFromUtc(TimeZones.NewYork);
-            algorithm.Securities["SPY"].Exchange.SetMarketHours(localReferenceTime.AddSeconds(1).TimeOfDay, TimeSpan.FromDays(1), localReferenceTime.DayOfWeek);
+            algorithm.Securities[Symbols.SPY].Exchange.SetMarketHours(localReferenceTime.AddSeconds(1).TimeOfDay, TimeSpan.FromDays(1), localReferenceTime.DayOfWeek);
             var job = new LiveNodePacket();
             var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
             var api = new Api.Api();
@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Engine
             var referenceTime = DateTime.UtcNow;
             algorithm.SetDateTime(referenceTime);
             var localReferencTime = referenceTime.ConvertFromUtc(TimeZones.NewYork);
-            algorithm.Securities["SPY"].Exchange.SetMarketHours(localReferencTime.AddSeconds(1).TimeOfDay, TimeSpan.FromDays(1), localReferencTime.DayOfWeek);
+            algorithm.Securities[Symbols.SPY].Exchange.SetMarketHours(localReferencTime.AddSeconds(1).TimeOfDay, TimeSpan.FromDays(1), localReferencTime.DayOfWeek);
             var job = new LiveNodePacket();
             var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
             var api = new Api.Api();

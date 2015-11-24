@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, book.Count);
             var cash = book.Single().Value;
             Assert.AreEqual(CashBook.AccountCurrency, cash.Symbol);
-            Assert.AreEqual(0, cash.Quantity);
+            Assert.AreEqual(0, cash.Amount);
             Assert.AreEqual(1m, cash.ConversionRate);
         }
 
@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void ComputesValueInAccountCurrency()
         {
             var book = new CashBook();
-            book["USD"].Quantity = 1000;
+            book["USD"].SetAmount(1000);
             book.Add("JPY", 1000, 1/100m);
             book.Add("GBP", 1000, 2m);
 

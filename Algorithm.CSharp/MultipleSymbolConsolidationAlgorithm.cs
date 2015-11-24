@@ -128,7 +128,7 @@ namespace QuantConnect.Algorithm.Examples
             foreach (var symbolData in Data.Values)
             {
                 // this check proves that this symbol was JUST updated prior to this OnData function being called
-                if (symbolData.IsReady && symbolData.WasJustUpdated(data.Time))
+                if (symbolData.IsReady && symbolData.WasJustUpdated(Time))
                 {
                     if (!Portfolio[symbolData.Symbol].Invested)
                     {
@@ -212,22 +212,6 @@ namespace QuantConnect.Algorithm.Examples
             public bool WasJustUpdated(DateTime current)
             {
                 return Bars.Count > 0 && Bars[0].Time == current - BarPeriod;
-            }
-
-            /// <summary>
-            /// Updates indicators and other class state
-            /// </summary>
-            /// <param name="data">The data used to updated</param>
-            public void Update(TradeBar data)
-            {
-                // verify the input data matches our symbol - sanity check
-                if (!string.Equals(data.Symbol, Symbol, StringComparison.CurrentCultureIgnoreCase))
-                {
-                    throw new ArgumentException("Expected trade bar data for " + Symbol + " but received " + data.Symbol);
-                }
-
-                Bars.Add(data);
-                SMA.Update(data.Time, data.Close);
             }
         }
     }

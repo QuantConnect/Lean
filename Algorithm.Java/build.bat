@@ -8,19 +8,18 @@ SET javaCompilerx86="C:\Program Files (x86)\Java\jdk1.7.0_80\bin\javac.exe"
 
 ikvmstub -nostdlib %dotnet_framework%\mscorlib.dll
 ikvmstub -nostdlib -r:%dotnet_framework%\mscorlib.dll QuantConnect.Algorithm.dll
-ikvmstub -nostdlib -r:%dotnet_framework%\mscorlib.dll QuantConnect.Interfaces.dll
 ikvmstub -nostdlib -r:%dotnet_framework%\mscorlib.dll -r:%dotnet_framework%\System.dll -r:%dotnet_framework%\System.Core.dll -r:%dotnet_framework%\System.Xml.Linq.dll  QuantConnect.Common.dll
 
 :CheckOS
 IF EXIST "%PROGRAMFILES(X86)%" (GOTO 64BIT) ELSE (GOTO 32BIT)
 
 :64BIT
-	%javaCompilerx64% -cp QuantConnect.Algorithm.jar;QuantConnect.Interfaces.jar;mscorlib.jar;QuantConnect.common.jar *.java
+	%javaCompilerx64% -cp QuantConnect.Algorithm.jar;mscorlib.jar;QuantConnect.Common.jar *.java
 GOTO END
 
 :32BIT
-	%javaCompilerx86% -cp QuantConnect.Algorithm.jar;QuantConnect.Interfaces.jar;mscorlib.jar;QuantConnect.common.jar *.java
+	%javaCompilerx86% -cp QuantConnect.Algorithm.jar;mscorlib.jar;QuantConnect.Common.jar *.java
 GOTO END
 
 :END
-ikvmc -debug -target:library -out:QuantConnect.Algorithm.Java.dll -nostdlib -r:QuantConnect.Common.dll -r:QuantConnect.Indicators.dll -r:QuantConnect.Algorithm.dll -r:QuantConnect.Interfaces.dll -r:Newtonsoft.json.dll -r:%dotnet_framework%\mscorlib.dll -r:%dotnet_framework%\System.dll -r:%dotnet_framework%\System.Core.dll -r:%dotnet_framework%\System.Xml.Linq.dll *.class
+ikvmc -debug -target:library -out:QuantConnect.Algorithm.Java.dll -nostdlib -r:QuantConnect.Common.dll -r:QuantConnect.Indicators.dll -r:QuantConnect.Algorithm.dll -r:Newtonsoft.json.dll -r:%dotnet_framework%\mscorlib.dll -r:%dotnet_framework%\System.dll -r:%dotnet_framework%\System.Core.dll -r:%dotnet_framework%\System.Xml.Linq.dll -r:%dotnet_framework%\System.ComponentModel.Composition.dll *.class

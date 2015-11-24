@@ -20,6 +20,7 @@ using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
@@ -31,7 +32,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             var currentTime = new DateTime(2015, 10, 10, 13, 6, 0);
             var timeProvider = new ManualTimeProvider(currentTime, TimeZones.Utc);
-            var data = Enumerable.Range(0, 100).Select(x => new Tick {Symbol = x.ToString()}).GetEnumerator();
+            var data = Enumerable.Range(0, 100).Select(x => new Tick {Symbol = CreateSymbol(x)}).GetEnumerator();
             var rateLimit = new RateLimitEnumerator(data, timeProvider, Time.OneSecond);
 
             Assert.IsTrue(rateLimit.MoveNext());
@@ -45,7 +46,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.AreEqual(1, delta);
 
-            Assert.AreEqual("1", data.Current.Symbol.ToString());
+            Assert.AreEqual("1", data.Current.Symbol.Value);
+        }
+
+        private static Symbol CreateSymbol(int x)
+        {
+            return new Symbol(SecurityIdentifier.GenerateBase(x.ToString(), Market.USA), x.ToString());
         }
     }
 }

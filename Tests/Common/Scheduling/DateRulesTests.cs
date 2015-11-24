@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void EverySymbolDayRuleEmitsOnTradeableDates()
         {
             var rules = GetDateRules();
-            var rule = rules.EveryDay("SPY");
+            var rule = rules.EveryDay(Symbols.SPY);
             var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
 
             int count = 0;
@@ -106,7 +106,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void StartOfMonthWithSymbol()
         {
             var rules = GetDateRules();
-            var rule = rules.MonthStart("SPY");
+            var rule = rules.MonthStart(Symbols.SPY);
             var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31));
 
             int count = 0;
@@ -126,7 +126,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void StartOfMonthWithSymbolMidMonthStart()
         {
             var rules = GetDateRules();
-            var rule = rules.MonthStart("SPY");
+            var rule = rules.MonthStart(Symbols.SPY);
             var dates = rule.GetDates(new DateTime(2000, 01, 04), new DateTime(2000, 12, 31));
 
             int count = 0;
@@ -146,9 +146,9 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var timeKeeper = new TimeKeeper(DateTime.Today, new List<DateTimeZone>());
             var manager = new SecurityManager(timeKeeper);
-            var securityExchangeHours = SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours("usa", null, SecurityType.Equity);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), SecurityType.Equity, "SPY", Resolution.Daily, "usa", TimeZones.NewYork, true, false, false);
-            manager.Add("SPY", new Security(securityExchangeHours, config, 1));
+            var securityExchangeHours = SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, true, false, false);
+            manager.Add(Symbols.SPY, new Security(securityExchangeHours, config, 1));
             var rules = new DateRules(manager);
             return rules;
         }

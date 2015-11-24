@@ -39,12 +39,26 @@ namespace QuantConnect.Securities
         public SecurityTransactionManager Transactions;
 
         /// <summary>
-        /// Gets the cash book that keeps track of all currency holdings
+        /// Gets the cash book that keeps track of all currency holdings (only settled cash)
         /// </summary>
         public CashBook CashBook { get; private set; }
-        
-        //Record keeping variables
+
+        /// <summary>
+        /// Gets the cash book that keeps track of all currency holdings (only unsettled cash)
+        /// </summary>
+        public CashBook UnsettledCashBook { get; private set; }
+
+        /// <summary>
+        /// The list of pending funds waiting for settlement time
+        /// </summary>
+        private readonly List<UnsettledCashAmount> _unsettledCashAmounts;
+
+        // The _unsettledCashAmounts list has to be synchronized because order fills are happening on a separate thread
+        private readonly object _unsettledCashAmountsLocker = new object();
+
+        // Record keeping variables
         private readonly Cash _baseCurrencyCash;
+        private readonly Cash _baseCurrencyUnsettledCash;
 
         /// <summary>
         /// Initialise security portfolio manager.
@@ -56,10 +70,14 @@ namespace QuantConnect.Securities
             MarginCallModel = new MarginCallModel(this);
 
             CashBook = new CashBook();
+            UnsettledCashBook = new CashBook();
+            _unsettledCashAmounts = new List<UnsettledCashAmount>();
+
             _baseCurrencyCash = CashBook[CashBook.AccountCurrency];
+            _baseCurrencyUnsettledCash = UnsettledCashBook[CashBook.AccountCurrency];
 
             // default to $100,000.00
-            _baseCurrencyCash.Quantity = 100000;
+            _baseCurrencyCash.SetAmount(100000);
         }
 
         #region IDictionary Implementation
@@ -232,7 +250,7 @@ namespace QuantConnect.Securities
         #endregion
 
         /// <summary>
-        /// Sum of all currencies in account in US dollars
+        /// Sum of all currencies in account in US dollars (only settled cash)
         /// </summary>
         /// <remarks>
         /// This should not be mistaken for margin available because Forex uses margin
@@ -241,6 +259,18 @@ namespace QuantConnect.Securities
         public decimal Cash
         {
             get { return CashBook.TotalValueInAccountCurrency; }
+        }
+
+        /// <summary>
+        /// Sum of all currencies in account in US dollars (only unsettled cash)
+        /// </summary>
+        /// <remarks>
+        /// This should not be mistaken for margin available because Forex uses margin
+        /// even though the total cash value is not impact
+        /// </remarks>
+        public decimal UnsettledCash
+        {
+            get { return UnsettledCashBook.TotalValueInAccountCurrency; }
         }
 
         /// <summary>
@@ -335,7 +365,7 @@ namespace QuantConnect.Securities
                                                       where position.Type != SecurityType.Forex
                                                       select position.Holdings.HoldingsValue).Sum();
 
-                return CashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForex;
+                return CashBook.TotalValueInAccountCurrency + UnsettledCashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForex;
             }
         }
 
@@ -392,7 +422,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal MarginRemaining
         {
-            get { return TotalPortfolioValue - TotalMarginUsed; }
+            get { return TotalPortfolioValue - UnsettledCashBook.TotalValueInAccountCurrency - TotalMarginUsed; }
         }
 
         /// <summary>
@@ -404,7 +434,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Indexer for the PortfolioManager class to access the underlying security holdings objects.
         /// </summary>
-        /// <param name="symbol">Symbol indexer</param>
+        /// <param name="symbol">Symbol object indexer</param>
         /// <returns>SecurityHolding class from the algorithm securities</returns>
         public SecurityHolding this[Symbol symbol]
         {
@@ -413,12 +443,23 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Indexer for the PortfolioManager class to access the underlying security holdings objects.
+        /// </summary>
+        /// <param name="ticker">string ticker symbol indexer</param>
+        /// <returns>SecurityHolding class from the algorithm securities</returns>
+        public SecurityHolding this[string ticker]
+        {
+            get { return Securities[ticker].Holdings; }
+            set { Securities[ticker].Holdings = value; }
+        }
+
+        /// <summary>
         /// Set the base currrency cash this algorithm is to manage.
         /// </summary>
         /// <param name="cash">Decimal cash value of portfolio</param>
         public void SetCash(decimal cash) 
         {
-            _baseCurrencyCash.Quantity = cash;
+            _baseCurrencyCash.SetAmount(cash);
         }
 
         /// <summary>
@@ -432,7 +473,7 @@ namespace QuantConnect.Securities
             Cash item;
             if (CashBook.TryGetValue(symbol, out item))
             {
-                item.Quantity = cash;
+                item.SetAmount(cash);
                 item.ConversionRate = conversionRate;
             }
             else
@@ -551,7 +592,7 @@ namespace QuantConnect.Securities
                 var total = security.Holdings.Quantity*dividend.Distribution;
 
                 // assuming USD, we still need to add Currency to the security object
-                _baseCurrencyCash.Quantity += total;
+                _baseCurrencyCash.AddAmount(total);
             }
         }
 
@@ -577,7 +618,7 @@ namespace QuantConnect.Securities
             // we'll model this as a cash adjustment
             var leftOver = quantity - (int) quantity;
             var extraCash = leftOver*split.ReferencePrice;
-            _baseCurrencyCash.Quantity += extraCash;
+            _baseCurrencyCash.AddAmount(extraCash);
 
             security.Holdings.SetHoldings(avgPrice, (int) quantity);
 
@@ -638,5 +679,43 @@ namespace QuantConnect.Securities
             }
             return null;
         }
+
+        /// <summary>
+        /// Adds an item to the list of unsettled cash amounts
+        /// </summary>
+        /// <param name="item">The item to add</param>
+        public void AddUnsettledCashAmount(UnsettledCashAmount item)
+        {
+            lock (_unsettledCashAmountsLocker)
+            {
+                _unsettledCashAmounts.Add(item);
+            }
+        }
+
+        /// <summary>
+        /// Scan the portfolio to check if unsettled funds should be settled
+        /// </summary>
+        public void ScanForCashSettlement(DateTime timeUtc)
+        {
+            lock (_unsettledCashAmountsLocker)
+            {
+                foreach (var item in _unsettledCashAmounts.ToList())
+                {
+                    // check if settlement time has passed
+                    if (timeUtc >= item.SettlementTimeUtc)
+                    {
+                        // remove item from unsettled funds list
+                        _unsettledCashAmounts.Remove(item);
+
+                        // update unsettled cashbook
+                        UnsettledCashBook[item.Currency].AddAmount(-item.Amount);
+
+                        // update settled cashbook
+                        CashBook[item.Currency].AddAmount(item.Amount);
+                    }
+                }
+            }
+        }
+
     }
 }

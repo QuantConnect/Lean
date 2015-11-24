@@ -22,63 +22,25 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class Bar : IBar
     {
-        private int _initialized;
-        private decimal _open;
-        private decimal _high;
-        private decimal _low;
-        private decimal _close;
-
         /// <summary>
         /// Opening price of the bar: Defined as the price at the start of the time period.
         /// </summary>
-        public decimal Open
-        {
-            get { return _open; }
-            set
-            {
-                Initialize(value);
-                _open = value;
-            }
-        }
+        public decimal Open { get; set; }
 
         /// <summary>
         /// High price of the bar during the time period.
         /// </summary>
-        public decimal High
-        {
-            get { return _high; }
-            set
-            {
-                Initialize(value); 
-                _high = value;
-            }
-        }
+        public decimal High { get; set; }
 
         /// <summary>
         /// Low price of the bar during the time period.
         /// </summary>
-        public decimal Low
-        {
-            get { return _low; }
-            set
-            {
-                Initialize(value); 
-                _low = value;
-            }
-        }
+        public decimal Low { get; set; }
 
         /// <summary>
         /// Closing price of the bar. Defined as the price at Start Time + TimeSpan.
         /// </summary>
-        public decimal Close
-        {
-            get { return _close; }
-            set
-            {
-                Initialize(value);
-                _close = value;
-            }
-        }
+        public decimal Close { get; set; }
 
         /// <summary>
         /// Default initializer to setup an empty bar.
@@ -100,7 +62,6 @@ namespace QuantConnect.Data.Market
             High = high;
             Low = low;
             Close = close;
-            _initialized = 1;
         }
 
         /// <summary>
@@ -109,7 +70,10 @@ namespace QuantConnect.Data.Market
         /// <param name="value">The new value</param>
         public void Update(decimal value)
         {
-            Initialize(value);
+            // Do not accept zero as a new value
+            if (value == 0) return;
+
+            if (Open == 0) Open = High = Low = Close = value;
             if (value > High) High = value;
             if (value < Low) Low = value;
             Close = value;
@@ -121,19 +85,6 @@ namespace QuantConnect.Data.Market
         public Bar Clone()
         {
             return new Bar(Open, High, Low, Close);
-        }
-
-        /// <summary>
-        /// Initializes this bar with a first data point
-        /// </summary>
-        /// <param name="value">The seed value for this bar</param>
-        private void Initialize(decimal value)
-        {
-            // require that the first initialization point must be non-zero
-            if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 0 && value != 0)
-            {
-                _open = _high = _low = _close = value;
-            }
         }
     }
 }

@@ -18,6 +18,7 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
@@ -31,7 +32,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var underlying = Enumerable.Range(0, 5).Select(x => new Tick { Time = time }).ToList();
             underlying.AddRange(new Tick[] { null, null, null });
 
-            var aggregator = new BaseDataCollectionAggregatorEnumerator(underlying.GetEnumerator(), "underlying");
+            var aggregator = new BaseDataCollectionAggregatorEnumerator(underlying.GetEnumerator(), Symbols.SPY);
 
             Assert.IsTrue(aggregator.MoveNext());
             Assert.IsNotNull(aggregator.Current);
@@ -44,7 +45,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var underlying = Enumerable.Range(0, 5).Select(x => new Tick { Time = time }).ToList();
             underlying.AddRange(Enumerable.Range(0, 5).Select(x => new Tick {Time = time.AddSeconds(1)}));
 
-            var aggregator = new BaseDataCollectionAggregatorEnumerator(underlying.GetEnumerator(), "underlying");
+            var aggregator = new BaseDataCollectionAggregatorEnumerator(underlying.GetEnumerator(), Symbols.SPY);
 
             Assert.IsTrue(aggregator.MoveNext());
             Assert.IsNotNull(aggregator.Current);

@@ -38,8 +38,9 @@ namespace QuantConnect.Interfaces
         /// Initializes this history provider to work for the specified job
         /// </summary>
         /// <param name="job">The job</param>
+        /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
         /// <param name="statusUpdate">Function used to send status updates</param>
-        void Initialize(AlgorithmNodePacket job, Action<int> statusUpdate);
+        void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, Action<int> statusUpdate);
 
         /// <summary>
         /// Gets the history for the requested securities

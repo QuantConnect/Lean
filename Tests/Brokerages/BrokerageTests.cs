@@ -43,10 +43,10 @@ namespace QuantConnect.Tests.Brokerages
             {
                 return new []
                 {
-                    new TestCaseData(new MarketOrderTestParameters(Symbol, SecurityType)).SetName("MarketOrder"),
-                    new TestCaseData(new LimitOrderTestParameters(Symbol, SecurityType, HighPrice, LowPrice)).SetName("LimitOrder"),
-                    new TestCaseData(new StopMarketOrderTestParameters(Symbol, SecurityType, HighPrice, LowPrice)).SetName("StopMarketOrder"),
-                    new TestCaseData(new StopLimitOrderTestParameters(Symbol, SecurityType, HighPrice, LowPrice)).SetName("StopLimitOrder")
+                    new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
+                    new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
+                    new TestCaseData(new StopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder"),
+                    new TestCaseData(new StopLimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopLimitOrder")
                 };
             }
         }
@@ -145,7 +145,7 @@ namespace QuantConnect.Tests.Brokerages
                 // we need to keep this maintained properly
                 if (args.Status == OrderStatus.Filled || args.Status == OrderStatus.PartiallyFilled)
                 {
-                    Log.Trace("FILL EVENT: " + args.FillQuantity + " units of " + args.Symbol);
+                    Log.Trace("FILL EVENT: " + args.FillQuantity + " units of " + args.Symbol.ToString());
 
                     Holding holding;
                     if (_holdingsProvider.TryGetValue(args.Symbol, out holding))
@@ -238,7 +238,7 @@ namespace QuantConnect.Tests.Brokerages
         /// <summary>
         /// Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected abstract string Symbol { get; }
+        protected abstract Symbol Symbol { get; }
 
         /// <summary>
         /// Gets the security type associated with the <see cref="Symbol"/>
@@ -258,7 +258,7 @@ namespace QuantConnect.Tests.Brokerages
         /// <summary>
         /// Gets the current market price of the specified security
         /// </summary>
-        protected abstract decimal GetAskPrice(string symbol, SecurityType securityType);
+        protected abstract decimal GetAskPrice(Symbol symbol);
 
         /// <summary>
         /// Gets the default order quantity
@@ -423,7 +423,7 @@ namespace QuantConnect.Tests.Brokerages
                 filledResetEvent.Reset();
                 if (order.Status == OrderStatus.PartiallyFilled) continue;
 
-                var marketPrice = GetAskPrice(order.Symbol, order.SecurityType);
+                var marketPrice = GetAskPrice(order.Symbol);
                 Log.Trace("BrokerageTests.ModifyOrderUntilFilled(): Ask: " + marketPrice);
 
                 var updateOrder = parameters.ModifyOrderToFill(Brokerage, order, marketPrice);

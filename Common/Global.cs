@@ -53,7 +53,8 @@ namespace QuantConnect
     public class Holding
     {
         /// Symbol of the Holding:
-        public string Symbol = "";
+        [JsonConverter(typeof(SymbolValueJsonConverter))]
+        public Symbol Symbol = Symbol.Empty;
 
         /// Type of the security
         public SecurityType Type;
@@ -87,7 +88,7 @@ namespace QuantConnect
         public Holding(SecurityHolding holding)
              : this()
         {
-            Symbol = holding.Symbol.Value;
+            Symbol = holding.Symbol;
             Type = holding.Type;
             Quantity = holding.Quantity;
 
@@ -270,6 +271,22 @@ namespace QuantConnect
     }
 
     /// <summary>
+    /// Account type: margin or cash
+    /// </summary>
+    public enum AccountType
+    {
+        /// <summary>
+        /// Margin account type
+        /// </summary>
+        Margin,
+
+        /// <summary>
+        /// Cash account type
+        /// </summary>
+        Cash
+    }
+
+    /// <summary>
     /// Market data style: is the market data a summary (OHLC style) bar, or is it a time-price value.
     /// </summary>
     public enum MarketDataType
@@ -359,6 +376,37 @@ namespace QuantConnect
         Daily
     }
 
+    /// <summary>
+    /// Specifies the different types of options
+    /// </summary>
+    public enum OptionRight
+    {
+        /// <summary>
+        /// A call option, the right to buy at the strike price
+        /// </summary>
+        Call,
+
+        /// <summary>
+        /// A put option, the right to sell at the strike price
+        /// </summary>
+        Put
+    }
+
+    /// <summary>
+    /// Specifies the style of an option
+    /// </summary>
+    public enum OptionStyle
+    {
+        /// <summary>
+        /// American style options are able to be exercised at any time on or before the expiration date
+        /// </summary>
+        American,
+
+        /// <summary>
+        /// European style options are able to be exercised on the expiration date only.
+        /// </summary>
+        European
+    }
 
     /// <summary>
     /// Wrapper for algorithm status enum to include the charting subscription.

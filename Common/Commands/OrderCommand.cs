@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Commands
 {
@@ -63,7 +64,7 @@ namespace QuantConnect.Commands
         /// Runs this command against the specified algorithm instance
         /// </summary>
         /// <param name="algorithm">The algorithm to run this command against</param>
-        public void Run(IAlgorithm algorithm)
+        public CommandResultPacket Run(IAlgorithm algorithm)
         {
             var request = new SubmitOrderRequest(OrderType, SecurityType, Symbol, Quantity, StopPrice, LimitPrice, DateTime.UtcNow, Tag);
             var ticket = algorithm.Transactions.ProcessRequest(request);
@@ -78,6 +79,8 @@ namespace QuantConnect.Commands
             {
                 algorithm.Error(message);
             }
+
+            return new CommandResultPacket(this, response.IsSuccess);
         }
 
         /// <summary>

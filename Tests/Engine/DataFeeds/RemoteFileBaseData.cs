@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             var csv = line.Split(',');
-            if (csv[1].ToLower() != config.Symbol.ToLower())
+            if (csv[1].ToLower() != config.Symbol.ToString().ToLower())
             {
                 // this row isn't for me
                 return null;
@@ -47,8 +47,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             // this file is only a few seconds worth of data, so it's quick to download
-            var remoteFileSource = @"http://www.quantconnect.com/live-test?type=file&symbols=" + config.Symbol;
-            remoteFileSource = @"http://beta.quantconnect.com/live-test?type=file&symbols=" + config.Symbol;
+            var remoteFileSource = @"http://www.quantconnect.com/live-test?type=file&symbols=" + config.Symbol.Value;
+            remoteFileSource = @"http://beta.quantconnect.com/live-test?type=file&symbols=" + config.Symbol.Value;
             return new SubscriptionDataSource(remoteFileSource, SubscriptionTransportMedium.RemoteFile, FileFormat.Csv);
         }
     }

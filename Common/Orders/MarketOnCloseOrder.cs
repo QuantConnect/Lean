@@ -31,14 +31,6 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Value of the order at limit price if a limit order, or market price if a market order.
-        /// </summary>
-        public override decimal Value
-        {
-            get { return AbsoluteQuantity * Price; }
-        }
-
-        /// <summary>
         /// Intiializes a new instance of the <see cref="MarketOnCloseOrder"/> class.
         /// </summary>
         public MarketOnCloseOrder()

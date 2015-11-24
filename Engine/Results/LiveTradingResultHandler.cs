@@ -67,7 +67,7 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextRunningStatus;
         private DateTime _nextLogStoreUpdate;
         private DateTime _nextStatisticsUpdate;
-        private int _lastOrderId = -1;
+        private int _lastOrderId = 0;
         private readonly object _chartLock = new Object();
         private readonly object _runtimeLock = new Object();
         private string _subscription = "Strategy Equity";
@@ -224,7 +224,7 @@ namespace QuantConnect.Lean.Engine.Results
                             case PacketType.OrderEvent:
                                 var orderEvent = packet as OrderEventPacket;
                                 DebugMessage("New Order Event: OrderId:" + orderEvent.Event.OrderId + " Symbol:" +
-                                                orderEvent.Event.Symbol + " Quantity:" + orderEvent.Event.FillQuantity +
+                                                orderEvent.Event.Symbol.ToString() + " Quantity:" + orderEvent.Event.FillQuantity +
                                                 " Status:" + orderEvent.Event.Status);
                                 _messagingHandler.Send(orderEvent);
                                 break;
@@ -345,7 +345,7 @@ namespace QuantConnect.Lean.Engine.Results
                     serverStatistics["Up Time"] = string.Format("{0}d {1:hh\\:mm\\:ss}", upTime.Days, upTime);
 
                     // only send holdings updates when we have changes in orders, except for first time, then we want to send all
-                    foreach (var asset in _algorithm.Securities.Values.OrderBy(x => x.Symbol.Value))
+                    foreach (var asset in _algorithm.Securities.Values.Where(x => !x.SubscriptionDataConfig.IsInternalFeed).OrderBy(x => x.Symbol.Value))
                     {
                         holdings.Add(asset.Symbol.Value, new Holding(asset.Holdings));
                     }
@@ -962,7 +962,7 @@ namespace QuantConnect.Lean.Engine.Results
             Messages.Enqueue(new OrderEventPacket(_deployId, newEvent));
 
             //Add the order event message to the log:
-            LogMessage("New Order Event: Id:" + newEvent.OrderId + " Symbol:" + newEvent.Symbol + " Quantity:" + newEvent.FillQuantity + " Status:" + newEvent.Status);
+            LogMessage("New Order Event: Id:" + newEvent.OrderId + " Symbol:" + newEvent.Symbol.ToString() + " Quantity:" + newEvent.FillQuantity + " Status:" + newEvent.Status);
         }
 
         /// <summary>

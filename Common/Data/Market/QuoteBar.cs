@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -25,7 +25,13 @@ namespace QuantConnect.Data.Market
     {
         // scale factor used in QC equity/forex data files
         private const decimal _scaleFactor = 10000m;
-        
+
+        private int _updateBidCount = 0;
+        private long _sumBidSize = 0;
+
+        private int _updateAskCount = 0;
+        private long _sumAskSize = 0;
+
         /// <summary>
         /// Average bid size
         /// </summary>
@@ -161,11 +167,13 @@ namespace QuantConnect.Data.Market
             Time = new DateTime();
             Bid = new Bar();
             Ask = new Bar();
-            AvgBidSize = 0;
-            AvgAskSize = 0;
+            AvgBidSize = _sumBidSize = 0;
+            AvgAskSize = _sumAskSize = 0;
             Value = 0;
             Period = TimeSpan.FromMinutes(1);
             DataType = MarketDataType.QuoteBar;
+            _updateBidCount = 0;
+            _updateAskCount = 0;
         }
 
         /// <summary>
@@ -186,6 +194,8 @@ namespace QuantConnect.Data.Market
             Value = original.Close;
             Period = original.Period;
             DataType = MarketDataType.QuoteBar;
+            _updateBidCount = 0;
+            _updateAskCount = 0;
         }
 
         /// <summary>
@@ -209,6 +219,8 @@ namespace QuantConnect.Data.Market
             Value = Close;
             Period = period ?? TimeSpan.FromMinutes(1);
             DataType = MarketDataType.QuoteBar;
+            _updateBidCount = 0;
+            _updateAskCount = 0;
         }
 
         /// <summary>
@@ -226,9 +238,24 @@ namespace QuantConnect.Data.Market
             Bid.Update(bidPrice);
             Ask.Update(askPrice);
 
-            // Note: we are summing instead of averaging!!!
-            AvgBidSize += Convert.ToInt32(bidSize);
-            AvgAskSize += Convert.ToInt32(askSize);
+            if ((_updateBidCount == 0 && AvgBidSize > 0) || (_updateAskCount == 0 && AvgAskSize > 0))
+            {
+                throw new InvalidOperationException("Average bid/ask size cannot be greater then zero if update counter is zero.");
+            }
+            
+            if (bidSize > 0) 
+            {   
+                _updateBidCount++;
+                _sumBidSize += Convert.ToInt32(bidSize);
+                AvgBidSize = _sumBidSize / _updateBidCount;
+            }
+            
+            if (askSize > 0) 
+            {
+                _updateAskCount++;
+                _sumAskSize += Convert.ToInt32(askSize);
+                AvgAskSize = _sumAskSize / _updateAskCount;
+            }
 
             // be prepared for updates without trades
             if (lastTrade != 0) Value = lastTrade;

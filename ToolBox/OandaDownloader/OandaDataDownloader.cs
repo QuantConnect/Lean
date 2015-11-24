@@ -23,6 +23,7 @@ using System.Net;
 using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 using QuantConnect.ToolBox.OandaDownloader.OandaRestLibrary;
 
 namespace QuantConnect.ToolBox.OandaDownloader
@@ -35,7 +36,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
         private const string InstrumentsFileName = "instruments_oanda.txt";
         private const int BarsPerRequest = 5000;
 
-        private static Dictionary<Symbol, LeanInstrument> _instruments;
+        private static Dictionary<string, LeanInstrument> _instruments;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaDataDownloader"/> class
@@ -57,7 +58,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
             if (!File.Exists(InstrumentsFileName))
                 throw new FileNotFoundException(InstrumentsFileName + " file not found.");
 
-            _instruments = new Dictionary<Symbol, LeanInstrument>();
+            _instruments = new Dictionary<string, LeanInstrument>();
 
             var lines = File.ReadAllLines(InstrumentsFileName);
             foreach (var line in lines)
@@ -65,13 +66,14 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 var tokens = line.Split(',');
                 if (tokens.Length >= 3)
                 {
-                    string oandaSymbol = tokens[0];
-                    Symbol symbol = ConvertOandaSymbolToLeanSymbol(oandaSymbol);
+                    var oandaSymbol = tokens[0];
+                    var securityType = (SecurityType)Enum.Parse(typeof(SecurityType), tokens[2]);
+                    var symbol = ConvertOandaSymbolToLeanSymbol(oandaSymbol);
                     _instruments.Add(symbol, new LeanInstrument
                     {
                         Symbol = symbol,
                         Name = tokens[1],
-                        Type = (SecurityType)Enum.Parse(typeof(SecurityType), tokens[2])
+                        Type = securityType
                     });
                 }
             }
@@ -82,9 +84,9 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// </summary>
         /// <param name="oandaSymbol">The Oanda symbol</param>
         /// <returns>A Lean symbol</returns>
-        private static Symbol ConvertOandaSymbolToLeanSymbol(string oandaSymbol)
+        private static string ConvertOandaSymbolToLeanSymbol(string oandaSymbol)
         {
-            return new Symbol(oandaSymbol.Replace("_", ""));
+            return oandaSymbol.Replace("_", "");
         }
 
         /// <summary>
@@ -94,6 +96,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// <returns>An Oanda symbol</returns>
         private static string ConvertLeanSymbolToOandaSymbol(Symbol symbol)
         {
+            // this will only work for forex symbols
             return symbol.Value.Insert(symbol.Value.Length - 3, "_");
         }
 
@@ -102,7 +105,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// </summary>
         /// <param name="symbol"></param>
         /// <returns>Returns true if the symbol is available</returns>
-        public bool HasSymbol(Symbol symbol)
+        public bool HasSymbol(string symbol)
         {
             return _instruments.ContainsKey(symbol);
         }
@@ -112,7 +115,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <returns>The security type</returns>
-        public SecurityType GetSecurityType(Symbol symbol)
+        public SecurityType GetSecurityType(string symbol)
         {
             return _instruments[symbol].Type;
         }
@@ -128,8 +131,8 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// <returns>Enumerable of base data for this symbol</returns>
         public IEnumerable<BaseData> Get(Symbol symbol, SecurityType type, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-            if (!_instruments.ContainsKey(symbol))
-                throw new ArgumentException("Invalid symbol requested: " + symbol);
+            if (!_instruments.ContainsKey(symbol.Value))
+                throw new ArgumentException("Invalid symbol requested: " + symbol.ToString());
 
             if (resolution == Resolution.Tick)
                 throw new NotSupportedException("Resolution not available: " + resolution);
@@ -298,7 +301,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// <summary>
         /// Downloads a block of 5-second bars from a starting datetime
         /// </summary>
-        /// <param name="symbol"></param>
+        /// <param name="oandaSymbol"></param>
         /// <param name="start"></param>
         /// <param name="barsPerRequest"></param>
         /// <returns></returns>

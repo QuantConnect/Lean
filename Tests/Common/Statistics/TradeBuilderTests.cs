@@ -23,7 +23,6 @@ namespace QuantConnect.Tests.Common.Statistics
     [TestFixture]
     public class TradeBuilderTests
     {
-        private const string Symbol = "EURUSD";
         private const decimal OrderFee = 1;
         private const decimal ConversionRate = 1;
         private readonly DateTime _startTime = new DateTime(2015, 08, 06, 15, 30, 0);
@@ -42,23 +41,23 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(1, Symbol, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.075m);
-            builder.SetMarketPrice(Symbol, 1.10m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsFalse(builder.HasOpenPosition(Symbol));
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
 
             Assert.AreEqual(1, builder.ClosedTrades.Count);
 
             var trade = builder.ClosedTrades[0];
 
-            Assert.AreEqual(Symbol, trade.Symbol);
+            Assert.AreEqual(Symbols.EURUSD, trade.Symbol);
             Assert.AreEqual(time, trade.EntryTime);
             Assert.AreEqual(1.08m, trade.EntryPrice);
             Assert.AreEqual(TradeDirection.Long, trade.Direction);
@@ -85,23 +84,23 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(1, Symbol, time, OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.075m);
-            builder.SetMarketPrice(Symbol, 1.10m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
             
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsFalse(builder.HasOpenPosition(Symbol));
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
 
             Assert.AreEqual(1, builder.ClosedTrades.Count);
 
             var trade = builder.ClosedTrades[0];
 
-            Assert.AreEqual(Symbol, trade.Symbol);
+            Assert.AreEqual(Symbols.EURUSD, trade.Symbol);
             Assert.AreEqual(time, trade.EntryTime);
             Assert.AreEqual(1.08m, trade.EntryPrice);
             Assert.AreEqual(TradeDirection.Short, trade.Direction);
@@ -128,24 +127,24 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(1, Symbol, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.075m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.07m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.07m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.065m);
-            builder.SetMarketPrice(Symbol, 1.10m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.065m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
 
             // Sell 2k
-            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbols.EURUSD, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsFalse(builder.HasOpenPosition(Symbol));
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
 
             if (groupingMethod == FillGroupingMethod.FillToFill)
             {
@@ -153,7 +152,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade1 = builder.ClosedTrades[matchingMethod == FillMatchingMethod.FIFO ? 0 : 1];
 
-                Assert.AreEqual(Symbol, trade1.Symbol);
+                Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                 Assert.AreEqual(time, trade1.EntryTime);
                 Assert.AreEqual(1.08m, trade1.EntryPrice);
                 Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -167,7 +166,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade2 = builder.ClosedTrades[matchingMethod == FillMatchingMethod.FIFO ? 1 : 0];
 
-                Assert.AreEqual(Symbol, trade2.Symbol);
+                Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                 Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
                 Assert.AreEqual(1.07m, trade2.EntryPrice);
                 Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -185,7 +184,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade = builder.ClosedTrades[0];
 
-                Assert.AreEqual(Symbol, trade.Symbol);
+                Assert.AreEqual(Symbols.EURUSD, trade.Symbol);
                 Assert.AreEqual(time, trade.EntryTime);
                 Assert.AreEqual(1.075m, trade.EntryPrice);
                 Assert.AreEqual(TradeDirection.Long, trade.Direction);
@@ -213,24 +212,24 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(1, Symbol, time, OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.075m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.07m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.07m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.065m);
-            builder.SetMarketPrice(Symbol, 1.10m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.065m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
 
             // Buy 2k
-            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbols.EURUSD, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsFalse(builder.HasOpenPosition(Symbol));
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
 
             if (groupingMethod == FillGroupingMethod.FillToFill)
             {
@@ -238,7 +237,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade1 = builder.ClosedTrades[matchingMethod == FillMatchingMethod.FIFO ? 0 : 1];
 
-                Assert.AreEqual(Symbol, trade1.Symbol);
+                Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                 Assert.AreEqual(time, trade1.EntryTime);
                 Assert.AreEqual(1.08m, trade1.EntryPrice);
                 Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -252,7 +251,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade2 = builder.ClosedTrades[matchingMethod == FillMatchingMethod.FIFO ? 1 : 0];
 
-                Assert.AreEqual(Symbol, trade2.Symbol);
+                Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                 Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
                 Assert.AreEqual(1.07m, trade2.EntryPrice);
                 Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -270,7 +269,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade = builder.ClosedTrades[0];
 
-                Assert.AreEqual(Symbol, trade.Symbol);
+                Assert.AreEqual(Symbols.EURUSD, trade.Symbol);
                 Assert.AreEqual(time, trade.EntryTime);
                 Assert.AreEqual(1.075m, trade.EntryPrice);
                 Assert.AreEqual(TradeDirection.Short, trade.Direction);
@@ -298,24 +297,24 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Buy 2k
-            builder.ProcessFill(new OrderEvent(1, Symbol, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.07m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.07m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.075m);
-
-            // Sell 1k
-            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
-
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
-
-            builder.SetMarketPrice(Symbol, 1.065m);
-            builder.SetMarketPrice(Symbol, 1.10m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsFalse(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
+
+            builder.SetMarketPrice(Symbols.EURUSD, 1.065m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
+
+            // Sell 1k
+            builder.ProcessFill(new OrderEvent(3, Symbols.EURUSD, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
 
             if (groupingMethod == FillGroupingMethod.FlatToFlat)
             {
@@ -323,7 +322,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade = builder.ClosedTrades[0];
 
-                Assert.AreEqual(Symbol, trade.Symbol);
+                Assert.AreEqual(Symbols.EURUSD, trade.Symbol);
                 Assert.AreEqual(time, trade.EntryTime);
                 Assert.AreEqual(1.07m, trade.EntryPrice);
                 Assert.AreEqual(TradeDirection.Long, trade.Direction);
@@ -341,7 +340,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade1 = builder.ClosedTrades[0];
 
-                Assert.AreEqual(Symbol, trade1.Symbol);
+                Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                 Assert.AreEqual(time, trade1.EntryTime);
                 Assert.AreEqual(1.07m, trade1.EntryPrice);
                 Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -355,7 +354,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade2 = builder.ClosedTrades[1];
 
-                Assert.AreEqual(Symbol, trade2.Symbol);
+                Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                 Assert.AreEqual(time, trade2.EntryTime);
                 Assert.AreEqual(1.07m, trade2.EntryPrice);
                 Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -383,24 +382,24 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Sell 2k
-            builder.ProcessFill(new OrderEvent(1, Symbol, time, OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.07m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.07m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.075m);
-
-            // Buy 1k
-            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
-
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
-
-            builder.SetMarketPrice(Symbol, 1.065m);
-            builder.SetMarketPrice(Symbol, 1.10m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsFalse(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
+
+            builder.SetMarketPrice(Symbols.EURUSD, 1.065m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
+
+            // Buy 1k
+            builder.ProcessFill(new OrderEvent(3, Symbols.EURUSD, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
 
             if (groupingMethod == FillGroupingMethod.FlatToFlat)
             {
@@ -408,7 +407,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade = builder.ClosedTrades[0];
 
-                Assert.AreEqual(Symbol, trade.Symbol);
+                Assert.AreEqual(Symbols.EURUSD, trade.Symbol);
                 Assert.AreEqual(time, trade.EntryTime);
                 Assert.AreEqual(1.07m, trade.EntryPrice);
                 Assert.AreEqual(TradeDirection.Short, trade.Direction);
@@ -426,7 +425,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade1 = builder.ClosedTrades[0];
 
-                Assert.AreEqual(Symbol, trade1.Symbol);
+                Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                 Assert.AreEqual(time, trade1.EntryTime);
                 Assert.AreEqual(1.07m, trade1.EntryPrice);
                 Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -440,7 +439,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                 var trade2 = builder.ClosedTrades[1];
 
-                Assert.AreEqual(Symbol, trade2.Symbol);
+                Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                 Assert.AreEqual(time, trade2.EntryTime);
                 Assert.AreEqual(1.07m, trade2.EntryPrice);
                 Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -468,30 +467,30 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(1, Symbol, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.07m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.07m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.075m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
 
             // Sell 2k
-            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.065m);
-            builder.SetMarketPrice(Symbol, 1.10m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.065m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbols.EURUSD, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsFalse(builder.HasOpenPosition(Symbol));
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
 
             Assert.AreEqual(2, builder.ClosedTrades.Count);
 
             var trade1 = builder.ClosedTrades[0];
 
-            Assert.AreEqual(Symbol, trade1.Symbol);
+            Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
             Assert.AreEqual(time, trade1.EntryTime);
             Assert.AreEqual(1.07m, trade1.EntryPrice);
             Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -505,7 +504,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
             var trade2 = builder.ClosedTrades[1];
 
-            Assert.AreEqual(Symbol, trade2.Symbol);
+            Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
             Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
             Assert.AreEqual(1.08m, trade2.EntryPrice);
             Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -532,30 +531,30 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(1, Symbol, time, OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.07m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.07m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.075m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
 
             // Buy 2k
-            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.065m);
-            builder.SetMarketPrice(Symbol, 1.10m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.065m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbols.EURUSD, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsFalse(builder.HasOpenPosition(Symbol));
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
 
             Assert.AreEqual(2, builder.ClosedTrades.Count);
 
             var trade1 = builder.ClosedTrades[0];
 
-            Assert.AreEqual(Symbol, trade1.Symbol);
+            Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
             Assert.AreEqual(time, trade1.EntryTime);
             Assert.AreEqual(1.07m, trade1.EntryPrice);
             Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -569,7 +568,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
             var trade2 = builder.ClosedTrades[1];
 
-            Assert.AreEqual(Symbol, trade2.Symbol);
+            Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
             Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
             Assert.AreEqual(1.08m, trade2.EntryPrice);
             Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -596,34 +595,34 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(1, Symbol, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.07m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.07m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.075m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.065m);
-            builder.SetMarketPrice(Symbol, 1.10m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.065m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbols.EURUSD, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(4, Symbol, time.AddMinutes(30), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(4, Symbols.EURUSD, time.AddMinutes(30), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
             // Sell 2k
-            builder.ProcessFill(new OrderEvent(5, Symbol, time.AddMinutes(40), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(5, Symbols.EURUSD, time.AddMinutes(40), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsFalse(builder.HasOpenPosition(Symbol));
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
 
             switch (groupingMethod)
             {
@@ -633,7 +632,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.08m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -647,7 +646,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time.AddMinutes(30), trade2.EntryTime);
                         Assert.AreEqual(1.08m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -661,7 +660,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade3 = builder.ClosedTrades[2];
 
-                        Assert.AreEqual(Symbol, trade3.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade3.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(30) : time, trade3.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.07m, trade3.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade3.Direction);
@@ -681,7 +680,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade.Symbol);
                         Assert.AreEqual(time, trade.EntryTime);
                         Assert.AreEqual(1.0766666666666666666666666667m, trade.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade.Direction);
@@ -701,7 +700,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.08m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -715,7 +714,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time, trade2.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.075m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -745,34 +744,34 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(1, Symbol, time, OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.07m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.07m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.075m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.065m);
-            builder.SetMarketPrice(Symbol, 1.10m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.065m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbols.EURUSD, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(4, Symbol, time.AddMinutes(30), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(4, Symbols.EURUSD, time.AddMinutes(30), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
             // Buy 2k
-            builder.ProcessFill(new OrderEvent(5, Symbol, time.AddMinutes(40), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(5, Symbols.EURUSD, time.AddMinutes(40), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsFalse(builder.HasOpenPosition(Symbol));
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
 
             switch (groupingMethod)
             {
@@ -782,7 +781,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.08m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -796,7 +795,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time.AddMinutes(30), trade2.EntryTime);
                         Assert.AreEqual(1.08m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -810,7 +809,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade3 = builder.ClosedTrades[2];
 
-                        Assert.AreEqual(Symbol, trade3.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade3.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(30) : time, trade3.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.07m, trade3.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade3.Direction);
@@ -830,7 +829,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade.Symbol);
                         Assert.AreEqual(time, trade.EntryTime);
                         Assert.AreEqual(1.0766666666666666666666666667m, trade.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade.Direction);
@@ -850,7 +849,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.08m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -864,7 +863,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time, trade2.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.075m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -894,34 +893,34 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(1, Symbol, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.07m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.07m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.075m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
 
             // Buy 2k
-            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.065m);
-            builder.SetMarketPrice(Symbol, 1.10m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.065m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbols.EURUSD, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(4, Symbol, time.AddMinutes(30), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(4, Symbols.EURUSD, time.AddMinutes(30), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
             // Sell 3k
-            builder.ProcessFill(new OrderEvent(5, Symbol, time.AddMinutes(40), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -3000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(5, Symbols.EURUSD, time.AddMinutes(40), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -3000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsFalse(builder.HasOpenPosition(Symbol));
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
 
             switch (groupingMethod)
             {
@@ -933,7 +932,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade1 = builder.ClosedTrades[0];
 
-                            Assert.AreEqual(Symbol, trade1.Symbol);
+                            Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                             Assert.AreEqual(time, trade1.EntryTime);
                             Assert.AreEqual(1.07m, trade1.EntryPrice);
                             Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -947,7 +946,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade2 = builder.ClosedTrades[1];
 
-                            Assert.AreEqual(Symbol, trade2.Symbol);
+                            Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                             Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
                             Assert.AreEqual(1.08m, trade2.EntryPrice);
                             Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -961,7 +960,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade3 = builder.ClosedTrades[2];
 
-                            Assert.AreEqual(Symbol, trade3.Symbol);
+                            Assert.AreEqual(Symbols.EURUSD, trade3.Symbol);
                             Assert.AreEqual(time.AddMinutes(30), trade3.EntryTime);
                             Assert.AreEqual(1.08m, trade3.EntryPrice);
                             Assert.AreEqual(TradeDirection.Long, trade3.Direction);
@@ -979,7 +978,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade1 = builder.ClosedTrades[0];
 
-                            Assert.AreEqual(Symbol, trade1.Symbol);
+                            Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                             Assert.AreEqual(time.AddMinutes(10), trade1.EntryTime);
                             Assert.AreEqual(1.08m, trade1.EntryPrice);
                             Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -993,7 +992,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade2 = builder.ClosedTrades[1];
 
-                            Assert.AreEqual(Symbol, trade2.Symbol);
+                            Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                             Assert.AreEqual(time.AddMinutes(30), trade2.EntryTime);
                             Assert.AreEqual(1.08m, trade2.EntryPrice);
                             Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -1007,7 +1006,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade3 = builder.ClosedTrades[2];
 
-                            Assert.AreEqual(Symbol, trade3.Symbol);
+                            Assert.AreEqual(Symbols.EURUSD, trade3.Symbol);
                             Assert.AreEqual(time.AddMinutes(10), trade3.EntryTime);
                             Assert.AreEqual(1.08m, trade3.EntryPrice);
                             Assert.AreEqual(TradeDirection.Long, trade3.Direction);
@@ -1021,7 +1020,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade4 = builder.ClosedTrades[3];
 
-                            Assert.AreEqual(Symbol, trade4.Symbol);
+                            Assert.AreEqual(Symbols.EURUSD, trade4.Symbol);
                             Assert.AreEqual(time, trade4.EntryTime);
                             Assert.AreEqual(1.07m, trade4.EntryPrice);
                             Assert.AreEqual(TradeDirection.Long, trade4.Direction);
@@ -1042,7 +1041,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade.Symbol);
                         Assert.AreEqual(time, trade.EntryTime);
                         Assert.AreEqual(1.0775m, trade.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade.Direction);
@@ -1062,7 +1061,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.08m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -1076,7 +1075,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time, trade2.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.0766666666666666666666666667m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -1106,34 +1105,34 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(1, Symbol, time, OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.07m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.07m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.075m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
 
             // Sell 2k
-            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.065m);
-            builder.SetMarketPrice(Symbol, 1.10m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.065m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(3, Symbols.EURUSD, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(4, Symbol, time.AddMinutes(30), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(4, Symbols.EURUSD, time.AddMinutes(30), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
             // Buy 3k
-            builder.ProcessFill(new OrderEvent(5, Symbol, time.AddMinutes(40), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 3000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(5, Symbols.EURUSD, time.AddMinutes(40), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 3000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsFalse(builder.HasOpenPosition(Symbol));
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
 
             switch (groupingMethod)
             {
@@ -1145,7 +1144,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade1 = builder.ClosedTrades[0];
 
-                            Assert.AreEqual(Symbol, trade1.Symbol);
+                            Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                             Assert.AreEqual(time, trade1.EntryTime);
                             Assert.AreEqual(1.07m, trade1.EntryPrice);
                             Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -1159,7 +1158,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade2 = builder.ClosedTrades[1];
 
-                            Assert.AreEqual(Symbol, trade2.Symbol);
+                            Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                             Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
                             Assert.AreEqual(1.08m, trade2.EntryPrice);
                             Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -1173,7 +1172,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade3 = builder.ClosedTrades[2];
 
-                            Assert.AreEqual(Symbol, trade3.Symbol);
+                            Assert.AreEqual(Symbols.EURUSD, trade3.Symbol);
                             Assert.AreEqual(time.AddMinutes(30), trade3.EntryTime);
                             Assert.AreEqual(1.08m, trade3.EntryPrice);
                             Assert.AreEqual(TradeDirection.Short, trade3.Direction);
@@ -1191,7 +1190,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade1 = builder.ClosedTrades[0];
 
-                            Assert.AreEqual(Symbol, trade1.Symbol);
+                            Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                             Assert.AreEqual(time.AddMinutes(10), trade1.EntryTime);
                             Assert.AreEqual(1.08m, trade1.EntryPrice);
                             Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -1205,7 +1204,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade2 = builder.ClosedTrades[1];
 
-                            Assert.AreEqual(Symbol, trade2.Symbol);
+                            Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                             Assert.AreEqual(time.AddMinutes(30), trade2.EntryTime);
                             Assert.AreEqual(1.08m, trade2.EntryPrice);
                             Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -1219,7 +1218,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade3 = builder.ClosedTrades[2];
 
-                            Assert.AreEqual(Symbol, trade3.Symbol);
+                            Assert.AreEqual(Symbols.EURUSD, trade3.Symbol);
                             Assert.AreEqual(time.AddMinutes(10), trade3.EntryTime);
                             Assert.AreEqual(1.08m, trade3.EntryPrice);
                             Assert.AreEqual(TradeDirection.Short, trade3.Direction);
@@ -1233,7 +1232,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                             var trade4 = builder.ClosedTrades[3];
 
-                            Assert.AreEqual(Symbol, trade4.Symbol);
+                            Assert.AreEqual(Symbols.EURUSD, trade4.Symbol);
                             Assert.AreEqual(time, trade4.EntryTime);
                             Assert.AreEqual(1.07m, trade4.EntryPrice);
                             Assert.AreEqual(TradeDirection.Short, trade4.Direction);
@@ -1254,7 +1253,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade.Symbol);
                         Assert.AreEqual(time, trade.EntryTime);
                         Assert.AreEqual(1.0775m, trade.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade.Direction);
@@ -1274,7 +1273,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.08m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -1288,7 +1287,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(10) : time, trade2.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.0766666666666666666666666667m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -1318,39 +1317,39 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(1, Symbol, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.07m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.07m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.075m);
-
-            // Buy 1k
-            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
-
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
-
-            builder.SetMarketPrice(Symbol, 1.065m);
-            builder.SetMarketPrice(Symbol, 1.10m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
+
+            builder.SetMarketPrice(Symbols.EURUSD, 1.065m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
+
+            // Buy 1k
+            builder.ProcessFill(new OrderEvent(3, Symbols.EURUSD, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
             // Sell 2k
-            builder.ProcessFill(new OrderEvent(4, Symbol, time.AddMinutes(30), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.10m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(4, Symbols.EURUSD, time.AddMinutes(30), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.10m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
             // Buy 1k
-            builder.ProcessFill(new OrderEvent(5, Symbol, time.AddMinutes(40), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(5, Symbols.EURUSD, time.AddMinutes(40), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
             // Sell 2k
-            builder.ProcessFill(new OrderEvent(6, Symbol, time.AddMinutes(50), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(6, Symbols.EURUSD, time.AddMinutes(50), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -2000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsFalse(builder.HasOpenPosition(Symbol));
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
 
             switch (groupingMethod)
             {
@@ -1360,7 +1359,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(20), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.09m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -1374,7 +1373,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                         Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
                         Assert.AreEqual(1.08m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -1388,7 +1387,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade3 = builder.ClosedTrades[2];
 
-                        Assert.AreEqual(Symbol, trade3.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade3.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(20) : time.AddMinutes(40), trade3.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.09m : 1.08m, trade3.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade3.Direction);
@@ -1402,7 +1401,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade4 = builder.ClosedTrades[3];
 
-                        Assert.AreEqual(Symbol, trade4.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade4.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(40) : time, trade4.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.07m, trade4.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade4.Direction);
@@ -1422,7 +1421,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade.Symbol);
                         Assert.AreEqual(time, trade.EntryTime);
                         Assert.AreEqual(1.08m, trade.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade.Direction);
@@ -1442,7 +1441,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.075m : 1.085m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade1.Direction);
@@ -1456,7 +1455,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(20) : time, trade2.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.085m : 1.075m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Long, trade2.Direction);
@@ -1486,39 +1485,39 @@ namespace QuantConnect.Tests.Common.Statistics
             var time = _startTime;
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(1, Symbol, time, OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.07m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.07m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
-            builder.SetMarketPrice(Symbol, 1.075m);
-
-            // Sell 1k
-            builder.ProcessFill(new OrderEvent(2, Symbol, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
-
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
-
-            builder.SetMarketPrice(Symbol, 1.065m);
-            builder.SetMarketPrice(Symbol, 1.10m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(3, Symbol, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
+
+            builder.SetMarketPrice(Symbols.EURUSD, 1.065m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
+
+            // Sell 1k
+            builder.ProcessFill(new OrderEvent(3, Symbols.EURUSD, time.AddMinutes(20), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
             // Buy 2k
-            builder.ProcessFill(new OrderEvent(4, Symbol, time.AddMinutes(30), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.10m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(4, Symbols.EURUSD, time.AddMinutes(30), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.10m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
             // Sell 1k
-            builder.ProcessFill(new OrderEvent(5, Symbol, time.AddMinutes(40), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(5, Symbols.EURUSD, time.AddMinutes(40), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.08m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsTrue(builder.HasOpenPosition(Symbol));
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
 
             // Buy 2k
-            builder.ProcessFill(new OrderEvent(6, Symbol, time.AddMinutes(50), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
+            builder.ProcessFill(new OrderEvent(6, Symbols.EURUSD, time.AddMinutes(50), OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.09m, fillQuantity: 2000, orderFee: OrderFee), ConversionRate);
 
-            Assert.IsFalse(builder.HasOpenPosition(Symbol));
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
 
             switch (groupingMethod)
             {
@@ -1528,7 +1527,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(20), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.07m : 1.09m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -1542,7 +1541,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                         Assert.AreEqual(time.AddMinutes(10), trade2.EntryTime);
                         Assert.AreEqual(1.08m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade2.Direction);
@@ -1556,7 +1555,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade3 = builder.ClosedTrades[2];
 
-                        Assert.AreEqual(Symbol, trade3.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade3.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(20) : time.AddMinutes(40), trade3.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.09m : 1.08m, trade3.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade3.Direction);
@@ -1570,7 +1569,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade4 = builder.ClosedTrades[3];
 
-                        Assert.AreEqual(Symbol, trade4.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade4.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(40) : time, trade4.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.08m : 1.07m, trade4.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade4.Direction);
@@ -1590,7 +1589,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade.Symbol);
                         Assert.AreEqual(time, trade.EntryTime);
                         Assert.AreEqual(1.08m, trade.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade.Direction);
@@ -1610,7 +1609,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade1 = builder.ClosedTrades[0];
 
-                        Assert.AreEqual(Symbol, trade1.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade1.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time : time.AddMinutes(10), trade1.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.075m : 1.085m, trade1.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade1.Direction);
@@ -1624,7 +1623,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
                         var trade2 = builder.ClosedTrades[1];
 
-                        Assert.AreEqual(Symbol, trade2.Symbol);
+                        Assert.AreEqual(Symbols.EURUSD, trade2.Symbol);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? time.AddMinutes(20) : time, trade2.EntryTime);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1.085m : 1.075m, trade2.EntryPrice);
                         Assert.AreEqual(TradeDirection.Short, trade2.Direction);

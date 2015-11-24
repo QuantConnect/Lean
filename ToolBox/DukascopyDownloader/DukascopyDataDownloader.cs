@@ -76,7 +76,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// </summary>
         /// <param name="symbol"></param>
         /// <returns>Returns true if the symbol is available</returns>
-        public bool HasSymbol(Symbol symbol)
+        public bool HasSymbol(string symbol)
         {
             return _instruments.ContainsKey(symbol);
         }
@@ -86,7 +86,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <returns>The security type</returns>
-        public SecurityType GetSecurityType(Symbol symbol)
+        public SecurityType GetSecurityType(string symbol)
         {
             return _instruments[symbol].Type;
         }
@@ -102,8 +102,8 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <returns>Enumerable of base data for this symbol</returns>
         public IEnumerable<BaseData> Get(Symbol symbol, SecurityType type, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-            if (!_instruments.ContainsKey(symbol))
-                throw new ArgumentException("Invalid symbol requested: " + symbol);
+            if (!_instruments.ContainsKey(symbol.Value))
+                throw new ArgumentException("Invalid symbol requested: " + symbol.ToString());
 
             if (type != SecurityType.Forex && type != SecurityType.Cfd)
                 throw new NotSupportedException("SecurityType not available: " + type);
@@ -169,7 +169,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <param name="ticks"></param>
         /// <param name="resolution"></param>
         /// <returns></returns>
-        private static IEnumerable<TradeBar> AggregateTicks(Symbol symbol, IEnumerable<Tick> ticks, TimeSpan resolution)
+        internal static IEnumerable<TradeBar> AggregateTicks(Symbol symbol, IEnumerable<Tick> ticks, TimeSpan resolution)
         {
             return 
                 (from t in ticks
@@ -194,7 +194,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <returns>An enumerable of ticks</returns>
         private IEnumerable<Tick> DownloadTicks(Symbol symbol, DateTime date)
         {
-            var pointValue = _instruments[symbol].PointValue;
+            var pointValue = _instruments[symbol.Value].PointValue;
 
             for (var hour = 0; hour < 24; hour++)
             {
@@ -205,7 +205,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
 
                 using (var client = new WebClient())
                 {
-                    byte[] bytes = null;
+                    byte[] bytes;
                     try
                     {
                         bytes = client.DownloadData(url);

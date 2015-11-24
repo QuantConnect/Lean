@@ -148,23 +148,13 @@ namespace QuantConnect.Brokerages.Oanda
         {
             return new Holding
             {
-                Symbol = MapOandaInstructmentToQcSymbol(position.instrument,InstrumentSecurityTypeMap[position.instrument]),
+                Symbol = ConvertSymbol(position.instrument,InstrumentSecurityTypeMap[position.instrument]),
                 Type = InstrumentSecurityTypeMap[position.instrument],
                 AveragePrice = (decimal)position.avgPrice,
                 ConversionRate = 1.0m,
                 CurrencySymbol = "$",
                 Quantity = position.side == "sell" ? -position.units : position.units
             };
-        }
-
-        private string MapOandaInstructmentToQcSymbol(string instrument, SecurityType securityType)
-        {
-            if (securityType == SecurityType.Forex)
-            {
-                instrument = instrument.Trim('_');
-                return instrument;
-            }
-            return instrument;
         }
 
         /// <summary>
@@ -256,7 +246,7 @@ namespace QuantConnect.Brokerages.Oanda
         {
             var requestParams = new Dictionary<string, string>
             {
-                {"instrument", order.Symbol},
+                {"instrument", order.Symbol.Value},
                 {"units", Convert.ToInt32(order.AbsoluteQuantity).ToString()}
             };
 
@@ -375,7 +365,7 @@ namespace QuantConnect.Brokerages.Oanda
             
             var requestParams = new Dictionary<string, string>
             {
-                {"instrument", order.Symbol},
+                {"instrument", order.Symbol.Value},
                 {"units", Convert.ToInt32(order.AbsoluteQuantity).ToString()},
             };
 
@@ -1000,9 +990,10 @@ namespace QuantConnect.Brokerages.Oanda
                 default:
                     throw new NotSupportedException("The Oanda order type " + order.type + " is not supported.");
             }
-            qcOrder.Symbol = order.instrument;
+            var securityType = InstrumentSecurityTypeMap[order.instrument];
+            qcOrder.Symbol = ConvertSymbol(order.instrument, securityType);
             qcOrder.Quantity = ConvertQuantity(order);
-            qcOrder.SecurityType = InstrumentSecurityTypeMap[order.instrument];
+            qcOrder.SecurityType = securityType;
             qcOrder.Status = OrderStatus.None;
             qcOrder.BrokerId.Add(order.id);
             qcOrder.Id = order.id;
@@ -1033,6 +1024,17 @@ namespace QuantConnect.Brokerages.Oanda
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private static Symbol ConvertSymbol(string instrument, SecurityType securityType)
+        {
+            if (securityType == SecurityType.Forex)
+            {
+                instrument = instrument.Trim('_');
+                return new Symbol(SecurityIdentifier.GenerateForex(instrument, Market.Oanda), instrument);
+            }
+
+            throw new NotImplementedException("The specified security type is not yet implemented: " + securityType);
         }
     }
 }

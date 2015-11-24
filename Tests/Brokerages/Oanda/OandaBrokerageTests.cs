@@ -75,9 +75,9 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         /// <summary>
         ///     Gets the symbol to be traded, must be shortable
         /// </summary>
-        protected override string Symbol
+        protected override Symbol Symbol
         {
-            get { return "EURUSD"; }
+            get { return Symbols.EURUSD; }
         }
 
         /// <summary>
@@ -107,10 +107,10 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         /// <summary>
         ///     Gets the current market price of the specified security
         /// </summary>
-        protected override decimal GetAskPrice(string symbol, SecurityType securityType)
+        protected override decimal GetAskPrice(Symbol symbol)
         {
             var oanda = (OandaBrokerage) Brokerage;
-            var quotes = oanda.GetRates(new List<Instrument> { new Instrument { instrument = symbol } });
+            var quotes = oanda.GetRates(new List<Instrument> { new Instrument { instrument = symbol.Value } });
             return (decimal)quotes[0].ask;
         }
     }

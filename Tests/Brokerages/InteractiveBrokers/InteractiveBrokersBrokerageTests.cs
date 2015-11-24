@@ -33,7 +33,6 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         private readonly List<Order> _orders = new List<Order>(); 
         private InteractiveBrokersBrokerage _interactiveBrokersBrokerage;
         private const int buyQuantity = 100;
-        private const string Symbol = "USDJPY";
         private const SecurityType Type = SecurityType.Forex;
 
         [SetUp]
@@ -98,11 +97,11 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                     //filledResetEvent.Reset();
                 }
 
-                var openOrdersText = _interactiveBrokersBrokerage.GetOpenOrders().Select(x => x.Symbol + " " + x.Quantity);
+                var openOrdersText = _interactiveBrokersBrokerage.GetOpenOrders().Select(x => x.Symbol.ToString() + " " + x.Quantity);
                 Log.Trace("InteractiveBrokersBrokerageTests.Teardown(): Open orders: " + string.Join(", ", openOrdersText));
                 //Assert.AreEqual(0, actualOpenOrderCount, "Failed to verify that there are zero open orders.");
 
-                var holdingsText = _interactiveBrokersBrokerage.GetAccountHoldings().Where(x => x.Quantity != 0).Select(x => x.Symbol + " " + x.Quantity);
+                var holdingsText = _interactiveBrokersBrokerage.GetAccountHoldings().Where(x => x.Quantity != 0).Select(x => x.Symbol.ToString() + " " + x.Quantity);
                 Log.Trace("InteractiveBrokersBrokerageTests.Teardown(): Account holdings: " + string.Join(", ", holdingsText));
                 //Assert.AreEqual(0, holdingsCount, "Failed to verify that there are zero account holdings.");
 
@@ -127,14 +126,14 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             var ib = _interactiveBrokersBrokerage;
 
-            var order = new MarketOrder(Symbol, buyQuantity, DateTime.UtcNow, type: Type);
+            var order = new MarketOrder(Symbols.USDJPY, buyQuantity, DateTime.UtcNow, type: Type);
             _orders.Add(order);
             ib.PlaceOrder(order);
 
             var brokerageID = order.BrokerId.Single();
             Assert.AreNotEqual(0, brokerageID);
 
-            order = new MarketOrder(Symbol, buyQuantity, DateTime.UtcNow, type: Type);
+            order = new MarketOrder(Symbols.USDJPY, buyQuantity, DateTime.UtcNow, type: Type);
             _orders.Add(order);
             ib.PlaceOrder(order);
 
@@ -157,7 +156,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 }
             };
 
-            var order = new MarketOrder(Symbol, buyQuantity, DateTime.UtcNow, type: Type) {Id = 1};
+            var order = new MarketOrder(Symbols.USDJPY, buyQuantity, DateTime.UtcNow, type: Type) {Id = 1};
             _orders.Add(order);
             ib.PlaceOrder(order);
 
@@ -184,7 +183,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             };
 
             // sell a single share
-            var order = new MarketOrder(Symbol, -buyQuantity, DateTime.UtcNow, type: Type);
+            var order = new MarketOrder(Symbols.USDJPY, -buyQuantity, DateTime.UtcNow, type: Type);
             _orders.Add(order);
             ib.PlaceOrder(order);
 
@@ -216,7 +215,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             // get the current market price, couldn't get RequestMarketData to fire tick events
             int id = 0;
-            Order order = new MarketOrder(Symbol, buyQuantity, DateTime.UtcNow, type: Type) { Id = ++id };
+            Order order = new MarketOrder(Symbols.USDJPY, buyQuantity, DateTime.UtcNow, type: Type) { Id = ++id };
             _orders.Add(order);
             ib.PlaceOrder(order);
 
@@ -225,11 +224,11 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             // make a box around the current price +- a little
 
-            order = new LimitOrder(Symbol, buyQuantity, price - delta, DateTime.UtcNow, null, Type) { Id = ++id };
+            order = new LimitOrder(Symbols.USDJPY, buyQuantity, price - delta, DateTime.UtcNow, null, Type) { Id = ++id };
             _orders.Add(order);
             ib.PlaceOrder(order);
 
-            order = new LimitOrder(Symbol, -buyQuantity, price + delta, DateTime.UtcNow, null, Type) { Id = ++id };
+            order = new LimitOrder(Symbols.USDJPY, -buyQuantity, price + delta, DateTime.UtcNow, null, Type) { Id = ++id };
             _orders.Add(order);
             ib.PlaceOrder(order);
 
@@ -258,7 +257,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             // get the current market price, couldn't get RequestMarketData to fire tick events
             int id = 0;
-            Order order = new MarketOrder(Symbol, buyQuantity, DateTime.UtcNow, type: Type) { Id = ++id };
+            Order order = new MarketOrder(Symbols.USDJPY, buyQuantity, DateTime.UtcNow, type: Type) { Id = ++id };
             _orders.Add(order);
             ib.PlaceOrder(order);
 
@@ -270,11 +269,11 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             // make a box around the current price +- a little
 
-            order = new StopMarketOrder(Symbol, buyQuantity, fillPrice - delta, DateTime.UtcNow, type: Type) { Id = ++id };
+            order = new StopMarketOrder(Symbols.USDJPY, buyQuantity, fillPrice - delta, DateTime.UtcNow, type: Type) { Id = ++id };
             _orders.Add(order);
             ib.PlaceOrder(order);
 
-            order = new StopMarketOrder(Symbol, -buyQuantity, fillPrice + delta, DateTime.UtcNow, type: Type) { Id = ++id };
+            order = new StopMarketOrder(Symbols.USDJPY, -buyQuantity, fillPrice + delta, DateTime.UtcNow, type: Type) { Id = ++id };
             _orders.Add(order);
             ib.PlaceOrder(order);
 
@@ -300,7 +299,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             };
 
             const decimal limitPrice = 10000m;
-            var order = new LimitOrder(Symbol, -buyQuantity, limitPrice, DateTime.UtcNow, type: Type) {Id = ++id};
+            var order = new LimitOrder(Symbols.USDJPY, -buyQuantity, limitPrice, DateTime.UtcNow, type: Type) {Id = ++id};
             _orders.Add(order);
             ib.PlaceOrder(order);
 
@@ -337,7 +336,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             };
 
             // try to sell a single share at a ridiculous price, we'll cancel this later
-            var order = new LimitOrder(Symbol, -buyQuantity, 100000, DateTime.UtcNow, null, Type);
+            var order = new LimitOrder(Symbols.USDJPY, -buyQuantity, 100000, DateTime.UtcNow, null, Type);
             _orders.Add(order);
             ib.PlaceOrder(order);
             orderedResetEvent.WaitOneAssertFail(2500, "Limit order failed to be submitted.");
@@ -358,7 +357,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             var ib = _interactiveBrokersBrokerage;
 
-            var order = new MarketOrder(Symbol, buyQuantity, new DateTime(), type: Type) {Id = 1};
+            var order = new MarketOrder(Symbols.USDJPY, buyQuantity, new DateTime(), type: Type) {Id = 1};
             _orders.Add(order);
 
             int orderFilledEventCount = 0;
@@ -399,9 +398,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 Console.WriteLine(holding.Value);
             }
 
-            Log.Trace("Quantity: " + previousHoldings[Symbol].Quantity);
+            Log.Trace("Quantity: " + previousHoldings[Symbols.USDJPY].Quantity);
 
-            bool hasSymbol = previousHoldings.ContainsKey(Symbol);
+            bool hasSymbol = previousHoldings.ContainsKey(Symbols.USDJPY);
 
             // wait for order to complete before request account holdings
             var orderResetEvent = new ManualResetEvent(false);
@@ -410,15 +409,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 if (fill.Status == OrderStatus.Filled) orderResetEvent.Set();
             };
 
-            var portfolioResetEvent = new ManualResetEvent(false);
-            ib.SecurityHoldingUpdated += (sender, update) =>
-            {
-                portfolioResetEvent.Set();
-            };
-
             // buy some currency
             const int quantity = -buyQuantity;
-            var order = new MarketOrder(Symbol, quantity, DateTime.UtcNow, type: Type);
+            var order = new MarketOrder(Symbols.USDJPY, quantity, DateTime.UtcNow, type: Type);
             _orders.Add(order);
             ib.PlaceOrder(order);
 
@@ -428,20 +421,17 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             // ib is slow to update tws
             Thread.Sleep(5000);
 
-            // wait for account holdings to be updated
-            portfolioResetEvent.WaitOneAssertFail(1500, "Didn't receive portfolio update event");
-
             var newHoldings = ib.GetAccountHoldings().ToDictionary(x => x.Symbol);
-            Log.Trace("New Quantity: " + newHoldings[Symbol].Quantity);
+            Log.Trace("New Quantity: " + newHoldings[Symbols.USDJPY].Quantity);
 
             if (hasSymbol)
             {
-                Assert.AreEqual(previousHoldings[Symbol].Quantity, newHoldings[Symbol].Quantity - quantity);
+                Assert.AreEqual(previousHoldings[Symbols.USDJPY].Quantity, newHoldings[Symbols.USDJPY].Quantity - quantity);
             }
             else
             {
-                Assert.IsTrue(newHoldings.ContainsKey(Symbol));
-                Assert.AreEqual(newHoldings[Symbol].Quantity, quantity);
+                Assert.IsTrue(newHoldings.ContainsKey(Symbols.USDJPY));
+                Assert.AreEqual(newHoldings[Symbols.USDJPY].Quantity, quantity);
             }
         }
 
@@ -486,7 +476,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             const int orderCount = 3;
             for (int i = 0; i < orderCount; i++)
             {
-                var order = new MarketOrder(Symbol, buyQuantity*(i + 1), new DateTime(), type: Type) {Id = i + 1};
+                var order = new MarketOrder(Symbols.USDJPY, buyQuantity*(i + 1), new DateTime(), type: Type) {Id = i + 1};
                 _orders.Add(order);
                 ib.PlaceOrder(order);
 
@@ -505,19 +495,19 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             var ib = _interactiveBrokersBrokerage;
 
-            decimal balance = ib.GetCashBalance().Single(x => x.Symbol == "USD").Quantity;
+            decimal balance = ib.GetCashBalance().Single(x => x.Symbol == "USD").Amount;
 
             // wait for our order to fill
             var manualResetEvent = new ManualResetEvent(false);
             ib.AccountChanged += (sender, orderEvent) => manualResetEvent.Set();
 
-            var order = new MarketOrder(Symbol, buyQuantity, DateTime.UtcNow, type: Type);
+            var order = new MarketOrder(Symbols.USDJPY, buyQuantity, DateTime.UtcNow, type: Type);
             _orders.Add(order);
             ib.PlaceOrder(order);
 
             manualResetEvent.WaitOneAssertFail(1500, "Didn't receive account changed event");
 
-            decimal balanceAfterTrade = ib.GetCashBalance().Single(x => x.Symbol == "USD").Quantity;
+            decimal balanceAfterTrade = ib.GetCashBalance().Single(x => x.Symbol == "USD").Amount;
 
             Assert.AreNotEqual(balance, balanceAfterTrade);
         }
@@ -536,7 +526,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 }
             };
 
-            var order = new MarketOrder(Symbol, -buyQuantity, new DateTime(), type: Type);
+            var order = new MarketOrder(Symbols.USDJPY, -buyQuantity, new DateTime(), type: Type);
             _orders.Add(order);
             ib.PlaceOrder(order);
             orderEventFired.WaitOne(1500);
@@ -560,7 +550,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 }
             };
 
-            var order = new LimitOrder(Symbol, buyQuantity, 0.01m, DateTime.UtcNow, type: Type);
+            var order = new LimitOrder(Symbols.USDJPY, buyQuantity, 0.01m, DateTime.UtcNow, type: Type);
             _orders.Add(order);
             ib.PlaceOrder(order);
 

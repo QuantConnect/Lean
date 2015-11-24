@@ -21,6 +21,7 @@ using System.Linq;
 using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -53,7 +54,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IDataQueueHandler _dataQueueHandler;
         private BaseDataExchange _exchange;
         private BaseDataExchange _customExchange;
-        private ConcurrentDictionary<SymbolSecurityType, Subscription> _subscriptions;
+        private ConcurrentDictionary<Symbol, Subscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
@@ -90,7 +91,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider)
         {
             if (!(job is LiveNodePacket))
             {
@@ -114,7 +115,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _customExchange = new BaseDataExchange("CustomDataExchange") {SleepInterval = 10};
             // sleep is controlled on this exchange via the GetNextTicksEnumerator
             _exchange = new BaseDataExchange("DataQueueExchange", GetNextTicksEnumerator()){SleepInterval = 0};
-            _subscriptions = new ConcurrentDictionary<SymbolSecurityType, Subscription>();
+            _subscriptions = new ConcurrentDictionary<Symbol, Subscription>();
 
             Bridge = new BusyBlockingCollection<TimeSlice>();
 
@@ -133,7 +134,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             foreach (var universe in _algorithm.Universes)
             {
                 var subscription = CreateUniverseSubscription(universe, start, Time.EndOfTime);
-                _subscriptions[new SymbolSecurityType(subscription)] = subscription;
+                _subscriptions[subscription.Security.Symbol] = subscription;
             }
         }
 
@@ -153,21 +154,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // for some reason we couldn't create the subscription
             if (subscription == null)
             {
-                Log.Trace("Unable to add subscription for: " + security.Symbol);
+                Log.Trace("Unable to add subscription for: " + security.Symbol.ToString());
                 return false;
             }
 
-            Log.Trace("LiveTradingDataFeed.AddSubscription(): Added " + security.Symbol);
+            Log.Trace("LiveTradingDataFeed.AddSubscription(): Added " + security.Symbol.ToString());
 
-            _subscriptions[new SymbolSecurityType(subscription)] = subscription;
+            _subscriptions[subscription.Security.Symbol] = subscription;
 
             // send the subscription for the new symbol through to the data queuehandler
             // unless it is custom data, custom data is retrieved using the same as backtest
             if (!subscription.Configuration.IsCustomData)
             {
-                _dataQueueHandler.Subscribe(_job, new Dictionary<SecurityType, List<string>>
+                _dataQueueHandler.Subscribe(_job, new Dictionary<SecurityType, List<Symbol>>
                 {
-                    {security.Type, new List<string> {security.Symbol}}
+                    {security.Type, new List<Symbol> {security.Symbol}}
                 });
             }
 
@@ -195,15 +196,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // request to unsubscribe from the subscription
             if (!security.SubscriptionDataConfig.IsCustomData)
             {
-                _dataQueueHandler.Unsubscribe(_job, new Dictionary<SecurityType, List<string>>
+                _dataQueueHandler.Unsubscribe(_job, new Dictionary<SecurityType, List<Symbol>>
                 {
-                    {security.Type, new List<string> {security.Symbol}}
+                    {security.Type, new List<Symbol> {security.Symbol}}
                 });
             }
 
             // remove the subscription from our collection
             Subscription sub;
-            if (_subscriptions.TryRemove(new SymbolSecurityType(security), out sub))
+            if (_subscriptions.TryRemove(subscription.Security.Symbol, out sub))
             {
                 sub.Dispose();
             }
@@ -212,7 +213,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            Log.Trace("LiveTradingDataFeed.RemoveSubscription(): Removed " + security.Symbol);
+            Log.Trace("LiveTradingDataFeed.RemoveSubscription(): Removed " + security.Symbol.ToString());
 
             // keep track of security changes, we emit these to the algorithm
             // as notications, used in universe selection
@@ -319,7 +320,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                     catch (Exception err)
                     {
-                        Log.Error(err, "Error removing: " + kvp.Key);
+                        Log.Error(err, "Error removing: " + kvp.Key.ToString());
                     }
                 }
             }
@@ -479,9 +480,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // since we're binding to the data queue exchange we'll need to let him
                 // know that we expect this data
-                _dataQueueHandler.Subscribe(_job, new Dictionary<SecurityType, List<string>>
+                _dataQueueHandler.Subscribe(_job, new Dictionary<SecurityType, List<Symbol>>
                 {
-                    {config.SecurityType, new List<string>{config.Symbol}}
+                    {config.SecurityType, new List<Symbol>{config.Symbol}}
                 });
 
                 var enqueable = new EnqueableEnumerator<BaseData>();

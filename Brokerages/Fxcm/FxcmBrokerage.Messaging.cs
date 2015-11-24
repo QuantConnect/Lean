@@ -43,7 +43,7 @@ namespace QuantConnect.Brokerages.Fxcm
         private bool _isOrderUpdateOrCancelRejected;
         private bool _isOrderSubmitRejected;
 
-        private readonly Dictionary<string, string> _mapInstrumentSymbols = new Dictionary<string, string>();
+        private readonly Dictionary<Symbol, string> _mapInstrumentSymbols = new Dictionary<Symbol, string>();
         private readonly Dictionary<string, TradingSecurity> _fxcmInstruments = new Dictionary<string, TradingSecurity>();
         private readonly Dictionary<string, CollateralReport> _accounts = new Dictionary<string, CollateralReport>();
         private readonly Dictionary<string, MarketDataSnapshot> _rates = new Dictionary<string, MarketDataSnapshot>();
@@ -128,7 +128,7 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             return GetQuotes(fxcmSymbols).Select(x => new Tick
             {
-                Symbol = x.getInstrument().getSymbol(),
+                Symbol = ConvertSymbol(x.getInstrument()),
                 BidPrice = (decimal) x.getBidClose(),
                 AskPrice = (decimal) x.getAskClose()
             }).ToList();
@@ -248,9 +248,11 @@ namespace QuantConnect.Brokerages.Fxcm
                 }
 
                 // create map from QuantConnect symbols to FXCM symbols
-                foreach (var fxcmSymbol in _fxcmInstruments.Keys)
+                foreach (var kvp in _fxcmInstruments)
                 {
-                    var symbol = ConvertFxcmSymbolToSymbol(fxcmSymbol);
+                    var fxcmSymbol = kvp.Key;
+                    var tradingSecurity = kvp.Value;
+                    var symbol = ConvertSymbol(tradingSecurity);
                     _mapInstrumentSymbols[symbol] = fxcmSymbol;
                 }
 
@@ -260,15 +262,18 @@ namespace QuantConnect.Brokerages.Fxcm
                 _mapRequestsToAutoResetEvents[_currentRequest].Set();
                 _mapRequestsToAutoResetEvents.Remove(_currentRequest);
 
-                // unsubscribe all instruments
-                var request = new MarketDataRequest();
-                foreach (var fxcmSymbol in _fxcmInstruments.Keys)
+                // unsubscribe all instruments (only at first logon)
+                if (_subscribedSymbols.Count == 0)
                 {
-                    request.addRelatedSymbol(_fxcmInstruments[fxcmSymbol]);
+                    var request = new MarketDataRequest();
+                    foreach (var fxcmSymbol in _fxcmInstruments.Keys)
+                    {
+                        request.addRelatedSymbol(_fxcmInstruments[fxcmSymbol]);
+                    }
+                    request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.UNSUBSCRIBE);
+                    request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
+                    _gateway.sendMessage(request);
                 }
-                request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.UNSUBSCRIBE);
-                request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
-                _gateway.sendMessage(request);
             }
         }
 
@@ -297,10 +302,11 @@ namespace QuantConnect.Brokerages.Fxcm
         private void OnMarketDataSnapshot(MarketDataSnapshot message)
         {
             // update the current prices for the instrument
-            _rates[message.getInstrument().getSymbol()] = message;
+            var instrument = message.getInstrument();
+            _rates[instrument.getSymbol()] = message;
 
             // if instrument is subscribed, add ticks to list
-            var symbol = ConvertFxcmSymbolToSymbol(message.getInstrument().getSymbol());
+            var symbol = ConvertSymbol(instrument);
 
             if (_subscribedSymbols.Contains(symbol))
             {
@@ -381,9 +387,12 @@ namespace QuantConnect.Brokerages.Fxcm
                 {
                     if (orderId == "NONE" && orderStatus.getCode() == IFixValueDefs.__Fields.FXCMORDSTATUS_REJECTED)
                     {
-                        var messageText = message.getFXCMErrorDetails().Replace("\n", "");
-                        Log.Trace(messageText);
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderSubmitReject", messageText));
+                        if (message.getSide() != SideFactory.UNDISCLOSED)
+                        {
+                            var messageText = message.getFXCMErrorDetails().Replace("\n", "");
+                            Log.Trace("FxcmBrokerage.OnExecutionReport(): " + messageText);
+                            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderSubmitReject", messageText));
+                        }
 
                         _isOrderSubmitRejected = true;
                     }
@@ -444,7 +453,7 @@ namespace QuantConnect.Brokerages.Fxcm
             if (message.getRequestID() == _currentRequest)
             {
                 var messageText = message.getFXCMErrorDetails().Replace("\n", "");
-                Log.Trace(messageText);
+                Log.Trace("FxcmBrokerage.OnOrderCancelReject(): " + messageText);
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderUpdateOrCancelReject", messageText));
 
                 _isOrderUpdateOrCancelRejected = true;
@@ -464,6 +473,20 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <param name="message">Status message received</param>
         public void messageArrived(ISessionStatus message)
         {
+            switch (message.getStatusCode())
+            {
+                case ISessionStatus.__Fields.STATUSCODE_READY:
+                    lock (_lockerConnectionMonitor)
+                    {
+                        _lastReadyMessageTime = DateTime.UtcNow;
+                    }
+                    _connectionError = false;
+                    break;
+
+                case ISessionStatus.__Fields.STATUSCODE_ERROR:
+                    _connectionError = true;
+                    break;
+            }
         }
 
         #endregion

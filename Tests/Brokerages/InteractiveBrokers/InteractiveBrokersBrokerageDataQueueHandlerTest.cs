@@ -34,9 +34,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             var ib = new InteractiveBrokersBrokerage(new OrderProvider());
             ib.Connect();
 
-            ib.Subscribe(null, new Dictionary<SecurityType, List<string>>
+            ib.Subscribe(null, new Dictionary<SecurityType, List<Symbol>>
             {
-                {SecurityType.Forex, new List<string>{"USDJPY", "EURGBP"}}
+                {SecurityType.Forex, new List<Symbol>{Symbols.USDJPY, Symbols.EURGBP}}
             });
             
             Thread.Sleep(1000);

@@ -15,6 +15,7 @@
 
 using System;
 using System.IO;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -84,7 +85,7 @@ namespace QuantConnect.Data.UniverseSelection
                 var csv = line.Split(',');
                 return new CoarseFundamental
                 {
-                    Symbol = new Symbol(csv[0], csv[1]),
+                    Symbol = new Symbol(SecurityIdentifier.Parse(csv[0]), csv[1]),
                     Time = date,
                     Market = config.Market,
                     Value = csv[2].ToDecimal(),
@@ -123,7 +124,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>A coarse universe symbol for the specified market</returns>
         public static Symbol CreateUniverseSymbol(string market)
         {
-            return new Symbol("qc-universe-coarse-" + market.ToLower());
+            market = market.ToLower();
+            var ticker = "qc-universe-coarse-" + market;
+            var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
+            return new Symbol(sid, ticker);
         }
     }
 }

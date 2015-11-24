@@ -28,14 +28,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public AlgorithmStub(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null)
         {
             Securities.SetLimits(1000, 1000, 1000);
-            foreach (var symbol in equities ?? new List<string>())
+            foreach (var ticker in equities ?? new List<string>())
             {
-                AddSecurity(SecurityType.Equity, symbol, resolution);
+                AddSecurity(SecurityType.Equity, ticker, resolution);
+                var symbol = SymbolCache.GetSymbol(ticker);
                 Securities[symbol].Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
             }
-            foreach (var symbol in forex ?? new List<string>())
+            foreach (var ticker in forex ?? new List<string>())
             {
-                AddSecurity(SecurityType.Forex, symbol, resolution);
+                AddSecurity(SecurityType.Forex, ticker, resolution);
+                var symbol = SymbolCache.GetSymbol(ticker);
                 Securities[symbol].Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard));
             }
         }

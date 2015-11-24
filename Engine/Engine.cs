@@ -216,7 +216,7 @@ namespace QuantConnect.Lean.Engine
                     _algorithmHandlers.CommandQueue.Initialize(job, algorithm);
 
                     // set the history provider before setting up the algorithm
-                    _algorithmHandlers.HistoryProvider.Initialize(job, progress =>
+                    _algorithmHandlers.HistoryProvider.Initialize(job, _algorithmHandlers.MapFileProvider, progress =>
                     {
                         // send progress updates to the result handler only during initialization
                         if (!algorithm.GetLocked() || algorithm.IsWarmingUp)
@@ -270,7 +270,7 @@ namespace QuantConnect.Lean.Engine
                     _algorithmHandlers.DataFeed.UniverseSelection += (sender, args) => universeSelection.ApplyUniverseSelection(args);
 
                     //Load the associated handlers for data, transaction and realtime events:
-                    _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results);
+                    _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider);
                     _algorithmHandlers.Transactions.Initialize(algorithm, brokerage, _algorithmHandlers.Results);
                     _algorithmHandlers.RealTime.Setup(algorithm, job, _algorithmHandlers.Results, _systemHandlers.Api);
 

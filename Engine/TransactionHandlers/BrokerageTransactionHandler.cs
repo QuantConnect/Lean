@@ -107,11 +107,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 HandleOrderEvent(fill);
             };
 
-            _brokerage.SecurityHoldingUpdated += (sender, holding) =>
-            {
-                HandleSecurityHoldingUpdated(holding);
-            };
-
             _brokerage.AccountChanged += (sender, account) =>
             {
                 HandleAccountChanged(account);
@@ -539,7 +534,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     if (_algorithm.Portfolio.CashBook.TryGetValue(balance.Symbol, out cash))
                     {
                         // compare in dollars
-                        var delta = cash.Quantity - balance.Quantity;
+                        var delta = cash.Amount - balance.Amount;
                         if (Math.Abs(delta) > _algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol))
                         {
                             // log the delta between 
@@ -547,7 +542,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                                 delta.ToString("0.00"));
                         }
                     }
-                    _algorithm.Portfolio.SetCash(balance.Symbol, balance.Quantity, balance.ConversionRate);
+                    _algorithm.Portfolio.SetCash(balance.Symbol, balance.Amount, balance.ConversionRate);
                 }
 
                 _syncedLiveBrokerageCashToday = true;
@@ -807,7 +802,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     if (order.SecurityType == SecurityType.Forex)
                     {
                         string baseCurrency, quoteCurrency;
-                        Forex.DecomposeCurrencyPair(fill.Symbol, out baseCurrency, out quoteCurrency);
+                        Forex.DecomposeCurrencyPair(fill.Symbol.Value, out baseCurrency, out quoteCurrency);
                         conversionRate = _algorithm.Portfolio.CashBook[quoteCurrency].ConversionRate;
                     }
 
@@ -859,7 +854,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private void HandleAccountChanged(AccountEvent account)
         {
             // how close are we?
-            var delta = _algorithm.Portfolio.CashBook[account.CurrencySymbol].Quantity - account.CashBalance;
+            var delta = _algorithm.Portfolio.CashBook[account.CurrencySymbol].Amount - account.CashBalance;
             if (delta != 0)
             {
                 Log.Trace(string.Format("BrokerageTransactionHandler.HandleAccountChanged(): {0} Cash Delta: {1}", account.CurrencySymbol, delta));
@@ -868,25 +863,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // we don't actually want to do this, this data can be delayed
             // override the current cash value to we're always gauranted to be in sync with the brokerage's push updates
             //_algorithm.Portfolio.CashBook[account.CurrencySymbol].Quantity = account.CashBalance;
-        }
-
-        /// <summary>
-        /// Brokerages can send portfolio updates which should include average price of holdings and the
-        /// quantity of holdings, we'll trust this information as truth and just set the portfolio with it
-        /// </summary>
-        private void HandleSecurityHoldingUpdated(SecurityEvent holding)
-        {
-            // how close are we?
-            var securityHolding = _algorithm.Portfolio[new Symbol(holding.Symbol)];
-            var deltaQuantity = securityHolding.Quantity - holding.Quantity;
-            var deltaAvgPrice = securityHolding.AveragePrice - holding.AveragePrice;
-            if (deltaQuantity != 0 || deltaAvgPrice != 0)
-            {
-                Log.Trace(string.Format("BrokerageTransactionHandler.HandleSecurityHoldingUpdated(): {0} DeltaQuantity: {1} DeltaAvgPrice: {2}", holding.Symbol, deltaQuantity, deltaAvgPrice));
-            }
-
-            // we don't actually want to do this, this data can be delayed
-            //securityHolding.SetHoldings(holding.AveragePrice, holding.Quantity);
         }
 
         /// <summary>

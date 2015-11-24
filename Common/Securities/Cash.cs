@@ -29,6 +29,8 @@ namespace QuantConnect.Securities
         private bool _isBaseCurrency;
         private bool _invertRealTimePrice;
 
+        private readonly object _locker = new object();
+
         /// <summary>
         /// Gets the symbol of the security required to provide conversion rates.
         /// </summary>
@@ -42,7 +44,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets or sets the amount of cash held
         /// </summary>
-        public decimal Quantity { get; set; }
+        public decimal Amount { get; private set; }
 
         /// <summary>
         /// Gets the conversion rate into account currency
@@ -54,22 +56,22 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal ValueInAccountCurrency
         {
-            get { return Quantity*ConversionRate; }
+            get { return Amount*ConversionRate; }
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Cash"/> class
         /// </summary>
         /// <param name="symbol">The symbol used to represent this cash</param>
-        /// <param name="quantity">The quantity of this currency held</param>
+        /// <param name="amount">The amount of this currency held</param>
         /// <param name="conversionRate">The initial conversion rate of this currency into the <see cref="CashBook.AccountCurrency"/></param>
-        public Cash(string symbol, decimal quantity, decimal conversionRate)
+        public Cash(string symbol, decimal amount, decimal conversionRate)
         {
             if (symbol == null || symbol.Length != 3)
             {
                 throw new ArgumentException("Cash symbols must be exactly 3 characters.");
             }
-            Quantity = quantity;
+            Amount = amount;
             ConversionRate = conversionRate;
             Symbol = symbol.ToUpper();
         }
@@ -88,6 +90,33 @@ namespace QuantConnect.Securities
                 rate = 1/rate;
             }
             ConversionRate = rate;
+        }
+
+        /// <summary>
+        /// Adds the specified amount of currency to this Cash instance and returns the new total.
+        /// This operation is thread-safe
+        /// </summary>
+        /// <param name="amount">The amount of currency to be added</param>
+        /// <returns>The amount of currency directly after the addition</returns>
+        public decimal AddAmount(decimal amount)
+        {
+            lock (_locker)
+            {
+                Amount += amount;
+                return Amount;
+            }
+        }
+
+        /// <summary>
+        /// Sets the Quantity to the specified amount
+        /// </summary>
+        /// <param name="amount">The amount to set the quantity to</param>
+        public void SetAmount(decimal amount)
+        {
+            lock (_locker)
+            {
+                Amount = amount;
+            }
         }
 
         /// <summary>
@@ -133,10 +162,10 @@ namespace QuantConnect.Securities
             // get the market from the first Forex subscription
             string market = (from config in subscriptions.Subscriptions
                              where config.SecurityType == SecurityType.Forex
-                             select config.Market).FirstOrDefault() ?? "fxcm";
+                             select config.Market).FirstOrDefault() ?? Market.FXCM;
 
             // if we've made it here we didn't find a subscription, so we'll need to add one
-            var currencyPairs = Forex.Forex.CurrencyPairs.Select(x => new Symbol(x));
+            var currencyPairs = Forex.Forex.CurrencyPairs.Select(x => new Symbol(SecurityIdentifier.GenerateForex(x, market), x));
             var minimumResolution = subscriptions.Subscriptions.Min(x => x.Resolution);
             var objectType = minimumResolution == Resolution.Tick ? typeof (Tick) : typeof (TradeBar);
             foreach (var symbol in currencyPairs)
@@ -146,11 +175,11 @@ namespace QuantConnect.Securities
                     _invertRealTimePrice = symbol.Value == invert;
                     var exchangeHours = exchangeHoursProvider.GetExchangeHours(market, symbol, SecurityType.Forex);
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
-                    var config = subscriptions.Add(objectType, SecurityType.Forex, symbol, minimumResolution, market, exchangeHours.TimeZone, false, true, false, true);
+                    var config = subscriptions.Add(objectType, symbol, minimumResolution, exchangeHours.TimeZone, false, true, false, true);
                     var security = new Forex.Forex(this, config, 1m);
                     SecuritySymbol = config.Symbol;
                     securities.Add(config.Symbol, security);
-                    Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol + " for cash " + Symbol + " currency feed");
+                    Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.ToString() + " for cash " + Symbol + " currency feed");
                     return;
                 }
             }
@@ -168,7 +197,7 @@ namespace QuantConnect.Securities
             // round the conversion rate for output
             decimal rate = ConversionRate;
             rate = rate < 1000 ? rate.RoundToSignificantDigits(5) : Math.Round(rate, 2);
-            return string.Format("{0}: {1,10} @ ${2,10} = {3}", Symbol, Quantity.ToString("0.00"), rate.ToString("0.00####"), ValueInAccountCurrency.ToString("C"));
+            return string.Format("{0}: {1,10} @ ${2,10} = {3}", Symbol, Amount.ToString("0.00"), rate.ToString("0.00####"), ValueInAccountCurrency.ToString("C"));
         }
     }
 }

@@ -35,15 +35,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var array = JsonConvert.DeserializeObject<JsonSerialization[]>(line);
             if (array.Length > 0)
             {
-                return array[0].ToBaseData(config.TimeZone, config.Increment);
+                return array[0].ToBaseData(config.TimeZone, config.Increment, config.Symbol);
             }
             return null;
         }
 
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var remoteFileSource = @"https://www.quantconnect.com/live-test?type=rest&symbols=" + config.Symbol;
-            //remoteFileSource = @"http://beta.quantconnect.com/live-test?type=rest&symbols=" + config.Symbol;
+            var remoteFileSource = @"https://www.quantconnect.com/live-test?type=rest&symbols=" + config.Symbol.Value;
+            //remoteFileSource = @"http://beta.quantconnect.com/live-test?type=rest&symbols=" + config.Symbol.Value;
             return new SubscriptionDataSource(remoteFileSource, SubscriptionTransportMedium.Rest, FileFormat.Csv);
         }
 
@@ -54,12 +54,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             public double alpha;
             public double beta;
 
-            public RestApiBaseData ToBaseData(DateTimeZone timeZone, TimeSpan period)
+            public RestApiBaseData ToBaseData(DateTimeZone timeZone, TimeSpan period, Symbol sym)
             {
                 var dateTime = QuantConnect.Time.UnixTimeStampToDateTime(time).ConvertFromUtc(timeZone).Subtract(period);
                 return new RestApiBaseData
                 {
-                    Symbol = symbol,
+                    Symbol = sym,
                     Time = dateTime,
                     EndTime = dateTime.Add(period),
                     Value = (decimal) alpha

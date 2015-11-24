@@ -23,9 +23,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             InteractiveBrokersGatewayRunner.Stop();
         }
 
-        protected override string Symbol
+        protected override Symbol Symbol
         {
-            get { return "USDJPY"; }
+            get { return Symbols.USDJPY; }
         }
 
         protected override SecurityType SecurityType
@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             get { return 0.01m; }
         }
 
-        protected override decimal GetAskPrice(string symbol, SecurityType securityType)
+        protected override decimal GetAskPrice(Symbol symbol)
         {
             throw new NotImplementedException();
         }

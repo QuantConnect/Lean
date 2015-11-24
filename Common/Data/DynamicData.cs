@@ -58,7 +58,14 @@ namespace QuantConnect.Data
             }
             if (name == "symbol")
             {
-                Symbol = new Symbol((string) value);
+                if (value is string)
+                {
+                    Symbol = SymbolCache.GetSymbol((string) value);
+                }
+                else
+                {
+                    Symbol = (Symbol) value;
+                }
             }
             // reaodnly
             //if (name == "Price")

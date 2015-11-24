@@ -45,6 +45,13 @@ namespace QuantConnect.Brokerages.Fxcm
         private readonly string _accountId;
 
         private Thread _orderEventThread;
+        private Thread _connectionMonitorThread;
+
+        private readonly object _lockerConnectionMonitor = new object();
+        private DateTime _lastReadyMessageTime;
+        private volatile bool _connectionLost;
+        private volatile bool _connectionError;
+
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ConcurrentQueue<OrderEvent> _orderEventQueue = new ConcurrentQueue<OrderEvent>();
 
@@ -79,7 +86,7 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             get
             {
-                return _gateway != null && _gateway.isConnected();
+                return _gateway != null && _gateway.isConnected() && !_connectionLost;
             }
         }
 
@@ -128,6 +135,92 @@ namespace QuantConnect.Brokerages.Fxcm
             // log in
             _gateway.login(loginProperties);
 
+            // create new thread to manage disconnections and reconnections
+            _connectionMonitorThread = new Thread(() =>
+            {
+                _lastReadyMessageTime = DateTime.UtcNow;
+
+                try
+                {
+                    while (!_cancellationTokenSource.IsCancellationRequested)
+                    {
+                        TimeSpan elapsed;
+                        lock (_lockerConnectionMonitor)
+                        {
+                            elapsed = DateTime.UtcNow - _lastReadyMessageTime;
+                        }
+
+                        if (!_connectionLost && elapsed > TimeSpan.FromSeconds(5))
+                        {
+                            _connectionLost = true;
+
+                            OnMessage(BrokerageMessageEvent.Disconnected("Connection with FXCM server lost. " +
+                                                                         "This could be because of internet connectivity issues. "));
+                        }
+                        else if (_connectionLost && elapsed <= TimeSpan.FromSeconds(5))
+                        {
+                            try
+                            {
+                                _gateway.relogin();
+
+                                _connectionLost = false;
+
+                                OnMessage(BrokerageMessageEvent.Reconnected("Connection with FXCM server restored."));
+                            }
+                            catch (Exception exception)
+                            {
+                                Log.Error(exception);
+                            }
+                        }
+                        else if (_connectionError)
+                        {
+                            try
+                            {
+                                // log out
+                                _gateway.logout();
+
+                                // remove the message listeners
+                                _gateway.removeGenericMessageListener(this);
+                                _gateway.removeStatusMessageListener(this);
+
+                                // register the message listeners with the gateway
+                                _gateway.registerGenericMessageListener(this);
+                                _gateway.registerStatusMessageListener(this);
+
+                                // log in
+                                _gateway.login(loginProperties);
+
+                                // load instruments, accounts, orders, positions
+                                LoadInstruments();
+                                LoadAccounts();
+                                LoadOpenOrders();
+                                LoadOpenPositions();
+
+                                _connectionError = false;
+                                _connectionLost = false;
+
+                                OnMessage(BrokerageMessageEvent.Reconnected("Connection with FXCM server restored."));
+                            }
+                            catch (Exception exception)
+                            {
+                                Log.Error(exception);
+                            }
+                        }
+
+                        Thread.Sleep(5000);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception);
+                }
+            });
+            _connectionMonitorThread.Start();
+            while (!_connectionMonitorThread.IsAlive)
+            {
+                Thread.Sleep(1);
+            }
+
             // load instruments, accounts, orders, positions
             LoadInstruments();
             LoadAccounts();
@@ -154,6 +247,7 @@ namespace QuantConnect.Brokerages.Fxcm
             // request and wait for thread to stop
             _cancellationTokenSource.Cancel();
             _orderEventThread.Join();
+            _connectionMonitorThread.Join();
         }
 
         /// <summary>

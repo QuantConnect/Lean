@@ -17,6 +17,7 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -35,7 +36,7 @@ namespace QuantConnect.Tests.Common.Data
             var reference = DateTime.Today;
             var bar1 = new Tick
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference,
                 Value = 5,
                 Quantity = 10
@@ -45,7 +46,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var bar2 = new Tick
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference.AddHours(1),
                 Value = 10,
                 Quantity = 20
@@ -54,7 +55,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.IsNull(newTradeBar);
             var bar3 = new Tick
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference.AddHours(2),
                 Value = 1,
                 Quantity = 10
@@ -64,7 +65,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var bar4 = new Tick
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference.AddHours(3),
                 Value = 9,
                 Quantity = 20
@@ -72,7 +73,7 @@ namespace QuantConnect.Tests.Common.Data
             creator.Update(bar4);
             Assert.IsNotNull(newTradeBar);
 
-            Assert.AreEqual("SPY", newTradeBar.Symbol.Permtick);
+            Assert.AreEqual(Symbols.SPY, newTradeBar.Symbol);
             Assert.AreEqual(bar1.Time, newTradeBar.Time);
             Assert.AreEqual(bar1.Value, newTradeBar.Open);
             Assert.AreEqual(bar2.Value, newTradeBar.High);

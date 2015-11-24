@@ -34,5 +34,9 @@ namespace QuantConnect
         /// </summary>
         public static string FXCM = "fxcm";
 
+        /// <summary>
+        /// Dukascopy Market
+        /// </summary>
+        public static string Dukascopy = "dukascopy";
     }
 }

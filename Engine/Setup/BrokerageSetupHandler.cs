@@ -19,6 +19,7 @@ using System.Linq;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.RealTime;
@@ -79,6 +80,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// Create a new instance of an algorithm from a physical dll path.
         /// </summary>
         /// <param name="assemblyPath">The path to the assembly's location</param>
+        /// <param name="language">The algorithm's language</param>
         /// <returns>A new instance of IAlgorithm, or throws an exception if there was an error</returns>
         public IAlgorithm CreateAlgorithmInstance(string assemblyPath, Language language)
         {
@@ -182,6 +184,11 @@ namespace QuantConnect.Lean.Engine.Setup
                         algorithm.Schedule.SetEventSchedule(realTimeHandler);
                         //Initialise the algorithm, get the required data:
                         algorithm.Initialize();
+                        //Zero the CashBook - we'll populate directly from brokerage
+                        foreach (var kvp in algorithm.Portfolio.CashBook)
+                        {
+                            kvp.Value.SetAmount(0);
+                        }
                     }
                     catch (Exception err)
                     {
@@ -219,8 +226,8 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 brokerage.Message += brokerageOnMessage;
 
-                // set the transaction models base on the brokerage properties
-                SetupHandler.UpdateTransactionModels(algorithm, algorithm.BrokerageModel);
+                // set the transaction and settlement models based on the brokerage properties
+                SetupHandler.UpdateModels(algorithm, algorithm.BrokerageModel);
                 algorithm.Transactions.SetOrderProcessor(transactionHandler);
                 algorithm.PostInitialize();
 
@@ -252,8 +259,8 @@ namespace QuantConnect.Lean.Engine.Setup
                     var cashBalance = brokerage.GetCashBalance();
                     foreach (var cash in cashBalance)
                     {
-                        Log.Trace("BrokerageSetupHandler.Setup(): Setting " + cash.Symbol + " cash to " + cash.Quantity);
-                        algorithm.SetCash(cash.Symbol, cash.Quantity, cash.ConversionRate);
+                        Log.Trace("BrokerageSetupHandler.Setup(): Setting " + cash.Symbol + " cash to " + cash.Amount);
+                        algorithm.SetCash(cash.Symbol, cash.Amount, cash.ConversionRate);
                     }
                 }
                 catch (Exception err)
@@ -271,7 +278,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     foreach (var order in openOrders)
                     {
                         // be sure to assign order IDs such that we increment from the SecurityTransactionManager to avoid ID collisions
-                        Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol + " - " + order.Quantity);
+                        Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol.ToString() + " - " + order.Quantity);
                         order.Id = algorithm.Transactions.GetIncrementOrderId();
                         transactionHandler.Orders.AddOrUpdate(order.Id, order, (i, o) => order);
                     }
@@ -292,13 +299,12 @@ namespace QuantConnect.Lean.Engine.Setup
                     var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Min(x => x.Value.Resolution));
                     foreach (var holding in holdings)
                     {
-                        var symbol = new Symbol(holding.Symbol);
                         Log.Trace("BrokerageSetupHandler.Setup(): Has existing holding: " + holding);
 
                         // verify existing holding security type
                         if (!supportedSecurityTypes.Contains(holding.Type))
                         {
-                            Log.Error("BrokerageSetupHandler.Setup(): Unsupported security type: " + holding.Type + "-" + holding.Symbol.ToUpper());
+                            Log.Error("BrokerageSetupHandler.Setup(): Unsupported security type: " + holding.Type + "-" + holding.Symbol.Value);
                             AddInitializationError("Found unsupported security type in existing brokerage holdings: " + holding.Type + ". " +
                                 "QuantConnect currently supports the following security types: " + string.Join(",", supportedSecurityTypes));
 
@@ -306,14 +312,14 @@ namespace QuantConnect.Lean.Engine.Setup
                             continue;
                         }
 
-                        if (!algorithm.Portfolio.ContainsKey(symbol))
+                        if (!algorithm.Portfolio.ContainsKey(holding.Symbol))
                         {
-                            Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol);
+                            Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol.ToString());
                             // for items not directly requested set leverage to 1 and at the min resolution
-                            algorithm.AddSecurity(holding.Type, symbol, minResolution.Value, null, true, 1.0m, false);
+                            algorithm.AddSecurity(holding.Type, holding.Symbol.Value, minResolution.Value, null, true, 1.0m, false);
                         }
-                        algorithm.Portfolio[symbol].SetHoldings(holding.AveragePrice, (int) holding.Quantity);
-                        algorithm.Securities[symbol].SetMarketPrice(new TradeBar
+                        algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int) holding.Quantity);
+                        algorithm.Securities[holding.Symbol].SetMarketPrice(new TradeBar
                         {
                             Time = DateTime.Now,
                             Open = holding.MarketPrice,
@@ -321,7 +327,7 @@ namespace QuantConnect.Lean.Engine.Setup
                             Low = holding.MarketPrice,
                             Close = holding.MarketPrice,
                             Volume = 0,
-                            Symbol = symbol,
+                            Symbol = holding.Symbol,
                             DataType = MarketDataType.TradeBar
                         });
                     }

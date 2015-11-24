@@ -150,7 +150,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var tb1 = new TradeBar
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Open = 10,
                 High = 100,
                 Low = 1,
@@ -161,7 +161,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var tb2 = new TradeBar
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Open = 50,
                 High = 123,
                 Low = 35,
@@ -172,7 +172,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var tb3 = new TradeBar
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Open = 75,
                 High = 100,
                 Low = 50,
@@ -186,7 +186,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(tb3);
 
             Assert.IsNotNull(consolidated);
-            Assert.AreEqual("SPY", consolidated.Symbol.Permtick);
+            Assert.AreEqual(Symbols.SPY, consolidated.Symbol);
             Assert.AreEqual(10m, consolidated.Open);
             Assert.AreEqual(123m, consolidated.High);
             Assert.AreEqual(1m, consolidated.Low);

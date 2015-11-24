@@ -25,7 +25,7 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// The symbol of the traded instrument
         /// </summary>
-        public string Symbol { get; set; }
+        public Symbol Symbol { get; set; }
 
         /// <summary>
         /// The date and time the trade was opened

@@ -227,5 +227,54 @@ namespace QuantConnect.Util
                 }
             }
         }
+
+        /// <summary>
+        /// Creates a new enumerable that will be distinct by the specified property selector
+        /// </summary>
+        /// <typeparam name="T">The enumerable item type</typeparam>
+        /// <typeparam name="TPropery">The selected property type</typeparam>
+        /// <param name="enumerable">The source enumerable</param>
+        /// <param name="selector">The property selector</param>
+        /// <returns>A filtered enumerable distinct on the selected property</returns>
+        public static IEnumerable<T> DistincyBy<T, TPropery>(this IEnumerable<T> enumerable, Func<T, TPropery> selector)
+        {
+            var hash = new HashSet<TPropery>();
+            return enumerable.Where(x => hash.Add(selector(x)));
+        }
+
+        /// <summary>
+        /// Groups adjacent elements of the enumerale using the specified grouper function
+        /// </summary>
+        /// <typeparam name="T">The enumerable item type</typeparam>
+        /// <param name="enumerable">The source enumerable to be grouped</param>
+        /// <param name="grouper">A function that accepts the previous value and the next value and returns
+        /// true if the next value belongs in the same group as the previous value, otherwise returns false</param>
+        /// <returns>A new enumerable of the groups defined by grouper. These groups don't have a key
+        /// and are only grouped by being emitted separately from this enumerable</returns>
+        public static IEnumerable<IEnumerable<T>> GroupAdjacentBy<T>(this IEnumerable<T> enumerable, Func<T, T, bool> grouper)
+        {
+            using (var e = enumerable.GetEnumerator())
+            {
+                if (e.MoveNext())
+                {
+                    var list = new List<T> {e.Current};
+                    var pred = e.Current;
+                    while (e.MoveNext())
+                    {
+                        if (grouper(pred, e.Current))
+                        {
+                            list.Add(e.Current);
+                        }
+                        else
+                        {
+                            yield return list;
+                            list = new List<T> {e.Current};
+                        }
+                        pred = e.Current;
+                    }
+                    yield return list;
+                }
+            }
+        }
     }
 }

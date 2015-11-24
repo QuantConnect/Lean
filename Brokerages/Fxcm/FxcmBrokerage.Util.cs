@@ -20,6 +20,7 @@ using com.fxcm.fix.posttrade;
 using com.fxcm.fix.trade;
 using com.sun.rowset;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages.Fxcm
 {
@@ -121,23 +122,22 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <summary>
         /// Converts an FXCM symbol to a QuantConnect symbol
         /// </summary>
-        private static string ConvertSymbol(Instrument instrument)
+        private static Symbol ConvertSymbol(Instrument instrument)
         {
-            return ConvertFxcmSymbolToSymbol(instrument.getSymbol());
-        }
+            var symbol = instrument.getSymbol().Replace("/", "");
+            var securityType = GetSecurityType(instrument);
+            if (securityType == SecurityType.Forex)
+            {
+                return new Symbol(SecurityIdentifier.GenerateForex(symbol, Market.FXCM), symbol);
+            }
 
-        /// <summary>
-        /// Converts an FXCM symbol to a QuantConnect symbol
-        /// </summary>
-        private static string ConvertFxcmSymbolToSymbol(string symbol)
-        {
-            return symbol.Replace("/", "").ToUpper();
+            throw new ArgumentException("The specified security type is not supported: " + securityType);
         }
 
         /// <summary>
         /// Converts a QuantConnect symbol to an FXCM symbol
         /// </summary>
-        public string ConvertSymbolToFxcmSymbol(string symbol)
+        public string ConvertSymbolToFxcmSymbol(Symbol symbol)
         {
             return _mapInstrumentSymbols[symbol];
         }

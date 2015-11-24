@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Common.Data
             var reference = DateTime.Today;
             var bar1 = new Tick
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference,
                 Value = 5,
                 Quantity = 10
@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var bar2 = new Tick
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference.AddHours(1),
                 Value = 10,
                 Quantity = 20
@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.IsNull(newTradeBar);
             var bar3 = new Tick
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference.AddHours(2),
                 Value = 1,
                 Quantity = 10
@@ -64,7 +64,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var bar4 = new Tick
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference.AddHours(3),
                 Value = 9,
                 Quantity = 20
@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(bar4);
             Assert.IsNotNull(newTradeBar);
 
-            Assert.AreEqual("SPY", newTradeBar.Symbol.Permtick);
+            Assert.AreEqual(Symbols.SPY, newTradeBar.Symbol);
             Assert.AreEqual(bar1.Time, newTradeBar.Time);
             Assert.AreEqual(bar1.Value, newTradeBar.Open);
             Assert.AreEqual(bar2.Value, newTradeBar.High);
@@ -186,7 +186,7 @@ namespace QuantConnect.Tests.Common.Data
             var reference = new DateTime(2015, 06, 02);
             var tick1 = new Tick
             {
-                Symbol = "EURUSD",
+                Symbol = Symbols.EURUSD,
                 Time = reference.AddSeconds(3),
                 Value = 1.1000m
             };
@@ -195,7 +195,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var tick2 = new Tick
             {
-                Symbol = "EURUSD",
+                Symbol = Symbols.EURUSD,
                 Time = reference.AddSeconds(10),
                 Value = 1.1005m
             };
@@ -204,7 +204,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var tick3 = new Tick
             {
-                Symbol = "EURUSD",
+                Symbol = Symbols.EURUSD,
                 Time = reference.AddSeconds(61),
                 Value = 1.1010m
             };
@@ -217,7 +217,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var tick4 = new Tick
             {
-                Symbol = "EURUSD",
+                Symbol = Symbols.EURUSD,
                 Time = reference.AddSeconds(70),
                 Value = 1.1015m
             };
@@ -226,7 +226,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var tick5 = new Tick
             {
-                Symbol = "EURUSD",
+                Symbol = Symbols.EURUSD,
                 Time = reference.AddSeconds(118),
                 Value = 1.1020m
             };
@@ -235,7 +235,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var tick6 = new Tick
             {
-                Symbol = "EURUSD",
+                Symbol = Symbols.EURUSD,
                 Time = reference.AddSeconds(140),
                 Value = 1.1025m
             };

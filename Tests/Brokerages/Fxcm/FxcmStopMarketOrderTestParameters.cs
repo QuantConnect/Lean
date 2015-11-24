@@ -25,8 +25,8 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
 {
     public class FxcmStopMarketOrderTestParameters : StopMarketOrderTestParameters
     {
-        public FxcmStopMarketOrderTestParameters(string symbol, SecurityType securityType, decimal highLimit, decimal lowLimit)
-            : base(symbol, securityType, highLimit, lowLimit)
+        public FxcmStopMarketOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit)
+            : base(symbol, highLimit, lowLimit)
         {
         }
 

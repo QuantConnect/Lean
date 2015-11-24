@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -42,7 +43,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IResultHandler _resultHandler;
         private Ref<TimeSpan> _fillForwardResolution;
         private SecurityChanges _changes = SecurityChanges.None;
-        private ConcurrentDictionary<SymbolSecurityType, Subscription> _subscriptions;
+        private IMapFileProvider _mapFileProvider;
+        private ConcurrentDictionary<Symbol, Subscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
@@ -73,7 +75,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             get; private set;
         }
 
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider)
         {
             if (algorithm.SubscriptionManager.Subscriptions.Count == 0 && algorithm.Universes.IsNullOrEmpty())
             {
@@ -82,7 +84,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _algorithm = algorithm;
             _resultHandler = resultHandler;
-            _subscriptions = new ConcurrentDictionary<SymbolSecurityType, Subscription>();
+            _mapFileProvider = mapFileProvider;
+            _subscriptions = new ConcurrentDictionary<Symbol, Subscription>();
             _cancellationTokenSource = new CancellationTokenSource();
 
             IsActive = true;
@@ -118,8 +121,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return null;
             }
 
+            // get the map file resolver for this market
+            var mapFileResolver = _mapFileProvider.Get(config.Market);
+
             // ReSharper disable once PossibleMultipleEnumeration
-            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, resultHandler, tradeableDates, false);
+            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, resultHandler, mapFileResolver, tradeableDates, false);
 
             // optionally apply fill forward logic, but never for tick data
             if (config.FillDataForward && config.Resolution != Resolution.Tick)
@@ -152,9 +158,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            Log.Trace("FileSystemDataFeed.AddSubscription(): Added " + security.Symbol);
+            Log.Trace("FileSystemDataFeed.AddSubscription(): Added " + security.Symbol.ToString());
 
-            _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription),  subscription);
+            _subscriptions.AddOrUpdate(subscription.Security.Symbol,  subscription);
 
             // prime the pump, run method checks current before move next calls
             PrimeSubscriptionPump(subscription, true);
@@ -173,13 +179,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool RemoveSubscription(Subscription subscription)
         {
             Subscription sub;
-            if (!_subscriptions.TryRemove(new SymbolSecurityType(subscription), out sub))
+            if (!_subscriptions.TryRemove(subscription.Security.Symbol, out sub))
             {
-                Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + subscription.Security.Symbol);
+                Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + subscription.Security.Symbol.ToString());
                 return false;
             }
 
-            Log.Trace("FileSystemDataFeed.RemoveSubscription(): Removed " + subscription.Security.Symbol);
+            Log.Trace("FileSystemDataFeed.RemoveSubscription(): Removed " + subscription.Security.Symbol.ToString());
 
             _changes += SecurityChanges.Removed(sub.Security);
 
@@ -219,7 +225,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             // remove finished subscriptions
                             Subscription sub;
-                            _subscriptions.TryRemove(new SymbolSecurityType(subscription), out sub);
+                            _subscriptions.TryRemove(subscription.Security.Symbol, out sub);
                             continue;
                         }
 
@@ -238,7 +244,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             cache.Value.Add(clone);
                             if (!subscription.MoveNext())
                             {
-                                Log.Trace("FileSystemDataFeed.Run(): Finished subscription: " + subscription.Security.Symbol + " at " + frontier + " UTC");
+                                Log.Trace("FileSystemDataFeed.Run(): Finished subscription: " + subscription.Security.Symbol.ToString() + " at " + frontier + " UTC");
                                 break;
                             }
                         }
@@ -379,7 +385,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 // normal reader for all others
-                enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, tradeableDates, false);
+                enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, MapFileResolver.Empty, tradeableDates, false);
             }
 
             // create the subscription
@@ -389,7 +395,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // only message the user if it's one of their universe types
             var messageUser = subscription.Configuration.Type != typeof(CoarseFundamental);
             PrimeSubscriptionPump(subscription, messageUser);
-            _subscriptions.AddOrUpdate(new SymbolSecurityType(subscription), subscription);
+            _subscriptions.AddOrUpdate(subscription.Security.Symbol, subscription);
         }
 
         /// <summary>
@@ -414,12 +420,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (!subscription.MoveNext())
             {
-                Log.Error("FileSystemDataFeed.PrimeSubscriptionPump(): Failed to load subscription: " + subscription.Security.Symbol);
+                Log.Error("FileSystemDataFeed.PrimeSubscriptionPump(): Failed to load subscription: " + subscription.Security.Symbol.ToString());
                 if (messageUser)
                 {
-                    _algorithm.Error("Failed to load subscription: " + subscription.Security.Symbol);
+                    _algorithm.Error("Failed to load subscription: " + subscription.Security.Symbol.ToString());
                 }
-                _subscriptions.TryRemove(new SymbolSecurityType(subscription), out subscription);
+                _subscriptions.TryRemove(subscription.Security.Symbol, out subscription);
             }
         }
 

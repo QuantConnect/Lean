@@ -253,7 +253,7 @@ namespace QuantConnect.Securities
         /// Indexer method for the security manager to access the securities objects by their symbol.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        /// <param name="symbol">Symbol string indexer</param>
+        /// <param name="symbol">Symbol object indexer</param>
         /// <returns>Security</returns>
         public Security this[Symbol symbol]
         {
@@ -261,13 +261,41 @@ namespace QuantConnect.Securities
             {
                 if (!_securityManager.ContainsKey(symbol))
                 {
-                    throw new Exception("This asset symbol (" + symbol.Permtick + ") was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"" + symbol.Permtick + "\")'");
+                    throw new Exception(string.Format("This asset symbol ({0}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"{1}\")'", symbol, SymbolCache.GetTicker(symbol)));
                 } 
                 return _securityManager[symbol];
             }
             set 
             {
                 _securityManager[symbol] = value;
+            }
+        }
+
+        /// <summary>
+        /// Indexer method for the security manager to access the securities objects by their symbol.
+        /// </summary>
+        /// <remarks>IDictionary implementation</remarks>
+        /// <param name="ticker">string ticker symbol indexer</param>
+        /// <returns>Security</returns>
+        public Security this[string ticker]
+        {
+            get
+            {
+                Symbol symbol;
+                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
+                {
+                    throw new Exception(string.Format("This asset symbol ({0}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"{0}\")'", ticker));
+                }
+                return this[symbol];
+            }
+            set
+            {
+                Symbol symbol;
+                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
+                {
+                    throw new Exception(string.Format("This asset symbol ({0}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"{0}\")'", ticker));
+                }
+                this[symbol] = value;
             }
         }
 
@@ -351,51 +379,44 @@ namespace QuantConnect.Securities
             return _minuteMemory * minute + _secondMemory * second + _tickMemory * tick;
         }
 
-
         /// <summary>
         /// Creates a security and matching configuration. This applies the default leverage if
-        /// leverage is less than or equal to zero
+        /// leverage is less than or equal to zero.
+        /// This method also add the new symbol mapping to the <see cref="SymbolCache"/>
         /// </summary>
         public static Security CreateSecurity(SecurityPortfolioManager securityPortfolioManager,
             SubscriptionManager subscriptionManager,
             SecurityExchangeHoursProvider securityExchangeHoursProvider,
-            SecurityType securityType,
             Symbol symbol,
             Resolution resolution,
-            string market,
             bool fillDataForward,
             decimal leverage,
             bool extendedMarketHours,
             bool isInternalFeed,
             bool isCustomData)
         {
-            //If it hasn't been set, use some defaults based on the portfolio type:
+            var sid = symbol.ID;
+
+            //If it hasn't been set, use some defaults based on the security type
             if (leverage <= 0)
             {
-                switch (securityType)
-                {
-                    case SecurityType.Equity:
-                        leverage = 2; //Cash Ac. = 1, RegT Std = 2 or PDT = 4.
-                        break;
-                    case SecurityType.Forex:
-                        leverage = 50;
-                        break;
-                }
+                if (sid.SecurityType == SecurityType.Equity) leverage = 2;
+                else if (sid.SecurityType == SecurityType.Forex) leverage = 50;
+                // default to 1 for everything else
+                else leverage = 1m;
             }
 
-            if (market == null)
-            {
-                // set default values
-                if (securityType == SecurityType.Forex) market = "fxcm";
-                else if (securityType == SecurityType.Equity) market = "usa";
-                else market = "usa";
-            }
+            // add the symbol to our cache
+            SymbolCache.Set(symbol.Value, symbol);
+
+            var market = sid.Market;
+            var securityType = sid.SecurityType;
 
             //Add the symbol to Data Manager -- generate unified data streams for algorithm events
             var exchangeHours = securityExchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
-            var tradeBarType = typeof(TradeBar);
-            var type = resolution == Resolution.Tick ? typeof(Tick) : tradeBarType;
-            var config = subscriptionManager.Add(type, securityType, symbol, resolution, market, exchangeHours.TimeZone, isCustomData, fillDataForward, extendedMarketHours, isInternalFeed);
+            var tradeBarType = typeof (TradeBar);
+            var type = resolution == Resolution.Tick ? typeof (Tick) : tradeBarType;
+            var config = subscriptionManager.Add(type, symbol, resolution, exchangeHours.TimeZone, isCustomData, fillDataForward, extendedMarketHours, isInternalFeed);
 
             Security security;
             switch (config.SecurityType)

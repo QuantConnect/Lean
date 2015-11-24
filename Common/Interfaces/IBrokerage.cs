@@ -33,11 +33,6 @@ namespace QuantConnect.Interfaces
         event EventHandler<OrderEvent> OrderStatusChanged;
 
         /// <summary>
-        /// Event that fires each time portfolio holdings have changed
-        /// </summary>
-        event EventHandler<SecurityEvent> SecurityHoldingUpdated;
-
-        /// <summary>
         /// Event that fires each time a user's brokerage account is changed
         /// </summary>
         event EventHandler<AccountEvent> AccountChanged;

@@ -40,6 +40,9 @@ namespace QuantConnect.ToolBox.YahooDownloader
         /// <returns>Enumerable of base data for this symbol</returns>
         public IEnumerable<BaseData> Get(Symbol symbol, SecurityType type, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
+            if (resolution != Resolution.Daily)
+                throw new ArgumentException("The YahooDataDownloader can only download daily data.");
+
             // We subtract one day to make sure we have data from yahoo
             var finishMonth = endUtc.Month;
             var finishDay = endUtc.Subtract(TimeSpan.FromDays(1)).Day;

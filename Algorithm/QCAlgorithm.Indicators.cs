@@ -485,7 +485,8 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose Keltner Channel we seek</param>
         /// <param name="period">The period over which to compute the Keltner Channels</param>
-        /// <param name="k">The number of multiples of the ATR from the middle band of the Keltner Channels</param>
+        /// <param name="k">The number of multiples of the <see cref="AverageTrueRange"/> from the middle band of the Keltner Channels</param>
+        /// <param name="movingAverageType">Specifies the type of moving average to be used as the middle line of the Keltner Channel</param>
         /// <param name="resolution">The resolution.</param> 
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The Keltner Channel indicator for the requested symbol.</returns>
@@ -565,7 +566,7 @@ namespace QuantConnect.Algorithm
         /// <param name="period">The period of the log return.</param>
         /// <param name="resolution">The resolution.</param>
         /// <returns>log return indicator for the requested symbol.</returns>
-        public LogReturn LOGR(string symbol, int period, Resolution? resolution = null)
+        public LogReturn LOGR(Symbol symbol, int period, Resolution? resolution = null)
         {
             string name = CreateIndicatorName(symbol, "LOGR", resolution);
             var logr = new LogReturn(name, period);
@@ -822,7 +823,7 @@ namespace QuantConnect.Algorithm
             catch (InvalidOperationException)
             {
                 // this will happen if we did not find the subscription, let's give the user a decent error message
-                throw new Exception("Please register to receive data for symbol '" + symbol + "' using the AddSecurity() function.");
+                throw new Exception("Please register to receive data for symbol '" + symbol.ToString() + "' using the AddSecurity() function.");
             }
             return subscription;
         }
@@ -865,7 +866,7 @@ namespace QuantConnect.Algorithm
                     throw new ArgumentOutOfRangeException("resolution");
             }
 
-            return string.Format("{0}({1}{2})", type, symbol.Permtick, res);
+            return string.Format("{0}({1}{2})", type, symbol.ToString(), res);
         }
 
     } // End Partial Algorithm Template - Indicators.
