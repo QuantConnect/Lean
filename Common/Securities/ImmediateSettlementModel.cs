@@ -33,7 +33,7 @@ namespace QuantConnect.Securities
         /// <param name="amount">The amount of cash to apply</param>
         public void ApplyFunds(SecurityPortfolioManager portfolio, Security security, DateTime applicationTimeUtc, string currency, decimal amount)
         {
-            portfolio.CashBook[currency].AddQuantity(amount);
+            portfolio.CashBook[currency].AddAmount(amount);
         }
     }
 }

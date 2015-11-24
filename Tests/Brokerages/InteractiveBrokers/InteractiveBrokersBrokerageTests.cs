@@ -495,7 +495,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             var ib = _interactiveBrokersBrokerage;
 
-            decimal balance = ib.GetCashBalance().Single(x => x.Symbol == "USD").Quantity;
+            decimal balance = ib.GetCashBalance().Single(x => x.Symbol == "USD").Amount;
 
             // wait for our order to fill
             var manualResetEvent = new ManualResetEvent(false);
@@ -507,7 +507,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             manualResetEvent.WaitOneAssertFail(1500, "Didn't receive account changed event");
 
-            decimal balanceAfterTrade = ib.GetCashBalance().Single(x => x.Symbol == "USD").Quantity;
+            decimal balanceAfterTrade = ib.GetCashBalance().Single(x => x.Symbol == "USD").Amount;
 
             Assert.AreNotEqual(balance, balanceAfterTrade);
         }

@@ -187,7 +187,7 @@ namespace QuantConnect.Lean.Engine.Setup
                         //Zero the CashBook - we'll populate directly from brokerage
                         foreach (var kvp in algorithm.Portfolio.CashBook)
                         {
-                            kvp.Value.SetQuantity(0);
+                            kvp.Value.SetAmount(0);
                         }
                     }
                     catch (Exception err)
@@ -259,8 +259,8 @@ namespace QuantConnect.Lean.Engine.Setup
                     var cashBalance = brokerage.GetCashBalance();
                     foreach (var cash in cashBalance)
                     {
-                        Log.Trace("BrokerageSetupHandler.Setup(): Setting " + cash.Symbol + " cash to " + cash.Quantity);
-                        algorithm.SetCash(cash.Symbol, cash.Quantity, cash.ConversionRate);
+                        Log.Trace("BrokerageSetupHandler.Setup(): Setting " + cash.Symbol + " cash to " + cash.Amount);
+                        algorithm.SetCash(cash.Symbol, cash.Amount, cash.ConversionRate);
                     }
                 }
                 catch (Exception err)

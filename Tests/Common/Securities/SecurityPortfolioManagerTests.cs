@@ -209,8 +209,8 @@ namespace QuantConnect.Tests.Common.Securities
 
                 Console.WriteLine(i + 1 + "   " + portfolio.TotalPortfolioValue.ToString("C"));
                 //Assert.AreEqual((double) equity[i + 1], (double)portfolio.TotalPortfolioValue, 2e-2);
-                Assert.AreEqual((double) mchQuantity[i + 1], (double)portfolio.CashBook["MCH"].Quantity);
-                Assert.AreEqual((double) jwbQuantity[i + 1], (double)portfolio.CashBook["JWB"].Quantity);
+                Assert.AreEqual((double) mchQuantity[i + 1], (double)portfolio.CashBook["MCH"].Amount);
+                Assert.AreEqual((double) jwbQuantity[i + 1], (double)portfolio.CashBook["JWB"].Amount);
 
                 //Console.WriteLine();
                 //Console.WriteLine();
@@ -225,7 +225,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
-            portfolio.CashBook["USD"].SetQuantity(quantity);
+            portfolio.CashBook["USD"].SetAmount(quantity);
 
             var config = CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL);
             securities.Add(new Security(SecurityExchangeHours, config, leverage));
@@ -238,7 +238,7 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new MarketOrder(Symbols.AAPL, quantity, time) {Price = buyPrice};
             var fill = new OrderEvent(order, DateTime.UtcNow, 0) { FillPrice = buyPrice, FillQuantity = quantity };
 
-            Assert.AreEqual(portfolio.CashBook["USD"].Quantity, fill.FillPrice*fill.FillQuantity);
+            Assert.AreEqual(portfolio.CashBook["USD"].Amount, fill.FillPrice*fill.FillQuantity);
 
             portfolio.ProcessFill(fill);
 
@@ -304,7 +304,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
-            portfolio.CashBook["USD"].SetQuantity(1000);
+            portfolio.CashBook["USD"].SetAmount(1000);
             portfolio.CashBook.Add("EUR",  1000, 1.1m);
             portfolio.CashBook.Add("GBP", -1000, 2.0m);
 
@@ -432,8 +432,8 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.ProcessFill(fill);
             Assert.AreEqual(100, securities[Symbols.EURUSD].Holdings.Quantity);
             Assert.AreEqual(998, portfolio.Cash);
-            Assert.AreEqual(100, portfolio.CashBook["EUR"].Quantity);
-            Assert.AreEqual(888, portfolio.CashBook["USD"].Quantity);
+            Assert.AreEqual(100, portfolio.CashBook["EUR"].Amount);
+            Assert.AreEqual(888, portfolio.CashBook["USD"].Amount);
         }
 
         [Test]

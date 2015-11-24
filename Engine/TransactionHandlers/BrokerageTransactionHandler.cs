@@ -534,7 +534,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     if (_algorithm.Portfolio.CashBook.TryGetValue(balance.Symbol, out cash))
                     {
                         // compare in dollars
-                        var delta = cash.Quantity - balance.Quantity;
+                        var delta = cash.Amount - balance.Amount;
                         if (Math.Abs(delta) > _algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol))
                         {
                             // log the delta between 
@@ -542,7 +542,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                                 delta.ToString("0.00"));
                         }
                     }
-                    _algorithm.Portfolio.SetCash(balance.Symbol, balance.Quantity, balance.ConversionRate);
+                    _algorithm.Portfolio.SetCash(balance.Symbol, balance.Amount, balance.ConversionRate);
                 }
 
                 _syncedLiveBrokerageCashToday = true;
@@ -854,7 +854,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private void HandleAccountChanged(AccountEvent account)
         {
             // how close are we?
-            var delta = _algorithm.Portfolio.CashBook[account.CurrencySymbol].Quantity - account.CashBalance;
+            var delta = _algorithm.Portfolio.CashBook[account.CurrencySymbol].Amount - account.CashBalance;
             if (delta != 0)
             {
                 Log.Trace(string.Format("BrokerageTransactionHandler.HandleAccountChanged(): {0} Cash Delta: {1}", account.CurrencySymbol, delta));

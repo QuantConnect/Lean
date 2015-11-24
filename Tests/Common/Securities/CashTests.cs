@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal conversionRate = 1.2m;
             var cash = new Cash(symbol, quantity, conversionRate);
             Assert.AreEqual(symbol, cash.Symbol);
-            Assert.AreEqual(quantity, cash.Quantity);
+            Assert.AreEqual(quantity, cash.Amount);
             Assert.AreEqual(conversionRate, cash.ConversionRate);
         }
 
