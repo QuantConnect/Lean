@@ -48,8 +48,8 @@ namespace QuantConnect
         public static Symbol GetSymbol(string ticker)
         {
             Symbol symbol;
-            if (_cache.Symbols.TryGetValue(ticker, out symbol)) return symbol;
-            throw new Exception("We were unable to locate the ticker '" + ticker +"'.");
+            if (TryGetSymbol(ticker, out symbol)) return symbol;
+            throw new Exception(string.Format("We were unable to locate the ticker '{0}'.", ticker));
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace QuantConnect
         /// <returns>The symbol object that maps to the specified string ticker symbol</returns>
         public static bool TryGetSymbol(string ticker, out Symbol symbol)
         {
-            return _cache.Symbols.TryGetValue(ticker, out symbol);
+            return _cache.TryGetSymbol(ticker, out symbol);
         }
 
         /// <summary>
@@ -97,6 +97,28 @@ namespace QuantConnect
         {
             public readonly ConcurrentDictionary<string, Symbol> Symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.OrdinalIgnoreCase);
             public readonly ConcurrentDictionary<Symbol, string> Tickers = new ConcurrentDictionary<Symbol, string>();
+
+            /// <summary>
+            /// Attempts to resolve the ticker to a Symbol via the cache. If not found in the
+            /// cache then
+            /// </summary>
+            /// <param name="ticker">The ticker to resolver to a symbol</param>
+            /// <param name="symbol">The resolves symbol</param>
+            /// <returns>True if we successfully resolved a symbol, false otherwise</returns>
+            public bool TryGetSymbol(string ticker, out Symbol symbol)
+            {
+                if (Symbols.TryGetValue(ticker, out symbol))
+                {
+                    return true;
+                }
+                SecurityIdentifier sid;
+                if (SecurityIdentifier.TryParse(ticker, out sid))
+                {
+                    symbol = new Symbol(sid, sid.Symbol);
+                    return true;
+                }
+                return false;
+            }
         }
     }
 }
