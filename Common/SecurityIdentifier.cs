@@ -79,24 +79,6 @@ namespace QuantConnect
         private const ulong PutCallOffset = DaysOffset * DaysWidth;
         private const ulong PutCallWidth = 10;
 
-        private static readonly Dictionary<string, ulong> Markets = new Dictionary<string, ulong>
-        {
-            {"empty", 0},
-            {QuantConnect.Market.USA, 1},
-            {QuantConnect.Market.FXCM, 2},
-            {QuantConnect.Market.Oanda, 3},
-            {QuantConnect.Market.Dukascopy, 4}
-        };
-
-        private static readonly Dictionary<ulong, string> ReverseMarkets = new Dictionary<ulong, string>
-        {
-            {0, "empty"},
-            {1, QuantConnect.Market.USA},
-            {2, QuantConnect.Market.FXCM},
-            {3, QuantConnect.Market.Oanda},
-            {4, QuantConnect.Market.Dukascopy}
-        };
-
         #endregion
 
         #region Member variables
@@ -153,15 +135,11 @@ namespace QuantConnect
         {
             get
             {
-                string market;
-                var marketIndex = ExtractFromProperties(MarketOffset, MarketWidth);
-                if (ReverseMarkets.TryGetValue(marketIndex, out market))
-                {
-                    return market;
-                }
+                var marketCode = ExtractFromProperties(MarketOffset, MarketWidth);
+                var market = QuantConnect.Market.Decode((int)marketCode);
 
                 // if we couldn't find it, send back the numeric representation
-                return marketIndex.ToString();
+                return market ?? marketCode.ToString();
             }
         }
 
@@ -249,48 +227,6 @@ namespace QuantConnect
         #endregion
 
         #region AddMarket, GetMarketCode, and Generate
-
-        /// <summary>
-        /// Adds the specified market to the map of available markets with the specified identifier.
-        /// </summary>
-        /// <param name="market">The market string to add</param>
-        /// <param name="identifier">The identifier for the market, this value must be positive and less than 100</param>
-        public static void AddMarket(string market, ushort identifier)
-        {
-            if (identifier >= MarketWidth)
-            {
-                throw new ArgumentOutOfRangeException("identifier", "The market identifier is limited to values less than 100.");
-            }
-
-            market = market.ToLower();
-
-            ulong marketIdentifier;
-            if (Markets.TryGetValue(market, out marketIdentifier) && identifier != marketIdentifier)
-            {
-                throw new ArgumentException("Attempted to add an already added market with a different identifier. Market: " + market);
-            }
-
-            string existingMarket;
-            if (ReverseMarkets.TryGetValue(identifier, out existingMarket))
-            {
-                throw new ArgumentException("Attempted to add a market identifier that is already in use. New Market: " + market + " Existing Market: " + existingMarket);
-            }
-
-            // update our maps
-            Markets[market] = identifier;
-            ReverseMarkets[identifier] = market;
-        }
-
-        /// <summary>
-        /// Gets the market code for the specified market. Returns <see cref="ulong.MaxValue"/> if the market is not found
-        /// </summary>
-        /// <param name="market">The market to check for (case sensitive)</param>
-        /// <returns>The internal code used for the market. Corresponds to the value used when calling <see cref="AddMarket"/></returns>
-        public static ulong GetMarketCode(string market)
-        {
-            ulong code;
-            return !Markets.TryGetValue(market, out code) ? ulong.MaxValue : code;
-        }
 
         /// <summary>
         /// Generates a new <see cref="SecurityIdentifier"/> for an option
@@ -403,21 +339,23 @@ namespace QuantConnect
             market = market.ToLower();
             symbol = symbol.ToUpper();
 
-            ulong marketIdentifier;
-            if (!Markets.TryGetValue(market, out marketIdentifier))
+            var marketIdentifier = QuantConnect.Market.Encode(market);
+            if (!marketIdentifier.HasValue)
             {
-                throw new ArgumentOutOfRangeException("market", "The specified market wasn't found in the lookup. Requested: " + market);
+                throw new ArgumentOutOfRangeException("market", string.Format("The specified market wasn't found in the markets lookup. Requested: {0}. " +
+                    "You can add markets by calling QuantConnect.Market.AddMarket(string,ushort)", market));
             }
 
             var days = ((ulong)date.ToOADate()) * DaysOffset;
-            marketIdentifier = marketIdentifier * MarketOffset;
+            var marketCode = (ulong)marketIdentifier * MarketOffset;
+
             ulong strikeScale;
             var strk = NormalizeStrike(strike, out strikeScale) * StrikeOffset;
             strikeScale *= StrikeScaleOffset;
             var style = ((ulong)optionStyle) * OptionStyleOffset;
             var putcall = (ulong)(optionRight) * PutCallOffset;
 
-            var otherData = putcall + days + style + strk + strikeScale + marketIdentifier + (ulong)securityType;
+            var otherData = putcall + days + style + strk + strikeScale + marketCode + (ulong)securityType;
 
             return new SecurityIdentifier(symbol, otherData);
         }

@@ -12,6 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
+using System;
+using System.Collections.Generic;
+
 namespace QuantConnect
 {
     /// <summary>
@@ -19,24 +23,109 @@ namespace QuantConnect
     /// </summary>
     public static class Market
     {
+        private static readonly object _lock = new object();
+        private static readonly Dictionary<string, int> Markets = new Dictionary<string, int>();
+        private static readonly Dictionary<int, string> ReverseMarkets = new Dictionary<int, string>();
+        private static readonly IEnumerable<Tuple<string, int>> HardcodeMarkets = new List<Tuple<string, int>>
+        {
+            Tuple.Create("empty", 0),
+            Tuple.Create(USA, 1),
+            Tuple.Create(FXCM, 2),
+            Tuple.Create(Oanda, 3),
+            Tuple.Create(Dukascopy, 4)
+        };
+
+        static Market()
+        {
+            // initialize our concurrent maps
+            foreach (var market in HardcodeMarkets)
+            {
+                Markets[market.Item1] = market.Item2;
+                ReverseMarkets[market.Item2] = market.Item1;
+            }
+        }
+
         /// <summary>
         /// USA Market 
         /// </summary>
-        public static string USA = "usa";
+        public const string USA = "usa";
 
         /// <summary>
         /// Oanda Market
         /// </summary>
-        public static string Oanda = "oanda";
+        public const string Oanda = "oanda";
 
         /// <summary>
         /// FXCM Market Hours
         /// </summary>
-        public static string FXCM = "fxcm";
+        public const string FXCM = "fxcm";
 
         /// <summary>
         /// Dukascopy Market
         /// </summary>
-        public static string Dukascopy = "dukascopy";
+        public const string Dukascopy = "dukascopy";
+
+        /// <summary>
+        /// Adds the specified market to the map of available markets with the specified identifier.
+        /// </summary>
+        /// <param name="market">The market string to add</param>
+        /// <param name="identifier">The identifier for the market, this value must be positive and less than 100</param>
+        public static void Add(string market, int identifier)
+        {
+            if (identifier >= 1000)
+            {
+                throw new ArgumentOutOfRangeException("identifier", "The market identifier is limited to positive values less than 100.");
+            }
+
+            market = market.ToLower();
+
+            // we lock since we don't want multiple threads getting these two dictionaries out of sync
+            lock (_lock)
+            {
+                int marketIdentifier;
+                if (Markets.TryGetValue(market, out marketIdentifier) && identifier != marketIdentifier)
+                {
+                    throw new ArgumentException("Attempted to add an already added market with a different identifier. Market: " + market);
+                }
+
+                string existingMarket;
+                if (ReverseMarkets.TryGetValue(identifier, out existingMarket))
+                {
+                    throw new ArgumentException("Attempted to add a market identifier that is already in use. New Market: " + market + " Existing Market: " + existingMarket);
+                }
+
+                // update our maps
+                Markets[market] = identifier;
+                ReverseMarkets[identifier] = market;
+            }
+        }
+
+        /// <summary>
+        /// Gets the market code for the specified market. Returns <c>null</c> if the market is not found
+        /// </summary>
+        /// <param name="market">The market to check for (case sensitive)</param>
+        /// <returns>The internal code used for the market. Corresponds to the value used when calling <see cref="Add"/></returns>
+        public static int? Encode(string market)
+        {
+            lock (_lock)
+            {
+                int code;
+                return !Markets.TryGetValue(market, out code) ? (int?) null : code;
+            }
+        }
+
+        /// <summary>
+        /// Gets the market string for the specified market code.
+        /// </summary>
+        /// <param name="code">The market code to be decoded</param>
+        /// <returns>The string representation of the market, or null if not found</returns>
+        public static string Decode(int code)
+        {
+            lock (_lock)
+            {
+                string market;
+                return !ReverseMarkets.TryGetValue(code, out market) ? null : market;
+            }
+        }
     }
 }

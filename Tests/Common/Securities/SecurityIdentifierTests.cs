@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using NUnit.Framework;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -235,18 +234,6 @@ namespace QuantConnect.Tests.Common.Securities
             const string symbol = "~!@#$%^&*()_+¼»`ÆÜCⁿª▓G";
             var sid = new SecurityIdentifier(symbol, 0);
             Assert.AreEqual(sid.Symbol, symbol);
-        }
-
-        [Test]
-        public void MapsAllMarketsInMarketClass()
-        {
-            var markets = typeof (Market).GetFields();
-            foreach (var field in markets)
-            {
-                var market = (string)field.GetValue(null);
-                var code = SecurityIdentifier.GetMarketCode(market);
-                Assert.AreNotEqual(ulong.MaxValue, code);
-            }
         }
 
         class Container
