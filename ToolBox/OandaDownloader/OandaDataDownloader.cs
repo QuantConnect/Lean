@@ -23,7 +23,6 @@ using System.Net;
 using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Securities;
 using QuantConnect.ToolBox.OandaDownloader.OandaRestLibrary;
 
 namespace QuantConnect.ToolBox.OandaDownloader
@@ -132,7 +131,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
         public IEnumerable<BaseData> Get(Symbol symbol, SecurityType type, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
             if (!_instruments.ContainsKey(symbol.Value))
-                throw new ArgumentException("Invalid symbol requested: " + symbol.ToString());
+                throw new ArgumentException("Invalid symbol requested: " + symbol.Value);
 
             if (resolution == Resolution.Tick)
                 throw new NotSupportedException("Resolution not available: " + resolution);
@@ -214,28 +213,10 @@ namespace QuantConnect.ToolBox.OandaDownloader
             switch (resolution)
             {
                 case Resolution.Second:
-                    foreach (var bar in AggregateBars(symbol, barsTotalInPeriod, new TimeSpan(0, 0, 1)))
-                    {
-                        yield return bar;
-                    }
-                    break;
-
                 case Resolution.Minute:
-                    foreach (var bar in AggregateBars(symbol, barsTotalInPeriod, new TimeSpan(0, 1, 0)))
-                    {
-                        yield return bar;
-                    }
-                    break;
-
                 case Resolution.Hour:
-                    foreach (var bar in AggregateBars(symbol, barsTotalInPeriod, new TimeSpan(1, 0, 0)))
-                    {
-                        yield return bar;
-                    }
-                    break;
-
                 case Resolution.Daily:
-                    foreach (var bar in AggregateBars(symbol, barsTotalInPeriod, new TimeSpan(1, 0, 0, 0)))
+                    foreach (var bar in AggregateBars(symbol, barsTotalInPeriod, resolution.ToTimeSpan()))
                     {
                         yield return bar;
                     }
