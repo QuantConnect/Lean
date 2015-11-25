@@ -72,7 +72,7 @@ namespace QuantConnect
         /// Adds the specified market to the map of available markets with the specified identifier.
         /// </summary>
         /// <param name="market">The market string to add</param>
-        /// <param name="identifier">The identifier for the market, this value must be positive and less than 100</param>
+        /// <param name="identifier">The identifier for the market, this value must be positive and less than 1000</param>
         public static void Add(string market, int identifier)
         {
             if (identifier >= MaxMarketIdentifier)
