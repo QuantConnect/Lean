@@ -132,6 +132,10 @@ namespace QuantConnect.ToolBox.OandaDownloader
             {
                 return new Symbol(SecurityIdentifier.GenerateForex(instrument, Market.Oanda), instrument);
             }
+            if (securityType == SecurityType.Cfd)
+            {
+                return new Symbol(SecurityIdentifier.GenerateCfd(instrument, Market.Oanda), instrument);
+            }
 
             throw new NotImplementedException("The specfied security type has not been implemented yet: " + securityType);
         }
