@@ -126,9 +126,13 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             var symbol = instrument.getSymbol().Replace("/", "");
             var securityType = GetSecurityType(instrument);
-            if (securityType == SecurityType.Forex)
+            switch (securityType)
             {
-                return new Symbol(SecurityIdentifier.GenerateForex(symbol, Market.FXCM), symbol);
+                case SecurityType.Forex:
+                    return new Symbol(SecurityIdentifier.GenerateForex(symbol, Market.FXCM), symbol);
+
+                case SecurityType.Cfd:
+                    return new Symbol(SecurityIdentifier.GenerateCfd(symbol, Market.FXCM), symbol);
             }
 
             throw new ArgumentException("The specified security type is not supported: " + securityType);
