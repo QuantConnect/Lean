@@ -22,7 +22,6 @@ using NodaTime.TimeZones;
 using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Notifications;
@@ -424,7 +423,7 @@ namespace QuantConnect.Algorithm
         public virtual void Initialize() 
         {
             //Setup Required Data
-            throw new NotImplementedException("Please override the Intitialize() method");
+            throw new NotImplementedException("Please override the Initialize() method");
         }
 
         /// <summary>
@@ -570,7 +569,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Margin call warning event handler. This method is called when Portoflio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue
+        /// Margin call warning event handler. This method is called when Portfolio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue
         /// </summary>
         public virtual void OnMarginCallWarning()
         {
@@ -622,6 +621,30 @@ namespace QuantConnect.Algorithm
         public virtual void OnOrderEvent(OrderEvent orderEvent)
         {
    
+        }
+
+        /// <summary>
+        /// Brokerage message event handler. This method is called for all types of brokerage messages.
+        /// </summary>
+        public virtual void OnBrokerageMessage(BrokerageMessageEvent messageEvent)
+        {
+            
+        }
+
+        /// <summary>
+        /// Brokerage disconnected event handler. This method is called when the brokerage connection is lost.
+        /// </summary>
+        public virtual void OnBrokerageDisconnect()
+        {
+
+        }
+
+        /// <summary>
+        /// Brokerage reconnected event handler. This method is called when the brokerage connection is restored after a disconnection.
+        /// </summary>
+        public virtual void OnBrokerageReconnect()
+        {
+
         }
 
         /// <summary>
@@ -737,7 +760,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Sets the implementation used to handle messages from the brokerage.
         /// The default implementation will forward messages to debug or error
-        /// and when a <see cref="BrokerageMessageType.Error"/> ocurrs, the algorithm
+        /// and when a <see cref="BrokerageMessageType.Error"/> occurs, the algorithm
         /// is stopped.
         /// </summary>
         /// <param name="handler">The message handler to use</param>
