@@ -36,7 +36,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
     public class FxcmDataDownloader : IDataDownloader, IGenericMessageListener, IStatusMessageListener
     {
         private const string InstrumentsFileName = "instruments_fxcm.txt";
-        private Dictionary<Symbol, LeanInstrument> _instruments = new Dictionary<Symbol, LeanInstrument>();
+        private Dictionary<string, LeanInstrument> _instruments = new Dictionary<string, LeanInstrument>();
         private readonly string _server;
         private readonly string _terminal;
         private readonly string _userName;
@@ -73,7 +73,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             if (!File.Exists(InstrumentsFileName))
                 throw new FileNotFoundException(InstrumentsFileName + " file not found.");
 
-            _instruments = new Dictionary<Symbol, LeanInstrument>();
+            _instruments = new Dictionary<string, LeanInstrument>();
 
             var lines = File.ReadAllLines(InstrumentsFileName);
             foreach (var line in lines)
@@ -82,12 +82,13 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 if (tokens.Length >= 3)
                 {
                     var fxcmSymbol = tokens[0];
-                    var symbol = ConvertFxcmSymbolToLeanSymbol(fxcmSymbol);
-                    _instruments.Add(symbol, new LeanInstrument
+                    var securityType = (SecurityType)Enum.Parse(typeof(SecurityType), tokens[2]);
+                    var symbol = ConvertFxcmSymbolToLeanSymbol(fxcmSymbol, securityType);
+                    _instruments.Add(symbol.Value, new LeanInstrument
                     {
-                        Symbol = symbol,
+                        Symbol = symbol.Value,
                         Name = tokens[1],
-                        Type = (SecurityType)Enum.Parse(typeof(SecurityType), tokens[2])
+                        Type = securityType
                     });
 
                     _mapInstrumentSymbols[symbol] = fxcmSymbol;
@@ -99,10 +100,13 @@ namespace QuantConnect.ToolBox.FxcmDownloader
         /// Converts an FXCM symbol to a Lean Symbol instance
         /// </summary>
         /// <param name="fxcmSymbol">The FXCM symbol</param>
+        /// <param name="securityType">The security type</param>
         /// <returns>A Lean symbol</returns>
-        private static Symbol ConvertFxcmSymbolToLeanSymbol(string fxcmSymbol)
+        private static Symbol ConvertFxcmSymbolToLeanSymbol(string fxcmSymbol, SecurityType securityType)
         {
-            return new Symbol(fxcmSymbol.Replace("/", "").ToUpper());
+            // convert to lean format
+            var ticker = fxcmSymbol.Replace("/", "").ToUpper();
+            return Symbol.Create(ticker, securityType, Market.FXCM);
         }
 
         /// <summary>
@@ -151,7 +155,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
         /// </summary>
         /// <param name="symbol"></param>
         /// <returns>Returns true if the symbol is available</returns>
-        public bool HasSymbol(Symbol symbol)
+        public bool HasSymbol(string symbol)
         {
             return _instruments.ContainsKey(symbol);
         }
@@ -161,7 +165,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <returns>The security type</returns>
-        public SecurityType GetSecurityType(Symbol symbol)
+        public SecurityType GetSecurityType(string symbol)
         {
             return _instruments[symbol].Type;
         }
@@ -177,8 +181,8 @@ namespace QuantConnect.ToolBox.FxcmDownloader
         /// <returns>Enumerable of base data for this symbol</returns>
         public IEnumerable<BaseData> Get(Symbol symbol, SecurityType type, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-            if (!_instruments.ContainsKey(symbol))
-                throw new ArgumentException("Invalid symbol requested: " + symbol);
+            if (!_instruments.ContainsKey(symbol.Value))
+                throw new ArgumentException("Invalid symbol requested: " + symbol.Value);
 
             if (resolution == Resolution.Tick)
                 throw new NotSupportedException("Resolution not available: " + resolution);
@@ -361,7 +365,11 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             if (message.getRequestID() == _currentRequest)
             {
                 // create new TradeBar from FXCM response message
-                var symbol = ConvertFxcmSymbolToLeanSymbol(message.getInstrument().getSymbol());
+                var instrument = message.getInstrument();
+                var securityType = instrument.getFXCMProductID() == IFixValueDefs.__Fields.FXCMPRODUCTID_FOREX
+                    ? SecurityType.Forex
+                    : SecurityType.Cfd;
+                var symbol = ConvertFxcmSymbolToLeanSymbol(instrument.getSymbol(), securityType);
                 var time = FromJavaDateUtc(message.getDate().toDate());
                 var open = Convert.ToDecimal((message.getBidOpen() + message.getAskOpen()) / 2);
                 var high = Convert.ToDecimal((message.getBidHigh() + message.getAskHigh()) / 2);

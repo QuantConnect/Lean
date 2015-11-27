@@ -46,7 +46,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 BasicConfigurator.configure(new FileAppender(new SimpleLayout(), "FxcmDownloader.log", append: false));
 
                 // Load settings from command line
-                var symbols = args[0].Split(',');
+                var tickers = args[0].Split(',');
                 var allResolutions = args[1].ToLower() == "all";
                 var resolution = allResolutions ? Resolution.Second : (Resolution)Enum.Parse(typeof(Resolution), args[1]);
                 var startDate = DateTime.ParseExact(args[2], "yyyyMMdd", CultureInfo.InvariantCulture);
@@ -63,16 +63,15 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 const string market = "fxcm";
                 var downloader = new FxcmDataDownloader(server, terminal, userName, password);
 
-                foreach (var symbol in symbols)
+                foreach (var ticker in tickers)
                 {
-                    if (!downloader.HasSymbol(symbol))
-                        throw new ArgumentException("The symbol " + symbol + " is not available.");
-                }
+                    var securityType = downloader.GetSecurityType(ticker);
+                    var symbol = Symbol.Create(ticker, securityType, Market.FXCM);
 
-                foreach (var symbol in symbols)
-                {
-                    var securityType = downloader.GetSecurityType(symbol);
-                    var data = downloader.Get(new Symbol(symbol), securityType, resolution, startDate, endDate);
+                    if (!downloader.HasSymbol(ticker))
+                        throw new ArgumentException("The symbol " + ticker + " is not available.");
+
+                    var data = downloader.Get(symbol, securityType, resolution, startDate, endDate);
 
                     if (allResolutions)
                     {
@@ -85,7 +84,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                         // Save the data (other resolutions)
                         foreach (var res in new[] {Resolution.Minute, Resolution.Hour, Resolution.Daily})
                         {
-                            var resData = FxcmDataDownloader.AggregateBars(new Symbol(symbol), bars, res.ToTimeSpan());
+                            var resData = FxcmDataDownloader.AggregateBars(symbol, bars, res.ToTimeSpan());
 
                             writer = new LeanDataWriter(securityType, res, symbol, dataDirectory, market);
                             writer.Write(resData);
