@@ -20,6 +20,7 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -275,7 +276,22 @@ namespace QuantConnect.Lean.Engine
                     _algorithmHandlers.RealTime.Setup(algorithm, job, _algorithmHandlers.Results, _systemHandlers.Api);
 
                     // wire up the brokerage message handler
-                    brokerage.Message += (sender, message) => algorithm.BrokerageMessageHandler.Handle(message);
+                    brokerage.Message += (sender, message) =>
+                    {
+                        algorithm.BrokerageMessageHandler.Handle(message);
+
+                        // fire brokerage message events
+                        algorithm.OnBrokerageMessage(message);
+                        switch (message.Type)
+                        {
+                            case BrokerageMessageType.Disconnect:
+                                algorithm.OnBrokerageDisconnect();
+                                break;
+                            case BrokerageMessageType.Reconnect:
+                                algorithm.OnBrokerageReconnect();
+                                break;
+                        }
+                    };
 
                     //Send status to user the algorithm is now executing.
                     _algorithmHandlers.Results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Running);

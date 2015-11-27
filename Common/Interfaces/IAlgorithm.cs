@@ -372,6 +372,21 @@ namespace QuantConnect.Interfaces
         void OnOrderEvent(OrderEvent newEvent);
 
         /// <summary>
+        /// Brokerage message event handler. This method is called for all types of brokerage messages.
+        /// </summary>
+        void OnBrokerageMessage(BrokerageMessageEvent messageEvent);
+
+        /// <summary>
+        /// Brokerage disconnected event handler. This method is called when the brokerage connection is lost.
+        /// </summary>
+        void OnBrokerageDisconnect();
+
+        /// <summary>
+        /// Brokerage reconnected event handler. This method is called when the brokerage connection is restored after a disconnection.
+        /// </summary>
+        void OnBrokerageReconnect();
+
+        /// <summary>
         /// Set the DateTime Frontier: This is the master time and is
         /// </summary>
         /// <param name="time"></param>
