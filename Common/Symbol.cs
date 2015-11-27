@@ -16,7 +16,6 @@
 
 using System;
 using Newtonsoft.Json;
-using QuantConnect.Securities;
 
 namespace QuantConnect
 {
@@ -33,6 +32,41 @@ namespace QuantConnect
         /// uninitialized, default value
         /// </summary>
         public static readonly Symbol Empty = new Symbol(SecurityIdentifier.Empty, string.Empty);
+
+        /// <summary>
+        /// Provides a convience method for creating a Symbol for most security types.
+        /// This method currently does not support Option, Commodity, and Future
+        /// </summary>
+        /// <param name="ticker">The string ticker symbol</param>
+        /// <param name="securityType">The security type of the ticker</param>
+        /// <param name="market">The market the ticker resides in</param>
+        /// <returns>A new Symbol object for the specified ticker</returns>
+        public static Symbol Create(string ticker, SecurityType securityType, string market)
+        {
+            SecurityIdentifier sid;
+            switch (securityType)
+            {
+                case SecurityType.Base:
+                    sid = SecurityIdentifier.GenerateBase(ticker, market);
+                    break;
+                case SecurityType.Equity:
+                    sid = SecurityIdentifier.GenerateEquity(ticker, market);
+                    break;
+                case SecurityType.Forex:
+                    sid = SecurityIdentifier.GenerateForex(ticker, market);
+                    break;
+                case SecurityType.Cfd:
+                    sid = SecurityIdentifier.GenerateCfd(ticker, market);
+                    break;
+                case SecurityType.Option:
+                case SecurityType.Commodity:
+                case SecurityType.Future:
+                default:
+                    throw new NotImplementedException("The security type has not been implemented yet: " + securityType);
+            }
+
+            return new Symbol(sid, ticker);
+        }
 
         #region Properties
 
