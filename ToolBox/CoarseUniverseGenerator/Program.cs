@@ -133,7 +133,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// <param name="symbolResolver">Function used to provide symbol resolution. Default resolution uses the zip file name to resolve
         /// the symbol, specify null for this behavior.</param>
         /// <returns>A collection of the generated coarse files</returns>
-        public static ICollection<string> ProcessDailyFolder(string dailyFolder, string coarseFolder, MapFileResolver mapFileResolver, HashSet<string> exclusions, bool ignoreMapless, DateTime lastProcessedDate, Func<string, string> symbolResolver = null)
+        public static ICollection<string> ProcessDailyFolder(string dailyFolder, string coarseFolder, MapFileResolver mapFileResolver, HashSet<string> exclusions, bool ignoreMapless, DateTime startDate, Func<string, string> symbolResolver = null)
         {
             const decimal scaleFactor = 10000m;
 
@@ -200,6 +200,9 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             //20150625.csv
                             var csv = line.Split(',');
                             var date = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
+                            
+                            // spin past old data
+                            if (date < startDate) continue;
 
                             if (ignoreMapless && !checkedForMapFile)
                             {

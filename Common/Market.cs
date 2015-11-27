@@ -23,6 +23,9 @@ namespace QuantConnect
     /// </summary>
     public static class Market
     {
+        // the upper bound (non-inclusive) for market identifiers
+        private const int MaxMarketIdentifier = 1000;
+
         private static readonly object _lock = new object();
         private static readonly Dictionary<string, int> Markets = new Dictionary<string, int>();
         private static readonly Dictionary<int, string> ReverseMarkets = new Dictionary<int, string>();
@@ -69,12 +72,13 @@ namespace QuantConnect
         /// Adds the specified market to the map of available markets with the specified identifier.
         /// </summary>
         /// <param name="market">The market string to add</param>
-        /// <param name="identifier">The identifier for the market, this value must be positive and less than 100</param>
+        /// <param name="identifier">The identifier for the market, this value must be positive and less than 1000</param>
         public static void Add(string market, int identifier)
         {
-            if (identifier >= 1000)
+            if (identifier >= MaxMarketIdentifier)
             {
-                throw new ArgumentOutOfRangeException("identifier", "The market identifier is limited to positive values less than 100.");
+                var message = string.Format("The market identifier is limited to positive values less than {0}.", MaxMarketIdentifier);
+                throw new ArgumentOutOfRangeException("identifier", message);
             }
 
             market = market.ToLower();

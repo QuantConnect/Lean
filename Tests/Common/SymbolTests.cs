@@ -210,7 +210,7 @@ namespace QuantConnect.Tests.Common
         public void ImplicitOperatorsReturnSIDOnFailure()
         {
 #pragma warning disable 0618 // This test requires implicit operators
-            // this doesn't exist in the symbol cace
+            // this doesn't exist in the symbol cache
             var eurusd = new Symbol(SecurityIdentifier.GenerateForex("NOT A SECURITY", Market.FXCM), "EURUSD");
             string stringEurusd = eurusd;
             Assert.AreEqual(eurusd.ID.ToString(), stringEurusd);
@@ -239,6 +239,41 @@ namespace QuantConnect.Tests.Common
             string sid = expected.ID.ToString();
             Symbol actual = sid;
             Assert.AreEqual(expected, actual);
+#pragma warning restore 0618
+        }
+
+        [Test]
+        public void ImplicitFromWithinStringLiftsSecondArgument()
+        {
+#pragma warning disable 0618 // This test requires implicit operators
+            SymbolCache.Clear();
+            SymbolCache.Set("EURUSD", Symbols.EURUSD);
+            var expected = SymbolCache.GetSymbol("EURUSD");
+            string stringValue = expected;
+            string notFound = "EURGBP 5O";
+            var expectedNotFoundSymbol = Symbols.EURGBP;
+            string sid = expected.ID.ToString();
+            Symbol actual = sid;
+            if (!(expected == stringValue))
+            {
+                Assert.Fail("Failed expected == string");
+            }
+            else if (!(stringValue == expected))
+            {
+                Assert.Fail("Failed string == expected");
+            }
+            else if (expected != stringValue)
+            {
+                Assert.Fail("Failed expected != string");
+            }
+            else if (stringValue != expected)
+            {
+                Assert.Fail("Failed string != expected");
+            }
+
+            Symbol notFoundSymbol = notFound;
+            Assert.AreEqual(expectedNotFoundSymbol, notFoundSymbol);
+            SymbolCache.Clear();
 #pragma warning restore 0618
         }
 

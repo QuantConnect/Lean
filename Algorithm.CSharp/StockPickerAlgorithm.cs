@@ -40,6 +40,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetCash(100000);
 
+            AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
+            SetBenchmark("SPY");
+
             // add a custom universe data source
             AddUniverse<NyseTopGainers>(SecurityType.Equity, "universe-nyse-top-gainers", Resolution.Daily, Market.USA, data =>
             {
@@ -120,7 +123,7 @@ namespace QuantConnect.Algorithm.CSharp
                     return new NyseTopGainers
                     {
                         Time = DateTime.ParseExact(csv[0], "yyyyMMdd", null),
-                        Symbol = csv[1],
+                        Symbol = new Symbol(SecurityIdentifier.GenerateEquity(csv[1], Market.USA), csv[1]),
                         TopGainersRank = int.Parse(csv[2])
                     };
                 }
@@ -147,10 +150,10 @@ namespace QuantConnect.Algorithm.CSharp
                     return null;
                 }
 
-                var symbol = line.Substring(lastOpenParen + 1, lastCloseParen - lastOpenParen - 1);
+                var symbolString = line.Substring(lastOpenParen + 1, lastCloseParen - lastOpenParen - 1);
                 return new NyseTopGainers
                 {
-                    Symbol = symbol, 
+                    Symbol = new Symbol(SecurityIdentifier.GenerateEquity(symbolString, Market.USA), symbolString),
                     Time = date,
                     // the html has these in order, so we'll keep incrementing until a new day
                     TopGainersRank = ++count
