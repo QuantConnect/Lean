@@ -333,16 +333,13 @@ namespace QuantConnect.ToolBox
                 case SecurityType.Equity:
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
-                    // Base directory includes the market
-                    file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), _symbol.ToString().ToLower(), Compression.CreateZipFileName(_symbol.Value, _securityType, time, _resolution));
-
                     if (_resolution == Resolution.Daily || _resolution == Resolution.Hour)
                     {
                         file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), Compression.CreateZipFileName(_symbol.Value, _securityType, time, _resolution));
                     }
                     else
                     {
-                        file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), _symbol.ToString().ToLower(), Compression.CreateZipFileName(_symbol.Value, _securityType, time, _resolution));
+                        file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), _symbol.Value.ToLower(), Compression.CreateZipFileName(_symbol.Value, _securityType, time, _resolution));
                     }
                     break;
 

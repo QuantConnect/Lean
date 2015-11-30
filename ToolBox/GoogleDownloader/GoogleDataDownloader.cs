@@ -51,12 +51,15 @@ namespace QuantConnect.ToolBox.GoogleDownloader
             if (type != SecurityType.Equity)
                 throw new NotSupportedException("SecurityType not available: " + type);
 
+            if (endUtc < startUtc)
+                throw new ArgumentException("The end date must be greater or equal than the start date.");
+
             var numberOfDays = (int)(endUtc - startUtc).TotalDays;
             var resolutionSeconds = (int)resolution.ToTimeSpan().TotalSeconds;
-            var startUnixTime = ToUnixTime(startUtc);
+            var endUnixTime = ToUnixTime(endUtc);
 
             // Create the Google formatted URL.
-            var url = string.Format(UrlPrototype, symbol, resolutionSeconds, numberOfDays, startUnixTime);
+            var url = string.Format(UrlPrototype, symbol.Value, resolutionSeconds, numberOfDays, endUnixTime);
 
             // Download the data from Google.
             string[] lines;

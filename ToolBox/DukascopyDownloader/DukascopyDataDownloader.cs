@@ -103,7 +103,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         public IEnumerable<BaseData> Get(Symbol symbol, SecurityType type, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
             if (!_instruments.ContainsKey(symbol.Value))
-                throw new ArgumentException("Invalid symbol requested: " + symbol.ToString());
+                throw new ArgumentException("Invalid symbol requested: " + symbol.Value);
 
             if (type != SecurityType.Forex && type != SecurityType.Cfd)
                 throw new NotSupportedException("SecurityType not available: " + type);
@@ -125,33 +125,15 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                     case Resolution.Tick:
                         foreach (var tick in ticks)
                         {
-                            yield return new Tick(tick.Time, symbol, Convert.ToDecimal(tick.BidPrice), Convert.ToDecimal(tick.AskPrice));
+                            yield return new Tick(tick.Time, symbol, tick.BidPrice, tick.AskPrice);
                         }
                         break;
 
                     case Resolution.Second:
-                        foreach (var bar in AggregateTicks(symbol, ticks, new TimeSpan(0, 0, 1)))
-                        {
-                            yield return bar;
-                        }
-                        break;
-
                     case Resolution.Minute:
-                        foreach (var bar in AggregateTicks(symbol, ticks, new TimeSpan(0, 1, 0)))
-                        {
-                            yield return bar;
-                        }
-                        break;
-
                     case Resolution.Hour:
-                        foreach (var bar in AggregateTicks(symbol, ticks, new TimeSpan(1, 0, 0)))
-                        {
-                            yield return bar;
-                        }
-                        break;
-
                     case Resolution.Daily:
-                        foreach (var bar in AggregateTicks(symbol, ticks, new TimeSpan(1, 0, 0, 0)))
+                        foreach (var bar in AggregateTicks(symbol, ticks, resolution.ToTimeSpan()))
                         {
                             yield return bar;
                         }
@@ -201,7 +183,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                 var timeOffset = hour * 3600000;
 
                 var url = string.Format(@"http://www.dukascopy.com/datafeed/{0}/{1:D4}/{2:D2}/{3:D2}/{4:D2}h_ticks.bi5",
-                    symbol, date.Year, date.Month - 1, date.Day, hour);
+                    symbol.Value, date.Year, date.Month - 1, date.Day, hour);
 
                 using (var client = new WebClient())
                 {
