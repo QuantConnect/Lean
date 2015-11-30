@@ -26,22 +26,22 @@ using QuantConnect.Util;
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Provides access to exchange hours in various markets
+    /// Provides access to exchange hours and raw data times zones in various markets
     /// </summary>
-    public class SecurityExchangeHoursProvider
+    public class MarketHoursDatabase
     {
-        private static SecurityExchangeHoursProvider DataFolderSecurityExchangeHoursProvider;
+        private static MarketHoursDatabase _dataFolderMarketHoursDatabase;
         private static readonly object DataFolderSecurityExchangeHoursProviderLock = new object();
 
         private readonly IReadOnlyDictionary<Key, Entry> _entries;
 
         /// <summary>
-        /// Gets an instant of <see cref="SecurityExchangeHoursProvider"/> that will always return <see cref="SecurityExchangeHours.AlwaysOpen"/>
+        /// Gets an instant of <see cref="MarketHoursDatabase"/> that will always return <see cref="SecurityExchangeHours.AlwaysOpen"/>
         /// for each call to <see cref="GetExchangeHours(string, Symbol, SecurityType,DateTimeZone)"/>
         /// </summary>
-        public static SecurityExchangeHoursProvider AlwaysOpen
+        public static MarketHoursDatabase AlwaysOpen
         {
-            get { return new AlwaysOpenSecurityExchangeHoursProvider(); }
+            get { return new AlwaysOpenMarketHoursDatabase(); }
         }
 
         /// <summary>
@@ -52,12 +52,12 @@ namespace QuantConnect.Securities
             get { return _entries.Values.Select(x => x.ExchangeHours).ToList(); }
         }
 
-        private SecurityExchangeHoursProvider(IReadOnlyDictionary<Key, Entry> exchangeHours)
+        private MarketHoursDatabase(IReadOnlyDictionary<Key, Entry> exchangeHours)
         {
             _entries = exchangeHours.ToDictionary();
         }
 
-        private SecurityExchangeHoursProvider()
+        private MarketHoursDatabase()
         {
             // used for the always open implementation
         }
@@ -90,31 +90,31 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the instance of the <see cref="SecurityExchangeHoursProvider"/> class produced by reading in the market hours
+        /// Gets the instance of the <see cref="MarketHoursDatabase"/> class produced by reading in the market hours
         /// data found in /Data/market-hours/
         /// </summary>
-        /// <returns>A <see cref="SecurityExchangeHoursProvider"/> class that represents the data in the market-hours folder</returns>
-        public static SecurityExchangeHoursProvider FromDataFolder()
+        /// <returns>A <see cref="MarketHoursDatabase"/> class that represents the data in the market-hours folder</returns>
+        public static MarketHoursDatabase FromDataFolder()
         {
             lock (DataFolderSecurityExchangeHoursProviderLock)
             {
-                if (DataFolderSecurityExchangeHoursProvider == null)
+                if (_dataFolderMarketHoursDatabase == null)
                 {
                     var directory = Path.Combine(Constants.DataFolder, "market-hours");
                     var holidays = ReadHolidaysFromDirectory(directory);
-                    DataFolderSecurityExchangeHoursProvider = FromCsvFile(Path.Combine(directory, "market-hours-database.csv"), holidays);
+                    _dataFolderMarketHoursDatabase = FromCsvFile(Path.Combine(directory, "market-hours-database.csv"), holidays);
                 }
             }
-            return DataFolderSecurityExchangeHoursProvider;
+            return _dataFolderMarketHoursDatabase;
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="SecurityExchangeHoursProvider"/> class by reading the specified csv file
+        /// Creates a new instance of the <see cref="MarketHoursDatabase"/> class by reading the specified csv file
         /// </summary>
         /// <param name="file">The csv file to be read</param>
         /// <param name="holidaysByMarket">The holidays for each market in the file, if no holiday is present then none is used</param>
-        /// <returns>A new instance of the <see cref="SecurityExchangeHoursProvider"/> class representing the data in the specified file</returns>
-        public static SecurityExchangeHoursProvider FromCsvFile(string file, IReadOnlyDictionary<string, IEnumerable<DateTime>> holidaysByMarket)
+        /// <returns>A new instance of the <see cref="MarketHoursDatabase"/> class representing the data in the specified file</returns>
+        public static MarketHoursDatabase FromCsvFile(string file, IReadOnlyDictionary<string, IEnumerable<DateTime>> holidaysByMarket)
         {
             var exchangeHours = new Dictionary<Key, Entry>();
 
@@ -136,7 +136,7 @@ namespace QuantConnect.Securities
                 exchangeHours[key] = hours;
             }
 
-            return new SecurityExchangeHoursProvider(exchangeHours);
+            return new MarketHoursDatabase(exchangeHours);
         }
 
         /// <summary>
@@ -381,9 +381,9 @@ namespace QuantConnect.Securities
             }
         }
 
-        class AlwaysOpenSecurityExchangeHoursProvider : SecurityExchangeHoursProvider
+        class AlwaysOpenMarketHoursDatabase : MarketHoursDatabase
         {
-            public AlwaysOpenSecurityExchangeHoursProvider()
+            public AlwaysOpenMarketHoursDatabase()
             {
             }
 

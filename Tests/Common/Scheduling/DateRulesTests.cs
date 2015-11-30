@@ -146,7 +146,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var timeKeeper = new TimeKeeper(DateTime.Today, new List<DateTimeZone>());
             var manager = new SecurityManager(timeKeeper);
-            var securityExchangeHours = SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
+            var securityExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, true, false, false);
             manager.Add(Symbols.SPY, new Security(securityExchangeHours, config, 1));
             var rules = new DateRules(manager);

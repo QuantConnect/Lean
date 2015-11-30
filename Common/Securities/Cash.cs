@@ -125,8 +125,8 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="securities">The security manager</param>
         /// <param name="subscriptions">The subscription manager used for searching and adding subscriptions</param>
-        /// <param name="exchangeHoursProvider">A security exchange hours provider instance used to resolve exchange hours for new subscriptions</param>
-        public void EnsureCurrencyDataFeed(SecurityManager securities, SubscriptionManager subscriptions, SecurityExchangeHoursProvider exchangeHoursProvider)
+        /// <param name="marketHoursDatabase">A security exchange hours provider instance used to resolve exchange hours for new subscriptions</param>
+        public void EnsureCurrencyDataFeed(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase)
         {
             if (Symbol == CashBook.AccountCurrency)
             {
@@ -173,7 +173,7 @@ namespace QuantConnect.Securities
                 if (symbol.Value == normal || symbol.Value == invert)
                 {
                     _invertRealTimePrice = symbol.Value == invert;
-                    var exchangeHours = exchangeHoursProvider.GetExchangeHours(market, symbol, SecurityType.Forex);
+                    var exchangeHours = marketHoursDatabase.GetExchangeHours(market, symbol, SecurityType.Forex);
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
                     var config = subscriptions.Add(objectType, symbol, minimumResolution, exchangeHours.TimeZone, false, true, false, true);
                     var security = new Forex.Forex(this, config, 1m);

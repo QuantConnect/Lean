@@ -32,7 +32,7 @@ namespace QuantConnect.Securities.Forex
         /// <param name="config">The subscription configuration for this security</param>
         /// <param name="leverage">The leverage used for this security</param>
         public Forex(Cash quoteCurrency, SubscriptionDataConfig config, decimal leverage)
-            : this(SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(config), quoteCurrency, config, leverage)
+            : this(MarketHoursDatabase.FromDataFolder().GetExchangeHours(config), quoteCurrency, config, leverage)
         {
             // this constructor is provided for backward compatibility
 

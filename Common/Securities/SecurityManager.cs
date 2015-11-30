@@ -386,7 +386,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public static Security CreateSecurity(SecurityPortfolioManager securityPortfolioManager,
             SubscriptionManager subscriptionManager,
-            SecurityExchangeHoursProvider securityExchangeHoursProvider,
+            MarketHoursDatabase marketHoursDatabase,
             Symbol symbol,
             Resolution resolution,
             bool fillDataForward,
@@ -413,7 +413,7 @@ namespace QuantConnect.Securities
             var securityType = sid.SecurityType;
 
             //Add the symbol to Data Manager -- generate unified data streams for algorithm events
-            var exchangeHours = securityExchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
+            var exchangeHours = marketHoursDatabase.GetExchangeHours(market, symbol, securityType);
             var tradeBarType = typeof (TradeBar);
             var type = resolution == Resolution.Tick ? typeof (Tick) : tradeBarType;
             var config = subscriptionManager.Add(type, symbol, resolution, exchangeHours.TimeZone, isCustomData, fillDataForward, extendedMarketHours, isInternalFeed);

@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm
         private string _previousErrorMessage = "";
         private bool _sentNoDataError = false;
 
-        private readonly SecurityExchangeHoursProvider _exchangeHoursProvider;
+        private readonly MarketHoursDatabase _marketHoursDatabase;
 
         // used for calling through to void OnData(Slice) if no override specified
         private bool _checkedForOnDataSlice;
@@ -114,7 +114,7 @@ namespace QuantConnect.Algorithm
             _locked = false;
 
             // get exchange hours loaded from the market-hours-database.csv in /Data/market-hours
-            _exchangeHoursProvider = SecurityExchangeHoursProvider.FromDataFolder();
+            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
             // universe selection
             Universes = new List<Universe>();
@@ -449,7 +449,7 @@ namespace QuantConnect.Algorithm
                 {
                     // add the security as an internal feed so the algorithm doesn't receive the data
                     var resolution = _liveMode ? Resolution.Second : Resolution.Daily;
-                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider, _benchmarkSymbol, resolution, true, 1m, false, true, false);
+                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _benchmarkSymbol, resolution, true, 1m, false, true, false);
                     Securities.Add(security.Symbol, security);
                 }
 
@@ -1100,7 +1100,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         public void AddUniverse<T>(SecurityType securityType, Symbol symbol, Resolution resolution, string market, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
-            var exchangeHours = _exchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
+            var exchangeHours = _marketHoursDatabase.GetExchangeHours(market, symbol, securityType);
             var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, exchangeHours.TimeZone, false, false, true, true);
             AddUniverse(new FuncUniverse(config, UniverseSettings, d => selector(d.OfType<T>())));
         }
@@ -1117,7 +1117,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         public void AddUniverse<T>(SecurityType securityType, Symbol symbol, Resolution resolution, string market, SubscriptionSettings subscriptionSettings, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
-            var exchangeHours = _exchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
+            var exchangeHours = _marketHoursDatabase.GetExchangeHours(market, symbol, securityType);
             var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, exchangeHours.TimeZone, false, false, true, true);
             AddUniverse(new FuncUniverse(config, subscriptionSettings, d => selector(d.OfType<T>())));
         }
@@ -1214,7 +1214,7 @@ namespace QuantConnect.Algorithm
                 
                 var symbolObject = GenerateSimpleSymbol(securityType, symbol, market);
 
-                var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _exchangeHoursProvider,
+                var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase,
                     symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false);
 
                 //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
@@ -1282,7 +1282,7 @@ namespace QuantConnect.Algorithm
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
             var config = SubscriptionManager.Add(typeof(T), symbolObject, resolution, timeZone, true, fillDataForward, true, false);
 
-            var exchangeHours = _exchangeHoursProvider.GetExchangeHours(config);
+            var exchangeHours = _marketHoursDatabase.GetExchangeHours(config);
 
             //Add this new generic data as a tradeable security: 
             var security = new Security(exchangeHours, config, leverage);

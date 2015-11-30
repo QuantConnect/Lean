@@ -22,7 +22,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Tests.Common.Securities
 {
     [TestFixture]
-    public class SecurityExchangeHoursProviderTests
+    public class MarketHoursDatabaseTests
     {
         [Test]
         public void InitializesFromCsv()
@@ -72,13 +72,13 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void InitializesFromDataFolder()
         {
-            var provider = SecurityExchangeHoursProvider.FromDataFolder();
+            var provider = MarketHoursDatabase.FromDataFolder();
             Assert.AreNotEqual(0, provider.ExchangeHoursListing.Count);
         }
 
-        private static SecurityExchangeHoursProvider GetSecurityExchangeHoursProvider(string file)
+        private static MarketHoursDatabase GetSecurityExchangeHoursProvider(string file)
         {
-            return SecurityExchangeHoursProvider.FromCsvFile(file, new Dictionary<string, IEnumerable<DateTime>>
+            return MarketHoursDatabase.FromCsvFile(file, new Dictionary<string, IEnumerable<DateTime>>
             {
                 {Market.USA, USHoliday.Dates}
             });
