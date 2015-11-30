@@ -201,32 +201,24 @@ namespace QuantConnect.Securities
             // timezones can be specified using Tzdb names (America/New_York) or they can
             // be specified using offsets, UTC-5
 
-            DateTimeZone timeZone;
-            if (!csv[0].StartsWith("UTC"))
-            {
-                timeZone = DateTimeZoneProviders.Tzdb[csv[0]];
-            }
-            else
-            {
-                // define the time zone as a constant offset time zone in the form: 'UTC-3.5' or 'UTC+10'
-                var millisecondsOffset = (int)TimeSpan.FromHours(double.Parse(csv[0].Replace("UTC", string.Empty))).TotalMilliseconds;
-                timeZone = DateTimeZone.ForOffset(Offset.FromMilliseconds(millisecondsOffset));
-            }
+            var dataTimeZone = ParseTimeZone(csv[0]);
+            var exchangeTimeZone = ParseTimeZone(csv[1]);
 
-            //var market = csv[1];
-            //var symbol = csv[2];
-            //var type = csv[3];
-            var symbol = string.IsNullOrEmpty(csv[2]) ? null : csv[2];
-            key = new Key(csv[1], symbol, (SecurityType)Enum.Parse(typeof(SecurityType), csv[3], true));
+            //var market = csv[2];
+            //var symbol = csv[3];
+            //var type = csv[4];
+            var symbol = string.IsNullOrEmpty(csv[3]) ? null : csv[3];
+            key = new Key(csv[2], symbol, (SecurityType)Enum.Parse(typeof(SecurityType), csv[4], true));
 
             int csvLength = csv.Length;
-            for (int i = 1; i < 8; i++)
+            for (int i = 1; i < 8; i++) // 7 days, so < 8
             {
-                if (4*i + 3 > csvLength - 1)
+                // the 4 here is because 4 times per day, ex_open,open,close,ex_close
+                if (4*i + 4 > csvLength - 1)
                 {
                     break;
                 }
-                var hours = ReadCsvHours(csv, 4*i, (DayOfWeek) (i - 1));
+                var hours = ReadCsvHours(csv, 4*i + 1, (DayOfWeek) (i - 1));
                 marketHours.Add(hours);
             }
 
@@ -236,8 +228,24 @@ namespace QuantConnect.Securities
                 holidays = Enumerable.Empty<DateTime>();
             }
 
-            var exchangeHours = new SecurityExchangeHours(timeZone, holidays, marketHours.ToDictionary(x => x.DayOfWeek));
-            return new Entry(timeZone, exchangeHours);
+            var exchangeHours = new SecurityExchangeHours(exchangeTimeZone, holidays, marketHours.ToDictionary(x => x.DayOfWeek));
+            return new Entry(dataTimeZone, exchangeHours);
+        }
+
+        private static DateTimeZone ParseTimeZone(string exchangeTimeZone)
+        {
+            DateTimeZone timeZone;
+            if (!exchangeTimeZone.StartsWith("UTC"))
+            {
+                timeZone = DateTimeZoneProviders.Tzdb[exchangeTimeZone];
+            }
+            else
+            {
+                // define the time zone as a constant offset time zone in the form: 'UTC-3.5' or 'UTC+10'
+                var millisecondsOffset = (int) TimeSpan.FromHours(double.Parse(exchangeTimeZone.Replace("UTC", string.Empty))).TotalMilliseconds;
+                timeZone = DateTimeZone.ForOffset(Offset.FromMilliseconds(millisecondsOffset));
+            }
+            return timeZone;
         }
 
         private static LocalMarketHours ReadCsvHours(string[] csv, int startIndex, DayOfWeek dayOfWeek)
