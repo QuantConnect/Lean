@@ -56,10 +56,10 @@ namespace QuantConnect.ToolBox.GoogleDownloader
 
             var numberOfDays = (int)(endUtc - startUtc).TotalDays;
             var resolutionSeconds = (int)resolution.ToTimeSpan().TotalSeconds;
-            var startUnixTime = ToUnixTime(endUtc);
+            var endUnixTime = ToUnixTime(endUtc);
 
             // Create the Google formatted URL.
-            var url = string.Format(UrlPrototype, symbol.Value, resolutionSeconds, numberOfDays, startUnixTime);
+            var url = string.Format(UrlPrototype, symbol.Value, resolutionSeconds, numberOfDays, endUnixTime);
 
             // Download the data from Google.
             string[] lines;
