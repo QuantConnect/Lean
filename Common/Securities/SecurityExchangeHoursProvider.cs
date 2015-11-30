@@ -33,7 +33,7 @@ namespace QuantConnect.Securities
         private static SecurityExchangeHoursProvider DataFolderSecurityExchangeHoursProvider;
         private static readonly object DataFolderSecurityExchangeHoursProviderLock = new object();
 
-        private readonly IReadOnlyDictionary<Key, SecurityExchangeHours> _exchangeHours;
+        private readonly IReadOnlyDictionary<Key, Entry> _exchangeHours;
 
         /// <summary>
         /// Gets an instant of <see cref="SecurityExchangeHoursProvider"/> that will always return <see cref="SecurityExchangeHours.AlwaysOpen"/>
@@ -49,10 +49,10 @@ namespace QuantConnect.Securities
         /// </summary>
         public List<SecurityExchangeHours> ExchangeHoursListing
         {
-            get { return _exchangeHours.Values.ToList(); }
+            get { return _exchangeHours.Values.Select(x => x.ExchangeHours).ToList(); }
         }
 
-        private SecurityExchangeHoursProvider(IReadOnlyDictionary<Key, SecurityExchangeHours> exchangeHours)
+        private SecurityExchangeHoursProvider(IReadOnlyDictionary<Key, Entry> exchangeHours)
         {
             _exchangeHours = exchangeHours.ToDictionary();
         }
@@ -85,14 +85,14 @@ namespace QuantConnect.Securities
         /// <returns>The exchange hours for the specified security</returns>
         public virtual SecurityExchangeHours GetExchangeHours(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
         {
-            SecurityExchangeHours hours;
+            Entry entry;
             var stringSymbol = symbol == null ? string.Empty : symbol.ToString();
             var key = new Key(market, stringSymbol, securityType);
-            if (!_exchangeHours.TryGetValue(key, out hours))
+            if (!_exchangeHours.TryGetValue(key, out entry))
             {
                 // now check with a null symbol
                 key = new Key(market, null, securityType);
-                if (!_exchangeHours.TryGetValue(key, out hours))
+                if (!_exchangeHours.TryGetValue(key, out entry))
                 {
                     if (securityType == SecurityType.Base)
                     {
@@ -113,13 +113,13 @@ namespace QuantConnect.Securities
                 }
                 // perform time zone override if requested, we'll use the same exact local hours
                 // and holidays, but we'll express them in a different time zone
-                if (overrideTimeZone != null && !hours.TimeZone.Equals(overrideTimeZone))
+                if (overrideTimeZone != null && !entry.ExchangeHours.TimeZone.Equals(overrideTimeZone))
                 {
-                    hours = new SecurityExchangeHours(overrideTimeZone, hours.Holidays, hours.MarketHours);
+                    return new SecurityExchangeHours(overrideTimeZone, entry.ExchangeHours.Holidays, entry.ExchangeHours.MarketHours);
                 }
             }
 
-            return hours;
+            return entry.ExchangeHours;
         }
 
         /// <summary>
@@ -149,7 +149,7 @@ namespace QuantConnect.Securities
         /// <returns>A new instance of the <see cref="SecurityExchangeHoursProvider"/> class representing the data in the specified file</returns>
         public static SecurityExchangeHoursProvider FromCsvFile(string file, IReadOnlyDictionary<string, IEnumerable<DateTime>> holidaysByMarket)
         {
-            var exchangeHours = new Dictionary<Key, SecurityExchangeHours>();
+            var exchangeHours = new Dictionary<Key, Entry>();
 
             if (!File.Exists(file))
             {
@@ -179,7 +179,7 @@ namespace QuantConnect.Securities
         /// <param name="holidaysByMarket">The holidays this exchange isn't open for trading by market</param>
         /// <param name="key">The key used to uniquely identify these market hours</param>
         /// <returns>A new <see cref="SecurityExchangeHours"/> for the specified csv line and holidays</returns>
-        private static SecurityExchangeHours FromCsvLine(string line, IReadOnlyDictionary<string, IEnumerable<DateTime>> holidaysByMarket, out Key key)
+        private static Entry FromCsvLine(string line, IReadOnlyDictionary<string, IEnumerable<DateTime>> holidaysByMarket, out Key key)
         {
             var csv = line.Split(',');
             var marketHours = new List<LocalMarketHours>(7);
@@ -222,7 +222,8 @@ namespace QuantConnect.Securities
                 holidays = Enumerable.Empty<DateTime>();
             }
 
-            return new SecurityExchangeHours(timeZone, holidays, marketHours.ToDictionary(x => x.DayOfWeek));
+            var exchangeHours = new SecurityExchangeHours(timeZone, holidays, marketHours.ToDictionary(x => x.DayOfWeek));
+            return new Entry(timeZone, exchangeHours);
         }
 
         private static LocalMarketHours ReadCsvHours(string[] csv, int startIndex, DayOfWeek dayOfWeek)
@@ -286,6 +287,17 @@ namespace QuantConnect.Securities
         private static TimeSpan ParseHoursToTimeSpan(string ex_open)
         {
             return TimeSpan.FromHours(double.Parse(ex_open, CultureInfo.InvariantCulture));
+        }
+
+        class Entry
+        {
+            public readonly DateTimeZone DataTimeZone;
+            public readonly SecurityExchangeHours ExchangeHours;
+            public Entry(DateTimeZone dataTimeZone, SecurityExchangeHours exchangeHours)
+            {
+                DataTimeZone = dataTimeZone;
+                ExchangeHours = exchangeHours;
+            }
         }
 
         class Key : IEquatable<Key>
