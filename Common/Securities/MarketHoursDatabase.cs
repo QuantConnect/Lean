@@ -149,7 +149,7 @@ namespace QuantConnect.Securities
         /// This value will also be used as the time zone for SecurityType.Base with no market hours database entry.
         /// If null is specified, no override will be performed. If null is specified, and it's SecurityType.Base, then Utc will be used.</param>
         /// <returns>The entry matching the specified market/symbol/security-type</returns>
-        protected virtual Entry GetEntry(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
+        public virtual Entry GetEntry(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
         {
             Entry entry;
             var key = new Key(market, symbol, securityType);
@@ -309,10 +309,24 @@ namespace QuantConnect.Securities
             return TimeSpan.FromHours(double.Parse(ex_open, CultureInfo.InvariantCulture));
         }
 
-        protected class Entry
+        /// <summary>
+        /// Represents a single entry in the <see cref="MarketHoursDatabase"/>
+        /// </summary>
+        public class Entry
         {
+            /// <summary>
+            /// Gets the raw data time zone for this entry
+            /// </summary>
             public readonly DateTimeZone DataTimeZone;
+            /// <summary>
+            /// Gets the exchange hours for this entry
+            /// </summary>
             public readonly SecurityExchangeHours ExchangeHours;
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Entry"/> class
+            /// </summary>
+            /// <param name="dataTimeZone">The raw data time zone</param>
+            /// <param name="exchangeHours">The security exchange hours for this entry</param>
             public Entry(DateTimeZone dataTimeZone, SecurityExchangeHours exchangeHours)
             {
                 DataTimeZone = dataTimeZone;
@@ -381,7 +395,7 @@ namespace QuantConnect.Securities
 
         class AlwaysOpenMarketHoursDatabase : MarketHoursDatabase
         {
-            protected override Entry GetEntry(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
+            public override Entry GetEntry(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
             {
                 var tz = overrideTimeZone ?? TimeZones.Utc;
                 return new Entry(tz, SecurityExchangeHours.AlwaysOpen(tz));
