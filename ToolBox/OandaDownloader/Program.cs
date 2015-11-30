@@ -20,7 +20,6 @@ using System.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
-using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.OandaDownloader
 {
@@ -33,7 +32,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
         {
             if (args.Length != 4)
             {
-                Console.WriteLine("Usage: OandaDownloader SYMBOL RESOLUTION FROMDATE TODATE");
+                Console.WriteLine("Usage: OandaDownloader SYMBOLS RESOLUTION FROMDATE TODATE");
                 Console.WriteLine("SYMBOLS = eg EURUSD,USDJPY");
                 Console.WriteLine("RESOLUTION = Second/Minute/Hour/Daily/All");
                 Console.WriteLine("FROMDATE = yyyymmdd");
@@ -55,8 +54,8 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 var accessToken = Config.Get("access-token", "73eba38ad5b44778f9a0c0fec1a66ed1-44f47f052c897b3e1e7f24196bbc071f");
                 var accountId = Convert.ToInt32(Config.Get("account-id", "621396"));
 
-                // Download the data
-                const string market = "oanda";
+                // Create an instance of the downloader
+                const string market = Market.Oanda;
                 var downloader = new OandaDataDownloader(accessToken, accountId);
 
                 foreach (var symbol in symbols)
@@ -67,6 +66,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
 
                 foreach (var symbol in symbols)
                 {
+                    // Download the data
                     var securityType = downloader.GetSecurityType(symbol);
                     var symbolObject = ConvertSymbol(symbol, securityType);
                     var data = downloader.Get(symbolObject, securityType, resolution, startDate, endDate);
@@ -131,6 +131,10 @@ namespace QuantConnect.ToolBox.OandaDownloader
             if (securityType == SecurityType.Forex)
             {
                 return new Symbol(SecurityIdentifier.GenerateForex(instrument, Market.Oanda), instrument);
+            }
+            if (securityType == SecurityType.Cfd)
+            {
+                return new Symbol(SecurityIdentifier.GenerateCfd(instrument, Market.Oanda), instrument);
             }
 
             throw new NotImplementedException("The specfied security type has not been implemented yet: " + securityType);

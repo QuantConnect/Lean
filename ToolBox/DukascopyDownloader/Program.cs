@@ -19,7 +19,6 @@ using System.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
-using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.DukascopyDownloader
 {
@@ -32,7 +31,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         {
             if (args.Length != 4)
             {
-                Console.WriteLine("Usage: DukascopyDownloader SYMBOL RESOLUTION FROMDATE TODATE");
+                Console.WriteLine("Usage: DukascopyDownloader SYMBOLS RESOLUTION FROMDATE TODATE");
                 Console.WriteLine("SYMBOLS = eg EURUSD,USDJPY");
                 Console.WriteLine("RESOLUTION = Tick/Second/Minute/Hour/Daily/All");
                 Console.WriteLine("FROMDATE = yyyymmdd");
@@ -53,7 +52,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
 
                 // Download the data
-                const string market = "dukascopy";
+                const string market = Market.Dukascopy;
                 var downloader = new DukascopyDataDownloader();
 
                 foreach (var symbol in symbols)

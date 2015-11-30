@@ -12,27 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-
 using System;
 using System.Globalization;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 
-namespace QuantConnect.ToolBox.GoogleDownloader
+namespace QuantConnect.ToolBox.YahooDownloader
 {
     class Program
     {
         /// <summary>
-        /// QuantConnect Google Downloader For LEAN Algorithmic Trading Engine.
+        /// Yahoo Downloader Toolbox Project For LEAN Algorithmic Trading Engine.
         /// Original by @chrisdk2015, tidied by @jaredbroad
         /// </summary>
-        public static void Main(string[] args)
+        static void Main(string[] args)
         {
             if (args.Length != 4)
             {
-                Console.WriteLine("Usage: GoogleDownloader SYMBOLS RESOLUTION FROMDATE TODATE");
+                Console.WriteLine("Usage: YahooDownloader SYMBOLS RESOLUTION FROMDATE TODATE");
                 Console.WriteLine("SYMBOLS = eg SPY,AAPL");
-                Console.WriteLine("RESOLUTION = Minute/Hour");
+                Console.WriteLine("RESOLUTION = Daily");
                 Console.WriteLine("FROMDATE = yyyymmdd");
                 Console.WriteLine("TODATE = yyyymmdd");
                 Environment.Exit(1);
@@ -51,7 +50,7 @@ namespace QuantConnect.ToolBox.GoogleDownloader
 
                 // Create an instance of the downloader
                 const string market = Market.USA;
-                var downloader = new GoogleDataDownloader();
+                var downloader = new YahooDataDownloader();
 
                 foreach (var symbol in symbols)
                 {
@@ -67,9 +66,8 @@ namespace QuantConnect.ToolBox.GoogleDownloader
             }
             catch (Exception err)
             {
-                Log.Error("GoogleDownloader(): Error: " + err.Message);
+                Log.Error("YahooDownloader(): Error: " + err.Message);
             }
         }
-
     }
 }

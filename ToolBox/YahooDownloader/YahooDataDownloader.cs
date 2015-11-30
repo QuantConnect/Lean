@@ -22,7 +22,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
 {
 
     /// <summary>
-    /// Yahoo Data Downloader class for 
+    /// Yahoo Data Downloader class 
     /// </summary>
     public class YahooDataDownloader : IDataDownloader
     {
@@ -43,11 +43,14 @@ namespace QuantConnect.ToolBox.YahooDownloader
             if (resolution != Resolution.Daily)
                 throw new ArgumentException("The YahooDataDownloader can only download daily data.");
 
-            // We subtract one day to make sure we have data from yahoo
-            var finishMonth = endUtc.Month;
-            var finishDay = endUtc.Subtract(TimeSpan.FromDays(1)).Day;
-            var finishYear = endUtc.Year;
-            var url = string.Format(_urlPrototype, symbol, 01, 01, 1990, finishMonth, finishDay, finishYear, "d");
+            if (type != SecurityType.Equity)
+                throw new NotSupportedException("SecurityType not available: " + type);
+
+            if (endUtc < startUtc)
+                throw new ArgumentException("The end date must be greater or equal than the start date.");
+
+            // Note: Yahoo syntax requires the month zero-based (0-11)
+            var url = string.Format(_urlPrototype, symbol.Value, startUtc.Month - 1, startUtc.Day, startUtc.Year, endUtc.Month - 1, endUtc.Day, endUtc.Year, "d");
 
             using (var cl = new WebClient())
             {
@@ -59,14 +62,14 @@ namespace QuantConnect.ToolBox.YahooDownloader
                     var str = lines[i].Split(',');
                     if (str.Length < 6) continue;
                     var ymd = str[0].Split('-');
-                    var year = Convert.ToInt32(ymd[0]);
-                    var month = Convert.ToInt32(ymd[1]);
-                    var day = Convert.ToInt32(ymd[2]);
-                    var open = decimal.Parse(str[1]);
-                    var high = decimal.Parse(str[2]);
-                    var low = decimal.Parse(str[3]);
-                    var close = decimal.Parse(str[4]);
-                    var volume = int.Parse(str[5]);
+                    var year = ymd[0].ToInt32();
+                    var month = ymd[1].ToInt32();
+                    var day = ymd[2].ToInt32();
+                    var open = str[1].ToDecimal();
+                    var high = str[2].ToDecimal();
+                    var low = str[3].ToDecimal();
+                    var close = str[4].ToDecimal();
+                    var volume = str[5].ToInt64();
                     yield return new TradeBar(new DateTime(year, month, day), symbol, open, high, low, close, volume, TimeSpan.FromDays(1));
                 }
             }
