@@ -170,7 +170,6 @@
     <Compile Include="DataFeeds\Queues\DataQueue.cs" />
     <Compile Include="DataFeeds\Queues\FakeDataQueue.cs" />
     <Compile Include="DataFeeds\ReaderErrorEventArgs.cs" />
-    <Compile Include="DataFeeds\StreamStore.cs" />
     <Compile Include="DataFeeds\SubscriptionDataReader.cs" />
     <Compile Include="DataFeeds\TimeSlice.cs" />
     <Compile Include="DataFeeds\Transport\IStreamReader.cs" />
