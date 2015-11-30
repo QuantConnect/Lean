@@ -251,3 +251,4 @@ Charts/
 # NCrunch files
 *.ncrunchsolution
 *.ncrunchproject
+/.vs/config
