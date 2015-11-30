@@ -33,7 +33,7 @@ namespace QuantConnect.Securities
         private static SecurityExchangeHoursProvider DataFolderSecurityExchangeHoursProvider;
         private static readonly object DataFolderSecurityExchangeHoursProviderLock = new object();
 
-        private readonly IReadOnlyDictionary<Key, Entry> _exchangeHours;
+        private readonly IReadOnlyDictionary<Key, Entry> _entries;
 
         /// <summary>
         /// Gets an instant of <see cref="SecurityExchangeHoursProvider"/> that will always return <see cref="SecurityExchangeHours.AlwaysOpen"/>
@@ -49,12 +49,12 @@ namespace QuantConnect.Securities
         /// </summary>
         public List<SecurityExchangeHours> ExchangeHoursListing
         {
-            get { return _exchangeHours.Values.Select(x => x.ExchangeHours).ToList(); }
+            get { return _entries.Values.Select(x => x.ExchangeHours).ToList(); }
         }
 
         private SecurityExchangeHoursProvider(IReadOnlyDictionary<Key, Entry> exchangeHours)
         {
-            _exchangeHours = exchangeHours.ToDictionary();
+            _entries = exchangeHours.ToDictionary();
         }
 
         private SecurityExchangeHoursProvider()
@@ -85,41 +85,8 @@ namespace QuantConnect.Securities
         /// <returns>The exchange hours for the specified security</returns>
         public virtual SecurityExchangeHours GetExchangeHours(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
         {
-            Entry entry;
             var stringSymbol = symbol == null ? string.Empty : symbol.Value;
-            var key = new Key(market, stringSymbol, securityType);
-            if (!_exchangeHours.TryGetValue(key, out entry))
-            {
-                // now check with a null symbol
-                key = new Key(market, null, securityType);
-                if (!_exchangeHours.TryGetValue(key, out entry))
-                {
-                    if (securityType == SecurityType.Base)
-                    {
-                        if (overrideTimeZone == null)
-                        {
-                            overrideTimeZone = TimeZones.Utc;
-                            Log.Trace("SecurityExchangeHoursProvider.GetExchangeHours(): Custom data no time zone specified, default to UTC. " + new Key(market, stringSymbol, securityType));
-                        }
-                        // base securities are always open by default
-                        return SecurityExchangeHours.AlwaysOpen(overrideTimeZone);
-                    }
-
-                    Log.Error("SecurityExchangeHoursProvider.GetExchangeHours(): Unable to locate exchange hours for " + key + "." +
-                        "Available keys: " + string.Join(", ", _exchangeHours.Keys));
-
-                    // there was nothing that really matched exactly... what should we do here?
-                    throw new ArgumentException("Unable to locate exchange hours for " + key);
-                }
-                // perform time zone override if requested, we'll use the same exact local hours
-                // and holidays, but we'll express them in a different time zone
-                if (overrideTimeZone != null && !entry.ExchangeHours.TimeZone.Equals(overrideTimeZone))
-                {
-                    return new SecurityExchangeHours(overrideTimeZone, entry.ExchangeHours.Holidays, entry.ExchangeHours.MarketHours);
-                }
-            }
-
-            return entry.ExchangeHours;
+            return GetEntry(market, stringSymbol, securityType, overrideTimeZone).ExchangeHours;
         }
 
         /// <summary>
@@ -170,6 +137,53 @@ namespace QuantConnect.Securities
             }
 
             return new SecurityExchangeHoursProvider(exchangeHours);
+        }
+
+        /// <summary>
+        /// Gets the entry for the specified market/symbol/security-type
+        /// </summary>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="symbol">The particular symbol being traded</param>
+        /// <param name="securityType">The security type of the symbol</param>
+        /// <param name="overrideTimeZone">Specify this time zone to override the resolved time zone from the market hours database.
+        /// This value will also be used as the time zone for SecurityType.Base with no market hours database entry.
+        /// If null is specified, no override will be performed. If null is specified, and it's SecurityType.Base, then Utc will be used.</param>
+        /// <returns>The entry matching the specified market/symbol/security-type</returns>
+        private Entry GetEntry(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
+        {
+            Entry entry;
+            var key = new Key(market, symbol, securityType);
+            if (!_entries.TryGetValue(key, out entry))
+            {
+                // now check with null symbol key
+                if (!_entries.TryGetValue(new Key(market, null, securityType), out entry))
+                {
+                    if (securityType == SecurityType.Base)
+                    {
+                        if (overrideTimeZone == null)
+                        {
+                            overrideTimeZone = TimeZones.Utc;
+                            Log.Trace("SecurityExchangeHoursProvider.GetExchangeHours(): Custom data no time zone specified, default to UTC. " + key);
+                        }
+                        // base securities are always open by default and have equal data time zone and exchange time zones
+                        return new Entry(overrideTimeZone, SecurityExchangeHours.AlwaysOpen(overrideTimeZone));
+                    }
+
+                    Log.Error(string.Format("SecurityExchangeHoursProvider.GetExchangeHours(): Unable to locate exchange hours for {0}." + "Available keys: {1}", key, string.Join(", ", _entries.Keys)));
+
+                    // there was nothing that really matched exactly... what should we do here?
+                    throw new ArgumentException("Unable to locate exchange hours for " + key);
+                }
+
+                // perform time zone override if requested, we'll use the same exact local hours
+                // and holidays, but we'll express them in a different time zone
+                if (overrideTimeZone != null && !entry.ExchangeHours.TimeZone.Equals(overrideTimeZone))
+                {
+                    return new Entry(overrideTimeZone, new SecurityExchangeHours(overrideTimeZone, entry.ExchangeHours.Holidays, entry.ExchangeHours.MarketHours));
+                }
+            }
+
+            return entry;
         }
 
         /// <summary>
