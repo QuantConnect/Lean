@@ -139,7 +139,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 return data.EndTime > start;
             });
 
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, start, end);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.DataTimeZone, start, end);
             return new Subscription(null, security, reader, timeZoneOffsetProvider, start, end, false);
         }
 

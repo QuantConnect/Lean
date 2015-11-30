@@ -115,9 +115,9 @@ namespace QuantConnect.Data
         public readonly string Market;
 
         /// <summary>
-        /// Gets the time zone for this subscription
+        /// Gets the data time zone for this subscription
         /// </summary>
-        public readonly DateTimeZone TimeZone;
+        public readonly DateTimeZone DataTimeZone;
 
         /// <summary>
         /// Consolidators that are registred with this subscription
@@ -130,7 +130,7 @@ namespace QuantConnect.Data
         /// <param name="objectType">Type of the data objects.</param>
         /// <param name="symbol">Symbol of the asset we're requesting</param>
         /// <param name="resolution">Resolution of the asset we're requesting</param>
-        /// <param name="timeZone">The time zone the raw data is time stamped in</param>
+        /// <param name="dataTimeZone">The time zone the raw data is time stamped in</param>
         /// <param name="fillForward">Fill in gaps with historical data</param>
         /// <param name="extendedHours">Equities only - send in data from 4am - 8pm</param>
         /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
@@ -139,7 +139,7 @@ namespace QuantConnect.Data
         public SubscriptionDataConfig(Type objectType, 
             Symbol symbol, 
             Resolution resolution, 
-            DateTimeZone timeZone,
+            DateTimeZone dataTimeZone,
             bool fillForward, 
             bool extendedHours,
             bool isInternalFeed,
@@ -156,7 +156,7 @@ namespace QuantConnect.Data
             IsInternalFeed = isInternalFeed;
             IsCustomData = isCustom;
             Market = symbol.ID.Market;
-            TimeZone = timeZone;
+            DataTimeZone = dataTimeZone;
             Consolidators = new HashSet<IDataConsolidator>();
 
             switch (resolution)
@@ -213,7 +213,7 @@ namespace QuantConnect.Data
             objectType ?? config.Type,
             symbol ?? config.Symbol,
             resolution ?? config.Resolution,
-            timeZone ?? config.TimeZone,
+            timeZone ?? config.DataTimeZone,
             fillForward ?? config.FillDataForward,
             extendedHours ?? config.ExtendedMarketHours,
             isInternalFeed ?? config.IsInternalFeed,

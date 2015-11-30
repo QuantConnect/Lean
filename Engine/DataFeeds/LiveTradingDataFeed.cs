@@ -366,9 +366,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             try
             {
                 var config = security.SubscriptionDataConfig;
-                var localStartTime = utcStartTime.ConvertFromUtc(config.TimeZone);
-                var localEndTime = utcEndTime.ConvertFromUtc(config.TimeZone);
-                var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, utcStartTime, utcEndTime);
+                var localStartTime = utcStartTime.ConvertFromUtc(config.DataTimeZone);
+                var localEndTime = utcEndTime.ConvertFromUtc(config.DataTimeZone);
+                var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.DataTimeZone, utcStartTime, utcEndTime);
 
                 IEnumerator<BaseData> enumerator;
                 if (config.IsCustomData)
@@ -377,12 +377,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var refresher = new RefreshEnumerator<BaseData>(() =>
                     {
                         var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
-                        var currentLocalDate = DateTime.UtcNow.ConvertFromUtc(config.TimeZone).Date;
+                        var currentLocalDate = DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone).Date;
                         var factory = new BaseDataSubscriptionFactory(config, currentLocalDate, true);
                         var source = sourceProvider.GetSource(config, currentLocalDate, true);
                         var factoryReadEnumerator = factory.Read(source).GetEnumerator();
                         var maximumDataAge = TimeSpan.FromTicks(Math.Max(config.Increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
-                        var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, config.TimeZone, maximumDataAge);
+                        var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, config.DataTimeZone, maximumDataAge);
                         return new FrontierAwareEnumerator(fastForward, _timeProvider, timeZoneOffsetProvider);
                     });
 
@@ -403,7 +403,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // this enumerator allows the exchange to pump ticks into the 'back' of the enumerator,
                     // and the time sync loop can pull aggregated trade bars off the front
-                    var aggregator = new TradeBarBuilderEnumerator(config.Increment, config.TimeZone, _timeProvider);
+                    var aggregator = new TradeBarBuilderEnumerator(config.Increment, config.DataTimeZone, _timeProvider);
                     _exchange.SetHandler(config.Symbol, data =>
                     {
                         aggregator.ProcessData((Tick) data);
@@ -458,8 +458,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // grab the relevant exchange hours
             var config = universe.Configuration;
-            var localStartTime = startTimeUtc.ConvertFromUtc(config.TimeZone);
-            var localEndTime = endTimeUtc.ConvertFromUtc(config.TimeZone);
+            var localStartTime = startTimeUtc.ConvertFromUtc(config.DataTimeZone);
+            var localEndTime = endTimeUtc.ConvertFromUtc(config.DataTimeZone);
 
             var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(config);
 
@@ -502,12 +502,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var refresher = new RefreshEnumerator<BaseDataCollection>(() =>
                 {
                     var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
-                    var currentLocalDate = DateTime.UtcNow.ConvertFromUtc(config.TimeZone).Date;
+                    var currentLocalDate = DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone).Date;
                     var factory = new BaseDataSubscriptionFactory(config, currentLocalDate, true);
                     var source = sourceProvider.GetSource(config, currentLocalDate, true);
                     var factorEnumerator = factory.Read(source).GetEnumerator();
-                    var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, config.TimeZone, config.Increment);
-                    var timeZoneOffsetProvider = new TimeZoneOffsetProvider(config.TimeZone, startTimeUtc, endTimeUtc);
+                    var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, config.DataTimeZone, config.Increment);
+                    var timeZoneOffsetProvider = new TimeZoneOffsetProvider(config.DataTimeZone, startTimeUtc, endTimeUtc);
                     var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, timeZoneOffsetProvider);
                     return new BaseDataCollectionAggregatorEnumerator(frontierAware, config.Symbol);
                 });
@@ -534,7 +534,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // create the subscription
-            var subscription = new Subscription(universe, security, enumerator, new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, startTimeUtc, endTimeUtc), startTimeUtc, endTimeUtc, true);
+            var subscription = new Subscription(universe, security, enumerator, new TimeZoneOffsetProvider(config.DataTimeZone, startTimeUtc, endTimeUtc), startTimeUtc, endTimeUtc, true);
 
             return subscription;
         }

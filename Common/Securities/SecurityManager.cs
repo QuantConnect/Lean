@@ -94,7 +94,7 @@ namespace QuantConnect.Securities
         public void Add(Symbol symbol, Security security)
         {
             CheckResolutionCounts(security.Resolution);
-            security.SetLocalTimeKeeper(_timeKeeper.GetLocalTimeKeeper(security.SubscriptionDataConfig.TimeZone));
+            security.SetLocalTimeKeeper(_timeKeeper.GetLocalTimeKeeper(security.Exchange.TimeZone));
             _securityManager.Add(symbol, security);
         }
 
