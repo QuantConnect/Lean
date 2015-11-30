@@ -1100,8 +1100,8 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         public void AddUniverse<T>(SecurityType securityType, Symbol symbol, Resolution resolution, string market, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
-            var exchangeHours = _marketHoursDatabase.GetExchangeHours(market, symbol, securityType);
-            var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, exchangeHours.TimeZone, false, false, true, true);
+            var dataTimeZone = _marketHoursDatabase.GetDataTimeZone(market, symbol, securityType);
+            var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, dataTimeZone, false, false, true, true);
             AddUniverse(new FuncUniverse(config, UniverseSettings, d => selector(d.OfType<T>())));
         }
 
@@ -1117,8 +1117,8 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         public void AddUniverse<T>(SecurityType securityType, Symbol symbol, Resolution resolution, string market, SubscriptionSettings subscriptionSettings, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
-            var exchangeHours = _marketHoursDatabase.GetExchangeHours(market, symbol, securityType);
-            var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, exchangeHours.TimeZone, false, false, true, true);
+            var dataTimeZone = _marketHoursDatabase.GetDataTimeZone(market, symbol, securityType);
+            var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, dataTimeZone, false, false, true, true);
             AddUniverse(new FuncUniverse(config, subscriptionSettings, d => selector(d.OfType<T>())));
         }
 
@@ -1278,14 +1278,14 @@ namespace QuantConnect.Algorithm
         {
             if (_locked) return;
 
+            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, TimeZones.NewYork);
+
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
-            var config = SubscriptionManager.Add(typeof(T), symbolObject, resolution, timeZone, true, fillDataForward, true, false);
-
-            var exchangeHours = _marketHoursDatabase.GetExchangeHours(config);
+            var config = SubscriptionManager.Add(typeof(T), symbolObject, resolution, marketHoursDbEntry.DataTimeZone, true, fillDataForward, true, false);
 
             //Add this new generic data as a tradeable security: 
-            var security = new Security(exchangeHours, config, leverage);
+            var security = new Security(marketHoursDbEntry.ExchangeHours, config, leverage);
             Securities.Add(symbolObject, security);
 
             AddToUserDefinedUniverse(security);

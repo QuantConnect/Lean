@@ -90,6 +90,20 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Performs a lookup using the specified information and returns the data's time zone if found,
+        /// if an entry is not found, an exception is thrown
+        /// </summary>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="symbol">The particular symbol being traded</param>
+        /// <param name="securityType">The security type of the symbol</param>
+        /// <returns>The raw data time zone for the specified security</returns>
+        public DateTimeZone GetDataTimeZone(string market, Symbol symbol, SecurityType securityType)
+        {
+            var stringSymbol = symbol == null ? string.Empty : symbol.Value;
+            return GetEntry(market, stringSymbol, securityType).DataTimeZone;
+        }
+
+        /// <summary>
         /// Gets the instance of the <see cref="MarketHoursDatabase"/> class produced by reading in the market hours
         /// data found in /Data/market-hours/
         /// </summary>
