@@ -67,9 +67,12 @@ namespace QuantConnect.Securities
         /// if exchange hours are not found, an exception is thrown
         /// </summary>
         /// <param name="configuration">The subscription data config to get exchange hours for</param>
-        public SecurityExchangeHours GetExchangeHours(SubscriptionDataConfig configuration)
+        /// <param name="overrideTimeZone">Specify this time zone to override the resolved time zone from the market hours database.
+        /// This value will also be used as the time zone for SecurityType.Base with no market hours database entry.
+        /// If null is specified, no override will be performed. If null is specified, and it's SecurityType.Base, then Utc will be used.</param>
+        public SecurityExchangeHours GetExchangeHours(SubscriptionDataConfig configuration, DateTimeZone overrideTimeZone = null)
         {
-            return GetExchangeHours(configuration.Market, configuration.Symbol, configuration.SecurityType, configuration.TimeZone);
+            return GetExchangeHours(configuration.Market, configuration.Symbol, configuration.SecurityType, overrideTimeZone);
         }
 
         /// <summary>
