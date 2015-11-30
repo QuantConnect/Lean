@@ -86,7 +86,7 @@ namespace QuantConnect.Securities
         public virtual SecurityExchangeHours GetExchangeHours(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
         {
             Entry entry;
-            var stringSymbol = symbol == null ? string.Empty : symbol.ToString();
+            var stringSymbol = symbol == null ? string.Empty : symbol.Value;
             var key = new Key(market, stringSymbol, securityType);
             if (!_exchangeHours.TryGetValue(key, out entry))
             {
