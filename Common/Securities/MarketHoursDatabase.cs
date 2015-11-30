@@ -83,7 +83,7 @@ namespace QuantConnect.Securities
         /// This value will also be used as the time zone for SecurityType.Base with no market hours database entry.
         /// If null is specified, no override will be performed. If null is specified, and it's SecurityType.Base, then Utc will be used.</param>
         /// <returns>The exchange hours for the specified security</returns>
-        public virtual SecurityExchangeHours GetExchangeHours(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
+        public SecurityExchangeHours GetExchangeHours(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
         {
             var stringSymbol = symbol == null ? string.Empty : symbol.Value;
             return GetEntry(market, stringSymbol, securityType, overrideTimeZone).ExchangeHours;
@@ -149,7 +149,7 @@ namespace QuantConnect.Securities
         /// This value will also be used as the time zone for SecurityType.Base with no market hours database entry.
         /// If null is specified, no override will be performed. If null is specified, and it's SecurityType.Base, then Utc will be used.</param>
         /// <returns>The entry matching the specified market/symbol/security-type</returns>
-        private Entry GetEntry(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
+        protected virtual Entry GetEntry(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
         {
             Entry entry;
             var key = new Key(market, symbol, securityType);
@@ -232,20 +232,18 @@ namespace QuantConnect.Securities
             return new Entry(dataTimeZone, exchangeHours);
         }
 
-        private static DateTimeZone ParseTimeZone(string exchangeTimeZone)
+        private static DateTimeZone ParseTimeZone(string tz)
         {
-            DateTimeZone timeZone;
-            if (!exchangeTimeZone.StartsWith("UTC"))
-            {
-                timeZone = DateTimeZoneProviders.Tzdb[exchangeTimeZone];
-            }
-            else
-            {
-                // define the time zone as a constant offset time zone in the form: 'UTC-3.5' or 'UTC+10'
-                var millisecondsOffset = (int) TimeSpan.FromHours(double.Parse(exchangeTimeZone.Replace("UTC", string.Empty))).TotalMilliseconds;
-                timeZone = DateTimeZone.ForOffset(Offset.FromMilliseconds(millisecondsOffset));
-            }
-            return timeZone;
+            // handle UTC directly
+            if (tz == "UTC") return TimeZones.Utc;
+            // if it doesn't start with UTC then it's a name, like America/New_York
+            if (!tz.StartsWith("UTC")) return DateTimeZoneProviders.Tzdb[tz];
+
+            // it must be a UTC offset, parse the offset as hours
+            
+            // define the time zone as a constant offset time zone in the form: 'UTC-3.5' or 'UTC+10'
+            var millisecondsOffset = (int) TimeSpan.FromHours(double.Parse(tz.Replace("UTC", string.Empty))).TotalMilliseconds;
+            return DateTimeZone.ForOffset(Offset.FromMilliseconds(millisecondsOffset));
         }
 
         private static LocalMarketHours ReadCsvHours(string[] csv, int startIndex, DayOfWeek dayOfWeek)
@@ -311,7 +309,7 @@ namespace QuantConnect.Securities
             return TimeSpan.FromHours(double.Parse(ex_open, CultureInfo.InvariantCulture));
         }
 
-        class Entry
+        protected class Entry
         {
             public readonly DateTimeZone DataTimeZone;
             public readonly SecurityExchangeHours ExchangeHours;
@@ -377,19 +375,16 @@ namespace QuantConnect.Securities
 
             public override string ToString()
             {
-                return string.Format("{0}-{1}-{2}", Market ?? "[null]", Symbol == null ? "[null]" : Symbol, SecurityType);
+                return string.Format("{0}-{1}-{2}", Market ?? "[null]", Symbol ?? "[null]", SecurityType);
             }
         }
 
         class AlwaysOpenMarketHoursDatabase : MarketHoursDatabase
         {
-            public AlwaysOpenMarketHoursDatabase()
+            protected override Entry GetEntry(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
             {
-            }
-
-            public override SecurityExchangeHours GetExchangeHours(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
-            {
-                return SecurityExchangeHours.AlwaysOpen(overrideTimeZone ?? TimeZones.Utc);
+                var tz = overrideTimeZone ?? TimeZones.Utc;
+                return new Entry(tz, SecurityExchangeHours.AlwaysOpen(tz));
             }
         }
     }
