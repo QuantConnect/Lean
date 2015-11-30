@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void InitializesFromCsv()
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
-            var exchangeHours = GetSecurityExchangeHoursProvider(file);
+            var exchangeHours = GetMarketHoursDatabase(file);
 
             Assert.AreEqual(2, exchangeHours.ExchangeHoursListing.Count);
         }
@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void RetrievesExchangeHoursWithAndWithoutSymbol()
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
-            var exchangeHours = GetSecurityExchangeHoursProvider(file);
+            var exchangeHours = GetMarketHoursDatabase(file);
 
             var hours = exchangeHours.GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
             Assert.IsNotNull(hours);
@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void CorrectlyReadsClosedAllDayHours()
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
-            var exchangeHours = GetSecurityExchangeHoursProvider(file);
+            var exchangeHours = GetMarketHoursDatabase(file);
 
             var hours = exchangeHours.GetExchangeHours(Market.USA, null, SecurityType.Equity);
             Assert.IsNotNull(hours);
@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void CorrectlyReadsOpenAllDayHours()
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
-            var exchangeHours = GetSecurityExchangeHoursProvider(file);
+            var exchangeHours = GetMarketHoursDatabase(file);
 
             var hours = exchangeHours.GetExchangeHours(Market.FXCM, null, SecurityType.Forex);
             Assert.IsNotNull(hours);
@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreNotEqual(0, provider.ExchangeHoursListing.Count);
         }
 
-        private static MarketHoursDatabase GetSecurityExchangeHoursProvider(string file)
+        private static MarketHoursDatabase GetMarketHoursDatabase(string file)
         {
             return MarketHoursDatabase.FromCsvFile(file, new Dictionary<string, IEnumerable<DateTime>>
             {
@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void CorrectlyReadsUsEquityMarketHours()
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
-            var exchangeHours = GetSecurityExchangeHoursProvider(file);
+            var exchangeHours = GetMarketHoursDatabase(file);
 
             var equityHours = exchangeHours.GetExchangeHours(Market.USA, null, SecurityType.Equity);
             foreach (var day in equityHours.MarketHours.Keys)
@@ -110,7 +110,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void CorrectlyReadFxcmForexMarketHours()
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
-            var exchangeHours = GetSecurityExchangeHoursProvider(file);
+            var exchangeHours = GetMarketHoursDatabase(file);
 
             var equityHours = exchangeHours.GetExchangeHours(Market.FXCM, null, SecurityType.Forex);
             foreach (var day in equityHours.MarketHours.Keys)
