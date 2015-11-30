@@ -76,14 +76,6 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreNotEqual(0, provider.ExchangeHoursListing.Count);
         }
 
-        private static MarketHoursDatabase GetMarketHoursDatabase(string file)
-        {
-            return MarketHoursDatabase.FromCsvFile(file, new Dictionary<string, IEnumerable<DateTime>>
-            {
-                {Market.USA, USHoliday.Dates}
-            });
-        }
-
         [Test]
         public void CorrectlyReadsUsEquityMarketHours()
         {
@@ -139,6 +131,32 @@ namespace QuantConnect.Tests.Common.Securities
                     Assert.AreEqual(new TimeSpan(17, 0, 0), marketHours.ExtendedMarketClose);
                 }
             }
+        }
+
+        [Test]
+        public void ReadsUsEquityDataTimeZone()
+        {
+            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
+            var marketHoursDatabase = GetMarketHoursDatabase(file);
+
+            Assert.AreEqual(TimeZones.NewYork, marketHoursDatabase.GetDataTimeZone(Market.USA, null, SecurityType.Equity));
+        }
+
+        [Test]
+        public void ReadsFxcmForexDataTimeZone()
+        {
+            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
+            var marketHoursDatabase = GetMarketHoursDatabase(file);
+
+            Assert.AreEqual(TimeZones.EasternStandard, marketHoursDatabase.GetDataTimeZone(Market.FXCM, null, SecurityType.Forex));
+        }
+
+        private static MarketHoursDatabase GetMarketHoursDatabase(string file)
+        {
+            return MarketHoursDatabase.FromCsvFile(file, new Dictionary<string, IEnumerable<DateTime>>
+            {
+                {Market.USA, USHoliday.Dates}
+            });
         }
     }
 }
