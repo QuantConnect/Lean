@@ -108,7 +108,7 @@ namespace QuantConnect.Data
             Subscriptions.Add(newConfig);
 
             // add the time zone to our time keeper
-            _timeKeeper.AddTimeZone(dataTimeZone);
+            _timeKeeper.AddTimeZone(exchangeTimeZone);
 
             return newConfig;
         }
