@@ -109,8 +109,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private Subscription CreateSubscription(Universe universe, IResultHandler resultHandler, Security security, DateTime startTimeUtc, DateTime endTimeUtc, IReadOnlyRef<TimeSpan> fillForwardResolution)
         {
             var config = security.SubscriptionDataConfig;
-            var localStartTime = startTimeUtc.ConvertFromUtc(config.DataTimeZone);
-            var localEndTime = endTimeUtc.ConvertFromUtc(config.DataTimeZone);
+            var localStartTime = startTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
+            var localEndTime = endTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
 
             var tradeableDates = Time.EachTradeableDay(security, localStartTime, localEndTime);
 
@@ -136,7 +136,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // finally apply exchange/user filters
             enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, enumerator, security, localEndTime);
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.DataTimeZone, startTimeUtc, endTimeUtc);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
             var subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, false);
             return subscription;
         }
@@ -333,7 +333,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // OffsetProvider exists to give forward marching mapping
 
                 // compute the initial frontier time
-                var currentEndTimeUtc = current.EndTime.ConvertToUtc(subscription.DataTimeZone);
+                var currentEndTimeUtc = current.EndTime.ConvertToUtc(subscription.TimeZone);
                 var endTime = current.EndTime.Ticks - subscription.OffsetProvider.GetOffsetTicks(currentEndTimeUtc);
                 if (endTime < frontier.Ticks)
                 {
@@ -366,8 +366,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // create a canonical security object
             var security = new Security(exchangeHours, config, universe.SubscriptionSettings.Leverage);
 
-            var localStartTime = startTimeUtc.ConvertFromUtc(config.DataTimeZone);
-            var localEndTime = endTimeUtc.ConvertFromUtc(config.DataTimeZone);
+            var localStartTime = startTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
+            var localEndTime = endTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
 
             // define our data enumerator
             IEnumerator<BaseData> enumerator;
@@ -389,7 +389,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // create the subscription
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.DataTimeZone, startTimeUtc, endTimeUtc);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
             var subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, true);
 
             // only message the user if it's one of their universe types
