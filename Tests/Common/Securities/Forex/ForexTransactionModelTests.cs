@@ -29,9 +29,9 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type)
         {
             if (type == SecurityType.Equity)
-                return new SubscriptionDataConfig(typeof(TradeBar), Symbols.USDJPY, Resolution.Minute, TimeZones.NewYork, true, true, true);
+                return new SubscriptionDataConfig(typeof(TradeBar), Symbols.USDJPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
             if (type == SecurityType.Forex)
-                return new SubscriptionDataConfig(typeof(TradeBar), Symbols.USDJPY, Resolution.Minute, TimeZones.EasternStandard, true, true, true);
+                return new SubscriptionDataConfig(typeof(TradeBar), Symbols.USDJPY, Resolution.Minute, TimeZones.EasternStandard, TimeZones.EasternStandard, true, true, true);
             throw new NotImplementedException(type.ToString());
         }
 

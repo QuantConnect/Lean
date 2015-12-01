@@ -98,6 +98,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 request.Symbol, 
                 request.Resolution, 
                 request.TimeZone, 
+                request.ExchangeHours.TimeZone, 
                 request.FillForwardResolution.HasValue, 
                 request.IncludeExtendedMarketHours, 
                 false, 
