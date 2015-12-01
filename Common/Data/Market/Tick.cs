@@ -226,7 +226,7 @@ namespace QuantConnect.Data.Market
                 { 
                     case SecurityType.Equity:
                         Symbol = config.Symbol;
-                        Time = date.Date.AddMilliseconds(csv[0].ToInt64());
+                        Time = date.Date.AddMilliseconds(csv[0].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                         Value = config.GetNormalizedPrice(csv[1].ToDecimal() / 10000m);
                         TickType = TickType.Trade;
                         Quantity = csv[2].ToInt32();
@@ -241,7 +241,7 @@ namespace QuantConnect.Data.Market
                     case SecurityType.Forex:
                         Symbol = config.Symbol;
                         TickType = TickType.Quote;
-                        Time = date.Date.AddMilliseconds(csv[0].ToInt64());
+                        Time = date.Date.AddMilliseconds(csv[0].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                         BidPrice = csv[1].ToDecimal();
                         AskPrice = csv[2].ToDecimal();
                         Value = (BidPrice + AskPrice) / 2;

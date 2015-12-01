@@ -132,7 +132,7 @@ namespace QuantConnect.Data
 
         /// <summary>
         /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object 
-        /// each time it is called. 
+        /// each time it is called. The returned object is assumed to be time stamped in the config.ExchangeTimeZone.
         /// </summary>
         /// <param name="config">Subscription data config setup object</param>
         /// <param name="line">Line of the source document</param>
