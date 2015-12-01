@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Brokerages
         {
             var mapper = new IdentitySymbolMapper(Market.USA);
 
-            var symbol = mapper.GetLeanSymbol("AAPL", SecurityType.Equity);
+            var symbol = mapper.GetLeanSymbol("AAPL");
             Assert.AreEqual("AAPL", symbol.Value);
             Assert.AreEqual(SecurityType.Equity, symbol.ID.SecurityType);
             Assert.AreEqual(Market.USA, symbol.ID.Market);
@@ -49,9 +49,9 @@ namespace QuantConnect.Tests.Brokerages
         {
             var mapper = new IdentitySymbolMapper(Market.USA);
 
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(null, SecurityType.Equity));
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(null));
 
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol("", SecurityType.Equity));
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(""));
 
             var symbol = Symbol.Empty;
             Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(symbol));

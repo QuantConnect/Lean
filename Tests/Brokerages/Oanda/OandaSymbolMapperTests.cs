@@ -28,12 +28,12 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         {
             var mapper = new OandaSymbolMapper();
 
-            var symbol = mapper.GetLeanSymbol("EUR_USD", SecurityType.Forex);
+            var symbol = mapper.GetLeanSymbol("EUR_USD");
             Assert.AreEqual("EURUSD", symbol.Value);
             Assert.AreEqual(SecurityType.Forex, symbol.ID.SecurityType);
             Assert.AreEqual(Market.Oanda, symbol.ID.Market);
 
-            symbol = mapper.GetLeanSymbol("DE30_EUR", SecurityType.Cfd);
+            symbol = mapper.GetLeanSymbol("DE30_EUR");
             Assert.AreEqual("DE30EUR", symbol.Value);
             Assert.AreEqual(SecurityType.Cfd, symbol.ID.SecurityType);
             Assert.AreEqual(Market.Oanda, symbol.ID.Market);
@@ -58,9 +58,9 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         {
             var mapper = new OandaSymbolMapper();
 
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(null, SecurityType.Forex));
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(null));
 
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol("", SecurityType.Forex));
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(""));
 
             var symbol = Symbol.Empty;
             Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(symbol));
@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         {
             var mapper = new OandaSymbolMapper();
 
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol("ABC_USD", SecurityType.Forex));
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol("ABC_USD"));
 
             var symbol = Symbol.Create("ABCUSD", SecurityType.Forex, Market.Oanda);
             Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(symbol));
@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         {
             var mapper = new OandaSymbolMapper();
 
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol("AAPL", SecurityType.Equity));
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol("AAPL"));
 
             var symbol = Symbol.Create("AAPL", SecurityType.Equity, Market.Oanda);
             Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(symbol));

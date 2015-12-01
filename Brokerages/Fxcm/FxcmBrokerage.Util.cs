@@ -20,7 +20,6 @@ using com.fxcm.fix.posttrade;
 using com.fxcm.fix.trade;
 using com.sun.rowset;
 using QuantConnect.Orders;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages.Fxcm
 {
@@ -63,9 +62,9 @@ namespace QuantConnect.Brokerages.Fxcm
                 throw new NotSupportedException("FxcmBrokerage.ConvertOrder(): The FXCM order type " + fxcmOrder.getOrdType() + " is not supported.");
             }
 
-            order.Symbol = SymbolFromFxcmInstrument(fxcmOrder.getInstrument());
+            order.Symbol = SymbolMapper.GetLeanSymbol(fxcmOrder.getInstrument().getSymbol());
             order.Quantity = Convert.ToInt32(fxcmOrder.getOrderQty() * (fxcmOrder.getSide() == SideFactory.BUY ? +1 : -1));
-            order.SecurityType = GetSecurityType(fxcmOrder.getInstrument());
+            order.SecurityType = SymbolMapper.GetSecurityType(fxcmOrder.getInstrument().getSymbol());
             order.Status = ConvertOrderStatus(fxcmOrder.getFXCMOrdStatus());
             order.BrokerId.Add(Convert.ToInt64(fxcmOrder.getOrderID()));
             order.Duration = ConvertDuration(fxcmOrder.getTimeInForce());
@@ -96,8 +95,8 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             return new Holding
             {
-                Symbol = SymbolFromFxcmInstrument(fxcmPosition.getInstrument()),
-                Type = GetSecurityType(fxcmPosition.getInstrument()),
+                Symbol = SymbolMapper.GetLeanSymbol(fxcmPosition.getInstrument().getSymbol()),
+                Type = SymbolMapper.GetSecurityType(fxcmPosition.getInstrument().getSymbol()),
                 AveragePrice = Convert.ToDecimal(fxcmPosition.getSettlPrice()),
                 ConversionRate = 1.0m,
                 CurrencySymbol = "$",
@@ -105,26 +104,6 @@ namespace QuantConnect.Brokerages.Fxcm
                     ? fxcmPosition.getPositionQty().getLongQty() 
                     : -fxcmPosition.getPositionQty().getShortQty())
             };        
-        }
-
-        /// <summary>
-        /// Gets the <see cref="SecurityType"/> of an FXCM instrument
-        /// </summary>
-        /// <param name="instrument">The FXCM instrument</param>
-        /// <returns>The security type of the instrument</returns>
-        private static SecurityType GetSecurityType(Instrument instrument)
-        {
-            return instrument.getFXCMProductID() == IFixValueDefs.__Fields.FXCMPRODUCTID_FOREX
-                ? SecurityType.Forex
-                : SecurityType.Cfd;
-        }
-
-        /// <summary>
-        /// Creates a <see cref="Symbol"/> object from an FXCM Instrument
-        /// </summary>
-        private Symbol SymbolFromFxcmInstrument(Instrument instrument)
-        {
-            return SymbolMapper.GetLeanSymbol(instrument.getSymbol(), GetSecurityType(instrument));
         }
 
         /// <summary>

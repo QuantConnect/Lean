@@ -31,9 +31,15 @@ namespace QuantConnect.Brokerages
         /// Converts a brokerage symbol to a Lean symbol instance
         /// </summary>
         /// <param name="brokerageSymbol">The brokerage symbol</param>
-        /// <param name="securityType">The security type</param>
         /// <returns>A new Lean Symbol instance</returns>
-        Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType);
+        Symbol GetLeanSymbol(string brokerageSymbol);
+
+        /// <summary>
+        /// Returns the security type for a brokerage symbol
+        /// </summary>
+        /// <param name="brokerageSymbol">The brokerage symbol</param>
+        /// <returns>The security type</returns>
+        SecurityType GetSecurityType(string brokerageSymbol);
 
         /// <summary>
         /// Checks if the symbol is supported by the brokerage

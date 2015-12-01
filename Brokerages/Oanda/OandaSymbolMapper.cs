@@ -188,9 +188,8 @@ namespace QuantConnect.Brokerages.Oanda
         /// Converts an Oanda symbol to a Lean symbol instance
         /// </summary>
         /// <param name="brokerageSymbol">The Oanda symbol</param>
-        /// <param name="securityType">The security type</param>
         /// <returns>A new Lean Symbol instance</returns>
-        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType)
+        public Symbol GetLeanSymbol(string brokerageSymbol)
         {
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException("Invalid Oanda symbol: " + brokerageSymbol);
@@ -198,10 +197,23 @@ namespace QuantConnect.Brokerages.Oanda
             if (!IsKnownBrokerageSymbol(brokerageSymbol))
                 throw new ArgumentException("Unknown Oanda symbol: " + brokerageSymbol);
 
-            if (securityType != SecurityType.Forex && securityType != SecurityType.Cfd)
-                throw new ArgumentException("Invalid security type: " + securityType);
+            return Symbol.Create(ConvertOandaSymbolToLeanSymbol(brokerageSymbol), GetSecurityType(brokerageSymbol), Market.Oanda);
+        }
 
-            return Symbol.Create(ConvertOandaSymbolToLeanSymbol(brokerageSymbol), securityType, Market.Oanda);
+        /// <summary>
+        /// Returns the security type for an Oanda symbol
+        /// </summary>
+        /// <param name="brokerageSymbol">The Oanda symbol</param>
+        /// <returns>The security type</returns>
+        public SecurityType GetSecurityType(string brokerageSymbol)
+        {
+            var tokens = brokerageSymbol.Split('_');
+            if (tokens.Length != 2)
+                throw new ArgumentException("Unable to determine SecurityType for Oanda symbol: " + brokerageSymbol);
+
+            return KnownCurrencies.Contains(tokens[0]) && KnownCurrencies.Contains(tokens[1])
+                ? SecurityType.Forex
+                : SecurityType.Cfd;
         }
 
         /// <summary>
@@ -245,20 +257,6 @@ namespace QuantConnect.Brokerages.Oanda
         {
             // All Oanda symbols end with '_XYZ', where XYZ is the quote currency
             return leanSymbol.Insert(leanSymbol.Length - 3, "_");
-        }
-
-        /// <summary>
-        /// Returns the security type of an Oanda symbol
-        /// </summary>
-        private static SecurityType GetSecurityType(string oandaSymbol)
-        {
-            var tokens = oandaSymbol.Split('_');
-            if (tokens.Length != 2)
-                throw new ArgumentException("Unable to determine SecurityType from Oanda symbol: " + oandaSymbol);
-
-            return KnownCurrencies.Contains(tokens[0]) && KnownCurrencies.Contains(tokens[1])
-                ? SecurityType.Forex
-                : SecurityType.Cfd;
         }
 
     }

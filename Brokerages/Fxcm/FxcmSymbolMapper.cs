@@ -159,9 +159,8 @@ namespace QuantConnect.Brokerages.Fxcm
         /// Converts an FXCM symbol to a Lean symbol instance
         /// </summary>
         /// <param name="brokerageSymbol">The FXCM symbol</param>
-        /// <param name="securityType">The security type</param>
         /// <returns>A new Lean Symbol instance</returns>
-        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType)
+        public Symbol GetLeanSymbol(string brokerageSymbol)
         {
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException("Invalid FXCM symbol: " + brokerageSymbol);
@@ -169,10 +168,20 @@ namespace QuantConnect.Brokerages.Fxcm
             if (!IsKnownBrokerageSymbol(brokerageSymbol))
                 throw new ArgumentException("Unknown FXCM symbol: " + brokerageSymbol);
 
-            if (securityType != SecurityType.Forex && securityType != SecurityType.Cfd)
-                throw new ArgumentException("Invalid security type: " + securityType);
+            return Symbol.Create(ConvertFxcmSymbolToLeanSymbol(brokerageSymbol), GetSecurityType(brokerageSymbol), Market.FXCM);
+        }
 
-            return Symbol.Create(ConvertFxcmSymbolToLeanSymbol(brokerageSymbol), securityType, Market.FXCM);
+        /// <summary>
+        /// Returns the security type for an FXCM symbol
+        /// </summary>
+        /// <param name="brokerageSymbol">The FXCM symbol</param>
+        /// <returns>The security type</returns>
+        public SecurityType GetSecurityType(string brokerageSymbol)
+        {
+            var tokens = brokerageSymbol.Split('/');
+            return tokens.Length == 2 && KnownCurrencies.Contains(tokens[0]) && KnownCurrencies.Contains(tokens[1])
+                ? SecurityType.Forex
+                : SecurityType.Cfd;
         }
 
         /// <summary>
@@ -216,17 +225,6 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             string fxcmSymbol;
             return MapLeanToFxcm.TryGetValue(leanSymbol, out fxcmSymbol) ? fxcmSymbol : string.Empty;
-        }
-
-        /// <summary>
-        /// Returns the security type of an FXCM symbol
-        /// </summary>
-        private static SecurityType GetSecurityType(string fxcmSymbol)
-        {
-            var tokens = fxcmSymbol.Split('/');
-            return tokens.Length == 2 && KnownCurrencies.Contains(tokens[0]) && KnownCurrencies.Contains(tokens[1])
-                ? SecurityType.Forex
-                : SecurityType.Cfd;
         }
 
     }
