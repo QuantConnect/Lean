@@ -43,7 +43,6 @@ namespace QuantConnect.Brokerages.Fxcm
         private bool _isOrderUpdateOrCancelRejected;
         private bool _isOrderSubmitRejected;
 
-        private readonly Dictionary<Symbol, string> _mapInstrumentSymbols = new Dictionary<Symbol, string>();
         private readonly Dictionary<string, TradingSecurity> _fxcmInstruments = new Dictionary<string, TradingSecurity>();
         private readonly Dictionary<string, CollateralReport> _accounts = new Dictionary<string, CollateralReport>();
         private readonly Dictionary<string, MarketDataSnapshot> _rates = new Dictionary<string, MarketDataSnapshot>();
@@ -128,7 +127,7 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             return GetQuotes(fxcmSymbols).Select(x => new Tick
             {
-                Symbol = ConvertSymbol(x.getInstrument()),
+                Symbol = SymbolFromFxcmInstrument(x.getInstrument()),
                 BidPrice = (decimal) x.getBidClose(),
                 AskPrice = (decimal) x.getAskClose()
             }).ToList();
@@ -247,15 +246,6 @@ namespace QuantConnect.Brokerages.Fxcm
                     _fxcmInstruments[security.getSymbol()] = security;
                 }
 
-                // create map from QuantConnect symbols to FXCM symbols
-                foreach (var kvp in _fxcmInstruments)
-                {
-                    var fxcmSymbol = kvp.Key;
-                    var tradingSecurity = kvp.Value;
-                    var symbol = ConvertSymbol(tradingSecurity);
-                    _mapInstrumentSymbols[symbol] = fxcmSymbol;
-                }
-
                 // get account base currency
                 _fxcmAccountCurrency = message.getParameter("BASE_CRNCY").getValue();
 
@@ -306,7 +296,7 @@ namespace QuantConnect.Brokerages.Fxcm
             _rates[instrument.getSymbol()] = message;
 
             // if instrument is subscribed, add ticks to list
-            var symbol = ConvertSymbol(instrument);
+            var symbol = SymbolFromFxcmInstrument(instrument);
 
             if (_subscribedSymbols.Contains(symbol))
             {

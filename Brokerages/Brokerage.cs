@@ -59,7 +59,13 @@ namespace QuantConnect.Brokerages
         protected Brokerage(string name)
         {
             Name = name;
+            SymbolMapper = new IdentitySymbolMapper(Market.USA);
         }
+
+        /// <summary>
+        /// Gets/sets the symbol mapper between Lean symbols and the brokerage symbols
+        /// </summary>
+        protected ISymbolMapper SymbolMapper { get; set; }
 
         /// <summary>
         /// Places a new order and assigns a new broker ID to the order

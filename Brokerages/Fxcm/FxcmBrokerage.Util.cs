@@ -33,7 +33,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// Converts an FXCM order to a QuantConnect order.
         /// </summary>
         /// <param name="fxcmOrder">The FXCM order</param>
-        private static Order ConvertOrder(ExecutionReport fxcmOrder)
+        private Order ConvertOrder(ExecutionReport fxcmOrder)
         {
             Order order;
 
@@ -63,7 +63,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 throw new NotSupportedException("FxcmBrokerage.ConvertOrder(): The FXCM order type " + fxcmOrder.getOrdType() + " is not supported.");
             }
 
-            order.Symbol = ConvertSymbol(fxcmOrder.getInstrument());
+            order.Symbol = SymbolFromFxcmInstrument(fxcmOrder.getInstrument());
             order.Quantity = Convert.ToInt32(fxcmOrder.getOrderQty() * (fxcmOrder.getSide() == SideFactory.BUY ? +1 : -1));
             order.SecurityType = GetSecurityType(fxcmOrder.getInstrument());
             order.Status = ConvertOrderStatus(fxcmOrder.getFXCMOrdStatus());
@@ -92,11 +92,11 @@ namespace QuantConnect.Brokerages.Fxcm
         /// Converts an FXCM position to a QuantConnect holding.
         /// </summary>
         /// <param name="fxcmPosition">The FXCM position</param>
-        private static Holding ConvertHolding(PositionReport fxcmPosition)
+        private Holding ConvertHolding(PositionReport fxcmPosition)
         {
             return new Holding
             {
-                Symbol = ConvertSymbol(fxcmPosition.getInstrument()),
+                Symbol = SymbolFromFxcmInstrument(fxcmPosition.getInstrument()),
                 Type = GetSecurityType(fxcmPosition.getInstrument()),
                 AveragePrice = Convert.ToDecimal(fxcmPosition.getSettlPrice()),
                 ConversionRate = 1.0m,
@@ -120,30 +120,11 @@ namespace QuantConnect.Brokerages.Fxcm
         }
 
         /// <summary>
-        /// Converts an FXCM symbol to a QuantConnect symbol
+        /// Creates a <see cref="Symbol"/> object from an FXCM Instrument
         /// </summary>
-        private static Symbol ConvertSymbol(Instrument instrument)
+        private Symbol SymbolFromFxcmInstrument(Instrument instrument)
         {
-            var symbol = instrument.getSymbol().Replace("/", "");
-            var securityType = GetSecurityType(instrument);
-            switch (securityType)
-            {
-                case SecurityType.Forex:
-                    return new Symbol(SecurityIdentifier.GenerateForex(symbol, Market.FXCM), symbol);
-
-                case SecurityType.Cfd:
-                    return new Symbol(SecurityIdentifier.GenerateCfd(symbol, Market.FXCM), symbol);
-            }
-
-            throw new ArgumentException("The specified security type is not supported: " + securityType);
-        }
-
-        /// <summary>
-        /// Converts a QuantConnect symbol to an FXCM symbol
-        /// </summary>
-        public string ConvertSymbolToFxcmSymbol(Symbol symbol)
-        {
-            return _mapInstrumentSymbols[symbol];
+            return SymbolMapper.GetLeanSymbol(instrument.getSymbol(), GetSecurityType(instrument));
         }
 
         /// <summary>
@@ -224,7 +205,8 @@ namespace QuantConnect.Brokerages.Fxcm
                                 cal.get(java.util.Calendar.DAY_OF_MONTH),
                                 cal.get(java.util.Calendar.HOUR_OF_DAY),
                                 cal.get(java.util.Calendar.MINUTE),
-                                cal.get(java.util.Calendar.SECOND));
+                                cal.get(java.util.Calendar.SECOND),
+                                cal.get(java.util.Calendar.MILLISECOND));
         }
 
 

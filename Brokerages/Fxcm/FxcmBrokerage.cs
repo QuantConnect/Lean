@@ -75,6 +75,8 @@ namespace QuantConnect.Brokerages.Fxcm
             _userName = userName;
             _password = password;
             _accountId = accountId;
+
+            SymbolMapper = new FxcmSymbolMapper();
         }
 
         #region IBrokerage implementation
@@ -276,17 +278,17 @@ namespace QuantConnect.Brokerages.Fxcm
             var holdings = _openPositions.Values.Select(ConvertHolding).Where(x => x.Quantity != 0).ToList();
 
             // Set MarketPrice in each Holding
-            var symbols = holdings
-                .Select(x => ConvertSymbolToFxcmSymbol(x.Symbol))
+            var fxcmSymbols = holdings
+                .Select(x => SymbolMapper.GetBrokerageSymbol(x.Symbol))
                 .ToList();
 
-            if (symbols.Count > 0)
+            if (fxcmSymbols.Count > 0)
             {
-                var quotes = GetQuotes(symbols).ToDictionary(x => x.getInstrument().getSymbol());
+                var quotes = GetQuotes(fxcmSymbols).ToDictionary(x => x.getInstrument().getSymbol());
                 foreach (var holding in holdings)
                 {
                     MarketDataSnapshot quote;
-                    if (quotes.TryGetValue(ConvertSymbolToFxcmSymbol(holding.Symbol), out quote))
+                    if (quotes.TryGetValue(SymbolMapper.GetBrokerageSymbol(holding.Symbol), out quote))
                     {
                         holding.MarketPrice = Convert.ToDecimal((quote.getBidClose() + quote.getAskClose()) / 2);
                     }
@@ -325,7 +327,7 @@ namespace QuantConnect.Brokerages.Fxcm
             if (order.Direction != OrderDirection.Buy && order.Direction != OrderDirection.Sell)
                 throw new ArgumentException("FxcmBrokerage.PlaceOrder(): Invalid Order Direction");
 
-            var symbol = ConvertSymbolToFxcmSymbol(order.Symbol);
+            var fxcmSymbol = SymbolMapper.GetBrokerageSymbol(order.Symbol);
             var orderSide = order.Direction == OrderDirection.Buy ? SideFactory.BUY : SideFactory.SELL;
             var quantity = (double)order.AbsoluteQuantity;
 
@@ -333,19 +335,19 @@ namespace QuantConnect.Brokerages.Fxcm
             switch (order.Type)
             {
                 case OrderType.Market:
-                    orderRequest = MessageGenerator.generateMarketOrder(_accountId, quantity, orderSide, symbol, "");
+                    orderRequest = MessageGenerator.generateMarketOrder(_accountId, quantity, orderSide, fxcmSymbol, "");
                     break;
 
                 case OrderType.Limit:
                     var limitPrice = (double)((LimitOrder)order).LimitPrice;
-                    orderRequest = MessageGenerator.generateOpenOrder(limitPrice, _accountId, quantity, orderSide, symbol, "");
+                    orderRequest = MessageGenerator.generateOpenOrder(limitPrice, _accountId, quantity, orderSide, fxcmSymbol, "");
                     orderRequest.setOrdType(OrdTypeFactory.LIMIT);
                     orderRequest.setTimeInForce(TimeInForceFactory.GOOD_TILL_CANCEL);
                     break;
 
                 case OrderType.StopMarket:
                     var stopPrice = (double)((StopMarketOrder)order).StopPrice;
-                    orderRequest = MessageGenerator.generateOpenOrder(stopPrice, _accountId, quantity, orderSide, symbol, "");
+                    orderRequest = MessageGenerator.generateOpenOrder(stopPrice, _accountId, quantity, orderSide, fxcmSymbol, "");
                     orderRequest.setOrdType(OrdTypeFactory.STOP);
                     orderRequest.setTimeInForce(TimeInForceFactory.GOOD_TILL_CANCEL);
                     break;
