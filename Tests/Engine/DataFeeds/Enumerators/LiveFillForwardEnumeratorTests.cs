@@ -22,6 +22,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
@@ -50,7 +51,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var timeProvider = new ManualTimeProvider(TimeZones.NewYork);
             timeProvider.SetCurrentTime(reference);
             var exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
-            var fillForward = new LiveFillForwardEnumerator(timeProvider, underlying.GetEnumerator(), exchange, Time.OneSecond, false, Time.EndOfTime, Time.OneSecond);
+            var fillForward = new LiveFillForwardEnumerator(timeProvider, underlying.GetEnumerator(), exchange, Ref.Create(Time.OneSecond), false, Time.EndOfTime, Time.OneSecond);
 
             // first point is always emitted
             Assert.IsTrue(fillForward.MoveNext());
