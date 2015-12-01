@@ -1346,7 +1346,7 @@ namespace QuantConnect.Brokerages.Tradier
                         {
                             Log.Error(err);
                             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "PendingOrderNotReturned",
-                                "An error ocurred while trying to resolve fill events from Tradier orders: " + err.Message));
+                                "An error ocurred while trying to resolve fill events from Tradier orders: " + err));
                         }
                         finally
                         {
@@ -1409,7 +1409,7 @@ namespace QuantConnect.Brokerages.Tradier
                             foreach (var id in localUnknownTradierOrderIDs) _unknownTradierOrderIDs.Add(id);
 
                             Log.Error(err);
-                            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UnknownIdResolution", "An error ocurred while trying to resolve unknown Tradier order IDs: " + err.Message));
+                            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UnknownIdResolution", "An error ocurred while trying to resolve unknown Tradier order IDs: " + err));
                         }
                     });
                 }
@@ -1417,7 +1417,7 @@ namespace QuantConnect.Brokerages.Tradier
             catch (Exception err)
             {
                 Log.Error(err);
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CheckForFillsError", "An error ocurred while checking for fills: " + err.Message));
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CheckForFillsError", "An error ocurred while checking for fills: " + err));
             }
             finally
             {

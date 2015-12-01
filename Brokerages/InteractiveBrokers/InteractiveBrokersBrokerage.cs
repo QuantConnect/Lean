@@ -186,7 +186,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch (Exception err)
             {
-                Log.Error("InteractiveBrokersBrokerage.PlaceOrder(): " + err.Message);
+                Log.Error("InteractiveBrokersBrokerage.PlaceOrder(): " + err);
                 return false;
             }
         }
@@ -206,7 +206,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch (Exception err)
             {
-                Log.Error("InteractiveBrokersBrokerage.UpdateOrder(): " + err.Message);
+                Log.Error("InteractiveBrokersBrokerage.UpdateOrder(): " + err);
                 return false;
             }
             return true;
@@ -233,7 +233,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch (Exception err)
             {
-                Log.Error("InteractiveBrokersBrokerage.CancelOrder(): OrderID: " + order.Id + " - " + err.Message);
+                Log.Error("InteractiveBrokersBrokerage.CancelOrder(): OrderID: " + order.Id + " - " + err);
                 return false;
             }
             return true;
@@ -412,7 +412,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     }
 
                     // we couldn't connect after several attempts, log the error and throw an exception
-                    Log.Error("InteractiveBrokersBrokerage.Connect(): " + err.Message);
+                    Log.Error("InteractiveBrokersBrokerage.Connect(): " + err);
 
                     // add a blurb about TWS for connection refused errors
                     if (err.Message.Contains("Connection refused"))
@@ -804,7 +804,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch (Exception err)
             {
-                Log.Error("InteractiveBrokersBrokerage.HandleUpdateAccountValue(): " + err.Message);
+                Log.Error("InteractiveBrokersBrokerage.HandleUpdateAccountValue(): " + err);
             }
         }
 
@@ -883,11 +883,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch(InvalidOperationException err)
             {
-                Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Unable to resolve executions for BrokerageID: " + update.OrderId + " - " + err.Message);
+                Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Unable to resolve executions for BrokerageID: " + update.OrderId + " - " + err);
             }
             catch (Exception err)
             {
-                Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): " + err.Message);
+                Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): " + err);
             }
         }
 
