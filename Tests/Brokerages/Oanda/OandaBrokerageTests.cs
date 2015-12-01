@@ -59,8 +59,6 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             oandaBrokerage.SetTokens(qcUserId, tokens.AccessToken, tokens.IssuedAt,
                 TimeSpan.FromSeconds(tokens.ExpiresIn));
 
-            oandaBrokerage.InitializeInstrumentSecurityTypeMap();
-
             // keep the tokens up to date in the event of a refresh
             oandaBrokerage.SessionRefreshed +=
                 (sender, args) =>
@@ -110,7 +108,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         protected override decimal GetAskPrice(Symbol symbol)
         {
             var oanda = (OandaBrokerage) Brokerage;
-            var quotes = oanda.GetRates(new List<Instrument> { new Instrument { instrument = symbol.Value } });
+            var quotes = oanda.GetRates(new List<Instrument> { new Instrument { instrument = new OandaSymbolMapper().GetBrokerageSymbol(symbol) } });
             return (decimal)quotes[0].ask;
         }
     }
