@@ -41,13 +41,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class FileSystemDataFeed : IDataFeed
     {
         private IAlgorithm _algorithm;
+        private BaseDataExchange _exchange;
         private IResultHandler _resultHandler;
         private Ref<TimeSpan> _fillForwardResolution;
         private SecurityChanges _changes = SecurityChanges.None;
         private IMapFileProvider _mapFileProvider;
         private ConcurrentDictionary<Symbol, Subscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        private BusyBlockingCollection<TimeSlice> _bridge;
 
         /// <summary>
         /// Event fired when the data feed encounters a universe selection subscripion
@@ -86,7 +86,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _cancellationTokenSource = new CancellationTokenSource();
 
             IsActive = true;
-            _bridge = new BusyBlockingCollection<TimeSlice>(100);
+            _exchange = new BaseDataExchange {SleepInterval = 0};
 
             var ffres = Time.OneSecond;
             _fillForwardResolution = Ref.Create(() => ffres, res => ffres = res);
@@ -134,8 +134,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // finally apply exchange/user filters
             enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, enumerator, security, localEndTime);
+
+            var enqueueable = new EnqueueableEnumerator<BaseData>(true);
+
+            // add this enumerator to our exchange
+            _exchange.AddEnumerator(enumerator, () => true, handler => enqueueable.Stop());
+            _exchange.SetDataHandler(config.Symbol, enqueueable.Enqueue);
+
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
-            var subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, false);
+            var subscription = new Subscription(universe, security, enqueueable, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, false);
             return subscription;
         }
 
@@ -197,75 +204,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <remarks>This is a hot-thread and should be kept extremely lean. Modify with caution.</remarks>
         public void Run()
         {
-            var frontier = DateTime.MaxValue;
             try
             {
-                // compute initial frontier time
-                frontier = GetInitialFrontierTime();
-
-                var subscriptionSyncer = new SubscriptionSyncer();
-                subscriptionSyncer.SubscriptionFinished += (sender, args) => _subscriptions.TryRemove(args.Security.Symbol, out args);
-                subscriptionSyncer.UniverseSelection += (sender, args) =>
-                {
-                    // always wait for other thread
-                    if (!_bridge.Wait(Timeout.Infinite, _cancellationTokenSource.Token))
-                    {
-                        return SecurityChanges.None;
-                    }
-
-                    return OnUniverseSelection(args);
-                };
-
-                Log.Trace(string.Format("FileSystemDataFeed.Run(): Begin: {0} UTC", frontier));
-                // continue to loop over each subscription, enqueuing data in time order
-                while (!_cancellationTokenSource.IsCancellationRequested)
-                {
-                    _changes = SecurityChanges.None;
-
-                    // we union subscriptions with itself so if subscriptions changes on the first
-                    // iteration we will pick up those changes in the union call, this is used in
-                    // universe selection. an alternative is to extract this into a method and check
-                    // to see if changes != SecurityChanges.None, and re-run all subscriptions again,
-                    // This was added as quick fix due to an issue found in universe selection regression alg
-                    var subscriptions = Subscriptions.Union(Subscriptions);
-
-                    DateTime nextFrontier;
-                    var timeSlice = subscriptionSyncer.Sync(frontier, subscriptions, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, out nextFrontier);
-
-                    if (nextFrontier == DateTime.MaxValue)
-                    {
-                        if (_changes == SecurityChanges.None)
-                        {
-                            // there's no more data to pull off, we're done
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        // enqueue our next time slice and set the frontier for the next
-                        _bridge.Add(timeSlice, _cancellationTokenSource.Token);
-                        frontier = nextFrontier;
-                    }
-                }
-
-                if (!_cancellationTokenSource.IsCancellationRequested)
-                {
-                    _bridge.CompleteAdding();
-                }
+                _exchange.Start(_cancellationTokenSource.Token);
             }
             catch (Exception err)
             {
                 Log.Error("FileSystemDataFeed.Run(): Encountered an error: " + err.Message); 
                 if (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    _bridge.CompleteAdding();
                     _cancellationTokenSource.Cancel();
                 }
             }
             finally
-            {
-                Log.Trace(string.Format("FileSystemDataFeed.Run(): Data Feed Completed at {0} UTC", frontier));
-                
+            {   
                 //Close up all streams:
                 foreach (var subscription in Subscriptions)
                 {
@@ -367,10 +319,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             Log.Trace("FileSystemDataFeed.Exit(): Exit triggered.");
             _cancellationTokenSource.Cancel();
-            if (_bridge != null)
-            {
-                _bridge.Dispose();
-            }
         }
 
         /// <summary>
@@ -408,7 +356,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return changes;
         }
 
-
         private static TimeSpan ResolveFillForwardResolution(IAlgorithm algorithm)
         {
             return algorithm.SubscriptionManager.Subscriptions
@@ -429,7 +376,48 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <filterpriority>1</filterpriority>
         public IEnumerator<TimeSlice> GetEnumerator()
         {
-            return _bridge.GetConsumingEnumerable(_cancellationTokenSource.Token).GetEnumerator();
+            // compute initial frontier time
+            var frontier = GetInitialFrontierTime();
+            Log.Trace(string.Format("FileSystemDataFeed.GetEnumerator(): Begin: {0} UTC", frontier));
+
+            var syncer = new SubscriptionSyncer();
+            syncer.UniverseSelection += (sender, args) => OnUniverseSelection(args);
+            syncer.SubscriptionFinished += (sender, subscription) =>
+            {
+                Log.Trace("FileSystemDataFeed.GetEnumerator(): Finished subscription: " + subscription.Security.Symbol.ToString() + " at " + frontier + " UTC");
+                _subscriptions.TryRemove(subscription.Security.Symbol, out subscription);
+                subscription.Dispose();
+            };
+
+            while (!_cancellationTokenSource.IsCancellationRequested)
+            {
+                TimeSlice timeSlice;
+                DateTime nextFrontier;
+
+                try
+                {
+                    timeSlice = syncer.Sync(frontier, Subscriptions.Union(Subscriptions), _algorithm.TimeZone, _algorithm.Portfolio.CashBook, out nextFrontier);
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    continue;
+                }
+                
+                // syncer returns MaxValue on failure/end of data
+                if (nextFrontier != DateTime.MaxValue)
+                {
+                    yield return timeSlice;
+                    frontier = nextFrontier;
+                }
+                else if (timeSlice.SecurityChanges == SecurityChanges.None)
+                {
+                    // there's no more data to pull off, we're done (nextFrontier is max value and no security changes)
+                    break;
+                }
+            }
+
+            Log.Trace(string.Format("FileSystemDataFeed.Run(): Data Feed Completed at {0} UTC", frontier));
         }
 
         /// <summary>
