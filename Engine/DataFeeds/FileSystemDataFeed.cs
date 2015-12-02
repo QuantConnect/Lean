@@ -122,7 +122,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // get the map file resolver for this market
-            var mapFileResolver = _mapFileProvider.Get(config.Market);
+            var mapFileResolver = MapFileResolver.Empty;
+            if (config.SecurityType == SecurityType.Equity) mapFileResolver = _mapFileProvider.Get(config.Market);
 
             // ReSharper disable once PossibleMultipleEnumeration
             IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, resultHandler, mapFileResolver, tradeableDates, false);
