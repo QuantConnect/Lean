@@ -166,7 +166,7 @@ namespace QuantConnect.Lean.Engine
                 .FirstOrDefault(x => x.DeclaringType == algorithm.GetType()) != null;
 
             //Go through the subscription types and create invokers to trigger the event handlers for each custom type:
-            foreach (var config in feed.Subscriptions.Select(x => x.Configuration)) 
+            foreach (var config in algorithm.SubscriptionManager.Subscriptions) 
             {
                 //If type is a tradebar, combine tradebars and ticks into unified array:
                 if (config.Type.Name != "TradeBar" && config.Type.Name != "Tick" && !config.IsInternalFeed) 
