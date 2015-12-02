@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             dataQueue.Enqueue(new Tick{Symbol = Symbols.SPY});
 
-            exchange.Start();
+            Task.Run(() => exchange.Start());
 
             Thread.Sleep(10);
 
@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             dataQueue.Enqueue(new Tick {Symbol = Symbols.SPY});
 
-            exchange.Start();
+            Task.Run(() => exchange.Start());
 
             Thread.Sleep(10);
 
@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataQueue = new ConcurrentQueue<BaseData>();
             var exchange = CreateExchange(dataQueue);
 
-            Task.Factory.StartNew(() =>
+            Task.Run(() =>
             {
                 while (true)
                 {
@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 last = spy;
             });
 
-            exchange.Start();
+            Task.Run(() => exchange.Start());
 
             Thread.Sleep(1);
 
@@ -122,7 +122,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataQueue = new ConcurrentQueue<BaseData>();
             var exchange = CreateExchange(dataQueue);
 
-            Task.Factory.StartNew(() =>
+            Task.Run(() =>
             {
                 while (true)
                 {
@@ -143,7 +143,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 last = spy;
             });
 
-            exchange.Start();
+            Task.Run(() => exchange.Start());
 
             Thread.Sleep(50);
 
@@ -181,7 +181,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             exchange.SetErrorHandler(error => true);
 
-            exchange.Start();
+            Task.Run(() => exchange.Start());
 
             Thread.Sleep(25);
 

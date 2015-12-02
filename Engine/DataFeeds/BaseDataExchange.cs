@@ -32,12 +32,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class BaseDataExchange
     {
         private int _sleepInterval = 1;
+        private volatile bool _isStopping = false;
         private Func<Exception, bool> _isFatalError;
 
         private readonly string _name;
-        private readonly Thread _thread;
         private readonly ConcurrentDictionary<Symbol, Handler> _handlers;
-        private readonly CancellationTokenSource _cancellationTokenSource;
 
         // using concurrent dictionary for fast/easy contains/remove, the int value is nothingness
         private readonly ConcurrentDictionary<IEnumerator<BaseData>, int> _enumerators;
@@ -76,7 +75,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public BaseDataExchange(string name, params IEnumerator<BaseData>[] enumerators)
         {
             _name = name;
-            _thread = new Thread(ConsumeEnumerators);
             _enumerators = new ConcurrentDictionary<IEnumerator<BaseData>, int>();
             foreach (var enumerator in enumerators)
             {
@@ -84,7 +82,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _enumerators.AddOrUpdate(enumerator, 0);
             }
             _isFatalError = x => false;
-            _cancellationTokenSource = new CancellationTokenSource();
             _handlers = new ConcurrentDictionary<Symbol, Handler>();
         }
 
@@ -140,12 +137,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Start()
         {
-            if (_cancellationTokenSource.IsCancellationRequested)
-            {
-                throw new Exception("This exchange has been requested to stop already.");
-            }
-
-            _thread.Start();
+            _isStopping = false;
+            ConsumeEnumerators();
         }
 
         /// <summary>
@@ -153,17 +146,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Stop()
         {
-            _cancellationTokenSource.Cancel();
-
-            // check back in 25 seconds, if thread is still running, abort
-            Task.Delay(TimeSpan.FromSeconds(25)).ContinueWith(t =>
-            {
-                if (_thread.IsAlive)
-                {
-                    Log.Trace(string.Format("BaseDataExchange.Stop({0}): Force abort thread.", _name));
-                    _thread.Abort();
-                }
-            });
+            _isStopping = true;
         }
 
         /// <summary> Entry point for queue consumption </summary>
@@ -172,7 +155,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             while (true)
             {
-                if (_cancellationTokenSource.IsCancellationRequested)
+                if (_isStopping)
                 {
                     Log.Trace("BaseDataExchange.ConsumeQueue(): Exiting...");
                     return;

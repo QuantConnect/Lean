@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
@@ -121,8 +122,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Bridge = new BusyBlockingCollection<TimeSlice>();
 
             // run the exchanges
-            _exchange.Start();
-            _customExchange.Start();
+            Task.Run(() => _exchange.Start());
+            Task.Run(() => _customExchange.Start());
 
             // this value will be modified via calls to AddSubscription/RemoveSubscription
             var ffres = Time.OneSecond;
@@ -325,6 +326,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
             }
+            
+            if (_exchange != null) _exchange.Stop();
+            if (_customExchange != null) _customExchange.Stop();
+
             if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
             {
                 _cancellationTokenSource.Cancel();
