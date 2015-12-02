@@ -224,10 +224,12 @@ namespace QuantConnect.Tests.Common
         public void ImplicitFromStringChecksSymbolCache()
         {
 #pragma warning disable 0618 // This test requires implicit operators
+            SymbolCache.Set("EURUSD", Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM));
             string ticker = "EURUSD";
             Symbol actual = ticker;
             var expected = SymbolCache.GetSymbol(ticker);
             Assert.AreEqual(expected, actual);
+            SymbolCache.Clear();
 #pragma warning restore 0618
         }
 
@@ -235,10 +237,12 @@ namespace QuantConnect.Tests.Common
         public void ImplicitFromStringParsesSid()
         {
 #pragma warning disable 0618 // This test requires implicit operators
+            SymbolCache.Set("EURUSD", Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM));
             var expected = SymbolCache.GetSymbol("EURUSD");
             string sid = expected.ID.ToString();
             Symbol actual = sid;
             Assert.AreEqual(expected, actual);
+            SymbolCache.Clear();
 #pragma warning restore 0618
         }
 
