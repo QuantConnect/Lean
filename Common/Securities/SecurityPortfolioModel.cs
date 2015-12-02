@@ -167,7 +167,7 @@ namespace QuantConnect.Securities
             }
             catch (Exception err)
             {
-                Log.Error("SecurityPortfolioModel.ProcessFill(): " + err.Message);
+                Log.Error(err);
             }
 
             //Set the results back to the vehicle.

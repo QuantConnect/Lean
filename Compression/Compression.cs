@@ -79,7 +79,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error("QC.Data.ZipData(): " + err.Message);
+                Log.Error(err);
                 success = false;
             }
             return success;
@@ -127,7 +127,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error("QC.Data.ZipData(): " + err.Message);
+                Log.Error(err);
                 success = false;
             }
             return success;
@@ -205,7 +205,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error("Data.UnzipData(): " + err.Message);
+                Log.Error(err);
             }
             return data;
         }
@@ -252,7 +252,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error("QC.Data.Zip(): " + err.Message);
+                Log.Error(err);
             }
             return zipPath;
         }
@@ -345,7 +345,7 @@ namespace QuantConnect
                     }
                     catch (Exception err)
                     {
-                        Log.Error("QC.Data.Unzip(1): " + err.Message);
+                        Log.Error(err, "Inner try/catch");
                         if (zip != null) zip.Dispose();
                         if (reader != null) reader.Close();
                     }
@@ -357,7 +357,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error("Data.UnZip(3): " + filename + " >> " + err.Message);
+                Log.Error(err, "File: " + filename);
             }
             return reader;
         } // End UnZip
@@ -486,7 +486,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error(err, "Data.UnZip(): Stream >> " + err.Message);
+                Log.Error(err);
             }
 
             return reader;

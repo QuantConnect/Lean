@@ -232,7 +232,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
             catch (Exception err)
             {
-                Log.Error("Algorithm.Transactions.UpdateOrder(): " + err.Message);
+                Log.Error(err);
                 request.SetResponse(OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, err.Message));
             }
 
@@ -292,7 +292,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
             catch (Exception err)
             {
-                Log.Error("TransactionManager.RemoveOrder(): " + err.Message);
+                Log.Error(err);
                 request.SetResponse(OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, err.Message));
             }
 

@@ -167,6 +167,7 @@ namespace QuantConnect.AlgorithmFactory
                 }
                 catch (Exception err)
                 {
+                    Log.Error(err);
                     errorMessage = err.Message + " - could not locate 'main' module. Please make sure you have a main.py file in your project.";
                     return false;
                 }
@@ -205,7 +206,7 @@ namespace QuantConnect.AlgorithmFactory
             }
             catch (Exception err)
             {
-                Log.Error("Loader.TryCreatePythonAlgorithm(): " + err.Message);
+                Log.Error(err);
             }
 
             return success && (algorithmInstance != null);
@@ -301,12 +302,13 @@ namespace QuantConnect.AlgorithmFactory
             }
             catch (ReflectionTypeLoadException err)
             {
+                Log.Error(err);
                 Log.Error("Loader.TryCreateILAlgorithm(1): " + err.LoaderExceptions[0]);
                 if (err.InnerException != null) errorMessage = err.InnerException.Message;
             }
             catch (Exception err)
             {
-                Log.Error("Loader.TryCreateILAlgorithm(2): " + err.Message);
+                Log.Error(err);
                 if (err.InnerException != null) errorMessage = err.InnerException.Message;
             }
 
@@ -359,7 +361,7 @@ namespace QuantConnect.AlgorithmFactory
             }
             catch (Exception err)
             {
-                Log.Error("API.GetExtendedTypeNames(): " + err.Message + " Inner: " + err.InnerException);
+                Log.Error(err);
             }
 
             return types;

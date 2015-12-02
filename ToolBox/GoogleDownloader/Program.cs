@@ -67,7 +67,7 @@ namespace QuantConnect.ToolBox.GoogleDownloader
             }
             catch (Exception err)
             {
-                Log.Error("GoogleDownloader(): Error: " + err.Message);
+                Log.Error(err);
             }
         }
 

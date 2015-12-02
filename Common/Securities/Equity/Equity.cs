@@ -38,7 +38,7 @@ namespace QuantConnect.Securities.Equity
         /// Construct the Equity Object
         /// </summary>
         public Equity(SubscriptionDataConfig config, decimal leverage)
-            : this(SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(config), config, leverage)
+            : this(MarketHoursDatabase.FromDataFolder().GetExchangeHours(config), config, leverage)
         {
             // this constructor is provided for backward compatibility
 

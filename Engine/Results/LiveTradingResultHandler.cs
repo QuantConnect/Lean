@@ -268,8 +268,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
                 catch (Exception err)
                 {
-                    //Error never hit but just in case.
-                    Log.Error("LiveTradingResultHandler.Run(): " + err.Message);
+                    Log.Error(err);
                 }
             } // While !End.
 
@@ -437,7 +436,7 @@ namespace QuantConnect.Lean.Engine.Results
                         }
                         catch (Exception err)
                         {
-                            Log.Error("LiveTradingResultHandler.Update(): Error sending statistics: " + err.Message);   
+                            Log.Error(err, "Error sending statistics:");
                         }
                         _nextStatisticsUpdate = DateTime.Now.AddMinutes(1);
                     }
@@ -469,7 +468,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
             catch (Exception err)
             {
-                Log.Error(err, "LiveTradingResultHandler().Update(): " + err.Message, true);
+                Log.Error(err, "LiveTradingResultHandler().Update(): ", true);
             }
         }
 
@@ -820,7 +819,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
             catch (Exception err)
             {
-                Log.Error("Algorithm.Worker.SendResult(): " + err.Message);
+                Log.Error(err);
             }
         }
 
@@ -840,7 +839,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
             catch (Exception err)
             {
-                Log.Error("LiveTradingResultHandler.StoreLog(): " + err.Message);
+                Log.Error(err);
             }
         }
 
@@ -944,7 +943,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
             catch (Exception err)
             {
-                Log.Error("LiveResultHandler.StoreResult(): " + err.Message);
+                Log.Error(err);
             }
         }
 
@@ -1153,7 +1152,7 @@ namespace QuantConnect.Lean.Engine.Results
                             }
                             catch (Exception err)
                             {
-                                Log.Error("LiveTradingResultHandler.ProcessSynchronousEvents(): Custom send notification: " + err.Message);
+                                Log.Error(err, "Custom send notification:");
                                 ErrorMessage("Custom send notification: " + err.Message, err.StackTrace);
                             }
                             break;

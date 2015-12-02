@@ -207,7 +207,7 @@ namespace QuantConnect.Data.Market
             }
             catch (Exception err)
             {
-                Log.Error("DataModels: TradeBar(): Error Initializing - " + config.SecurityType + " - " + err.Message + " - " + line);
+                Log.Error(err, "SecurityType: " + config.SecurityType + " Line: " + line);
             }
 
             // if we couldn't parse it above return a default instance
@@ -252,7 +252,7 @@ namespace QuantConnect.Data.Market
             if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
-                tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
+                tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                 tradeBar.Open = config.GetNormalizedPrice(Convert.ToDecimal(csv[1], CultureInfo.InvariantCulture) / _scaleFactor);
                 tradeBar.High = config.GetNormalizedPrice(Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture) / _scaleFactor);
                 tradeBar.Low = config.GetNormalizedPrice(Convert.ToDecimal(csv[3], CultureInfo.InvariantCulture) / _scaleFactor);
@@ -293,7 +293,7 @@ namespace QuantConnect.Data.Market
             if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
-                tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
+                tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                 tradeBar.Open = Convert.ToDecimal(csv[1], CultureInfo.InvariantCulture);
                 tradeBar.High = Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture);
                 tradeBar.Low = Convert.ToDecimal(csv[3], CultureInfo.InvariantCulture);
@@ -302,7 +302,7 @@ namespace QuantConnect.Data.Market
             else
             {
                 //Fast decimal conversion
-                tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32());
+                tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                 tradeBar.Open = csv[1].ToDecimal();
                 tradeBar.High = csv[2].ToDecimal();
                 tradeBar.Low = csv[3].ToDecimal();

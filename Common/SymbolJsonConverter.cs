@@ -38,7 +38,7 @@ namespace QuantConnect
 
             writer.WriteStartObject();
             writer.WritePropertyName("&type");
-            writer.WriteValue(typeof(Symbol).AssemblyQualifiedName);
+            writer.WriteValue("QuantConnect.Symbol, QuantConnect.Common");
             writer.WritePropertyName("Value");
             writer.WriteValue(symbol.Value);
             writer.WritePropertyName("ID");

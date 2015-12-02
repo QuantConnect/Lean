@@ -150,7 +150,7 @@ namespace QuantConnect.Data
             SecurityType = config.SecurityType;
             Market = config.Market;
             IsCustomData = config.IsCustomData;
-            TimeZone = config.TimeZone;
+            TimeZone = config.DataTimeZone;
         }
     }
 }

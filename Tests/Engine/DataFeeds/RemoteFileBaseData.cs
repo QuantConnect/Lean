@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return null;
             }
 
-            var time = QuantConnect.Time.UnixTimeStampToDateTime(double.Parse(csv[0])).ConvertFromUtc(config.TimeZone).Subtract(config.Increment);
+            var time = QuantConnect.Time.UnixTimeStampToDateTime(double.Parse(csv[0])).ConvertFromUtc(config.DataTimeZone).Subtract(config.Increment);
             return new RemoteFileBaseData
             {
                 Symbol = config.Symbol,

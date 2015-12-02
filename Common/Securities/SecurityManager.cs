@@ -18,6 +18,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
@@ -94,7 +95,7 @@ namespace QuantConnect.Securities
         public void Add(Symbol symbol, Security security)
         {
             CheckResolutionCounts(security.Resolution);
-            security.SetLocalTimeKeeper(_timeKeeper.GetLocalTimeKeeper(security.SubscriptionDataConfig.TimeZone));
+            security.SetLocalTimeKeeper(_timeKeeper.GetLocalTimeKeeper(security.Exchange.TimeZone));
             _securityManager.Add(symbol, security);
         }
 
@@ -317,7 +318,7 @@ namespace QuantConnect.Securities
             } 
             catch (Exception err) 
             {
-                Log.Error("Algorithm.Market.GetResolutionCount(): " + err.Message);
+                Log.Error(err);
             }
             return count;
         }
@@ -384,9 +385,11 @@ namespace QuantConnect.Securities
         /// leverage is less than or equal to zero.
         /// This method also add the new symbol mapping to the <see cref="SymbolCache"/>
         /// </summary>
-        public static Security CreateSecurity(SecurityPortfolioManager securityPortfolioManager,
+        public static Security CreateSecurity(Type factoryType,
+            SecurityPortfolioManager securityPortfolioManager,
             SubscriptionManager subscriptionManager,
-            SecurityExchangeHoursProvider securityExchangeHoursProvider,
+            SecurityExchangeHours exchangeHours,
+            DateTimeZone dataTimeZone,
             Symbol symbol,
             Resolution resolution,
             bool fillDataForward,
@@ -409,14 +412,9 @@ namespace QuantConnect.Securities
             // add the symbol to our cache
             SymbolCache.Set(symbol.Value, symbol);
 
-            var market = sid.Market;
-            var securityType = sid.SecurityType;
-
             //Add the symbol to Data Manager -- generate unified data streams for algorithm events
-            var exchangeHours = securityExchangeHoursProvider.GetExchangeHours(market, symbol, securityType);
-            var tradeBarType = typeof (TradeBar);
-            var type = resolution == Resolution.Tick ? typeof (Tick) : tradeBarType;
-            var config = subscriptionManager.Add(type, symbol, resolution, exchangeHours.TimeZone, isCustomData, fillDataForward, extendedMarketHours, isInternalFeed);
+            var config = subscriptionManager.Add(factoryType, symbol, resolution, dataTimeZone, exchangeHours.TimeZone, isCustomData, fillDataForward,
+                extendedMarketHours, isInternalFeed);
 
             Security security;
             switch (config.SecurityType)
@@ -450,6 +448,29 @@ namespace QuantConnect.Securities
             }
             return security;
         }
-    } // End Algorithm Security Manager Class
 
-} // End QC Namespace
+        /// <summary>
+        /// Creates a security and matching configuration. This applies the default leverage if
+        /// leverage is less than or equal to zero.
+        /// This method also add the new symbol mapping to the <see cref="SymbolCache"/>
+        /// </summary>
+        public static Security CreateSecurity(SecurityPortfolioManager securityPortfolioManager,
+            SubscriptionManager subscriptionManager,
+            MarketHoursDatabase marketHoursDatabase,
+            Symbol symbol,
+            Resolution resolution,
+            bool fillDataForward,
+            decimal leverage,
+            bool extendedMarketHours,
+            bool isInternalFeed,
+            bool isCustomData)
+        {
+            var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+            var exchangeHours = marketHoursDbEntry.ExchangeHours;
+            var tradeBarType = typeof(TradeBar);
+            var type = resolution == Resolution.Tick ? typeof(Tick) : tradeBarType;
+            return CreateSecurity(type, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbol, resolution,
+                fillDataForward, leverage, extendedMarketHours, isInternalFeed, isCustomData);
+        }
+    }
+}

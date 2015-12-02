@@ -51,11 +51,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public readonly SubscriptionDataConfig Configuration;
 
         /// <summary>
-        /// Gets the time zone associated with this subscription
+        /// Gets the data time zone associated with this subscription
         /// </summary>
         public DateTimeZone TimeZone
         {
-            get { return Configuration.TimeZone; }
+            get { return Security.Exchange.TimeZone; }
         }
 
         /// <summary>

@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var array = JsonConvert.DeserializeObject<JsonSerialization[]>(line);
             if (array.Length > 0)
             {
-                return array[0].ToBaseData(config.TimeZone, config.Increment, config.Symbol);
+                return array[0].ToBaseData(config.DataTimeZone, config.Increment, config.Symbol);
             }
             return null;
         }

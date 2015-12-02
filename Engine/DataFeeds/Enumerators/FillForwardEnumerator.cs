@@ -71,31 +71,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FillForwardEnumerator"/> class
-        /// </summary>
-        /// <param name="enumerator">The source enumerator to be filled forward</param>
-        /// <param name="exchange">The exchange used to determine when to insert fill forward data</param>
-        /// <param name="fillForwardResolution">The resolution we'd like to receive data on</param>
-        /// <param name="isExtendedMarketHours">True to use the exchange's extended market hours, false to use the regular market hours</param>
-        /// <param name="subscriptionEndTime">The end time of the subscrition, once passing this date the enumerator will stop</param>
-        /// <param name="dataResolution">The source enumerator's data resolution</param>
-        public FillForwardEnumerator(IEnumerator<BaseData> enumerator,
-            SecurityExchange exchange,
-            TimeSpan fillForwardResolution,
-            bool isExtendedMarketHours,
-            DateTime subscriptionEndTime,
-            TimeSpan dataResolution
-            )
-        {
-            _subscriptionEndTime = subscriptionEndTime;
-            Exchange = exchange;
-            _enumerator = enumerator;
-            _dataResolution = dataResolution;
-            _fillForwardResolution = Ref.CreateReadOnly(() => fillForwardResolution);
-            _isExtendedMarketHours = isExtendedMarketHours;
-        }
-
-        /// <summary>
         /// Gets the element in the collection at the current position of the enumerator.
         /// </summary>
         /// <returns>

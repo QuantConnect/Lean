@@ -22,13 +22,13 @@ using QuantConnect.Securities;
 namespace QuantConnect.Tests.Common.Securities
 {
     [TestFixture]
-    public class SecurityExchangeHoursProviderTests
+    public class MarketHoursDatabaseTests
     {
         [Test]
         public void InitializesFromCsv()
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
-            var exchangeHours = GetSecurityExchangeHoursProvider(file);
+            var exchangeHours = GetMarketHoursDatabase(file);
 
             Assert.AreEqual(2, exchangeHours.ExchangeHoursListing.Count);
         }
@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void RetrievesExchangeHoursWithAndWithoutSymbol()
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
-            var exchangeHours = GetSecurityExchangeHoursProvider(file);
+            var exchangeHours = GetMarketHoursDatabase(file);
 
             var hours = exchangeHours.GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
             Assert.IsNotNull(hours);
@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void CorrectlyReadsClosedAllDayHours()
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
-            var exchangeHours = GetSecurityExchangeHoursProvider(file);
+            var exchangeHours = GetMarketHoursDatabase(file);
 
             var hours = exchangeHours.GetExchangeHours(Market.USA, null, SecurityType.Equity);
             Assert.IsNotNull(hours);
@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void CorrectlyReadsOpenAllDayHours()
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
-            var exchangeHours = GetSecurityExchangeHoursProvider(file);
+            var exchangeHours = GetMarketHoursDatabase(file);
 
             var hours = exchangeHours.GetExchangeHours(Market.FXCM, null, SecurityType.Forex);
             Assert.IsNotNull(hours);
@@ -72,23 +72,15 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void InitializesFromDataFolder()
         {
-            var provider = SecurityExchangeHoursProvider.FromDataFolder();
+            var provider = MarketHoursDatabase.FromDataFolder();
             Assert.AreNotEqual(0, provider.ExchangeHoursListing.Count);
-        }
-
-        private static SecurityExchangeHoursProvider GetSecurityExchangeHoursProvider(string file)
-        {
-            return SecurityExchangeHoursProvider.FromCsvFile(file, new Dictionary<string, IEnumerable<DateTime>>
-            {
-                {Market.USA, USHoliday.Dates}
-            });
         }
 
         [Test]
         public void CorrectlyReadsUsEquityMarketHours()
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
-            var exchangeHours = GetSecurityExchangeHoursProvider(file);
+            var exchangeHours = GetMarketHoursDatabase(file);
 
             var equityHours = exchangeHours.GetExchangeHours(Market.USA, null, SecurityType.Equity);
             foreach (var day in equityHours.MarketHours.Keys)
@@ -110,7 +102,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void CorrectlyReadFxcmForexMarketHours()
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
-            var exchangeHours = GetSecurityExchangeHoursProvider(file);
+            var exchangeHours = GetMarketHoursDatabase(file);
 
             var equityHours = exchangeHours.GetExchangeHours(Market.FXCM, null, SecurityType.Forex);
             foreach (var day in equityHours.MarketHours.Keys)
@@ -139,6 +131,32 @@ namespace QuantConnect.Tests.Common.Securities
                     Assert.AreEqual(new TimeSpan(17, 0, 0), marketHours.ExtendedMarketClose);
                 }
             }
+        }
+
+        [Test]
+        public void ReadsUsEquityDataTimeZone()
+        {
+            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
+            var marketHoursDatabase = GetMarketHoursDatabase(file);
+
+            Assert.AreEqual(TimeZones.NewYork, marketHoursDatabase.GetDataTimeZone(Market.USA, null, SecurityType.Equity));
+        }
+
+        [Test]
+        public void ReadsFxcmForexDataTimeZone()
+        {
+            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
+            var marketHoursDatabase = GetMarketHoursDatabase(file);
+
+            Assert.AreEqual(TimeZones.EasternStandard, marketHoursDatabase.GetDataTimeZone(Market.FXCM, null, SecurityType.Forex));
+        }
+
+        private static MarketHoursDatabase GetMarketHoursDatabase(string file)
+        {
+            return MarketHoursDatabase.FromCsvFile(file, new Dictionary<string, IEnumerable<DateTime>>
+            {
+                {Market.USA, USHoliday.Dates}
+            });
         }
     }
 }

@@ -71,12 +71,12 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="securities">The SecurityManager for the algorithm</param>
         /// <param name="subscriptions">The SubscriptionManager for the algorithm</param>
-        /// <param name="exchangeHoursProvider">A security exchange hours provider instance used to resolve exchange hours for new subscriptions</param>
-        public void EnsureCurrencyDataFeeds(SecurityManager securities, SubscriptionManager subscriptions, SecurityExchangeHoursProvider exchangeHoursProvider)
+        /// <param name="marketHoursDatabase">A security exchange hours provider instance used to resolve exchange hours for new subscriptions</param>
+        public void EnsureCurrencyDataFeeds(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase)
         {
             foreach (var cash in _currencies.Values)
             {
-                cash.EnsureCurrencyDataFeed(securities, subscriptions, exchangeHoursProvider);
+                cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase);
             }
         }
 

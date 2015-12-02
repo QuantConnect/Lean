@@ -208,7 +208,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
                 catch (Exception err)
                 {
-                    Log.Error("BrokerageSetupHandler.Setup(): Error resolving brokerage factory for " + liveJob.Brokerage + ". " + err.Message);
+                    Log.Error(err, "Error resolving brokerage factory for " + liveJob.Brokerage+":");
                     AddInitializationError("Unable to locate factory for brokerage: " + liveJob.Brokerage);
                 }
 
@@ -342,7 +342,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 Log.Trace("BrokerageSetupHandler.Setup(): Ensuring currency data feeds present...");
 
                 // call this after we've initialized everything from the brokerage since we may have added some holdings/currencies
-                algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager, SecurityExchangeHoursProvider.FromDataFolder());
+                algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager, MarketHoursDatabase.FromDataFolder());
 
                 //Set the starting portfolio value for the strategy to calculate performance:
                 StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;

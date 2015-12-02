@@ -33,7 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly IDataFeed _dataFeed;
         private readonly IAlgorithm _algorithm;
-        private readonly SecurityExchangeHoursProvider _hoursProvider = SecurityExchangeHoursProvider.FromDataFolder();
+        private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
@@ -137,7 +137,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Security security;
                 if (!_algorithm.Securities.TryGetValue(symbol, out security))
                 {
-                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _hoursProvider,
+                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _marketHoursDatabase,
                         symbol,
                         settings.Resolution,
                         settings.FillForward,

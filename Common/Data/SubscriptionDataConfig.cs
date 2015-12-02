@@ -115,9 +115,14 @@ namespace QuantConnect.Data
         public readonly string Market;
 
         /// <summary>
-        /// Gets the time zone for this subscription
+        /// Gets the data time zone for this subscription
         /// </summary>
-        public readonly DateTimeZone TimeZone;
+        public readonly DateTimeZone DataTimeZone;
+
+        /// <summary>
+        /// Gets the exchange time zone for this subscription
+        /// </summary>
+        public readonly DateTimeZone ExchangeTimeZone;
 
         /// <summary>
         /// Consolidators that are registred with this subscription
@@ -130,17 +135,20 @@ namespace QuantConnect.Data
         /// <param name="objectType">Type of the data objects.</param>
         /// <param name="symbol">Symbol of the asset we're requesting</param>
         /// <param name="resolution">Resolution of the asset we're requesting</param>
-        /// <param name="timeZone">The time zone the raw data is time stamped in</param>
+        /// <param name="dataTimeZone">The time zone the raw data is time stamped in</param>
+        /// <param name="exchangeTimeZone">Specifies the time zone of the exchange for the security this subscription is for. This
+        /// is this output time zone, that is, the time zone that will be used on BaseData instances</param>
         /// <param name="fillForward">Fill in gaps with historical data</param>
         /// <param name="extendedHours">Equities only - send in data from 4am - 8pm</param>
         /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
         /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
         /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
-        public SubscriptionDataConfig(Type objectType, 
-            Symbol symbol, 
-            Resolution resolution, 
-            DateTimeZone timeZone,
-            bool fillForward, 
+        public SubscriptionDataConfig(Type objectType,
+            Symbol symbol,
+            Resolution resolution,
+            DateTimeZone dataTimeZone,
+            DateTimeZone exchangeTimeZone,
+            bool fillForward,
             bool extendedHours,
             bool isInternalFeed,
             bool isCustom = false)
@@ -156,7 +164,8 @@ namespace QuantConnect.Data
             IsInternalFeed = isInternalFeed;
             IsCustomData = isCustom;
             Market = symbol.ID.Market;
-            TimeZone = timeZone;
+            DataTimeZone = dataTimeZone;
+            ExchangeTimeZone = exchangeTimeZone;
             Consolidators = new HashSet<IDataConsolidator>();
 
             switch (resolution)
@@ -192,7 +201,9 @@ namespace QuantConnect.Data
         /// <param name="symbol">Symbol of the asset we're requesting</param>
         /// <param name="resolution">Resolution of the asset we're requesting</param>
         /// <param name="market">The market this subscription comes from</param>
-        /// <param name="timeZone">The time zone the raw data is time stamped in</param>
+        /// <param name="dataTimeZone">The time zone the raw data is time stamped in</param>
+        /// <param name="exchangeTimeZone">Specifies the time zone of the exchange for the security this subscription is for. This
+        /// is this output time zone, that is, the time zone that will be used on BaseData instances</param>
         /// <param name="fillForward">Fill in gaps with historical data</param>
         /// <param name="extendedHours">Equities only - send in data from 4am - 8pm</param>
         /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
@@ -204,7 +215,8 @@ namespace QuantConnect.Data
             Symbol symbol = null,
             Resolution? resolution = null,
             string market = null,
-            DateTimeZone timeZone = null,
+            DateTimeZone dataTimeZone = null,
+            DateTimeZone exchangeTimeZone = null,
             bool? fillForward = null,
             bool? extendedHours = null,
             bool? isInternalFeed = null,
@@ -213,7 +225,8 @@ namespace QuantConnect.Data
             objectType ?? config.Type,
             symbol ?? config.Symbol,
             resolution ?? config.Resolution,
-            timeZone ?? config.TimeZone,
+            dataTimeZone ?? config.DataTimeZone, 
+            exchangeTimeZone ?? config.ExchangeTimeZone,
             fillForward ?? config.FillDataForward,
             extendedHours ?? config.ExtendedMarketHours,
             isInternalFeed ?? config.IsInternalFeed,

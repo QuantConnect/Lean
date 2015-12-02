@@ -91,5 +91,16 @@ namespace QuantConnect.Util
         {
             return new Ref<T>(getter, null).AsReadOnly();
         }
+        /// <summary>
+        /// Creates a new <see cref="Ref{T}"/> instance by closing over
+        /// the specified <paramref name="initialValue"/> variable.
+        /// NOTE: This won't close over the variable input to the function,
+        /// but rather a copy of the variable. This reference will use it's
+        /// own storage.
+        /// </summary>
+        public static Ref<T> Create<T>(T initialValue)
+        {
+            return new Ref<T>(() => initialValue, value => { initialValue = value; });
+        }
     }
 }

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Threading;
 using NodaTime;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -98,6 +99,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 request.Symbol, 
                 request.Resolution, 
                 request.TimeZone, 
+                request.ExchangeHours.TimeZone, 
                 request.FillForwardResolution.HasValue, 
                 request.IncludeExtendedMarketHours, 
                 false, 
@@ -110,7 +112,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 start, 
                 end, 
                 ResultHandlerStub.Instance,
-                _mapFileProvider.Get(config.Market),
+                config.SecurityType == SecurityType.Equity ? _mapFileProvider.Get(config.Market) : MapFileResolver.Empty,
                 Time.EachTradeableDay(request.ExchangeHours, start, end), 
                 false,
                 includeAuxilliaryData: false
@@ -139,7 +141,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 return data.EndTime > start;
             });
 
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, start, end);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, start, end);
             return new Subscription(null, security, reader, timeZoneOffsetProvider, start, end, false);
         }
 

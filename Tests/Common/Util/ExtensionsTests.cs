@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var time = new DateTime(2015, 05, 02, 18, 01, 00);
             var expected = new DateTime(2015, 05, 01);
-            var hours = SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(Market.FXCM, null, SecurityType.Forex);
+            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.FXCM, null, SecurityType.Forex);
             var exchangeRounded = time.ExchangeRoundDown(Time.OneDay, hours, false);
             Assert.AreEqual(expected, exchangeRounded);
         }

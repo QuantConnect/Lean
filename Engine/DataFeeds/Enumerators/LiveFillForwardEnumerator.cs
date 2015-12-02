@@ -50,23 +50,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LiveFillForwardEnumerator"/> class
-        /// </summary>
-        /// <param name="timeProvider">The source of time used to gauage when this enumerator should emit extra bars when
-        /// null data is returned from the source enumerator</param>
-        /// <param name="enumerator">The source enumerator to be filled forward</param>
-        /// <param name="exchange">The exchange used to determine when to insert fill forward data</param>
-        /// <param name="fillForwardResolution">The resolution we'd like to receive data on</param>
-        /// <param name="isExtendedMarketHours">True to use the exchange's extended market hours, false to use the regular market hours</param>
-        /// <param name="subscriptionEndTime">The end time of the subscrition, once passing this date the enumerator will stop</param>
-        /// <param name="dataResolution">The source enumerator's data resolution</param>
-        public LiveFillForwardEnumerator(ITimeProvider timeProvider, IEnumerator<BaseData> enumerator, SecurityExchange exchange, TimeSpan fillForwardResolution, bool isExtendedMarketHours, DateTime subscriptionEndTime, TimeSpan dataResolution)
-            : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionEndTime, dataResolution)
-        {
-            _timeProvider = timeProvider;
-        }
-
-        /// <summary>
         /// Determines whether or not fill forward is required, and if true, will produce the new fill forward data
         /// </summary>
         /// <param name="fillForwardResolution"></param>

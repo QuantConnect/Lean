@@ -103,7 +103,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             }
             catch (Exception err)
             {
-                Log.Error("FxcmDownloader(): Error: " + err.Message);
+                Log.Error(err);
             }
         }
     }

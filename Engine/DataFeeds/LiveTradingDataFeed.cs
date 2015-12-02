@@ -22,6 +22,7 @@ using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -366,23 +367,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             try
             {
                 var config = security.SubscriptionDataConfig;
-                var localStartTime = utcStartTime.ConvertFromUtc(config.TimeZone);
-                var localEndTime = utcEndTime.ConvertFromUtc(config.TimeZone);
-                var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, utcStartTime, utcEndTime);
+                var localEndTime = utcEndTime.ConvertFromUtc(security.Exchange.TimeZone);
+                var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, utcStartTime, utcEndTime);
 
                 IEnumerator<BaseData> enumerator;
                 if (config.IsCustomData)
                 {
+                    if (!Quandl.IsAuthCodeSet)
+                    {
+                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
+                        Quandl.SetAuthCode(Config.Get("quandl-auth-token"));
+                    }
+
                     // each time we exhaust we'll new up this enumerator stack
                     var refresher = new RefreshEnumerator<BaseData>(() =>
                     {
                         var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
-                        var currentLocalDate = DateTime.UtcNow.ConvertFromUtc(config.TimeZone).Date;
+                        var currentLocalDate = DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone).Date;
                         var factory = new BaseDataSubscriptionFactory(config, currentLocalDate, true);
                         var source = sourceProvider.GetSource(config, currentLocalDate, true);
                         var factoryReadEnumerator = factory.Read(source).GetEnumerator();
                         var maximumDataAge = TimeSpan.FromTicks(Math.Max(config.Increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
-                        var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, config.TimeZone, maximumDataAge);
+                        var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, security.Exchange.TimeZone, maximumDataAge);
                         return new FrontierAwareEnumerator(fastForward, _timeProvider, timeZoneOffsetProvider);
                     });
 
@@ -403,7 +409,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // this enumerator allows the exchange to pump ticks into the 'back' of the enumerator,
                     // and the time sync loop can pull aggregated trade bars off the front
-                    var aggregator = new TradeBarBuilderEnumerator(config.Increment, config.TimeZone, _timeProvider);
+                    var aggregator = new TradeBarBuilderEnumerator(config.Increment, security.Exchange.TimeZone, _timeProvider);
                     _exchange.SetHandler(config.Symbol, data =>
                     {
                         aggregator.ProcessData((Tick) data);
@@ -458,10 +464,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // grab the relevant exchange hours
             var config = universe.Configuration;
-            var localStartTime = startTimeUtc.ConvertFromUtc(config.TimeZone);
-            var localEndTime = endTimeUtc.ConvertFromUtc(config.TimeZone);
 
-            var exchangeHours = SecurityExchangeHoursProvider.FromDataFolder().GetExchangeHours(config);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(universe.Market, config.Symbol, universe.SecurityType);
+
+            var localStartTime = startTimeUtc.ConvertFromUtc(exchangeHours.TimeZone);
+            var localEndTime = endTimeUtc.ConvertFromUtc(exchangeHours.TimeZone);
 
             // create a canonical security object
             var security = new Security(exchangeHours, config, universe.SubscriptionSettings.Leverage);
@@ -502,13 +509,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var refresher = new RefreshEnumerator<BaseDataCollection>(() =>
                 {
                     var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
-                    var currentLocalDate = DateTime.UtcNow.ConvertFromUtc(config.TimeZone).Date;
+                    var currentLocalDate = DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone).Date;
                     var factory = new BaseDataSubscriptionFactory(config, currentLocalDate, true);
                     var source = sourceProvider.GetSource(config, currentLocalDate, true);
                     var factorEnumerator = factory.Read(source).GetEnumerator();
-                    var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, config.TimeZone, config.Increment);
-                    var timeZoneOffsetProvider = new TimeZoneOffsetProvider(config.TimeZone, startTimeUtc, endTimeUtc);
-                    var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, timeZoneOffsetProvider);
+                    var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, security.Exchange.TimeZone, config.Increment);
+                    var tzOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
+                    var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, tzOffsetProvider);
                     return new BaseDataCollectionAggregatorEnumerator(frontierAware, config.Symbol);
                 });
                 
@@ -534,7 +541,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // create the subscription
-            var subscription = new Subscription(universe, security, enumerator, new TimeZoneOffsetProvider(security.SubscriptionDataConfig.TimeZone, startTimeUtc, endTimeUtc), startTimeUtc, endTimeUtc, true);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
+            var subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, true);
 
             return subscription;
         }

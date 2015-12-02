@@ -79,10 +79,10 @@ namespace QuantConnect.Tests.Common.Securities
             var cash = new Cash("JPY", quantity, conversionRate);
 
             var subscriptions = new SubscriptionManager(TimeKeeper);
-            var abcConfig = subscriptions.Add(Symbols.SPY, Resolution.Minute, TimeZone);
+            var abcConfig = subscriptions.Add(Symbols.SPY, Resolution.Minute, TimeZone, TimeZone);
             var securities = new SecurityManager(TimeKeeper);
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, abcConfig, 1m));
-            cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen);
             Assert.AreEqual(1, subscriptions.Subscriptions.Count(x => x.Symbol == Symbols.USDJPY));
             Assert.AreEqual(1, securities.Values.Count(x => x.Symbol == Symbols.USDJPY));
         }
@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var securities = new SecurityManager(TimeKeeper);
             var subscriptions = new SubscriptionManager(TimeKeeper);
-            cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen);
         }
 
         [Test]
@@ -110,10 +110,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             var subscriptions = new SubscriptionManager(TimeKeeper);
             var securities = new SecurityManager(TimeKeeper);
-            securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.SPY, Resolution.Minute, TimeZone), 1m));
-            securities.Add(Symbols.EURUSD, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.EURUSD, minimumResolution, TimeZone), 1m));
+            securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.SPY, Resolution.Minute, TimeZone, TimeZone), 1m));
+            securities.Add(Symbols.EURUSD, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.EURUSD, minimumResolution, TimeZone, TimeZone), 1m));
 
-            cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen);
             Assert.AreEqual(minimumResolution, subscriptions.Subscriptions.Single(x => x.Symbol == Symbols.USDJPY).Resolution);
         }
 
@@ -126,9 +126,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             var subscriptions = new SubscriptionManager(TimeKeeper);
             var securities = new SecurityManager(TimeKeeper);
-            securities.Add(Symbols.EURUSD, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.EURUSD, Resolution.Minute, TimeZone), 1m));
+            securities.Add(Symbols.EURUSD, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.EURUSD, Resolution.Minute, TimeZone, TimeZone), 1m));
 
-            cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen);
             var config = subscriptions.Subscriptions.Single(x => x.Symbol == Symbols.USDJPY);
             Assert.IsTrue(config.IsInternalFeed);
         }
@@ -142,9 +142,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             var subscriptions = new SubscriptionManager(TimeKeeper);
             var securities = new SecurityManager(TimeKeeper);
-            securities.Add(Symbols.USDJPY, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.USDJPY, Resolution.Minute, TimeZone), 1m));
+            securities.Add(Symbols.USDJPY, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.USDJPY, Resolution.Minute, TimeZone, TimeZone), 1m));
 
-            cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen);
             var config = subscriptions.Subscriptions.Single(x => x.Symbol == Symbols.USDJPY);
             Assert.IsFalse(config.IsInternalFeed);
         }
@@ -158,10 +158,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             var subscriptions = new SubscriptionManager(TimeKeeper);
             var securities = new SecurityManager(TimeKeeper);
-            securities.Add(Symbols.USDJPY, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.USDJPY, Resolution.Minute, TimeZone), 1m));
+            securities.Add(Symbols.USDJPY, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.USDJPY, Resolution.Minute, TimeZone, TimeZone), 1m));
 
             // we need to get subscription index
-            cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen);
 
             var last = 120m;
             cash.Update(new Tick(DateTime.Now, Symbols.USDJPY, last, 119.95m, 120.05m));
@@ -179,10 +179,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             var subscriptions = new SubscriptionManager(TimeKeeper);
             var securities = new SecurityManager(TimeKeeper);
-            securities.Add(Symbols.GBPUSD, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.GBPUSD, Resolution.Minute, TimeZone), 1m));
+            securities.Add(Symbols.GBPUSD, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.GBPUSD, Resolution.Minute, TimeZone, TimeZone), 1m));
 
             // we need to get subscription index
-            cash.EnsureCurrencyDataFeed(securities, subscriptions, SecurityExchangeHoursProvider.AlwaysOpen);
+            cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen);
 
             var last = 1.5m;
             cash.Update(new Tick(DateTime.Now, Symbols.GBPUSD, last, last * 1.009m, last * 0.009m));

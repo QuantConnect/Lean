@@ -127,7 +127,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Set the time frontier of the algorithm
                     algorithm.SetDateTime(algorithm.StartDate.ConvertToUtc(algorithm.TimeZone));
                     //Add currency data feeds that weren't explicity added in Initialize
-                    algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager, SecurityExchangeHoursProvider.FromDataFolder());
+                    algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager, MarketHoursDatabase.FromDataFolder());
 
                     //Construct the backtest job packet:
                     backtestJob.PeriodStart = algorithm.StartDate;
@@ -147,7 +147,7 @@ namespace QuantConnect.Lean.Engine.Setup
             }
             catch (Exception err)
             {
-                Log.Error("ConsoleSetupHandler().Setup(): " + err.Message);
+                Log.Error(err);
                 Errors.Add("Failed to initialize algorithm: Initialize(): " + err.Message);
             }
 

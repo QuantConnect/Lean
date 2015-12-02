@@ -59,11 +59,13 @@ namespace QuantConnect.Data
         /// <param name="symbol">Symbol of the asset we're like</param>
         /// <param name="resolution">Resolution of Asset Required</param>
         /// <param name="timeZone">The time zone the subscription's data is time stamped in</param>
+        /// <param name="exchangeTimeZone">Specifies the time zone of the exchange for the security this subscription is for. This
+        /// is this output time zone, that is, the time zone that will be used on BaseData instances</param>
         /// <param name="isCustomData">True if this is custom user supplied data, false for normal QC data</param>
         /// <param name="fillDataForward">when there is no data pass the last tradebar forward</param>
         /// <param name="extendedMarketHours">Request premarket data as well when true </param>
         /// <returns>The newly created <see cref="SubscriptionDataConfig"/></returns>
-        public SubscriptionDataConfig Add(Symbol symbol, Resolution resolution, DateTimeZone timeZone, bool isCustomData = false, bool fillDataForward = true, bool extendedMarketHours = false)
+        public SubscriptionDataConfig Add(Symbol symbol, Resolution resolution, DateTimeZone timeZone, DateTimeZone exchangeTimeZone, bool isCustomData = false, bool fillDataForward = true, bool extendedMarketHours = false)
         {
             //Set the type: market data only comes in two forms -- ticks(trade by trade) or tradebar(time summaries)
             var dataType = typeof(TradeBar);
@@ -71,7 +73,7 @@ namespace QuantConnect.Data
             {
                 dataType = typeof(Tick);
             }
-            return Add(dataType, symbol, resolution, timeZone, isCustomData, fillDataForward, extendedMarketHours, false);
+            return Add(dataType, symbol, resolution, timeZone, exchangeTimeZone, isCustomData, fillDataForward, extendedMarketHours, false);
         }
 
         /// <summary>
@@ -80,27 +82,33 @@ namespace QuantConnect.Data
         /// <param name="dataType">Set the type of the data we're subscribing to.</param>
         /// <param name="symbol">Symbol of the asset we're like</param>
         /// <param name="resolution">Resolution of Asset Required</param>
-        /// <param name="timeZone">The time zone the subscription's data is time stamped in</param>
+        /// <param name="dataTimeZone">The time zone the subscription's data is time stamped in</param>
+        /// <param name="exchangeTimeZone">Specifies the time zone of the exchange for the security this subscription is for. This
+        /// is this output time zone, that is, the time zone that will be used on BaseData instances</param>
         /// <param name="isCustomData">True if this is custom user supplied data, false for normal QC data</param>
         /// <param name="fillDataForward">when there is no data pass the last tradebar forward</param>
         /// <param name="extendedMarketHours">Request premarket data as well when true </param>
         /// <param name="isInternalFeed">Set to true to prevent data from this subscription from being sent into the algorithm's OnData events</param>
         /// <returns>The newly created <see cref="SubscriptionDataConfig"/></returns>
-        public SubscriptionDataConfig Add(Type dataType, Symbol symbol, Resolution resolution, DateTimeZone timeZone, bool isCustomData, bool fillDataForward = true, bool extendedMarketHours = false, bool isInternalFeed = false) 
+        public SubscriptionDataConfig Add(Type dataType, Symbol symbol, Resolution resolution, DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone, bool isCustomData, bool fillDataForward = true, bool extendedMarketHours = false, bool isInternalFeed = false)
         {
-            if (timeZone == null)
+            if (dataTimeZone == null)
             {
-                throw new ArgumentNullException("timeZone", "TimeZone is a required parameter for new subscriptions.  Set to the time zone the raw data is time stamped in.");
+                throw new ArgumentNullException("dataTimeZone", "DataTimeZone is a required parameter for new subscriptions.  Set to the time zone the raw data is time stamped in.");
+            }
+            if (exchangeTimeZone == null)
+            {
+                throw new ArgumentNullException("exchangeTimeZone", "ExchangeTimeZone is a required parameter for new subscriptions.  Set to the time zone the security exchange resides in.");
             }
             
             //Create:
-            var newConfig = new SubscriptionDataConfig(dataType, symbol, resolution, timeZone, fillDataForward, extendedMarketHours, isInternalFeed, isCustomData);
+            var newConfig = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, fillDataForward, extendedMarketHours, isInternalFeed, isCustomData);
 
             //Add to subscription list: make sure we don't have his symbol:
             Subscriptions.Add(newConfig);
 
             // add the time zone to our time keeper
-            _timeKeeper.AddTimeZone(timeZone);
+            _timeKeeper.AddTimeZone(exchangeTimeZone);
 
             return newConfig;
         }

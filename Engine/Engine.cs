@@ -147,6 +147,7 @@ namespace QuantConnect.Lean.Engine
                 }
                 catch (Exception err)
                 {
+                    Log.Error(err);
                     var runtimeMessage = "Algorithm.Initialize() Error: " + err.Message + " Stack Trace: " + err.StackTrace;
                     _algorithmHandlers.Results.RuntimeError(runtimeMessage, err.StackTrace);
                     _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, runtimeMessage);
@@ -249,7 +250,7 @@ namespace QuantConnect.Lean.Engine
                     catch (Exception err)
                     {
                         //Error running the user algorithm: purge datafeed, send error messages, set algorithm status to failed.
-                        Log.Error("Engine.Run(): Breaking out of parent try-catch: " + err.Message + " " + err.StackTrace);
+                        Log.Error(err, "Breaking out of parent try catch:");
                         if (_algorithmHandlers.DataFeed != null) _algorithmHandlers.DataFeed.Exit();
                         if (_algorithmHandlers.Results != null)
                         {
@@ -301,7 +302,7 @@ namespace QuantConnect.Lean.Engine
                         }
                         catch (Exception err)
                         {
-                            Log.Error("Algorithm.Node.Engine(): Error generating statistics packet: " + err.Message);
+                            Log.Error(err, "Error generating statistics packet");
                         }
 
                         //Diagnostics Completed, Send Result Packet:
@@ -316,7 +317,7 @@ namespace QuantConnect.Lean.Engine
                     }
                     catch (Exception err)
                     {
-                        Log.Error("Engine.Main(): Error sending analysis result: " + err.Message + "  ST >> " + err.StackTrace);
+                        Log.Error(err, "Error sending analysis results");
                     }
 
                     //Before we return, send terminate commands to close up the threads
@@ -359,7 +360,7 @@ namespace QuantConnect.Lean.Engine
             }
             catch (Exception err)
             {
-                Log.Error("Engine.Main(): Error running algorithm: " + err.Message + " >> " + err.StackTrace);
+                Log.Error(err, "Error running algorithm");
             }
             finally
             {

@@ -99,7 +99,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
             }
             catch (Exception err)
             {
-                Log.Error("OandaDownloader(): Error: " + err.Message);
+                Log.Error(err);
             }
         }
 

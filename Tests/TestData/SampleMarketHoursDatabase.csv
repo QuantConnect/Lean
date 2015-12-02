@@ -8,6 +8,6 @@
 # Specify + for ex_open to signify the exchange is open all day
 # Specify 0 for midnight in local time and 24 for the end of day
 #
-America/New_York,usa,,equity,-,-,-,-,4,9.5,16,20,4,9.5,16,20,4,9.5,16,20,4,9.5,16,20,4,9.5,16,20,-,-,-,-
+America/New_York,America/New_York,usa,,equity,-,-,-,-,4,9.5,16,20,4,9.5,16,20,4,9.5,16,20,4,9.5,16,20,4,9.5,16,20,-,-,-,-
 # fxcm data uses EST, does not use EDT, so use a fixed offset
-UTC-05,fxcm,,forex,17,17,24,24,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,0,0,17,17,-,-,-,-
+UTC-05,UTC-05,fxcm,,forex,17,17,24,24,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,0,0,17,17,-,-,-,-

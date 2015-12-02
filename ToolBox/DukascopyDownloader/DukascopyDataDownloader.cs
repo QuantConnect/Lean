@@ -193,7 +193,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                     }
                     catch (Exception exception)
                     {
-                        Log.Error(exception.Message);
+                        Log.Error(exception);
                         yield break;
                     }
                     if (bytes != null && bytes.Length > 0)
