@@ -22,6 +22,7 @@ using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -372,6 +373,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 IEnumerator<BaseData> enumerator;
                 if (config.IsCustomData)
                 {
+                    if (!Quandl.IsAuthCodeSet)
+                    {
+                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
+                        Quandl.SetAuthCode(Config.Get("quandl-auth-token"));
+                    }
+
                     // each time we exhaust we'll new up this enumerator stack
                     var refresher = new RefreshEnumerator<BaseData>(() =>
                     {
