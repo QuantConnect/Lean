@@ -33,7 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <param name="sender">The data feed</param>
     /// <param name="args">The event arguments</param>
     /// <returns>Changes requested via universe selection</returns>
-    public delegate SecurityChanges UniverseSelectionHandler(IDataFeed sender, UniverseSelectionEventArgs args);
+    public delegate SecurityChanges UniverseSelectionHandler(object sender, UniverseSelectionEventArgs args);
 
     /// <summary>
     /// Datafeed interface for creating custom datafeed sources.
