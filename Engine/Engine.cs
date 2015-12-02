@@ -246,8 +246,6 @@ namespace QuantConnect.Lean.Engine
                         {
                             throw algorithm.RunTimeError;
                         }
-
-                        throw new Exception("Example exception");
                     }
                     catch (Exception err)
                     {
