@@ -405,7 +405,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 
                 // syncer returns MaxValue on failure/end of data
-                if (nextFrontier != DateTime.MaxValue)
+                if (frontier != DateTime.MaxValue)
                 {
                     yield return timeSlice;
                     frontier = nextFrontier;

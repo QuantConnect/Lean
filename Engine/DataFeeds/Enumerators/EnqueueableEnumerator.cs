@@ -111,6 +111,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _blockingCollection.CompleteAdding();
         }
 
+        private T lastDequeued;
+
         /// <summary>
         /// Advances the enumerator to the next element of the collection.
         /// </summary>
@@ -126,6 +128,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 {
                     return !_end;
                 }
+
+                lastDequeued = _current;
 
                 // even if we don't have data to return, we haven't technically
                 // passed the end of the collection, so always return true until
