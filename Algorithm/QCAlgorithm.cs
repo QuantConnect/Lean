@@ -1278,14 +1278,15 @@ namespace QuantConnect.Algorithm
         {
             if (_locked) return;
 
-            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, TimeZones.NewYork);
+            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, timeZone);
 
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
-            var config = SubscriptionManager.Add(typeof(T), symbolObject, resolution, marketHoursDbEntry.DataTimeZone, marketHoursDbEntry.ExchangeHours.TimeZone, true, fillDataForward, true, false);
 
             //Add this new generic data as a tradeable security: 
-            var security = new Security(marketHoursDbEntry.ExchangeHours, config, leverage);
+            var security = SecurityManager.CreateSecurity(typeof (T), Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone, symbolObject, resolution,
+                fillDataForward, leverage, true, false, true);
+
             Securities.Add(symbolObject, security);
 
             AddToUserDefinedUniverse(security);
