@@ -116,8 +116,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _bridge = new BusyBlockingCollection<TimeSlice>();
 
             // run the exchanges
-            Task.Run(() => _exchange.Start());
-            Task.Run(() => _customExchange.Start());
+            Task.Run(() => _exchange.Start(_cancellationTokenSource.Token));
+            Task.Run(() => _customExchange.Start(_cancellationTokenSource.Token));
 
             // this value will be modified via calls to AddSubscription/RemoveSubscription
             var ffres = Time.OneSecond;

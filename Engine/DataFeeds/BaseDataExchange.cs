@@ -96,6 +96,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Adds the enumerator to this exchange. If it has already been added
+        /// then it will remain registered in the exchange only once
+        /// </summary>
+        /// <param name="enumerator">The enumerator to be added</param>
+        /// <param name="symbol">The symbol to remove handlers for</param>
+        /// <param name="handler">The handler to use when this symbol's data is encountered</param>
+        public void AddEnumerator(IEnumerator<BaseData> enumerator, Symbol symbol, Action<BaseData> handler)
+        {
+            _enumerators.TryAdd(enumerator, 0);
+            SetHandler(symbol, handler);
+        }
+
+        /// <summary>
         /// Sets the specified function as the error handler. This function
         /// returns true if it is a fatal error and queue consumption should
         /// cease.
@@ -135,10 +148,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Begins consumption of the wrapped <see cref="IDataQueueHandler"/> on
         /// a separate thread
         /// </summary>
-        public void Start()
+        /// <param name="token">A cancellation token used to signal to stop</param>
+        public void Start(CancellationToken? token = null)
         {
             _isStopping = false;
-            ConsumeEnumerators();
+            ConsumeEnumerators(token ?? CancellationToken.None);
         }
 
         /// <summary>
@@ -150,13 +164,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary> Entry point for queue consumption </summary>
-        /// <remarks> This function only return after <see cref="Stop"/> is called </remarks>
-        private void ConsumeEnumerators()
+        /// <param name="token">A cancellation token used to signal to stop</param>
+        /// <remarks> This function only returns after <see cref="Stop"/> is called or the token is cancelled</remarks>
+        private void ConsumeEnumerators(CancellationToken token)
         {
             while (true)
             {
-                if (_isStopping)
+                if (_isStopping || token.IsCancellationRequested)
                 {
+                    _isStopping = true;
                     Log.Trace("BaseDataExchange.ConsumeQueue(): Exiting...");
                     return;
                 }
