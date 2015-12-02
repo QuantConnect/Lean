@@ -86,12 +86,7 @@ namespace QuantConnect.Logging
         /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
         private static void Error(string method, Exception exception, string message = null, bool overrideMessageFloodProtection = false)
         {
-            message = method + "(): " + (message ?? string.Empty) + " " + AggregateExceptionMessage(exception);
-            var stack = AggregateStackTrace(exception);
-            if (!string.IsNullOrEmpty(stack))
-            {
-                message += Environment.NewLine + stack;
-            }
+            message = method + "(): " + (message ?? string.Empty) + " " + exception;
             Error(message, overrideMessageFloodProtection);
         }
 
@@ -252,28 +247,6 @@ namespace QuantConnect.Logging
             }
 
             return result.ToString();
-        }
-
-        private static string AggregateExceptionMessage(Exception exception)
-        {
-            var sb = new StringBuilder();
-            while (exception != null)
-            {
-                sb.Append(exception.Message);
-                exception = exception.InnerException;
-            }
-            return sb.ToString();
-        }
-
-        private static string AggregateStackTrace(Exception exception)
-        {
-            var sb = new StringBuilder();
-            while (exception != null)
-            {
-                sb.AppendLine(exception.StackTrace);
-                exception = exception.InnerException;
-            }
-            return sb.ToString();
         }
     }
 }

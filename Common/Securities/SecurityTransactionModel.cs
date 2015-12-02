@@ -77,7 +77,7 @@ namespace QuantConnect.Securities
             }
             catch (Exception err)
             {
-                Log.Error("SecurityTransactionModel.MarketFill(): " + err.Message);
+                Log.Error(err);
             }
 
             return fill;
@@ -143,7 +143,7 @@ namespace QuantConnect.Securities
             }
             catch (Exception err)
             {
-                Log.Error("SecurityTransactionModel.StopMarketFill(): " + err.Message);
+                Log.Error(err);
             }
 
             return fill;
@@ -222,7 +222,7 @@ namespace QuantConnect.Securities
             }
             catch (Exception err)
             {
-                Log.Error("SecurityTransactionModel.StopLimitFill(): " + err.Message);
+                Log.Error(err);
             }
 
             return fill;
@@ -284,7 +284,7 @@ namespace QuantConnect.Securities
             }
             catch (Exception err)
             {
-                Log.Error("SecurityTransactionModel.LimitFill(): " + err.Message);
+                Log.Error(err);
             }
 
             return fill;

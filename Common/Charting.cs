@@ -84,7 +84,7 @@ namespace QuantConnect
                 }
             }
             catch (Exception err) {
-                Log.Error("Chart.GetUpdates(): " + err.Message);
+                Log.Error(err);
             }
             return copy;
         }
@@ -184,7 +184,7 @@ namespace QuantConnect
                 _updatePosition = Values.Count;
             }
             catch (Exception err) {
-                Log.Error("Series.GetUpdates(): " + err.Message);
+                Log.Error(err);
             }
             return copy;
         }

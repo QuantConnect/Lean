@@ -97,7 +97,7 @@ namespace QuantConnect.Packets
             } 
             catch (Exception err)
             {
-                Log.Trace("LiveResultPacket(): Error converting json: " + err.Message);
+                Log.Trace("LiveResultPacket(): Error converting json: " + err);
             }
         }
 
@@ -121,7 +121,7 @@ namespace QuantConnect.Packets
                 Channel = job.Channel;
             }
             catch (Exception err) {
-                Log.Error("LiveResultPacket.Constructor: " + err.Message);
+                Log.Error(err);
             }
         }
     } // End Queue Packet:

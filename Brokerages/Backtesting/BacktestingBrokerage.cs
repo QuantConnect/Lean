@@ -287,7 +287,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         }
                         catch (Exception err)
                         {
-                            Log.Error("BacktestingBrokerage.Scan(): " + err.Message);
+                            Log.Error(err);
                             _algorithm.Error(string.Format("Order Error: id: {0}, Transaction model failed to fill for order type: {1} with error: {2}",
                                 order.Id, order.Type, err.Message));
                         }

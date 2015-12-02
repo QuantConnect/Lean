@@ -250,7 +250,7 @@ namespace QuantConnect.Data.Market
             }
             catch (Exception err)
             {
-                Log.Error("Error Generating Tick: " + err.Message);
+                Log.Error(err);
             }
         }
 

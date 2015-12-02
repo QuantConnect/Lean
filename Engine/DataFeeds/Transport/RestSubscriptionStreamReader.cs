@@ -69,7 +69,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             }
             catch (Exception err)
             {
-                Log.Error("RestSubscriptionStreamReader.ReadLine(): " + err.Message);
+                Log.Error(err);
             }
 
             return string.Empty;

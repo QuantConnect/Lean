@@ -90,7 +90,7 @@ namespace QuantConnect.Statistics
             }
             catch (Exception err)
             {
-                Log.Error("Statistics.ChartPointToDictionary(): " + err.Message);
+                Log.Error(err);
             }
             return dictionary;
         }
@@ -197,7 +197,7 @@ namespace QuantConnect.Statistics
             }
             catch (Exception err)
             {
-                Log.Error("Statistics.Generate.Dic-Array Convert: " + err.Message);
+                Log.Error(err, "Dic-Array Convert:");
             }
 
             try
@@ -207,7 +207,7 @@ namespace QuantConnect.Statistics
             }
             catch (Exception err)
             {
-                Log.Error("Statistics.Generate(): Fraction of Years: " + err.Message);
+                Log.Error(err, "Fraction of Years:");
             }
 
             try
@@ -221,7 +221,7 @@ namespace QuantConnect.Statistics
             }
             catch (Exception err)
             {
-                Log.Error("Statistics.Generate(): Compounding: " + err.Message);
+                Log.Error(err, "Compounding:");
             }
 
             try
@@ -313,7 +313,7 @@ namespace QuantConnect.Statistics
                 }
                 catch (Exception err)
                 {
-                    Log.Error("Statistics.RunOrders(): Second Half: " + err.Message);
+                    Log.Error(err, "Second Half:");
                 }
 
                 var profitLossRatio = ProfitLossRatio(averageWin, averageLoss);
@@ -345,7 +345,7 @@ namespace QuantConnect.Statistics
             }
             catch (Exception err)
             {
-                Log.Error("QC.Statistics.RunOrders(): " + err.Message + err.InnerException + err.TargetSite);
+                Log.Error(err);
             }
             return statistics;
         }
@@ -385,7 +385,7 @@ namespace QuantConnect.Statistics
             }
             catch (Exception err)
             {
-                Log.Error("Statistics.DrawdownPercentage(): " + err.Message);
+                Log.Error(err);
             }
             return dd;
         }
@@ -426,7 +426,7 @@ namespace QuantConnect.Statistics
             }
             catch (Exception err)
             {
-                Log.Error("Statistics.DrawdownValue(): " + err.Message);
+                Log.Error(err);
             }
             return 0;
         } // End Drawdown:

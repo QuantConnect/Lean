@@ -208,7 +208,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
                 catch (Exception err)
                 {
-                    Log.Error("BrokerageSetupHandler.Setup(): Error resolving brokerage factory for " + liveJob.Brokerage + ". " + err.Message);
+                    Log.Error(err, "Error resolving brokerage factory for " + liveJob.Brokerage+":");
                     AddInitializationError("Unable to locate factory for brokerage: " + liveJob.Brokerage);
                 }
 

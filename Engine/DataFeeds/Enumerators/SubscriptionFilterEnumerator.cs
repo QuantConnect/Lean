@@ -39,7 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             var filter = new SubscriptionFilterEnumerator(enumerator, security, endTime);
             filter.DataFilterError += (sender, exception) =>
             {
-                Log.Error("SubscriptionDataReader.MoveNext(): Error applying filter: " + exception.Message);
+                Log.Error(exception, "WrapForDataFeed");
                 resultHandler.RuntimeError("Runtime error applying data filter. Assuming filter pass: " + exception.Message, exception.StackTrace);
             };
             return filter;
