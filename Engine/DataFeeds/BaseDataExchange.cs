@@ -17,9 +17,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -36,10 +34,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private Func<Exception, bool> _isFatalError;
 
         private readonly string _name;
-        private readonly ConcurrentDictionary<Symbol, Handler> _handlers;
+        private readonly ConcurrentDictionary<Symbol, DataHandler> _dataHandlers;
 
         // using concurrent dictionary for fast/easy contains/remove, the int value is nothingness
-        private readonly ConcurrentDictionary<IEnumerator<BaseData>, int> _enumerators;
+        private readonly ConcurrentDictionary<IEnumerator<BaseData>, EnumeratorHandler> _enumeratorHandlers;
 
         /// <summary>
         /// Gets or sets how long this thread will sleep when no data is available
@@ -75,14 +73,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public BaseDataExchange(string name, params IEnumerator<BaseData>[] enumerators)
         {
             _name = name;
-            _enumerators = new ConcurrentDictionary<IEnumerator<BaseData>, int>();
+            _enumeratorHandlers = new ConcurrentDictionary<IEnumerator<BaseData>, EnumeratorHandler>();
             foreach (var enumerator in enumerators)
             {
                 // enumerators added via ctor are always called
-                _enumerators.AddOrUpdate(enumerator, 0);
+                _enumeratorHandlers.AddOrUpdate(enumerator, new EnumeratorHandler(enumerator, () => true));
             }
             _isFatalError = x => false;
-            _handlers = new ConcurrentDictionary<Symbol, Handler>();
+            _dataHandlers = new ConcurrentDictionary<Symbol, DataHandler>();
         }
 
         /// <summary>
@@ -90,22 +88,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// then it will remain registered in the exchange only once
         /// </summary>
         /// <param name="enumerator">The enumerator to be added</param>
-        public void AddEnumerator(IEnumerator<BaseData> enumerator)
-        {
-            _enumerators.TryAdd(enumerator, 0);
-        }
-
-        /// <summary>
-        /// Adds the enumerator to this exchange. If it has already been added
-        /// then it will remain registered in the exchange only once
-        /// </summary>
-        /// <param name="enumerator">The enumerator to be added</param>
-        /// <param name="symbol">The symbol to remove handlers for</param>
         /// <param name="handler">The handler to use when this symbol's data is encountered</param>
-        public void AddEnumerator(IEnumerator<BaseData> enumerator, Symbol symbol, Action<BaseData> handler)
+        public void AddEnumerator(IEnumerator<BaseData> enumerator, EnumeratorHandler handler)
         {
-            _enumerators.TryAdd(enumerator, 0);
-            SetHandler(symbol, handler);
+            _enumeratorHandlers.TryAdd(enumerator, handler);
+        }
+
+        /// <summary>
+        /// Adds the enumerator to this exchange. If it has already been added
+        /// then it will remain registered in the exchange only once
+        /// </summary>
+        /// <param name="enumerator">The enumerator to be added</param>
+        /// <param name="shouldMoveNext">Function used to determine if move next should be called on this
+        /// enumerator, defaults to always returning true</param>
+        /// <param name="enumeratorFinished">Delegate called when the enumerator move next returns false</param>
+        public void AddEnumerator(IEnumerator<BaseData> enumerator, Func<bool> shouldMoveNext = null, Action<EnumeratorHandler> enumeratorFinished = null)
+        {
+            var enumeratorHandler = new EnumeratorHandler(enumerator, shouldMoveNext);
+            if (enumeratorFinished != null)
+            {
+                enumeratorHandler.EnumeratorFinished += (sender, args) => enumeratorFinished(args);
+            }
+            _enumeratorHandlers.TryAdd(enumerator, enumeratorHandler);
         }
 
         /// <summary>
@@ -124,24 +128,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Sets the specified hander function to handle data for the symbol
+        /// Sets the specified hander function to handle data for the handler's symbol
         /// </summary>
-        /// <param name="symbol">The symbol to remove handlers for</param>
         /// <param name="handler">The handler to use when this symbol's data is encountered</param>
         /// <returns>An identifier that can be used to remove this handler</returns>
-        public void SetHandler(Symbol symbol, Action<BaseData> handler)
+        public void SetDataHandler(DataHandler handler)
         {
-            _handlers[symbol] = new Handler(symbol, handler);
+            _dataHandlers[handler.Symbol] = handler;
+        }
+
+        /// <summary>
+        /// Sets the specified hander function to handle data for the handler's symbol
+        /// </summary>
+        /// <param name="symbol">The symbol whose data is to be handled</param>
+        /// <param name="handler">The handler to use when this symbol's data is encountered</param>
+        /// <returns>An identifier that can be used to remove this handler</returns>
+        public void SetDataHandler(Symbol symbol, Action<BaseData> handler)
+        {
+            var dataHandler = new DataHandler(symbol);
+            dataHandler.DataEmitted += (sender, args) => handler(args);
+            _dataHandlers[symbol] = dataHandler;
         }
 
         /// <summary>
         /// Removes the handler with the specified identifier
         /// </summary>
         /// <param name="symbol">The symbol to remove handlers for</param>
-        public bool RemoveHandler(Symbol symbol)
+        public bool RemoveDataHandler(Symbol symbol)
         {
-            Handler handler;
-            return _handlers.TryRemove(symbol, out handler);
+            DataHandler handler;
+            return _dataHandlers.TryRemove(symbol, out handler);
         }
 
         /// <summary>
@@ -182,26 +198,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // call move next each enumerator and invoke the appropriate handlers
 
                     var handled = false;
-                    foreach (var kvpe in _enumerators)
+                    foreach (var kvpe in _enumeratorHandlers)
                     {
                         var enumerator = kvpe.Key;
+                        var enumeratorHandler = kvpe.Value;
+
+                        // check to see if we should advance this enumerator
+                        if (!enumeratorHandler.ShouldMoveNext()) continue;
 
                         if (!enumerator.MoveNext())
                         {
+                            enumeratorHandler.OnEnumeratorFinished();
+
                             // remove dead enumerators
-                            int state;
-                            _enumerators.TryRemove(enumerator, out state);
+                            _enumeratorHandlers.TryRemove(enumerator, out enumeratorHandler);
                             continue;
                         }
                         
                         if (enumerator.Current == null) continue;
 
                         // invoke the correct handler
-                        Handler handler;
-                        if (_handlers.TryGetValue(enumerator.Current.Symbol, out handler))
+                        DataHandler dataHandler;
+                        if (_dataHandlers.TryGetValue(enumerator.Current.Symbol, out dataHandler))
                         {
                             handled = true;
-                            handler.Handle(enumerator.Current);
+                            dataHandler.OnDataEmitted(enumerator.Current);
                         }
                     }
 
@@ -223,15 +244,80 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        private class Handler
+        /// <summary>
+        /// Handler used to handle data emitted from enumerators
+        /// </summary>
+        public class DataHandler
         {
-            public readonly Symbol Symbol;
-            public readonly Action<BaseData> Handle;
+            /// <summary>
+            /// Event fired when MoveNext returns true and Current is non-null
+            /// </summary>
+            public event EventHandler<BaseData> DataEmitted;
 
-            public Handler(Symbol symbol, Action<BaseData> handle)
+            /// <summary>
+            /// The symbol this handler handles
+            /// </summary>
+            public readonly Symbol Symbol;
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="DataHandler"/> class
+            /// </summary>
+            /// <param name="symbol">The symbol whose data is to be handled</param>
+            public DataHandler(Symbol symbol)
             {
                 Symbol = symbol;
-                Handle = handle;
+            }
+
+            /// <summary>
+            /// Event invocator for the <see cref="DataEmitted"/> event
+            /// </summary>
+            /// <param name="data">The data being emitted</param>
+            public void OnDataEmitted(BaseData data)
+            {
+                var handler = DataEmitted;
+                if (handler != null) handler(this, data);
+            }
+        }
+
+        /// <summary>
+        /// Handler used to manage a single enumerator's move next/end of stream behavior
+        /// </summary>
+        public class EnumeratorHandler
+        {
+            /// <summary>
+            /// Event fired when MoveNext returns false
+            /// </summary>
+            public event EventHandler<EnumeratorHandler> EnumeratorFinished;
+
+            /// <summary>
+            /// The enumerator this handler handles
+            /// </summary>
+            public readonly IEnumerator<BaseData> Enumerator;
+
+            /// <summary>
+            /// Predicate function used to determine if we should move next on the handled enumerator
+            /// </summary>
+            public readonly Func<bool> ShouldMoveNext;
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="EnumeratorHandler"/> class
+            /// </summary>
+            /// <param name="enumerator">The enumeator this handler handles</param>
+            /// <param name="shouldMoveNext">Predicate function used to determine if we should call move next
+            /// on the symbol's enumerator</param>
+            public EnumeratorHandler(IEnumerator<BaseData> enumerator, Func<bool> shouldMoveNext = null)
+            {
+                Enumerator = enumerator;
+                ShouldMoveNext = shouldMoveNext ?? (() => true);
+            }
+
+            /// <summary>
+            /// Event invocator for the <see cref="EnumeratorFinished"/> event
+            /// </summary>
+            public void OnEnumeratorFinished()
+            {
+                var handler = EnumeratorFinished;
+                if (handler != null) handler(this, this);
             }
         }
     }

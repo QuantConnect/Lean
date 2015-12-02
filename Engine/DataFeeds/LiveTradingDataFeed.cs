@@ -187,7 +187,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var security = subscription.Security;
 
-            _exchange.RemoveHandler(security.Symbol);
+            _exchange.RemoveDataHandler(security.Symbol);
 
             // request to unsubscribe from the subscription
             if (!security.SubscriptionDataConfig.IsCustomData)
@@ -397,7 +397,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _customExchange.AddEnumerator(rateLimit);
 
                     var enqueable = new EnqueueableEnumerator<BaseData>();
-                    _customExchange.SetHandler(config.Symbol, data =>
+                    _customExchange.SetDataHandler(config.Symbol, data =>
                     {
                         enqueable.Enqueue(data);
                         if (subscription != null) subscription.RealtimePrice = data.Value;
@@ -409,7 +409,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // this enumerator allows the exchange to pump ticks into the 'back' of the enumerator,
                     // and the time sync loop can pull aggregated trade bars off the front
                     var aggregator = new TradeBarBuilderEnumerator(config.Increment, security.Exchange.TimeZone, _timeProvider);
-                    _exchange.SetHandler(config.Symbol, data =>
+                    _exchange.SetDataHandler(config.Symbol, data =>
                     {
                         aggregator.ProcessData((Tick) data);
                         if (subscription != null) subscription.RealtimePrice = data.Value;
@@ -420,7 +420,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // tick subscriptions can pass right through
                     var tickEnumerator = new EnqueueableEnumerator<BaseData>();
-                    _exchange.SetHandler(config.Symbol, data =>
+                    _exchange.SetDataHandler(config.Symbol, data =>
                     {
                         tickEnumerator.Enqueue(data);
                         if (subscription != null) subscription.RealtimePrice = data.Value;
@@ -492,7 +492,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 });
 
                 var enqueable = new EnqueueableEnumerator<BaseData>();
-                _exchange.SetHandler(config.Symbol, data =>
+                _exchange.SetDataHandler(config.Symbol, data =>
                 {
                     var universeData = data as BaseDataCollection;
                     if (universeData != null)
@@ -524,7 +524,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _customExchange.AddEnumerator(rateLimit);
 
                 var enqueable = new EnqueueableEnumerator<BaseData>();
-                _customExchange.SetHandler(config.Symbol, data =>
+                _customExchange.SetDataHandler(config.Symbol, data =>
                 {
                     var universeData = data as BaseDataCollection;
                     if (universeData != null)
