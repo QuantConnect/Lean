@@ -63,27 +63,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Initializes a new instance of the <see cref="BaseDataExchange"/>
         /// </summary>
         /// <param name="enumerators">The enumerators to fanout</param>
-        public BaseDataExchange(IEnumerable<IEnumerator<BaseData>> enumerators)
-            : this(string.Empty, enumerators.ToArray())
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BaseDataExchange"/>
-        /// </summary>
-        /// <param name="enumerators">The enumerators to fanout</param>
         public BaseDataExchange(params IEnumerator<BaseData>[] enumerators)
             : this(string.Empty, enumerators)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BaseDataExchange"/>
-        /// </summary>
-        /// <param name="name">A name for this exchange</param>
-        /// <param name="enumerators">The enumerators to fanout</param>
-        public BaseDataExchange(string name, IEnumerable<IEnumerator<BaseData>> enumerators)
-            : this(name, enumerators.ToArray())
         {
         }
 
