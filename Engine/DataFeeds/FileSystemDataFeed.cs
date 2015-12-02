@@ -203,72 +203,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // compute initial frontier time
                 frontier = GetInitialFrontierTime();
 
+                var subscriptionSyncer = new SubscriptionSyncer();
+                subscriptionSyncer.SubscriptionFinished += (sender, args) => _subscriptions.TryRemove(args.Security.Symbol, out args);
+                subscriptionSyncer.UniverseSelection += (sender, args) =>
+                {
+                    // always wait for other thread
+                    if (!_bridge.Wait(Timeout.Infinite, _cancellationTokenSource.Token))
+                    {
+                        return SecurityChanges.None;
+                    }
+
+                    return OnUniverseSelection(args);
+                };
+
                 Log.Trace(string.Format("FileSystemDataFeed.Run(): Begin: {0} UTC", frontier));
                 // continue to loop over each subscription, enqueuing data in time order
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    // each time step reset our security changes
                     _changes = SecurityChanges.None;
-                    var earlyBirdTicks = long.MaxValue;
-                    var data = new List<KeyValuePair<Security, List<BaseData>>>();
 
                     // we union subscriptions with itself so if subscriptions changes on the first
                     // iteration we will pick up those changes in the union call, this is used in
                     // universe selection. an alternative is to extract this into a method and check
                     // to see if changes != SecurityChanges.None, and re-run all subscriptions again,
                     // This was added as quick fix due to an issue found in universe selection regression alg
-                    foreach (var subscription in Subscriptions.Union(Subscriptions))
-                    {
-                        if (subscription.EndOfStream)
-                        {
-                            // remove finished subscriptions
-                            Subscription sub;
-                            _subscriptions.TryRemove(subscription.Security.Symbol, out sub);
-                            continue;
-                        }
+                    var subscriptions = Subscriptions.Union(Subscriptions);
 
-                        var cache = new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData>());
-                        data.Add(cache);
+                    DateTime nextFrontier;
+                    var timeSlice = subscriptionSyncer.Sync(frontier, subscriptions, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, out nextFrontier);
 
-                        var configuration = subscription.Configuration;
-                        var offsetProvider = subscription.OffsetProvider;
-                        var currentOffsetTicks = offsetProvider.GetOffsetTicks(frontier);
-                        while (subscription.Current.EndTime.Ticks - currentOffsetTicks <= frontier.Ticks)
-                        {
-                            // we want bars rounded using their subscription times, we make a clone
-                            // so we don't interfere with the enumerator's internal logic
-                            var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
-                            clone.Time = clone.Time.ExchangeRoundDown(configuration.Increment, subscription.Security.Exchange.Hours, configuration.ExtendedMarketHours);
-                            cache.Value.Add(clone);
-                            if (!subscription.MoveNext())
-                            {
-                                Log.Trace("FileSystemDataFeed.Run(): Finished subscription: " + subscription.Security.Symbol.ToString() + " at " + frontier + " UTC");
-                                break;
-                            }
-                        }
-
-                        // we have new universe data to select based on
-                        if (subscription.IsUniverseSelectionSubscription && cache.Value.Count > 0)
-                        {
-                            var universe = subscription.Universe;
-
-                            // always wait for other thread
-                            if (!_bridge.Wait(Timeout.Infinite, _cancellationTokenSource.Token))
-                            {
-                                break;
-                            }
-                            
-                            OnUniverseSelection(universe, frontier, configuration, cache.Value);
-                        }
-
-                        if (subscription.Current != null)
-                        {
-                            // take the earliest between the next piece of data or the next tz discontinuity
-                            earlyBirdTicks = Math.Min(earlyBirdTicks, Math.Min(subscription.Current.EndTime.Ticks - currentOffsetTicks, offsetProvider.GetNextDiscontinuity()));
-                        }
-                    }
-
-                    if (earlyBirdTicks == long.MaxValue)
+                    if (nextFrontier == DateTime.MaxValue)
                     {
                         if (_changes == SecurityChanges.None)
                         {
@@ -276,12 +240,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             break;
                         }
                     }
-
-                    // enqueue our next time slice and set the frontier for the next
-                    _bridge.Add(TimeSlice.Create(frontier, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes), _cancellationTokenSource.Token);
-
-                    // never go backwards in time, so take the max between early birds and the current frontier
-                    frontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);
+                    else
+                    {
+                        // enqueue our next time slice and set the frontier for the next
+                        _bridge.Add(timeSlice, _cancellationTokenSource.Token);
+                        frontier = nextFrontier;
+                    }
                 }
 
                 if (!_cancellationTokenSource.IsCancellationRequested)
@@ -430,17 +394,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Event invocator for the <see cref="UniverseSelection"/> event
         /// </summary>
-        protected virtual void OnUniverseSelection(Universe universe, DateTime dateTimeUtc, SubscriptionDataConfig configuration, IReadOnlyList<BaseData> data)
+        protected virtual SecurityChanges OnUniverseSelection(UniverseSelectionEventArgs universeSelectionEventArgs)
         {
+            var changes = SecurityChanges.None;
             if (UniverseSelection != null)
             {
-                var eventArgs = new UniverseSelectionEventArgs(universe, configuration, dateTimeUtc, data);
                 var multicast = (MulticastDelegate) UniverseSelection;
                 foreach (UniverseSelectionHandler handler in multicast.GetInvocationList())
                 {
-                    _changes += handler(this, eventArgs);
+                    changes += handler(this, universeSelectionEventArgs);
                 }
             }
+            return changes;
         }
 
 
