@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,6 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IMapFileProvider _mapFileProvider;
         private ConcurrentDictionary<Symbol, Subscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private BusyBlockingCollection<TimeSlice> _bridge;
 
         /// <summary>
         /// Event fired when the data feed encounters a universe selection subscripion
@@ -68,14 +70,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool IsActive { get; private set; }
 
         /// <summary>
-        /// Cross-threading queue so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
-        /// </summary>
-        public BusyBlockingCollection<TimeSlice> Bridge
-        {
-            get; private set;
-        }
-
-        /// <summary>
         /// Initializes the data feed for the specified job and algorithm
         /// </summary>
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider)
@@ -92,7 +86,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _cancellationTokenSource = new CancellationTokenSource();
 
             IsActive = true;
-            Bridge = new BusyBlockingCollection<TimeSlice>(100);
+            _bridge = new BusyBlockingCollection<TimeSlice>(100);
 
             var ffres = Time.OneSecond;
             _fillForwardResolution = Ref.Create(() => ffres, res => ffres = res);
@@ -259,7 +253,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             var universe = subscription.Universe;
 
                             // always wait for other thread
-                            if (!Bridge.Wait(Timeout.Infinite, _cancellationTokenSource.Token))
+                            if (!_bridge.Wait(Timeout.Infinite, _cancellationTokenSource.Token))
                             {
                                 break;
                             }
@@ -284,7 +278,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // enqueue our next time slice and set the frontier for the next
-                    Bridge.Add(TimeSlice.Create(frontier, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes), _cancellationTokenSource.Token);
+                    _bridge.Add(TimeSlice.Create(frontier, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes), _cancellationTokenSource.Token);
 
                     // never go backwards in time, so take the max between early birds and the current frontier
                     frontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);
@@ -292,7 +286,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    Bridge.CompleteAdding();
+                    _bridge.CompleteAdding();
                 }
             }
             catch (Exception err)
@@ -300,7 +294,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Log.Error("FileSystemDataFeed.Run(): Encountered an error: " + err.Message); 
                 if (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    Bridge.CompleteAdding();
+                    _bridge.CompleteAdding();
                     _cancellationTokenSource.Cancel();
                 }
             }
@@ -409,9 +403,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             Log.Trace("FileSystemDataFeed.Exit(): Exit triggered.");
             _cancellationTokenSource.Cancel();
-            if (Bridge != null)
+            if (_bridge != null)
             {
-                Bridge.Dispose();
+                _bridge.Dispose();
             }
         }
 
@@ -459,6 +453,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 .Where(x => x != Resolution.Tick)
                 .DefaultIfEmpty(Resolution.Second)
                 .Min().ToTimeSpan();
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>1</filterpriority>
+        public IEnumerator<TimeSlice> GetEnumerator()
+        {
+            return _bridge.GetConsumingEnumerable(_cancellationTokenSource.Token).GetEnumerator();
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.IEnumerator"/> object that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

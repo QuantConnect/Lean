@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,6 +59,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private BaseDataExchange _customExchange;
         private ConcurrentDictionary<Symbol, Subscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private BusyBlockingCollection<TimeSlice> _bridge;
 
         /// <summary>
         /// Event fired when the data feed encounters new fundamental data.
@@ -72,14 +74,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public IEnumerable<Subscription> Subscriptions
         {
             get { return _subscriptions.Select(x => x.Value); }
-        }
-
-        /// <summary>
-        /// Cross-threading queue so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
-        /// </summary>
-        public BusyBlockingCollection<TimeSlice> Bridge
-        {
-            get; private set;
         }
 
         /// <summary>
@@ -119,7 +113,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _exchange = new BaseDataExchange("DataQueueExchange", GetNextTicksEnumerator()){SleepInterval = 0};
             _subscriptions = new ConcurrentDictionary<Symbol, Subscription>();
 
-            Bridge = new BusyBlockingCollection<TimeSlice>();
+            _bridge = new BusyBlockingCollection<TimeSlice>();
 
             // run the exchanges
             Task.Run(() => _exchange.Start());
@@ -269,7 +263,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             var universe = subscription.Universe;
 
                             // always wait for other thread to sync up
-                            if (!Bridge.Wait(Timeout.Infinite, _cancellationTokenSource.Token))
+                            if (!_bridge.Wait(Timeout.Infinite, _cancellationTokenSource.Token))
                             {
                                 break;
                             }
@@ -285,7 +279,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // emit on data or if we've elapsed a full second since last emit
                     if (data.Count != 0 || frontier >= nextEmit)
                     {
-                        Bridge.Add(TimeSlice.Create(frontier, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes), _cancellationTokenSource.Token);
+                        _bridge.Add(TimeSlice.Create(frontier, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes), _cancellationTokenSource.Token);
 
                         // force emitting every second
                         nextEmit = frontier.RoundDown(Time.OneSecond).Add(Time.OneSecond);
@@ -333,7 +327,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
             {
                 _cancellationTokenSource.Cancel();
-                if (Bridge != null) Bridge.Dispose();
+                if (_bridge != null) _bridge.Dispose();
             }
         }
 
@@ -600,6 +594,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 .Where(x => x != Resolution.Tick)
                 .DefaultIfEmpty(Resolution.Second)
                 .Min().ToTimeSpan();
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>1</filterpriority>
+        public IEnumerator<TimeSlice> GetEnumerator()
+        {
+            return _bridge.GetConsumingEnumerable(_cancellationTokenSource.Token).GetEnumerator();
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.IEnumerator"/> object that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

@@ -304,7 +304,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             RestApiBaseData last = null;
 
             var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-            foreach (var ts in feed.Bridge.GetConsumingEnumerable(timeout.Token))
+            foreach (var ts in feed)
             {
                 //timeProvider.AdvanceSeconds(0.5);
 
@@ -448,8 +448,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private static void ConsumeBridge(IDataFeed feed, TimeSpan timeout, bool alwaysInvoke, Action<TimeSlice> handler, bool noOutput = false)
         {
             bool startedReceivingata = false;
-            var cancellationTokenSource = new CancellationTokenSource(timeout);
-            foreach (var timeSlice in feed.Bridge.GetConsumingEnumerable(cancellationTokenSource.Token))
+            foreach (var timeSlice in feed)
             {
                 if (!noOutput)
                 {

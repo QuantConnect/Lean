@@ -748,7 +748,7 @@ namespace QuantConnect.Lean.Engine
                 }
             }
 
-            foreach (var timeSlice in feed.Bridge.GetConsumingEnumerable(cancellationToken))
+            foreach (var timeSlice in feed)
             {
                 if (!setStartTime)
                 {
