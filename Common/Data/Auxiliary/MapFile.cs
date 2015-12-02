@@ -169,7 +169,7 @@ namespace QuantConnect.Data.Auxiliary
             }
             catch (Exception err)
             {
-                Log.Error("MapFileResover.Create(): " + file + " \tError: " + err.Message);
+                Log.Error(err, "File: " + file);
                 return new List<MapFileRow>();
             }
         }

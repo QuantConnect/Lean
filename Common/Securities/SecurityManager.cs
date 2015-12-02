@@ -318,7 +318,7 @@ namespace QuantConnect.Securities
             } 
             catch (Exception err) 
             {
-                Log.Error("Algorithm.Market.GetResolutionCount(): " + err.Message);
+                Log.Error(err);
             }
             return count;
         }

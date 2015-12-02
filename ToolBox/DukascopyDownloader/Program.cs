@@ -94,7 +94,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
             }
             catch (Exception err)
             {
-                Log.Error("DukascopyDownloader(): {0}", err.Message);
+                Log.Error(err);
             }
         }
 

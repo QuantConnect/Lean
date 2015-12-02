@@ -105,9 +105,9 @@ namespace QuantConnect.Brokerages
                 var handler = OrderStatusChanged;
                 if (handler != null) handler(this, e);
             }
-            catch (Exception error)
+            catch (Exception err)
             {
-                Log.Error("Brokerage.OnOrderEvent(): Caught Error: " + error.Message);
+                Log.Error(err);
             }
         }
 
@@ -124,9 +124,9 @@ namespace QuantConnect.Brokerages
                 var handler = AccountChanged;
                 if (handler != null) handler(this, e);
             }
-            catch (Exception error)
+            catch (Exception err)
             {
-                Log.Error("Brokerage.OnAccountChanged(): Caught Error: " + error.Message);
+                Log.Error(err);
             }
         }
 
@@ -150,9 +150,9 @@ namespace QuantConnect.Brokerages
                 var handler = Message;
                 if (handler != null) handler(this, e);
             }
-            catch (Exception ex)
+            catch (Exception err)
             {
-                Log.Error("Brokerage.OnMessage(): Caught Error: " + ex.Message);
+                Log.Error(err);
             }
         }
 

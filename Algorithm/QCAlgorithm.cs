@@ -1224,7 +1224,7 @@ namespace QuantConnect.Algorithm
             }
             catch (Exception err)
             {
-                Error("Algorithm.AddSecurity(): " + err.Message);
+                Error("Algorithm.AddSecurity(): " + err);
             }
         }
 

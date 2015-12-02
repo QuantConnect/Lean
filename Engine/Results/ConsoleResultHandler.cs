@@ -657,7 +657,7 @@ namespace QuantConnect.Lean.Engine.Results
                             }
                             catch (Exception err)
                             {
-                                Log.Error("ConsoleResultHandler.ProcessSynchronousEvents(): Custom send notification: " + err.Message);
+                                Log.Error(err, "Custom send notification:");
                                 ErrorMessage("Custom send notification: " + err.Message, err.StackTrace);
                             }
                             break;

@@ -66,7 +66,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
             }
             catch (Exception err)
             {
-                Log.Error("YahooDownloader(): Error: " + err.Message);
+                Log.Error(err);
             }
         }
     }

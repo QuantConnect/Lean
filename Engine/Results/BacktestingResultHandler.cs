@@ -319,9 +319,9 @@ namespace QuantConnect.Lean.Engine.Results
                         where order.Value.Time.Date >= _lastUpdate && order.Value.Status == OrderStatus.Filled
                         select order).ToDictionary(t => t.Key, t => t.Value);
                 }
-                catch (Exception err) 
+                catch (Exception err)
                 {
-                    Log.Error("BacktestingResultHandler().Update(): Transactions: " + err.Message);
+                    Log.Error(err, "Transactions");
                 }
 
                 //Limit length of orders we pass back dynamically to avoid flooding.
@@ -334,9 +334,9 @@ namespace QuantConnect.Lean.Engine.Results
                     _lastDaysProcessed = _daysProcessed;
                     _nextUpdate = DateTime.Now.AddSeconds(0.5);
                 }
-                catch (Exception err) 
+                catch (Exception err)
                 {
-                    Log.Error("BacktestingResultHandler.Update(): Can't update variables: " + err.Message);
+                    Log.Error(err, "Can't update variables");
                 }
 
                 var deltaCharts = new Dictionary<string, Chart>();
@@ -371,9 +371,9 @@ namespace QuantConnect.Lean.Engine.Results
                     _messagingHandler.Send(backtestingPacket);
                 }
             }
-            catch (Exception err) 
+            catch (Exception err)
             {
-                Log.Error("BacktestingResultHandler().Update(): " + err.Message + " >> " + err.StackTrace );
+                Log.Error(err);
             }
         }
 
@@ -442,7 +442,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
             catch (Exception err)
             {
-                Log.Error("BacktestingResultHandler.StoreResult(): " + err.Message);
+                Log.Error(err);
             }
         }
 
@@ -483,9 +483,9 @@ namespace QuantConnect.Lean.Engine.Results
 
                 Log.Trace("BacktestingResultHandler.SendAnalysisResult(): Processed final packet"); 
             } 
-            catch (Exception err) 
+            catch (Exception err)
             {
-                Log.Error("Algorithm.Worker.SendResult(): " + err.Message);
+                Log.Error(err);
             }
         }
 
@@ -830,7 +830,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
             catch (Exception err)
             {
-                Log.Error("BacktestingResultHandler.ProcessLogMessages(): " + err.Message);
+                Log.Error(err);
             }
             Log.Trace("BacktestingResultHandler.ProcessLogMessages(): Ready: " + remoteUrl);
             return remoteUrl;

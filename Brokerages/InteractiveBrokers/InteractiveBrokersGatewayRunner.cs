@@ -81,7 +81,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch (Exception err)
             {
-                Log.Error("InteractiveBrokersGatewayRunner.Start(): " + err.Message);
+                Log.Error(err);
             }
         }
 
@@ -111,7 +111,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             catch (Exception err)
             {
-                Log.Error("InteractiveBrokersGatewayRunner.Stop(): " + err.Message);
+                Log.Error(err);
             }
         }
 

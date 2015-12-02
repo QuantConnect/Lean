@@ -207,7 +207,7 @@ namespace QuantConnect.Data.Market
             }
             catch (Exception err)
             {
-                Log.Error("DataModels: TradeBar(): Error Initializing - " + config.SecurityType + " - " + err.Message + " - " + line);
+                Log.Error(err, "SecurityType: " + config.SecurityType + " Line: " + line);
             }
 
             // if we couldn't parse it above return a default instance

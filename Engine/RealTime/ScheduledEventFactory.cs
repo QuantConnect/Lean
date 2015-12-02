@@ -86,16 +86,16 @@ namespace QuantConnect.Lean.Engine.RealTime
 
             return new ScheduledEvent(CreateEventName("Algorithm", "EndOfDay"), times, (name, triggerTime) =>
             {
-                Log.Debug(String.Format("ScheduledEvent.{0}: Firing at {1}", name, triggerTime));
+                Log.Debug(string.Format("ScheduledEvent.{0}: Firing at {1}", name, triggerTime));
                 try
                 {
                     algorithm.OnEndOfDay();
-                    Log.Debug(String.Format("ScheduledEvent.{0}: Fired On End of Day Event() for Day({1})", name, triggerTime.ToShortDateString()));
+                    Log.Debug(string.Format("ScheduledEvent.{0}: Fired On End of Day Event() for Day({1})", name, triggerTime.ToShortDateString()));
                 }
                 catch (Exception err)
                 {
                     resultHandler.RuntimeError(String.Format("Runtime error in {0} event: {1}", name, err.Message), err.StackTrace);
-                    Log.Error(String.Format("ScheduledEvent.{0}: {1}", name, err.Message));
+                    Log.Error(err, string.Format("ScheduledEvent.{0}:", name));
                 }
             });
         }
@@ -142,7 +142,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 catch (Exception err)
                 {
                     resultHandler.RuntimeError(String.Format("Runtime error in {0} event: {1}", name, err.Message), err.StackTrace);
-                    Log.Error(String.Format("ScheduledEvent.{0}: {1}", name, err.Message));
+                    Log.Error(err, string.Format("ScheduledEvent.{0}:", name));
                 }
             });
         }

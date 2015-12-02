@@ -158,7 +158,7 @@ namespace QuantConnect.Packets
             } 
             catch (Exception err)
             {
-                Log.Trace("BacktestResultPacket(): Error converting json: " + err.Message);
+                Log.Trace("BacktestResultPacket(): Error converting json: " + err);
             }
         }
 
@@ -189,7 +189,7 @@ namespace QuantConnect.Packets
                 TradeableDates = job.TradeableDates;
             }
             catch (Exception err) {
-                Log.Error("BacktestResultPacket.Constructor: " + err.Message);
+                Log.Error(err);
             }
         }
             

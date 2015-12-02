@@ -78,7 +78,7 @@ namespace QuantConnect.Lean.Engine
                     }
                     catch (Exception err)
                     {
-                        Log.Error("StateCheck.Run(): Error in state check: " + err.Message);
+                        Log.Error(err);
                     }
                 }
             }

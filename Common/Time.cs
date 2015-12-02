@@ -134,7 +134,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error("Time.UnixTimeStampToDateTime(): " + unixTimeStamp + err.Message);
+                Log.Error(err, "UnixTimeStamp: " + unixTimeStamp);
                 time = DateTime.Now;
             }
             return time;
@@ -154,7 +154,7 @@ namespace QuantConnect
             } 
             catch (Exception err) 
             {
-                Log.Error("Time.DateTimeToUnixTimeStamp(): " + time.ToOADate() + err.Message);
+                Log.Error(err, time.ToString("o"));
             }
             return timestamp;
         }
@@ -217,7 +217,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error("Time.ParseDate(): " + err.Message);
+                Log.Error(err);
             }
             
             return DateTime.Now;
@@ -304,7 +304,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error("Time.TradeableDate(): " + err.Message);
+                Log.Error(err);
             }
             return false;
         }
@@ -333,7 +333,7 @@ namespace QuantConnect
             } 
             catch (Exception err) 
             {
-                Log.Error("Time.TradeableDates(): " + err.Message);
+                Log.Error(err);
             }
             return count;
         }

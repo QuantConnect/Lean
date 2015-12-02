@@ -84,7 +84,7 @@ namespace QuantConnect.Queues
                 }
                 catch (Exception err)
                 {
-                    Log.Error(string.Format("JobQueue.NextJob(): Error resoliving BrokerageData for live job for brokerage {0}. {1}", liveJob.Brokerage, err.Message));
+                    Log.Error(err, string.Format("Error resolving BrokerageData for live job for brokerage {0}:", liveJob.Brokerage));
                 }
 
                 return liveJob;
