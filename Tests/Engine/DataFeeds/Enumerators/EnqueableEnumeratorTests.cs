@@ -15,10 +15,13 @@
 */
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
@@ -97,6 +100,55 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             enumerator.MoveNext();
             Assert.AreEqual(tick2, enumerator.Current);
+        }
+
+        [Test]
+        public void MoveNextBlocks()
+        {
+            var finished = new ManualResetEvent(false);
+            var enumerator = new EnqueableEnumerator<Tick>(true);
+
+            // producer
+            int count = 0;
+            Task.Run(() =>
+            {
+                while (!finished.WaitOne(TimeSpan.FromMilliseconds(50)))
+                {
+                    enumerator.Enqueue(new Tick(DateTime.Now, Symbols.SPY, 100, 101));
+                    count++;
+
+                    // 5 data points is plenty
+                    if (count > 5)
+                    {
+                        finished.Set();
+                        enumerator.Stop();
+                    }
+                }
+            });
+
+            // consumer
+            int dequeuedCount = 0;
+            bool encounteredError = false;
+            var consumerTaskFinished = new ManualResetEvent(false);
+            Task.Run(() =>
+            {
+                while (enumerator.MoveNext())
+                {
+                    dequeuedCount++;
+                    if (enumerator.Current == null)
+                    {
+                        encounteredError = true;
+                    }
+                }
+                consumerTaskFinished.Set();
+            });
+
+            finished.WaitOne(Timeout.Infinite);
+            consumerTaskFinished.WaitOne(Timeout.Infinite);
+
+            Assert.IsFalse(enumerator.MoveNext());
+            Assert.IsFalse(encounteredError);
+            Assert.AreEqual(count, dequeuedCount);
         }
     }
 }
