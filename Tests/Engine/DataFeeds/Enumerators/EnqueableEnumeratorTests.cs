@@ -55,5 +55,48 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsFalse(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
         }
+
+        [Test]
+        public void RecordsInternalQueueCount()
+        {
+            var enumerator = new EnqueableEnumerator<Tick>();
+
+            var currentTime = new DateTime(2015, 12, 01);
+            var tick = new Tick(currentTime, Symbols.SPY, 100, 101);
+            enumerator.Enqueue(tick);
+            Assert.AreEqual(1, enumerator.Count);
+
+            tick = new Tick(currentTime, Symbols.SPY, 100, 101);
+            enumerator.Enqueue(tick);
+            Assert.AreEqual(2, enumerator.Count);
+
+            enumerator.MoveNext();
+            Assert.AreEqual(1, enumerator.Count);
+
+            enumerator.MoveNext();
+            Assert.AreEqual(0, enumerator.Count);
+        }
+
+        [Test]
+        public void RecordsMostRecentlyEnqueuedItem()
+        {
+            var enumerator = new EnqueableEnumerator<Tick>();
+
+            var currentTime = new DateTime(2015, 12, 01);
+            var tick1 = new Tick(currentTime, Symbols.SPY, 100, 101);
+            enumerator.Enqueue(tick1);
+            Assert.AreEqual(null, enumerator.Current);
+            Assert.AreEqual(tick1, enumerator.LastEnqueued);
+
+            var tick2 = new Tick(currentTime, Symbols.SPY, 100, 101);
+            enumerator.Enqueue(tick2);
+            Assert.AreEqual(tick2, enumerator.LastEnqueued);
+
+            enumerator.MoveNext();
+            Assert.AreEqual(tick1, enumerator.Current);
+
+            enumerator.MoveNext();
+            Assert.AreEqual(tick2, enumerator.Current);
+        }
     }
 }

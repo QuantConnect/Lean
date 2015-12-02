@@ -32,9 +32,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     {
         private T _current;
         private bool _end;
+        private T _lastEnqueued;
 
         private readonly ConcurrentQueue<T> _queue;
         private readonly ReaderWriterLockSlim _lock;
+
+        /// <summary>
+        /// Gets the current number of items held in the internal queue
+        /// </summary>
+        public int Count
+        {
+            get { return _queue.Count; }
+        }
+
+        /// <summary>
+        /// Gets the last item that was enqueued
+        /// </summary>
+        public T LastEnqueued
+        {
+            get { return _lastEnqueued; }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EnqueableEnumerator{T}"/> class
@@ -53,6 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             if (_end) return;
             _queue.Enqueue(data);
+            _lastEnqueued = data;
         }
 
         /// <summary>
@@ -74,6 +92,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 foreach (var datum in data)
                 {
                     _queue.Enqueue(datum);
+                    _lastEnqueued = datum;
                 }
             }
         }
