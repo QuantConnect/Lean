@@ -58,7 +58,7 @@ namespace QuantConnect.Brokerages
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException("Invalid brokerage symbol: " + brokerageSymbol);
 
-            return Symbol.Create(brokerageSymbol, GetSecurityType(brokerageSymbol), _market);
+            return Symbol.Create(brokerageSymbol, GetBrokerageSecurityType(brokerageSymbol), _market);
         }
 
         /// <summary>
@@ -66,7 +66,17 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="brokerageSymbol">The brokerage symbol</param>
         /// <returns>The security type</returns>
-        public SecurityType GetSecurityType(string brokerageSymbol)
+        public SecurityType GetBrokerageSecurityType(string brokerageSymbol)
+        {
+            return SecurityType.Equity;
+        }
+
+        /// <summary>
+        /// Returns the security type for a Lean symbol
+        /// </summary>
+        /// <param name="leanSymbol">The Lean symbol</param>
+        /// <returns>The security type</returns>
+        public SecurityType GetLeanSecurityType(string leanSymbol)
         {
             return SecurityType.Equity;
         }

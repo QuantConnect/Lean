@@ -197,7 +197,7 @@ namespace QuantConnect.Brokerages.Oanda
             if (!IsKnownBrokerageSymbol(brokerageSymbol))
                 throw new ArgumentException("Unknown Oanda symbol: " + brokerageSymbol);
 
-            return Symbol.Create(ConvertOandaSymbolToLeanSymbol(brokerageSymbol), GetSecurityType(brokerageSymbol), Market.Oanda);
+            return Symbol.Create(ConvertOandaSymbolToLeanSymbol(brokerageSymbol), GetBrokerageSecurityType(brokerageSymbol), Market.Oanda);
         }
 
         /// <summary>
@@ -205,7 +205,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="brokerageSymbol">The Oanda symbol</param>
         /// <returns>The security type</returns>
-        public SecurityType GetSecurityType(string brokerageSymbol)
+        public SecurityType GetBrokerageSecurityType(string brokerageSymbol)
         {
             var tokens = brokerageSymbol.Split('_');
             if (tokens.Length != 2)
@@ -214,6 +214,16 @@ namespace QuantConnect.Brokerages.Oanda
             return KnownCurrencies.Contains(tokens[0]) && KnownCurrencies.Contains(tokens[1])
                 ? SecurityType.Forex
                 : SecurityType.Cfd;
+        }
+
+        /// <summary>
+        /// Returns the security type for a Lean symbol
+        /// </summary>
+        /// <param name="leanSymbol">The Lean symbol</param>
+        /// <returns>The security type</returns>
+        public SecurityType GetLeanSecurityType(string leanSymbol)
+        {
+            return GetBrokerageSecurityType(ConvertLeanSymbolToOandaSymbol(leanSymbol));
         }
 
         /// <summary>
@@ -238,7 +248,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             var oandaSymbol = ConvertLeanSymbolToOandaSymbol(symbol.Value);
 
-            return KnownSymbols.Contains(oandaSymbol) && GetSecurityType(oandaSymbol) == symbol.ID.SecurityType;
+            return KnownSymbols.Contains(oandaSymbol) && GetBrokerageSecurityType(oandaSymbol) == symbol.ID.SecurityType;
         }
 
         /// <summary>

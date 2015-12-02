@@ -168,7 +168,7 @@ namespace QuantConnect.Brokerages.Fxcm
             if (!IsKnownBrokerageSymbol(brokerageSymbol))
                 throw new ArgumentException("Unknown FXCM symbol: " + brokerageSymbol);
 
-            return Symbol.Create(ConvertFxcmSymbolToLeanSymbol(brokerageSymbol), GetSecurityType(brokerageSymbol), Market.FXCM);
+            return Symbol.Create(ConvertFxcmSymbolToLeanSymbol(brokerageSymbol), GetBrokerageSecurityType(brokerageSymbol), Market.FXCM);
         }
 
         /// <summary>
@@ -176,12 +176,26 @@ namespace QuantConnect.Brokerages.Fxcm
         /// </summary>
         /// <param name="brokerageSymbol">The FXCM symbol</param>
         /// <returns>The security type</returns>
-        public SecurityType GetSecurityType(string brokerageSymbol)
+        public SecurityType GetBrokerageSecurityType(string brokerageSymbol)
         {
             var tokens = brokerageSymbol.Split('/');
             return tokens.Length == 2 && KnownCurrencies.Contains(tokens[0]) && KnownCurrencies.Contains(tokens[1])
                 ? SecurityType.Forex
                 : SecurityType.Cfd;
+        }
+
+        /// <summary>
+        /// Returns the security type for a Lean symbol
+        /// </summary>
+        /// <param name="leanSymbol">The Lean symbol</param>
+        /// <returns>The security type</returns>
+        public SecurityType GetLeanSecurityType(string leanSymbol)
+        {
+            string fxcmSymbol;
+            if (!MapLeanToFxcm.TryGetValue(leanSymbol, out fxcmSymbol))
+                throw new ArgumentException("Unknown Lean symbol: " + leanSymbol);
+
+            return GetBrokerageSecurityType(fxcmSymbol);
         }
 
         /// <summary>
@@ -206,7 +220,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
             var fxcmSymbol = ConvertLeanSymbolToFxcmSymbol(symbol.Value);
 
-            return MapFxcmToLean.ContainsKey(fxcmSymbol) && GetSecurityType(fxcmSymbol) == symbol.ID.SecurityType;
+            return MapFxcmToLean.ContainsKey(fxcmSymbol) && GetBrokerageSecurityType(fxcmSymbol) == symbol.ID.SecurityType;
         }
 
         /// <summary>

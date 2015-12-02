@@ -39,7 +39,14 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="brokerageSymbol">The brokerage symbol</param>
         /// <returns>The security type</returns>
-        SecurityType GetSecurityType(string brokerageSymbol);
+        SecurityType GetBrokerageSecurityType(string brokerageSymbol);
+
+        /// <summary>
+        /// Returns the security type for a Lean symbol
+        /// </summary>
+        /// <param name="leanSymbol">The Lean symbol</param>
+        /// <returns>The security type</returns>
+        SecurityType GetLeanSecurityType(string leanSymbol);
 
         /// <summary>
         /// Checks if the symbol is supported by the brokerage

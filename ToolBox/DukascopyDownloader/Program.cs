@@ -65,7 +65,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                 {
                     var securityType = downloader.GetSecurityType(symbol);
                     var symbolObject = new Symbol(GetSid(symbol, securityType), symbol);
-                    var data = downloader.Get(symbolObject, securityType, resolution, startDate, endDate);
+                    var data = downloader.Get(symbolObject, resolution, startDate, endDate);
 
                     if (allResolutions)
                     {

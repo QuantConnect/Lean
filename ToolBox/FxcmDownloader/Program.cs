@@ -60,18 +60,21 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 var password = Config.Get("fxcm-password", "password");
 
                 // Download the data
-                const string market = "fxcm";
+                const string market = Market.FXCM;
                 var downloader = new FxcmDataDownloader(server, terminal, userName, password);
 
                 foreach (var ticker in tickers)
                 {
-                    var securityType = downloader.GetSecurityType(ticker);
-                    var symbol = Symbol.Create(ticker, securityType, Market.FXCM);
-
                     if (!downloader.HasSymbol(ticker))
                         throw new ArgumentException("The symbol " + ticker + " is not available.");
+                }
 
-                    var data = downloader.Get(symbol, securityType, resolution, startDate, endDate);
+                foreach (var ticker in tickers)
+                {
+                    var securityType = downloader.GetSecurityType(ticker);
+                    var symbol = Symbol.Create(ticker, securityType, market);
+
+                    var data = downloader.Get(symbol, resolution, startDate, endDate);
 
                     if (allResolutions)
                     {

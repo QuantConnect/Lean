@@ -132,7 +132,7 @@ namespace QuantConnect.Brokerages.Oanda
             return new Holding
             {
                 Symbol = SymbolMapper.GetLeanSymbol(position.instrument),
-                Type = SymbolMapper.GetSecurityType(position.instrument),
+                Type = SymbolMapper.GetBrokerageSecurityType(position.instrument),
                 AveragePrice = (decimal)position.avgPrice,
                 ConversionRate = 1.0m,
                 CurrencySymbol = "$",
@@ -965,7 +965,7 @@ namespace QuantConnect.Brokerages.Oanda
             }
             qcOrder.Symbol = SymbolMapper.GetLeanSymbol(order.instrument);
             qcOrder.Quantity = ConvertQuantity(order);
-            qcOrder.SecurityType = SymbolMapper.GetSecurityType(order.instrument);
+            qcOrder.SecurityType = SymbolMapper.GetBrokerageSecurityType(order.instrument);
             qcOrder.Status = OrderStatus.None;
             qcOrder.BrokerId.Add(order.id);
             qcOrder.Id = order.id;
