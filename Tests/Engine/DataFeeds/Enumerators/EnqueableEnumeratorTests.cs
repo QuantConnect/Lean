@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [Test]
         public void PassesTicksStraightThrough()
         {
-            var enumerator = new EnqueableEnumerator<Tick>();
+            var enumerator = new EnqueueableEnumerator<Tick>();
 
             // add some ticks
             var currentTime = new DateTime(2015, 10, 08);
@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [Test]
         public void RecordsInternalQueueCount()
         {
-            var enumerator = new EnqueableEnumerator<Tick>();
+            var enumerator = new EnqueueableEnumerator<Tick>();
 
             var currentTime = new DateTime(2015, 12, 01);
             var tick = new Tick(currentTime, Symbols.SPY, 100, 101);
@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [Test]
         public void RecordsMostRecentlyEnqueuedItem()
         {
-            var enumerator = new EnqueableEnumerator<Tick>();
+            var enumerator = new EnqueueableEnumerator<Tick>();
 
             var currentTime = new DateTime(2015, 12, 01);
             var tick1 = new Tick(currentTime, Symbols.SPY, 100, 101);
@@ -106,7 +106,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void MoveNextBlocks()
         {
             var finished = new ManualResetEvent(false);
-            var enumerator = new EnqueableEnumerator<Tick>(true);
+            var enumerator = new EnqueueableEnumerator<Tick>(true);
 
             // producer
             int count = 0;

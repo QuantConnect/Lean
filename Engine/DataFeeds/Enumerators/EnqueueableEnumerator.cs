@@ -29,7 +29,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// is called
     /// </summary>
     /// <typeparam name="T">The item type yielded by the enumerator</typeparam>
-    public class EnqueableEnumerator<T> : IEnumerator<T>
+    public class EnqueueableEnumerator<T> : IEnumerator<T>
     {
         private T _current;
         private T _lastEnqueued;
@@ -56,9 +56,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EnqueableEnumerator{T}"/> class
+        /// Initializes a new instance of the <see cref="EnqueueableEnumerator{T}"/> class
         /// </summary>
-        public EnqueableEnumerator(bool blocking = false)
+        public EnqueueableEnumerator(bool blocking = false)
         {
             _blockingCollection = new BlockingCollection<T>();
             _lock = new ReaderWriterLockSlim();

@@ -397,7 +397,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var rateLimit = new RateLimitEnumerator(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
                     _customExchange.AddEnumerator(rateLimit);
 
-                    var enqueable = new EnqueableEnumerator<BaseData>();
+                    var enqueable = new EnqueueableEnumerator<BaseData>();
                     _customExchange.SetHandler(config.Symbol, data =>
                     {
                         enqueable.Enqueue(data);
@@ -420,7 +420,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 else
                 {
                     // tick subscriptions can pass right through
-                    var tickEnumerator = new EnqueableEnumerator<BaseData>();
+                    var tickEnumerator = new EnqueueableEnumerator<BaseData>();
                     _exchange.SetHandler(config.Symbol, data =>
                     {
                         tickEnumerator.Enqueue(data);
@@ -492,7 +492,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {config.SecurityType, new List<Symbol>{config.Symbol}}
                 });
 
-                var enqueable = new EnqueableEnumerator<BaseData>();
+                var enqueable = new EnqueueableEnumerator<BaseData>();
                 _exchange.SetHandler(config.Symbol, data =>
                 {
                     var universeData = data as BaseDataCollection;
@@ -524,7 +524,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var rateLimit = new RateLimitEnumerator(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
                 _customExchange.AddEnumerator(rateLimit);
 
-                var enqueable = new EnqueableEnumerator<BaseData>();
+                var enqueable = new EnqueueableEnumerator<BaseData>();
                 _customExchange.SetHandler(config.Symbol, data =>
                 {
                     var universeData = data as BaseDataCollection;
