@@ -126,6 +126,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 T current;
                 if (!_blockingCollection.TryTake(out current, _timeout))
                 {
+                    _current = default(T);
                     return !_end;
                 }
 

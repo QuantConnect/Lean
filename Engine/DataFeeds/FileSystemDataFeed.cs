@@ -86,7 +86,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _cancellationTokenSource = new CancellationTokenSource();
 
             IsActive = true;
-            _exchange = new BaseDataExchange {SleepInterval = 0};
+            _exchange = new BaseDataExchange("FileSystemDataFeedExchange");
 
             var ffres = Time.OneSecond;
             _fillForwardResolution = Ref.Create(() => ffres, res => ffres = res);
@@ -138,7 +138,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var enqueueable = new EnqueueableEnumerator<BaseData>(true);
 
             // add this enumerator to our exchange
-            _exchange.AddEnumerator(enumerator, () => true, handler => enqueueable.Stop());
+            var handler = new EnumeratorHandler(enumerator, enqueueable);
+            _exchange.AddEnumerator(handler);
             _exchange.SetDataHandler(config.Symbol, enqueueable.Enqueue);
 
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
@@ -206,7 +207,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             try
             {
+                Log.Trace("FileSystemDataFeed.Run(): Exchange starting.");
                 _exchange.Start(_cancellationTokenSource.Token);
+                Log.Trace("FileSystemDataFeed.Run(): Exchange stopped.");
             }
             catch (Exception err)
             {
@@ -217,13 +220,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
             finally
-            {   
-                //Close up all streams:
-                foreach (var subscription in Subscriptions)
-                {
-                    subscription.Dispose();
-                }
-
+            {
                 Log.Trace("FileSystemDataFeed.Run(): Ending Thread... ");
                 IsActive = false;
             }
@@ -294,21 +291,41 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // spoof a tick on the requested interval to trigger the universe selection function
                 enumerator = LinqExtensions.Range(localStartTime, localEndTime, dt => dt + userDefined.Interval)
                     .Where(dt => security.Exchange.IsOpenDuringBar(dt, dt + userDefined.Interval, config.ExtendedMarketHours))
-                    .Select(dt => new Tick {Time = dt}).GetEnumerator();
+                    .Select(dt => new Tick {Time = dt, Symbol = config.Symbol}).GetEnumerator();
+            }
+            else if (config.Type == typeof (CoarseFundamental))
+            {
+                // performance improvement for coarse, preload all the data
+                var list = new List<BaseData>();
+                var cf = new CoarseFundamental();
+                foreach (var date in Time.EachTradeableDay(security, _algorithm.StartDate, _algorithm.EndDate))
+                {
+                    var factory = new BaseDataSubscriptionFactory(config, date, false);
+                    var source = cf.GetSource(config, date, false);
+                    var coarseFundamentalForDate = factory.Read(source);
+                    list.AddRange(coarseFundamentalForDate);
+                }
+                enumerator = list.GetEnumerator();
+                enumerator.MoveNext();
             }
             else
             {
                 // normal reader for all others
                 enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, MapFileResolver.Empty, tradeableDates, false);
+
+                // route these custom subscriptions through the exchange for buffering
+                var enqueueable = new EnqueueableEnumerator<BaseData>(true);
+
+                // add this enumerator to our exchange
+                _exchange.AddEnumerator(new EnumeratorHandler(enumerator, enqueueable));
+                _exchange.SetDataHandler(config.Symbol, enqueueable.Enqueue);
+
+                enumerator = enqueueable;
             }
 
             // create the subscription
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
             var subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, true);
-
-            // only message the user if it's one of their universe types
-            var messageUser = subscription.Configuration.Type != typeof(CoarseFundamental);
-            PrimeSubscriptionPump(subscription, messageUser);
             _subscriptions.AddOrUpdate(subscription.Security.Symbol, subscription);
         }
 
@@ -376,6 +393,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <filterpriority>1</filterpriority>
         public IEnumerator<TimeSlice> GetEnumerator()
         {
+            foreach (var subscription in Subscriptions)
+            {
+                if (subscription.Current == null)
+                {
+                    PrimeSubscriptionPump(subscription, true);
+                }
+                if (subscription.EndOfStream)
+                {
+                    Subscription sub;
+                    _subscriptions.TryRemove(subscription.Security.Symbol, out sub);
+                }
+            }
+
             // compute initial frontier time
             var frontier = GetInitialFrontierTime();
             Log.Trace(string.Format("FileSystemDataFeed.GetEnumerator(): Begin: {0} UTC", frontier));
@@ -412,9 +442,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 else if (timeSlice.SecurityChanges == SecurityChanges.None)
                 {
-                    // there's no more data to pull off, we're done (nextFrontier is max value and no security changes)
+                    // there's no more data to pull off, we're done (frontier is max value and no security changes)
                     break;
                 }
+            }
+
+            //Close up all streams:
+            foreach (var subscription in Subscriptions)
+            {
+                subscription.Dispose();
             }
 
             Log.Trace(string.Format("FileSystemDataFeed.Run(): Data Feed Completed at {0} UTC", frontier));
@@ -430,6 +466,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        /// <summary>
+        /// Overrides methods of the base data exchange implementation
+        /// </summary>
+        class EnumeratorHandler : BaseDataExchange.EnumeratorHandler
+        {
+            private readonly EnqueueableEnumerator<BaseData> _enqueueable;
+            public EnumeratorHandler(IEnumerator<BaseData> enumerator, EnqueueableEnumerator<BaseData> enqueueable)
+                : base(enumerator)
+            {
+                _enqueueable = enqueueable;
+            }
+
+            /// <summary>
+            /// Returns true if this enumerator should move next
+            /// </summary>
+            public override bool ShouldMoveNext() { return _enqueueable.Count < 1000; }
+            /// <summary>
+            /// Calls stop on the internal enqueueable enumerator
+            /// </summary>
+            public override void OnEnumeratorFinished() { _enqueueable.Stop(); }
         }
     }
 }

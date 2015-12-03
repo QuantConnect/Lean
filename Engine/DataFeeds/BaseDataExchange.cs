@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -37,7 +38,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly ConcurrentDictionary<Symbol, DataHandler> _dataHandlers;
 
         // using concurrent dictionary for fast/easy contains/remove, the int value is nothingness
-        private readonly ConcurrentDictionary<IEnumerator<BaseData>, EnumeratorHandler> _enumeratorHandlers;
+
+        private IReadOnlyList<EnumeratorHandler> _enumerators;
 
         /// <summary>
         /// Gets or sets how long this thread will sleep when no data is available
@@ -57,7 +59,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BaseDataExchange"/>
+        /// Initializes a new instance of the <see cref="BaseDataExchange"/>.
+        /// This constructor will exit the exchange when all enumerators are finished.
         /// </summary>
         /// <param name="enumerators">The enumerators to fanout</param>
         public BaseDataExchange(params IEnumerator<BaseData>[] enumerators)
@@ -73,25 +76,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public BaseDataExchange(string name, params IEnumerator<BaseData>[] enumerators)
         {
             _name = name;
-            _enumeratorHandlers = new ConcurrentDictionary<IEnumerator<BaseData>, EnumeratorHandler>();
-            foreach (var enumerator in enumerators)
-            {
-                // enumerators added via ctor are always called
-                _enumeratorHandlers.AddOrUpdate(enumerator, new EnumeratorHandler(enumerator, () => true));
-            }
             _isFatalError = x => false;
             _dataHandlers = new ConcurrentDictionary<Symbol, DataHandler>();
+            _enumerators = enumerators.Select(enumerator => new EnumeratorHandler(enumerator, () => true)).ToList();
         }
 
         /// <summary>
         /// Adds the enumerator to this exchange. If it has already been added
         /// then it will remain registered in the exchange only once
         /// </summary>
-        /// <param name="enumerator">The enumerator to be added</param>
         /// <param name="handler">The handler to use when this symbol's data is encountered</param>
-        public void AddEnumerator(IEnumerator<BaseData> enumerator, EnumeratorHandler handler)
+        public void AddEnumerator(EnumeratorHandler handler)
         {
-            _enumeratorHandlers.TryAdd(enumerator, handler);
+            var copy = _enumerators.ToList();
+            copy.Add(handler);
+            _enumerators = copy;
         }
 
         /// <summary>
@@ -109,7 +108,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 enumeratorHandler.EnumeratorFinished += (sender, args) => enumeratorFinished(args);
             }
-            _enumeratorHandlers.TryAdd(enumerator, enumeratorHandler);
+            AddEnumerator(enumeratorHandler);
         }
 
         /// <summary>
@@ -147,7 +146,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var dataHandler = new DataHandler(symbol);
             dataHandler.DataEmitted += (sender, args) => handler(args);
-            _dataHandlers[symbol] = dataHandler;
+            SetDataHandler(dataHandler);
         }
 
         /// <summary>
@@ -189,7 +188,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (_isStopping || token.IsCancellationRequested)
                 {
                     _isStopping = true;
-                    Log.Trace("BaseDataExchange.ConsumeQueue(): Exiting...");
+                    var request = token.IsCancellationRequested ? "Cancellation requested" : "Stop requested";
+                    Log.Trace("BaseDataExchange({0}).ConsumeQueue(): {1}.  Exiting...", Name, request);
                     return;
                 }
 
@@ -198,10 +198,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // call move next each enumerator and invoke the appropriate handlers
 
                     var handled = false;
-                    foreach (var kvpe in _enumeratorHandlers)
+                    foreach (var enumeratorHandler in _enumerators)
                     {
-                        var enumerator = kvpe.Key;
-                        var enumeratorHandler = kvpe.Value;
+                        var enumerator = enumeratorHandler.Enumerator;
 
                         // check to see if we should advance this enumerator
                         if (!enumeratorHandler.ShouldMoveNext()) continue;
@@ -211,7 +210,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             enumeratorHandler.OnEnumeratorFinished();
 
                             // remove dead enumerators
-                            _enumeratorHandlers.TryRemove(enumerator, out enumeratorHandler);
+                            var copy = _enumerators.ToList();
+                            copy.Remove(enumeratorHandler);
+                            _enumerators = copy;
+
                             continue;
                         }
                         
@@ -237,7 +239,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     Log.Error(err);
                     if (_isFatalError(err))
                     {
-                        Log.Trace("BaseDataExchange.ConsumeQueue(): Fatal error encountered. Exiting...");
+                        Log.Trace("BaseDataExchange({0}).ConsumeQueue(): Fatal error encountered. Exiting...", Name);
                         return;
                     }
                 }
@@ -284,6 +286,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public class EnumeratorHandler
         {
+            private readonly Func<bool> _shouldMoveNext;
+
             /// <summary>
             /// Event fired when MoveNext returns false
             /// </summary>
@@ -295,11 +299,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             public readonly IEnumerator<BaseData> Enumerator;
 
             /// <summary>
-            /// Predicate function used to determine if we should move next on the handled enumerator
-            /// </summary>
-            public readonly Func<bool> ShouldMoveNext;
-
-            /// <summary>
             /// Initializes a new instance of the <see cref="EnumeratorHandler"/> class
             /// </summary>
             /// <param name="enumerator">The enumeator this handler handles</param>
@@ -308,16 +307,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             public EnumeratorHandler(IEnumerator<BaseData> enumerator, Func<bool> shouldMoveNext = null)
             {
                 Enumerator = enumerator;
-                ShouldMoveNext = shouldMoveNext ?? (() => true);
+                _shouldMoveNext = shouldMoveNext ?? (() => true);
+            }
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="EnumeratorHandler"/> class
+            /// </summary>
+            /// <param name="enumerator">The enumeator this handler handles</param>
+            protected EnumeratorHandler(IEnumerator<BaseData> enumerator)
+            {
+                Enumerator = enumerator;
+                _shouldMoveNext = () => true;
             }
 
             /// <summary>
             /// Event invocator for the <see cref="EnumeratorFinished"/> event
             /// </summary>
-            public void OnEnumeratorFinished()
+            public virtual void OnEnumeratorFinished()
             {
                 var handler = EnumeratorFinished;
                 if (handler != null) handler(this, this);
+            }
+
+            /// <summary>
+            /// Returns true if this enumerator should move next
+            /// </summary>
+            public virtual bool ShouldMoveNext()
+            {
+                return _shouldMoveNext();
             }
         }
     }
