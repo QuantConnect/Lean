@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The epected resolution of the universe data</param>
         /// <param name="market">The market for selected symbols</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
-        public void AddUniverse<T>(SecurityType securityType, Symbol symbol, Resolution resolution, string market, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
+        public void AddUniverse<T>(SecurityType securityType, string symbol, Resolution resolution, string market, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
             AddUniverse(securityType, symbol, resolution, market, UniverseSettings, selector);
         }
@@ -80,12 +80,13 @@ namespace QuantConnect.Algorithm
         /// <param name="market">The market for selected symbols</param>
         /// <param name="subscriptionSettings">The subscription settings to use for newly created subscriptions</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
-        public void AddUniverse<T>(SecurityType securityType, Symbol symbol, Resolution resolution, string market, SubscriptionSettings subscriptionSettings, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
+        public void AddUniverse<T>(SecurityType securityType, string symbol, Resolution resolution, string market, SubscriptionSettings subscriptionSettings, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
-            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(market, symbol.Value, securityType);
+            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(market, symbol, securityType);
             var dataTimeZone = marketHoursDbEntry.DataTimeZone;
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
-            var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true);
+            var symbolObject = QuantConnect.Symbol.Create(symbol, securityType, market);
+            var config = new SubscriptionDataConfig(typeof(T), symbolObject, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true);
             AddUniverse(new FuncUniverse(config, subscriptionSettings, d => selector(d.OfType<T>())));
         }
 
