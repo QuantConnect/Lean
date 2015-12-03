@@ -336,7 +336,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var algorithm = new AlgorithmStub();
             Symbol symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
-            algorithm.SetUniverse(new FuncUniverse(
+            algorithm.AddUniverse(new FuncUniverse(
                 new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
                 new SubscriptionSettings(Resolution.Second, 1, true, false),
                 coarse => coarse.Take(10).Select(x => x.Symbol) 

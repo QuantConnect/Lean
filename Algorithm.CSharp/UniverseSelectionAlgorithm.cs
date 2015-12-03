@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(10000000);             //Set Strategy Cash
 
             var averages = new ConcurrentDictionary<Symbol, SelectionData>();
-            SetUniverse(coarse =>
+            AddUniverse(coarse =>
             {
                 return (from cf in coarse
                         let avg = averages.GetOrAdd(cf.Symbol, sym => new SelectionData())

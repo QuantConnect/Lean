@@ -1125,23 +1125,12 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Sets the current universe selector for the algorithm. This will be executed on day changes
         /// </summary>
-        /// <param name="selector">The universe selector</param>
-        public void SetUniverse(Universe selector)
-        {
-            // don't remove user defined universes
-            Universes.RemoveAll(x => x.GetType() != typeof(UserDefinedUniverse));
-            Universes.Add(selector);
-        }
-
-        /// <summary>
-        /// Sets the current universe selector for the algorithm. This will be executed on day changes
-        /// </summary>
         /// <param name="selector">Defines an initial coarse selection</param>
-        public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
+        public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
         {
             var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
-            SetUniverse(new FuncUniverse(config, UniverseSettings, selectionData => selector(selectionData.OfType<CoarseFundamental>())));
+            AddUniverse(new FuncUniverse(config, UniverseSettings, selectionData => selector(selectionData.OfType<CoarseFundamental>())));
         }
 
         /// <summary>
