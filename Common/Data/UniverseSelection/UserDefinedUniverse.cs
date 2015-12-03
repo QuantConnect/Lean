@@ -126,9 +126,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Returns the symbols defined by the user for this universe
         /// </summary>
+        /// <param name="utcTime">The curren utc time</param>
         /// <param name="data">The symbols to remain in the universe</param>
         /// <returns>The data that passes the filter</returns>
-        public override IEnumerable<Symbol> SelectSymbols(IEnumerable<BaseData> data)
+        public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, IEnumerable<BaseData> data)
         {
             // send back a copy of the set
             return _symbols.ToList();

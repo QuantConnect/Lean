@@ -99,9 +99,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Performs universe selection using the data specified
         /// </summary>
+        /// <param name="utcTime">The current utc time</param>
         /// <param name="data">The symbols to remain in the universe</param>
         /// <returns>The data that passes the filter</returns>
-        public abstract IEnumerable<Symbol> SelectSymbols(IEnumerable<BaseData> data);
+        public abstract IEnumerable<Symbol> SelectSymbols(DateTime utcTime, IEnumerable<BaseData> data);
 
         /// <summary>
         /// Determines whether or not the specified
