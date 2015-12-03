@@ -219,6 +219,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         
                         if (enumerator.Current == null) continue;
 
+                        // if the enumerator is configured to handle it, then do it, don't pass to data handlers
+                        if (enumeratorHandler.HandlesData)
+                        {
+                            handled = true;
+                            enumeratorHandler.HandleData(enumerator.Current);
+                            continue;
+                        }
+
                         // invoke the correct handler
                         DataHandler dataHandler;
                         if (_dataHandlers.TryGetValue(enumerator.Current.Symbol, out dataHandler))
@@ -287,6 +295,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public class EnumeratorHandler
         {
             private readonly Func<bool> _shouldMoveNext;
+            private readonly Action<BaseData> _handleData;
 
             /// <summary>
             /// Event fired when MoveNext returns false
@@ -299,14 +308,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             public readonly IEnumerator<BaseData> Enumerator;
 
             /// <summary>
+            /// Determines whether or not this handler is to be used for handling the
+            /// data emitted. This is useful when enumerators are not for a single symbol,
+            /// such is the case with universe subscriptions
+            /// </summary>
+            public readonly bool HandlesData;
+
+            /// <summary>
             /// Initializes a new instance of the <see cref="EnumeratorHandler"/> class
             /// </summary>
             /// <param name="enumerator">The enumeator this handler handles</param>
             /// <param name="shouldMoveNext">Predicate function used to determine if we should call move next
             /// on the symbol's enumerator</param>
-            public EnumeratorHandler(IEnumerator<BaseData> enumerator, Func<bool> shouldMoveNext = null)
+            /// <param name="handleData">Handler for data if HandlesData=true</param>
+            public EnumeratorHandler(IEnumerator<BaseData> enumerator, Func<bool> shouldMoveNext = null, Action<BaseData> handleData = null)
             {
                 Enumerator = enumerator;
+                HandlesData = handleData != null;
+
+                _handleData = handleData ?? (data => { });
                 _shouldMoveNext = shouldMoveNext ?? (() => true);
             }
 
@@ -314,9 +334,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             /// Initializes a new instance of the <see cref="EnumeratorHandler"/> class
             /// </summary>
             /// <param name="enumerator">The enumeator this handler handles</param>
-            protected EnumeratorHandler(IEnumerator<BaseData> enumerator)
+            /// <param name="handlesData">True if this handler will handle the data, false otherwise</param>
+            protected EnumeratorHandler(IEnumerator<BaseData> enumerator, bool handlesData)
             {
+                HandlesData = handlesData;
                 Enumerator = enumerator;
+
+                _handleData = data => { };
                 _shouldMoveNext = () => true;
             }
 
@@ -335,6 +359,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             public virtual bool ShouldMoveNext()
             {
                 return _shouldMoveNext();
+            }
+
+            /// <summary>
+            /// Handles the specified data.
+            /// </summary>
+            /// <param name="data">The data to be handled</param>
+            public virtual void HandleData(BaseData data)
+            {
+                _handleData(data);
             }
         }
     }

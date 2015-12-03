@@ -140,7 +140,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // add this enumerator to our exchange
             var handler = new EnumeratorHandler(enumerator, enqueueable);
             _exchange.AddEnumerator(handler);
-            _exchange.SetDataHandler(config.Symbol, enqueueable.Enqueue);
 
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
             var subscription = new Subscription(universe, security, enqueueable, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, false);
@@ -318,7 +317,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 // add this enumerator to our exchange
                 _exchange.AddEnumerator(new EnumeratorHandler(enumerator, enqueueable));
-                _exchange.SetDataHandler(config.Symbol, enqueueable.Enqueue);
 
                 enumerator = enqueueable;
             }
@@ -475,11 +473,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             private readonly EnqueueableEnumerator<BaseData> _enqueueable;
             public EnumeratorHandler(IEnumerator<BaseData> enumerator, EnqueueableEnumerator<BaseData> enqueueable)
-                : base(enumerator)
+                : base(enumerator, true)
             {
                 _enqueueable = enqueueable;
             }
-
             /// <summary>
             /// Returns true if this enumerator should move next
             /// </summary>
@@ -488,6 +485,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             /// Calls stop on the internal enqueueable enumerator
             /// </summary>
             public override void OnEnumeratorFinished() { _enqueueable.Stop(); }
+
+            /// <summary>
+            /// Enqueues the data
+            /// </summary>
+            /// <param name="data">The data to be handled</param>
+            public override void HandleData(BaseData data)
+            {
+                var collection = data as BaseDataCollection;
+                if (collection != null) _enqueueable.EnqueueRange(collection.Data);
+                else _enqueueable.Enqueue(data);
+            }
         }
     }
 }

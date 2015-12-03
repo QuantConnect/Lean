@@ -478,6 +478,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // spoof a tick on the requested interval to trigger the universe selection function
                 enumerator = userDefined.GetTriggerTimes(startTimeUtc, endTimeUtc, marketHoursDatabase)
                     .Select(dt => new Tick { Time = dt }).GetEnumerator();
+
+                var enqueueable = new EnqueueableEnumerator<BaseData>();
+                _customExchange.AddEnumerator(new EnumeratorHandler(enumerator, enqueueable));
+                enumerator = enqueueable;
             }
             else if (config.Type == typeof (CoarseFundamental))
             {
@@ -518,22 +522,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // rate limit the refreshing of the stack to the requested interval
                 var minimumTimeBetweenCalls = Math.Min(config.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
                 var rateLimit = new RateLimitEnumerator(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
-                _customExchange.AddEnumerator(rateLimit);
-
-                var enqueable = new EnqueueableEnumerator<BaseData>();
-                _customExchange.SetDataHandler(config.Symbol, data =>
-                {
-                    var universeData = data as BaseDataCollection;
-                    if (universeData != null)
-                    {
-                        enqueable.EnqueueRange(universeData.Data);
-                    }
-                    else
-                    {
-                        enqueable.Enqueue(data);
-                    }
-                });
-                enumerator = enqueable;
+                var enqueueable = new EnqueueableEnumerator<BaseData>();
+                _customExchange.AddEnumerator(new EnumeratorHandler(rateLimit, enqueueable));
+                enumerator = enqueueable;
             }
 
             // create the subscription
@@ -615,6 +606,38 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+
+        /// <summary>
+        /// Overrides methods of the base data exchange implementation
+        /// </summary>
+        class EnumeratorHandler : BaseDataExchange.EnumeratorHandler
+        {
+            private readonly EnqueueableEnumerator<BaseData> _enqueueable;
+            public EnumeratorHandler(IEnumerator<BaseData> enumerator, EnqueueableEnumerator<BaseData> enqueueable)
+                : base(enumerator, true)
+            {
+                _enqueueable = enqueueable;
+            }
+            /// <summary>
+            /// Returns true if this enumerator should move next
+            /// </summary>
+            public override bool ShouldMoveNext() { return true; }
+            /// <summary>
+            /// Calls stop on the internal enqueueable enumerator
+            /// </summary>
+            public override void OnEnumeratorFinished() { _enqueueable.Stop(); }
+            /// <summary>
+            /// Enqueues the data
+            /// </summary>
+            /// <param name="data">The data to be handled</param>
+            public override void HandleData(BaseData data)
+            {
+                var collection = data as BaseDataCollection;
+                if (collection != null) _enqueueable.EnqueueRange(collection.Data);
+                else _enqueueable.Enqueue(data);
+            }
         }
     }
 }
