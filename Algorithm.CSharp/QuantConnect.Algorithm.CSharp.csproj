@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="BasicTemplateAlgorithm.cs" />
     <Compile Include="CustomBenchmarkAlgorithm.cs" />
+    <Compile Include="CustomBrokerageMessageHandlerAlgorithm.cs" />
     <Compile Include="CustomDataRegressionAlgorithm.cs" />
     <Compile Include="DelistingEventsAlgorithm.cs" />
     <Compile Include="HistoryAlgorithm.cs" />
