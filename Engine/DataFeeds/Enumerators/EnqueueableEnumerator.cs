@@ -58,6 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Initializes a new instance of the <see cref="EnqueueableEnumerator{T}"/> class
         /// </summary>
+        /// <param name="blocking">Specifies whether or not to use the blocking behavior</param>
         public EnqueueableEnumerator(bool blocking = false)
         {
             _blockingCollection = new BlockingCollection<T>();
@@ -111,8 +112,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _blockingCollection.CompleteAdding();
         }
 
-        private T lastDequeued;
-
         /// <summary>
         /// Advances the enumerator to the next element of the collection.
         /// </summary>
@@ -124,12 +123,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             using (_lock.Read())
             {
-                if (!_blockingCollection.TryTake(out _current, _timeout))
+                T current;
+                if (!_blockingCollection.TryTake(out current, _timeout))
                 {
                     return !_end;
                 }
 
-                lastDequeued = _current;
+                _current = current;
 
                 // even if we don't have data to return, we haven't technically
                 // passed the end of the collection, so always return true until
