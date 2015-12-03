@@ -155,5 +155,32 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$2.00"}
             });
         }
+
+        [Test]
+        public void CustomDataRegressionAlgorithm()
+        {
+            AlgorithmRunner.RunLocalBacktest("CustomDataRegressionAlgorithm", new Dictionary<string, string>
+            {
+                {"Total Trades", "1"},
+                {"Average Win", "0%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "155.256%"},
+                {"Drawdown", "84.800%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "0%"},
+                {"Sharpe Ratio", "1.197"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0"},
+                {"Beta", "0"},
+                {"Annual Standard Deviation", "0.878"},
+                {"Annual Variance", "0.771"},
+                {"Information Ratio", "0"},
+                {"Tracking Error", "0"},
+                {"Treynor Ratio", "0"},
+                {"Total Fees", "$0.00"}
+            });
+        }
     }
 }
