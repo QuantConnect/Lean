@@ -272,7 +272,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // grab the relevant exchange hours
             var config = universe.Configuration;
 
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(config);
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var exchangeHours = marketHoursDatabase.GetExchangeHours(config);
 
             // create a canonical security object
             var security = new Security(exchangeHours, config, universe.SubscriptionSettings.Leverage);
@@ -289,9 +290,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (userDefined != null)
             {
                 // spoof a tick on the requested interval to trigger the universe selection function
-                enumerator = LinqExtensions.Range(localStartTime, localEndTime, dt => dt + userDefined.Interval)
-                    .Where(dt => security.Exchange.IsOpenDuringBar(dt, dt + userDefined.Interval, config.ExtendedMarketHours))
-                    .Select(dt => new Tick {Time = dt, Symbol = config.Symbol}).GetEnumerator();
+                enumerator = userDefined.GetTriggerTimes(startTimeUtc, endTimeUtc, marketHoursDatabase)
+                    .Select(x => new Tick {Time = x, Symbol = config.Symbol}).GetEnumerator();
             }
             else if (config.Type == typeof (CoarseFundamental))
             {

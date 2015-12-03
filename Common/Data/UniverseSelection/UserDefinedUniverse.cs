@@ -134,5 +134,19 @@ namespace QuantConnect.Data.UniverseSelection
             // send back a copy of the set
             return _symbols.ToList();
         }
+
+        /// <summary>
+        /// Returns an enumerator that defines when this user defined universe will be invoked
+        /// </summary>
+        /// <returns>An enumerator of DateTime that defines when this universe will be invoked</returns>
+        public virtual IEnumerable<DateTime> GetTriggerTimes(DateTime startTimeUtc, DateTime endTimeUtc, MarketHoursDatabase marketHoursDatabase)
+        {
+            var exchangeHours = marketHoursDatabase.GetExchangeHours(Configuration);
+            var localStartTime = startTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone);
+            var localEndTime = endTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone);
+
+            return LinqExtensions.Range(localStartTime, localEndTime, dt => dt + Interval)
+                .Where(dt => exchangeHours.IsOpen(dt, dt + Interval, Configuration.ExtendedMarketHours));
+        }
     }
 }
