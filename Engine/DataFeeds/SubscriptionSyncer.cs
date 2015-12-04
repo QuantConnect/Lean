@@ -62,6 +62,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     continue;
                 }
 
+                // prime if needed
+                if (subscription.Current == null)
+                {
+                    if (!subscription.MoveNext())
+                    {
+                        OnSubscriptionFinished(subscription);
+                        continue;
+                    }
+                }
+
                 var cache = new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData>());
                 data.Add(cache);
 

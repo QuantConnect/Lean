@@ -168,7 +168,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _subscriptions.AddOrUpdate(subscription.Security.Symbol,  subscription);
 
             // prime the pump, run method checks current before move next calls
-            PrimeSubscriptionPump(subscription, true);
+            //PrimeSubscriptionPump(subscription, true);
 
             _changes += SecurityChanges.Added(security);
 
@@ -290,7 +290,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // spoof a tick on the requested interval to trigger the universe selection function
                 enumerator = userDefined.GetTriggerTimes(startTimeUtc, endTimeUtc, marketHoursDatabase)
-                    .Select(x => new Tick {Time = x, Symbol = config.Symbol}).GetEnumerator();
+                    .Select(x => new Tick { Time = x, Symbol = config.Symbol }).GetEnumerator();
+
+                // route these custom subscriptions through the exchange for buffering
+                var enqueueable = new EnqueueableEnumerator<BaseData>(true);
+
+                // add this enumerator to our exchange
+                _exchange.AddEnumerator(new EnumeratorHandler(enumerator, enqueueable));
+
+                enumerator = enqueueable;
             }
             else if (config.Type == typeof (CoarseFundamental))
             {
@@ -305,7 +313,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     list.AddRange(coarseFundamentalForDate);
                 }
                 enumerator = list.GetEnumerator();
-                enumerator.MoveNext();
             }
             else
             {
@@ -391,19 +398,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <filterpriority>1</filterpriority>
         public IEnumerator<TimeSlice> GetEnumerator()
         {
-            foreach (var subscription in Subscriptions)
-            {
-                if (subscription.Current == null)
-                {
-                    PrimeSubscriptionPump(subscription, true);
-                }
-                if (subscription.EndOfStream)
-                {
-                    Subscription sub;
-                    _subscriptions.TryRemove(subscription.Security.Symbol, out sub);
-                }
-            }
-
             // compute initial frontier time
             var frontier = GetInitialFrontierTime();
             Log.Trace(string.Format("FileSystemDataFeed.GetEnumerator(): Begin: {0} UTC", frontier));
