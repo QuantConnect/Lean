@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -25,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.Resolution = Resolution.Hour;
 
             SetStartDate(2015, 01, 05);
-            SetEndDate(2015, 01, 09);
+            SetEndDate(2015, 11, 09);
 
             SetCash(1000*1000);
 
@@ -64,14 +65,23 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     // rebalance portfolio to equal weights
                     SetHoldings(target.Ticker, targetPercentage);
-
-                    // set stop loss / profit orders
-                    var existingHoldings = Securities[target.Ticker].Holdings.Quantity;
-                    StopMarketOrder(target.Ticker, -existingHoldings, target.StopLoss);
-                    LimitOrder(target.Ticker, -existingHoldings, target.StopGain);
                 }
 
                 tradedToday = Time.Date;
+            }
+            else
+            {
+                foreach (var target in _todaysResponse.Securities.Where(x => ValidSymbols.Contains(x.Ticker)))
+                {
+                    // set stop loss / profit orders
+                    var security = Securities[target.Ticker];
+                    if (!security.Invested) continue;
+
+                    if (security.Close < target.StopLoss || security.Close > target.StopGain)
+                    {
+                        MarketOrder(target.Ticker, -security.Holdings.Quantity, true);
+                    }
+                }
             }
         }
 

@@ -392,6 +392,8 @@ namespace QuantConnect
         /// <returns>The time in terms of the to time zone</returns>
         public static DateTime ConvertTo(this DateTime time, DateTimeZone from, DateTimeZone to, bool strict = false)
         {
+            if (ReferenceEquals(from, to)) return time;
+
             if (strict)
             {
                 return from.AtStrictly(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();

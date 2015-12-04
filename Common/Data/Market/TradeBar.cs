@@ -28,7 +28,7 @@ namespace QuantConnect.Data.Market
     public class TradeBar : BaseData, IBar
     {
         // scale factor used in QC equity/forex data files
-        private const decimal _scaleFactor = 10000m;
+        private const decimal _scaleFactor = 1/10000m;
 
         private int _initialized;
         private decimal _open;
@@ -253,22 +253,19 @@ namespace QuantConnect.Data.Market
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
                 tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
-                tradeBar.Open = config.GetNormalizedPrice(Convert.ToDecimal(csv[1], CultureInfo.InvariantCulture) / _scaleFactor);
-                tradeBar.High = config.GetNormalizedPrice(Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture) / _scaleFactor);
-                tradeBar.Low = config.GetNormalizedPrice(Convert.ToDecimal(csv[3], CultureInfo.InvariantCulture) / _scaleFactor);
-                tradeBar.Close = config.GetNormalizedPrice(Convert.ToDecimal(csv[4], CultureInfo.InvariantCulture) / _scaleFactor);
             }
             else
             {
                 // Using custom "ToDecimal" conversion for speed on high resolution data.
-                tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32());
-                tradeBar.Open = config.GetNormalizedPrice(csv[1].ToDecimal()/_scaleFactor);
-                tradeBar.High = config.GetNormalizedPrice(csv[2].ToDecimal()/_scaleFactor);
-                tradeBar.Low = config.GetNormalizedPrice(csv[3].ToDecimal()/_scaleFactor);
-                tradeBar.Close = config.GetNormalizedPrice(csv[4].ToDecimal()/_scaleFactor);
+                tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
 
+            tradeBar.Open = config.GetNormalizedPrice(csv[1].ToDecimal() * _scaleFactor);
+            tradeBar.High = config.GetNormalizedPrice(csv[2].ToDecimal() * _scaleFactor);
+            tradeBar.Low = config.GetNormalizedPrice(csv[3].ToDecimal() * _scaleFactor);
+            tradeBar.Close = config.GetNormalizedPrice(csv[4].ToDecimal() * _scaleFactor);
             tradeBar.Volume = csv[5].ToInt64();
+
             return tradeBar;
         }
 
