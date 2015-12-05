@@ -9,7 +9,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
         public override void Initialize()
         {
             SetStartDate(2015, 09, 28);
-            SetEndDate(2015, 10, 28);
+            SetEndDate(2015, 11, 13);
             foreach (var symbol in Symbols.Equity.All.Take(400))
             {
                 AddSecurity(SecurityType.Equity, symbol);
