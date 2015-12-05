@@ -171,7 +171,6 @@
     <Compile Include="Fxcm\FxcmBrokerage.Util.cs" />
     <Compile Include="Fxcm\FxcmBrokerageFactory.cs" />
     <Compile Include="Fxcm\FxcmSymbolMapper.cs" />
-    <Compile Include="IdentitySymbolMapper.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerageFactory.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersGatewayRunner.cs" />
