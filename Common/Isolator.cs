@@ -80,10 +80,18 @@ namespace QuantConnect
             memoryCap *= 1024 * 1024;
 
             //Launch task
-            var task = Task.Factory.StartNew(codeBlock, CancellationTokenSource.Token);
+            var thread = new Thread(() => codeBlock());
+            thread.Start();
 
-            while (!task.IsCompleted && DateTime.Now < end)
+            var timedout = false;
+            while (thread.IsAlive)
             {
+                if (DateTime.Now > end)
+                {
+                    timedout = true;
+                    break;
+                }
+
                 var memoryUsed = GC.GetTotalMemory(false);
 
                 if (memoryUsed > memoryCap)
@@ -117,10 +125,11 @@ namespace QuantConnect
                 Thread.Sleep(100);
             }
 
-            if (task.IsCompleted == false && message == "")
+            if (thread.IsAlive && message == "")
             {
                 message = "Execution Security Error: Operation timed out - " + timeSpan.TotalMinutes + " minutes max. Check for recursive loops.";
                 Log.Trace("Isolator.ExecuteWithTimeLimit(): " + message);
+                thread.Abort();
             }
 
             if (message != "")
@@ -129,7 +138,7 @@ namespace QuantConnect
                 Log.Error("Security.ExecuteWithTimeLimit(): " + message);
                 throw new Exception(message);
             }
-            return task.IsCompleted;
+            return !timedout;
         }
 
         /// <summary>
