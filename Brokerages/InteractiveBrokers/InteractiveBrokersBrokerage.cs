@@ -74,7 +74,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // number of shares per symbol
         private readonly ConcurrentDictionary<string, Holding> _accountHoldings = new ConcurrentDictionary<string, Holding>();
 
-        private readonly ConcurrentDictionary<string, IB.ContractDetails> _contractDetails = new ConcurrentDictionary<string, IB.ContractDetails>(); 
+        private readonly ConcurrentDictionary<string, IB.ContractDetails> _contractDetails = new ConcurrentDictionary<string, IB.ContractDetails>();
+
+        private readonly InteractiveBrokersSymbolMapper _symbolMapper = new InteractiveBrokersSymbolMapper();
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
@@ -108,7 +110,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Creates a new InteractiveBrokeragBrokerage for the specified account
+        /// Creates a new InteractiveBrokersBrokerage for the specified account
         /// </summary>
         /// <param name="orderProvider">An instance of IOrderMapping used to fetch Order objects by brokerage ID</param>
         /// <param name="account">The account used to connect to IB</param>
@@ -517,7 +519,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new InvalidOperationException("InteractiveBrokersBrokerage.IBPlaceOrder(): Unable to place order while not connected.");
             }
 
-            var contract = CreateContract(order.Symbol.Value, order.SecurityType, exchange);
+            var contract = CreateContract(order.Symbol, exchange);
 
             int ibOrderID = 0;
             if (needsNewID)
@@ -630,7 +632,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // is it XXXUSD or USDXXX
             bool inverted = invertedSymbol == currencyPair;
-            var contract = CreateContract(currencyPair, SecurityType.Forex);
+            var symbol = Symbol.Create(currencyPair, SecurityType.Forex, Market.FXCM);
+            var contract = CreateContract(symbol);
             var details = GetContractDetails(contract);
             if (details == null)
             {
@@ -1013,19 +1016,19 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Creates an IB contract from the order.
         /// </summary>
         /// <param name="symbol">The symbol whose contract we need to create</param>
-        /// <param name="type">The security type of the symbol</param>
         /// <param name="exchange">The exchange where the order will be placed, defaults to 'Smart'</param>
         /// <returns>A new IB contract for the order</returns>
-        private IB.Contract CreateContract(string symbol, SecurityType type, string exchange = null)
+        private IB.Contract CreateContract(Symbol symbol, string exchange = null)
         {
-            var securityType = ConvertSecurityType(type);
-            var contract = new IB.Contract(symbol, exchange ?? "Smart", securityType, "USD");
-            if (type == SecurityType.Forex)
+            var securityType = ConvertSecurityType(symbol.ID.SecurityType);
+            var ibSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
+            var contract = new IB.Contract(ibSymbol, exchange ?? "Smart", securityType, "USD");
+            if (symbol.ID.SecurityType == SecurityType.Forex)
             {
                 // forex is special, so rewrite some of the properties to make it work
                 contract.Exchange = "IDEALPRO";
-                contract.Symbol = symbol.Substring(0, 3);
-                contract.Currency = symbol.Substring(3);
+                contract.Symbol = ibSymbol.Substring(0, 3);
+                contract.Currency = ibSymbol.Substring(3);
             }
 
             // some contracts require this, such as MSFT
@@ -1226,21 +1229,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Maps the IB Contract's symbol to a QC symbol
         /// </summary>
-        private static Symbol MapSymbol(IB.Contract contract)
+        private Symbol MapSymbol(IB.Contract contract)
         {
             var securityType = ConvertSecurityType(contract.SecurityType);
-            if (securityType == SecurityType.Forex)
-            {
-                // reformat for QC
-                var symbol = contract.Symbol + contract.Currency;
-                return new Symbol(SecurityIdentifier.GenerateForex(symbol, Market.FXCM), symbol);
-            }
-            if (securityType == SecurityType.Equity)
-            {
-                return new Symbol(SecurityIdentifier.GenerateEquity(contract.Symbol, Market.USA), contract.Symbol);
-            }
+            var ibSymbol = securityType == SecurityType.Forex ? contract.Symbol + contract.Currency : contract.Symbol;
+            var market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
 
-            throw new NotImplementedException("The specified security type has not been implemented: " + securityType);
+            return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market);
         }
 
         private decimal RoundPrice(decimal input, decimal minTick)
@@ -1345,7 +1340,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 foreach (var symbol in secType.Value)
                 {
                     var id = GetNextRequestID();
-                    var contract = CreateContract(symbol.Value, secType.Key);
+                    var contract = CreateContract(symbol);
                     Client.RequestMarketData(id, contract, null, false, false);
 
                     var symbolTuple = Tuple.Create(secType.Key, symbol);

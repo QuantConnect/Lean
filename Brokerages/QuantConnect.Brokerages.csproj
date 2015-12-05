@@ -174,6 +174,7 @@
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerageFactory.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersGatewayRunner.cs" />
+    <Compile Include="InteractiveBrokers\InteractiveBrokersSymbolMapper.cs" />
     <Compile Include="ISymbolMapper.cs" />
     <Compile Include="Oanda\DataType\Account.cs" />
     <Compile Include="Oanda\DataType\Communications\AccountResponse.cs" />
