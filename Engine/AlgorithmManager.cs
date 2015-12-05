@@ -542,7 +542,7 @@ namespace QuantConnect.Lean.Engine
 
                 try
                 {
-                    if (timeSlice.Slice.Count != 0)
+                    if (timeSlice.Slice.HasData)
                     {
                         // EVENT HANDLER v3.0 -- all data in a single event
                         algorithm.OnData(timeSlice.Slice);

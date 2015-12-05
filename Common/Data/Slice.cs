@@ -38,7 +38,7 @@ namespace QuantConnect.Data
 
         // string -> data   for non-tick data
         // string -> list{data} for tick data
-        private readonly DataDictionary<SymbolData> _data;
+        private readonly Lazy<DataDictionary<SymbolData>> _data;
         // Quandl -> DataDictonary<Quandl>
         private readonly Dictionary<Type, Lazy<object>> _dataByType;
 
@@ -46,6 +46,14 @@ namespace QuantConnect.Data
         /// Gets the timestamp for this slice of data
         /// </summary>
         public DateTime Time
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets whether or not this slice has data
+        /// </summary>
+        public bool HasData
         {
             get; private set;
         }
@@ -103,7 +111,7 @@ namespace QuantConnect.Data
         /// </summary>
         public int Count
         {
-            get { return _data.Count; }
+            get { return _data.Value.Count; }
         }
 
         /// <summary>
@@ -111,7 +119,7 @@ namespace QuantConnect.Data
         /// </summary>
         public IReadOnlyList<Symbol> Keys
         {
-            get { return new List<Symbol>(_data.Keys); }
+            get { return new List<Symbol>(_data.Value.Keys); }
         }
 
         /// <summary>
@@ -145,14 +153,18 @@ namespace QuantConnect.Data
         /// <param name="dividends">The dividends for this slice</param>
         /// <param name="delistings">The delistings for this slice</param>
         /// <param name="symbolChanges">The symbol changed events for this slice</param>
-        public Slice(DateTime time, IEnumerable<BaseData> data, TradeBars tradeBars, Ticks ticks, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges)
+        /// <param name="hasData">true if this slice contains data</param>
+        public Slice(DateTime time, IEnumerable<BaseData> data, TradeBars tradeBars, Ticks ticks, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, bool? hasData = null)
         {
             Time = time;
 
             _dataByType = new Dictionary<Type, Lazy<object>>();
 
             // market data
-            _data = CreateDynamicDataDictionary(data);
+            _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(data));
+
+            HasData = hasData != null || _data.Value.Count > 0;
+
             _ticks = CreateTicksCollection(ticks);
             _bars = CreateCollection<TradeBars, TradeBar>(tradeBars);
 
@@ -176,7 +188,7 @@ namespace QuantConnect.Data
             get
             {
                 SymbolData value;
-                if (_data.TryGetValue(symbol, out value))
+                if (_data.Value.TryGetValue(symbol, out value))
                 {
                     return value.GetData();
                 }
@@ -195,7 +207,7 @@ namespace QuantConnect.Data
             Lazy<object> dictionary;
             if (!_dataByType.TryGetValue(typeof(T), out dictionary))
             {
-                dictionary = new Lazy<object>(() => new DataDictionary<T>(_data.Values.Select(x => x.GetData()).OfType<T>(), x => x.Symbol));
+                dictionary = new Lazy<object>(() => new DataDictionary<T>(_data.Value.Values.Select(x => x.GetData()).OfType<T>(), x => x.Symbol));
                 _dataByType[typeof (T)] = dictionary;
             }
             return (DataDictionary<T>) dictionary.Value;
@@ -220,7 +232,7 @@ namespace QuantConnect.Data
         /// <returns>True if this instance contains data for the symbol, false otherwise</returns>
         public bool ContainsKey(Symbol symbol)
         {
-            return _data.ContainsKey(symbol);
+            return _data.Value.ContainsKey(symbol);
         }
 
         /// <summary>
@@ -233,7 +245,7 @@ namespace QuantConnect.Data
         {
             data = null;
             SymbolData symbolData;
-            if (_data.TryGetValue(symbol, out symbolData))
+            if (_data.Value.TryGetValue(symbol, out symbolData))
             {
                 data = symbolData.GetData();
                 return data != null;
@@ -291,7 +303,7 @@ namespace QuantConnect.Data
         {
             if (ticks != null) return ticks;
             ticks = new Ticks(Time);
-            foreach (var listTicks in _data.Values.Select(x => x.GetData()).OfType<List<Tick>>().Where(x => x.Count != 0))
+            foreach (var listTicks in _data.Value.Values.Select(x => x.GetData()).OfType<List<Tick>>().Where(x => x.Count != 0))
             {
                 ticks[listTicks[0].Symbol] = listTicks;
             }
@@ -314,7 +326,7 @@ namespace QuantConnect.Data
 #pragma warning disable 618 // This assignment is left here until the Time property is removed.
             collection.Time = Time;
 #pragma warning restore 618
-            foreach (var item in _data.Values.Select(x => x.GetData()).OfType<TItem>())
+            foreach (var item in _data.Value.Values.Select(x => x.GetData()).OfType<TItem>())
             {
                 collection[item.Symbol] = item;
             }
@@ -348,7 +360,7 @@ namespace QuantConnect.Data
         private IEnumerable<KeyValuePair<Symbol, BaseData>> GetKeyValuePairEnumerable()
         {
             // this will not enumerate auxilliary data!
-            return _data.Select(kvp => new KeyValuePair<Symbol, BaseData>(kvp.Key, kvp.Value.GetData()));
+            return _data.Value.Select(kvp => new KeyValuePair<Symbol, BaseData>(kvp.Key, kvp.Value.GetData()));
         }
 
         private enum SubscriptionType { TradeBar, Tick, Custom };
