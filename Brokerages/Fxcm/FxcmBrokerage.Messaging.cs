@@ -127,7 +127,10 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             return GetQuotes(fxcmSymbols).Select(x => new Tick
             {
-                Symbol = _symbolMapper.GetLeanSymbol(x.getInstrument().getSymbol()),
+                Symbol = _symbolMapper.GetLeanSymbol(
+                    x.getInstrument().getSymbol(),
+                    _symbolMapper.GetBrokerageSecurityType(x.getInstrument().getSymbol()), 
+                    Market.FXCM),
                 BidPrice = (decimal) x.getBidClose(),
                 AskPrice = (decimal) x.getAskClose()
             }).ToList();
@@ -296,7 +299,8 @@ namespace QuantConnect.Brokerages.Fxcm
             _rates[instrument.getSymbol()] = message;
 
             // if instrument is subscribed, add ticks to list
-            var symbol = _symbolMapper.GetLeanSymbol(instrument.getSymbol());
+            var securityType = _symbolMapper.GetBrokerageSecurityType(instrument.getSymbol());
+            var symbol = _symbolMapper.GetLeanSymbol(instrument.getSymbol(), securityType, Market.FXCM);
 
             if (_subscribedSymbols.Contains(symbol))
             {

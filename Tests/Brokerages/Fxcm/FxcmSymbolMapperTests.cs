@@ -28,12 +28,12 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         {
             var mapper = new FxcmSymbolMapper();
 
-            var symbol = mapper.GetLeanSymbol("EUR/USD");
+            var symbol = mapper.GetLeanSymbol("EUR/USD", SecurityType.Forex, Market.FXCM);
             Assert.AreEqual("EURUSD", symbol.Value);
             Assert.AreEqual(SecurityType.Forex, symbol.ID.SecurityType);
             Assert.AreEqual(Market.FXCM, symbol.ID.Market);
 
-            symbol = mapper.GetLeanSymbol("GER30");
+            symbol = mapper.GetLeanSymbol("GER30", SecurityType.Cfd, Market.FXCM);
             Assert.AreEqual("DE30EUR", symbol.Value);
             Assert.AreEqual(SecurityType.Cfd, symbol.ID.SecurityType);
             Assert.AreEqual(Market.FXCM, symbol.ID.Market);
@@ -58,9 +58,9 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         {
             var mapper = new FxcmSymbolMapper();
 
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(null));
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(null, SecurityType.Forex, Market.FXCM));
 
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(""));
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol("", SecurityType.Forex, Market.FXCM));
 
             var symbol = Symbol.Empty;
             Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(symbol));
@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         {
             var mapper = new FxcmSymbolMapper();
 
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol("ABC/USD"));
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol("ABC/USD", SecurityType.Forex, Market.FXCM));
 
             var symbol = Symbol.Create("ABCUSD", SecurityType.Forex, Market.FXCM);
             Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(symbol));
@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         {
             var mapper = new FxcmSymbolMapper();
 
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol("AAPL"));
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol("AAPL", SecurityType.Equity, Market.FXCM));
 
             var symbol = Symbol.Create("AAPL", SecurityType.Equity, Market.FXCM);
             Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(symbol));

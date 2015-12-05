@@ -159,14 +159,22 @@ namespace QuantConnect.Brokerages.Fxcm
         /// Converts an FXCM symbol to a Lean symbol instance
         /// </summary>
         /// <param name="brokerageSymbol">The FXCM symbol</param>
+        /// <param name="securityType">The security type</param>
+        /// <param name="market">The market</param>
         /// <returns>A new Lean Symbol instance</returns>
-        public Symbol GetLeanSymbol(string brokerageSymbol)
+        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market)
         {
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException("Invalid FXCM symbol: " + brokerageSymbol);
 
             if (!IsKnownBrokerageSymbol(brokerageSymbol))
                 throw new ArgumentException("Unknown FXCM symbol: " + brokerageSymbol);
+
+            if (securityType != SecurityType.Forex && securityType != SecurityType.Cfd)
+                throw new ArgumentException("Invalid security type: " + securityType);
+
+            if (market != Market.FXCM)
+                throw new ArgumentException("Invalid market: " + market);
 
             return Symbol.Create(ConvertFxcmSymbolToLeanSymbol(brokerageSymbol), GetBrokerageSecurityType(brokerageSymbol), Market.FXCM);
         }

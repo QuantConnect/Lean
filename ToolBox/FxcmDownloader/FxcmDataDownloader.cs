@@ -317,7 +317,8 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             if (message.getRequestID() == _currentRequest)
             {
                 // create new TradeBar from FXCM response message
-                var symbol = _symbolMapper.GetLeanSymbol(message.getInstrument().getSymbol());
+                var securityType = _symbolMapper.GetBrokerageSecurityType(message.getInstrument().getSymbol());
+                var symbol = _symbolMapper.GetLeanSymbol(message.getInstrument().getSymbol(), securityType, Market.FXCM);
                 var time = FromJavaDateUtc(message.getDate().toDate());
                 var open = Convert.ToDecimal((message.getBidOpen() + message.getAskOpen()) / 2);
                 var high = Convert.ToDecimal((message.getBidHigh() + message.getAskHigh()) / 2);

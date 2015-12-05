@@ -129,10 +129,12 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns></returns>
         protected Holding ConvertHolding(Position position)
         {
+            var securityType = _symbolMapper.GetBrokerageSecurityType(position.instrument);
+
             return new Holding
             {
-                Symbol = _symbolMapper.GetLeanSymbol(position.instrument),
-                Type = _symbolMapper.GetBrokerageSecurityType(position.instrument),
+                Symbol = _symbolMapper.GetLeanSymbol(position.instrument, securityType, Market.Oanda),
+                Type = securityType,
                 AveragePrice = (decimal)position.avgPrice,
                 ConversionRate = 1.0m,
                 CurrencySymbol = "$",
@@ -963,9 +965,9 @@ namespace QuantConnect.Brokerages.Oanda
                 default:
                     throw new NotSupportedException("The Oanda order type " + order.type + " is not supported.");
             }
-            qcOrder.Symbol = _symbolMapper.GetLeanSymbol(order.instrument);
-            qcOrder.Quantity = ConvertQuantity(order);
             qcOrder.SecurityType = _symbolMapper.GetBrokerageSecurityType(order.instrument);
+            qcOrder.Symbol = _symbolMapper.GetLeanSymbol(order.instrument, qcOrder.SecurityType, Market.Oanda);
+            qcOrder.Quantity = ConvertQuantity(order);
             qcOrder.Status = OrderStatus.None;
             qcOrder.BrokerId.Add(order.id);
             qcOrder.Id = order.id;

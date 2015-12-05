@@ -188,14 +188,22 @@ namespace QuantConnect.Brokerages.Oanda
         /// Converts an Oanda symbol to a Lean symbol instance
         /// </summary>
         /// <param name="brokerageSymbol">The Oanda symbol</param>
+        /// <param name="securityType">The security type</param>
+        /// <param name="market">The market</param>
         /// <returns>A new Lean Symbol instance</returns>
-        public Symbol GetLeanSymbol(string brokerageSymbol)
+        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market)
         {
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException("Invalid Oanda symbol: " + brokerageSymbol);
 
             if (!IsKnownBrokerageSymbol(brokerageSymbol))
                 throw new ArgumentException("Unknown Oanda symbol: " + brokerageSymbol);
+
+            if (securityType != SecurityType.Forex && securityType != SecurityType.Cfd)
+                throw new ArgumentException("Invalid security type: " + securityType);
+
+            if (market != Market.Oanda)
+                throw new ArgumentException("Invalid market: " + market);
 
             return Symbol.Create(ConvertOandaSymbolToLeanSymbol(brokerageSymbol), GetBrokerageSecurityType(brokerageSymbol), Market.Oanda);
         }
