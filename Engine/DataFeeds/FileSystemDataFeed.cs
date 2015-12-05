@@ -41,7 +41,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class FileSystemDataFeed : IDataFeed
     {
         private IAlgorithm _algorithm;
-        private BaseDataExchange _exchange;
+        private ParallelRunner _runner;
         private IResultHandler _resultHandler;
         private Ref<TimeSpan> _fillForwardResolution;
         private SecurityChanges _changes = SecurityChanges.None;
@@ -86,7 +86,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _cancellationTokenSource = new CancellationTokenSource();
 
             IsActive = true;
-            _exchange = new BaseDataExchange("FileSystemDataFeedExchange");
+            var threadCount = Math.Max(1, Environment.ProcessorCount - 4);
+            _runner = ParallelRunner.Run(threadCount, _cancellationTokenSource.Token);
 
             var ffres = Time.OneSecond;
             _fillForwardResolution = Ref.Create(() => ffres, res => ffres = res);
@@ -138,12 +139,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var enqueueable = new EnqueueableEnumerator<BaseData>(true);
 
             // add this enumerator to our exchange
-            var handler = new EnumeratorHandler(enumerator, enqueueable);
-            _exchange.AddEnumerator(handler);
+            ScheduleEnumerator(enumerator, enqueueable);
 
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
             var subscription = new Subscription(universe, security, enqueueable, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, false);
             return subscription;
+        }
+
+        private void ScheduleEnumerator(IEnumerator<BaseData> enumerator, EnqueueableEnumerator<BaseData> enqueueable)
+        {
+            _runner.Schedule(() =>
+            {
+                if (enqueueable.Count > 1000)
+                    return ParallelRunner.WorkResult.Skipped;
+
+                if (enumerator.MoveNext())
+                {
+                    var collection = enumerator.Current as BaseDataCollection;
+                    if (collection != null) enqueueable.EnqueueRange(collection.Data);
+                    else enqueueable.Enqueue(enumerator.Current);
+                    return ParallelRunner.WorkResult.Executed;
+                }
+
+                enqueueable.Stop();
+                return ParallelRunner.WorkResult.Finalized;
+            });
         }
 
         /// <summary>
@@ -206,9 +226,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             try
             {
-                Log.Trace("FileSystemDataFeed.Run(): Exchange starting.");
-                _exchange.Start(_cancellationTokenSource.Token);
-                Log.Trace("FileSystemDataFeed.Run(): Exchange stopped.");
+                _cancellationTokenSource.Token.WaitHandle.WaitOne();
             }
             catch (Exception err)
             {
@@ -296,7 +314,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enqueueable = new EnqueueableEnumerator<BaseData>(true);
 
                 // add this enumerator to our exchange
-                _exchange.AddEnumerator(new EnumeratorHandler(enumerator, enqueueable));
+                ScheduleEnumerator(enumerator, enqueueable);
 
                 enumerator = enqueueable;
             }
@@ -323,7 +341,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enqueueable = new EnqueueableEnumerator<BaseData>(true);
 
                 // add this enumerator to our exchange
-                _exchange.AddEnumerator(new EnumeratorHandler(enumerator, enqueueable));
+                ScheduleEnumerator(enumerator, enqueueable);
 
                 enumerator = enqueueable;
             }
@@ -458,38 +476,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
-        }
-
-        /// <summary>
-        /// Overrides methods of the base data exchange implementation
-        /// </summary>
-        class EnumeratorHandler : BaseDataExchange.EnumeratorHandler
-        {
-            private readonly EnqueueableEnumerator<BaseData> _enqueueable;
-            public EnumeratorHandler(IEnumerator<BaseData> enumerator, EnqueueableEnumerator<BaseData> enqueueable)
-                : base(enumerator, true)
-            {
-                _enqueueable = enqueueable;
-            }
-            /// <summary>
-            /// Returns true if this enumerator should move next
-            /// </summary>
-            public override bool ShouldMoveNext() { return _enqueueable.Count < 1000; }
-            /// <summary>
-            /// Calls stop on the internal enqueueable enumerator
-            /// </summary>
-            public override void OnEnumeratorFinished() { _enqueueable.Stop(); }
-
-            /// <summary>
-            /// Enqueues the data
-            /// </summary>
-            /// <param name="data">The data to be handled</param>
-            public override void HandleData(BaseData data)
-            {
-                var collection = data as BaseDataCollection;
-                if (collection != null) _enqueueable.EnqueueRange(collection.Data);
-                else _enqueueable.Enqueue(data);
-            }
         }
     }
 }
