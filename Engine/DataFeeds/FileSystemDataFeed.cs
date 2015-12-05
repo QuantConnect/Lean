@@ -86,7 +86,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _cancellationTokenSource = new CancellationTokenSource();
 
             IsActive = true;
-            var threadCount = Math.Max(1, Environment.ProcessorCount - 4);
+            var threadCount = Math.Max(1, Math.Min(4, Environment.ProcessorCount - 3));
             _runner = ParallelRunner.Run(threadCount, _cancellationTokenSource.Token);
 
             var ffres = Time.OneSecond;
