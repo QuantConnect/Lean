@@ -80,7 +80,7 @@ namespace QuantConnect.Util
             var parallel = new ParallelRunner();
             parallel._waitHandle = new ManualResetEvent(false);
 
-            Log.Trace("ParallelRunner.Execute(): Launching " + threadCount + " threads.");
+            Log.Trace(typeof(ParallelRunner).Name + ".Execute(): Launching " + threadCount + " threads.");
 
             var handles = new WaitHandle[threadCount];
             for (int i = 0; i < threadCount; i++)
@@ -102,7 +102,7 @@ namespace QuantConnect.Util
                         }
                         else
                         {
-                            Log.Trace("ParallelRunner.Execute(): Cancellation requested.");
+                            Log.Trace(typeof(ParallelRunner).Name + ".Execute(): Cancellation requested.");
                         }
                     }
                     catch (Exception err)
@@ -114,7 +114,7 @@ namespace QuantConnect.Util
                         manualResetEvent.Set();
                     }
                 });
-                thread.Name = "ParallelRunner " + (i + 1);
+                thread.Name = "DedicatedThreadParallel " + (i + 1);
                 thread.Start();
             }
 
