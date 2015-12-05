@@ -48,6 +48,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BasicTemplateAlgorithm.cs" />
+    <Compile Include="Benchmarks\EmptyMinute400EquityAlgorithm.cs" />
+    <Compile Include="Benchmarks\Symbols.cs" />
     <Compile Include="CustomBenchmarkAlgorithm.cs" />
     <Compile Include="CustomDataRegressionAlgorithm.cs" />
     <Compile Include="DelistingEventsAlgorithm.cs" />
