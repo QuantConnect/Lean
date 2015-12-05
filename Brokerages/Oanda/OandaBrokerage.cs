@@ -65,6 +65,7 @@ namespace QuantConnect.Brokerages.Oanda
 
         //This should correlate to the Orders list in Oanda.
         private readonly IOrderProvider _orderProvider;
+        private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
 
         private string _userName;
         
@@ -88,7 +89,6 @@ namespace QuantConnect.Brokerages.Oanda
         {
             _orderProvider = orderProvider;
             AccountId = accountId;
-            SymbolMapper = new OandaSymbolMapper();
         }
 
         /// <summary>
@@ -131,8 +131,8 @@ namespace QuantConnect.Brokerages.Oanda
         {
             return new Holding
             {
-                Symbol = SymbolMapper.GetLeanSymbol(position.instrument),
-                Type = SymbolMapper.GetBrokerageSecurityType(position.instrument),
+                Symbol = _symbolMapper.GetLeanSymbol(position.instrument),
+                Type = _symbolMapper.GetBrokerageSecurityType(position.instrument),
                 AveragePrice = (decimal)position.avgPrice,
                 ConversionRate = 1.0m,
                 CurrencySymbol = "$",
@@ -963,9 +963,9 @@ namespace QuantConnect.Brokerages.Oanda
                 default:
                     throw new NotSupportedException("The Oanda order type " + order.type + " is not supported.");
             }
-            qcOrder.Symbol = SymbolMapper.GetLeanSymbol(order.instrument);
+            qcOrder.Symbol = _symbolMapper.GetLeanSymbol(order.instrument);
             qcOrder.Quantity = ConvertQuantity(order);
-            qcOrder.SecurityType = SymbolMapper.GetBrokerageSecurityType(order.instrument);
+            qcOrder.SecurityType = _symbolMapper.GetBrokerageSecurityType(order.instrument);
             qcOrder.Status = OrderStatus.None;
             qcOrder.BrokerId.Add(order.id);
             qcOrder.Id = order.id;

@@ -54,6 +54,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ConcurrentQueue<OrderEvent> _orderEventQueue = new ConcurrentQueue<OrderEvent>();
+        private readonly FxcmSymbolMapper _symbolMapper = new FxcmSymbolMapper();
 
         /// <summary>
         /// Creates a new instance of the <see cref="FxcmBrokerage"/> class
@@ -75,8 +76,6 @@ namespace QuantConnect.Brokerages.Fxcm
             _userName = userName;
             _password = password;
             _accountId = accountId;
-
-            SymbolMapper = new FxcmSymbolMapper();
         }
 
         #region IBrokerage implementation
@@ -279,7 +278,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
             // Set MarketPrice in each Holding
             var fxcmSymbols = holdings
-                .Select(x => SymbolMapper.GetBrokerageSymbol(x.Symbol))
+                .Select(x => _symbolMapper.GetBrokerageSymbol(x.Symbol))
                 .ToList();
 
             if (fxcmSymbols.Count > 0)
@@ -288,7 +287,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 foreach (var holding in holdings)
                 {
                     MarketDataSnapshot quote;
-                    if (quotes.TryGetValue(SymbolMapper.GetBrokerageSymbol(holding.Symbol), out quote))
+                    if (quotes.TryGetValue(_symbolMapper.GetBrokerageSymbol(holding.Symbol), out quote))
                     {
                         holding.MarketPrice = Convert.ToDecimal((quote.getBidClose() + quote.getAskClose()) / 2);
                     }
@@ -327,7 +326,7 @@ namespace QuantConnect.Brokerages.Fxcm
             if (order.Direction != OrderDirection.Buy && order.Direction != OrderDirection.Sell)
                 throw new ArgumentException("FxcmBrokerage.PlaceOrder(): Invalid Order Direction");
 
-            var fxcmSymbol = SymbolMapper.GetBrokerageSymbol(order.Symbol);
+            var fxcmSymbol = _symbolMapper.GetBrokerageSymbol(order.Symbol);
             var orderSide = order.Direction == OrderDirection.Buy ? SideFactory.BUY : SideFactory.SELL;
             var quantity = (double)order.AbsoluteQuantity;
 

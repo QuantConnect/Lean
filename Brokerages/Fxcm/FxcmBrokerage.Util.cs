@@ -62,9 +62,9 @@ namespace QuantConnect.Brokerages.Fxcm
                 throw new NotSupportedException("FxcmBrokerage.ConvertOrder(): The FXCM order type " + fxcmOrder.getOrdType() + " is not supported.");
             }
 
-            order.Symbol = SymbolMapper.GetLeanSymbol(fxcmOrder.getInstrument().getSymbol());
+            order.Symbol = _symbolMapper.GetLeanSymbol(fxcmOrder.getInstrument().getSymbol());
             order.Quantity = Convert.ToInt32(fxcmOrder.getOrderQty() * (fxcmOrder.getSide() == SideFactory.BUY ? +1 : -1));
-            order.SecurityType = SymbolMapper.GetBrokerageSecurityType(fxcmOrder.getInstrument().getSymbol());
+            order.SecurityType = _symbolMapper.GetBrokerageSecurityType(fxcmOrder.getInstrument().getSymbol());
             order.Status = ConvertOrderStatus(fxcmOrder.getFXCMOrdStatus());
             order.BrokerId.Add(Convert.ToInt64(fxcmOrder.getOrderID()));
             order.Duration = ConvertDuration(fxcmOrder.getTimeInForce());
@@ -95,8 +95,8 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             return new Holding
             {
-                Symbol = SymbolMapper.GetLeanSymbol(fxcmPosition.getInstrument().getSymbol()),
-                Type = SymbolMapper.GetBrokerageSecurityType(fxcmPosition.getInstrument().getSymbol()),
+                Symbol = _symbolMapper.GetLeanSymbol(fxcmPosition.getInstrument().getSymbol()),
+                Type = _symbolMapper.GetBrokerageSecurityType(fxcmPosition.getInstrument().getSymbol()),
                 AveragePrice = Convert.ToDecimal(fxcmPosition.getSettlPrice()),
                 ConversionRate = 1.0m,
                 CurrencySymbol = "$",
