@@ -23,6 +23,7 @@ using QuantConnect.Brokerages.Oanda.DataType;
 
 namespace QuantConnect.Brokerages.Oanda.Session
 {
+#pragma warning disable 1591
     /// <summary>
     /// Initialise an events sessions for Oanda Brokerage.
     /// </summary>
@@ -38,4 +39,5 @@ namespace QuantConnect.Brokerages.Oanda.Session
             return await OandaBrokerage.StartEventsSession(new List<int> {_accountId});
         }
     }
+#pragma warning restore 1591
 }

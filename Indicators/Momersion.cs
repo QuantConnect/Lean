@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// Oscillator indicator that measures momentum and mean-reversion over a specified
     /// period n.
     /// Source: Harris, Michael. "Momersion Indicator." Price Action Lab.,
-    ///             13 Aug. 2015. Web. <http://www.priceactionlab.com/Blog/2015/08/momersion-indicator/>.
+    ///             13 Aug. 2015. Web. http://www.priceactionlab.com/Blog/2015/08/momersion-indicator/.
     /// </summary>
     public class MomersionIndicator : WindowIndicator<IndicatorDataPoint>
     {

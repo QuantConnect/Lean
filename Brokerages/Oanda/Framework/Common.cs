@@ -21,6 +21,7 @@ using System.Reflection;
 
 namespace QuantConnect.Brokerages.Oanda.Framework
 {
+#pragma warning disable 1591
     /// <summary>
     /// Common reflection helper methods for Oanda data types.
     /// </summary>
@@ -36,4 +37,5 @@ namespace QuantConnect.Brokerages.Oanda.Framework
 			return default(T);
 		}
 	}
+#pragma warning restore 1591
 }

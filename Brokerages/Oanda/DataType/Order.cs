@@ -20,6 +20,7 @@ using QuantConnect.Brokerages.Oanda.DataType.Communications;
 
 namespace QuantConnect.Brokerages.Oanda.DataType
 {
+#pragma warning disable 1591
     /// <summary>
     /// Represents an order on Oanda.
     /// </summary>
@@ -39,4 +40,5 @@ namespace QuantConnect.Brokerages.Oanda.DataType
         public double lowerBound { get; set; }
         public int trailingStop { get; set; }
     }
+#pragma warning restore 1591
 }

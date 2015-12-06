@@ -367,6 +367,9 @@ namespace QuantConnect.Data.Market
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
+        /// <summary>
+        /// Return a new instance clone of this object
+        /// </summary>
         public override BaseData Clone()
         {
             return (BaseData)MemberwiseClone();

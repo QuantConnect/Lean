@@ -41,6 +41,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly IEnumerator<BaseData> _enumerator;
         private readonly IReadOnlyRef<TimeSpan> _fillForwardResolution;
 
+        /// <summary>
+        /// The exchange used to determine when to insert fill forward data
+        /// </summary>
         protected readonly SecurityExchange Exchange;
 
         /// <summary>

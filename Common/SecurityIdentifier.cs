@@ -470,7 +470,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Attempts to parse the specified <see cref="value"/> as a <see cref="SecurityIdentifier"/>.
+        /// Attempts to parse the specified <see paramref="value"/> as a <see cref="SecurityIdentifier"/>.
         /// </summary>
         /// <param name="value">The string value to be parsed</param>
         /// <param name="identifier">The result of parsing, when this function returns true, <paramref name="identifier"/>
