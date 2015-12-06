@@ -20,6 +20,7 @@ using QuantConnect.Brokerages.Oanda.DataType.Communications;
 
 namespace QuantConnect.Brokerages.Oanda.DataType
 {
+#pragma warning disable 1591
     /// <summary>
     /// Represents a Trade Data object containing the details of a trade.
     /// </summary>
@@ -36,4 +37,5 @@ namespace QuantConnect.Brokerages.Oanda.DataType
         public int trailingStop { get; set; }
 		public double trailingAmount { get; set; }
     }
+#pragma warning restore 1591
 }

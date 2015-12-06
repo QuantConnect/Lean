@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Threading;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -31,6 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Delegate type for the <see cref="IDataFeed.UniverseSelection"/> event
     /// </summary>
+    /// <param name="sender">The data feed</param>
     /// <param name="args">The event arguments</param>
     /// <returns>Changes requested via universe selection</returns>
     public delegate SecurityChanges UniverseSelectionHandler(IDataFeed sender, UniverseSelectionEventArgs args);

@@ -91,7 +91,7 @@ namespace QuantConnect.Securities
         /// <remarks>IDictionary implementation</remarks>
         /// <param name="symbol">symbol for security we're trading</param>
         /// <param name="security">security object</param>
-        /// <seealso cref="Add(string,Resolution,bool)"/>
+        /// <seealso cref="Add(Security)"/>
         public void Add(Symbol symbol, Security security)
         {
             CheckResolutionCounts(security.Resolution);

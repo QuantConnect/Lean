@@ -75,6 +75,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             get; private set;
         }
 
+        /// <summary>
+        /// Initializes the data feed for the specified job and algorithm
+        /// </summary>
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider)
         {
             if (algorithm.SubscriptionManager.Subscriptions.Count == 0 && algorithm.Universes.IsNullOrEmpty())

@@ -23,7 +23,14 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityMarginModel : ISecurityMarginModel
     {
+        /// <summary>
+        /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
+        /// </summary>
         protected decimal InitialMarginRequirement;
+
+        /// <summary>
+        /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
+        /// </summary>
         protected decimal MaintenanceMarginRequirement;
 
         /// <summary>
