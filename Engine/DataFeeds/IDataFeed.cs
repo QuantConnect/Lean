@@ -17,35 +17,20 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Threading;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
-    /// <summary>
-    /// Delegate type for the <see cref="IDataFeed.UniverseSelection"/> event
-    /// </summary>
-    /// <param name="sender">The data feed</param>
-    /// <param name="args">The event arguments</param>
-    /// <returns>Changes requested via universe selection</returns>
-    public delegate SecurityChanges UniverseSelectionHandler(object sender, UniverseSelectionEventArgs args);
-
     /// <summary>
     /// Datafeed interface for creating custom datafeed sources.
     /// </summary>
     [InheritedExport(typeof(IDataFeed))]
     public interface IDataFeed : IEnumerable<TimeSlice>
     {
-        /// <summary>
-        /// Event fired when the data feed encounters new fundamental data.
-        /// </summary>
-        event UniverseSelectionHandler UniverseSelection;
-        
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
         /// </summary>

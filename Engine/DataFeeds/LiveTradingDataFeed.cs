@@ -60,13 +60,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private ConcurrentDictionary<Symbol, Subscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private BusyBlockingCollection<TimeSlice> _bridge;
-
-        /// <summary>
-        /// Event fired when the data feed encounters new fundamental data.
-        /// This event must be fired when there is nothing in the <see cref="IDataFeed.Bridge"/>,
-        /// this can be accomplished using <see cref="BusyBlockingCollection{T}.Wait(int,CancellationToken)"/>
-        /// </summary>
-        public event UniverseSelectionHandler UniverseSelection;
+        private UniverseSelection _universeSelection;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -114,6 +108,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _subscriptions = new ConcurrentDictionary<Symbol, Subscription>();
 
             _bridge = new BusyBlockingCollection<TimeSlice>();
+            _universeSelection = new UniverseSelection(this, algorithm);
 
             // run the exchanges
             Task.Run(() => _exchange.Start(_cancellationTokenSource.Token));
@@ -268,8 +263,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 break;
                             }
 
-                            // fire the universe selection event
-                            OnUniverseSelection(universe, subscription.Configuration, frontier, cache.Value);
+                            var universeSelectionEventArgs = new UniverseSelectionEventArgs(universe, subscription.Configuration, frontier, cache.Value);
+                            _changes += _universeSelection.ApplyUniverseSelection(universeSelectionEventArgs);
                         }
                     }
 
@@ -532,26 +527,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, true);
 
             return subscription;
-        }
-
-        /// <summary>
-        /// Event invocator for the <see cref="UniverseSelection"/> event
-        /// </summary>
-        /// <param name="universe">The universe to perform selection on the data</param>
-        /// <param name="config">The configuration of the universe</param>
-        /// <param name="dateTimeUtc">The current date time in UTC</param>
-        /// <param name="data">The universe selection data to be operated on</param>
-        protected virtual void OnUniverseSelection(Universe universe, SubscriptionDataConfig config, DateTime dateTimeUtc, IReadOnlyList<BaseData> data)
-        {
-            if (UniverseSelection != null)
-            {
-                var eventArgs = new UniverseSelectionEventArgs(universe, config, dateTimeUtc, data);
-                var multicast = (MulticastDelegate)UniverseSelection;
-                foreach (UniverseSelectionHandler handler in multicast.GetInvocationList())
-                {
-                    _changes += handler(this, eventArgs);
-                }
-            }
         }
 
         /// <summary>

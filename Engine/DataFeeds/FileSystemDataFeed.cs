@@ -48,13 +48,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IMapFileProvider _mapFileProvider;
         private ConcurrentDictionary<Symbol, Subscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-
-        /// <summary>
-        /// Event fired when the data feed encounters a universe selection subscripion
-        /// This event should be bound to so consumers can perform the required actions
-        /// such as adding and removing subscriptions to the data feed
-        /// </summary>
-        public event UniverseSelectionHandler UniverseSelection;
+        private UniverseSelection _universeSelection;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -83,6 +77,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
             _subscriptions = new ConcurrentDictionary<Symbol, Subscription>();
+            _universeSelection = new UniverseSelection(this, algorithm);
             _cancellationTokenSource = new CancellationTokenSource();
 
             IsActive = true;
@@ -361,41 +356,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _cancellationTokenSource.Cancel();
         }
 
-        /// <summary>
-        /// Calls move next on the subscription and logs if we didn't get any data (load failure)
-        /// </summary>
-        /// <param name="subscription">The subscription to prime</param>
-        /// <param name="messageUser">True to send an algorithm.Error to the user</param>
-        private void PrimeSubscriptionPump(Subscription subscription, bool messageUser)
-        {
-            if (!subscription.MoveNext())
-            {
-                Log.Error("FileSystemDataFeed.PrimeSubscriptionPump(): Failed to load subscription: " + subscription.Security.Symbol.ToString());
-                if (messageUser)
-                {
-                    _algorithm.Error("Failed to load subscription: " + subscription.Security.Symbol.ToString());
-                }
-                _subscriptions.TryRemove(subscription.Security.Symbol, out subscription);
-            }
-        }
-
-        /// <summary>
-        /// Event invocator for the <see cref="UniverseSelection"/> event
-        /// </summary>
-        protected virtual SecurityChanges OnUniverseSelection(UniverseSelectionEventArgs universeSelectionEventArgs)
-        {
-            var changes = SecurityChanges.None;
-            if (UniverseSelection != null)
-            {
-                var multicast = (MulticastDelegate) UniverseSelection;
-                foreach (UniverseSelectionHandler handler in multicast.GetInvocationList())
-                {
-                    changes += handler(this, universeSelectionEventArgs);
-                }
-            }
-            return changes;
-        }
-
         private static TimeSpan ResolveFillForwardResolution(IAlgorithm algorithm)
         {
             return algorithm.SubscriptionManager.Subscriptions
@@ -420,8 +380,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var frontier = GetInitialFrontierTime();
             Log.Trace(string.Format("FileSystemDataFeed.GetEnumerator(): Begin: {0} UTC", frontier));
 
-            var syncer = new SubscriptionSynchronizer();
-            syncer.UniverseSelection += (sender, args) => OnUniverseSelection(args);
+            var syncer = new SubscriptionSynchronizer(_universeSelection);
             syncer.SubscriptionFinished += (sender, subscription) =>
             {
                 Log.Trace("FileSystemDataFeed.GetEnumerator(): Finished subscription: " + subscription.Security.Symbol.ToString() + " at " + frontier + " UTC");

@@ -28,15 +28,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class SubscriptionSynchronizer
     {
-        /// <summary>
-        /// Event fired when universe selection subscriptions are encountered
-        /// </summary>
-        public event UniverseSelectionHandler UniverseSelection;
+        private readonly UniverseSelection _universeSelection;
 
         /// <summary>
         /// Event fired when a subscription is finished
         /// </summary>
         public event EventHandler<Subscription> SubscriptionFinished;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SubscriptionSynchronizer"/> class
+        /// </summary>
+        /// <param name="universeSelection">The universe selection instance used to handle universe
+        /// selection subscription output</param>
+        public SubscriptionSynchronizer(UniverseSelection universeSelection)
+        {
+            _universeSelection = universeSelection;
+        }
 
         /// <summary>
         /// Syncs the specifies subscriptions at the frontier time
@@ -100,7 +107,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // we have new universe data to select based on
                     if (subscription.IsUniverseSelectionSubscription && cache.Value.Count > 0)
                     {
-                        newChanges += OnUniverseSelection(subscription.Universe, frontier, configuration, cache.Value);
+                        var universeSelectionEventArgs = new UniverseSelectionEventArgs(subscription.Universe, configuration, frontier, cache.Value);
+                        newChanges += _universeSelection.ApplyUniverseSelection(universeSelectionEventArgs);
                     }
 
                     if (subscription.Current != null)
@@ -126,16 +134,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var handler = SubscriptionFinished;
             if (handler != null) handler(this, subscription);
-        }
-
-        /// <summary>
-        /// Event invocator for the <see cref="UniverseSelection"/> event
-        /// </summary>
-        protected virtual SecurityChanges OnUniverseSelection(Universe universe, DateTime frontier, SubscriptionDataConfig configuration, List<BaseData> value)
-        {
-            var handler = UniverseSelection;
-            if (handler != null) return handler(this, new UniverseSelectionEventArgs(universe, configuration, frontier, value));
-            return SecurityChanges.None;
         }
     }
 }

@@ -384,12 +384,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(feed.Subscriptions.Any(x => x.IsUniverseSelectionSubscription));
 
             var universeSelectionHadAllData = false;
-            feed.UniverseSelection += (sender, args) =>
-            {
-                universeSelectionHadAllData = args.Data.Count == coarseDataPointCount;
-                Console.WriteLine(DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork).ToString("o") + ": Fired universe selection. Count: " + args.Data.Count);
-                return SecurityChanges.None;
-            };
 
 
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
