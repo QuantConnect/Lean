@@ -61,6 +61,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private BusyBlockingCollection<TimeSlice> _bridge;
         private UniverseSelection _universeSelection;
+        private DateTime _frontierUtc;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -234,8 +235,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {
                     // perform sleeps to wake up on the second?
-                    var frontier = _timeProvider.GetUtcNow();
-                    _frontierTimeProvider.SetCurrentTime(frontier);
+                    _frontierUtc = _timeProvider.GetUtcNow();
+                    _frontierTimeProvider.SetCurrentTime(_frontierUtc);
 
                     var data = new List<KeyValuePair<Security, List<BaseData>>>();
                     foreach (var kvp in _subscriptions)
@@ -264,7 +265,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 break;
                             }
 
-                            _changes += _universeSelection.ApplyUniverseSelection(universe, frontier, cache.Value);
+                            _changes += _universeSelection.ApplyUniverseSelection(universe, _frontierUtc, cache.Value);
                         }
                     }
 
@@ -272,12 +273,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (_cancellationTokenSource.IsCancellationRequested) return;
 
                     // emit on data or if we've elapsed a full second since last emit
-                    if (data.Count != 0 || frontier >= nextEmit)
+                    if (data.Count != 0 || _frontierUtc >= nextEmit)
                     {
-                        _bridge.Add(TimeSlice.Create(frontier, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes), _cancellationTokenSource.Token);
+                        _bridge.Add(TimeSlice.Create(_frontierUtc, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, data, _changes), _cancellationTokenSource.Token);
 
                         // force emitting every second
-                        nextEmit = frontier.RoundDown(Time.OneSecond).Add(Time.OneSecond);
+                        nextEmit = _frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
                     }
 
                     // reset our security changes

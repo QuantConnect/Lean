@@ -49,6 +49,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private ConcurrentDictionary<Symbol, Subscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private UniverseSelection _universeSelection;
+        private DateTime _frontierUtc;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -379,13 +380,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public IEnumerator<TimeSlice> GetEnumerator()
         {
             // compute initial frontier time
-            var frontier = GetInitialFrontierTime();
-            Log.Trace(string.Format("FileSystemDataFeed.GetEnumerator(): Begin: {0} UTC", frontier));
+            _frontierUtc = GetInitialFrontierTime();
+            Log.Trace(string.Format("FileSystemDataFeed.GetEnumerator(): Begin: {0} UTC", _frontierUtc));
 
             var syncer = new SubscriptionSynchronizer(_universeSelection);
             syncer.SubscriptionFinished += (sender, subscription) =>
             {
-                Log.Trace("FileSystemDataFeed.GetEnumerator(): Finished subscription: " + subscription.Security.Symbol.ToString() + " at " + frontier + " UTC");
+                Log.Trace("FileSystemDataFeed.GetEnumerator(): Finished subscription: " + subscription.Security.Symbol.ToString() + " at " + _frontierUtc + " UTC");
                 _subscriptions.TryRemove(subscription.Security.Symbol, out subscription);
                 subscription.Dispose();
             };
@@ -397,7 +398,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 try
                 {
-                    timeSlice = syncer.Sync(frontier, Subscriptions, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, out nextFrontier);
+                    timeSlice = syncer.Sync(_frontierUtc, Subscriptions, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, out nextFrontier);
                 }
                 catch (Exception err)
                 {
@@ -406,10 +407,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 
                 // syncer returns MaxValue on failure/end of data
-                if (frontier != DateTime.MaxValue)
+                if (_frontierUtc != DateTime.MaxValue)
                 {
                     yield return timeSlice;
-                    frontier = nextFrontier;
+                    _frontierUtc = nextFrontier;
                 }
                 else if (timeSlice.SecurityChanges == SecurityChanges.None)
                 {
@@ -424,7 +425,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 subscription.Dispose();
             }
 
-            Log.Trace(string.Format("FileSystemDataFeed.Run(): Data Feed Completed at {0} UTC", frontier));
+            Log.Trace(string.Format("FileSystemDataFeed.Run(): Data Feed Completed at {0} UTC", _frontierUtc));
         }
 
         /// <summary>
