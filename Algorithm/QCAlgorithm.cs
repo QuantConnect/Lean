@@ -1115,11 +1115,6 @@ namespace QuantConnect.Algorithm
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
         public void AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
         {
-            if (_locked)
-            {
-                throw new Exception("Algorithm.AddSecurity(): Cannot add another security after algorithm running.");
-            }
-
             try
             {
                 if (market == null)
