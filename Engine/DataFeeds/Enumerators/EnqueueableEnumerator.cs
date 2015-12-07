@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -28,21 +29,41 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// is called
     /// </summary>
     /// <typeparam name="T">The item type yielded by the enumerator</typeparam>
-    public class EnqueableEnumerator<T> : IEnumerator<T>
+    public class EnqueueableEnumerator<T> : IEnumerator<T>
     {
         private T _current;
-        private bool _end;
+        private T _lastEnqueued;
+        private volatile bool _end;
 
-        private readonly ConcurrentQueue<T> _queue;
+        private readonly int _timeout;
         private readonly ReaderWriterLockSlim _lock;
+        private readonly BlockingCollection<T> _blockingCollection;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EnqueableEnumerator{T}"/> class
+        /// Gets the current number of items held in the internal queue
         /// </summary>
-        public EnqueableEnumerator()
+        public int Count
         {
-            _queue = new ConcurrentQueue<T>();
+            get { return _blockingCollection.Count; }
+        }
+
+        /// <summary>
+        /// Gets the last item that was enqueued
+        /// </summary>
+        public T LastEnqueued
+        {
+            get { return _lastEnqueued; }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EnqueueableEnumerator{T}"/> class
+        /// </summary>
+        /// <param name="blocking">Specifies whether or not to use the blocking behavior</param>
+        public EnqueueableEnumerator(bool blocking = false)
+        {
+            _blockingCollection = new BlockingCollection<T>();
             _lock = new ReaderWriterLockSlim();
+            _timeout = blocking ? Timeout.Infinite : 0;
         }
 
         /// <summary>
@@ -52,7 +73,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public void Enqueue(T data)
         {
             if (_end) return;
-            _queue.Enqueue(data);
+            _blockingCollection.Add(data);
+            _lastEnqueued = data;
         }
 
         /// <summary>
@@ -73,7 +95,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             {
                 foreach (var datum in data)
                 {
-                    _queue.Enqueue(datum);
+                    _blockingCollection.Add(datum);
+                    _lastEnqueued = datum;
                 }
             }
         }
@@ -84,7 +107,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public void Stop()
         {
+            // no more items can be added, so no need to wait anymore
             _end = true;
+            _blockingCollection.CompleteAdding();
         }
 
         /// <summary>
@@ -98,10 +123,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             using (_lock.Read())
             {
-                if (!_queue.TryDequeue(out _current))
+                T current;
+                if (!_blockingCollection.TryTake(out current, _timeout))
                 {
+                    _current = default(T);
                     return !_end;
                 }
+
+                _current = current;
 
                 // even if we don't have data to return, we haven't technically
                 // passed the end of the collection, so always return true until
@@ -116,7 +145,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public void Reset()
         {
-            _queue.Clear();
+            throw new NotImplementedException("EnqueableEnumerator.Reset() has not been implemented yet.");
         }
 
         /// <summary>
@@ -149,7 +178,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public void Dispose()
         {
             Stop();
-            if (_queue != null) _queue.Clear();
+            if (_blockingCollection != null) _blockingCollection.Dispose();
             if (_lock != null) _lock.Dispose();
         }
     }

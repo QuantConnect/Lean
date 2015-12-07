@@ -20,6 +20,7 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages.Oanda.DataType.Communications
 {
+#pragma warning disable 1591
     /// <summary>
     /// Represents the current active positions from Oanda.
     /// </summary>
@@ -27,4 +28,5 @@ namespace QuantConnect.Brokerages.Oanda.DataType.Communications
     {
         public List<Position> positions;
     }
+#pragma warning restore 1591
 }

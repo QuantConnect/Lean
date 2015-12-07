@@ -232,6 +232,30 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Breaks the specified string into csv components, all commas are considered separators
+        /// </summary>
+        /// <param name="str">The string to be broken into csv</param>
+        /// <param name="size">The expected size of the output list</param>
+        /// <returns>A list of the csv pieces</returns>
+        public static List<string> ToCsv(this string str, int size)
+        {
+            int last = 0;
+            var csv = new List<string>(size);
+            for (int i = 0; i < str.Length; i++)
+            {
+                if (str[i] == ',')
+                {
+                    if (last != 0) last = last + 1;
+                    csv.Add(str.Substring(last, i - last));
+                    last = i;
+                }
+            }
+            if (last != 0) last = last + 1;
+            csv.Add(str.Substring(last));
+            return csv;
+        }
+
+        /// <summary>
         /// Check if a number is NaN or equal to zero
         /// </summary>
         /// <param name="value">The double value to check</param>
@@ -392,6 +416,8 @@ namespace QuantConnect
         /// <returns>The time in terms of the to time zone</returns>
         public static DateTime ConvertTo(this DateTime time, DateTimeZone from, DateTimeZone to, bool strict = false)
         {
+            if (ReferenceEquals(from, to)) return time;
+
             if (strict)
             {
                 return from.AtStrictly(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();

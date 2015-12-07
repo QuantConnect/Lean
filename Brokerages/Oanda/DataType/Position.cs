@@ -18,6 +18,7 @@
 */
 namespace QuantConnect.Brokerages.Oanda.DataType
 {
+#pragma warning disable 1591
     /// <summary>
     /// Represent a Position in Oanda.
     /// </summary>
@@ -28,4 +29,5 @@ namespace QuantConnect.Brokerages.Oanda.DataType
         public int units { get; set; }
         public double avgPrice { get; set; }
     }
+#pragma warning restore 1591
 }

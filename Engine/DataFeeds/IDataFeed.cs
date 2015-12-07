@@ -17,49 +17,24 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Threading;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Delegate type for the <see cref="IDataFeed.UniverseSelection"/> event
-    /// </summary>
-    /// <param name="args">The event arguments</param>
-    /// <returns>Changes requested via universe selection</returns>
-    public delegate SecurityChanges UniverseSelectionHandler(IDataFeed sender, UniverseSelectionEventArgs args);
-
-    /// <summary>
     /// Datafeed interface for creating custom datafeed sources.
     /// </summary>
     [InheritedExport(typeof(IDataFeed))]
-    public interface IDataFeed
+    public interface IDataFeed : IEnumerable<TimeSlice>
     {
-        /// <summary>
-        /// Event fired when the data feed encounters new fundamental data.
-        /// This event must be fired when there is nothing in the <see cref="Bridge"/>,
-        /// this can be accomplished using <see cref="BusyBlockingCollection{T}.Wait(int,CancellationToken)"/>
-        /// </summary>
-        event UniverseSelectionHandler UniverseSelection;
-        
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
         /// </summary>
         IEnumerable<Subscription> Subscriptions
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Cross-threading queue so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
-        /// </summary>
-        BusyBlockingCollection<TimeSlice> Bridge
         {
             get;
         }

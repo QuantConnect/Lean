@@ -150,6 +150,22 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Cancels all open orders for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol whose orders are to be cancelled</param>
+        /// <returns>List containing the cancelled order tickets</returns>
+        public List<OrderTicket> CancelOpenOrders(Symbol symbol)
+        {
+            var cancelledOrders = new List<OrderTicket>();
+            foreach (var ticket in GetOrderTickets(x => x.Symbol == symbol && x.Status.IsOpen()))
+            {
+                ticket.Cancel();
+                cancelledOrders.Add(ticket);
+            }
+            return cancelledOrders;
+        }
+
+        /// <summary>
         /// Remove this order from outstanding queue: user is requesting a cancel.
         /// </summary>
         /// <param name="orderId">Specific order id to remove</param>
@@ -229,7 +245,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="brokerageId">The brokerage id to fetch</param>
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        public Order GetOrderByBrokerageId(int brokerageId)
+        public Order GetOrderByBrokerageId(long brokerageId)
         {
             return _orderProcessor.GetOrderByBrokerageId(brokerageId);
         }

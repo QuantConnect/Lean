@@ -20,6 +20,7 @@ using QuantConnect.Brokerages.Oanda.DataType.Communications;
 
 namespace QuantConnect.Brokerages.Oanda.DataType
 {
+#pragma warning disable 1591
     /// <summary>
     /// Represents a Transaction object with details about an Oanda transaction.
     /// </summary>
@@ -80,4 +81,5 @@ namespace QuantConnect.Brokerages.Oanda.DataType
             return readable;
         }
     }
+#pragma warning restore 1591
 }

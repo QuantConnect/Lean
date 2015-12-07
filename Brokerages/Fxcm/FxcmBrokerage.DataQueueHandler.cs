@@ -67,7 +67,7 @@ namespace QuantConnect.Brokerages.Fxcm
             var request = new MarketDataRequest();
             foreach (var symbol in symbolsToSubscribe)
             {
-                request.addRelatedSymbol(_fxcmInstruments[ConvertSymbolToFxcmSymbol(symbol)]);
+                request.addRelatedSymbol(_fxcmInstruments[_symbolMapper.GetBrokerageSymbol(symbol)]);
             }
             request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SUBSCRIBE);
             request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
@@ -102,7 +102,7 @@ namespace QuantConnect.Brokerages.Fxcm
             var request = new MarketDataRequest();
             foreach (var symbol in symbolsToUnsubscribe)
             {
-                request.addRelatedSymbol(_fxcmInstruments[ConvertSymbolToFxcmSymbol(symbol)]);
+                request.addRelatedSymbol(_fxcmInstruments[_symbolMapper.GetBrokerageSymbol(symbol)]);
             }
             request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.UNSUBSCRIBE);
             request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);

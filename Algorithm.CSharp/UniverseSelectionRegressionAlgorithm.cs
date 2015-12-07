@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
             // security that doesn't exist until half way in backtest (comes in as GOOCV)
             AddSecurity(SecurityType.Equity, "GOOG", Resolution.Daily);
 
-            SetUniverse(coarse =>
+            AddUniverse(coarse =>
             {
                 // select the various google symbols over the period
                 return from c in coarse

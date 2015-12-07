@@ -40,8 +40,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="dataFeed">The data feed to add/remove subscriptions from</param>
         /// <param name="algorithm">The algorithm to add securities to</param>
-        /// <param name="isLiveMode">True for live mode, false for back test mode</param>
-        public UniverseSelection(IDataFeed dataFeed, IAlgorithm algorithm, bool isLiveMode)
+        public UniverseSelection(IDataFeed dataFeed, IAlgorithm algorithm)
         {
             _dataFeed = dataFeed;
             _algorithm = algorithm;
@@ -83,7 +82,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // perform initial filtering and limit the result
-            var selections = universe.SelectSymbols(args.Data).Take(limit).ToHashSet();
+            var selections = universe.SelectSymbols(args.DateTimeUtc, args.Data).Take(limit).ToHashSet();
 
             // create a hash set of our existing subscriptions by sid
             var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol);

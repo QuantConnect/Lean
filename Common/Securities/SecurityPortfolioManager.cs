@@ -361,9 +361,12 @@ namespace QuantConnect.Securities
             get
             {
                 // we can't include forex in this calculation since we would be double accounting with respect to the cash book
-                var totalHoldingsValueWithoutForex = (from position in Securities.Values
-                                                      where position.Type != SecurityType.Forex
-                                                      select position.Holdings.HoldingsValue).Sum();
+                decimal totalHoldingsValueWithoutForex = 0;
+                foreach (var kvp in Securities)
+                {
+                    var position = kvp.Value;
+                    if (position.Type != SecurityType.Forex) totalHoldingsValueWithoutForex += position.Holdings.HoldingsValue;
+                }
 
                 return CashBook.TotalValueInAccountCurrency + UnsettledCashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForex;
             }
@@ -412,8 +415,13 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from security in Securities.Values
-                        select security.MarginModel.GetMaintenanceMargin(security)).Sum();
+                decimal sum = 0;
+                foreach (var kvp in Securities)
+                {
+                    var security = kvp.Value;
+                    sum += security.MarginModel.GetMaintenanceMargin(security);
+                }
+                return sum;
             }
         }
 

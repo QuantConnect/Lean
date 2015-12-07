@@ -18,7 +18,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -29,8 +28,8 @@ namespace QuantConnect.Lean.Engine
     /// Provides a default implementation o <see cref="IBrokerageMessageHandler"/> that will forward
     /// messages as follows:
     /// Information -> IResultHandler.Debug
-    /// Warning     -> IResultHandler.Error && IApi.SendUserEmail
-    /// Error       -> IResultHandler.Error && IAlgorithm.RunTimeError
+    /// Warning     -> IResultHandler.Error &amp;&amp; IApi.SendUserEmail
+    /// Error       -> IResultHandler.Error &amp;&amp; IAlgorithm.RunTimeError
     /// </summary>
     public class DefaultBrokerageMessageHandler : IBrokerageMessageHandler
     {

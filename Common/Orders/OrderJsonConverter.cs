@@ -102,12 +102,10 @@ namespace QuantConnect.Orders
                 // provide for backwards compatibility
                 var ticker = jObject.SelectTokens("Symbol.Value").Single().Value<string>();
 
-                SecurityIdentifier sid;
-                if (order.SecurityType == SecurityType.Equity) sid = GetEquitySid(ticker, order.Time.Date);
-                else if (order.SecurityType == SecurityType.Forex) sid = SecurityIdentifier.GenerateForex(ticker, Market.FXCM);
-                else throw new NotImplementedException("The specified security type has not been implemented yet: " + order.SecurityType);
+                var market = Market.USA;
+                if (order.SecurityType == SecurityType.Forex) market = Market.FXCM;
 
-                order.Symbol = new Symbol(sid, ticker);
+                order.Symbol = Symbol.Create(ticker, order.SecurityType, market);
             }
 
             return order;
@@ -156,22 +154,6 @@ namespace QuantConnect.Orders
                     throw new ArgumentOutOfRangeException();
             }
             return order;
-        }
-
-        /// <summary>
-        /// Generates an equity sid by using the map file provider
-        /// </summary>
-        private static SecurityIdentifier GetEquitySid(string ticker, DateTime date)
-        {
-            string firstSymbol = ticker;
-            var resolver = MapFileProvider.Value.Get(Market.USA);
-            var mapFile = resolver.ResolveMapFile(ticker, date);
-            var firstDate = mapFile.FirstDate;
-            if (mapFile.Any())
-            {
-                firstSymbol = mapFile.OrderBy(x => x.Date).First().MappedSymbol;
-            }
-            return SecurityIdentifier.GenerateEquity(firstDate, firstSymbol, Market.USA);
         }
     }
 }

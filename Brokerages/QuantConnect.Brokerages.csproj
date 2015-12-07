@@ -170,9 +170,12 @@
     <Compile Include="Fxcm\FxcmBrokerage.Messaging.cs" />
     <Compile Include="Fxcm\FxcmBrokerage.Util.cs" />
     <Compile Include="Fxcm\FxcmBrokerageFactory.cs" />
+    <Compile Include="Fxcm\FxcmSymbolMapper.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerageFactory.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersGatewayRunner.cs" />
+    <Compile Include="InteractiveBrokers\InteractiveBrokersSymbolMapper.cs" />
+    <Compile Include="ISymbolMapper.cs" />
     <Compile Include="Oanda\DataType\Account.cs" />
     <Compile Include="Oanda\DataType\Communications\AccountResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\AccountsResponse.cs" />
@@ -197,6 +200,7 @@
     <Compile Include="Oanda\Framework\EndpointResolver.cs" />
     <Compile Include="Oanda\OandaBrokerage.cs" />
     <Compile Include="Oanda\OandaBrokerageFactory.cs" />
+    <Compile Include="Oanda\OandaSymbolMapper.cs" />
     <Compile Include="Oanda\Server.cs" />
     <Compile Include="Oanda\Session\EventsSession.cs" />
     <Compile Include="Oanda\Session\StreamSession.cs" />

@@ -18,6 +18,7 @@
 */
 namespace QuantConnect.Brokerages.Oanda.DataType
 {
+#pragma warning disable 1591
     /// <summary>
     /// Represents the Price object creating Orders for each instrument.
     /// </summary>
@@ -57,4 +58,5 @@ namespace QuantConnect.Brokerages.Oanda.DataType
             this.time = update.time;
         }
     }
+#pragma warning restore 1591
 }

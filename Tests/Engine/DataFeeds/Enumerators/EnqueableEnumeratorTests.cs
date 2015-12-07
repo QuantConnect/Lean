@@ -15,10 +15,13 @@
 */
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
@@ -28,7 +31,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [Test]
         public void PassesTicksStraightThrough()
         {
-            var enumerator = new EnqueableEnumerator<Tick>();
+            var enumerator = new EnqueueableEnumerator<Tick>();
 
             // add some ticks
             var currentTime = new DateTime(2015, 10, 08);
@@ -54,6 +57,98 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.IsFalse(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
+        }
+
+        [Test]
+        public void RecordsInternalQueueCount()
+        {
+            var enumerator = new EnqueueableEnumerator<Tick>();
+
+            var currentTime = new DateTime(2015, 12, 01);
+            var tick = new Tick(currentTime, Symbols.SPY, 100, 101);
+            enumerator.Enqueue(tick);
+            Assert.AreEqual(1, enumerator.Count);
+
+            tick = new Tick(currentTime, Symbols.SPY, 100, 101);
+            enumerator.Enqueue(tick);
+            Assert.AreEqual(2, enumerator.Count);
+
+            enumerator.MoveNext();
+            Assert.AreEqual(1, enumerator.Count);
+
+            enumerator.MoveNext();
+            Assert.AreEqual(0, enumerator.Count);
+        }
+
+        [Test]
+        public void RecordsMostRecentlyEnqueuedItem()
+        {
+            var enumerator = new EnqueueableEnumerator<Tick>();
+
+            var currentTime = new DateTime(2015, 12, 01);
+            var tick1 = new Tick(currentTime, Symbols.SPY, 100, 101);
+            enumerator.Enqueue(tick1);
+            Assert.AreEqual(null, enumerator.Current);
+            Assert.AreEqual(tick1, enumerator.LastEnqueued);
+
+            var tick2 = new Tick(currentTime, Symbols.SPY, 100, 101);
+            enumerator.Enqueue(tick2);
+            Assert.AreEqual(tick2, enumerator.LastEnqueued);
+
+            enumerator.MoveNext();
+            Assert.AreEqual(tick1, enumerator.Current);
+
+            enumerator.MoveNext();
+            Assert.AreEqual(tick2, enumerator.Current);
+        }
+
+        [Test]
+        public void MoveNextBlocks()
+        {
+            var finished = new ManualResetEvent(false);
+            var enumerator = new EnqueueableEnumerator<Tick>(true);
+
+            // producer
+            int count = 0;
+            Task.Run(() =>
+            {
+                while (!finished.WaitOne(TimeSpan.FromMilliseconds(50)))
+                {
+                    enumerator.Enqueue(new Tick(DateTime.Now, Symbols.SPY, 100, 101));
+                    count++;
+
+                    // 5 data points is plenty
+                    if (count > 5)
+                    {
+                        finished.Set();
+                        enumerator.Stop();
+                    }
+                }
+            });
+
+            // consumer
+            int dequeuedCount = 0;
+            bool encounteredError = false;
+            var consumerTaskFinished = new ManualResetEvent(false);
+            Task.Run(() =>
+            {
+                while (enumerator.MoveNext())
+                {
+                    dequeuedCount++;
+                    if (enumerator.Current == null)
+                    {
+                        encounteredError = true;
+                    }
+                }
+                consumerTaskFinished.Set();
+            });
+
+            finished.WaitOne(Timeout.Infinite);
+            consumerTaskFinished.WaitOne(Timeout.Infinite);
+
+            Assert.IsFalse(enumerator.MoveNext());
+            Assert.IsFalse(encounteredError);
+            Assert.AreEqual(count, dequeuedCount);
         }
     }
 }

@@ -18,6 +18,7 @@
 */
 namespace QuantConnect.Brokerages.Oanda.DataType
 {
+#pragma warning disable 1591
     /// <summary>
     /// Represents a single event when subscribed to the streaming events.
     /// </summary>
@@ -30,4 +31,5 @@ namespace QuantConnect.Brokerages.Oanda.DataType
 			return (heartbeat != null);
 		}
 	}
+#pragma warning restore 1591
 }

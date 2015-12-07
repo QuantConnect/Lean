@@ -41,7 +41,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="brokerageId">The brokerage id to fetch</param>
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        Order GetOrderByBrokerageId(int brokerageId);
+        Order GetOrderByBrokerageId(long brokerageId);
 
         /// <summary>
         /// Gets and enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>

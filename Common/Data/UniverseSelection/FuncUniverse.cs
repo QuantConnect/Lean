@@ -50,9 +50,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Performs an initial, coarse filter
         /// </summary>
+        /// <param name="utcTime">The current utc time</param>
         /// <param name="data">The coarse fundamental data</param>
         /// <returns>The data that passes the filter</returns>
-        public override IEnumerable<Symbol> SelectSymbols(IEnumerable<BaseData> data)
+        public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, IEnumerable<BaseData> data)
         {
             return _universeSelector(data);
         }

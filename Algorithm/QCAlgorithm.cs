@@ -71,9 +71,6 @@ namespace QuantConnect.Algorithm
         private TimeSpan? _warmupTimeSpan;
         private int? _warmupBarCount;
 
-        // user defined universes by security type
-        private readonly Dictionary<SecurityTypeMarket, UserDefinedUniverse> _userDefinedUniverses;
-
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
         /// QCAlgorithm manages the transactions, portfolio, charting and security subscriptions for the users algorithms.
@@ -345,22 +342,6 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Gets the current universe selector, or null if no selection is to be performed
-        /// </summary>
-        public List<Universe> Universes
-        {
-            get; private set;
-        }
-
-        /// <summary>
-        /// Gets the subscription settings to be used when adding securities via universe selection
-        /// </summary>
-        public SubscriptionSettings UniverseSettings
-        {
-            get; private set;
-        }
-
-        /// <summary>
         /// Storage for debugging messages before the event handler has passed control back to the Lean Engine.
         /// </summary>
         /// <seealso cref="Debug(string)"/>
@@ -438,7 +419,7 @@ namespace QuantConnect.Algorithm
                 // apply the default benchmark if it hasn't been set
                 if (_benchmarkSymbol == null || _benchmarkSymbol == QuantConnect.Symbol.Empty)
                 {
-                    _benchmarkSymbol = new Symbol(SecurityIdentifier.GenerateEquity("SPY", Market.USA), "SPY");
+                    _benchmarkSymbol = QuantConnect.Symbol.Create( "SPY", SecurityType.Equity, Market.USA);
                 }
 
                 // if the requested benchmark symbol wasn't already added, then add it now
@@ -785,7 +766,7 @@ namespace QuantConnect.Algorithm
         public void SetBenchmark(SecurityType securityType, string symbol)
         {
             var market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
-            _benchmarkSymbol = GenerateSimpleSymbol(securityType, symbol, market);
+            _benchmarkSymbol = QuantConnect.Symbol.Create(symbol, securityType, market);
         }
 
         /// <summary>
@@ -802,7 +783,7 @@ namespace QuantConnect.Algorithm
             symbol = symbol.ToUpper();
             var security = Securities.FirstOrDefault(x => x.Key.Value == symbol).Value;
             _benchmarkSymbol = security == null 
-                ? GenerateSimpleSymbol(SecurityType.Equity, symbol, Market.USA)
+                ? QuantConnect.Symbol.Create(symbol, SecurityType.Equity, Market.USA)
                 : security.Symbol;
         }
 
@@ -1080,71 +1061,6 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Adds the universe to the algorithm
-        /// </summary>
-        /// <param name="universe">The universe to be added</param>
-        public void AddUniverse(Universe universe)
-        {
-            Universes.Add(universe);
-        }
-
-        /// <summary>
-        /// Creates a new universe and adds it to the algorithm. This will use the default universe settings
-        /// specified via the <see cref="UniverseSettings"/> property.
-        /// </summary>
-        /// <typeparam name="T">The data type</typeparam>
-        /// <param name="securityType">The security type the universe produces</param>
-        /// <param name="symbol">The symbol for the universe</param>
-        /// <param name="resolution">The epected resolution of the universe data</param>
-        /// <param name="market">The market for selected symbols</param>
-        /// <param name="selector">Function delegate that performs selection on the universe data</param>
-        public void AddUniverse<T>(SecurityType securityType, Symbol symbol, Resolution resolution, string market, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
-        {
-            AddUniverse(securityType, symbol, resolution, market, UniverseSettings, selector);
-        }
-
-        /// <summary>
-        /// Creates a new universe and adds it to the algorithm
-        /// </summary>
-        /// <typeparam name="T">The data type</typeparam>
-        /// <param name="securityType">The security type the universe produces</param>
-        /// <param name="symbol">The symbol for the universe</param>
-        /// <param name="resolution">The epected resolution of the universe data</param>
-        /// <param name="market">The market for selected symbols</param>
-        /// <param name="subscriptionSettings">The subscription settings to use for newly created subscriptions</param>
-        /// <param name="selector">Function delegate that performs selection on the universe data</param>
-        public void AddUniverse<T>(SecurityType securityType, Symbol symbol, Resolution resolution, string market, SubscriptionSettings subscriptionSettings, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
-        {
-            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(market, symbol.Value, securityType);
-            var dataTimeZone = marketHoursDbEntry.DataTimeZone;
-            var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
-            var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true);
-            AddUniverse(new FuncUniverse(config, subscriptionSettings, d => selector(d.OfType<T>())));
-        }
-
-        /// <summary>
-        /// Sets the current universe selector for the algorithm. This will be executed on day changes
-        /// </summary>
-        /// <param name="selector">The universe selector</param>
-        public void SetUniverse(Universe selector)
-        {
-            // don't remove user defined universes
-            Universes.RemoveAll(x => x.GetType() != typeof(UserDefinedUniverse));
-            Universes.Add(selector);
-        }
-
-        /// <summary>
-        /// Sets the current universe selector for the algorithm. This will be executed on day changes
-        /// </summary>
-        /// <param name="selector">Defines an initial coarse selection</param>
-        public void SetUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
-        {
-            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
-            SetUniverse(new FuncUniverse(config, UniverseSettings, selectionData => selector(selectionData.OfType<CoarseFundamental>())));
-        }
-
-        /// <summary>
         /// Set the maximum number of assets allowable to ensure good memory usage / avoid linux killing job.
         /// </summary>
         /// <param name="minuteLimit">Maximum number of minute level assets the live mode can support with selected server</param>
@@ -1211,8 +1127,8 @@ namespace QuantConnect.Algorithm
                     // set default values, use fxcm for forex, usa for everything else
                     market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
                 }
-                
-                var symbolObject = GenerateSimpleSymbol(securityType, symbol, market);
+
+                var symbolObject = QuantConnect.Symbol.Create(symbol, securityType, market);
 
                 var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase,
                     symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false);
@@ -1378,54 +1294,6 @@ namespace QuantConnect.Algorithm
         public Symbol Symbol(string ticker)
         {
             return SymbolCache.GetSymbol(ticker);
-        }
-
-        /// <summary>
-        /// Adds the security to the user defined universe for the specified 
-        /// </summary>
-        private void AddToUserDefinedUniverse(Security security)
-        {
-            // add this security to the user defined universe
-            UserDefinedUniverse universe;
-            var key = new SecurityTypeMarket(security.Type, security.SubscriptionDataConfig.Market);
-            if (_userDefinedUniverses.TryGetValue(key, out universe))
-            {
-                universe.Add(security.Symbol);
-            }
-            else
-            {
-                // create a new universe, these subscription settings don't currently get used
-                // since universe selection proper is never invoked on this type of universe
-                var securityConfig = security.SubscriptionDataConfig;
-                var universeSymbol = UserDefinedUniverse.CreateSymbol(securityConfig.SecurityType, securityConfig.Market);
-                var uconfig = new SubscriptionDataConfig(securityConfig, symbol: universeSymbol, isInternalFeed: true, fillForward: false);
-                universe = new UserDefinedUniverse(uconfig,
-                    new SubscriptionSettings(security.Resolution, security.Leverage, security.IsFillDataForward, security.IsExtendedMarketHours),
-                    QuantConnect.Time.MaxTimeSpan,
-                    new List<Symbol> { security.Symbol }
-                    );
-                _userDefinedUniverses[key] = universe;
-
-                Universes.Add(universe);
-            }
-        }
-
-        /// <summary>
-        /// Generates a smbol object from the specified data.
-        /// NOTE: This method only works with SecurityType.Base, SecurityType.Equity, and SecurityType.Forex
-        /// </summary>
-        /// <param name="securityType">The security type (Base, Equity, or Forex)</param>
-        /// <param name="ticker">The current ticker symbol</param>
-        /// <param name="market">The market the security resides in</param>
-        /// <returns>A symbol object for the specified ticker/market</returns>
-        private static Symbol GenerateSimpleSymbol(SecurityType securityType, string ticker, string market)
-        {
-            Symbol symbol;
-            if (securityType == SecurityType.Equity) symbol = new Symbol(SecurityIdentifier.GenerateEquity(ticker, market), ticker);
-            else if (securityType == SecurityType.Forex) symbol = new Symbol(SecurityIdentifier.GenerateForex(ticker, market), ticker);
-            else if (securityType == SecurityType.Base) symbol = new Symbol(SecurityIdentifier.GenerateBase(ticker, market), ticker);
-            else throw new NotImplementedException("The specified security type has not been implemented yet: " + securityType);
-            return symbol;
         }
     }
 }

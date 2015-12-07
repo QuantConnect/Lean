@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             var previousStop = stop.StopPrice;
 
             var fxcmBrokerage = (FxcmBrokerage)brokerage;
-            var quotes = fxcmBrokerage.GetBidAndAsk(new List<string> { fxcmBrokerage.ConvertSymbolToFxcmSymbol(order.Symbol) });
+            var quotes = fxcmBrokerage.GetBidAndAsk(new List<string> { new FxcmSymbolMapper().GetBrokerageSymbol(order.Symbol) });
             
             if (order.Quantity > 0)
             {

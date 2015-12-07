@@ -163,10 +163,6 @@ namespace QuantConnect.Lean.Engine
                     algorithm.SetAlgorithmId(job.AlgorithmId);
                     algorithm.SetLocked();
 
-                    //Wire up the universe selection event handler before kicking off the data feed
-                    var universeSelection = new UniverseSelection(_algorithmHandlers.DataFeed, algorithm, _liveMode);
-                    _algorithmHandlers.DataFeed.UniverseSelection += (sender, args) => universeSelection.ApplyUniverseSelection(args);
-
                     //Load the associated handlers for data, transaction and realtime events:
                     _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider);
                     _algorithmHandlers.Transactions.Initialize(algorithm, brokerage, _algorithmHandlers.Results);

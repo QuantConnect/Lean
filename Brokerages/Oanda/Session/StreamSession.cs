@@ -25,6 +25,7 @@ using QuantConnect.Brokerages.Oanda.DataType;
 
 namespace QuantConnect.Brokerages.Oanda.Session
 {
+#pragma warning disable 1591
     /// <summary>
     /// StreamSession abstract class used to model the Oanda Events Sessions.
     /// </summary>
@@ -87,4 +88,5 @@ namespace QuantConnect.Brokerages.Oanda.Session
             _shutdown = true;
         }
     }
+#pragma warning restore 1591
 }

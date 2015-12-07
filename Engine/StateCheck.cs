@@ -41,6 +41,9 @@ namespace QuantConnect.Lean.Engine
             private readonly IResultHandler _resultHandler;
             private readonly IMessagingHandler _messagingHandler;
 
+            /// <summary>
+            /// Creates an instance of the <see cref="Ping"/> class
+            /// </summary>
             public Ping(AlgorithmManager algorithmManager, IApi api, IResultHandler resultHandler, IMessagingHandler messagingHandler, AlgorithmNodePacket job)
             {
                 _api = api;

@@ -20,6 +20,7 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages.Oanda.DataType.Communications
 {
+#pragma warning disable 1591
     /// <summary>
     /// Represents the web response when querying the list of accounts belong to one Oanda user.
     /// </summary>
@@ -28,4 +29,5 @@ namespace QuantConnect.Brokerages.Oanda.DataType.Communications
         public List<Account> accounts;
 	
     }
+#pragma warning restore 1591
 }

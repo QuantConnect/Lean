@@ -48,10 +48,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BasicTemplateAlgorithm.cs" />
+    <Compile Include="Benchmarks\EmptyMinute400EquityAlgorithm.cs" />
+    <Compile Include="Benchmarks\Symbols.cs" />
     <Compile Include="CustomBenchmarkAlgorithm.cs" />
     <Compile Include="CustomBrokerageMessageHandlerAlgorithm.cs" />
     <Compile Include="CustomDataRegressionAlgorithm.cs" />
     <Compile Include="DelistingEventsAlgorithm.cs" />
+    <Compile Include="EquitiesLabAlgorithm.cs" />
     <Compile Include="HistoryAlgorithm.cs" />
     <Compile Include="HistoryAndWarmupRegressionAlgorithm.cs" />
     <Compile Include="LimitFillRegressionAlgorithm.cs" />
@@ -71,6 +74,7 @@
     <Compile Include="LiveFeaturesAlgorithm.cs" />
     <Compile Include="OpeningBreakoutAlgorithm.cs" />
     <Compile Include="StockPickerAlgorithm.cs" />
+    <Compile Include="UserDefinedUniverseAlgorithm.cs" />
     <Compile Include="WarmupAlgorithm.cs" />
     <Compile Include="WarmupHistoryAlgorithm.cs" />
     <Compile Include="MACDTrendAlgorithm.cs" />

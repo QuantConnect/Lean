@@ -72,6 +72,8 @@ namespace QuantConnect.Securities
         /// If null is specified, no override will be performed. If null is specified, and it's SecurityType.Base, then Utc will be used.</param>
         public SecurityExchangeHours GetExchangeHours(SubscriptionDataConfig configuration, DateTimeZone overrideTimeZone = null)
         {
+            // we don't expect base security types to be in the market-hours-database, so set overrideTimeZone
+            if (configuration.SecurityType == SecurityType.Base && overrideTimeZone == null) overrideTimeZone = configuration.ExchangeTimeZone;
             return GetExchangeHours(configuration.Market, configuration.Symbol, configuration.SecurityType, overrideTimeZone);
         }
 
@@ -180,7 +182,7 @@ namespace QuantConnect.Securities
                         if (overrideTimeZone == null)
                         {
                             overrideTimeZone = TimeZones.Utc;
-                            Log.Trace("SecurityExchangeHoursProvider.GetExchangeHours(): Custom data no time zone specified, default to UTC. " + key);
+                            Log.Error("SecurityExchangeHoursProvider.GetExchangeHours(): Custom data no time zone specified, default to UTC. " + key);
                         }
                         // base securities are always open by default and have equal data time zone and exchange time zones
                         return new Entry(overrideTimeZone, SecurityExchangeHours.AlwaysOpen(overrideTimeZone));
