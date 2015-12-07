@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
@@ -69,11 +70,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider)
         {
-            if (algorithm.SubscriptionManager.Subscriptions.Count == 0 && algorithm.Universes.IsNullOrEmpty())
-            {
-                throw new Exception("No subscriptions registered and no universe defined.");
-            }
-
             _algorithm = algorithm;
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
@@ -91,14 +87,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // find the minimum resolution, ignoring ticks
             ffres = ResolveFillForwardResolution(algorithm);
 
-            // add each universe selection subscription to the feed
-            foreach (var kvp in _algorithm.Universes)
+            // wire ourselves up to receive notifications when universes are added/removed
+            algorithm.Universes.CollectionChanged += (sender, args) =>
             {
-                var universe = kvp.Value;
-                var startTimeUtc = _algorithm.StartDate.ConvertToUtc(_algorithm.TimeZone);
-                var endTimeUtc = _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone);
-                AddUniverseSubscription(universe, startTimeUtc, endTimeUtc);
-            }
+                switch (args.Action)
+                {
+                    case NotifyCollectionChangedAction.Add:
+                        foreach (var universe in args.NewItems.OfType<Universe>())
+                        {
+                            var start = _frontierUtc != DateTime.MinValue ? _frontierUtc : _algorithm.StartDate.ConvertToUtc(_algorithm.TimeZone);
+                            AddUniverseSubscription(universe, start, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone));
+                        }
+                        break;
+
+                    case NotifyCollectionChangedAction.Remove:
+                        foreach (var universe in args.OldItems.OfType<Universe>())
+                        {
+                            Subscription subscription;
+                            if (_subscriptions.TryGetValue(universe.Configuration.Symbol, out subscription))
+                            {
+                                RemoveSubscription(subscription);
+                            }
+                        }
+                        break;
+
+                    default:
+                        throw new NotImplementedException("The specified action is not implemented: " + args.Action);
+                }
+            };
         }
 
         private Subscription CreateSubscription(Universe universe, IResultHandler resultHandler, Security security, DateTime startTimeUtc, DateTime endTimeUtc, IReadOnlyRef<TimeSpan> fillForwardResolution)

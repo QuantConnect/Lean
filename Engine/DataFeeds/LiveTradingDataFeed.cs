@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -89,11 +90,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 throw new ArgumentException("The LiveTradingDataFeed requires a LiveNodePacket.");
             }
 
-            if (algorithm.SubscriptionManager.Subscriptions.Count == 0 && algorithm.Universes.IsNullOrEmpty())
-            {
-                throw new Exception("No subscriptions registered and no universe defined.");
-            }
-
             _cancellationTokenSource = new CancellationTokenSource();
 
             _algorithm = algorithm;
@@ -121,14 +117,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             ffres = ResolveFillForwardResolution(algorithm);
 
-            // add subscriptions
+            // wire ourselves up to receive notifications when universes are added/removed
             var start = _timeProvider.GetUtcNow();
-            foreach (var kvp in _algorithm.Universes)
+            algorithm.Universes.CollectionChanged += (sender, args) =>
             {
-                var universe = kvp.Value;
-                var subscription = CreateUniverseSubscription(universe, start, Time.EndOfTime);
-                _subscriptions[subscription.Security.Symbol] = subscription;
-            }
+                switch (args.Action)
+                {
+                    case NotifyCollectionChangedAction.Add:
+                        foreach (var universe in args.NewItems.OfType<Universe>())
+                        {
+                            _subscriptions[universe.Configuration.Symbol] = CreateUniverseSubscription(universe, start, Time.EndOfTime);
+                        }
+                        break;
+
+                    case NotifyCollectionChangedAction.Remove:
+                        foreach (var universe in args.OldItems.OfType<Universe>())
+                        {
+                            Subscription subscription;
+                            if (_subscriptions.TryGetValue(universe.Configuration.Symbol, out subscription))
+                            {
+                                RemoveSubscription(subscription);
+                            }
+                        }
+                        break;
+
+                    default:
+                        throw new NotImplementedException("The specified action is not implemented: " + args.Action);
+                }
+            };
         }
 
         /// <summary>
