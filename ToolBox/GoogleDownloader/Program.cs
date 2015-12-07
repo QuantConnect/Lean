@@ -58,7 +58,7 @@ namespace QuantConnect.ToolBox.GoogleDownloader
                     // Download the data
                     var sid = SecurityIdentifier.GenerateEquity(symbol, market);
                     var symbolObject = new Symbol(sid, symbol);
-                    var data = downloader.Get(symbolObject, SecurityType.Equity, resolution, startDate, endDate);
+                    var data = downloader.Get(symbolObject, resolution, startDate, endDate);
 
                     // Save the data
                     var writer = new LeanDataWriter(SecurityType.Equity, resolution, symbolObject, dataDirectory, market);

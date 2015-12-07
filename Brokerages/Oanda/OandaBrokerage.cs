@@ -22,7 +22,6 @@ using System.Linq;
 using System.Net;
 using System.Runtime.Serialization.Json;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 using Newtonsoft.Json;
@@ -55,14 +54,6 @@ namespace QuantConnect.Brokerages.Oanda
         private TimeSpan _lifeSpan = TimeSpan.FromSeconds(86399); // 1 second less than a day
         
         /// <summary>
-        /// Gets or sets the instrument security type map.
-        /// </summary>
-        /// <value>
-        /// The instrument security type map.
-        /// </value>
-        public Dictionary<string, SecurityType> InstrumentSecurityTypeMap { get; private set; }
-
-        /// <summary>
         /// Gets the oanda environment.
         /// </summary>
         /// <value>
@@ -74,6 +65,7 @@ namespace QuantConnect.Brokerages.Oanda
 
         //This should correlate to the Orders list in Oanda.
         private readonly IOrderProvider _orderProvider;
+        private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
 
         private string _userName;
         
@@ -97,15 +89,6 @@ namespace QuantConnect.Brokerages.Oanda
         {
             _orderProvider = orderProvider;
             AccountId = accountId;
-            InstrumentSecurityTypeMap =  new Dictionary<string, SecurityType>(); 
-        }
-
-        /// <summary>
-        /// Initializes the instrument security type map.
-        /// </summary>
-        public void InitializeInstrumentSecurityTypeMap()
-        {
-            InstrumentSecurityTypeMap = MapInstrumentToSecurityType(GetInstrumentsAsync());
         }
 
         /// <summary>
@@ -146,10 +129,12 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns></returns>
         protected Holding ConvertHolding(Position position)
         {
+            var securityType = _symbolMapper.GetBrokerageSecurityType(position.instrument);
+
             return new Holding
             {
-                Symbol = ConvertSymbol(position.instrument,InstrumentSecurityTypeMap[position.instrument]),
-                Type = InstrumentSecurityTypeMap[position.instrument],
+                Symbol = _symbolMapper.GetLeanSymbol(position.instrument, securityType, Market.Oanda),
+                Type = securityType,
                 AveragePrice = (decimal)position.avgPrice,
                 ConversionRate = 1.0m,
                 CurrencySymbol = "$",
@@ -207,16 +192,6 @@ namespace QuantConnect.Brokerages.Oanda
                 return 1 / rate;
             }
             return rate;
-            }
-        private Dictionary<string, SecurityType> MapInstrumentToSecurityType(List<Instrument> instruments)
-        {
-            var result = new Dictionary<string, SecurityType>();
-            foreach (var instrument in instruments)
-            {
-                var isForex = Regex.IsMatch(instrument.instrument, "[A-Z]{3}_[A-Z]{3}") && Regex.IsMatch(instrument.displayName, "[A-Z]{3}/[A-Z]{3}");
-                result.Add(instrument.instrument, isForex ? SecurityType.Forex : SecurityType.Cfd);
-            }
-            return result;
         }
 
         /// <summary>
@@ -990,10 +965,9 @@ namespace QuantConnect.Brokerages.Oanda
                 default:
                     throw new NotSupportedException("The Oanda order type " + order.type + " is not supported.");
             }
-            var securityType = InstrumentSecurityTypeMap[order.instrument];
-            qcOrder.Symbol = ConvertSymbol(order.instrument, securityType);
+            qcOrder.SecurityType = _symbolMapper.GetBrokerageSecurityType(order.instrument);
+            qcOrder.Symbol = _symbolMapper.GetLeanSymbol(order.instrument, qcOrder.SecurityType, Market.Oanda);
             qcOrder.Quantity = ConvertQuantity(order);
-            qcOrder.SecurityType = securityType;
             qcOrder.Status = OrderStatus.None;
             qcOrder.BrokerId.Add(order.id);
             qcOrder.Id = order.id;
@@ -1026,15 +1000,5 @@ namespace QuantConnect.Brokerages.Oanda
             }
         }
 
-        private static Symbol ConvertSymbol(string instrument, SecurityType securityType)
-        {
-            if (securityType == SecurityType.Forex)
-            {
-                instrument = instrument.Trim('_');
-                return new Symbol(SecurityIdentifier.GenerateForex(instrument, Market.Oanda), instrument);
-            }
-
-            throw new NotImplementedException("The specified security type is not yet implemented: " + securityType);
-        }
     }
 }

@@ -43,7 +43,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
             try
             {
                 // Load settings from command line
-                var symbols = args[0].Split(',');
+                var tickers = args[0].Split(',');
                 var allResolutions = args[1].ToLower() == "all";
                 var resolution = allResolutions ? Resolution.Second : (Resolution)Enum.Parse(typeof(Resolution), args[1]);
                 var startDate = DateTime.ParseExact(args[2], "yyyyMMdd", CultureInfo.InvariantCulture);
@@ -58,40 +58,41 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 const string market = Market.Oanda;
                 var downloader = new OandaDataDownloader(accessToken, accountId);
 
-                foreach (var symbol in symbols)
+                foreach (var ticker in tickers)
                 {
-                    if (!downloader.HasSymbol(symbol))
-                        throw new ArgumentException("The symbol " + symbol + " is not available.");
+                    if (!downloader.HasSymbol(ticker))
+                        throw new ArgumentException("The symbol " + ticker + " is not available.");
                 }
 
-                foreach (var symbol in symbols)
+                foreach (var ticker in tickers)
                 {
                     // Download the data
-                    var securityType = downloader.GetSecurityType(symbol);
-                    var symbolObject = ConvertSymbol(symbol, securityType);
-                    var data = downloader.Get(symbolObject, securityType, resolution, startDate, endDate);
+                    var securityType = downloader.GetSecurityType(ticker);
+                    var symbol = Symbol.Create(ticker, securityType, market);
+
+                    var data = downloader.Get(symbol, resolution, startDate, endDate);
 
                     if (allResolutions)
                     {
                         var bars = data.Cast<TradeBar>().ToList();
 
                         // Save the data (second resolution)
-                        var writer = new LeanDataWriter(securityType, resolution, symbolObject, dataDirectory, market);
+                        var writer = new LeanDataWriter(securityType, resolution, symbol, dataDirectory, market);
                         writer.Write(bars);
 
                         // Save the data (other resolutions)
                         foreach (var res in new[] { Resolution.Minute, Resolution.Hour, Resolution.Daily })
                         {
-                            var resData = AggregateBars(symbolObject, bars, res.ToTimeSpan());
+                            var resData = AggregateBars(symbol, bars, res.ToTimeSpan());
 
-                            writer = new LeanDataWriter(securityType, res, symbolObject, dataDirectory, market);
+                            writer = new LeanDataWriter(securityType, res, symbol, dataDirectory, market);
                             writer.Write(resData);
                         }
                     }
                     else
                     {
                         // Save the data (single resolution)
-                        var writer = new LeanDataWriter(securityType, resolution, symbolObject, dataDirectory, market);
+                        var writer = new LeanDataWriter(securityType, resolution, symbol, dataDirectory, market);
                         writer.Write(data);
                     }
                 }

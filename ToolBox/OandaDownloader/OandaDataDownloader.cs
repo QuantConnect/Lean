@@ -24,6 +24,7 @@ using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.ToolBox.OandaDownloader.OandaRestLibrary;
+using QuantConnect.Brokerages.Oanda;
 
 namespace QuantConnect.ToolBox.OandaDownloader
 {
@@ -32,112 +33,56 @@ namespace QuantConnect.ToolBox.OandaDownloader
     /// </summary>
     public class OandaDataDownloader : IDataDownloader
     {
-        private const string InstrumentsFileName = "instruments_oanda.txt";
+        private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
         private const int BarsPerRequest = 5000;
-
-        private static Dictionary<string, LeanInstrument> _instruments;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaDataDownloader"/> class
         /// </summary>
         public OandaDataDownloader(string accessToken, int accountId)
         {
-            LoadInstruments();
-
             // Set Oanda account credentials
             Credentials.SetCredentials(EEnvironment.Practice, accessToken, accountId);
         }
 
         /// <summary>
-        /// Loads the instrument list from the instruments.txt file
-        /// </summary>
-        /// <returns></returns>
-        private static void LoadInstruments()
-        {
-            if (!File.Exists(InstrumentsFileName))
-                throw new FileNotFoundException(InstrumentsFileName + " file not found.");
-
-            _instruments = new Dictionary<string, LeanInstrument>();
-
-            var lines = File.ReadAllLines(InstrumentsFileName);
-            foreach (var line in lines)
-            {
-                var tokens = line.Split(',');
-                if (tokens.Length >= 3)
-                {
-                    var oandaSymbol = tokens[0];
-                    var securityType = (SecurityType)Enum.Parse(typeof(SecurityType), tokens[2]);
-                    var symbol = ConvertOandaSymbolToLeanSymbol(oandaSymbol);
-                    _instruments.Add(symbol, new LeanInstrument
-                    {
-                        Symbol = symbol,
-                        Name = tokens[1],
-                        Type = securityType
-                    });
-                }
-            }
-        }
-
-        /// <summary>
-        /// Converts an Oanda symbol to a Lean Symbol instance
-        /// </summary>
-        /// <param name="oandaSymbol">The Oanda symbol</param>
-        /// <returns>A Lean symbol</returns>
-        private static string ConvertOandaSymbolToLeanSymbol(string oandaSymbol)
-        {
-            return oandaSymbol.Replace("_", "");
-        }
-
-        /// <summary>
-        /// Converts a Lean symbol to an Oanda symbol
+        /// Checks if downloader can get the data for the Lean symbol
         /// </summary>
         /// <param name="symbol">The Lean symbol</param>
-        /// <returns>An Oanda symbol</returns>
-        private static string ConvertLeanSymbolToOandaSymbol(Symbol symbol)
-        {
-            // this will only work for forex symbols
-            return symbol.Value.Insert(symbol.Value.Length - 3, "_");
-        }
-
-        /// <summary>
-        /// Checks if downloader can get the data for the symbol
-        /// </summary>
-        /// <param name="symbol"></param>
         /// <returns>Returns true if the symbol is available</returns>
         public bool HasSymbol(string symbol)
         {
-            return _instruments.ContainsKey(symbol);
+            return _symbolMapper.IsKnownLeanSymbol(Symbol.Create(symbol, GetSecurityType(symbol), Market.Oanda));
         }
 
         /// <summary>
-        /// Gets the security type for the specified symbol
+        /// Gets the security type for the specified Lean symbol
         /// </summary>
-        /// <param name="symbol">The symbol</param>
+        /// <param name="symbol">The Lean symbol</param>
         /// <returns>The security type</returns>
         public SecurityType GetSecurityType(string symbol)
         {
-            return _instruments[symbol].Type;
+            return _symbolMapper.GetLeanSecurityType(symbol);
         }
 
         /// <summary>
         /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
         /// </summary>
         /// <param name="symbol">Symbol for the data we're looking for.</param>
-        /// <param name="type">Security type</param>
         /// <param name="resolution">Resolution of the data request</param>
         /// <param name="startUtc">Start time of the data in UTC</param>
         /// <param name="endUtc">End time of the data in UTC</param>
         /// <returns>Enumerable of base data for this symbol</returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, SecurityType type, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-            if (!_instruments.ContainsKey(symbol.Value))
+            if (!_symbolMapper.IsKnownLeanSymbol(symbol))
                 throw new ArgumentException("Invalid symbol requested: " + symbol.Value);
 
             if (resolution == Resolution.Tick)
                 throw new NotSupportedException("Resolution not available: " + resolution);
 
-            if (type != SecurityType.Forex && type != SecurityType.Cfd)
-                throw new NotSupportedException("SecurityType not available: " + type);
+            if (symbol.ID.SecurityType != SecurityType.Forex && symbol.ID.SecurityType != SecurityType.Cfd)
+                throw new NotSupportedException("SecurityType not available: " + symbol.ID.SecurityType);
 
             if (endUtc < startUtc)
                 throw new ArgumentException("The end date must be greater or equal than the start date.");
@@ -155,7 +100,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 string start = startDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
 
                 // request blocks of 5-second bars with a starting date/time
-                var oandaSymbol = ConvertLeanSymbolToOandaSymbol(symbol);
+                var oandaSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
                 var bars = DownloadBars(oandaSymbol, start, BarsPerRequest);
                 if (bars.Count == 0)
                     break;

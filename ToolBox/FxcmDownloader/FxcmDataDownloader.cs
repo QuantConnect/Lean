@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using com.fxcm.external.api.transport;
@@ -24,6 +23,7 @@ using com.fxcm.fix;
 using com.fxcm.fix.pretrade;
 using com.fxcm.messaging;
 using java.util;
+using QuantConnect.Brokerages.Fxcm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using TimeZone = java.util.TimeZone;
@@ -35,8 +35,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
     /// </summary>
     public class FxcmDataDownloader : IDataDownloader, IGenericMessageListener, IStatusMessageListener
     {
-        private const string InstrumentsFileName = "instruments_fxcm.txt";
-        private Dictionary<string, LeanInstrument> _instruments = new Dictionary<string, LeanInstrument>();
+        private readonly FxcmSymbolMapper _symbolMapper = new FxcmSymbolMapper();
         private readonly string _server;
         private readonly string _terminal;
         private readonly string _userName;
@@ -47,7 +46,6 @@ namespace QuantConnect.ToolBox.FxcmDownloader
         private string _currentRequest;
         private const int ResponseTimeout = 2500;
         private readonly Dictionary<string, AutoResetEvent> _mapRequestsToAutoResetEvents = new Dictionary<string, AutoResetEvent>();
-        private readonly Dictionary<Symbol, string> _mapInstrumentSymbols = new Dictionary<Symbol, string>();
         private readonly Dictionary<string, TradingSecurity> _fxcmInstruments = new Dictionary<string, TradingSecurity>();
         private readonly List<TradeBar> _currentBars = new List<TradeBar>();
 
@@ -60,53 +58,6 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             _terminal = terminal;
             _userName = userName;
             _password = password;
-
-            LoadInstruments();
-        }
-
-        /// <summary>
-        /// Loads the instrument list from the instruments.txt file
-        /// </summary>
-        /// <returns></returns>
-        private void LoadInstruments()
-        {
-            if (!File.Exists(InstrumentsFileName))
-                throw new FileNotFoundException(InstrumentsFileName + " file not found.");
-
-            _instruments = new Dictionary<string, LeanInstrument>();
-
-            var lines = File.ReadAllLines(InstrumentsFileName);
-            foreach (var line in lines)
-            {
-                var tokens = line.Split(',');
-                if (tokens.Length >= 3)
-                {
-                    var fxcmSymbol = tokens[0];
-                    var securityType = (SecurityType)Enum.Parse(typeof(SecurityType), tokens[2]);
-                    var symbol = ConvertFxcmSymbolToLeanSymbol(fxcmSymbol, securityType);
-                    _instruments.Add(symbol.Value, new LeanInstrument
-                    {
-                        Symbol = symbol.Value,
-                        Name = tokens[1],
-                        Type = securityType
-                    });
-
-                    _mapInstrumentSymbols[symbol] = fxcmSymbol;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Converts an FXCM symbol to a Lean Symbol instance
-        /// </summary>
-        /// <param name="fxcmSymbol">The FXCM symbol</param>
-        /// <param name="securityType">The security type</param>
-        /// <returns>A Lean symbol</returns>
-        private static Symbol ConvertFxcmSymbolToLeanSymbol(string fxcmSymbol, SecurityType securityType)
-        {
-            // convert to lean format
-            var ticker = fxcmSymbol.Replace("/", "").ToUpper();
-            return Symbol.Create(ticker, securityType, Market.FXCM);
         }
 
         /// <summary>
@@ -127,7 +78,8 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                                 cal.get(Calendar.DAY_OF_MONTH),
                                 cal.get(Calendar.HOUR_OF_DAY),
                                 cal.get(Calendar.MINUTE),
-                                cal.get(Calendar.SECOND));
+                                cal.get(Calendar.SECOND),
+                                cal.get(Calendar.MILLISECOND));
         }
 
         /// <summary>
@@ -146,49 +98,49 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             cal.set(Calendar.HOUR_OF_DAY, utcDateTime.Hour);
             cal.set(Calendar.MINUTE, utcDateTime.Minute);
             cal.set(Calendar.SECOND, utcDateTime.Second);
+            cal.set(Calendar.MILLISECOND, utcDateTime.Millisecond);
 
             return cal.getTime();
         }
 
         /// <summary>
-        /// Checks if downloader can get the data for the symbol
+        /// Checks if downloader can get the data for the Lean symbol
         /// </summary>
-        /// <param name="symbol"></param>
+        /// <param name="symbol">The Lean symbol</param>
         /// <returns>Returns true if the symbol is available</returns>
         public bool HasSymbol(string symbol)
         {
-            return _instruments.ContainsKey(symbol);
+            return _symbolMapper.IsKnownLeanSymbol(Symbol.Create(symbol, GetSecurityType(symbol), Market.FXCM));
         }
 
         /// <summary>
-        /// Gets the security type for the specified symbol
+        /// Gets the security type for the specified Lean symbol
         /// </summary>
-        /// <param name="symbol">The symbol</param>
+        /// <param name="symbol">The Lean symbol</param>
         /// <returns>The security type</returns>
         public SecurityType GetSecurityType(string symbol)
         {
-            return _instruments[symbol].Type;
+            return _symbolMapper.GetLeanSecurityType(symbol);
         }
 
         /// <summary>
         /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
         /// </summary>
         /// <param name="symbol">Symbol for the data we're looking for.</param>
-        /// <param name="type">Security type</param>
         /// <param name="resolution">Resolution of the data request</param>
         /// <param name="startUtc">Start time of the data in UTC</param>
         /// <param name="endUtc">End time of the data in UTC</param>
         /// <returns>Enumerable of base data for this symbol</returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, SecurityType type, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-            if (!_instruments.ContainsKey(symbol.Value))
+            if (!_symbolMapper.IsKnownLeanSymbol(symbol))
                 throw new ArgumentException("Invalid symbol requested: " + symbol.Value);
 
             if (resolution == Resolution.Tick)
                 throw new NotSupportedException("Resolution not available: " + resolution);
 
-            if (type != SecurityType.Forex && type != SecurityType.Cfd)
-                throw new NotSupportedException("SecurityType not available: " + type);
+            if (symbol.ID.SecurityType != SecurityType.Forex && symbol.ID.SecurityType != SecurityType.Cfd)
+                throw new NotSupportedException("SecurityType not available: " + symbol.ID.SecurityType);
 
             if (endUtc < startUtc)
                 throw new ArgumentException("The end date must be greater or equal than the start date.");
@@ -238,7 +190,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 mdr.setFXCMStartTime(new UTCTimeOnly(ToJavaDateUtc(start)));
                 mdr.setFXCMEndDate(new UTCDate(ToJavaDateUtc(end)));
                 mdr.setFXCMEndTime(new UTCTimeOnly(ToJavaDateUtc(end)));
-                mdr.addRelatedSymbol(_fxcmInstruments[_mapInstrumentSymbols[symbol]]);
+                mdr.addRelatedSymbol(_fxcmInstruments[_symbolMapper.GetBrokerageSymbol(symbol)]);
 
                 AutoResetEvent autoResetEvent;
                 lock (_locker)
@@ -365,11 +317,8 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             if (message.getRequestID() == _currentRequest)
             {
                 // create new TradeBar from FXCM response message
-                var instrument = message.getInstrument();
-                var securityType = instrument.getFXCMProductID() == IFixValueDefs.__Fields.FXCMPRODUCTID_FOREX
-                    ? SecurityType.Forex
-                    : SecurityType.Cfd;
-                var symbol = ConvertFxcmSymbolToLeanSymbol(instrument.getSymbol(), securityType);
+                var securityType = _symbolMapper.GetBrokerageSecurityType(message.getInstrument().getSymbol());
+                var symbol = _symbolMapper.GetLeanSymbol(message.getInstrument().getSymbol(), securityType, Market.FXCM);
                 var time = FromJavaDateUtc(message.getDate().toDate());
                 var open = Convert.ToDecimal((message.getBidOpen() + message.getAskOpen()) / 2);
                 var high = Convert.ToDecimal((message.getBidHigh() + message.getAskHigh()) / 2);

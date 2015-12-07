@@ -75,12 +75,15 @@
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmLimitOrderTestParameters.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmStopMarketOrderTestParameters.cs" />
+    <Compile Include="Brokerages\Fxcm\FxcmSymbolMapperTests.cs" />
     <Compile Include="Brokerages\HoldingsProvider.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageDataQueueHandlerTest.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersOrderTests.cs" />
+    <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersSymbolMapperTests.cs" />
     <Compile Include="Brokerages\LimitOrderTestParameters.cs" />
     <Compile Include="Brokerages\MarketOrderTestParameters.cs" />
     <Compile Include="Brokerages\Oanda\OandaBrokerageTests.cs" />
+    <Compile Include="Brokerages\Oanda\OandaSymbolMapperTests.cs" />
     <Compile Include="Brokerages\OrderProvider.cs" />
     <Compile Include="Brokerages\OrderTestParameters.cs" />
     <Compile Include="Brokerages\StopLimitOrderTestParameters.cs" />
