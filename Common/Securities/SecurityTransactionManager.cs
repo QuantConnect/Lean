@@ -245,7 +245,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="brokerageId">The brokerage id to fetch</param>
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        public Order GetOrderByBrokerageId(int brokerageId)
+        public Order GetOrderByBrokerageId(long brokerageId)
         {
             return _orderProcessor.GetOrderByBrokerageId(brokerageId);
         }
