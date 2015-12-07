@@ -1,21 +1,32 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     public class EquitiesLabAlgorithm : QCAlgorithm
     {
-        public const string EquitiesLabKey = @"45e047dd182cd3846e4dcd5e2e7ce40e772e8302e76fd5f9790b116072bcc672";
-        public const string EquitiesLabScreener = @"2792ba7b29506180544f6d8b53409fb703ab251659e9138bdf3f2b83f7b969b5";
+        public const string EquitiesLabKey = @"ENTER YOUR EQUITIES LAB KEY HERE";
+        public const string EquitiesLabScreener = @"ENTRY YOUR EQUITIES LAB SCREEN KEY HERE";
         public const string EquitiesLabUrlFormat = @"https://www.equitieslab.com/play/prod/RestControl/get?key={0}&screener={1}&date={2}&metadata=false";
 
         private DateTime tradedToday;
