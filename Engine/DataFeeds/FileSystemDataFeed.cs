@@ -221,7 +221,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             try
             {
-                _cancellationTokenSource.Token.WaitHandle.WaitOne();
+                _runner.WaitHandle.WaitOne();
             }
             catch (Exception err)
             {
@@ -234,6 +234,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             finally
             {
                 Log.Trace("FileSystemDataFeed.Run(): Ending Thread... ");
+                if (_runner != null) _runner.Dispose();
                 IsActive = false;
             }
         }

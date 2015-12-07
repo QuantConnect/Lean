@@ -17,8 +17,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Logging;
@@ -31,8 +29,8 @@ namespace QuantConnect.Util
     public class ParallelRunner : IDisposable
     {
         private int _skipped;
+        private readonly ManualResetEvent _waitHandle = new ManualResetEvent(false);
         private readonly BlockingCollection<Func<WorkResult>> _queue = new BlockingCollection<Func<WorkResult>>();
-        private ManualResetEvent _waitHandle;
 
         /// <summary>
         /// Gets the wait handle for the execution
@@ -45,7 +43,10 @@ namespace QuantConnect.Util
         /// <summary>
         /// Get true if the operation has completed, false if it is still running.
         /// </summary>
-        public bool IsCompleted { get; private set; }
+        public bool IsCompleted
+        {
+            get; private set;
+        }
 
         /// <summary>
         /// Schedules the specified delegate to run
@@ -78,9 +79,8 @@ namespace QuantConnect.Util
         public static ParallelRunner Run(int threadCount, CancellationToken token)
         {
             var parallel = new ParallelRunner();
-            parallel._waitHandle = new ManualResetEvent(false);
 
-            Log.Trace(typeof(ParallelRunner).Name + ".Execute(): Launching " + threadCount + " threads.");
+            Log.Trace("ParallelRunner.Execute(): Launching " + threadCount + " threads.");
 
             var handles = new WaitHandle[threadCount];
             for (int i = 0; i < threadCount; i++)
@@ -102,7 +102,7 @@ namespace QuantConnect.Util
                         }
                         else
                         {
-                            Log.Trace(typeof(ParallelRunner).Name + ".Execute(): Cancellation requested.");
+                            Log.Trace("ParallelRunner.Execute(): Cancellation requested.");
                         }
                     }
                     catch (Exception err)
@@ -114,7 +114,7 @@ namespace QuantConnect.Util
                         manualResetEvent.Set();
                     }
                 });
-                thread.Name = "DedicatedThreadParallel " + (i + 1);
+                thread.Name = "ParallelRunner " + (i + 1);
                 thread.Start();
             }
 
@@ -123,10 +123,13 @@ namespace QuantConnect.Util
                 WaitHandle.WaitAll(handles);
                 parallel._waitHandle.Set();
 
-                for (int i = 0; i < handles.Length; i++)
+                foreach (var handle in handles)
                 {
-                    handles[i].Dispose();
+                    handle.Dispose();
                 }
+
+                parallel.IsCompleted = true;
+
             }, CancellationToken.None);
 
             return parallel;
@@ -185,6 +188,7 @@ namespace QuantConnect.Util
         public void Dispose()
         {
             if (_waitHandle != null) _waitHandle.Dispose();
+            if (_queue != null) _queue.Dispose();
         }
 
 
