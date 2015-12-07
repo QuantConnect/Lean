@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -28,12 +29,17 @@ namespace QuantConnect.Data.UniverseSelection
     /// can be configured to fire on certain interval and will always
     /// return the internal list of symbols.
     /// </summary>
-    public class UserDefinedUniverse : Universe
+    public class UserDefinedUniverse : Universe, INotifyCollectionChanged
     {
         private readonly TimeSpan _interval;
         private readonly HashSet<Symbol> _symbols;
         private readonly SubscriptionSettings _subscriptionSettings;
         private readonly Func<DateTime, IEnumerable<Symbol>> _selector;
+
+        /// <summary>
+        /// Event fired when a symbol is added or removed from this universe
+        /// </summary>
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
 
         /// <summary>
         /// Gets the interval of this user defined universe
@@ -128,7 +134,12 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>True if the symbol was added, false if it was already present</returns>
         public bool Add(Symbol symbol)
         {
-            return _symbols.Add(symbol);
+            if (_symbols.Add(symbol))
+            {
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, symbol));
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -138,7 +149,12 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>True if the symbol was removed, false if the symbol was not present</returns>
         public bool Remove(Symbol symbol)
         {
-            return _symbols.Remove(symbol);
+            if (_symbols.Remove(symbol))
+            {
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, symbol));
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -164,6 +180,16 @@ namespace QuantConnect.Data.UniverseSelection
 
             return LinqExtensions.Range(localStartTime, localEndTime, dt => dt + Interval)
                 .Where(dt => exchangeHours.IsOpen(dt, dt + Interval, Configuration.ExtendedMarketHours));
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="CollectionChanged"/> event
+        /// </summary>
+        /// <param name="e">The notify collection changed event arguments</param>
+        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        {
+            var handler = CollectionChanged;
+            if (handler != null) handler(this, e);
         }
     }
 }
