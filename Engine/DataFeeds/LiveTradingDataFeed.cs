@@ -263,8 +263,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 break;
                             }
 
-                            var universeSelectionEventArgs = new UniverseSelectionEventArgs(universe, subscription.Configuration, frontier, cache.Value);
-                            _changes += _universeSelection.ApplyUniverseSelection(universeSelectionEventArgs);
+                            _changes += _universeSelection.ApplyUniverseSelection(universe, frontier, cache.Value);
                         }
                     }
 

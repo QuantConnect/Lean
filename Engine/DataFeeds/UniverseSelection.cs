@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -49,11 +48,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Applies universe selection the the data feed and algorithm
         /// </summary>
-        /// <param name="args">The arguments from a universe selection event, containing the universe and
-        /// the data produced for selection</param>
-        public SecurityChanges ApplyUniverseSelection(UniverseSelectionEventArgs args)
+        /// <param name="universe">The universe to perform selection on</param>
+        /// <param name="dateTimeUtc">The current date time in utc</param>
+        /// <param name="data">The data provided to perform selection with</param>
+        public SecurityChanges ApplyUniverseSelection(Universe universe, DateTime dateTimeUtc, IReadOnlyList<BaseData> data)
         {
-            var universe = args.Universe;
             var settings = universe.SubscriptionSettings;
 
             var limit = 1000; //daily/hourly limit
@@ -82,7 +81,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // perform initial filtering and limit the result
-            var selections = universe.SelectSymbols(args.DateTimeUtc, args.Data).Take(limit).ToHashSet();
+            var selections = universe.SelectSymbols(dateTimeUtc, data).Take(limit).ToHashSet();
 
             // create a hash set of our existing subscriptions by sid
             var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol);
@@ -149,7 +148,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 additions.Add(security);
 
                 // add the new subscriptions to the data feed
-                if (_dataFeed.AddSubscription(universe, security, args.DateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)))
+                if (_dataFeed.AddSubscription(universe, security, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)))
                 {
                     universe.AddMember(security);
                 }

@@ -107,8 +107,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // we have new universe data to select based on
                     if (subscription.IsUniverseSelectionSubscription && cache.Value.Count > 0)
                     {
-                        var universeSelectionEventArgs = new UniverseSelectionEventArgs(subscription.Universe, configuration, frontier, cache.Value);
-                        newChanges += _universeSelection.ApplyUniverseSelection(universeSelectionEventArgs);
+                        newChanges += _universeSelection.ApplyUniverseSelection(subscription.Universe, frontier, cache.Value);
                     }
 
                     if (subscription.Current != null)
