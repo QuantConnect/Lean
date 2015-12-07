@@ -17,6 +17,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
@@ -29,12 +30,17 @@ namespace QuantConnect.Securities
     /// Enumerable security management class for grouping security objects into an array and providing any common properties.
     /// </summary>
     /// <remarks>Implements IDictionary for the index searching of securities by symbol</remarks>
-    public class SecurityManager : IDictionary<Symbol, Security>
+    public class SecurityManager : IDictionary<Symbol, Security>, INotifyCollectionChanged
     {
+        /// <summary>
+        /// Event fired when a security is added or removed from this collection
+        /// </summary>
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+
         private readonly TimeKeeper _timeKeeper;
 
         //Internal dictionary implementation:
-        private readonly IDictionary<Symbol, Security> _securityManager;
+        private readonly ConcurrentDictionary<Symbol, Security> _securityManager;
         private int _minuteLimit = 500;
         private int _minuteMemory = 2;
         private int _secondLimit = 100;
@@ -95,8 +101,11 @@ namespace QuantConnect.Securities
         public void Add(Symbol symbol, Security security)
         {
             CheckResolutionCounts(security.Resolution);
-            security.SetLocalTimeKeeper(_timeKeeper.GetLocalTimeKeeper(security.Exchange.TimeZone));
-            _securityManager.Add(symbol, security);
+            if (_securityManager.TryAdd(symbol, security))
+            {
+                security.SetLocalTimeKeeper(_timeKeeper.GetLocalTimeKeeper(security.Exchange.TimeZone));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, security));
+            }
         }
 
         /// <summary>
@@ -116,7 +125,7 @@ namespace QuantConnect.Securities
         public void Add(KeyValuePair<Symbol, Security> pair)
         {
             CheckResolutionCounts(pair.Value.Resolution);
-            _securityManager.Add(pair.Key, pair.Value);
+            Add(pair.Key, pair.Value);
         }
 
         /// <summary>
@@ -158,7 +167,7 @@ namespace QuantConnect.Securities
         /// <remarks>IDictionary implementation</remarks>
         public void CopyTo(KeyValuePair<Symbol, Security>[] array, int number)
         {
-            _securityManager.CopyTo(array, number);
+            ((IDictionary<Symbol, Security>)_securityManager).CopyTo(array, number);
         }
 
         /// <summary>
@@ -176,7 +185,7 @@ namespace QuantConnect.Securities
         /// <remarks>IDictionary implementation</remarks>
         public bool IsReadOnly
         {
-            get { return _securityManager.IsReadOnly;  }
+            get { return false;  }
         }
 
         /// <summary>
@@ -187,7 +196,7 @@ namespace QuantConnect.Securities
         /// <returns>Boolean true on success</returns>
         public bool Remove(KeyValuePair<Symbol, Security> pair)
         {
-            return _securityManager.Remove(pair);
+            return Remove(pair.Key);
         }
 
         /// <summary>
@@ -197,7 +206,13 @@ namespace QuantConnect.Securities
         /// <returns>true success</returns>
         public bool Remove(Symbol symbol)
         {
-            return _securityManager.Remove(symbol);
+            Security security;
+            if (_securityManager.TryRemove(symbol, out security))
+            {
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, security));
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -258,7 +273,7 @@ namespace QuantConnect.Securities
         /// <returns>Security</returns>
         public Security this[Symbol symbol]
         {
-            get
+            get 
             {
                 if (!_securityManager.ContainsKey(symbol))
                 {
@@ -266,9 +281,19 @@ namespace QuantConnect.Securities
                 } 
                 return _securityManager[symbol];
             }
-            set 
+            set
             {
-                _securityManager[symbol] = value;
+                Security existing;
+                if (_securityManager.TryGetValue(symbol, out existing) && existing != value)
+                {
+                    throw new ArgumentException("Unable to over write existing Security: " + symbol.ToString());
+                }
+
+                // no security exists for the specified symbol key, add it now
+                if (existing == null)
+                {
+                    Add(symbol, value);
+                }
             }
         }
 
@@ -335,6 +360,16 @@ namespace QuantConnect.Securities
             _secondLimit = second;
             _tickLimit = tick;
             _maxRamEstimate = Math.Max(Math.Max(MinuteLimit * _minuteMemory, SecondLimit * _secondMemory), TickLimit * _tickMemory);
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="CollectionChanged"/> event
+        /// </summary>
+        /// <param name="changedEventArgs">Event arguments for the <see cref="CollectionChanged"/> event</param>
+        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs changedEventArgs)
+        {
+            var handler = CollectionChanged;
+            if (handler != null) handler(this, changedEventArgs);
         }
 
         /// <summary>
