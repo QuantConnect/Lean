@@ -163,7 +163,7 @@ namespace QuantConnect.Data
             // market data
             _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(data));
 
-            HasData = hasData != null || _data.Value.Count > 0;
+            HasData = hasData ?? _data.Value.Count > 0;
 
             _ticks = CreateTicksCollection(ticks);
             _bars = CreateCollection<TradeBars, TradeBar>(tradeBars);
