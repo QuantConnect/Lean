@@ -244,6 +244,7 @@
     <Compile Include="Securities\SecurityPortfolioModel.cs" />
     <Compile Include="Securities\SecurityMarginModel.cs" />
     <Compile Include="Securities\ImmediateSettlementModel.cs" />
+    <Compile Include="Securities\UniverseManager.cs" />
     <Compile Include="Securities\UnsettledCashAmount.cs" />
     <Compile Include="SecurityIdentifier.cs" />
     <Compile Include="SeriesSampler.cs" />

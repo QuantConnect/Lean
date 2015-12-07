@@ -115,6 +115,7 @@
     <Compile Include="Common\Securities\SecurityIdentifierTests.cs" />
     <Compile Include="Common\Securities\SecurityManagerTests.cs" />
     <Compile Include="Common\Securities\SecurityTransactionModelTests.cs" />
+    <Compile Include="Common\Securities\UniverseManagerTests.cs" />
     <Compile Include="Common\SeriesTests.cs" />
     <Compile Include="Common\SymbolCacheTests.cs" />
     <Compile Include="Common\SymbolTests.cs" />
