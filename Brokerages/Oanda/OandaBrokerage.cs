@@ -517,7 +517,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="orderId">the id of the order to retrieve</param>
         /// <returns>Order object containing the order details</returns>
-        public DataType.Order GetOrderDetails(int orderId)
+        public DataType.Order GetOrderDetails(long orderId)
         {
             var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
             var order = MakeRequest<DataType.Order>(requestString);

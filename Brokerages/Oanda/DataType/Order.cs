@@ -26,7 +26,7 @@ namespace QuantConnect.Brokerages.Oanda.DataType
     /// </summary>
     public class Order : Response
     {
-        public int id { get; set; }
+        public long id { get; set; }
 		public string instrument { get; set; }
 		public int units { get; set; }
 		public string side { get; set; }
