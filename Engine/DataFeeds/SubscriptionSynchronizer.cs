@@ -24,9 +24,9 @@ using QuantConnect.Securities;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Provides the ability to sync subscriptions into time slices
+    /// Provides the ability to synchronize subscriptions into time slices
     /// </summary>
-    public class SubscriptionSyncer
+    public class SubscriptionSynchronizer
     {
         /// <summary>
         /// Event fired when universe selection subscriptions are encountered

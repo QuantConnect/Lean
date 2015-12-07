@@ -420,7 +420,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var frontier = GetInitialFrontierTime();
             Log.Trace(string.Format("FileSystemDataFeed.GetEnumerator(): Begin: {0} UTC", frontier));
 
-            var syncer = new SubscriptionSyncer();
+            var syncer = new SubscriptionSynchronizer();
             syncer.UniverseSelection += (sender, args) => OnUniverseSelection(args);
             syncer.SubscriptionFinished += (sender, subscription) =>
             {
