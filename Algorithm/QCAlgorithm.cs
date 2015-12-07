@@ -419,7 +419,7 @@ namespace QuantConnect.Algorithm
                 // apply the default benchmark if it hasn't been set
                 if (_benchmarkSymbol == null || _benchmarkSymbol == QuantConnect.Symbol.Empty)
                 {
-                    _benchmarkSymbol = new Symbol(SecurityIdentifier.GenerateEquity("SPY", Market.USA), "SPY");
+                    _benchmarkSymbol = QuantConnect.Symbol.Create( "SPY", SecurityType.Equity, Market.USA);
                 }
 
                 // if the requested benchmark symbol wasn't already added, then add it now
@@ -766,7 +766,7 @@ namespace QuantConnect.Algorithm
         public void SetBenchmark(SecurityType securityType, string symbol)
         {
             var market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
-            _benchmarkSymbol = GenerateSimpleSymbol(securityType, symbol, market);
+            _benchmarkSymbol = QuantConnect.Symbol.Create(symbol, securityType, market);
         }
 
         /// <summary>
@@ -783,7 +783,7 @@ namespace QuantConnect.Algorithm
             symbol = symbol.ToUpper();
             var security = Securities.FirstOrDefault(x => x.Key.Value == symbol).Value;
             _benchmarkSymbol = security == null 
-                ? GenerateSimpleSymbol(SecurityType.Equity, symbol, Market.USA)
+                ? QuantConnect.Symbol.Create(symbol, SecurityType.Equity, Market.USA)
                 : security.Symbol;
         }
 
@@ -1127,8 +1127,8 @@ namespace QuantConnect.Algorithm
                     // set default values, use fxcm for forex, usa for everything else
                     market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
                 }
-                
-                var symbolObject = GenerateSimpleSymbol(securityType, symbol, market);
+
+                var symbolObject = QuantConnect.Symbol.Create(symbol, securityType, market);
 
                 var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase,
                     symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false);
@@ -1294,24 +1294,6 @@ namespace QuantConnect.Algorithm
         public Symbol Symbol(string ticker)
         {
             return SymbolCache.GetSymbol(ticker);
-        }
-
-        /// <summary>
-        /// Generates a smbol object from the specified data.
-        /// NOTE: This method only works with SecurityType.Base, SecurityType.Equity, and SecurityType.Forex
-        /// </summary>
-        /// <param name="securityType">The security type (Base, Equity, or Forex)</param>
-        /// <param name="ticker">The current ticker symbol</param>
-        /// <param name="market">The market the security resides in</param>
-        /// <returns>A symbol object for the specified ticker/market</returns>
-        private static Symbol GenerateSimpleSymbol(SecurityType securityType, string ticker, string market)
-        {
-            Symbol symbol;
-            if (securityType == SecurityType.Equity) symbol = new Symbol(SecurityIdentifier.GenerateEquity(ticker, market), ticker);
-            else if (securityType == SecurityType.Forex) symbol = new Symbol(SecurityIdentifier.GenerateForex(ticker, market), ticker);
-            else if (securityType == SecurityType.Base) symbol = new Symbol(SecurityIdentifier.GenerateBase(ticker, market), ticker);
-            else throw new NotImplementedException("The specified security type has not been implemented yet: " + securityType);
-            return symbol;
         }
     }
 }

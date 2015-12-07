@@ -64,7 +64,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                 foreach (var symbol in symbols)
                 {
                     var securityType = downloader.GetSecurityType(symbol);
-                    var symbolObject = new Symbol(GetSid(symbol, securityType), symbol);
+                    var symbolObject = Symbol.Create(symbol, securityType, Market.Dukascopy);
                     var data = downloader.Get(symbolObject, resolution, startDate, endDate);
 
                     if (allResolutions)
@@ -96,20 +96,6 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
             {
                 Log.Error(err);
             }
-        }
-
-        static SecurityIdentifier GetSid(string symbol, SecurityType securityType)
-        {
-            if (securityType == SecurityType.Forex)
-            {
-                return SecurityIdentifier.GenerateForex(symbol, Market.Dukascopy);
-            }
-            if (securityType == SecurityType.Cfd)
-            {
-                return SecurityIdentifier.GenerateCfd(symbol, Market.Dukascopy);
-            }
-
-            throw new NotImplementedException("The specfied security type has not been implemented yet: " + securityType);
         }
     }
 }

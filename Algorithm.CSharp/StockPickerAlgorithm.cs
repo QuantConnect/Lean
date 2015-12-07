@@ -123,7 +123,7 @@ namespace QuantConnect.Algorithm.CSharp
                     return new NyseTopGainers
                     {
                         Time = DateTime.ParseExact(csv[0], "yyyyMMdd", null),
-                        Symbol = new Symbol(SecurityIdentifier.GenerateEquity(csv[1], Market.USA), csv[1]),
+                        Symbol = Symbol.Create(csv[1], SecurityType.Equity, Market.USA),
                         TopGainersRank = int.Parse(csv[2])
                     };
                 }
@@ -153,7 +153,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var symbolString = line.Substring(lastOpenParen + 1, lastCloseParen - lastOpenParen - 1);
                 return new NyseTopGainers
                 {
-                    Symbol = new Symbol(SecurityIdentifier.GenerateEquity(symbolString, Market.USA), symbolString),
+                    Symbol = Symbol.Create(symbolString, SecurityType.Equity, Market.USA),
                     Time = date,
                     // the html has these in order, so we'll keep incrementing until a new day
                     TopGainersRank = ++count

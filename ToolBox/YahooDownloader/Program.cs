@@ -55,8 +55,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 foreach (var symbol in symbols)
                 {
                     // Download the data
-                    var sid = SecurityIdentifier.GenerateEquity(symbol, market);
-                    var symbolObject = new Symbol(sid, symbol);
+                    var symbolObject = Symbol.Create(symbol, SecurityType.Equity, market);
                     var data = downloader.Get(symbolObject, resolution, startDate, endDate);
 
                     // Save the data

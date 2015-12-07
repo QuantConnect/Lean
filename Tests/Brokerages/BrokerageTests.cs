@@ -409,7 +409,6 @@ namespace QuantConnect.Tests.Brokerages
             };
 
             // pick a security with low, but some, volume
-            var fxe = new Symbol(SecurityIdentifier.GenerateEquity("FXE", Market.USA), "FXE");
             var symbol = Symbols.EURUSD;
             var order = new MarketOrder(symbol, qty, DateTime.UtcNow, type: symbol.ID.SecurityType) { Id = 1 };
             Brokerage.PlaceOrder(order);

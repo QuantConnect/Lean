@@ -16,6 +16,7 @@ namespace QuantConnect.Tests
         public static readonly Symbol AAPL = CreateEquitySymbol("AAPL");
         public static readonly Symbol MSFT = CreateEquitySymbol("MSFT");
         public static readonly Symbol ZNGA = CreateEquitySymbol("ZNGA");
+        public static readonly Symbol FXE = CreateEquitySymbol("FXE");
 
         public static readonly Symbol USDJPY = CreateForexSymbol("USDJPY");
         public static readonly Symbol EURUSD = CreateForexSymbol("EURUSD");
@@ -24,12 +25,12 @@ namespace QuantConnect.Tests
 
         private static Symbol CreateForexSymbol(string symbol)
         {
-            return new Symbol(SecurityIdentifier.GenerateForex(symbol, Market.FXCM), symbol);
+            return Symbol.Create(symbol, SecurityType.Forex, Market.FXCM);
         }
 
         private static Symbol CreateEquitySymbol(string symbol)
         {
-            return new Symbol(SecurityIdentifier.GenerateEquity(symbol, Market.USA), symbol);
+            return Symbol.Create(symbol, SecurityType.Equity, Market.USA);
         }
     }
 }
