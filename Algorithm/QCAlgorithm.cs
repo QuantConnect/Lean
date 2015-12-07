@@ -114,7 +114,7 @@ namespace QuantConnect.Algorithm
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
             // universe selection
-            Universes = new List<Universe>();
+            Universes = new UniverseManager();
             UniverseSettings = new SubscriptionSettings(Resolution.Minute, 2m, true, false);
             _userDefinedUniverses = new Dictionary<SecurityTypeMarket, UserDefinedUniverse>();
 

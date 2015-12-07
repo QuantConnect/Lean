@@ -91,8 +91,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             ffres = ResolveFillForwardResolution(algorithm);
 
             // add each universe selection subscription to the feed
-            foreach (var universe in _algorithm.Universes)
+            foreach (var kvp in _algorithm.Universes)
             {
+                var universe = kvp.Value;
                 var startTimeUtc = _algorithm.StartDate.ConvertToUtc(_algorithm.TimeZone);
                 var endTimeUtc = _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone);
                 AddUniverseSubscription(universe, startTimeUtc, endTimeUtc);
@@ -362,7 +363,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return algorithm.SubscriptionManager.Subscriptions
                 .Where(x => !x.IsInternalFeed)
                 .Select(x => x.Resolution)
-                .Union(algorithm.Universes.Select(x => x.SubscriptionSettings.Resolution))
+                .Union(algorithm.Universes.Select(x => x.Value.SubscriptionSettings.Resolution))
                 .Where(x => x != Resolution.Tick)
                 .DefaultIfEmpty(Resolution.Second)
                 .Min().ToTimeSpan();

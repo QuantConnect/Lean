@@ -54,6 +54,14 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets the collection of universes for the algorithm
+        /// </summary>
+        UniverseManager Universes
+        {
+            get;
+        }
+
+        /// <summary>
         /// Security portfolio management class provides wrapper and helper methods for the Security.Holdings class such as
         /// IsLong, IsShort, TotalProfit
         /// </summary>
@@ -193,14 +201,6 @@ namespace QuantConnect.Interfaces
         /// Algorithm is running on a live server.
         /// </summary>
         bool LiveMode
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Gets the list of universes for the algorithm
-        /// </summary>
-        List<Universe> Universes
         {
             get;
         }

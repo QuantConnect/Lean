@@ -122,8 +122,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // add subscriptions
             var start = _timeProvider.GetUtcNow();
-            foreach (var universe in _algorithm.Universes)
+            foreach (var kvp in _algorithm.Universes)
             {
+                var universe = kvp.Value;
                 var subscription = CreateUniverseSubscription(universe, start, Time.EndOfTime);
                 _subscriptions[subscription.Security.Symbol] = subscription;
             }
@@ -552,7 +553,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return algorithm.SubscriptionManager.Subscriptions
                 .Where(x => !x.IsInternalFeed)
                 .Select(x => x.Resolution)
-                .Union(algorithm.Universes.Select(x => x.SubscriptionSettings.Resolution))
+                .Union(algorithm.Universes.Select(x => x.Value.SubscriptionSettings.Resolution))
                 .Where(x => x != Resolution.Tick)
                 .DefaultIfEmpty(Resolution.Second)
                 .Min().ToTimeSpan();
