@@ -436,7 +436,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 try
                 {
-                    timeSlice = syncer.Sync(frontier, Subscriptions.Union(Subscriptions), _algorithm.TimeZone, _algorithm.Portfolio.CashBook, out nextFrontier);
+                    timeSlice = syncer.Sync(frontier, Subscriptions, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, out nextFrontier);
                 }
                 catch (Exception err)
                 {

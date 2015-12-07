@@ -54,58 +54,68 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             nextFrontier = DateTime.MaxValue;
             var earlyBirdTicks = nextFrontier.Ticks;
             var data = new List<KeyValuePair<Security, List<BaseData>>>();
-            foreach (var subscription in subscriptions)
-            {
-                if (subscription.EndOfStream)
-                {
-                    OnSubscriptionFinished(subscription);
-                    continue;
-                }
 
-                // prime if needed
-                if (subscription.Current == null)
+            SecurityChanges newChanges;
+            do
+            {
+                newChanges = SecurityChanges.None;
+                foreach (var subscription in subscriptions)
                 {
-                    if (!subscription.MoveNext())
+                    if (subscription.EndOfStream)
                     {
                         OnSubscriptionFinished(subscription);
                         continue;
                     }
-                }
 
-                var cache = new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData>());
-                data.Add(cache);
-
-                var configuration = subscription.Configuration;
-                var offsetProvider = subscription.OffsetProvider;
-                var currentOffsetTicks = offsetProvider.GetOffsetTicks(frontier);
-                while (subscription.Current.EndTime.Ticks - currentOffsetTicks <= frontier.Ticks)
-                {
-                    // we want bars rounded using their subscription times, we make a clone
-                    // so we don't interfere with the enumerator's internal logic
-                    var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
-                    clone.Time = clone.Time.ExchangeRoundDown(configuration.Increment, subscription.Security.Exchange.Hours, configuration.ExtendedMarketHours);
-                    cache.Value.Add(clone);
-                    if (!subscription.MoveNext())
+                    // prime if needed
+                    if (subscription.Current == null)
                     {
-                        OnSubscriptionFinished(subscription);
-                        break;
+                        if (!subscription.MoveNext())
+                        {
+                            OnSubscriptionFinished(subscription);
+                            continue;
+                        }
+                    }
+
+                    var cache = new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData>());
+                    data.Add(cache);
+
+                    var configuration = subscription.Configuration;
+                    var offsetProvider = subscription.OffsetProvider;
+                    var currentOffsetTicks = offsetProvider.GetOffsetTicks(frontier);
+                    while (subscription.Current.EndTime.Ticks - currentOffsetTicks <= frontier.Ticks)
+                    {
+                        // we want bars rounded using their subscription times, we make a clone
+                        // so we don't interfere with the enumerator's internal logic
+                        var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
+                        clone.Time = clone.Time.ExchangeRoundDown(configuration.Increment, subscription.Security.Exchange.Hours, configuration.ExtendedMarketHours);
+                        cache.Value.Add(clone);
+                        if (!subscription.MoveNext())
+                        {
+                            OnSubscriptionFinished(subscription);
+                            break;
+                        }
+                    }
+
+                    // we have new universe data to select based on
+                    if (subscription.IsUniverseSelectionSubscription && cache.Value.Count > 0)
+                    {
+                        newChanges += OnUniverseSelection(subscription.Universe, frontier, configuration, cache.Value);
+                    }
+
+                    if (subscription.Current != null)
+                    {
+                        // take the earliest between the next piece of data or the next tz discontinuity
+                        earlyBirdTicks = Math.Min(earlyBirdTicks, Math.Min(subscription.Current.EndTime.Ticks - currentOffsetTicks, offsetProvider.GetNextDiscontinuity()));
                     }
                 }
 
-                // we have new universe data to select based on
-                if (subscription.IsUniverseSelectionSubscription && cache.Value.Count > 0)
-                {
-                    changes += OnUniverseSelection(subscription.Universe, frontier, configuration, cache.Value);
-                }
-
-                if (subscription.Current != null)
-                {
-                    // take the earliest between the next piece of data or the next tz discontinuity
-                    earlyBirdTicks = Math.Min(earlyBirdTicks, Math.Min(subscription.Current.EndTime.Ticks - currentOffsetTicks, offsetProvider.GetNextDiscontinuity()));
-                }
+                changes += newChanges;
             }
+            while (newChanges != SecurityChanges.None);
 
             nextFrontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);
+
             return TimeSlice.Create(frontier, sliceTimeZone, cashBook, data, changes);
         }
 
