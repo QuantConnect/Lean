@@ -19,6 +19,7 @@ using System.Linq;
 using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Brokerages.Oanda.Framework;
 using QuantConnect.Brokerages.Oanda.Session;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -29,7 +30,7 @@ namespace QuantConnect.Brokerages.Oanda
     /// <summary>
     /// Oanda Brokerage - implementation of IBrokerage interface
     /// </summary>
-    public partial class OandaBrokerage : Brokerage
+    public partial class OandaBrokerage : Brokerage, IDataQueueHandler
     {
         private readonly IOrderProvider _orderProvider;
         private readonly IHoldingsProvider _holdingsProvider;

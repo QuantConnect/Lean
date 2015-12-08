@@ -131,13 +131,12 @@ namespace QuantConnect.Brokerages.Oanda
             }
         }
 
+        /// <summary>
+        /// Event handler for streaming events
+        /// </summary>
+        /// <param name="data">The event object</param>
         private void OnEventReceived(Event data)
         {
-#if DEBUG
-            Console.Out.Write("---- On Event Received ----");
-            Console.Out.Write(data.transaction);
-#endif
-
             if (data.transaction != null)
             {
                 if (data.transaction.type == "ORDER_FILLED")
@@ -277,6 +276,37 @@ namespace QuantConnect.Brokerages.Oanda
             return stream;
         }
 
+        /// <summary>
+        /// Initializes a streaming rates session with the given instruments on the given account
+        /// </summary>
+        /// <param name="instruments">list of instruments to stream rates for</param>
+        /// <param name="accountId">the account ID you want to stream on</param>
+        /// <returns>the WebResponse object that can be used to retrieve the rates as they stream</returns>
+        public async Task<WebResponse> StartRatesSession(List<Instrument> instruments, int accountId)
+        {
+            var instrumentList = string.Join(",", instruments.Select(x => x.instrument));
+
+            var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.StreamingRates) + 
+                "prices?accountId=" + accountId + "&instruments=" + Uri.EscapeDataString(instrumentList);
+
+            var request = WebRequest.CreateHttp(requestString);
+            request.Method = "GET";
+            request.Headers[HttpRequestHeader.Authorization] = "Bearer " + _accessToken;
+
+            try
+            {
+                var response = await request.GetResponseAsync();
+                return response;
+            }
+            catch (WebException ex)
+            {
+                var response = (HttpWebResponse)ex.Response;
+                var stream = new StreamReader(response.GetResponseStream());
+                var result = stream.ReadToEnd();
+                throw new Exception(result);
+            }
+        }
+        
         /// <summary>
         /// Initializes a streaming events session which will stream events for the given accounts
         /// </summary>

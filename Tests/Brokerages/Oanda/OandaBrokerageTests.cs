@@ -24,7 +24,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Tests.Brokerages.Oanda
 {
     [TestFixture, Ignore("This test requires a configured and testable Oanda practice account")]
-    public class OandaBrokerageTests : BrokerageTests
+    public partial class OandaBrokerageTests : BrokerageTests
     {
         /// <summary>
         ///     Creates the brokerage under test and connects it

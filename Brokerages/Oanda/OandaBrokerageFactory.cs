@@ -12,11 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Oanda
 {
@@ -81,6 +83,7 @@ namespace QuantConnect.Brokerages.Oanda
             }
 
             var brokerage = new OandaBrokerage(algorithm.Transactions, algorithm.Portfolio, environment, accessToken, accountId);
+            Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;
         }

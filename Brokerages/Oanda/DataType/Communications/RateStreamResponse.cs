@@ -17,30 +17,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using System.Collections.Generic;
-using System.Net;
-using System.Threading.Tasks;
-using QuantConnect.Brokerages.Oanda.DataType;
-
-namespace QuantConnect.Brokerages.Oanda.Session
+namespace QuantConnect.Brokerages.Oanda.DataType.Communications
 {
 #pragma warning disable 1591
-    /// <summary>
-    /// Initialise an events sessions for Oanda Brokerage.
-    /// </summary>
-    public class EventsSession : StreamSession<Event>
+    public class RateStreamResponse : IHeartbeat
     {
-        private readonly OandaBrokerage _brokerage;
-
-        public EventsSession(OandaBrokerage brokerage, int accountId)
-            : base(accountId)
+        public Heartbeat heartbeat;
+        public Price tick;
+        public bool IsHeartbeat()
         {
-            _brokerage = brokerage;
-        }
-
-        protected override async Task<WebResponse> GetSession()
-        {
-            return await _brokerage.StartEventsSession(new List<int> {_accountId});
+            return (heartbeat != null);
         }
     }
 #pragma warning restore 1591

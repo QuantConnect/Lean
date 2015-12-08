@@ -21,26 +21,26 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using QuantConnect.Brokerages.Oanda.DataType;
+using QuantConnect.Brokerages.Oanda.DataType.Communications;
 
 namespace QuantConnect.Brokerages.Oanda.Session
 {
 #pragma warning disable 1591
-    /// <summary>
-    /// Initialise an events sessions for Oanda Brokerage.
-    /// </summary>
-    public class EventsSession : StreamSession<Event>
+    public class RatesSession : StreamSession<RateStreamResponse>
     {
         private readonly OandaBrokerage _brokerage;
+        private readonly List<Instrument> _instruments;
 
-        public EventsSession(OandaBrokerage brokerage, int accountId)
+        public RatesSession(OandaBrokerage brokerage, int accountId, List<Instrument> instruments)
             : base(accountId)
         {
             _brokerage = brokerage;
+            _instruments = instruments;
         }
 
         protected override async Task<WebResponse> GetSession()
         {
-            return await _brokerage.StartEventsSession(new List<int> {_accountId});
+            return await _brokerage.StartRatesSession(_instruments, _accountId);
         }
     }
 #pragma warning restore 1591
