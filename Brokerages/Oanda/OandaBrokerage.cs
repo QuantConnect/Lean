@@ -402,16 +402,6 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
 
-        /// <summary>
-        /// Checks for fill events by registering to the event session to receive events.
-        /// </summary>
-        private void CheckForFills()
-        {
-            var session = new EventsSession(this, _accountId);
-            session.DataReceived += OnEventReceived;
-            session.StartSession();
-        }
-
         private void OnEventReceived(Event data)
         {
             #if DEBUG
@@ -569,7 +559,7 @@ namespace QuantConnect.Brokerages.Oanda
         private void CancelOrder(long orderId)
         {
             var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + _accountId + "/orders/" + orderId;
-            MakeRequest<Order>(requestString, "DELETE");
+            MakeRequest<DataType.Order>(requestString, "DELETE");
         }
         
 
@@ -579,6 +569,11 @@ namespace QuantConnect.Brokerages.Oanda
         public override void Connect()
         {
             if (IsConnected) return;
+
+            // Register to the event session to receive events.
+            var session = new EventsSession(this, _accountId);
+            session.DataReceived += OnEventReceived;
+            session.StartSession();
 
             _isConnected = true;
         }
