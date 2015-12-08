@@ -77,9 +77,6 @@ namespace QuantConnect.Data.UniverseSelection
         {
             _securities = new ConcurrentDictionary<Symbol, Security>();
 
-            if (config.FillDataForward) throw new ArgumentException("Universe data can not be fill forward.");
-            if (!config.IsInternalFeed) throw new ArgumentException("Universe data must be marked as internal feed.");
-
             Configuration = config;
         }
 
