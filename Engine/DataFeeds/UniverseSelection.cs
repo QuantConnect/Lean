@@ -81,7 +81,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // perform initial filtering and limit the result
-            var selections = universe.SelectSymbols(dateTimeUtc, data).Take(limit).ToHashSet();
+            var selectSymbolsResult = universe.SelectSymbols(dateTimeUtc, data);
+
+            // check for no changes first
+            if (ReferenceEquals(selectSymbolsResult, Universe.Unchanged))
+            {
+                return SecurityChanges.None;
+            }
+
+            var selections = selectSymbolsResult.Take(limit).ToHashSet();
 
             // create a hash set of our existing subscriptions by sid
             var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol);

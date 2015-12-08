@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using NodaTime;
@@ -26,6 +27,11 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public abstract class Universe
     {
+        /// <summary>
+        /// Gets a value indicating that no change to the universe should be made
+        /// </summary>
+        public static readonly UnchangedUniverse Unchanged = UnchangedUniverse.Instance;
+
         private readonly ConcurrentDictionary<Symbol, Security> _securities;
 
         /// <summary>
@@ -141,6 +147,15 @@ namespace QuantConnect.Data.UniverseSelection
                 return _securities.TryRemove(security.Symbol, out security);
             }
             return false;
+        }
+
+        public sealed class UnchangedUniverse : IEnumerable<string>, IEnumerable<Symbol>
+        {
+            public static readonly UnchangedUniverse Instance = new UnchangedUniverse();
+            private UnchangedUniverse() { }
+            IEnumerator<Symbol> IEnumerable<Symbol>.GetEnumerator() { yield break; }
+            IEnumerator<string> IEnumerable<string>.GetEnumerator() { yield break; }
+            IEnumerator IEnumerable.GetEnumerator() { yield break; }
         }
     }
 }
