@@ -221,7 +221,7 @@ namespace QuantConnect.Algorithm
                 var uconfig = new SubscriptionDataConfig(securityConfig, symbol: universeSymbol, isInternalFeed: true, fillForward: false);
                 universe = new UserDefinedUniverse(uconfig,
                     new SubscriptionSettings(security.Resolution, security.Leverage, security.IsFillDataForward, security.IsExtendedMarketHours),
-                    QuantConnect.Time.MaxTimeSpan,
+                    QuantConnect.Time.OneDay,
                     new List<Symbol> { security.Symbol }
                     );
                 _userDefinedUniverses[key] = universe;

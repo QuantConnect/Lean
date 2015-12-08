@@ -178,8 +178,19 @@ namespace QuantConnect.Data.UniverseSelection
             var localStartTime = startTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone);
             var localEndTime = endTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone);
 
-            return LinqExtensions.Range(localStartTime, localEndTime, dt => dt + Interval)
-                .Where(dt => exchangeHours.IsOpen(dt, dt + Interval, Configuration.ExtendedMarketHours));
+            var first = true;
+            foreach (var dateTime in LinqExtensions.Range(localStartTime, localEndTime, dt => dt + Interval))
+            {
+                if (first)
+                {
+                    yield return dateTime;
+                    first = false;
+                }
+                if (exchangeHours.IsOpen(dateTime, dateTime + Interval, Configuration.ExtendedMarketHours))
+                {
+                    yield return dateTime;
+                }
+            }
         }
 
         /// <summary>
