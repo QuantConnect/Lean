@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
     <Compile Include="BasicTemplateAlgorithm.cs" />
     <Compile Include="Benchmarks\EmptyMinute400EquityAlgorithm.cs" />
     <Compile Include="Benchmarks\Symbols.cs" />

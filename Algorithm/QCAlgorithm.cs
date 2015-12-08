@@ -1140,6 +1140,32 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Removes the security with the specified symbol. This will cancel all
+        /// open orders and then liquidate any existing holdings
+        /// </summary>
+        /// <param name="symbol">The symbol of the security to be removed</param>
+        public bool RemoveSecurity(Symbol symbol)
+        {
+            Security security;
+            if (Securities.TryGetValue(symbol, out security))
+            {
+                // cancel open orders
+                Transactions.CancelOpenOrders(security.Symbol);
+
+                // liquidate if invested
+                if (security.Invested) Liquidate(security.Symbol);
+
+                UserDefinedUniverse universe;
+                var key = new SecurityTypeMarket(symbol.ID.SecurityType, symbol.ID.Market);
+                if (_userDefinedUniverses.TryGetValue(key, out universe))
+                {
+                    return universe.Remove(symbol);
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// AddData<typeparam name="T"/> a new user defined data source, requiring only the minimum config options.
         /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time)
         /// </summary>

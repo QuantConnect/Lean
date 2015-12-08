@@ -182,5 +182,32 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$0.00"}
             });
         }
+
+        [Test]
+        public void AddRemoveSecurityRegressionAlgorithm()
+        {
+            AlgorithmRunner.RunLocalBacktest("AddRemoveSecurityRegressionAlgorithm", new Dictionary<string, string>
+            {
+                {"Total Trades", "5"},
+                {"Average Win", "0.49%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "307.953%"},
+                {"Drawdown", "0.800%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "1.814%"},
+                {"Sharpe Ratio", "6.475"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "100%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0.906"},
+                {"Beta", "0.018"},
+                {"Annual Standard Deviation", "0.141"},
+                {"Annual Variance", "0.02"},
+                {"Information Ratio", "1.649"},
+                {"Tracking Error", "0.236"},
+                {"Treynor Ratio", "50.468"},
+                {"Total Fees", "$25.21"}
+            });
+        }
     }
 }
