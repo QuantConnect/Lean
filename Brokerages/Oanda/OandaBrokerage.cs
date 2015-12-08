@@ -199,8 +199,8 @@ namespace QuantConnect.Brokerages.Oanda
         {
             var requestParams = new Dictionary<string, string>
             {
-                {"instrument", order.Symbol.Value},
-                {"units", Convert.ToInt32(order.AbsoluteQuantity).ToString()}
+                { "instrument", _symbolMapper.GetBrokerageSymbol(order.Symbol) },
+                { "units", Convert.ToInt32(order.AbsoluteQuantity).ToString() }
             };
 
             PopulateOrderRequestParameters(order, requestParams);
@@ -318,8 +318,8 @@ namespace QuantConnect.Brokerages.Oanda
             
             var requestParams = new Dictionary<string, string>
             {
-                {"instrument", order.Symbol.Value},
-                {"units", Convert.ToInt32(order.AbsoluteQuantity).ToString()},
+                { "instrument", _symbolMapper.GetBrokerageSymbol(order.Symbol) },
+                { "units", Convert.ToInt32(order.AbsoluteQuantity).ToString() },
             };
 
             // we need the brokerage order id in order to perform an update
