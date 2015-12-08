@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// define a custom data type for the NYSE top gainers and then short the 
     /// top 2 gainers each day
     /// </summary>
-    public class StockPickerAlgorithm : QCAlgorithm
+    public class CustomDataUniverseAlgorithm : QCAlgorithm
     {
         private SecurityChanges _changes;
 
