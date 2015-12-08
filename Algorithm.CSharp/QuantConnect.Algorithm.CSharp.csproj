@@ -54,7 +54,9 @@
     <Compile Include="CustomBenchmarkAlgorithm.cs" />
     <Compile Include="CustomBrokerageMessageHandlerAlgorithm.cs" />
     <Compile Include="CustomDataRegressionAlgorithm.cs" />
+    <Compile Include="CustomDataUniverseAlgorithm.cs" />
     <Compile Include="DelistingEventsAlgorithm.cs" />
+    <Compile Include="DropboxBaseDataUniverseSelectionAlgorithm.cs" />
     <Compile Include="EquitiesLabAlgorithm.cs" />
     <Compile Include="HistoryAlgorithm.cs" />
     <Compile Include="HistoryAndWarmupRegressionAlgorithm.cs" />
@@ -74,7 +76,7 @@
     <Compile Include="IndicatorSuiteAlgorithm.cs" />
     <Compile Include="LiveFeaturesAlgorithm.cs" />
     <Compile Include="OpeningBreakoutAlgorithm.cs" />
-    <Compile Include="CustomRestUniverseAlgorithm.cs" />
+    <Compile Include="DropboxUniverseSelectionAlgorithm.cs" />
     <Compile Include="UserDefinedUniverseAlgorithm.cs" />
     <Compile Include="WarmupAlgorithm.cs" />
     <Compile Include="WarmupHistoryAlgorithm.cs" />

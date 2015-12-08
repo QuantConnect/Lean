@@ -43,8 +43,8 @@ namespace QuantConnect.Algorithm.CSharp
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
             SetBenchmark("SPY");
 
-            // add a custom universe data source
-            AddUniverse<NyseTopGainers>(SecurityType.Equity, "universe-nyse-top-gainers", Resolution.Daily, Market.USA, data =>
+            // add a custom universe data source (defaults to usa-equity)
+            AddUniverse<NyseTopGainers>("universe-nyse-top-gainers", Resolution.Daily, data =>
             {
                 // define our selection criteria
                 return from d in data

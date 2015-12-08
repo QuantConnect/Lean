@@ -209,5 +209,59 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$25.21"}
             });
         }
+
+        [Test]
+        public void DropboxBaseDataUniverseSelectionAlgorithm()
+        {
+            AlgorithmRunner.RunLocalBacktest("DropboxBaseDataUniverseSelectionAlgorithm", new Dictionary<string, string>
+            {
+                {"Total Trades", "67"},
+                {"Average Win", "1.07%"},
+                {"Average Loss", "-0.69%"},
+                {"Compounding Annual Return", "17.697%"},
+                {"Drawdown", "5.100%"},
+                {"Expectancy", "0.776"},
+                {"Net Profit", "17.697%"},
+                {"Sharpe Ratio", "1.516"},
+                {"Loss Rate", "30%"},
+                {"Win Rate", "70%"},
+                {"Profit-Loss Ratio", "1.55"},
+                {"Alpha", "0.175"},
+                {"Beta", "-0.042"},
+                {"Annual Standard Deviation", "0.108"},
+                {"Annual Variance", "0.012"},
+                {"Information Ratio", "-0.566"},
+                {"Tracking Error", "0.158"},
+                {"Treynor Ratio", "-3.962"},
+                {"Total Fees", "$300.29"}
+            });
+        }
+
+        [Test]
+        public void DropboxUniverseSelectionAlgorithm()
+        {
+            AlgorithmRunner.RunLocalBacktest("DropboxUniverseSelectionAlgorithm", new Dictionary<string, string>
+            {
+                {"Total Trades", "49"},
+                {"Average Win", "1.58%"},
+                {"Average Loss", "-1.03%"},
+                {"Compounding Annual Return", "21.280%"},
+                {"Drawdown", "8.200%"},
+                {"Expectancy", "0.646"},
+                {"Net Profit", "21.280%"},
+                {"Sharpe Ratio", "1.363"},
+                {"Loss Rate", "35%"},
+                {"Win Rate", "65%"},
+                {"Profit-Loss Ratio", "1.52"},
+                {"Alpha", "0.178"},
+                {"Beta", "-0.071"},
+                {"Annual Standard Deviation", "0.12"},
+                {"Annual Variance", "0.014"},
+                {"Information Ratio", "-0.297"},
+                {"Tracking Error", "0.161"},
+                {"Treynor Ratio", "-2.319"},
+                {"Total Fees", "$233.07"}
+            });
+        }
     }
 }
