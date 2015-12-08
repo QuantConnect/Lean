@@ -423,10 +423,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 
                 // syncer returns MaxValue on failure/end of data
-                if (_frontierUtc != DateTime.MaxValue)
+                if (timeSlice.Time != DateTime.MaxValue)
                 {
                     yield return timeSlice;
-                    _frontierUtc = nextFrontier;
+
+                    // end of data signal
+                    if (nextFrontier == DateTime.MaxValue) break;
+
+                    _frontierUtc = nextFrontier;    
                 }
                 else if (timeSlice.SecurityChanges == SecurityChanges.None)
                 {
