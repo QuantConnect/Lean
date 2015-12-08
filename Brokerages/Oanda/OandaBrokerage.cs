@@ -24,16 +24,13 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
-using Newtonsoft.Json;
 using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Brokerages.Oanda.DataType.Communications;
 using QuantConnect.Brokerages.Oanda.Framework;
 using QuantConnect.Brokerages.Oanda.Session;
-using QuantConnect.Brokerages.Tradier;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using RestSharp;
 using Order = QuantConnect.Orders.Order;
 using QuantConnect.Securities.Forex;
 
@@ -44,51 +41,36 @@ namespace QuantConnect.Brokerages.Oanda
     /// </summary>
     public class OandaBrokerage : Brokerage
     {
-        /// <summary>
-        /// The account identifier for Oanda Accounts.
-        /// </summary>
-        public int AccountId { get; private set; }
-
-        private DateTime _issuedAt;
-
-        private TimeSpan _lifeSpan = TimeSpan.FromSeconds(86399); // 1 second less than a day
-        
-        /// <summary>
-        /// Gets the oanda environment.
-        /// </summary>
-        /// <value>
-        /// The oanda environment.
-        /// </value>
-        public static Environment OandaEnvironment { get; private set; }
-
-        private readonly object _lockAccessCredentials = new object();
-
-        //This should correlate to the Orders list in Oanda.
         private readonly IOrderProvider _orderProvider;
+        private readonly IHoldingsProvider _holdingsProvider;
+        private readonly Environment _environment;
+        private readonly string _accessToken;
+        private readonly int _accountId;
+
         private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
 
-        private string _userName;
-        
-        /// <summary>
-        /// The QC User id, used for refreshing the session
-        /// </summary>
-        public int UserId { get; set; }
+        private bool _isConnected = false;
 
-        /// <summary>
-        /// Access Token Access:
-        /// </summary>
-        public static string AccessToken { get; private set; }
-        
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaBrokerage"/> class.
         /// </summary>
         /// <param name="orderProvider">The order provider.</param>
+        /// <param name="holdingsProvider">The holdings provider.</param>
+        /// <param name="environment">The Oanda environment (Trade or Practice)</param>
+        /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
-        public OandaBrokerage(IOrderProvider orderProvider, int accountId)
+        public OandaBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider, Environment environment, string accessToken, int accountId)
             : base("Oanda Brokerage")
         {
             _orderProvider = orderProvider;
-            AccountId = accountId;
+            _holdingsProvider = holdingsProvider;
+
+            if (environment != Environment.Trade && environment != Environment.Practice)
+                throw new NotSupportedException("Oanda Environment not supported: " + environment);
+
+            _environment = environment;
+            _accessToken = accessToken;
+            _accountId = accountId;
         }
 
         /// <summary>
@@ -96,7 +78,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override bool IsConnected
         {
-            get { return _issuedAt + _lifeSpan > DateTime.Now; }
+            get { return _isConnected; }
         }
 
         /// <summary>
@@ -118,7 +100,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            var holdings = GetPositions(AccountId).Select(ConvertHolding).ToList();
+            var holdings = GetPositions(_accountId).Select(ConvertHolding).ToList();
             return holdings;
         }
 
@@ -149,17 +131,13 @@ namespace QuantConnect.Brokerages.Oanda
         public override List<Cash> GetCashBalance()
         {
             var cash = new List<Cash>();
-            var getAllAccountsRequestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/";
-            if (OandaEnvironment == Environment.Sandbox)
-            {
-                getAllAccountsRequestString += "?username=" + _userName;
-            }
+            var getAllAccountsRequestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/";
 
             var accountsResponse = MakeRequest<AccountsResponse>(getAllAccountsRequestString);
 
             foreach (var account in accountsResponse.accounts)
             {
-                var getSpecificAccountRequestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + account.accountId;
+                var getSpecificAccountRequestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + account.accountId;
                 var accountResponse = MakeRequest<Account>(getSpecificAccountRequestString);
                 cash.Add(new Cash(accountResponse.accountCurrency, accountResponse.balance.ToDecimal(), GetUsdConversion(accountResponse.accountCurrency)));
             }
@@ -184,7 +162,7 @@ namespace QuantConnect.Brokerages.Oanda
             var currencyPair = Forex.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
             var inverted = invertedSymbol == currencyPair;
 
-            var getCurrencyRequestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Rates) + "prices?instruments=" +  (inverted ? invertedSymbol : normalSymbol);
+            var getCurrencyRequestString = EndpointResolver.ResolveEndpoint(_environment, Server.Rates) + "prices?instruments=" +  (inverted ? invertedSymbol : normalSymbol);
             var accountResponse = MakeRequest<PricesResponse>(getCurrencyRequestString);
             var rate = new decimal(accountResponse.prices.First().ask);
             if (inverted)
@@ -200,7 +178,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns></returns>
         public List<Instrument> GetInstrumentsAsync(List<string> instrumentNames = null)
         {
-            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Rates) + "instruments?accountId=" + AccountId;
+            var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.Rates) + "instruments?accountId=" + _accountId;
             if (instrumentNames != null)
             {
                 var instrumentsParam = string.Join(",", instrumentNames);
@@ -433,7 +411,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         private void CheckForFills()
         {
-            var session = new EventsSession(AccountId);
+            var session = new EventsSession(this, _accountId);
             session.DataReceived += OnEventReceived;
             session.StartSession();
         }
@@ -475,7 +453,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns></returns>
         public TradesResponse GetTradeList(Dictionary<string, string> requestParams = null)
         {
-            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/trades";
+            var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + _accountId + "/trades";
             return MakeRequest<TradesResponse>(requestString, "GET", requestParams);
         }
         
@@ -486,12 +464,12 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="requestParams">the parameters to update (name, value pairs)</param>
         public void UpdateOrder(long orderId, Dictionary<string, string> requestParams)
         {
-            var orderRequest = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
+            var orderRequest = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + _accountId + "/orders/" + orderId;
 
             var order = MakeRequest<DataType.Order>(orderRequest);
             if (order != null && order.id > 0)
             {
-                var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
+                var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + _accountId + "/orders/" + orderId;
                 try
                 {
                     MakeRequestWithBody<DataType.Order>(requestString, "PATCH", requestParams);
@@ -519,7 +497,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>Order object containing the order details</returns>
         public DataType.Order GetOrderDetails(long orderId)
         {
-            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
+            var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + _accountId + "/orders/" + orderId;
             var order = MakeRequest<DataType.Order>(requestString);
             return order;
         }
@@ -531,7 +509,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>List of Price objects with the current price for each instrument</returns>
         public List<Price> GetRates(List<Instrument> instruments)
         {
-            var requestBuilder = new StringBuilder(EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Rates) + "prices?instruments=");
+            var requestBuilder = new StringBuilder(EndpointResolver.ResolveEndpoint(_environment, Server.Rates) + "prices?instruments=");
             requestBuilder.Append(string.Join(",", instruments.Select(i => i.instrument)));
             var requestString = requestBuilder.ToString().Trim(',');
             requestString = requestString.Replace(",", "%2C");
@@ -550,7 +528,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>PostOrderResponse with details of the results (throws if if fails)</returns>
         public PostOrderResponse PostOrderAsync(Dictionary<string, string> requestParams)
         {
-            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders";
+            var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + _accountId + "/orders";
             return MakeRequestWithBody<PostOrderResponse>(requestString, "POST", requestParams);
         }
 
@@ -561,7 +539,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>List of Order objects (or empty list, if no orders)</returns>
         public List<DataType.Order> GetOrderList(Dictionary<string, string> requestParams = null)
         {
-            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders";
+            var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + _accountId + "/orders";
             var ordersResponse = MakeRequest<OrdersResponse>(requestString, "GET", requestParams);
             var orders = new List<DataType.Order>();
             orders.AddRange(ordersResponse.orders);
@@ -594,68 +572,10 @@ namespace QuantConnect.Brokerages.Oanda
 
         private void CancelOrder(long orderId)
         {
-            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + AccountId + "/orders/" + orderId;
+            var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + _accountId + "/orders/" + orderId;
             MakeRequest<Order>(requestString, "DELETE");
         }
         
-
-        /// <summary>
-        /// Verify we have a user session; or refresh the access token.
-        /// </summary>
-        public bool RefreshSession()
-        {
-            string raw;
-            bool success;
-            lock (_lockAccessCredentials)
-            {
-                //Create the client for connection:
-                var client = new RestClient("https://www.quantconnect.com/terminal/");
-
-                //Create the GET call:
-                var request = new RestRequest("processOanda", Method.GET);
-                request.AddParameter("uid", UserId.ToString(), ParameterType.GetOrPost);
-                request.AddParameter("accessToken", AccessToken, ParameterType.GetOrPost);
-
-                //Submit the call:
-                var result = client.Execute(request);
-                raw = result.Content;
-
-                //Decode to token response: update internal access parameters:
-                var newTokens = JsonConvert.DeserializeObject<TokenResponse>(result.Content); 
-                if (newTokens != null && newTokens.Success)
-                {
-                    AccessToken = newTokens.AccessToken;
-                    _issuedAt = newTokens.IssuedAt;
-                    _lifeSpan = TimeSpan.FromSeconds(newTokens.ExpiresIn);
-                    Log.Trace("SESSION REFRESHED: Access: " + AccessToken + " Issued At: " + _lifeSpan + " JSON>>"
-                        + result.Content);
-                    OnSessionRefreshed(newTokens);
-                    success = true;
-                } 
-                else
-                {
-                    Log.Error("Oanda.RefreshSession(): Error Refreshing Session: URL: " + client.BuildUri(request) + " Response: " + result.Content);
-                    success = false;
-                }
-            }
-
-            if (!success)
-            {
-                // if we can't refresh our tokens then we must stop the algorithm
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "RefreshSession", "Failed to refresh access token: " + raw));
-            }
-
-            return success;
-        }
-
-        /// <summary>
-        /// Event invocator for the SessionRefreshed event
-        /// </summary>
-        protected virtual void OnSessionRefreshed(TokenResponse e)
-        {
-            var handler = SessionRefreshed;
-            if (handler != null) handler(this, e);
-        }
 
         /// <summary>
         /// Connects the client to the broker's remote servers
@@ -663,7 +583,8 @@ namespace QuantConnect.Brokerages.Oanda
         public override void Connect()
         {
             if (IsConnected) return;
-            RefreshSession();
+
+            _isConnected = true;
         }
 
         /// <summary>
@@ -671,26 +592,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void Disconnect()
         {
-        }
-
-        /// <summary>
-        /// Event fired when our session has been refreshed/tokens updated
-        /// </summary>
-        public event EventHandler<TokenResponse> SessionRefreshed;
-
-        /// <summary>
-        /// Set the access token and login information for the Oanda brokerage 
-        /// </summary>
-        /// <param name="userId">Userid for this brokerage</param>
-        /// <param name="accessToken">Viable access token</param>
-        /// <param name="issuedAt">When the token was issued</param>
-        /// <param name="lifeSpan">Life span for our token.</param>
-        public void SetTokens(int userId, string accessToken, DateTime issuedAt, TimeSpan lifeSpan)
-        {
-            AccessToken = accessToken;
-            _issuedAt = issuedAt;
-            _lifeSpan = lifeSpan;
-            CheckForFills();
+            _isConnected = false;
         }
 
         private static Stream GetResponseStream(WebResponse response)
@@ -708,9 +610,9 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="accountId">the account IDs you want to stream on</param>
         /// <returns>the WebResponse object that can be used to retrieve the events as they stream</returns>
-        public static async Task<WebResponse> StartEventsSession(List<int> accountId = null)
+        public async Task<WebResponse> StartEventsSession(List<int> accountId = null)
         {
-            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.StreamingEvents) + "events";
+            var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.StreamingEvents) + "events";
 
             if (accountId != null && accountId.Count > 0)
             {
@@ -720,7 +622,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             var request = WebRequest.CreateHttp(requestString);
             request.Method = "GET";
-            request.Headers[HttpRequestHeader.Authorization] = "Bearer " + AccessToken;
+            request.Headers[HttpRequestHeader.Authorization] = "Bearer " + _accessToken;
 
             try
             {
@@ -752,7 +654,7 @@ namespace QuantConnect.Brokerages.Oanda
                 requestString = requestString + "?" + parameters;
             }
             var request = WebRequest.CreateHttp(requestString);
-            request.Headers[HttpRequestHeader.Authorization] = "Bearer " + AccessToken;
+            request.Headers[HttpRequestHeader.Authorization] = "Bearer " + _accessToken;
             request.Headers[HttpRequestHeader.AcceptEncoding] = "gzip, deflate";
             request.Method = method;
 
@@ -790,7 +692,7 @@ namespace QuantConnect.Brokerages.Oanda
                 requestString = requestString + "?" + parameters;
             }
             var request = WebRequest.CreateHttp(requestString);
-            request.Headers[HttpRequestHeader.Authorization] = "Bearer " + AccessToken;
+            request.Headers[HttpRequestHeader.Authorization] = "Bearer " + _accessToken;
             request.Headers[HttpRequestHeader.AcceptEncoding] = "gzip, deflate";
             request.Method = method;
 
@@ -825,7 +727,7 @@ namespace QuantConnect.Brokerages.Oanda
             // Create the body
             var requestBody = CreateParamString(requestParams);
             var request = WebRequest.CreateHttp(requestString);
-            request.Headers[HttpRequestHeader.Authorization] = "Bearer " + AccessToken;
+            request.Headers[HttpRequestHeader.Authorization] = "Bearer " + _accessToken;
             request.Method = method;
             request.ContentType = "application/x-www-form-urlencoded";
 
@@ -860,7 +762,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>List of Position objects with the details for each position (or empty list iff no positions)</returns>
         public List<Position> GetPositions(int accountId)
         {
-            var requestString = EndpointResolver.ResolveEndpoint(OandaEnvironment, Server.Account) + "accounts/" + accountId + "/positions";
+            var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + accountId + "/positions";
             var positionResponse = MakeRequest<PositionsResponse>(requestString);
             var positions = new List<Position>();
             positions.AddRange(positionResponse.positions);
@@ -877,49 +779,6 @@ namespace QuantConnect.Brokerages.Oanda
             return string.Join(",", requestParams.Select(x => x.Key + "=" + x.Value).Select(WebUtility.UrlEncode));
         }
 
-        /// <summary>
-        /// Sets the account identifier.
-        /// </summary>
-        /// <param name="accountId">The account identifier.</param>
-        public void SetAccountId(int accountId)
-        {
-            AccountId = accountId;
-        }
-
-
-        /// <summary>
-        /// Sets the name of the user. Used only in the Sandbox environment
-        /// </summary>
-        /// <param name="userName">Name of the user.</param>
-        public void SetUserName(string userName)
-        {
-            _userName = userName;
-        }
-
-
-        /// <summary>
-        /// Sets the Brokerage environment.
-        /// </summary>
-        /// <param name="environment">The oanda environment.</param>
-        public void SetEnvironment(string environment)
-        {
-            switch (environment.ToLowerInvariant())
-            {
-                case "sandbox":
-                    OandaEnvironment = Environment.Sandbox;
-                    break;
-                case "practice":
-                    OandaEnvironment = Environment.Practice;
-                    break;
-                case "trade":
-                    OandaEnvironment = Environment.Trade;
-                    break;
-                default:
-                    throw new ArgumentException("Unexpected or unexpected Oanda Environment: " + environment);
-            }
-
-        }
-        
         /// <summary>
         /// Converts the specified Oanda order into a qc order.
         /// The 'task' will have a value if we needed to issue a rest call for the stop price, otherwise it will be null

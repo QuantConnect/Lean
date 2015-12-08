@@ -62,12 +62,9 @@
     "trader-lifespan": "",
 
     // oanda configuration
-    "oanda-account-id": "",
+    "oanda-environment": "Practice",
     "oanda-access-token": "",
-    "oanda-refresh-token": "",
-    "oanda-tokens-issued-at": "",
-    "oanda-lifespan": "",
-    "oanda-environment": "sandbox",
+    "oanda-account-id": "",
 
     // fxcm configuration
     "fxcm-server": "",

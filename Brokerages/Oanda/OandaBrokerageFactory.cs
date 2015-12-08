@@ -14,62 +14,19 @@
 */
 using System;
 using System.Collections.Generic;
-using System.IO;
-using Newtonsoft.Json;
-using QuantConnect.Brokerages.Tradier;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Brokerages.Oanda
 {
     /// <summary>
-    /// Provides an implementations of IBrokerageFactory that produces a OandaBrokerageFactory
+    /// Provides an implementations of <see cref="IBrokerageFactory"/> that produces a <see cref="OandaBrokerage"/>
     /// </summary>
     public class OandaBrokerageFactory: BrokerageFactory
     {
-
         /// <summary>
-        /// Gets tradier values from configuration
-        /// </summary>
-        public static class Configuration
-        {
-            /// <summary>
-            /// Gets the account ID to be used when instantiating a brokerage
-            /// </summary>
-            public static int QuantConnectUserId
-            {
-                get { return Config.GetInt("qc-user-id"); }
-            }
-            
-            /// <summary>
-            /// Gets the account ID to be used when instantiating a brokerage
-            /// </summary>
-            public static int AccountId
-            {
-                get { return Config.GetInt("oanda-account-id"); }
-            }
-
-            /// <summary>
-            /// Gets the access token from configuration
-            /// </summary>
-            public static string AccessToken
-            {
-                get { return Config.Get("oanda-access-token"); }
-            }
-
-
-            /// <summary>
-            /// Gets the access token from configuration
-            /// </summary>
-            public static string Environment
-            {
-                get { return Config.Get("oanda-environment"); }
-            }
-        }
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BrokerageFactory"/> class.
+        /// Initializes a new instance of the <see cref="OandaBrokerageFactory"/> class.
         /// </summary>
         public OandaBrokerageFactory() : base(typeof(OandaBrokerage))
         {
@@ -82,12 +39,6 @@ namespace QuantConnect.Brokerages.Oanda
         {
         }
 
-
-        /// <summary>
-        /// File path used to store tradier token data
-        /// </summary>
-        public const string TokensFile = "oanda-tokens.txt";
-
         /// <summary>
         /// Gets the brokerage data required to run the brokerage from configuration/disk
         /// </summary>
@@ -99,27 +50,17 @@ namespace QuantConnect.Brokerages.Oanda
         {
             get
             {
-                string accessToken;
-
-                var accountId = Configuration.AccountId.ToString();
-                var data = new Dictionary<string, string>();
-                if (File.Exists(TokensFile))
+                return new Dictionary<string, string>
                 {
-                    var tokens = JsonConvert.DeserializeObject<TokenResponse>(File.ReadAllText(TokensFile));
-                    accessToken = tokens.AccessToken;
-                } 
-                else
-                {
-                    accessToken = Configuration.AccessToken;
-                }
-                data.Add("oanda-account-id", accountId);
-                data.Add("oanda-access-token", accessToken);
-                return data;
+                    { "oanda-environment", Config.Get("oanda-environment") },
+                    { "oanda-access-token", Config.Get("oanda-access-token") },
+                    { "oanda-account-id", Config.Get("oanda-account-id") }
+                };
             }
         }
 
         /// <summary>
-        /// Creates a new IBrokerage instance
+        /// Creates a new <see cref="IBrokerage"/> instance
         /// </summary>
         /// <param name="job">The job packet to create the brokerage for</param>
         /// <param name="algorithm">The algorithm instance</param>
@@ -127,47 +68,22 @@ namespace QuantConnect.Brokerages.Oanda
         public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
             var errors = new List<string>();
-            var accountId = Read<int>(job.BrokerageData, "oanda-account-id", errors);
+
+            // read values from the brokerage data
+            var environment = Read<Environment>(job.BrokerageData, "oanda-environment", errors);
             var accessToken = Read<string>(job.BrokerageData, "oanda-access-token", errors);
-            var issuedAt = Read<DateTime>(job.BrokerageData, "oanda-issued-at", errors);
-            var lifeSpan = TimeSpan.FromSeconds(Read<double>(job.BrokerageData, "oanda-lifespan", errors));
-            var environment = Read<string>(job.BrokerageData, "oanda-environment", errors);
-            var brokerage = new OandaBrokerage(algorithm.Transactions, accountId);
-            // if we're running live locally we'll want to save any new tokens generated so that they can easily be retrieved
-            if (Config.GetBool("local"))
+            var accountId = Read<int>(job.BrokerageData, "oanda-account-id", errors);
+
+            if (errors.Count != 0)
             {
-                brokerage.SessionRefreshed += (sender, args) =>
-                {
-                    File.WriteAllText(TokensFile, JsonConvert.SerializeObject(args, Formatting.Indented));
-                };
+                // if we had errors then we can't create the instance
+                throw new Exception(string.Join(System.Environment.NewLine, errors));
             }
 
-            brokerage.SetTokens(job.UserId, accessToken, issuedAt, lifeSpan);
-            brokerage.SetEnvironment(environment);
+            var brokerage = new OandaBrokerage(algorithm.Transactions, algorithm.Portfolio, environment, accessToken, accountId);
+
             return brokerage;
         }
 
-        /// <summary>
-        /// Reads the Oanda tokens from the <see cref="TokensFile"/> or from configuration
-        /// </summary>
-        public static TokenResponse GetTokens()
-        {
-            // pick a source for our tokens
-            if (File.Exists(TokensFile))
-            {
-                Log.Trace("Reading Oanda tokens from " + TokensFile);
-                return JsonConvert.DeserializeObject<TokenResponse>(File.ReadAllText(TokensFile));
-            }
-
-            return new TokenResponse
-            {
-                AccessToken = Config.Get("oanda-access-token"),
-                RefreshToken = Config.Get("oanda-refresh-token"),
-                IssuedAt = DateTime.Now,
-                ExpiresIn = 100000
-            };
-        }
     }
-
-
 }

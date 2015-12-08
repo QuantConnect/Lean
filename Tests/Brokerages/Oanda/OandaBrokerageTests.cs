@@ -12,24 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using System;
+
 using System.Collections.Generic;
-using System.IO;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Oanda;
 using QuantConnect.Brokerages.Oanda.DataType;
-using QuantConnect.Brokerages.Oanda.DataType.Communications;
-using QuantConnect.Brokerages.Oanda.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using Environment = QuantConnect.Brokerages.Oanda.Environment;
 
 namespace QuantConnect.Tests.Brokerages.Oanda
 {
     [TestFixture, Ignore("This test requires a configured and testable Oanda practice account")]
-    //[TestFixture]
     public class OandaBrokerageTests : BrokerageTests
     {
         /// <summary>
@@ -38,36 +32,11 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         /// <returns>A connected brokerage instance</returns>
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider)
         {
-            var oandaBrokerage = new OandaBrokerage(orderProvider, 0);
-            var tokens = OandaBrokerageFactory.GetTokens();
-            var environment = Config.Get("oanda-environment");
-            if (environment == "sandbox")
-            { 
-                var requestString = EndpointResolver.ResolveEndpoint(Environment.Sandbox, Server.Account) + "accounts";
-                var accountResponse = oandaBrokerage.MakeRequest<AccountResponse>(requestString, "POST");
-                oandaBrokerage.SetAccountId(accountResponse.accountId);
-                oandaBrokerage.SetEnvironment("sandbox");
-                oandaBrokerage.SetUserName(accountResponse.username);
-            }
-            else
-            {
-                oandaBrokerage.SetAccountId(Convert.ToInt32(Config.Get("oanda-account-id")));
-                oandaBrokerage.SetEnvironment(Config.Get("oanda-environment"));    
-            }
+            var environment = Config.Get("oanda-environment").ConvertTo<Environment>();
+            var accessToken = Config.Get("oanda-access-token");
+            var accountId = Config.Get("oanda-account-id").ConvertTo<int>();
 
-            var qcUserId = OandaBrokerageFactory.Configuration.QuantConnectUserId;
-            oandaBrokerage.SetTokens(qcUserId, tokens.AccessToken, tokens.IssuedAt,
-                TimeSpan.FromSeconds(tokens.ExpiresIn));
-
-            // keep the tokens up to date in the event of a refresh
-            oandaBrokerage.SessionRefreshed +=
-                (sender, args) =>
-                {
-                    File.WriteAllText(OandaBrokerageFactory.TokensFile,
-                        JsonConvert.SerializeObject(args, Formatting.Indented));
-                };
-
-            return oandaBrokerage;
+            return new OandaBrokerage(orderProvider, holdingsProvider, environment, accessToken, accountId);
         }
 
         /// <summary>

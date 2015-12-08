@@ -29,14 +29,17 @@ namespace QuantConnect.Brokerages.Oanda.Session
     /// </summary>
     public class EventsSession : StreamSession<Event>
     {
-        public EventsSession(int accountId)
+        private readonly OandaBrokerage _brokerage;
+
+        public EventsSession(OandaBrokerage brokerage, int accountId)
             : base(accountId)
         {
+            _brokerage = brokerage;
         }
 
         protected override async Task<WebResponse> GetSession()
         {
-            return await OandaBrokerage.StartEventsSession(new List<int> {_accountId});
+            return await _brokerage.StartEventsSession(new List<int> {_accountId});
         }
     }
 #pragma warning restore 1591
