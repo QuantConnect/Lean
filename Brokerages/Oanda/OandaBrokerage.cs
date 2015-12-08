@@ -776,7 +776,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>string containing all the parameters for use in requests</returns>
         private static string CreateParamString(Dictionary<string, string> requestParams)
         {
-            return string.Join(",", requestParams.Select(x => x.Key + "=" + x.Value).Select(WebUtility.UrlEncode));
+            return string.Join("&", requestParams.Select(x => WebUtility.UrlEncode(x.Key) + "=" + WebUtility.UrlEncode(x.Value)));
         }
 
         /// <summary>
