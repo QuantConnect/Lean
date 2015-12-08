@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         /// </summary>
         protected override Symbol Symbol
         {
-            get { return Symbols.EURUSD; }
+            get { return Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda); }
         }
 
         /// <summary>

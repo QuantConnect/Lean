@@ -130,18 +130,14 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<Cash> GetCashBalance()
         {
-            var cash = new List<Cash>();
-            var getAllAccountsRequestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/";
+            var getAccountRequestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + _accountId;
+            var accountResponse = MakeRequest<Account>(getAccountRequestString);
 
-            var accountsResponse = MakeRequest<AccountsResponse>(getAllAccountsRequestString);
-
-            foreach (var account in accountsResponse.accounts)
+            return new List<Cash>
             {
-                var getSpecificAccountRequestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + account.accountId;
-                var accountResponse = MakeRequest<Account>(getSpecificAccountRequestString);
-                cash.Add(new Cash(accountResponse.accountCurrency, accountResponse.balance.ToDecimal(), GetUsdConversion(accountResponse.accountCurrency)));
-            }
-            return cash;
+                new Cash(accountResponse.accountCurrency, accountResponse.balance.ToDecimal(),
+                    GetUsdConversion(accountResponse.accountCurrency))
+            };
         }
         
         
