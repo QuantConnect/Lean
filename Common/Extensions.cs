@@ -237,7 +237,7 @@ namespace QuantConnect
         /// <param name="str">The string to be broken into csv</param>
         /// <param name="size">The expected size of the output list</param>
         /// <returns>A list of the csv pieces</returns>
-        public static List<string> ToCsv(this string str, int size)
+        public static List<string> ToCsv(this string str, int size = 4)
         {
             int last = 0;
             var csv = new List<string>(size);
