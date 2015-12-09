@@ -100,6 +100,7 @@ namespace QuantConnect.Brokerages.Oanda
         public override void Disconnect()
         {
             _eventsSession.StopSession();
+            _ratesSession.StopSession();
 
             _isConnected = false;
         }
