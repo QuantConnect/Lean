@@ -190,7 +190,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 catch (Exception err)
                 {
-                    Log.Error(err, "Fetching Price/Map Factors:");
+                    Log.Error(err, "Fetching Price/Map Factors: " + config.Symbol.ID + ": ");
                 }
             }
 

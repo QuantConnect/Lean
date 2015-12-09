@@ -217,7 +217,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            Log.Trace("FileSystemDataFeed.AddSubscription(): Added " + security.Symbol.ID + " Start: " + utcStartTime + " End: " + utcEndTime);
+            Log.Debug("FileSystemDataFeed.AddSubscription(): Added " + security.Symbol.ID + " Start: " + utcStartTime + " End: " + utcEndTime);
 
             _subscriptions.AddOrUpdate(subscription.Security.Symbol,  subscription);
 
@@ -244,7 +244,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            Log.Trace("FileSystemDataFeed.RemoveSubscription(): Removed " + subscription.Security.Symbol.ToString());
+            Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + subscription.Security.Symbol.ToString());
 
             _changes += SecurityChanges.Removed(sub.Security);
 
@@ -427,9 +427,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var syncer = new SubscriptionSynchronizer(_universeSelection);
             syncer.SubscriptionFinished += (sender, subscription) =>
             {
-                Log.Trace("FileSystemDataFeed.GetEnumerator(): Finished subscription: " + subscription.Security.Symbol.ToString() + " at " + _frontierUtc + " UTC");
-                _subscriptions.TryRemove(subscription.Security.Symbol, out subscription);
-                subscription.Dispose();
+                if (subscription.EndOfStream && _subscriptions.TryRemove(subscription.Security.Symbol, out subscription))
+                {
+                    Log.Debug(string.Format("FileSystemDataFeed.GetEnumerator(): Finished subscription: {0} at {1} UTC", subscription.Security.Symbol.ID, _frontierUtc));
+                    subscription.Dispose();
+                }
             };
 
             while (!_cancellationTokenSource.IsCancellationRequested)
