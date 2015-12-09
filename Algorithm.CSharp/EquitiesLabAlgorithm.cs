@@ -23,6 +23,10 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// This algorithm demonstrates how you can get your symbol list each day from a remote server
+    /// using the WebClient
+    /// </summary>
     public class EquitiesLabAlgorithm : QCAlgorithm
     {
         public const string EquitiesLabKey = @"ENTER YOUR EQUITIES LAB KEY HERE";
