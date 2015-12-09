@@ -173,7 +173,7 @@ namespace QuantConnect.Securities
                 if (symbol.Value == normal || symbol.Value == invert)
                 {
                     _invertRealTimePrice = symbol.Value == invert;
-                    var marketHoursDbEntry = marketHoursDatabase.GetEntry(market, symbol, SecurityType.Forex);
+                    var marketHoursDbEntry = marketHoursDatabase.GetEntry(market, symbol.Value, SecurityType.Forex);
                     var exchangeHours = marketHoursDbEntry.ExchangeHours;
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
                     var config = subscriptions.Add(objectType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);

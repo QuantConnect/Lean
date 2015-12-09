@@ -500,7 +500,7 @@ namespace QuantConnect.Securities
             bool isInternalFeed,
             bool isCustomData)
         {
-            var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+            var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
             var tradeBarType = typeof(TradeBar);
             var type = resolution == Resolution.Tick ? typeof(Tick) : tradeBarType;
