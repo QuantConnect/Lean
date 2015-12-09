@@ -230,7 +230,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             if (next.EndTime < previous.Time)
             {
-                throw new ArgumentException("FillForwardEnumerator received data out of order.");
+                throw new ArgumentException("FillForwardEnumerator received data out of order. Symbol: " + previous.Symbol.ID);
             }
 
             // check to see if the gap between previous and next warrants fill forward behavior
