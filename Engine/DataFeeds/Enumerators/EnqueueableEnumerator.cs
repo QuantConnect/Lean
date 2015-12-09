@@ -78,30 +78,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         }
 
         /// <summary>
-        /// Enqueues a range of data. This operation will lock this enumerator
-        /// such that it will not MoveNext until the enqueueing has completed
-        /// </summary>
-        /// <param name="data"></param>
-        public void EnqueueRange(IEnumerable<T> data)
-        {
-            if (_end) return;
-
-            // only enqueueing a batch is senstive to being locked, since we wouldn't
-            // want the feed to split up a series of data at the same timestamp that
-            // should be emitted together, this is especially the case with universe
-            // selection data, ~10k records
-
-            using (_lock.Write())
-            {
-                foreach (var datum in data)
-                {
-                    _blockingCollection.Add(datum);
-                    _lastEnqueued = datum;
-                }
-            }
-        }
-
-        /// <summary>
         /// Signals the enumerator to stop enumerating when the items currently
         /// held inside are gone. No more items will be added to this enumerator.
         /// </summary>
@@ -121,22 +97,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
-            using (_lock.Read())
+            T current;
+            if (!_blockingCollection.TryTake(out current, _timeout))
             {
-                T current;
-                if (!_blockingCollection.TryTake(out current, _timeout))
-                {
-                    _current = default(T);
-                    return !_end;
-                }
-
-                _current = current;
-
-                // even if we don't have data to return, we haven't technically
-                // passed the end of the collection, so always return true until
-                // the enumerator is explicitly disposed or ended
-                return true;
+                _current = default(T);
+                return !_end;
             }
+
+            _current = current;
+
+            // even if we don't have data to return, we haven't technically
+            // passed the end of the collection, so always return true until
+            // the enumerator is explicitly disposed or ended
+            return true;
         }
 
         /// <summary>

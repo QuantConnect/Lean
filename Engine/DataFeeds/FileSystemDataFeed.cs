@@ -171,9 +171,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 while (enumerator.MoveNext())
                 {
                     // drop the data into the back of the enqueueable
-                    var collection = enumerator.Current as BaseDataCollection;
-                    if (collection != null) enqueueable.EnqueueRange(collection.Data);
-                    else enqueueable.Enqueue(enumerator.Current);
+                    enqueueable.Enqueue(enumerator.Current);
 
                     count++;
 

@@ -50,8 +50,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="universe">The universe to perform selection on</param>
         /// <param name="dateTimeUtc">The current date time in utc</param>
-        /// <param name="data">The data provided to perform selection with</param>
-        public SecurityChanges ApplyUniverseSelection(Universe universe, DateTime dateTimeUtc, IReadOnlyList<BaseData> data)
+        /// <param name="universeData">The data provided to perform selection with</param>
+        public SecurityChanges ApplyUniverseSelection(Universe universe, DateTime dateTimeUtc, BaseDataCollection universeData)
         {
             var settings = universe.SubscriptionSettings;
 
@@ -81,7 +81,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // perform initial filtering and limit the result
-            var selectSymbolsResult = universe.SelectSymbols(dateTimeUtc, data);
+            var selectSymbolsResult = universe.SelectSymbols(dateTimeUtc, universeData.Data);
 
             // check for no changes first
             if (ReferenceEquals(selectSymbolsResult, Universe.Unchanged))

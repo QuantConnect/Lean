@@ -281,7 +281,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 break;
                             }
 
-                            _changes += _universeSelection.ApplyUniverseSelection(universe, _frontierUtc, cache.Value);
+                            // assume that if the first item is a base data collection then the enumerator handled the aggregation,
+                            // otherwise, load all the the data into a new collection instance
+                            var collection = cache.Value[0] as BaseDataCollection ?? new BaseDataCollection(_frontierUtc, subscription.Configuration.Symbol, cache.Value);
+
+                            _changes += _universeSelection.ApplyUniverseSelection(universe, _frontierUtc, collection);
                         }
                     }
 
@@ -507,11 +511,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enqueable = new EnqueueableEnumerator<BaseData>();
                 _exchange.SetDataHandler(config.Symbol, data =>
                 {
-                    var universeData = data as BaseDataCollection;
-                    if (universeData != null)
-                    {
-                        enqueable.EnqueueRange(universeData.Data);
-                    }
+                    enqueable.Enqueue(data);
                 });
                 enumerator = enqueable;
             }
@@ -626,9 +626,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             /// <param name="data">The data to be handled</param>
             public override void HandleData(BaseData data)
             {
-                var collection = data as BaseDataCollection;
-                if (collection != null) _enqueueable.EnqueueRange(collection.Data);
-                else _enqueueable.Enqueue(data);
+                _enqueueable.Enqueue(data);
             }
         }
     }
