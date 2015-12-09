@@ -96,10 +96,10 @@ namespace QuantConnect.Brokerages.Oanda
                 switch (order.Direction)
                 {
                     case OrderDirection.Buy:
-                        //Orders can be submitted with lower and upper bounds. If the market price on execution falls outside these bounds, it is considered a "Bounds Violation" and the order is cancelled.
+                        requestParams.Add("upperBound", ((StopLimitOrder)order).LimitPrice.ToString(CultureInfo.InvariantCulture));
                         break;
                     case OrderDirection.Sell:
-                        //Orders can be submitted with lower and upper bounds. If the market price on execution falls outside these bounds, it is considered a "Bounds Violation" and the order is cancelled.
+                        requestParams.Add("lowerBound", ((StopLimitOrder)order).LimitPrice.ToString(CultureInfo.InvariantCulture));
                         break;
                 }
 
@@ -111,15 +111,6 @@ namespace QuantConnect.Brokerages.Oanda
             {
                 requestParams.Add("type", "marketIfTouched");
                 requestParams.Add("price", ((StopMarketOrder)order).StopPrice.ToString(CultureInfo.InvariantCulture));
-                switch (order.Direction)
-                {
-                    case OrderDirection.Buy:
-                        requestParams.Add("upperBound", ((StopMarketOrder)order).StopPrice.ToString(CultureInfo.InvariantCulture));
-                        break;
-                    case OrderDirection.Sell:
-                        requestParams.Add("lowerBound", ((StopMarketOrder)order).StopPrice.ToString(CultureInfo.InvariantCulture));
-                        break;
-                }
 
                 //3 months is the max expiry for Oanda, and OrderDuration.GTC is only currently available
                 requestParams.Add("expiry", XmlConvert.ToString(DateTime.Now.AddMonths(3), XmlDateTimeSerializationMode.Utc));
@@ -184,7 +175,7 @@ namespace QuantConnect.Brokerages.Oanda
                     MakeRequestWithBody<DataType.Order>(requestString, "PATCH", requestParams);
 
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
                 }
             }

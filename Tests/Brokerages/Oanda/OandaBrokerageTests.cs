@@ -16,7 +16,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Oanda;
-using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
