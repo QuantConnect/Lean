@@ -869,7 +869,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee, "Interactive Brokers Fill Event")
                 {
                     Status = status,
-                    FillPrice = update.AverageFillPrice,
+                    FillPrice = update.LastFillPrice,
                     FillQuantity = fillQuantity
                 };
                 if (update.Remaining != 0)
