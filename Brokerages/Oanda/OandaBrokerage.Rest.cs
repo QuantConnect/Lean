@@ -28,7 +28,6 @@ using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Brokerages.Oanda.DataType.Communications;
 using QuantConnect.Brokerages.Oanda.Framework;
 using QuantConnect.Orders;
-using QuantConnect.Securities.Forex;
 using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Oanda
@@ -42,18 +41,14 @@ namespace QuantConnect.Brokerages.Oanda
         /// Gets the list of available tradable instruments/products from Oanda
         /// </summary>
         /// <returns></returns>
-        private List<Instrument> GetInstrumentsAsync(List<string> instrumentNames = null)
+        private List<Instrument> GetInstruments(List<string> instrumentNames = null)
         {
             var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.Rates) + "instruments?accountId=" + _accountId;
             if (instrumentNames != null)
             {
-                var instrumentsParam = string.Join(",", instrumentNames);
-                requestString += "&instruments=" + Uri.EscapeDataString(instrumentsParam);
+                requestString += "&instruments=" + Uri.EscapeDataString(string.Join(",", instrumentNames));
             }
-            var instrumentResponse = MakeRequest<InstrumentsResponse>(requestString);
-            var instruments = new List<Instrument>();
-            instruments.AddRange(instrumentResponse.instruments);
-            return instruments;
+            return MakeRequest<InstrumentsResponse>(requestString).instruments;
         }
 
         private static void PopulateOrderRequestParameters(Order order, Dictionary<string, string> requestParams)
@@ -221,18 +216,13 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="instruments">the list of instruments to check</param>
         /// <returns>List of Price objects with the current price for each instrument</returns>
-        public List<Price> GetRates(List<Instrument> instruments)
+        public List<Price> GetRates(List<string> instruments)
         {
             var requestBuilder = new StringBuilder(EndpointResolver.ResolveEndpoint(_environment, Server.Rates) + "prices?instruments=");
-            requestBuilder.Append(string.Join(",", instruments.Select(i => i.instrument)));
-            var requestString = requestBuilder.ToString().Trim(',');
-            requestString = requestString.Replace(",", "%2C");
+            requestBuilder.Append(string.Join(",", instruments));
+            var requestString = requestBuilder.ToString().Replace(",", "%2C");
 
-            var pricesResponse = MakeRequest<PricesResponse>(requestString);
-            var prices = new List<Price>();
-            prices.AddRange(pricesResponse.prices);
-
-            return prices;
+            return MakeRequest<PricesResponse>(requestString).prices;
         }
 
         /// <summary>
@@ -592,24 +582,18 @@ namespace QuantConnect.Brokerages.Oanda
         private decimal GetUsdConversion(string currency)
         {
             if (currency == "USD")
-            {
                 return 1m;
-            }
 
             // determine the correct symbol to choose
-            var invertedSymbol = "USD_" + currency;
             var normalSymbol = currency + "_USD";
-            var currencyPair = Forex.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
-            var inverted = invertedSymbol == currencyPair;
+            var invertedSymbol = "USD_" + currency;
+            var isInverted = _oandaInstruments.ContainsKey(invertedSymbol);
+            var oandaSymbol = isInverted ? invertedSymbol : normalSymbol;
 
-            var getCurrencyRequestString = EndpointResolver.ResolveEndpoint(_environment, Server.Rates) + "prices?instruments=" + (inverted ? invertedSymbol : normalSymbol);
-            var accountResponse = MakeRequest<PricesResponse>(getCurrencyRequestString);
-            var rate = new decimal(accountResponse.prices.First().ask);
-            if (inverted)
-            {
-                return 1 / rate;
-            }
-            return rate;
+            var quote = GetRates(new List<string> { oandaSymbol }).First();
+            var rate = (decimal)(quote.bid + quote.ask) / 2;
+
+            return isInverted ? 1 / rate : rate;
         }
 
     }

@@ -77,8 +77,9 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         protected override decimal GetAskPrice(Symbol symbol)
         {
             var oanda = (OandaBrokerage) Brokerage;
-            var quotes = oanda.GetRates(new List<Instrument> { new Instrument { instrument = new OandaSymbolMapper().GetBrokerageSymbol(symbol) } });
+            var quotes = oanda.GetRates(new List<string> { new OandaSymbolMapper().GetBrokerageSymbol(symbol) });
             return (decimal)quotes[0].ask;
         }
+
     }
 }

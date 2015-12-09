@@ -38,6 +38,8 @@ namespace QuantConnect.Brokerages.Oanda
         private readonly string _accessToken;
         private readonly int _accountId;
 
+        private EventsSession _eventsSession;
+        private Dictionary<string, Instrument> _oandaInstruments; 
         private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
 
         private bool _isConnected = false;
@@ -81,10 +83,13 @@ namespace QuantConnect.Brokerages.Oanda
         {
             if (IsConnected) return;
 
+            // Load the list of instruments
+            _oandaInstruments = GetInstruments().ToDictionary(x => x.instrument);
+
             // Register to the event session to receive events.
-            var session = new EventsSession(this, _accountId);
-            session.DataReceived += OnEventReceived;
-            session.StartSession();
+            _eventsSession = new EventsSession(this, _accountId);
+            _eventsSession.DataReceived += OnEventReceived;
+            _eventsSession.StartSession();
 
             _isConnected = true;
         }
@@ -94,6 +99,8 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void Disconnect()
         {
+            _eventsSession.StopSession();
+
             _isConnected = false;
         }
 
