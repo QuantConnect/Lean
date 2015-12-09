@@ -31,7 +31,7 @@ namespace QuantConnect.Securities
     public class MarketHoursDatabase
     {
         private static MarketHoursDatabase _dataFolderMarketHoursDatabase;
-        private static readonly object DataFolderSecurityExchangeHoursProviderLock = new object();
+        private static readonly object DataFolderMarketHoursDatabaseLock = new object();
 
         private readonly IReadOnlyDictionary<Key, Entry> _entries;
 
@@ -115,7 +115,7 @@ namespace QuantConnect.Securities
         /// <returns>A <see cref="MarketHoursDatabase"/> class that represents the data in the market-hours folder</returns>
         public static MarketHoursDatabase FromDataFolder()
         {
-            lock (DataFolderSecurityExchangeHoursProviderLock)
+            lock (DataFolderMarketHoursDatabaseLock)
             {
                 if (_dataFolderMarketHoursDatabase == null)
                 {
@@ -182,13 +182,13 @@ namespace QuantConnect.Securities
                         if (overrideTimeZone == null)
                         {
                             overrideTimeZone = TimeZones.Utc;
-                            Log.Error("SecurityExchangeHoursProvider.GetExchangeHours(): Custom data no time zone specified, default to UTC. " + key);
+                            Log.Error("MarketHoursDatabase.GetExchangeHours(): Custom data no time zone specified, default to UTC. " + key);
                         }
                         // base securities are always open by default and have equal data time zone and exchange time zones
                         return new Entry(overrideTimeZone, SecurityExchangeHours.AlwaysOpen(overrideTimeZone));
                     }
 
-                    Log.Error(string.Format("SecurityExchangeHoursProvider.GetExchangeHours(): Unable to locate exchange hours for {0}." + "Available keys: {1}", key, string.Join(", ", _entries.Keys)));
+                    Log.Error(string.Format("MarketHoursDatabase.GetExchangeHours(): Unable to locate exchange hours for {0}." + "Available keys: {1}", key, string.Join(", ", _entries.Keys)));
 
                     // there was nothing that really matched exactly... what should we do here?
                     throw new ArgumentException("Unable to locate exchange hours for " + key);
