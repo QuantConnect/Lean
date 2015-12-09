@@ -110,7 +110,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // assume that if the first item is a base data collection then the enumerator handled the aggregation,
                         // otherwise, load all the the data into a new collection instance
                         var collection = cache.Value[0] as BaseDataCollection ?? new BaseDataCollection(frontier, subscription.Configuration.Symbol, cache.Value);
-
                         newChanges += _universeSelection.ApplyUniverseSelection(subscription.Universe, frontier, collection);
                     }
 

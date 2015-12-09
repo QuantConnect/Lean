@@ -133,7 +133,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var symbol = kvp.Key.Symbol;
                 
                 // keep count of all data points
-                count += list.Count;
+                if (list.Count == 1 && list[0] is BaseDataCollection)
+                {
+                    count += ((BaseDataCollection) list[0]).Data.Count;
+                }
+                else
+                {
+                    count += list.Count;
+                }
 
                 BaseData update = null;
                 var consolidatorUpdate = new List<BaseData>(list.Count);
