@@ -95,7 +95,7 @@
     <Compile Include="StressSymbolsAlgorithm.cs" />
     <Compile Include="StressSymbols.cs" />
     <Compile Include="TickDataFilteringAlgorithm.cs" />
-    <Compile Include="UniverseSelectionAlgorithm.cs" />
+    <Compile Include="EmaCrossUniverseSelectionAlgorithm.cs" />
     <Compile Include="UniverseSelectionRegressionAlgorithm.cs" />
     <Compile Include="UpdateOrderLiveTestAlgorithm.cs" />
     <Compile Include="UpdateOrderRegressionAlgorithm.cs" />

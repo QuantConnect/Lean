@@ -77,6 +77,8 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 SetHoldings(security.Symbol, 0.2m);
             }
+
+            _changes = SecurityChanges.None;
         }
 
         // this event fires whenever we have changes to our universe
