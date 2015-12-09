@@ -217,7 +217,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            Log.Trace("FileSystemDataFeed.AddSubscription(): Added " + security.Symbol.ToString() + " Start: " + utcStartTime + " End: " + utcEndTime);
+            Log.Trace("FileSystemDataFeed.AddSubscription(): Added " + security.Symbol.ID + " Start: " + utcStartTime + " End: " + utcEndTime);
 
             _subscriptions.AddOrUpdate(subscription.Security.Symbol,  subscription);
 
