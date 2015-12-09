@@ -96,7 +96,6 @@
     <Compile Include="Common\Data\Market\TradeBarTests.cs" />
     <Compile Include="Common\Data\SliceTests.cs" />
     <Compile Include="Common\Data\SubscriptionDataSourceTests.cs" />
-    <Compile Include="Common\HoldingTests.cs" />
     <Compile Include="Common\MarketTests.cs" />
     <Compile Include="Common\Orders\OrderJsonConverterTests.cs" />
     <Compile Include="Common\Scheduling\DateRulesTests.cs" />
