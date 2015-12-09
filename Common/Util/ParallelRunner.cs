@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Logging;
@@ -24,160 +25,125 @@ using QuantConnect.Logging;
 namespace QuantConnect.Util
 {
     /// <summary>
-    /// Starts a set number of threads that work can be scheduled to
+    /// Controller type used to schedule <see cref="IParallelRunnerWorkItem"/> instances
+    /// to run on dedicated runner threads
     /// </summary>
-    public class ParallelRunner : IDisposable
+    public class ParallelRunnerController : IDisposable
     {
-        private int _skipped;
-        private readonly ManualResetEvent _waitHandle = new ManualResetEvent(false);
-        private readonly BlockingCollection<Func<WorkResult>> _queue = new BlockingCollection<Func<WorkResult>>();
+        private Thread _processQueueThread;
+
+        private readonly int _threadCount;
+        private readonly object _sync = new object();
+        private readonly ManualResetEvent _waitHandle;
+        private readonly ParallelRunnerWorker[] _workers;
+        private readonly BlockingCollection<IParallelRunnerWorkItem> _holdQueue;
+        private readonly BlockingCollection<IParallelRunnerWorkItem> _processQueue;
 
         /// <summary>
-        /// Gets the wait handle for the execution
+        /// Gets a wait handle that can be used to wait for this controller
+        /// to finish all scheduled work
         /// </summary>
-        public WaitHandle WaitHandle
+        public WaitHandle WaitHandle 
         {
             get { return _waitHandle; }
         }
 
         /// <summary>
-        /// Get true if the operation has completed, false if it is still running.
+        /// Initializes a new instance of the <see cref="ParallelRunnerController"/> class
         /// </summary>
-        public bool IsCompleted
+        /// <param name="threadCount">The number of dedicated threads to spin up</param>
+        public ParallelRunnerController(int threadCount)
         {
-            get; private set;
+            _threadCount = threadCount;
+            _waitHandle = new ManualResetEvent(false);
+            _workers = new ParallelRunnerWorker[threadCount];
+            _holdQueue = new BlockingCollection<IParallelRunnerWorkItem>();
+            _processQueue = new BlockingCollection<IParallelRunnerWorkItem>();
         }
 
         /// <summary>
-        /// Schedules the specified delegate to run
+        /// Schedules the specified work item to run
         /// </summary>
-        /// <param name="work">The work item to be run</param>
-        public void Schedule(Func<WorkResult> work)
+        /// <param name="workItem">The work item to schedule</param>
+        public void Schedule(IParallelRunnerWorkItem workItem)
         {
-            _queue.Add(work);
+            if (workItem.IsReady) _processQueue.Add(workItem);
+            else _holdQueue.Add(workItem);
         }
-
         /// <summary>
-        /// Schedules the specified delegates to run
+        /// Starts this instance of <see cref="ParallelRunnerController"/>.
+        /// This method is indempotent
         /// </summary>
-        /// <param name="work">The work items to be scheduled</param>
-        public void Schedule(IEnumerable<Func<WorkResult>> work)
+        /// <param name="token">The cancellation token</param>
+        public void Start(CancellationToken token)
         {
-            foreach (var func in work)
+            WaitHandle[] waitHandles;
+            lock (_sync)
             {
-                Schedule(func);
-            }
-        }
-
-        /// <summary>
-        /// Starts the specified number of threads and returns an instance of <see cref="ParallelRunner"/>
-        /// that can be used to schedule delegates to run
-        /// </summary>
-        /// <param name="threadCount">The number of threads to run on</param>
-        /// <param name="token">Use for cancellation support</param>
-        /// <returns>A new instance of <see cref="ParallelRunner"/> that can be used to schedule work to run</returns>
-        public static ParallelRunner Run(int threadCount, CancellationToken token)
-        {
-            var parallel = new ParallelRunner();
-
-            Log.Trace("ParallelRunner.Execute(): Launching " + threadCount + " threads.");
-
-            var handles = new WaitHandle[threadCount];
-            for (int i = 0; i < threadCount; i++)
-            {
-                var manualResetEvent = new ManualResetEvent(false);
-                handles[i] = manualResetEvent;
-                var thread = new Thread(() =>
+                if (_workers[0] != null) return;
+                for (int i = 0; i < _threadCount; i++)
                 {
-                    try
-                    {
-                        parallel.ThreadEntry(token);
-                    }
-                    catch (OperationCanceledException err)
-                    {
-                        // do nothing if the token cancelled
-                        if (!token.IsCancellationRequested)
-                        {
-                            Log.Error(err);
-                        }
-                        else
-                        {
-                            Log.Trace("ParallelRunner.Execute(): Cancellation requested.");
-                        }
-                    }
-                    catch (Exception err)
-                    {
-                        Log.Error(err);
-                    }
-                    finally
-                    {
-                        manualResetEvent.Set();
-                    }
-                });
-                thread.Name = "ParallelRunner " + (i + 1);
-                thread.Start();
+                    var worker = new ParallelRunnerWorker(this, _processQueue);
+                    worker.Start(token);
+                    _workers[i] = worker;
+                }
+
+                waitHandles = _workers.Select(x => x.WaitHandle).ToArray();
             }
 
             Task.Run(() =>
             {
-                WaitHandle.WaitAll(handles);
-                parallel._waitHandle.Set();
+                WaitHandle.WaitAll(waitHandles);
+                _waitHandle.Set();
 
-                foreach (var handle in handles)
+                foreach (var worker in _workers)
                 {
-                    handle.Dispose();
+                    worker.Dispose();
                 }
-
-                parallel.IsCompleted = true;
 
             }, CancellationToken.None);
 
-            return parallel;
+            _processQueueThread = new Thread(() => ProcessHoldQueue(token));
+            _processQueueThread.Start();
         }
-
-        private void ThreadEntry(CancellationToken token)
+        /// <summary>
+        /// Processes the internal hold queue checking to see if work
+        /// items are ready to run
+        /// </summary>
+        /// <param name="token">The cancellation token</param>
+        private void ProcessHoldQueue(CancellationToken token)
         {
-            foreach (var workItem in _queue.GetConsumingEnumerable(token))
+            try
             {
-                if (token.IsCancellationRequested)
+                int count = 0;
+                foreach (var workItem in _holdQueue.GetConsumingEnumerable(token))
                 {
-                    break;
-                }
-
-                try
-                {
-                    var workResult = workItem();
-                    switch (workResult)
+                    if (workItem.IsReady)
                     {
-                        case WorkResult.Skipped:
-                            // throttle if we've skipped more than queue.Count
-                            if (Interlocked.Increment(ref _skipped) > _queue.Count) Thread.Sleep(1);
-                            _queue.Add(workItem, token);
-                            break;
-                        
-                        case WorkResult.Executed:
-                            if (_skipped != 0) Interlocked.Decrement(ref _skipped);_queue.Add(workItem, token);
-                            break;
-                        
-                        case WorkResult.Finalized:
-                            break;
-
-                        default:
-                            throw new ArgumentOutOfRangeException();
+                        _processQueue.Add(workItem, token);
+                        count = 0;
+                    }
+                    else
+                    {
+                        _holdQueue.Add(workItem, token);
+                        if (count++ > _holdQueue.Count)
+                        {
+                            count = 0;
+                            Thread.Sleep(1);
+                        }
                     }
                 }
-                catch (OperationCanceledException err)
-                {
-                    // do nothing if the token cancelled
-                    if (!token.IsCancellationRequested)
-                    {
-                        Log.Error(err);
-                    }
-                }
-                catch (Exception err)
+            }
+            catch (OperationCanceledException err)
+            {
+                if (!token.IsCancellationRequested)
                 {
                     Log.Error(err);
                 }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
             }
         }
 
@@ -187,28 +153,167 @@ namespace QuantConnect.Util
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            if (_waitHandle != null) _waitHandle.Dispose();
-            if (_queue != null) _queue.Dispose();
+            lock (_sync)
+            {
+                if (_holdQueue != null) _holdQueue.Dispose();
+                if (_processQueue != null) _processQueue.Dispose();
+                if (_processQueueThread != null && _processQueueThread.IsAlive) _processQueueThread.Abort();
+
+                foreach (var worker in _workers)
+                {
+                    worker.Dispose();
+                }
+
+                if (_waitHandle != null)
+                {
+                    _waitHandle.Set();
+                    _waitHandle.Dispose();
+                }
+            }
+        }
+    }
+    /// <summary>
+    /// Runner type used to run <see cref="IParallelRunnerWorkItem"/>
+    /// </summary>
+    public class ParallelRunnerWorker : IDisposable
+    {
+        private Thread _thread;
+        private readonly object _sync = new object();
+        private readonly ManualResetEvent _waitHandle;
+        private readonly ParallelRunnerController _controller;
+        private readonly BlockingCollection<IParallelRunnerWorkItem> _queue;
+        /// <summary>
+        /// Gets a wait handle that can be used to wait for this worker
+        /// to finished all work in the queue, that is, when <see cref="BlockingCollection{T}.IsAddingCompleted"/> equals true.
+        /// </summary>
+        public WaitHandle WaitHandle
+        {
+            get { return _waitHandle; }
+        }
+        /// <summary>
+        /// Initialzies a new instance of the <see cref="ParallelRunnerWorker"/> class
+        /// </summary>
+        /// <param name="controller">The controller instance used to reschedule work items</param>
+        /// <param name="queue">The work queue where this worker will source the work items</param>
+        public ParallelRunnerWorker(ParallelRunnerController controller, BlockingCollection<IParallelRunnerWorkItem> queue)
+        {
+            _queue = queue;
+            _controller = controller;
+            _waitHandle = new ManualResetEvent(false);
+        }
+        /// <summary>
+        /// Starts a new thread to process the work queue.
+        /// This method is indempotent.
+        /// </summary>
+        /// <param name="token">The cancellation token</param>
+        public void Start(CancellationToken token)
+        {
+            lock (_sync)
+            {
+                if (_thread != null) return;
+                _thread = new Thread(() => ThreadEntry(token));
+                _thread.Start();
+            }
+        }
+        /// <summary>
+        /// Main entry point for the worker thread
+        /// </summary>
+        private void ThreadEntry(CancellationToken token)
+        {
+            try
+            {
+                foreach (var workItem in _queue.GetConsumingEnumerable(token))
+                {
+                    try
+                    {
+                        workItem.Execute();
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err);
+                    }
+                }
+            }
+            catch (OperationCanceledException err)
+            {
+                if (!token.IsCancellationRequested)
+                {
+                    Log.Error(err);
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+            finally
+            {
+                _waitHandle.Set();
+            }
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            lock (_sync)
+            {
+                if (_waitHandle != null) _waitHandle.Dispose();
+                if (_thread != null && _thread.IsAlive) _thread.Abort();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Result type class used to denote what to do with finished work items.
+    /// </summary>
+    public class ParallelRunnerWorkResult
+    {
+        public static readonly ParallelRunnerWorkResult Reenqueue = new ParallelRunnerWorkResult(true);
+        public static readonly ParallelRunnerWorkResult Finalized = new ParallelRunnerWorkResult(false);
+
+        public readonly bool ShouldReenqueue;
+
+        protected ParallelRunnerWorkResult(bool reenqueue)
+        {
+            ShouldReenqueue = reenqueue;
+        }
+    }
+
+    public interface IParallelRunnerWorkItem
+    {
+        /// <summary>
+        /// Determines if this work item is ready to be processed
+        /// </summary>
+        bool IsReady { get; }
 
         /// <summary>
-        /// Specifies the result from an operation
+        /// Executes this work item
         /// </summary>
-        public enum WorkResult
+        /// <returns>The result of execution</returns>
+        void Execute();
+    }
+
+    public sealed class FuncParallelRunnerWorkItem : IParallelRunnerWorkItem
+    {
+        private readonly Func<bool> _isReady;
+        private readonly Action _execute;
+
+        public bool IsReady
         {
-            /// <summary>
-            /// The operation was skipped
-            /// </summary>
-            Skipped,
-            /// <summary>
-            /// The operation completed execution
-            /// </summary>
-            Executed,
-            /// <summary>
-            /// The operation is finalized and will not be reenqueued
-            /// </summary>
-            Finalized
+            get { return _isReady(); }
+        }
+
+        public FuncParallelRunnerWorkItem(Func<bool> isReady, Action execute)
+        {
+            _isReady = isReady;
+            _execute = execute;
+        }
+
+        public void Execute()
+        {
+            _execute();
         }
     }
 }

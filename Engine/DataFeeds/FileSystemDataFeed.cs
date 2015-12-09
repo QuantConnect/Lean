@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class FileSystemDataFeed : IDataFeed
     {
         private IAlgorithm _algorithm;
-        private ParallelRunner _runner;
+        private ParallelRunnerController _controller;
         private IResultHandler _resultHandler;
         private Ref<TimeSpan> _fillForwardResolution;
         private SecurityChanges _changes = SecurityChanges.None;
@@ -79,7 +79,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             IsActive = true;
             var threadCount = Math.Max(1, Math.Min(4, Environment.ProcessorCount - 3));
-            _runner = ParallelRunner.Run(threadCount, _cancellationTokenSource.Token);
+            _controller = new ParallelRunnerController(threadCount);
+            _controller.Start(_cancellationTokenSource.Token);
 
             var ffres = Time.OneSecond;
             _fillForwardResolution = Ref.Create(() => ffres, res => ffres = res);
@@ -152,31 +153,53 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var enqueueable = new EnqueueableEnumerator<BaseData>(true);
 
             // add this enumerator to our exchange
-            ScheduleEnumerator(enumerator, enqueueable);
+            ScheduleEnumerator(enumerator, enqueueable, GetLowerThreshold(config.Resolution), GetUpperThreshold(config.Resolution));
 
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
             var subscription = new Subscription(universe, security, enqueueable, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, false);
             return subscription;
         }
 
-        private void ScheduleEnumerator(IEnumerator<BaseData> enumerator, EnqueueableEnumerator<BaseData> enqueueable)
+        private void ScheduleEnumerator(IEnumerator<BaseData> enumerator, EnqueueableEnumerator<BaseData> enqueueable, int lowerThreshold, int upperThreshold, int firstLoopCount = 5)
         {
-            _runner.Schedule(() =>
+            // schedule the work on the controller
+            var firstLoop = true;
+            FuncParallelRunnerWorkItem workItem = null;
+            workItem = new FuncParallelRunnerWorkItem(() => enqueueable.Count < lowerThreshold, () =>
             {
-                if (enqueueable.Count > 1000)
-                    return ParallelRunner.WorkResult.Skipped;
-
-                if (enumerator.MoveNext())
+                var count = 0;
+                while (enumerator.MoveNext())
                 {
+                    // drop the data into the back of the enqueueable
                     var collection = enumerator.Current as BaseDataCollection;
                     if (collection != null) enqueueable.EnqueueRange(collection.Data);
                     else enqueueable.Enqueue(enumerator.Current);
-                    return ParallelRunner.WorkResult.Executed;
+
+                    count++;
+
+                    // special behavior for first loop to spool up quickly
+                    if (firstLoop && count > firstLoopCount)
+                    {
+                        // there's more data in the enumerator, reschedule to run again
+                        firstLoop = false;
+                        _controller.Schedule(workItem);
+                        return;
+                    }
+
+                    // stop executing if we've dequeued more than the lower threshold or have
+                    // more total that upper threshold in the enqueueable's queue
+                    if (count > lowerThreshold || enqueueable.Count > upperThreshold)
+                    {
+                        // there's more data in the enumerator, reschedule to run again
+                        _controller.Schedule(workItem);
+                        return;
+                    }
                 }
 
+                // we made it here because MoveNext returned false, stop the enqueueable and don't reschedule
                 enqueueable.Stop();
-                return ParallelRunner.WorkResult.Finalized;
             });
+            _controller.Schedule(workItem);
         }
 
         /// <summary>
@@ -239,7 +262,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             try
             {
-                _runner.WaitHandle.WaitOne();
+                _controller.WaitHandle.WaitOne();
             }
             catch (Exception err)
             {
@@ -252,7 +275,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             finally
             {
                 Log.Trace("FileSystemDataFeed.Run(): Ending Thread... ");
-                if (_runner != null) _runner.Dispose();
+                if (_controller != null) _controller.Dispose();
                 IsActive = false;
             }
         }
@@ -328,23 +351,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enqueueable = new EnqueueableEnumerator<BaseData>(true);
 
                 // add this enumerator to our exchange
-                ScheduleEnumerator(enumerator, enqueueable);
+                ScheduleEnumerator(enumerator, enqueueable, GetLowerThreshold(config.Resolution), GetUpperThreshold(config.Resolution));
 
                 enumerator = enqueueable;
             }
             else if (config.Type == typeof (CoarseFundamental))
             {
-                // performance improvement for coarse, preload all the data
-                var list = new List<BaseData>();
                 var cf = new CoarseFundamental();
-                foreach (var date in Time.EachTradeableDay(security, _algorithm.StartDate, _algorithm.EndDate))
-                {
-                    var factory = new BaseDataSubscriptionFactory(config, date, false);
-                    var source = cf.GetSource(config, date, false);
-                    var coarseFundamentalForDate = factory.Read(source);
-                    list.AddRange(coarseFundamentalForDate);
-                }
-                enumerator = list.GetEnumerator();
+
+                var enqueueable = new EnqueueableEnumerator<BaseData>(true);
+
+                // load coarse data day by day
+                var coarse = from date in Time.EachTradeableDay(security, _algorithm.StartDate, _algorithm.EndDate)
+                             let factory = new BaseDataSubscriptionFactory(config, date, false)
+                             let source = cf.GetSource(config, date, false)
+                             let coarseFundamentalForDate = factory.Read(source)
+                             select new BaseDataCollection(date, config.Symbol, coarseFundamentalForDate);
+
+                
+                ScheduleEnumerator(coarse.GetEnumerator(), enqueueable, 5, 100000, 2);
+
+                enumerator = enqueueable;
             }
             else
             {
@@ -355,7 +382,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enqueueable = new EnqueueableEnumerator<BaseData>(true);
 
                 // add this enumerator to our exchange
-                ScheduleEnumerator(enumerator, enqueueable);
+                ScheduleEnumerator(enumerator, enqueueable, GetLowerThreshold(config.Resolution), GetUpperThreshold(config.Resolution));
 
                 enumerator = enqueueable;
             }
@@ -458,6 +485,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+
+        private int GetLowerThreshold(Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Resolution.Tick: return 500;
+                case Resolution.Second: return 250;
+                case Resolution.Minute: return 100;
+                case Resolution.Hour: return 18;
+                case Resolution.Daily: return 5;
+                default:
+                    throw new ArgumentOutOfRangeException("resolution", resolution, null);
+            }
+        }
+
+        private int GetUpperThreshold(Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Resolution.Tick: return 10000;
+                case Resolution.Second: return 5000;
+                case Resolution.Minute: return 1200;
+                case Resolution.Hour: return 100;
+                case Resolution.Daily: return 50;
+                default:
+                    throw new ArgumentOutOfRangeException("resolution", resolution, null);
+            }
         }
     }
 }
