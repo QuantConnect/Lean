@@ -51,6 +51,7 @@
     <Compile Include="BasicTemplateAlgorithm.cs" />
     <Compile Include="Benchmarks\EmptyMinute400EquityAlgorithm.cs" />
     <Compile Include="Benchmarks\Symbols.cs" />
+    <Compile Include="CoarseUniverseTop5DollarVolumeAlgorithm.cs" />
     <Compile Include="CustomBenchmarkAlgorithm.cs" />
     <Compile Include="CustomBrokerageMessageHandlerAlgorithm.cs" />
     <Compile Include="CustomDataRegressionAlgorithm.cs" />
