@@ -477,7 +477,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var config = universe.Configuration;
 
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-            var exchangeHours = marketHoursDatabase.GetExchangeHours(universe.Market, config.Symbol, universe.SecurityType);
+            var exchangeHours = marketHoursDatabase.GetExchangeHours(config);
 
             // create a canonical security object
             var security = new Security(exchangeHours, config, universe.SubscriptionSettings.Leverage);
