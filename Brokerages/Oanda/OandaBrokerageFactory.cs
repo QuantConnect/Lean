@@ -75,6 +75,14 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
+        /// Gets a new instance of the <see cref="OandaBrokerageModel"/>
+        /// </summary>
+        public override IBrokerageModel BrokerageModel
+        {
+            get { return new OandaBrokerageModel(); }
+        }
+
+        /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
         public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets

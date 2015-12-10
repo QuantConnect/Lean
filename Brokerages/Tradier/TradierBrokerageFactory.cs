@@ -151,6 +151,14 @@ namespace QuantConnect.Brokerages.Tradier
         }
 
         /// <summary>
+        /// Gets a new instance of the <see cref="TradierBrokerageModel"/>
+        /// </summary>
+        public override IBrokerageModel BrokerageModel
+        {
+            get { return new TradierBrokerageModel(); }
+        }
+
+        /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
         public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets

@@ -48,6 +48,14 @@ namespace QuantConnect.Brokerages.Paper
         }
 
         /// <summary>
+        /// Gets a new instance of the <see cref="InteractiveBrokersBrokerageModel"/>
+        /// </summary>
+        public IBrokerageModel BrokerageModel
+        {
+            get { return new InteractiveBrokersBrokerageModel(); }
+        }
+
+        /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
         public IReadOnlyDictionary<SecurityType, string> DefaultMarkets
