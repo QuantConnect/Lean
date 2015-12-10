@@ -153,6 +153,17 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 resultHandler.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Initializing, "Initializing algorithm...");
 
+                try
+                {
+                    // find the correct brokerage factory based on the specified brokerage in the live job packet
+                    _factory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err, "Error resolving brokerage factory for " + liveJob.Brokerage + ":");
+                    AddInitializationError("Unable to locate factory for brokerage: " + liveJob.Brokerage);
+                }
+
                 //Execute the initialize code:
                 var isolator = new Isolator();
                 var initializeComplete = isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(300), () =>
@@ -175,7 +186,8 @@ namespace QuantConnect.Lean.Engine.Setup
                                 algorithm.SetAssetLimits(50, 25, 15);
                                 break;
                         }
-
+                        //Set our default markets
+                        algorithm.SetDefaultMarkets(_factory.DefaultMarkets.ToDictionary());
                         //Set our parameters
                         algorithm.SetParameters(job.Parameters);
                         //Algorithm is live, not backtesting:
@@ -202,16 +214,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     AddInitializationError("Initialization timed out.");
                     return false;
-                }
-                try
-                {
-                    // find the correct brokerage factory based on the specified brokerage in the live job packet
-                    _factory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err, "Error resolving brokerage factory for " + liveJob.Brokerage+":");
-                    AddInitializationError("Unable to locate factory for brokerage: " + liveJob.Brokerage);
                 }
 
                 // let the world know what we're doing since logging in can take a minute

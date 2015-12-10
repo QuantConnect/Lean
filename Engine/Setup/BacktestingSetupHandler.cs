@@ -28,6 +28,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -167,6 +168,8 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 try
                 {
+                    //Set our default markets
+                    algorithm.SetDefaultMarkets(BacktestingBrokerageFactory.DefaultMarketMap.ToDictionary());
                     //Set our parameters
                     algorithm.SetParameters(job.Parameters);
                     //Algorithm is backtesting, not live:
