@@ -290,6 +290,20 @@ namespace QuantConnect.Interfaces
         /// </summary>
         void PostInitialize();
 
+        /// <summary>
+        /// Gets the parameter with the specified name. If a parameter
+        /// with the specified name does not exist, null is returned
+        /// </summary>
+        /// <param name="name">The name of the parameter to get</param>
+        /// <returns>The value of the specified parameter, or null if not found</returns>
+        string GetParameter(string name);
+
+        /// <summary>
+        /// Sets the parameters from the dictionary
+        /// </summary>
+        /// <param name="parameters">Dictionary containing the parameter names to values</param>
+        void SetParameters(Dictionary<string, string> parameters);
+
         // <summary>
         // v1.0 Handler for Tick Events [DEPRECATED June-2014]
         // </summary>

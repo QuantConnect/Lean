@@ -29,6 +29,7 @@ using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
+using QuantConnect.Util;
 using SecurityTypeMarket = System.Tuple<QuantConnect.SecurityType, string>;
 
 namespace QuantConnect.Algorithm
@@ -70,6 +71,7 @@ namespace QuantConnect.Algorithm
         // warmup resolution variables
         private TimeSpan? _warmupTimeSpan;
         private int? _warmupBarCount;
+        private Dictionary<string, string> _parameters = new Dictionary<string, string>();
 
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
@@ -437,6 +439,28 @@ namespace QuantConnect.Algorithm
                 // just return the current price
                 Benchmark = new SecurityBenchmark(security);
             }
+        }
+
+        /// <summary>
+        /// Gets the parameter with the specified name. If a parameter
+        /// with the specified name does not exist, null is returned
+        /// </summary>
+        /// <param name="name">The name of the parameter to get</param>
+        /// <returns>The value of the specified parameter, or null if not found</returns>
+        public string GetParameter(string name)
+        {
+            string value;
+            return _parameters.TryGetValue(name, out value) ? value : null;
+        }
+
+        /// <summary>
+        /// Sets the parameters from the dictionary
+        /// </summary>
+        /// <param name="parameters">Dictionary containing the parameter names to values</param>
+        public void SetParameters(Dictionary<string, string> parameters)
+        {
+            // save off a copy
+            _parameters = parameters.ToDictionary();
         }
 
         /// <summary>
