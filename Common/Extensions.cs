@@ -22,6 +22,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using Newtonsoft.Json;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Securities;
@@ -570,21 +571,36 @@ namespace QuantConnect
         /// <returns>The converted value</returns>
         public static T ConvertTo<T>(this string value)
         {
-            var conversionType = typeof (T);
-            if (conversionType.IsEnum)
+            return (T) value.ConvertTo(typeof (T));
+        }
+
+        /// <summary>
+        /// Converts the specified string value into the specified type
+        /// </summary>
+        /// <param name="value">The string value to be converted</param>
+        /// <param name="type">The output type</param>
+        /// <returns>The converted value</returns>
+        public static object ConvertTo(this string value, Type type)
+        {
+            if (type.IsEnum)
             {
-                return (T) Enum.Parse(conversionType, value);
-            }
-            if (typeof (IConvertible).IsAssignableFrom(conversionType))
-            {
-                return (T)Convert.ChangeType(value, conversionType, CultureInfo.InvariantCulture);
-            }
-            if (typeof (TimeSpan) == conversionType)
-            {
-                return (T)(object)TimeSpan.Parse(value, CultureInfo.InvariantCulture);
+                return Enum.Parse(type, value);
             }
 
-            throw new ArgumentException("Extensions.ConvertTo is unable to convert to type: " + typeof (T).Name);
+            if (typeof (IConvertible).IsAssignableFrom(type))
+            {
+                return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
+            }
+
+            // try and find a static parse method
+            var parse = type.GetMethod("Parse", new[] {typeof (string)});
+            if (parse != null)
+            {
+                var result = parse.Invoke(null, new object[] {value});
+                return result;
+            }
+
+            return JsonConvert.DeserializeObject(value, type);
         }
 
         /// <summary>
