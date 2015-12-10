@@ -16,6 +16,7 @@
  * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
 using System.IO;
 using System.Net;
 using System.Runtime.Serialization.Json;
@@ -37,6 +38,7 @@ namespace QuantConnect.Brokerages.Oanda.Session
         protected readonly int _accountId;
         private WebResponse _response;
         private bool _shutdown;
+        private Task _runningTask;
 
         protected StreamSession(int accountId)
         {
@@ -58,10 +60,9 @@ namespace QuantConnect.Brokerages.Oanda.Session
             _shutdown = false;
             _response = await GetSession();
 
-
-            Task.Run(() =>
+            _runningTask = Task.Run(() =>
             {
-                var serializer = new DataContractJsonSerializer(typeof (T));
+                var serializer = new DataContractJsonSerializer(typeof(T));
                 var reader = new StreamReader(_response.GetResponseStream());
                 while (!_shutdown)
                 {
@@ -79,13 +80,26 @@ namespace QuantConnect.Brokerages.Oanda.Session
                         OnDataReceived(data);
                     }
                 }
-            }
-                );
+            });
         }
 
         public void StopSession()
         {
             _shutdown = true;
+
+            // wait for task to finish
+            if (_runningTask != null)
+            {
+                _runningTask.Wait();
+            }
+
+            // close and dispose of previous session
+            var httpResponse = _response as HttpWebResponse;
+            if (httpResponse != null)
+            {
+                httpResponse.Close();
+                httpResponse.Dispose();
+            }
         }
     }
 #pragma warning restore 1591

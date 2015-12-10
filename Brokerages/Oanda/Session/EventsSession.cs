@@ -16,6 +16,7 @@
  * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
@@ -29,14 +30,17 @@ namespace QuantConnect.Brokerages.Oanda.Session
     /// </summary>
     public class EventsSession : StreamSession<Event>
     {
-        public EventsSession(int accountId)
+        private readonly OandaBrokerage _brokerage;
+
+        public EventsSession(OandaBrokerage brokerage, int accountId)
             : base(accountId)
         {
+            _brokerage = brokerage;
         }
 
         protected override async Task<WebResponse> GetSession()
         {
-            return await OandaBrokerage.StartEventsSession(new List<int> {_accountId});
+            return await _brokerage.StartEventsSession(new List<int> {_accountId});
         }
     }
 #pragma warning restore 1591

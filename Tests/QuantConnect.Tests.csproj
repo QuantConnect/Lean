@@ -82,6 +82,7 @@
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersSymbolMapperTests.cs" />
     <Compile Include="Brokerages\LimitOrderTestParameters.cs" />
     <Compile Include="Brokerages\MarketOrderTestParameters.cs" />
+    <Compile Include="Brokerages\Oanda\OandaBrokerageDataQueueHandlerTests.cs" />
     <Compile Include="Brokerages\Oanda\OandaBrokerageTests.cs" />
     <Compile Include="Brokerages\Oanda\OandaSymbolMapperTests.cs" />
     <Compile Include="Brokerages\OrderProvider.cs" />

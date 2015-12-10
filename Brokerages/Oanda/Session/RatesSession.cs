@@ -16,26 +16,32 @@
  * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
+using System.Collections.Generic;
+using System.Net;
+using System.Threading.Tasks;
+using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Brokerages.Oanda.DataType.Communications;
 
-namespace QuantConnect.Brokerages.Oanda.DataType
+namespace QuantConnect.Brokerages.Oanda.Session
 {
 #pragma warning disable 1591
-    /// <summary>
-    /// Represents a Trade Data object containing the details of a trade.
-    /// </summary>
-    public class TradeData : Response
+    public class RatesSession : StreamSession<RateStreamResponse>
     {
-        public long id { get; set; }
-        public int units { get; set; }
-        public string side { get; set; }
-        public string instrument { get; set; }
-        public string time { get; set; }
-        public double price { get; set; }
-        public double takeProfit { get; set; }
-        public double stopLoss { get; set; }
-        public int trailingStop { get; set; }
-		public double trailingAmount { get; set; }
+        private readonly OandaBrokerage _brokerage;
+        private readonly List<Instrument> _instruments;
+
+        public RatesSession(OandaBrokerage brokerage, int accountId, List<Instrument> instruments)
+            : base(accountId)
+        {
+            _brokerage = brokerage;
+            _instruments = instruments;
+        }
+
+        protected override async Task<WebResponse> GetSession()
+        {
+            return await _brokerage.StartRatesSession(_instruments, _accountId);
+        }
     }
 #pragma warning restore 1591
 }

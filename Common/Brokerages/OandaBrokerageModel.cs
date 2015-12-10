@@ -41,15 +41,21 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        ///     Gets a new transaction model the represents this brokerage's fee structure and fill behavior
+        /// Gets a new transaction model that represents this brokerage's fee structure and fill behavior
         /// </summary>
         /// <param name="security">The security to get a transaction model for</param>
         /// <returns>The transaction model for this brokerage</returns>
         public override ISecurityTransactionModel GetTransactionModel(Security security)
         {
-            //TODO figure out how to incorporate the transaction fee model for Oanda
-            // everything return a zero fee model
-            return new ConstantFeeTransactionModel(0m);
+            switch (security.Type)
+            {
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    return new OandaTransactionModel();
+
+                default:
+                    throw new ArgumentOutOfRangeException("securityType", security.Type, null);
+            }
         }
     }
 }

@@ -16,26 +16,18 @@
  * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-using QuantConnect.Brokerages.Oanda.DataType.Communications;
 
-namespace QuantConnect.Brokerages.Oanda.DataType
+namespace QuantConnect.Brokerages.Oanda.DataType.Communications
 {
 #pragma warning disable 1591
-    /// <summary>
-    /// Represents a Trade Data object containing the details of a trade.
-    /// </summary>
-    public class TradeData : Response
+    public class RateStreamResponse : IHeartbeat
     {
-        public long id { get; set; }
-        public int units { get; set; }
-        public string side { get; set; }
-        public string instrument { get; set; }
-        public string time { get; set; }
-        public double price { get; set; }
-        public double takeProfit { get; set; }
-        public double stopLoss { get; set; }
-        public int trailingStop { get; set; }
-		public double trailingAmount { get; set; }
+        public Heartbeat heartbeat;
+        public Price tick;
+        public bool IsHeartbeat()
+        {
+            return (heartbeat != null);
+        }
     }
 #pragma warning restore 1591
 }
