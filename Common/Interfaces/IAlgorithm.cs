@@ -310,6 +310,15 @@ namespace QuantConnect.Interfaces
         /// <param name="defaultMarkets">A security typ to market string dictionary containing the default values</param>
         void SetDefaultMarkets(Dictionary<SecurityType, string> defaultMarkets);
 
+        /// <summary>
+        /// Sets the brokerage model used to resolve transaction models, settlement models,
+        /// and brokerage specified ordering behaviors.
+        /// </summary>
+        /// <param name="brokerageModel">The brokerage model used to emulate the real
+        /// brokerage</param>
+        /// <param name="accountType">Specifies if this is a margin or cash account</param>
+        void SetBrokerageModel(IBrokerageModel brokerageModel, AccountType accountType = AccountType.Margin);
+
         // <summary>
         // v1.0 Handler for Tick Events [DEPRECATED June-2014]
         // </summary>
