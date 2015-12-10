@@ -97,7 +97,7 @@ namespace QuantConnect.Configuration
                 Log.Trace(string.Format("Config.Get(): Configuration key not found. Key: {0} - Using default value: {1}", key, defaultValue));
                 return defaultValue;
             }
-            return token.Value<string>();
+            return token.ToString();
         }
 
         /// <summary>
