@@ -167,6 +167,8 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 try
                 {
+                    //Set our parameters
+                    algorithm.SetParameters(job.Parameters);
                     //Algorithm is backtesting, not live:
                     algorithm.SetLiveMode(false);
                     //Set the backtest level asset ram allocation limits

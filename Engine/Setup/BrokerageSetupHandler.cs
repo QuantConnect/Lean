@@ -176,6 +176,8 @@ namespace QuantConnect.Lean.Engine.Setup
                                 break;
                         }
 
+                        //Set our parameters
+                        algorithm.SetParameters(job.Parameters);
                         //Algorithm is live, not backtesting:
                         algorithm.SetLiveMode(true);
                         //Initialize the algorithm's starting date

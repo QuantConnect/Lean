@@ -26,6 +26,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Notifications;
 using QuantConnect.Orders;
+using QuantConnect.Parameters;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
@@ -459,8 +460,16 @@ namespace QuantConnect.Algorithm
         /// <param name="parameters">Dictionary containing the parameter names to values</param>
         public void SetParameters(Dictionary<string, string> parameters)
         {
-            // save off a copy
+            // save off a copy and try to apply the parameters
             _parameters = parameters.ToDictionary();
+            try
+            {
+                ParameterAttribute.ApplyAttributes(parameters, this);
+            }
+            catch (Exception err)
+            {
+                Error("Error applying parameter values: " + err.Message);
+            }
         }
 
         /// <summary>
