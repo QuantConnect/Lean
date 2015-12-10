@@ -144,8 +144,6 @@ namespace QuantConnect.Brokerages.Oanda
         {
             if (data.tick == null) return;
 
-            Log.Trace("{0}: {1} - {2} / {3}", data.tick.time, data.tick.instrument, data.tick.bid, data.tick.ask);
-
             var securityType = _symbolMapper.GetBrokerageSecurityType(data.tick.instrument);
             var symbol = _symbolMapper.GetLeanSymbol(data.tick.instrument, securityType, Market.Oanda);
             var time = GetDateTimeFromString(data.tick.time);
