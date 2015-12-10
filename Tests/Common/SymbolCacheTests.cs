@@ -67,5 +67,21 @@ namespace QuantConnect.Tests.Common
             Assert.IsFalse(SymbolCache.TryGetTicker(symbol, out ticker));
             Assert.AreEqual(default(string), ticker);
         }
+
+        [Test]
+        public void TryGetSymbolFromSidString()
+        {
+            var sid = Symbols.EURUSD.ID.ToString();
+            var symbol = SymbolCache.GetSymbol(sid);
+            Assert.AreEqual(Symbols.EURUSD, symbol);
+        }
+
+        [Test]
+        public void TryGetTickerFromUncachedSymbol()
+        {
+            var symbol = Symbol.Create("My Ticker", SecurityType.Equity, Market.USA);
+            var ticker = SymbolCache.GetTicker(symbol);
+            Assert.AreEqual(symbol.ID.ToString(), ticker);
+        }
     }
 }
