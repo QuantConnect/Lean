@@ -32,8 +32,8 @@ namespace QuantConnect.Brokerages.Oanda.DataType.Communications
 
 		public Order orderOpened { get; set; }
 		public TradeData tradeOpened { get; set; }
-		public List<Transaction> tradesClosed { get; set; } // TODO: verify this
-		public Transaction tradeReduced { get; set; } // TODO: verify this
+		public List<Transaction> tradesClosed { get; set; }
+		public Transaction tradeReduced { get; set; }
 	}
 #pragma warning restore 1591
 }

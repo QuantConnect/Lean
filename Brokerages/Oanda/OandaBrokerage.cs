@@ -159,97 +159,72 @@ namespace QuantConnect.Brokerages.Oanda
 
             PopulateOrderRequestParameters(order, requestParams);
 
-            Log.Trace(order.ToString());
-
-
-            var priorOrderPositions = GetTradeList(requestParams);
-
             var postOrderResponse = PostOrderAsync(requestParams);
+            if (postOrderResponse == null) 
+                return false;
 
-            if (postOrderResponse != null)
+            // if market order, find fill quantity and price
+            var marketOrderFillPrice = 0m;
+            if (order.Type == OrderType.Market)
             {
-                if (postOrderResponse.tradeOpened != null)
+                marketOrderFillPrice = Convert.ToDecimal(postOrderResponse.price);
+            }
+
+            var marketOrderFillQuantity = 0;
+            if (postOrderResponse.tradeOpened != null && postOrderResponse.tradeOpened.id > 0)
+            {
+                if (order.Type == OrderType.Market)
+                {
+                    marketOrderFillQuantity = postOrderResponse.tradeOpened.units;
+                }
+                else
                 {
                     order.BrokerId.Add(postOrderResponse.tradeOpened.id);
                 }
-                
-                if (postOrderResponse.tradeReduced != null)
+            }
+
+            if (postOrderResponse.tradeReduced != null && postOrderResponse.tradeReduced.id > 0)
+            {
+                if (order.Type == OrderType.Market)
+                {
+                    marketOrderFillQuantity = postOrderResponse.tradeReduced.units;
+                }
+                else
                 {
                     order.BrokerId.Add(postOrderResponse.tradeReduced.id);
                 }
+            }
 
-                if (postOrderResponse.orderOpened != null)
+            if (postOrderResponse.orderOpened != null && postOrderResponse.orderOpened.id > 0)
+            {
+                if (order.Type != OrderType.Market)
                 {
                     order.BrokerId.Add(postOrderResponse.orderOpened.id);
                 }
+            }
 
-                const int orderFee = 0;
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
-            } 
-            else
+            if (postOrderResponse.tradesClosed != null && postOrderResponse.tradesClosed.Count > 0)
             {
-                return false;
+                marketOrderFillQuantity += postOrderResponse.tradesClosed
+                    .Where(trade => order.Type == OrderType.Market)
+                    .Sum(trade => trade.units);
             }
 
-            // we need to determine if there was an existing order and wheter we closed it with market orders.
+            // send Submitted order event
+            const int orderFee = 0;
+            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
 
-            if (order.Type == OrderType.Market && order.Direction == OrderDirection.Buy)
+            if (order.Type == OrderType.Market)
             {
-                //assume that we are opening a new buy market order
-                if (postOrderResponse.tradeOpened != null && postOrderResponse.tradeOpened.id > 0)
+                // if market order, also send Filled order event
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee)
                 {
-                    var tradeOpenedId = postOrderResponse.tradeOpened.id;
-                    requestParams = new Dictionary<string, string>();
-                    var tradeListResponse = GetTradeList(requestParams);
-                    if (tradeListResponse.trades.Any(trade => trade.id == tradeOpenedId))
-                    {
-                        order.BrokerId.Add(tradeOpenedId);
-                        const int orderFee = 0;
-                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Filled });
-                    }
-                }
-
-                if (postOrderResponse.tradesClosed != null)
-                {
-                    var tradePositionClosedIds = postOrderResponse.tradesClosed.Select(tradesClosed => tradesClosed.id).ToList();
-                    var priorOrderPositionIds = priorOrderPositions.trades.Select(previousTrade => previousTrade.id).ToList();
-                    var verifyClosedOrder = tradePositionClosedIds.Intersect(priorOrderPositionIds).Count() == tradePositionClosedIds.Count();
-                    if (verifyClosedOrder)
-                    {
-                        const int orderFee = 0;
-                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Filled });
-                    }
-                }
+                    Status = OrderStatus.Filled,
+                    FillPrice = marketOrderFillPrice,
+                    FillQuantity = marketOrderFillQuantity * Math.Sign(order.Quantity)
+                });
             }
 
-            if (order.Type == OrderType.Market && order.Direction == OrderDirection.Sell)
-            {                
-                //assume that we are opening a new buy market order
-                if (postOrderResponse.tradeOpened != null && postOrderResponse.tradeOpened.id > 0)
-                {
-                    var tradeOpenedId = postOrderResponse.tradeOpened.id;
-                    requestParams = new Dictionary<string, string>();
-                    var tradeListResponse = GetTradeList(requestParams);
-                    if (tradeListResponse.trades.Any(trade => trade.id == tradeOpenedId))
-                    {
-                        order.BrokerId.Add(tradeOpenedId);
-                        const int orderFee = 0;
-                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Filled });
-                    }
-                }
-
-                if (postOrderResponse.tradesClosed != null)
-                {
-                    var tradePositionClosedIds = postOrderResponse.tradesClosed.Select(tradesClosed => tradesClosed.id).ToList();
-                    var priorOrderPositionIds = priorOrderPositions.trades.Select(previousTrade => previousTrade.id).ToList();
-                    var verifyClosedOrder = tradePositionClosedIds.Intersect(priorOrderPositionIds).Count() == tradePositionClosedIds.Count();
-                    if (verifyClosedOrder)
-                    {
-                        const int orderFee = 0;
-                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Filled });
-                    }
-                }
-            }
             return true;
         }
 
