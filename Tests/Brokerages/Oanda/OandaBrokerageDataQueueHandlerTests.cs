@@ -30,27 +30,17 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         {
             var brokerage = (OandaBrokerage)Brokerage;
 
-            brokerage.Subscribe(null, new Dictionary<SecurityType, List<Symbol>>
+            brokerage.Subscribe(null, new List<Symbol>
             {
-                { 
-                    SecurityType.Forex, new List<Symbol>
-                    {
-                        Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda), 
-                        Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda), 
-                    } 
-                }
+                Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda),
+                Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda),
             });
             Thread.Sleep(1000);
 
-            brokerage.Subscribe(null, new Dictionary<SecurityType, List<Symbol>>
+            brokerage.Subscribe(null, new List<Symbol>
             {
-                { 
-                    SecurityType.Forex, new List<Symbol>
-                    {
-                        Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), 
-                        Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda), 
-                    } 
-                }
+                Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda),
+                Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda),
             });
 
             Thread.Sleep(20000);
@@ -60,16 +50,11 @@ namespace QuantConnect.Tests.Brokerages.Oanda
                 Log.Trace("{0}: {1} - {2} / {3}", tick.Time, tick.Symbol.Value, ((Tick)tick).BidPrice, ((Tick)tick).AskPrice);
             }
 
-            brokerage.Unsubscribe(null, new Dictionary<SecurityType, List<Symbol>>
+            brokerage.Unsubscribe(null, new List<Symbol>
             {
-                { 
-                    SecurityType.Forex, new List<Symbol>
-                    {
-                        Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda), 
-                        Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda), 
-                        Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda), 
-                    } 
-                }
+                Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda),
+                Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda),
+                Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda),
             });
 
             Thread.Sleep(20000);

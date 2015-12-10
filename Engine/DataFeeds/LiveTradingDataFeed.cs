@@ -175,10 +175,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // unless it is custom data, custom data is retrieved using the same as backtest
             if (!subscription.Configuration.IsCustomData)
             {
-                _dataQueueHandler.Subscribe(_job, new Dictionary<SecurityType, List<Symbol>>
-                {
-                    {security.Type, new List<Symbol> {security.Symbol}}
-                });
+                _dataQueueHandler.Subscribe(_job, new[] {security.Symbol});
             }
 
             // keep track of security changes, we emit these to the algorithm
@@ -205,10 +202,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // request to unsubscribe from the subscription
             if (!security.SubscriptionDataConfig.IsCustomData)
             {
-                _dataQueueHandler.Unsubscribe(_job, new Dictionary<SecurityType, List<Symbol>>
-                {
-                    {security.Type, new List<Symbol> {security.Symbol}}
-                });
+                _dataQueueHandler.Unsubscribe(_job, new[] {security.Symbol});
             }
 
             // remove the subscription from our collection
@@ -503,10 +497,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // since we're binding to the data queue exchange we'll need to let him
                 // know that we expect this data
-                _dataQueueHandler.Subscribe(_job, new Dictionary<SecurityType, List<Symbol>>
-                {
-                    {config.SecurityType, new List<Symbol>{config.Symbol}}
-                });
+                _dataQueueHandler.Subscribe(_job, new[] {security.Symbol});
 
                 var enqueable = new EnqueueableEnumerator<BaseData>();
                 _exchange.SetDataHandler(config.Symbol, data =>

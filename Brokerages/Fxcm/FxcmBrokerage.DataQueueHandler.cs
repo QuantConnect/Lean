@@ -53,10 +53,9 @@ namespace QuantConnect.Brokerages.Fxcm
         /// </summary>
         /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IDictionary<SecurityType, List<Symbol>> symbols)
+        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            var symbolsToSubscribe = (from secType in symbols 
-                                      from symbol in secType.Value 
+            var symbolsToSubscribe = (from symbol in symbols 
                                       where !_subscribedSymbols.Contains(symbol) 
                                       select symbol).ToList();
             if (symbolsToSubscribe.Count == 0)
@@ -88,10 +87,9 @@ namespace QuantConnect.Brokerages.Fxcm
         /// </summary>
         /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IDictionary<SecurityType, List<Symbol>> symbols)
+        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            var symbolsToUnsubscribe = (from secType in symbols 
-                                        from symbol in secType.Value 
+            var symbolsToUnsubscribe = (from symbol in symbols 
                                         where _subscribedSymbols.Contains(symbol) 
                                         select symbol).ToList();
             if (symbolsToUnsubscribe.Count == 0)

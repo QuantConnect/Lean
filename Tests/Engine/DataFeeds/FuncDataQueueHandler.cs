@@ -64,14 +64,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// </summary>
         /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IDictionary<SecurityType, List<Symbol>> symbols)
+        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            foreach (var kvp in symbols)
+            foreach (var symbol in symbols)
             {
-                foreach (var symbol in kvp.Value)
-                {
-                    lock (_lock) _subscriptions.Add(symbol);
-                }
+                lock (_lock) _subscriptions.Add(symbol);
             }
         }
 
@@ -80,14 +77,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         /// </summary>
         /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IDictionary<SecurityType, List<Symbol>> symbols)
+        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            foreach (var kvp in symbols)
+            foreach (var symbol in symbols)
             {
-                foreach (var symbol in kvp.Value)
-                {
-                    lock (_lock) _subscriptions.Remove(symbol);
-                }
+                lock (_lock) _subscriptions.Remove(symbol);
             }
         }
     }
