@@ -162,6 +162,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     Log.Error(err, "Error resolving brokerage factory for " + liveJob.Brokerage + ":");
                     AddInitializationError("Unable to locate factory for brokerage: " + liveJob.Brokerage);
+                    return false;
                 }
 
                 //Execute the initialize code:
@@ -186,6 +187,8 @@ namespace QuantConnect.Lean.Engine.Setup
                                 algorithm.SetAssetLimits(50, 25, 15);
                                 break;
                         }
+                        //Set the default brokerage model before initialize
+                        algorithm.SetBrokerageModel(_factory.BrokerageModel);
                         //Set our default markets
                         algorithm.SetDefaultMarkets(_factory.DefaultMarkets.ToDictionary());
                         //Set our parameters
