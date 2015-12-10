@@ -150,6 +150,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         settings.Leverage,
                         settings.ExtendedMarketHours,
                         false,
+                        false,
                         false);
                 }
 

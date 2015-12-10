@@ -431,7 +431,8 @@ namespace QuantConnect.Securities
             decimal leverage,
             bool extendedMarketHours,
             bool isInternalFeed,
-            bool isCustomData)
+            bool isCustomData,
+            bool addToSymbolCache = true)
         {
             var sid = symbol.ID;
 
@@ -445,7 +446,7 @@ namespace QuantConnect.Securities
             }
 
             // add the symbol to our cache
-            SymbolCache.Set(symbol.Value, symbol);
+            if (addToSymbolCache) SymbolCache.Set(symbol.Value, symbol);
 
             //Add the symbol to Data Manager -- generate unified data streams for algorithm events
             var config = subscriptionManager.Add(factoryType, symbol, resolution, dataTimeZone, exchangeHours.TimeZone, isCustomData, fillDataForward,
@@ -498,7 +499,8 @@ namespace QuantConnect.Securities
             decimal leverage,
             bool extendedMarketHours,
             bool isInternalFeed,
-            bool isCustomData)
+            bool isCustomData,
+            bool addToSymbolCache = true)
         {
             var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
