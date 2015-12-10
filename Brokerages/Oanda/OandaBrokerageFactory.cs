@@ -28,9 +28,22 @@ namespace QuantConnect.Brokerages.Oanda
     public class OandaBrokerageFactory: BrokerageFactory
     {
         /// <summary>
+        /// The default markets for the fxcm brokerage
+        /// </summary>
+        public static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
+        {
+            {SecurityType.Base, Market.USA},
+            {SecurityType.Equity, Market.USA},
+            {SecurityType.Option, Market.USA},
+            {SecurityType.Forex, Market.Oanda},
+            {SecurityType.Cfd, Market.Oanda}
+        }.ToReadOnlyDictionary();
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OandaBrokerageFactory"/> class.
         /// </summary>
-        public OandaBrokerageFactory() : base(typeof(OandaBrokerage))
+        public OandaBrokerageFactory() 
+            : base(typeof(OandaBrokerage))
         {
         }
 
@@ -59,6 +72,14 @@ namespace QuantConnect.Brokerages.Oanda
                     { "oanda-account-id", Config.Get("oanda-account-id") }
                 };
             }
+        }
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets
+        {
+            get { return DefaultMarketMap; }
         }
 
         /// <summary>

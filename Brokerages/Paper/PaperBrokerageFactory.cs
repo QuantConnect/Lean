@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
@@ -44,6 +45,14 @@ namespace QuantConnect.Brokerages.Paper
         public Dictionary<string, string> BrokerageData
         {
             get { return new Dictionary<string, string>(); }
+        }
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public IReadOnlyDictionary<SecurityType, string> DefaultMarkets
+        {
+            get { return BacktestingBrokerageFactory.DefaultMarketMap; }
         }
 
         /// <summary>

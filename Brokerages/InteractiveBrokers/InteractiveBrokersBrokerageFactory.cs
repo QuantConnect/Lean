@@ -30,6 +30,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     public class InteractiveBrokersBrokerageFactory : BrokerageFactory
     {
         /// <summary>
+        /// The default markets for the fxcm brokerage
+        /// </summary>
+        public static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
+        {
+            {SecurityType.Base, Market.USA},
+            {SecurityType.Equity, Market.USA},
+            {SecurityType.Option, Market.USA},
+            {SecurityType.Forex, Market.FXCM},
+            {SecurityType.Cfd, Market.FXCM}
+        }.ToReadOnlyDictionary();
+
+        /// <summary>
         /// Initializes a new instance of the InteractiveBrokersBrokerageFactory class
         /// </summary>
         public InteractiveBrokersBrokerageFactory()
@@ -55,6 +67,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 data.Add("ib-agent-description", Config.Get("ib-agent-description"));
                 return data;
             }
+        }
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets
+        {
+            get { return DefaultMarketMap; }
         }
 
         /// <summary>

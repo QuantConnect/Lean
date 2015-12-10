@@ -31,6 +31,18 @@ namespace QuantConnect.Brokerages.Fxcm
         private const string DefaultTerminal = "Demo";
 
         /// <summary>
+        /// The default markets for the fxcm brokerage
+        /// </summary>
+        public static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
+        {
+            {SecurityType.Base, Market.USA},
+            {SecurityType.Equity, Market.USA},
+            {SecurityType.Option, Market.USA},
+            {SecurityType.Forex, Market.FXCM},
+            {SecurityType.Cfd, Market.FXCM}
+        }.ToReadOnlyDictionary();
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="FxcmBrokerageFactory"/> class
         /// </summary>
         public FxcmBrokerageFactory()
@@ -58,6 +70,14 @@ namespace QuantConnect.Brokerages.Fxcm
                     { "fxcm-account-id", Config.Get("fxcm-account-id") }
                 };
             }
+        }
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets
+        {
+            get { return DefaultMarketMap; }
         }
 
         /// <summary>

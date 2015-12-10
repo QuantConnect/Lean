@@ -41,6 +41,11 @@ namespace QuantConnect.Interfaces
         Dictionary<string, string> BrokerageData { get; }
 
         /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; }
+
+            /// <summary>
         /// Creates a new IBrokerage instance
         /// </summary>
         /// <param name="job">The job packet to create the brokerage for</param>
