@@ -276,7 +276,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             var universe = subscription.Universe;
 
                             // always wait for other thread to sync up
-                            if (!_bridge.Wait(Timeout.Infinite, _cancellationTokenSource.Token))
+                            if (!_bridge.WaitHandle.WaitOne(Timeout.Infinite, _cancellationTokenSource.Token))
                             {
                                 break;
                             }

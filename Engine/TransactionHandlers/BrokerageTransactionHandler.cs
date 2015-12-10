@@ -26,6 +26,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
@@ -34,7 +35,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// </summary>
     public class BrokerageTransactionHandler : ITransactionHandler
     {
-        private bool _exitTriggered;
         private IAlgorithm _algorithm;
         private IBrokerage _brokerage;
         private bool _syncedLiveBrokerageCashToday;
@@ -49,7 +49,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// OrderQueue holds the newly updated orders from the user algorithm waiting to be processed. Once
         /// orders are processed they are moved into the Orders queue awaiting the brokerage response.
         /// </summary>
-        private readonly ConcurrentQueue<OrderRequest> _orderRequestQueue = new ConcurrentQueue<OrderRequest>();
+        private readonly BusyBlockingCollection<OrderRequest> _orderRequestQueue = new BusyBlockingCollection<OrderRequest>();
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
         /// The orders dictionary holds orders which are sent to exchange, partially filled, completely filled or cancelled.
@@ -65,7 +66,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private readonly ConcurrentDictionary<int, OrderTicket> _orderTickets = new ConcurrentDictionary<int, OrderTicket>();
 
         private IResultHandler _resultHandler;
-        private readonly ManualResetEventSlim _processingCompletedEvent = new ManualResetEventSlim(false);
 
         /// <summary>
         /// Gets the permanent storage for all orders
@@ -123,14 +123,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public bool IsActive { get; private set; }
 
-        /// <summary>
-        /// Reset event that signals when this order processor is not busy processing orders
-        /// </summary>
-        public ManualResetEventSlim ProcessingCompletedEvent
-        {
-            get { return _processingCompletedEvent; }
-        }
-
         #region Order Request Processing
 
         /// <summary>
@@ -173,7 +165,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // send the order to be processed after creating the ticket
             if (response.IsSuccess)
             {
-                _orderRequestQueue.Enqueue(request);
+                _orderRequestQueue.Add(request);
             }
             else
             {
@@ -227,7 +219,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else
                 {
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
-                    _orderRequestQueue.Enqueue(request);
+                    _orderRequestQueue.Add(request);
                 }
             }
             catch (Exception err)
@@ -287,7 +279,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     // send the request to be processed
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
-                    _orderRequestQueue.Enqueue(request);
+                    _orderRequestQueue.Add(request);
                 }
             }
             catch (Exception err)
@@ -374,20 +366,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             try
             {
-                while (!_exitTriggered)
+                foreach(var request in _orderRequestQueue.GetConsumingEnumerable(_cancellationTokenSource.Token))
                 {
-                    _processingCompletedEvent.Reset();
-
-                    OrderRequest request;
-                    if (!_orderRequestQueue.TryDequeue(out request))
-                    {
-                        _processingCompletedEvent.Set();
-
-                        // if it's empty just sleep this thread for a little bit
-                        Thread.Sleep(1);
-                        continue;
-                    }
-
                     OrderResponse response;
                     switch (request.OrderRequestType)
                     {
@@ -440,14 +420,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // in backtesting we need to wait for orders to be removed from the queue and finished processing
             if (!_algorithm.LiveMode)
             {
-                var spinWait = new SpinWait();
-                while (!_orderRequestQueue.IsEmpty)
+                if (!_orderRequestQueue.WaitHandle.WaitOne(Time.OneSecond, _cancellationTokenSource.Token))
                 {
-                    // spin wait until the queue is empty
-                    spinWait.SpinOnce();
+                    Log.Error("BrokerageTransactionHandler.ProcessSynchronousEvents(): Timed out waiting for request queue to finish processing.");
                 }
-                // now wait for completed processing to signal
-                _processingCompletedEvent.Wait();
                 return;
             }
 
@@ -577,7 +553,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public void Exit()
         {
-            _exitTriggered = true;
+            _cancellationTokenSource.Cancel();
         }
 
         /// <summary>

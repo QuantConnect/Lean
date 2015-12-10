@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
@@ -40,6 +41,7 @@ namespace QuantConnect.Orders
         private readonly int _orderId;
         private readonly List<OrderEvent> _orderEvents; 
         private readonly SubmitOrderRequest _submitRequest;
+        private readonly ManualResetEvent _orderFilledEvent;
         private readonly List<UpdateOrderRequest> _updateRequests;
 
         // we pull this in to provide some behavior/simplicity to the ticket API
@@ -178,6 +180,14 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Gets a wait handle that can be used to wait until this order has filled
+        /// </summary>
+        public WaitHandle OrderFilled
+        {
+            get { return _orderFilledEvent; }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OrderTicket"/> class
         /// </summary>
         /// <param name="transactionManager">The transaction manager used for submitting updates and cancels for this ticket</param>
@@ -190,6 +200,7 @@ namespace QuantConnect.Orders
 
             _orderEvents = new List<OrderEvent>();
             _updateRequests = new List<UpdateOrderRequest>();
+            _orderFilledEvent = new ManualResetEvent(false);
         }
 
         /// <summary>
@@ -296,6 +307,12 @@ namespace QuantConnect.Orders
                     var quantityWeightedFillPrice = _orderEvents.Where(x => x.Status.IsFill()).Sum(x => x.AbsoluteFillQuantity*x.FillPrice);
                     _averageFillPrice = quantityWeightedFillPrice/Math.Abs(_quantityFilled);
                 }
+            }
+
+            // fire the wait handle indicating this order is filled
+            if (orderEvent.Status == OrderStatus.Filled)
+            {
+                _orderFilledEvent.Set();
             }
         }
 

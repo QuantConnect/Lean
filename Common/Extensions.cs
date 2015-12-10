@@ -21,10 +21,11 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Timers;
+using System.Threading;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Securities;
+using Timer = System.Timers.Timer;
 
 namespace QuantConnect 
 {
@@ -584,6 +585,56 @@ namespace QuantConnect
             }
 
             throw new ArgumentException("Extensions.ConvertTo is unable to convert to type: " + typeof (T).Name);
+        }
+
+        /// <summary>
+        /// Blocks the current thread until the current <see cref="T:System.Threading.WaitHandle"/> receives a signal, while observing a <see cref="T:System.Threading.CancellationToken"/>.
+        /// </summary>
+        /// <param name="waitHandle">The wait handle to wait on</param>
+        /// <param name="cancellationToken">The <see cref="T:System.Threading.CancellationToken"/> to observe.</param>
+        /// <exception cref="T:System.InvalidOperationException">The maximum number of waiters has been exceeded.</exception>
+        /// <exception cref="T:System.OperationCanceledExcepton"><paramref name="cancellationToken"/> was canceled.</exception>
+        /// <exception cref="T:System.ObjectDisposedException">The object has already been disposed or the <see cref="T:System.Threading.CancellationTokenSource"/> that created <paramref name="cancellationToken"/> has been disposed.</exception>
+        public static bool WaitOne(this WaitHandle waitHandle, CancellationToken cancellationToken)
+        {
+            return waitHandle.WaitOne(Timeout.Infinite, cancellationToken);
+        }
+
+        /// <summary>
+        /// Blocks the current thread until the current <see cref="T:System.Threading.WaitHandle"/> is set, using a <see cref="T:System.TimeSpan"/> to measure the time interval, while observing a <see cref="T:System.Threading.CancellationToken"/>.
+        /// </summary>
+        /// 
+        /// <returns>
+        /// true if the <see cref="T:System.Threading.WaitHandle"/> was set; otherwise, false.
+        /// </returns>
+        /// <param name="waitHandle">The wait handle to wait on</param>
+        /// <param name="timeout">A <see cref="T:System.TimeSpan"/> that represents the number of milliseconds to wait, or a <see cref="T:System.TimeSpan"/> that represents -1 milliseconds to wait indefinitely.</param>
+        /// <param name="cancellationToken">The <see cref="T:System.Threading.CancellationToken"/> to observe.</param>
+        /// <exception cref="T:System.Threading.OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="timeout"/> is a negative number other than -1 milliseconds, which represents an infinite time-out -or- timeout is greater than <see cref="F:System.Int32.MaxValue"/>.</exception>
+        /// <exception cref="T:System.InvalidOperationException">The maximum number of waiters has been exceeded. </exception><exception cref="T:System.ObjectDisposedException">The object has already been disposed or the <see cref="T:System.Threading.CancellationTokenSource"/> that created <paramref name="cancellationToken"/> has been disposed.</exception>
+        public static bool WaitOne(this WaitHandle waitHandle, TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            return waitHandle.WaitOne((int) timeout.TotalMilliseconds, cancellationToken);
+        }
+
+        /// <summary>
+        /// Blocks the current thread until the current <see cref="T:System.Threading.WaitHandle"/> is set, using a 32-bit signed integer to measure the time interval, while observing a <see cref="T:System.Threading.CancellationToken"/>.
+        /// </summary>
+        /// 
+        /// <returns>
+        /// true if the <see cref="T:System.Threading.WaitHandle"/> was set; otherwise, false.
+        /// </returns>
+        /// <param name="waitHandle">The wait handle to wait on</param>
+        /// <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="F:System.Threading.Timeout.Infinite"/>(-1) to wait indefinitely.</param>
+        /// <param name="cancellationToken">The <see cref="T:System.Threading.CancellationToken"/> to observe.</param>
+        /// <exception cref="T:System.Threading.OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="millisecondsTimeout"/> is a negative number other than -1, which represents an infinite time-out.</exception>
+        /// <exception cref="T:System.InvalidOperationException">The maximum number of waiters has been exceeded.</exception>
+        /// <exception cref="T:System.ObjectDisposedException">The object has already been disposed or the <see cref="T:System.Threading.CancellationTokenSource"/> that created <paramref name="cancellationToken"/> has been disposed.</exception>
+        public static bool WaitOne(this WaitHandle waitHandle, int millisecondsTimeout, CancellationToken cancellationToken)
+        {
+            return WaitHandle.WaitAny(new[] { waitHandle, cancellationToken.WaitHandle }, millisecondsTimeout) == 0;
         }
     }
 }
