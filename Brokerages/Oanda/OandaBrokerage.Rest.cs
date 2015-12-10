@@ -170,14 +170,7 @@ namespace QuantConnect.Brokerages.Oanda
             if (order != null && order.id > 0)
             {
                 var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + _accountId + "/orders/" + orderId;
-                try
-                {
-                    MakeRequestWithBody<DataType.Order>(requestString, "PATCH", requestParams);
-
-                }
-                catch (Exception exception)
-                {
-                }
+                MakeRequestWithBody<DataType.Order>(requestString, "PATCH", requestParams);
             }
             else
             {
