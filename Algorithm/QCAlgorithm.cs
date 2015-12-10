@@ -1169,8 +1169,10 @@ namespace QuantConnect.Algorithm
             {
                 if (market == null)
                 {
-                    // set default values, use fxcm for forex, usa for everything else
-                    market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
+                    if (!_defaultMarkets.TryGetValue(securityType, out market))
+                    {
+                        throw new Exception("No default market set for security type: " + securityType);
+                    }
                 }
 
                 var symbolObject = QuantConnect.Symbol.Create(symbol, securityType, market);
