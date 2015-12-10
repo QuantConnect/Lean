@@ -304,6 +304,12 @@ namespace QuantConnect.Interfaces
         /// <param name="parameters">Dictionary containing the parameter names to values</param>
         void SetParameters(Dictionary<string, string> parameters);
 
+        /// <summary>
+        /// Sets the default markets to be used by the algorithm
+        /// </summary>
+        /// <param name="defaultMarkets">A security typ to market string dictionary containing the default values</param>
+        void SetDefaultMarkets(Dictionary<SecurityType, string> defaultMarkets);
+
         // <summary>
         // v1.0 Handler for Tick Events [DEPRECATED June-2014]
         // </summary>

@@ -73,6 +73,14 @@ namespace QuantConnect.Algorithm
         private TimeSpan? _warmupTimeSpan;
         private int? _warmupBarCount;
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
+        private Dictionary<SecurityType, string> _defaultMarkets = new Dictionary<SecurityType, string>
+        {
+            {SecurityType.Base, Market.USA},
+            {SecurityType.Equity, Market.USA},
+            {SecurityType.Option, Market.USA},
+            {SecurityType.Forex, Market.FXCM},
+            {SecurityType.Cfd, Market.FXCM}
+        };
 
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
@@ -135,29 +143,29 @@ namespace QuantConnect.Algorithm
         /// manages the properties of tradeable assets such as price, open and close time and holdings information.
         /// </summary>
         public SecurityManager Securities
-        { 
-            get; 
-            set; 
+        {
+            get;
+            set;
         }
 
         /// <summary>
         /// Portfolio object provieds easy access to the underlying security-holding properties; summed together in a way to make them useful.
         /// This saves the user time by providing common portfolio requests in a single 
         /// </summary>
-        public SecurityPortfolioManager Portfolio 
-        { 
-            get; 
-            set; 
+        public SecurityPortfolioManager Portfolio
+        {
+            get;
+            set;
         }
 
         /// <summary>
         /// Generic Data Manager - Required for compiling all data feeds in order, and passing them into algorithm event methods.
         /// The subscription manager contains a list of the data feed's we're subscribed to and properties of each data feed.
         /// </summary>
-        public SubscriptionManager SubscriptionManager 
-        { 
-            get; 
-            set; 
+        public SubscriptionManager SubscriptionManager
+        {
+            get;
+            set;
         }
 
         /// <summary>
@@ -184,7 +192,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public NotificationManager Notify
         {
-            get; 
+            get;
             set;
         }
 
@@ -193,7 +201,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public ScheduleManager Schedule
         {
-            get; 
+            get;
             private set;
         }
 
@@ -202,7 +210,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public AlgorithmStatus Status
         {
-            get; 
+            get;
             set;
         }
 
@@ -211,7 +219,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public TradeBuilder TradeBuilder
         {
-            get; 
+            get;
             private set;
         }
 
@@ -245,7 +253,7 @@ namespace QuantConnect.Algorithm
         /// the algorithm-id.
         /// </summary>
         /// <seealso cref="AlgorithmId"/>
-        public string Name 
+        public string Name
         {
             get;
             set;
@@ -282,9 +290,9 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <remarks>This property is set with SetStartDate() and defaults to the earliest QuantConnect data available - Jan 1st 1998. It is ignored during live trading </remarks>
         /// <seealso cref="SetStartDate(DateTime)"/>
-        public DateTime StartDate 
+        public DateTime StartDate
         {
-            get 
+            get
             {
                 return _startDate;
             }
@@ -295,9 +303,9 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <remarks> This property is set with SetEndDate() and defaults to today. It is ignored during live trading.</remarks>
         /// <seealso cref="SetEndDate(DateTime)"/>
-        public DateTime EndDate 
+        public DateTime EndDate
         {
-            get 
+            get
             {
                 return _endDate;
             }
@@ -307,9 +315,9 @@ namespace QuantConnect.Algorithm
         /// Algorithm Id for this backtest or live algorithm. 
         /// </summary>
         /// <remarks>A unique identifier for </remarks>
-        public string AlgorithmId 
+        public string AlgorithmId
         {
-            get 
+            get
             {
                 return _algorithmId;
             }
@@ -324,9 +332,9 @@ namespace QuantConnect.Algorithm
         /// </remark>
         /// <obsolete>The RunMode enum propert is now obsolete. All algorithms will default to RunMode.Series for series backtests.</obsolete>
         [Obsolete("The RunMode enum propert is now obsolete. All algorithms will default to RunMode.Series for series backtests.")]
-        public RunMode RunMode 
+        public RunMode RunMode
         {
-            get 
+            get
             {
                 return _runMode;
             }
@@ -350,11 +358,11 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Debug(string)"/>
         public List<string> DebugMessages
         {
-            get 
+            get
             {
                 return _debugMessages;
             }
-            set 
+            set
             {
                 _debugMessages = value;
             }
@@ -364,13 +372,13 @@ namespace QuantConnect.Algorithm
         /// Storage for log messages before the event handlers have passed control back to the Lean Engine.
         /// </summary>
         /// <seealso cref="Log(string)"/>
-        public List<string> LogMessages 
+        public List<string> LogMessages
         {
-            get 
+            get
             {
                 return _logMessages;
             }
-            set 
+            set
             {
                 _logMessages = value;
             }
@@ -404,7 +412,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="SetStartDate(DateTime)"/>
         /// <seealso cref="SetEndDate(DateTime)"/>
         /// <seealso cref="SetCash(decimal)"/>
-        public virtual void Initialize() 
+        public virtual void Initialize()
         {
             //Setup Required Data
             throw new NotImplementedException("Please override the Initialize() method");
@@ -422,7 +430,7 @@ namespace QuantConnect.Algorithm
                 // apply the default benchmark if it hasn't been set
                 if (_benchmarkSymbol == null || _benchmarkSymbol == QuantConnect.Symbol.Empty)
                 {
-                    _benchmarkSymbol = QuantConnect.Symbol.Create( "SPY", SecurityType.Equity, Market.USA);
+                    _benchmarkSymbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
                 }
 
                 // if the requested benchmark symbol wasn't already added, then add it now
@@ -470,6 +478,15 @@ namespace QuantConnect.Algorithm
             {
                 Error("Error applying parameter values: " + err.Message);
             }
+        }
+
+        /// <summary>
+        /// Sets the default markets to be used by the algorithm
+        /// </summary>
+        /// <param name="defaultMarkets">A security typ to market string dictionary containing the default values</param>
+        public void SetDefaultMarkets(Dictionary<SecurityType, string> defaultMarkets)
+        {
+            _defaultMarkets = new Dictionary<SecurityType, string>(defaultMarkets);
         }
 
         /// <summary>
