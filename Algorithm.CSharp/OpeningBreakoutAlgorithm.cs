@@ -140,10 +140,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             // initialize our charts
             var chart = new Chart(Symbol);
-            chart.AddSeries(new Series(ADX14.Name));
-            chart.AddSeries(new Series("Enter", SeriesType.Scatter));
-            chart.AddSeries(new Series("Exit", SeriesType.Scatter));
-            chart.AddSeries(new Series(PSARMin.Name, SeriesType.Scatter));
+            chart.AddSeries(new Series(ADX14.Name, SeriesType.Line, 0));
+            chart.AddSeries(new Series("Enter", SeriesType.Scatter, 0));
+            chart.AddSeries(new Series("Exit", SeriesType.Scatter, 0));
+            chart.AddSeries(new Series(PSARMin.Name, SeriesType.Scatter, 0));
             AddChart(chart);
 
             var history = History(Symbol, 20, Resolution.Daily);

@@ -179,9 +179,9 @@ namespace QuantConnect.Lean.Engine.Results
             _startTime = DateTime.Now;
 
             //Default charts:
-            Charts.AddOrUpdate("Strategy Equity", new Chart("Strategy Equity", ChartType.Stacked));
-            Charts["Strategy Equity"].Series.Add("Equity", new Series("Equity", SeriesType.Candle));
-            Charts["Strategy Equity"].Series.Add("Daily Performance", new Series("Daily Performance", SeriesType.Bar, "%"));
+            Charts.AddOrUpdate("Strategy Equity", new Chart("Strategy Equity"));
+            Charts["Strategy Equity"].Series.Add("Equity", new Series("Equity", SeriesType.Candle, 0, "$"));
+            Charts["Strategy Equity"].Series.Add("Daily Performance", new Series("Daily Performance", SeriesType.Bar, 1, "%"));
         }
 
         /// <summary>
@@ -602,26 +602,26 @@ namespace QuantConnect.Lean.Engine.Results
         /// Add a sample to the chart specified by the chartName, and seriesName.
         /// </summary>
         /// <param name="chartName">String chart name to place the sample.</param>
-        /// <param name="chartType">Type of chart we should create if it doesn't already exist.</param>
+        /// <param name="seriesIndex">Type of chart we should create if it doesn't already exist.</param>
         /// <param name="seriesName">Series name for the chart.</param>
         /// <param name="seriesType">Series type for the chart.</param>
         /// <param name="time">Time for the sample</param>
         /// <param name="unit">Unit of the sample</param>
         /// <param name="value">Value for the chart sample.</param>
-        public void Sample(string chartName, ChartType chartType, string seriesName, SeriesType seriesType, DateTime time, decimal value, string unit = "$") 
+        public void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$") 
         {
             lock (_chartLock)
             {
                 //Add a copy locally:
                 if (!Charts.ContainsKey(chartName))
                 {
-                    Charts.AddOrUpdate(chartName, new Chart(chartName, chartType));
+                    Charts.AddOrUpdate(chartName, new Chart(chartName));
                 }
 
                 //Add the sample to our chart:
                 if (!Charts[chartName].Series.ContainsKey(seriesName)) 
                 {
-                    Charts[chartName].Series.Add(seriesName, new Series(seriesName, seriesType, unit));
+                    Charts[chartName].Series.Add(seriesName, new Series(seriesName, seriesType, seriesIndex, unit));
                 }
 
                 //Add our value:
@@ -637,7 +637,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void SampleEquity(DateTime time, decimal value) 
         {
             //Sample the Equity Value:
-            Sample("Strategy Equity", ChartType.Stacked, "Equity", SeriesType.Candle, time, value);
+            Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value, "$");
 
             //Recalculate the days processed:
             _daysProcessed = (time - _job.PeriodStart).TotalDays;
@@ -651,7 +651,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void SamplePerformance(DateTime time, decimal value) 
         {
             //Added a second chart to equity plot - daily perforamnce:
-            Sample("Strategy Equity", ChartType.Stacked, "Daily Performance", SeriesType.Bar, time, value, "%");
+            Sample("Strategy Equity", "Daily Performance", 1, SeriesType.Bar, time, value, "%");
         }
 
         /// <summary>
@@ -662,7 +662,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <seealso cref="IResultHandler.Sample"/>
         public void SampleBenchmark(DateTime time, decimal value)
         {
-            Sample("Benchmark", ChartType.Stacked, "Benchmark", SeriesType.Line, time, value);
+            Sample("Benchmark", "Benchmark", 0, SeriesType.Line, time, value, "$");
         }
 
         /// <summary>
@@ -678,7 +678,7 @@ namespace QuantConnect.Lean.Engine.Results
                     //Create the chart if it doesn't exist already:
                     if (!Charts.ContainsKey(update.Name)) 
                     {
-                        Charts.AddOrUpdate(update.Name, new Chart(update.Name, update.ChartType));
+                        Charts.AddOrUpdate(update.Name, new Chart(update.Name));
                     }
 
                     //Add these samples to this chart.
@@ -687,7 +687,7 @@ namespace QuantConnect.Lean.Engine.Results
                         //If we don't already have this record, its the first packet
                         if (!Charts[update.Name].Series.ContainsKey(series.Name))
                         {
-                            Charts[update.Name].Series.Add(series.Name, new Series(series.Name, series.SeriesType));
+                            Charts[update.Name].Series.Add(series.Name, new Series(series.Name, series.SeriesType, series.Index, series.Unit));
                         }
 
                         //We already have this record, so just the new samples to the end:

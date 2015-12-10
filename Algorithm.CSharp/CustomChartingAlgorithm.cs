@@ -58,19 +58,19 @@ namespace QuantConnect.Algorithm.Examples
             AddSecurity(SecurityType.Equity, "SPY", resolution: Resolution.Minute);
 
             //Chart - Master Container for the Chart:
-            Chart stockPlot = new Chart("Trade Plot", ChartType.Overlay);
+            Chart stockPlot = new Chart("Trade Plot");
             //On the Trade Plotter Chart we want 3 series: trades and price:
-            Series buyOrders = new Series("Buy", SeriesType.Scatter);
-            Series sellOrders = new Series("Sell", SeriesType.Scatter);
-            Series assetPrice = new Series("Price", SeriesType.Line);
+            Series buyOrders = new Series("Buy", SeriesType.Scatter, 0);
+            Series sellOrders = new Series("Sell", SeriesType.Scatter, 0);
+            Series assetPrice = new Series("Price", SeriesType.Line, 0);
             stockPlot.AddSeries(buyOrders);
             stockPlot.AddSeries(sellOrders);
             stockPlot.AddSeries(assetPrice);
             AddChart(stockPlot);
 
-            Chart avgCross = new Chart("Strategy Equity", ChartType.Stacked);
-            Series fastMA = new Series("FastMA", SeriesType.Line);
-            Series slowMA = new Series("SlowMA", SeriesType.Line);
+            Chart avgCross = new Chart("Strategy Equity");
+            Series fastMA = new Series("FastMA", SeriesType.Line, 1);
+            Series slowMA = new Series("SlowMA", SeriesType.Line, 1);
             avgCross.AddSeries(fastMA);
             avgCross.AddSeries(slowMA);
             AddChart(avgCross);

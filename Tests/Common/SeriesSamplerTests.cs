@@ -136,7 +136,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void DoesNotSampleScatterPlots()
         {
-            var scatter = new Series("scatter", SeriesType.Scatter);
+            var scatter = new Series("scatter", SeriesType.Scatter, 0, "$");
             scatter.AddPoint(DateTime.Today, 1m);
             scatter.AddPoint(DateTime.Today, 3m);
             scatter.AddPoint(DateTime.Today.AddSeconds(1), 1.5m);

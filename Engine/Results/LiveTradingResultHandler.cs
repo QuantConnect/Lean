@@ -610,7 +610,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="value">Value for the chart sample.</param>
         /// <param name="unit">Unit for the chart axis</param>
         /// <remarks>Sample can be used to create new charts or sample equity - daily performance.</remarks>
-        public void Sample(string chartName, ChartType chartType, string seriesName, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
+        public void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
         {
             Log.Debug("LiveTradingResultHandler.Sample(): Sampling " + chartName + "." + seriesName);
             lock (_chartLock)
@@ -618,13 +618,13 @@ namespace QuantConnect.Lean.Engine.Results
                 //Add a copy locally:
                 if (!Charts.ContainsKey(chartName))
                 {
-                    Charts.AddOrUpdate(chartName, new Chart(chartName, chartType));
+                    Charts.AddOrUpdate(chartName, new Chart(chartName));
                 }
 
                 //Add the sample to our chart:
                 if (!Charts[chartName].Series.ContainsKey(seriesName))
                 {
-                    Charts[chartName].Series.Add(seriesName, new Series(seriesName, seriesType));
+                    Charts[chartName].Series.Add(seriesName, new Series(seriesName, seriesType, seriesIndex, unit));
                 }
 
                 //Add our value:
@@ -638,13 +638,13 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="time">Time of the sample.</param>
         /// <param name="value">Equity value at this moment in time.</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
+        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
         public void SampleEquity(DateTime time, decimal value)
         {
             if (value > 0)
             {
                 Log.Debug("LiveTradingResultHandler.SampleEquity(): " + time.ToShortTimeString() + " >" + value);
-                Sample("Strategy Equity", ChartType.Stacked, "Equity", SeriesType.Candle, time, value);
+                Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value);
             }
         }
 
@@ -654,7 +654,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="symbol">Symbol we're sampling.</param>
         /// <param name="time">Time of sample</param>
         /// <param name="value">Value of the asset price</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
+        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
         public void SampleAssetPrices(Symbol symbol, DateTime time, decimal value)
         {
             // don't send stockplots for internal feeds
@@ -666,7 +666,7 @@ namespace QuantConnect.Lean.Engine.Results
                 var close = now.Date + security.Exchange.MarketClose;
                 if (now > open && now < close)
                 {
-                    Sample("Stockplot: " + symbol.Value, ChartType.Overlay, "Stockplot: " + symbol.Value, SeriesType.Line, time, value);
+                    Sample("Stockplot: " + symbol.Value, "Stockplot: " + symbol.Value, 0, SeriesType.Line, time, value);
                 }
             }
         }
@@ -676,7 +676,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="time">Current backtest date.</param>
         /// <param name="value">Current daily performance value.</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
+        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
         public void SamplePerformance(DateTime time, decimal value)
         {
             //No "daily performance" sampling for live trading yet.
@@ -692,14 +692,14 @@ namespace QuantConnect.Lean.Engine.Results
         /// <seealso cref="IResultHandler.Sample"/>
         public void SampleBenchmark(DateTime time, decimal value)
         {
-            Sample("Benchmark", ChartType.Stacked, "Benchmark", SeriesType.Line, time, value);
+            Sample("Benchmark", "Benchmark", 0, SeriesType.Line, time, value);
         }
 
         /// <summary>
         /// Add a range of samples from the users algorithms to the end of our current list.
         /// </summary>
         /// <param name="updates">Chart updates since the last request.</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
+        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
         public void SampleRange(List<Chart> updates)
         {
             Log.Debug("LiveTradingResultHandler.SampleRange(): Begin sampling");
@@ -710,7 +710,7 @@ namespace QuantConnect.Lean.Engine.Results
                     //Create the chart if it doesn't exist already:
                     if (!Charts.ContainsKey(update.Name))
                     {
-                        Charts.AddOrUpdate(update.Name, new Chart(update.Name, update.ChartType));
+                        Charts.AddOrUpdate(update.Name, new Chart(update.Name));
                     }
 
                     //Add these samples to this chart.
@@ -719,7 +719,7 @@ namespace QuantConnect.Lean.Engine.Results
                         //If we don't already have this record, its the first packet
                         if (!Charts[update.Name].Series.ContainsKey(series.Name))
                         {
-                            Charts[update.Name].Series.Add(series.Name, new Series(series.Name, series.SeriesType));
+                            Charts[update.Name].Series.Add(series.Name, new Series(series.Name, series.SeriesType, series.Index, series.Unit));
                         }
 
                         //We already have this record, so just the new samples to the end:

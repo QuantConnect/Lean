@@ -132,21 +132,21 @@ namespace QuantConnect.Lean.Engine.Results
         /// Add a sample to the chart specified by the chartName, and seriesName.
         /// </summary>
         /// <param name="chartName">String chart name to place the sample.</param>
-        /// <param name="chartType">Type of chart we should create if it doesn't already exist.</param>
         /// <param name="seriesName">Series name for the chart.</param>
         /// <param name="seriesType">Series type for the chart.</param>
         /// <param name="time">Time for the sample</param>
         /// <param name="value">Value for the chart sample.</param>
         /// <param name="unit">Unit for the sample chart</param>
+        /// <param name="seriesIndex">Index of the series we're sampling</param>
         /// <remarks>Sample can be used to create new charts or sample equity - daily performance.</remarks>
-        void Sample(string chartName, ChartType chartType, string seriesName, SeriesType seriesType, DateTime time, decimal value, string unit = "$");
+        void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$");
 
         /// <summary>
         /// Wrapper methond on sample to create the equity chart.
         /// </summary>
         /// <param name="time">Time of the sample.</param>
         /// <param name="value">Equity value at this moment in time.</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
+        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
         void SampleEquity(DateTime time, decimal value);
 
         /// <summary>
@@ -154,7 +154,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="time">Current backtest date.</param>
         /// <param name="value">Current daily performance value.</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
+        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
         void SamplePerformance(DateTime time, decimal value);
 
         /// <summary>
@@ -162,7 +162,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="time">Current backtest date.</param>
         /// <param name="value">Current benchmark value.</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
+        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
         void SampleBenchmark(DateTime time, decimal value);
 
         /// <summary>
@@ -171,14 +171,14 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="symbol">Symbol we're sampling.</param>
         /// <param name="time">Time of sample</param>
         /// <param name="value">Value of the asset price</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
+        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
         void SampleAssetPrices(Symbol symbol, DateTime time, decimal value);
 
         /// <summary>
         /// Add a range of samples from the users algorithms to the end of our current list.
         /// </summary>
         /// <param name="samples">Chart updates since the last request.</param>
-        /// <seealso cref="Sample(string,ChartType,string,SeriesType,DateTime,decimal,string)"/>
+        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
         void SampleRange(List<Chart> samples);
 
         /// <summary>

@@ -43,7 +43,7 @@ namespace QuantConnect
         /// <returns>The sampled series</returns>
         public Series Sample(Series series, DateTime start, DateTime stop)
         {
-            var sampled = new Series(series.Name, series.SeriesType);
+            var sampled = new Series(series.Name, series.SeriesType, series.Index, series.Unit);
 
             // chart point times are always in universal, so force it here as well
             double nextSample = Time.DateTimeToUnixTimeStamp(start.ToUniversalTime());
@@ -132,7 +132,7 @@ namespace QuantConnect
             var sampledCharts = new Dictionary<string, Chart>();
             foreach (var chart in charts.Values)
             {
-                var sampledChart = new Chart(chart.Name, chart.ChartType);
+                var sampledChart = new Chart(chart.Name);
                 sampledCharts.Add(sampledChart.Name, sampledChart);
                 foreach (var series in chart.Series.Values)
                 {

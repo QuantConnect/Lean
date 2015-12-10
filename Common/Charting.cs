@@ -30,10 +30,11 @@ namespace QuantConnect
         public string Name = "";
 
         /// Type of the Chart, Overlayed or Stacked.
+        [Obsolete("ChartType is now obsolete. Please use Series indexes instead by setting index in the series constructor.")]
         public ChartType ChartType = ChartType.Overlay;
 
         /// List of Series Objects for this Chart:
-        public Dictionary<string, Series> Series = new Dictionary<string,Series>();
+        public Dictionary<string, Series> Series = new Dictionary<string, Series>();
 
         /// <summary>
         /// Default constructor for chart:
@@ -45,11 +46,22 @@ namespace QuantConnect
         /// </summary>
         /// <param name="name">Name of the Chart</param>
         /// <param name="type"> Type of the chart</param>
+        [Obsolete("ChartType is now obsolete and ignored in charting. Please use Series indexes instead by setting index in the series constructor.")]
         public Chart(string name, ChartType type = ChartType.Overlay) 
         {
             Name = name;
             Series = new Dictionary<string, Series>();
             ChartType = type;
+        }
+
+        /// <summary>
+        /// Constructor for a chart
+        /// </summary>
+        /// <param name="name">String name of the chart</param>
+        public Chart(string name)
+        {
+            Name = name;
+            Series = new Dictionary<string, Series>();
         }
 
         /// <summary>
@@ -75,7 +87,7 @@ namespace QuantConnect
         /// <returns></returns>
         public Chart GetUpdates() 
         {
-            var copy = new Chart(Name, ChartType);
+            var copy = new Chart(Name);
             try
             {   
                 foreach (var series in Series.Values)
@@ -108,6 +120,11 @@ namespace QuantConnect
         public string Unit = "$";
 
         /// <summary>
+        /// Index/position of the series on the chart.
+        /// </summary>
+        public int Index;
+
+        /// <summary>
         ///  Values for the series plot:
         /// These values are assumed to be in ascending time order (first points earliest, last points latest)
         /// </summary>
@@ -119,7 +136,7 @@ namespace QuantConnect
         public SeriesType SeriesType = SeriesType.Line;
 
         /// Get the index of the last fetch update request to only retrieve the "delta" of the previous request.
-        private int _updatePosition = 0;
+        private int _updatePosition;
 
         /// <summary>
         /// Default constructor for chart series
@@ -130,14 +147,69 @@ namespace QuantConnect
         /// Constructor method for Chart Series
         /// </summary>
         /// <param name="name">Name of the chart series</param>
+        public Series(string name)
+        {
+            Name = name;
+            SeriesType = SeriesType.Line;
+            Unit = "$";
+            Index = 0;
+        }
+
+        /// <summary>
+        /// Foundational constructor on the series class
+        /// </summary>
+        /// <param name="name">Name of the series</param>
+        /// <param name="type">Type of the series</param>
+        public Series(string name, SeriesType type)
+        {
+            Name = name;
+            SeriesType = type;
+            Index = 0;
+            Unit = "$";
+        }
+
+        /// <summary>
+        /// Foundational constructor on the series class
+        /// </summary>
+        /// <param name="name">Name of the series</param>
+        /// <param name="type">Type of the series</param>
+        /// <param name="index">Index position on the chart of the series</param>
+        public Series(string name, SeriesType type, int index)
+        {
+            Name = name;
+            SeriesType = type;
+            Index = index;
+            Unit = "$";
+        }
+
+        /// <summary>
+        /// Foundational constructor on the series class
+        /// </summary>
+        /// <param name="name">Name of the series</param>
+        /// <param name="type">Type of the series</param>
+        /// <param name="index">Index position on the chart of the series</param>
+        /// <param name="unit">Unit for the series axis</param>
+        public Series(string name, SeriesType type, int index, string unit)
+        {
+            Name = name;
+            SeriesType = type;
+            Index = index;
+            Unit = unit;
+        }
+
+        /// <summary>
+        /// Constructor method for Chart Series
+        /// </summary>
+        /// <param name="name">Name of the chart series</param>
         /// <param name="type">Type of the chart series</param>
         /// <param name="unit">Unit of the serier</param>
-        public Series(string name, SeriesType type = SeriesType.Line, string unit = "$") 
+        public Series(string name, SeriesType type = SeriesType.Line, string unit = "$")
         {
             Name = name;
             Values = new List<ChartPoint>();
             SeriesType = type;
             Unit = unit;
+            Index = 0;
         }
 
         /// <summary>
@@ -172,7 +244,7 @@ namespace QuantConnect
         /// <returns>List of the updates from the series</returns>
         public Series GetUpdates() 
         {
-            var copy = new Series(Name, SeriesType, Unit);
+            var copy = new Series(Name, SeriesType, Index, Unit);
             try
             {
                 //Add the updates since the last 
