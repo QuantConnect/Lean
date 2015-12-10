@@ -131,6 +131,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <param name="request">The order to be processed</param>
         public OrderTicket Process(OrderRequest request)
         {
+            if (_algorithm.LiveMode)
+            {
+                Log.Trace("BrokerageTransactionHandler.Process(): " + request);
+            }
+
             switch (request.OrderRequestType)
             {
                 case OrderRequestType.Submit:
