@@ -147,17 +147,6 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Obtain the active open Trade List from Oanda.
-        /// </summary>
-        /// <param name="requestParams">the parameters to update (name, value pairs)</param>
-        /// <returns></returns>
-        private TradesResponse GetTradeList(Dictionary<string, string> requestParams = null)
-        {
-            var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + _accountId + "/trades";
-            return MakeRequest<TradesResponse>(requestString, "GET", requestParams);
-        }
-
-        /// <summary>
         /// Modify the specified order, updating it with the parameters provided
         /// </summary>
         /// <param name="orderId">the identifier of the order to update</param>
@@ -181,18 +170,6 @@ namespace QuantConnect.Brokerages.Oanda
                     Message = string.Format("Order currently does not exist with order id: {0}.", orderId)
                 });
             }
-        }
-
-        /// <summary>
-        /// Retrieves the details for a given order ID
-        /// </summary>
-        /// <param name="orderId">the id of the order to retrieve</param>
-        /// <returns>Order object containing the order details</returns>
-        private DataType.Order GetOrderDetails(long orderId)
-        {
-            var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + _accountId + "/orders/" + orderId;
-            var order = MakeRequest<DataType.Order>(requestString);
-            return order;
         }
 
         /// <summary>
@@ -337,44 +314,6 @@ namespace QuantConnect.Brokerages.Oanda
             try
             {
                 using (var response = request.GetResponse())
-                {
-                    var serializer = new DataContractJsonSerializer(typeof(T));
-                    var stream = GetResponseStream(response);
-                    return (T)serializer.ReadObject(stream);
-                }
-            }
-            catch (WebException ex)
-            {
-                var stream = GetResponseStream(ex.Response);
-                var reader = new StreamReader(stream);
-                var result = reader.ReadToEnd();
-                throw new Exception(result);
-            }
-        }
-
-        /// <summary>
-        /// Primary (internal) asynchronous request handler
-        /// </summary>
-        /// <typeparam name="T">The response type</typeparam>
-        /// <param name="requestString">the request to make</param>
-        /// <param name="method">method for the request (defaults to GET)</param>
-        /// <param name="requestParams">optional parameters (note that if provided, it's assumed the requestString doesn't contain any)</param>
-        /// <returns>response via type T</returns>
-        private async Task<T> MakeRequestAsync<T>(string requestString, string method = "GET", Dictionary<string, string> requestParams = null)
-        {
-            if (requestParams != null && requestParams.Count > 0)
-            {
-                var parameters = CreateParamString(requestParams);
-                requestString = requestString + "?" + parameters;
-            }
-            var request = WebRequest.CreateHttp(requestString);
-            request.Headers[HttpRequestHeader.Authorization] = "Bearer " + _accessToken;
-            request.Headers[HttpRequestHeader.AcceptEncoding] = "gzip, deflate";
-            request.Method = method;
-
-            try
-            {
-                using (var response = await request.GetResponseAsync())
                 {
                     var serializer = new DataContractJsonSerializer(typeof(T));
                     var stream = GetResponseStream(response);
