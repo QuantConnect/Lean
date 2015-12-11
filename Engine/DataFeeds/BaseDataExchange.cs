@@ -166,6 +166,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="token">A cancellation token used to signal to stop</param>
         public void Start(CancellationToken? token = null)
         {
+            Log.Trace("BaseDataExchange({0}) Starting...", Name);
             _isStopping = false;
             ConsumeEnumerators(token ?? CancellationToken.None);
         }
@@ -175,6 +176,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Stop()
         {
+            Log.Trace("BaseDataExchange({0}) Stopping...", Name);
             _isStopping = true;
         }
 
