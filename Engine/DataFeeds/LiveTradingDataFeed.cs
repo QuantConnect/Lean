@@ -485,6 +485,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var userDefined = universe as UserDefinedUniverse;
             if (userDefined != null)
             {
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: " + config.Symbol);
+
                 // spoof a tick on the requested interval to trigger the universe selection function
                 enumerator = userDefined.GetTriggerTimes(startTimeUtc, endTimeUtc, marketHoursDatabase)
                     .Select(dt => new Tick { Time = dt }).GetEnumerator();
@@ -495,6 +497,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else if (config.Type == typeof (CoarseFundamental))
             {
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating coarse universe: " + config.Symbol);
+
                 // since we're binding to the data queue exchange we'll need to let him
                 // know that we expect this data
                 _dataQueueHandler.Subscribe(_job, new[] {security.Symbol});
@@ -508,6 +512,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else
             {
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating custom universe: " + config.Symbol);
+
                 // each time we exhaust we'll new up this enumerator stack
                 var refresher = new RefreshEnumerator<BaseDataCollection>(() =>
                 {
