@@ -267,7 +267,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     foreach (var cash in cashBalance)
                     {
                         Log.Trace("BrokerageSetupHandler.Setup(): Setting " + cash.Symbol + " cash to " + cash.Amount);
-                        algorithm.SetCash(cash.Symbol, cash.Amount, cash.ConversionRate);
+                        algorithm.Portfolio.SetCash(cash.Symbol, cash.Amount, cash.ConversionRate);
                     }
                 }
                 catch (Exception err)

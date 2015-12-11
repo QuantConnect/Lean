@@ -75,7 +75,7 @@ namespace QuantConnect.Brokerages.Paper
             if (job.BrokerageData.ContainsKey("project-paper-equity"))
             {
                 var consistentCash = Convert.ToDecimal(job.BrokerageData["project-paper-equity"], CultureInfo.InvariantCulture);
-                algorithm.SetCash(consistentCash);
+                algorithm.Portfolio.SetCash(consistentCash);
             }
 
             return new PaperBrokerage(algorithm);
