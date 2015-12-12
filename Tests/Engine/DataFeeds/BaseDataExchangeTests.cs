@@ -18,11 +18,13 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
@@ -221,6 +223,29 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Task.Run(() => exchange.Start(new CancellationTokenSource(50).Token));
 
             isCompletedEvent.WaitOne();
+        }
+
+        [Test]
+        public void RemovesAllMatchingEnumerators()
+        {
+            var count = 100;
+            var reference = new DateTime(2015, 12, 11);
+            var enumerators =
+                from i in Enumerable.Range(0, count)
+                let idp = new IndicatorDataPoint(reference, i)
+                let list = new List<BaseData> {idp}
+                select ((IEnumerable<BaseData>) list).GetEnumerator();
+
+            var exchange = new BaseDataExchange(enumerators.ToArray());
+
+            var removed = exchange.RemoveEnumeratorHandlers(handler => !handler.Enumerator.MoveNext());
+            Assert.AreEqual(0, removed.Count);
+
+            Func<BaseDataExchange.EnumeratorHandler, bool> predicate = handler => handler.Enumerator.Current.Value%2 ==0;
+
+            removed = exchange.RemoveEnumeratorHandlers(predicate);
+            Assert.AreEqual(count/2, removed.Count);
+            Assert.IsTrue(removed.All(predicate));
         }
 
         private sealed class ExceptionEnumerator<T> : IEnumerator<T>

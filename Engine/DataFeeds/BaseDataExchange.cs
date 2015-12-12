@@ -35,10 +35,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private Func<Exception, bool> _isFatalError;
 
         private readonly string _name;
+        private readonly object _enumeratorsWriteLock = new object();
         private readonly ConcurrentDictionary<Symbol, DataHandler> _dataHandlers;
 
-        // using concurrent dictionary for fast/easy contains/remove, the int value is nothingness
-
+        // if modifications are to be made to _enumerators, then it should 
+        // be a new instance of a list, this allows the consumption thread
+        // to continue enumeration and without any read locks
         private IReadOnlyList<EnumeratorHandler> _enumerators;
 
         /// <summary>
@@ -160,6 +162,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Removes and returns enumerator handlers matching the specified predicate
+        /// </summary>
+        /// <param name="predicate">The predicate function defining which enumerator handlers to remove</param>
+        /// <returns>The removed enumerator handlers</returns>
+        public List<EnumeratorHandler> RemoveEnumeratorHandlers(Func<EnumeratorHandler, bool> predicate)
+        {
+            var removed = new List<EnumeratorHandler>();
+            var remaining = new List<EnumeratorHandler>();
+
+            lock (_enumeratorsWriteLock)
+            {
+                // remove all handlers matching the predicate
+                foreach (var handler in _enumerators)
+                {
+                    if (predicate(handler))
+                    {
+                        removed.Add(handler);
+                    }
+                    else
+                    {
+                        remaining.Add(handler);
+                    }
+                }
+                _enumerators = remaining;
+            }
+
+            return removed;
+        }
+
+        /// <summary>
         /// Begins consumption of the wrapped <see cref="IDataQueueHandler"/> on
         /// a separate thread
         /// </summary>
@@ -200,8 +232,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // call move next each enumerator and invoke the appropriate handlers
 
                     var handled = false;
-                    foreach (var enumeratorHandler in _enumerators)
+                    for (int i = 0; i < _enumerators.Count; i++)
                     {
+                        var enumeratorHandler = _enumerators[i];
                         var enumerator = enumeratorHandler.Enumerator;
 
                         // check to see if we should advance this enumerator
@@ -212,13 +245,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             enumeratorHandler.OnEnumeratorFinished();
 
                             // remove dead enumerators
-                            var copy = _enumerators.ToList();
-                            copy.Remove(enumeratorHandler);
-                            _enumerators = copy;
+                            lock (_enumeratorsWriteLock)
+                            {
+                                var copy = _enumerators.ToList();
+                                copy.RemoveAt(i);
+                                _enumerators = copy;
+                            }
 
                             continue;
                         }
-                        
+
                         if (enumerator.Current == null) continue;
 
                         // if the enumerator is configured to handle it, then do it, don't pass to data handlers
