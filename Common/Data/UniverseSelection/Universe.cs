@@ -149,8 +149,15 @@ namespace QuantConnect.Data.UniverseSelection
             return false;
         }
 
+        /// <summary>
+        /// Provides a value to indicate that no changes should be made to the universe.
+        /// This value is intended to be return reference via <see cref="Universe.SelectSymbols"/>
+        /// </summary>
         public sealed class UnchangedUniverse : IEnumerable<string>, IEnumerable<Symbol>
         {
+            /// <summary>
+            /// Read-only instance of the <see cref="UnchangedUniverse"/> value
+            /// </summary>
             public static readonly UnchangedUniverse Instance = new UnchangedUniverse();
             private UnchangedUniverse() { }
             IEnumerator<Symbol> IEnumerable<Symbol>.GetEnumerator() { yield break; }
