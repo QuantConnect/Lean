@@ -37,11 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly string _name;
         private readonly object _enumeratorsWriteLock = new object();
         private readonly ConcurrentDictionary<Symbol, DataHandler> _dataHandlers;
-
-        // if modifications are to be made to _enumerators, then it should 
-        // be a new instance of a list, this allows the consumption thread
-        // to continue enumeration and without any read locks
-        private IReadOnlyList<EnumeratorHandler> _enumerators;
+        private ConcurrentDictionary<Symbol, EnumeratorHandler> _enumerators;
 
         /// <summary>
         /// Gets or sets how long this thread will sleep when no data is available
@@ -70,7 +66,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _name = name;
             _isFatalError = x => false;
             _dataHandlers = new ConcurrentDictionary<Symbol, DataHandler>();
-            _enumerators = new List<EnumeratorHandler>();
+            _enumerators = new ConcurrentDictionary<Symbol, EnumeratorHandler>();
         }
 
         /// <summary>
@@ -80,9 +76,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="handler">The handler to use when this symbol's data is encountered</param>
         public void AddEnumerator(EnumeratorHandler handler)
         {
-            var copy = _enumerators.ToList();
-            copy.Add(handler);
-            _enumerators = copy;
+            _enumerators[handler.Symbol] = handler;
         }
 
         /// <summary>
@@ -160,25 +154,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public List<EnumeratorHandler> RemoveEnumeratorHandlers(Func<EnumeratorHandler, bool> predicate)
         {
             var removed = new List<EnumeratorHandler>();
-            var remaining = new List<EnumeratorHandler>();
-
-            lock (_enumeratorsWriteLock)
+            foreach (var kvp in _enumerators)
             {
-                // remove all handlers matching the predicate
-                foreach (var handler in _enumerators)
+                var handler = kvp.Value;
+                if (predicate(handler))
                 {
-                    if (predicate(handler))
+                    if (_enumerators.TryRemove(handler.Symbol, out handler))
                     {
                         removed.Add(handler);
                     }
-                    else
-                    {
-                        remaining.Add(handler);
-                    }
                 }
-                _enumerators = remaining;
             }
-
             return removed;
         }
 
@@ -223,10 +209,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // call move next each enumerator and invoke the appropriate handlers
 
                     var handled = false;
-                    var enumerators = _enumerators;
-                    for (int i = 0; i < enumerators.Count; i++)
+                    foreach (var kvp in _enumerators)
                     {
-                        var enumeratorHandler = enumerators[i];
+                        var enumeratorHandler = kvp.Value;
                         var enumerator = enumeratorHandler.Enumerator;
 
                         // check to see if we should advance this enumerator
@@ -235,15 +220,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (!enumerator.MoveNext())
                         {
                             enumeratorHandler.OnEnumeratorFinished();
-
-                            // remove dead enumerators
-                            lock (_enumeratorsWriteLock)
-                            {
-                                var copy = _enumerators.ToList();
-                                copy.RemoveAt(i);
-                                _enumerators = copy;
-                            }
-
+                            _enumerators.TryRemove(enumeratorHandler.Symbol, out enumeratorHandler);
                             continue;
                         }
 
