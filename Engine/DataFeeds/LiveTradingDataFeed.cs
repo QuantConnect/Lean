@@ -101,7 +101,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _frontierTimeProvider = new ManualTimeProvider(_timeProvider.GetUtcNow());
             _customExchange = new BaseDataExchange("CustomDataExchange") {SleepInterval = 10};
             // sleep is controlled on this exchange via the GetNextTicksEnumerator
-            _exchange = new BaseDataExchange("DataQueueExchange", GetNextTicksEnumerator()){SleepInterval = 0};
+            _exchange = new BaseDataExchange("DataQueueExchange"){SleepInterval = 0};
+            _exchange.AddEnumerator(GetNextTicksEnumerator());
             _subscriptions = new ConcurrentDictionary<Symbol, Subscription>();
 
             _bridge = new BusyBlockingCollection<TimeSlice>();

@@ -61,26 +61,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BaseDataExchange"/>.
-        /// This constructor will exit the exchange when all enumerators are finished.
-        /// </summary>
-        /// <param name="enumerators">The enumerators to fanout</param>
-        public BaseDataExchange(params IEnumerator<BaseData>[] enumerators)
-            : this(string.Empty, enumerators)
-        {
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="BaseDataExchange"/>
         /// </summary>
         /// <param name="name">A name for this exchange</param>
         /// <param name="enumerators">The enumerators to fanout</param>
-        public BaseDataExchange(string name, params IEnumerator<BaseData>[] enumerators)
+        public BaseDataExchange(string name)
         {
             _name = name;
             _isFatalError = x => false;
             _dataHandlers = new ConcurrentDictionary<Symbol, DataHandler>();
-            _enumerators = enumerators.Select(enumerator => new EnumeratorHandler(enumerator, () => true)).ToList();
+            _enumerators = new List<EnumeratorHandler>();
         }
 
         /// <summary>
