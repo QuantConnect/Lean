@@ -45,6 +45,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class LiveTradingDataFeed : IDataFeed
     {
         private SecurityChanges _changes = SecurityChanges.None;
+        private static readonly Symbol DataQueueHandlerSymbol = Symbol.Create("data-queue-handler-symbol", SecurityType.Base, Market.USA);
 
         private LiveNodePacket _job;
         private IAlgorithm _algorithm;
@@ -102,7 +103,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _customExchange = new BaseDataExchange("CustomDataExchange") {SleepInterval = 10};
             // sleep is controlled on this exchange via the GetNextTicksEnumerator
             _exchange = new BaseDataExchange("DataQueueExchange"){SleepInterval = 0};
-            _exchange.AddEnumerator(GetNextTicksEnumerator());
+            _exchange.AddEnumerator(DataQueueHandlerSymbol, GetNextTicksEnumerator());
             _subscriptions = new ConcurrentDictionary<Symbol, Subscription>();
 
             _bridge = new BusyBlockingCollection<TimeSlice>();
@@ -405,7 +406,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // rate limit the refreshing of the stack to the requested interval
                     var minimumTimeBetweenCalls = Math.Min(config.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
                     var rateLimit = new RateLimitEnumerator(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
-                    _customExchange.AddEnumerator(rateLimit);
+                    _customExchange.AddEnumerator(config.Symbol, rateLimit);
 
                     var enqueable = new EnqueueableEnumerator<BaseData>();
                     _customExchange.SetDataHandler(config.Symbol, data =>
@@ -496,7 +497,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 enumerator = new FrontierAwareEnumerator(enumerator, _timeProvider, tzOffsetProvider);
 
                 var enqueueable = new EnqueueableEnumerator<BaseData>();
-                _customExchange.AddEnumerator(new EnumeratorHandler(enumerator, enqueueable));
+                _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
                 enumerator = enqueueable;
             }
             else if (config.Type == typeof (CoarseFundamental))
@@ -535,7 +536,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var minimumTimeBetweenCalls = Math.Min(config.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
                 var rateLimit = new RateLimitEnumerator(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
                 var enqueueable = new EnqueueableEnumerator<BaseData>();
-                _customExchange.AddEnumerator(new EnumeratorHandler(rateLimit, enqueueable));
+                _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, rateLimit, enqueueable));
                 enumerator = enqueueable;
             }
 
@@ -606,8 +607,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         class EnumeratorHandler : BaseDataExchange.EnumeratorHandler
         {
             private readonly EnqueueableEnumerator<BaseData> _enqueueable;
-            public EnumeratorHandler(IEnumerator<BaseData> enumerator, EnqueueableEnumerator<BaseData> enqueueable)
-                : base(enumerator, true)
+            public EnumeratorHandler(Symbol symbol, IEnumerator<BaseData> enumerator, EnqueueableEnumerator<BaseData> enqueueable)
+                : base(symbol, enumerator, true)
             {
                 _enqueueable = enqueueable;
             }

@@ -89,13 +89,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Adds the enumerator to this exchange. If it has already been added
         /// then it will remain registered in the exchange only once
         /// </summary>
+        /// <param name="symbol">A unique symbol used to identify this enumerator</param>
         /// <param name="enumerator">The enumerator to be added</param>
         /// <param name="shouldMoveNext">Function used to determine if move next should be called on this
         /// enumerator, defaults to always returning true</param>
         /// <param name="enumeratorFinished">Delegate called when the enumerator move next returns false</param>
-        public void AddEnumerator(IEnumerator<BaseData> enumerator, Func<bool> shouldMoveNext = null, Action<EnumeratorHandler> enumeratorFinished = null)
+        public void AddEnumerator(Symbol symbol, IEnumerator<BaseData> enumerator, Func<bool> shouldMoveNext = null, Action<EnumeratorHandler> enumeratorFinished = null)
         {
-            var enumeratorHandler = new EnumeratorHandler(enumerator, shouldMoveNext);
+            var enumeratorHandler = new EnumeratorHandler(symbol, enumerator, shouldMoveNext);
             if (enumeratorFinished != null)
             {
                 enumeratorHandler.EnumeratorFinished += (sender, args) => enumeratorFinished(args);
@@ -332,6 +333,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             public event EventHandler<EnumeratorHandler> EnumeratorFinished;
 
             /// <summary>
+            /// A unique symbol used to identify this enumerator
+            /// </summary>
+            public readonly Symbol Symbol;
+
+            /// <summary>
             /// The enumerator this handler handles
             /// </summary>
             public readonly IEnumerator<BaseData> Enumerator;
@@ -346,12 +352,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             /// <summary>
             /// Initializes a new instance of the <see cref="EnumeratorHandler"/> class
             /// </summary>
+            /// <param name="symbol">The symbol to identify this enumerator</param>
             /// <param name="enumerator">The enumeator this handler handles</param>
             /// <param name="shouldMoveNext">Predicate function used to determine if we should call move next
             /// on the symbol's enumerator</param>
             /// <param name="handleData">Handler for data if HandlesData=true</param>
-            public EnumeratorHandler(IEnumerator<BaseData> enumerator, Func<bool> shouldMoveNext = null, Action<BaseData> handleData = null)
+            public EnumeratorHandler(Symbol symbol, IEnumerator<BaseData> enumerator, Func<bool> shouldMoveNext = null, Action<BaseData> handleData = null)
             {
+                Symbol = symbol;
                 Enumerator = enumerator;
                 HandlesData = handleData != null;
 
@@ -362,10 +370,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             /// <summary>
             /// Initializes a new instance of the <see cref="EnumeratorHandler"/> class
             /// </summary>
+            /// <param name="symbol">The symbol to identify this enumerator</param>
             /// <param name="enumerator">The enumeator this handler handles</param>
             /// <param name="handlesData">True if this handler will handle the data, false otherwise</param>
-            protected EnumeratorHandler(IEnumerator<BaseData> enumerator, bool handlesData)
+            protected EnumeratorHandler(Symbol symbol, IEnumerator<BaseData> enumerator, bool handlesData)
             {
+                Symbol = symbol;
                 HandlesData = handlesData;
                 Enumerator = enumerator;
 

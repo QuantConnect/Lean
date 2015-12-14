@@ -196,9 +196,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void RespectsShouldMoveNext()
         {
-            var exchange = new BaseDataExchange();
+            var exchange = new BaseDataExchange("test");
             exchange.SetErrorHandler(exception => true);
-            exchange.AddEnumerator(new List<BaseData> {new Tick()}.GetEnumerator(), () => false);
+            exchange.AddEnumerator(Symbol.Empty, new List<BaseData> {new Tick()}.GetEnumerator(), () => false);
 
             var isFaultedEvent = new ManualResetEvent(false);
             var isCompletedEvent = new ManualResetEvent(false);
@@ -215,11 +215,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void FiresOnEnumeratorFinishedEvents()
         {
-            var exchange = new BaseDataExchange();
+            var exchange = new BaseDataExchange("test");
             IEnumerator<BaseData> enumerator = new List<BaseData>().GetEnumerator();
 
             var isCompletedEvent = new ManualResetEvent(false);
-            exchange.AddEnumerator(enumerator, () => true, handler => isCompletedEvent.Set());
+            exchange.AddEnumerator(Symbol.Empty, enumerator, () => true, handler => isCompletedEvent.Set());
             Task.Run(() => exchange.Start(new CancellationTokenSource(50).Token));
 
             isCompletedEvent.WaitOne();
@@ -231,12 +231,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var count = 100;
             var reference = new DateTime(2015, 12, 11);
             var enumerators =
-                from i in Enumerable.Range(0, count)
-                let idp = new IndicatorDataPoint(reference, i)
-                let list = new List<BaseData> {idp}
-                select ((IEnumerable<BaseData>) list).GetEnumerator();
+                 from i in Enumerable.Range(0, count)
+                 let idp = new IndicatorDataPoint(reference, i)
+                 let list = new List<BaseData> {idp}
+                 select Tuple.Create(list.GetEnumerator(), i);
 
-            var exchange = new BaseDataExchange(enumerators.ToArray());
+            var exchange = new BaseDataExchange("test");
+            foreach (var tuple in enumerators)
+            {
+                var sym = Symbol.Create(tuple.Item2.ToString(), SecurityType.Base, Market.USA);
+                exchange.AddEnumerator(sym, tuple.Item1);
+            }
 
             var removed = exchange.RemoveEnumeratorHandlers(handler => !handler.Enumerator.MoveNext());
             Assert.AreEqual(0, removed.Count);
@@ -267,9 +272,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 while (++count < 10 && dataQueue.TryDequeue(out data)) list.Add(data);
                 return list;
             });
-            var exchange = new BaseDataExchange();
+            var exchange = new BaseDataExchange("test");
             IEnumerator<BaseData> enumerator = GetNextTicksEnumerator(dataQueueHandler);
-            exchange.AddEnumerator(enumerator, null, null);
+            var sym = Symbol.Create("data-queue-handler-symbol", SecurityType.Base, Market.USA);
+            exchange.AddEnumerator(sym, enumerator, null, null);
             return exchange;
         }
 
