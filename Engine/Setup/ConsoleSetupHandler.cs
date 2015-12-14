@@ -96,6 +96,17 @@ namespace QuantConnect.Lean.Engine.Setup
         }
 
         /// <summary>
+        /// Creates a new <see cref="BacktestingBrokerage"/> instance
+        /// </summary>
+        /// <param name="algorithmNodePacket">Job packet</param>
+        /// <param name="uninitializedAlgorithm">The algorithm instance before Initialize has been called</param>
+        /// <returns>The brokerage instance, or throws if error creating instance</returns>
+        public IBrokerage CreateBrokerage(AlgorithmNodePacket algorithmNodePacket, IAlgorithm uninitializedAlgorithm)
+        {
+            return new BacktestingBrokerage(uninitializedAlgorithm);
+        }
+
+        /// <summary>
         /// Setup the algorithm cash, dates and portfolio as desired.
         /// </summary>
         /// <param name="algorithm">Existing algorithm instance</param>
@@ -105,7 +116,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="transactionHandler">The configuration transaction handler</param>
         /// <param name="realTimeHandler">The configured real time handler</param>
         /// <returns>Boolean true on successfully setting up the console.</returns>
-        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler)
+        public bool Setup(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket baseJob, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler)
         {
             var initializeComplete = false;
 
@@ -160,9 +171,6 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 initializeComplete = true;
             }
-
-            // we need to do this after algorithm initialization
-            brokerage = new BacktestingBrokerage(algorithm);
 
             // set the transaction and settlement models based on the brokerage properties
             SetupHandler.UpdateModels(algorithm, algorithm.BrokerageModel);
