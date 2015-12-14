@@ -49,47 +49,44 @@ namespace QuantConnect.Util
         /// <returns>Method to return an instance of object</returns>
         public static Func<object[], object> GetActivator(Type dataType)
         {
-            Func<object[], object> factory;
             lock (_lock)
             {
                 // if we already have it, just use it
+                Func<object[], object> factory;
                 if (_activatorsByType.TryGetValue(dataType, out factory))
                 {
                     return factory;
                 }
-            }
 
-            var ctor = dataType.GetConstructor(new Type[] { });
+                var ctor = dataType.GetConstructor(new Type[] {});
 
-            //User has forgotten to include a parameterless constructor:
-            if (ctor == null) return null;
+                //User has forgotten to include a parameterless constructor:
+                if (ctor == null) return null;
 
-            var paramsInfo = ctor.GetParameters();
+                var paramsInfo = ctor.GetParameters();
 
-            //create a single param of type object[]
-            var param = Expression.Parameter(typeof(object[]), "args");
-            var argsExp = new Expression[paramsInfo.Length];
+                //create a single param of type object[]
+                var param = Expression.Parameter(typeof (object[]), "args");
+                var argsExp = new Expression[paramsInfo.Length];
 
-            for (var i = 0; i < paramsInfo.Length; i++)
-            {
-                var index = Expression.Constant(i);
-                var paramType = paramsInfo[i].ParameterType;
-                var paramAccessorExp = Expression.ArrayIndex(param, index);
-                var paramCastExp = Expression.Convert(paramAccessorExp, paramType);
-                argsExp[i] = paramCastExp;
-            }
+                for (var i = 0; i < paramsInfo.Length; i++)
+                {
+                    var index = Expression.Constant(i);
+                    var paramType = paramsInfo[i].ParameterType;
+                    var paramAccessorExp = Expression.ArrayIndex(param, index);
+                    var paramCastExp = Expression.Convert(paramAccessorExp, paramType);
+                    argsExp[i] = paramCastExp;
+                }
 
-            var newExp = Expression.New(ctor, argsExp);
-            var lambda = Expression.Lambda(typeof(Func<object[], object>), newExp, param);
-            factory = (Func<object[], object>)lambda.Compile();
+                var newExp = Expression.New(ctor, argsExp);
+                var lambda = Expression.Lambda(typeof (Func<object[], object>), newExp, param);
+                factory = (Func<object[], object>) lambda.Compile();
 
-            lock (_lock)
-            {
                 // save it for later
                 _activatorsByType.Add(dataType, factory);
-            }
 
-            return factory;
+                return factory;
+            }
         }
 
         /// <summary>
