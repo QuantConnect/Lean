@@ -147,25 +147,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Removes and returns enumerator handlers matching the specified predicate
+        /// Removes and returns enumerator handler with the specified symbol.
+        /// The removed handler is returned, null if not found
         /// </summary>
-        /// <param name="predicate">The predicate function defining which enumerator handlers to remove</param>
-        /// <returns>The removed enumerator handlers</returns>
-        public List<EnumeratorHandler> RemoveEnumeratorHandlers(Func<EnumeratorHandler, bool> predicate)
+        public EnumeratorHandler RemoveEnumerator(Symbol symbol)
         {
-            var removed = new List<EnumeratorHandler>();
-            foreach (var kvp in _enumerators)
-            {
-                var handler = kvp.Value;
-                if (predicate(handler))
-                {
-                    if (_enumerators.TryRemove(handler.Symbol, out handler))
-                    {
-                        removed.Add(handler);
-                    }
-                }
-            }
-            return removed;
+            EnumeratorHandler handler;
+            _enumerators.TryRemove(symbol, out handler);
+            return handler;
         }
 
         /// <summary>

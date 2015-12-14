@@ -226,31 +226,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
-        public void RemovesAllMatchingEnumerators()
+        public void RemovesBySymbol()
         {
-            var count = 100;
-            var reference = new DateTime(2015, 12, 11);
-            var enumerators =
-                 from i in Enumerable.Range(0, count)
-                 let idp = new IndicatorDataPoint(reference, i)
-                 let list = new List<BaseData> {idp}
-                 select Tuple.Create(list.GetEnumerator(), i);
-
             var exchange = new BaseDataExchange("test");
-            foreach (var tuple in enumerators)
-            {
-                var sym = Symbol.Create(tuple.Item2.ToString(), SecurityType.Base, Market.USA);
-                exchange.AddEnumerator(sym, tuple.Item1);
-            }
-
-            var removed = exchange.RemoveEnumeratorHandlers(handler => !handler.Enumerator.MoveNext());
-            Assert.AreEqual(0, removed.Count);
-
-            Func<BaseDataExchange.EnumeratorHandler, bool> predicate = handler => handler.Enumerator.Current.Value%2 ==0;
-
-            removed = exchange.RemoveEnumeratorHandlers(predicate);
-            Assert.AreEqual(count/2, removed.Count);
-            Assert.IsTrue(removed.All(predicate));
+            var enumerator = new List<BaseData> {new Tick {Symbol = Symbols.SPY}}.GetEnumerator();
+            exchange.AddEnumerator(Symbols.SPY, enumerator);
+            var removed = exchange.RemoveEnumerator(Symbols.AAPL);
+            Assert.IsNull(removed);
+            removed = exchange.RemoveEnumerator(Symbols.SPY);
+            Assert.AreEqual(Symbols.SPY, removed.Symbol);
         }
 
         private sealed class ExceptionEnumerator<T> : IEnumerator<T>
