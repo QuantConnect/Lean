@@ -190,6 +190,8 @@
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
     <Compile Include="Orders\CancelOrderRequest.cs" />
+    <Compile Include="Orders\IFeeModel.cs" />
+    <Compile Include="Orders\IFillModel.cs" />
     <Compile Include="Orders\MarketOnCloseOrder.cs" />
     <Compile Include="Orders\MarketOnOpenOrder.cs" />
     <Compile Include="Orders\OrderField.cs" />

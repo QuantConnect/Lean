@@ -25,68 +25,8 @@ namespace QuantConnect.Securities.Interfaces
     /// </summary>
     /// <seealso cref="EquityTransactionModel"/>
     /// <seealso cref="ForexTransactionModel"/>
-    public interface ISecurityTransactionModel
+    public interface ISecurityTransactionModel : IFillModel, IFeeModel
     {
-        /// <summary>
-        /// Model the slippage on a market order: fixed percentage of order price
-        /// </summary>
-        /// <param name="asset">Asset we're trading this order</param>
-        /// <param name="order">Order to update</param>
-        OrderEvent MarketFill(Security asset, MarketOrder order);
-
-
-        /// <summary>
-        /// Stop Market Fill Model. Return an order event with the fill details.
-        /// </summary>
-        /// <param name="asset">Asset we're trading this order</param>
-        /// <param name="order">Stop Order to Check, return filled if true</param>
-        OrderEvent StopMarketFill(Security asset, StopMarketOrder order);
-
-        /// <summary>
-        /// Stop Limit Fill Model. Return an order event with the fill details.
-        /// </summary>
-        /// <param name="asset"></param>
-        /// <param name="order"></param>
-        /// <returns></returns>
-        OrderEvent StopLimitFill(Security asset, StopLimitOrder order);
-
-        /// <summary>
-        /// Limit Fill Model. Return an order event with the fill details.
-        /// </summary>
-        /// <param name="asset">Stock Object to use to help model limit fill</param>
-        /// <param name="order">Order to fill. Alter the values directly if filled.</param>
-        OrderEvent LimitFill(Security asset, LimitOrder order);
-
-        /// <summary>
-        /// Market on Open Fill Model. Return an order event with the fill details
-        /// </summary>
-        /// <param name="asset">Asset we're trading with this order</param>
-        /// <param name="order">Order to be filled</param>
-        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order);
-
-        /// <summary>
-        /// Market on Close Fill Model. Return an order event with the fill details
-        /// </summary>
-        /// <param name="asset">Asset we're trading with this order</param>
-        /// <param name="order">Order to be filled</param>
-        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order);
-
-        /// <summary>
-        /// Slippage Model. Return a decimal cash slippage approximation on the order.
-        /// </summary>
-        decimal GetSlippageApproximation(Security asset, Order order);
-
-        /// <summary>
-        /// Gets the order fee associated with the specified order. This returns the cost
-        /// of the transaction in the account currency
-        /// </summary>
-        /// <param name="security">The security matching the order</param>
-        /// <param name="order">The order to compute fees for</param>
-        /// <returns>The cost of the order in units of the account currency</returns>
-        decimal GetOrderFee(Security security, Order order);
-
         /// <summary>
         /// Fee Model. Return the decimal fees from one order. Currently defaults to interactive
         /// </summary>
