@@ -222,9 +222,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // call move next each enumerator and invoke the appropriate handlers
 
                     var handled = false;
-                    for (int i = 0; i < _enumerators.Count; i++)
+                    var enumerators = _enumerators;
+                    for (int i = 0; i < enumerators.Count; i++)
                     {
-                        var enumeratorHandler = _enumerators[i];
+                        var enumeratorHandler = enumerators[i];
                         var enumerator = enumeratorHandler.Enumerator;
 
                         // check to see if we should advance this enumerator
