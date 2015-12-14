@@ -199,12 +199,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var security = subscription.Security;
 
-            _exchange.RemoveDataHandler(security.Symbol);
-
-            // request to unsubscribe from the subscription
-            if (!security.SubscriptionDataConfig.IsCustomData)
+            // remove the subscriptions
+            if (subscription.Configuration.IsCustomData)
+            {
+                _customExchange.RemoveEnumerator(security.Symbol);
+                _customExchange.RemoveDataHandler(security.Symbol);
+            }
+            else
             {
                 _dataQueueHandler.Unsubscribe(_job, new[] {security.Symbol});
+                _exchange.RemoveDataHandler(security.Symbol);
             }
 
             // remove the subscription from our collection

@@ -153,7 +153,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public EnumeratorHandler RemoveEnumerator(Symbol symbol)
         {
             EnumeratorHandler handler;
-            _enumerators.TryRemove(symbol, out handler);
+            if (_enumerators.TryRemove(symbol, out handler))
+            {
+                handler.OnEnumeratorFinished();
+                handler.Enumerator.Dispose();
+            }
             return handler;
         }
 
@@ -209,6 +213,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (!enumerator.MoveNext())
                         {
                             enumeratorHandler.OnEnumeratorFinished();
+                            enumeratorHandler.Enumerator.Dispose();
                             _enumerators.TryRemove(enumeratorHandler.Symbol, out enumeratorHandler);
                             continue;
                         }
