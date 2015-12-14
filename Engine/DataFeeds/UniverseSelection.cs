@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="universeData">The data provided to perform selection with</param>
         public SecurityChanges ApplyUniverseSelection(Universe universe, DateTime dateTimeUtc, BaseDataCollection universeData)
         {
-            var settings = universe.SubscriptionSettings;
+            var settings = universe.UniverseSettings;
 
             var limit = 1000; //daily/hourly limit
             var resolution = settings.Resolution;

@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var manager = new UniverseManager();
 
-            var universe = new FuncUniverse(CreateTradeBarConfig(), new SubscriptionSettings(Resolution.Minute, 2, true, false), 
+            var universe = new FuncUniverse(CreateTradeBarConfig(), new UniverseSettings(Resolution.Minute, 2, true, false), 
                 data => data.Select(x => x.Symbol)
                 );
 
@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var manager = new UniverseManager();
 
-            var universe = new FuncUniverse(CreateTradeBarConfig(), new SubscriptionSettings(Resolution.Minute, 2, true, false),
+            var universe = new FuncUniverse(CreateTradeBarConfig(), new UniverseSettings(Resolution.Minute, 2, true, false),
                 data => data.Select(x => x.Symbol)
                 );
 
@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var manager = new UniverseManager();
 
-            var universe = new FuncUniverse(CreateTradeBarConfig(), new SubscriptionSettings(Resolution.Minute, 2, true, false),
+            var universe = new FuncUniverse(CreateTradeBarConfig(), new UniverseSettings(Resolution.Minute, 2, true, false),
                 data => data.Select(x => x.Symbol)
                 );
 

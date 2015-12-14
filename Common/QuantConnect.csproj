@@ -173,7 +173,7 @@
     <Compile Include="Data\UniverseSelection\FuncUniverse.cs" />
     <Compile Include="Data\UniverseSelection\Universe.cs" />
     <Compile Include="Data\UniverseSelection\SecurityChanges.cs" />
-    <Compile Include="Data\UniverseSelection\SubscriptionSettings.cs" />
+    <Compile Include="Data\UniverseSelection\UniverseSettings.cs" />
     <Compile Include="Field.cs" />
     <Compile Include="Interfaces\IAlgorithm.cs" />
     <Compile Include="Interfaces\IApi.cs" />

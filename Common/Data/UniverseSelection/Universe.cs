@@ -53,7 +53,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the settings used for subscriptons added for this universe
         /// </summary>
-        public abstract SubscriptionSettings SubscriptionSettings
+        public abstract UniverseSettings UniverseSettings
         {
             get;
         }

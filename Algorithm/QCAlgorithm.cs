@@ -126,7 +126,7 @@ namespace QuantConnect.Algorithm
 
             // universe selection
             Universes = new UniverseManager();
-            UniverseSettings = new SubscriptionSettings(Resolution.Minute, 2m, true, false);
+            UniverseSettings = new UniverseSettings(Resolution.Minute, 2m, true, false);
             _userDefinedUniverses = new Dictionary<SecurityTypeMarket, UserDefinedUniverse>();
 
             // initialize our scheduler, this acts as a liason to the real time handler

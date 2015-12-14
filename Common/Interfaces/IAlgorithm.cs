@@ -208,7 +208,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets the subscription settings to be used when adding securities via universe selection
         /// </summary>
-        SubscriptionSettings UniverseSettings
+        UniverseSettings UniverseSettings
         {
             get;
         }
