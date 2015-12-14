@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
@@ -47,6 +48,22 @@ namespace QuantConnect.Brokerages.Paper
         }
 
         /// <summary>
+        /// Gets a new instance of the <see cref="InteractiveBrokersBrokerageModel"/>
+        /// </summary>
+        public IBrokerageModel BrokerageModel
+        {
+            get { return new InteractiveBrokersBrokerageModel(); }
+        }
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public IReadOnlyDictionary<SecurityType, string> DefaultMarkets
+        {
+            get { return BacktestingBrokerageFactory.DefaultMarketMap; }
+        }
+
+        /// <summary>
         /// Creates a new IBrokerage instance
         /// </summary>
         /// <param name="job">The job packet to create the brokerage for</param>
@@ -58,7 +75,7 @@ namespace QuantConnect.Brokerages.Paper
             if (job.BrokerageData.ContainsKey("project-paper-equity"))
             {
                 var consistentCash = Convert.ToDecimal(job.BrokerageData["project-paper-equity"], CultureInfo.InvariantCulture);
-                algorithm.SetCash(consistentCash);
+                algorithm.Portfolio.SetCash(consistentCash);
             }
 
             return new PaperBrokerage(algorithm);

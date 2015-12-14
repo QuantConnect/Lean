@@ -174,6 +174,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
+            EndOfStream = true;
             _enumerator.Dispose();
         }
 

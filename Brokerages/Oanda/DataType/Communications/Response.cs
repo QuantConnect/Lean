@@ -22,6 +22,7 @@ using QuantConnect.Brokerages.Oanda.Framework;
 
 namespace QuantConnect.Brokerages.Oanda.DataType.Communications
 {
+#pragma warning disable 1591
     /// <summary>
     /// Represents the Restful web response from Oanda.
     /// </summary>
@@ -52,4 +53,5 @@ namespace QuantConnect.Brokerages.Oanda.DataType.Communications
 			return result.ToString();
 		}
 	}
+#pragma warning restore 1591
 }

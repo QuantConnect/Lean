@@ -35,7 +35,7 @@ namespace QuantConnect.Brokerages.Backtesting
         // time loop
         private bool _needsScan;
         // this is the algorithm under test
-        private readonly IAlgorithm _algorithm;
+        protected readonly IAlgorithm Algorithm;
         private readonly ConcurrentDictionary<int, Order> _pending;
         private readonly object _needsScanLock = new object();
 
@@ -46,7 +46,7 @@ namespace QuantConnect.Brokerages.Backtesting
         public BacktestingBrokerage(IAlgorithm algorithm)
             : base("Backtesting Brokerage")
         {
-            _algorithm = algorithm;
+            Algorithm = algorithm;
             _pending = new ConcurrentDictionary<int, Order>();
         }
 
@@ -58,7 +58,7 @@ namespace QuantConnect.Brokerages.Backtesting
         protected BacktestingBrokerage(IAlgorithm algorithm, string name)
             : base(name)
         {
-            _algorithm = algorithm;
+            Algorithm = algorithm;
             _pending = new ConcurrentDictionary<int, Order>();
         }
 
@@ -79,7 +79,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>The open orders returned from IB</returns>
         public override List<Order> GetOpenOrders()
         {
-            return _algorithm.Transactions.GetOpenOrders();
+            return Algorithm.Transactions.GetOpenOrders();
         }
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace QuantConnect.Brokerages.Backtesting
         public override List<Holding> GetAccountHoldings()
         {
             // grab everything from the portfolio with a non-zero absolute quantity
-            return _algorithm.Portfolio.Values.Where(x => x.AbsoluteQuantity > 0).OrderBy(x => x.Symbol).Select(holding => new Holding(holding)).ToList();
+            return Algorithm.Portfolio.Values.Where(x => x.AbsoluteQuantity > 0).OrderBy(x => x.Symbol).Select(holding => new Holding(holding)).ToList();
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<Cash> GetCashBalance()
         {
-            return _algorithm.Portfolio.CashBook.Values.ToList();
+            return Algorithm.Portfolio.CashBook.Values.ToList();
         }
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace QuantConnect.Brokerages.Backtesting
 
                 // fire off the event that says this order has been submitted
                 const int orderFee = 0;
-                var submitted = new OrderEvent(order, _algorithm.UtcTime, orderFee) { Status = OrderStatus.Submitted };
+                var submitted = new OrderEvent(order, Algorithm.UtcTime, orderFee) { Status = OrderStatus.Submitted };
                 OnOrderEvent(submitted);
 
                 return true;
@@ -154,7 +154,7 @@ namespace QuantConnect.Brokerages.Backtesting
 
                 // fire off the event that says this order has been updated
                 const int orderFee = 0;
-                var updated = new OrderEvent(order, _algorithm.UtcTime, orderFee) { Status = OrderStatus.Submitted };
+                var updated = new OrderEvent(order, Algorithm.UtcTime, orderFee) { Status = OrderStatus.Submitted };
                 OnOrderEvent(updated);
 
                 return true;
@@ -179,7 +179,7 @@ namespace QuantConnect.Brokerages.Backtesting
 
             // fire off the event that says this order has been canceled
             const int orderFee = 0;
-            var canceled = new OrderEvent(order, _algorithm.UtcTime, orderFee) { Status = OrderStatus.Canceled };
+            var canceled = new OrderEvent(order, Algorithm.UtcTime, orderFee) { Status = OrderStatus.Canceled };
             OnOrderEvent(canceled);
 
             return true;
@@ -212,29 +212,29 @@ namespace QuantConnect.Brokerages.Backtesting
                     }
 
                     Security security;
-                    if (!_algorithm.Securities.TryGetValue(order.Symbol, out security))
+                    if (!Algorithm.Securities.TryGetValue(order.Symbol, out security))
                     {
                         Log.Error("BacktestingBrokerage.Scan(): Unable to process order: " + order.Id + ". The security no longer exists.");
                         // invalidate the order in the algorithm before removing
-                        OnOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m){Status = OrderStatus.Invalid});
+                        OnOrderEvent(new OrderEvent(order, Algorithm.UtcTime, 0m){Status = OrderStatus.Invalid});
                         _pending.TryRemove(order.Id, out order);
                         continue;
                     }
 
                     // check if we would actually be able to fill this
-                    if (!_algorithm.BrokerageModel.CanExecuteOrder(security, order))
+                    if (!Algorithm.BrokerageModel.CanExecuteOrder(security, order))
                     {
                         continue;
                     }
 
                     var orderFee = security.TransactionModel.GetOrderFee(security, order);
-                    var fill = new OrderEvent(order, _algorithm.UtcTime, orderFee);
+                    var fill = new OrderEvent(order, Algorithm.UtcTime, orderFee);
 
                     // verify sure we have enough cash to perform the fill
                     bool sufficientBuyingPower;
                     try
                     {
-                        sufficientBuyingPower = _algorithm.Transactions.GetSufficientCapitalForOrder(_algorithm.Portfolio, order);
+                        sufficientBuyingPower = Algorithm.Transactions.GetSufficientCapitalForOrder(Algorithm.Portfolio, order);
                     }
                     catch (Exception err)
                     {
@@ -242,10 +242,10 @@ namespace QuantConnect.Brokerages.Backtesting
                         Order pending;
                         _pending.TryRemove(order.Id, out pending);
                         order.Status = OrderStatus.Invalid;
-                        OnOrderEvent(new OrderEvent(order, _algorithm.UtcTime, orderFee, "Error in GetSufficientCapitalForOrder"));
+                        OnOrderEvent(new OrderEvent(order, Algorithm.UtcTime, orderFee, "Error in GetSufficientCapitalForOrder"));
 
                         Log.Error(err);
-                        _algorithm.Error(string.Format("Order Error: id: {0}, Error executing margin models: {1}", order.Id, err.Message));
+                        Algorithm.Error(string.Format("Order Error: id: {0}, Error executing margin models: {1}", order.Id, err.Message));
                         continue;
                     }
 
@@ -288,7 +288,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         catch (Exception err)
                         {
                             Log.Error(err);
-                            _algorithm.Error(string.Format("Order Error: id: {0}, Transaction model failed to fill for order type: {1} with error: {2}",
+                            Algorithm.Error(string.Format("Order Error: id: {0}, Transaction model failed to fill for order type: {1} with error: {2}",
                                 order.Id, order.Type, err.Message));
                         }
                     }
@@ -296,7 +296,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     {
                         //Flag order as invalid and push off queue:
                         order.Status = OrderStatus.Invalid;
-                        _algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id,
+                        Algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id,
                             order.GetValue(security.Price).SmartRounding()));
                     }
 

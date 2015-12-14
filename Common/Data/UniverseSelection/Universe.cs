@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using NodaTime;
@@ -26,6 +27,11 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public abstract class Universe
     {
+        /// <summary>
+        /// Gets a value indicating that no change to the universe should be made
+        /// </summary>
+        public static readonly UnchangedUniverse Unchanged = UnchangedUniverse.Instance;
+
         private readonly ConcurrentDictionary<Symbol, Security> _securities;
 
         /// <summary>
@@ -77,9 +83,6 @@ namespace QuantConnect.Data.UniverseSelection
         {
             _securities = new ConcurrentDictionary<Symbol, Security>();
 
-            if (config.FillDataForward) throw new ArgumentException("Universe data can not be fill forward.");
-            if (!config.IsInternalFeed) throw new ArgumentException("Universe data must be marked as internal feed.");
-
             Configuration = config;
         }
 
@@ -99,9 +102,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Performs universe selection using the data specified
         /// </summary>
+        /// <param name="utcTime">The current utc time</param>
         /// <param name="data">The symbols to remain in the universe</param>
         /// <returns>The data that passes the filter</returns>
-        public abstract IEnumerable<Symbol> SelectSymbols(IEnumerable<BaseData> data);
+        public abstract IEnumerable<Symbol> SelectSymbols(DateTime utcTime, IEnumerable<BaseData> data);
 
         /// <summary>
         /// Determines whether or not the specified
@@ -143,6 +147,15 @@ namespace QuantConnect.Data.UniverseSelection
                 return _securities.TryRemove(security.Symbol, out security);
             }
             return false;
+        }
+
+        public sealed class UnchangedUniverse : IEnumerable<string>, IEnumerable<Symbol>
+        {
+            public static readonly UnchangedUniverse Instance = new UnchangedUniverse();
+            private UnchangedUniverse() { }
+            IEnumerator<Symbol> IEnumerable<Symbol>.GetEnumerator() { yield break; }
+            IEnumerator<string> IEnumerable<string>.GetEnumerator() { yield break; }
+            IEnumerator IEnumerable.GetEnumerator() { yield break; }
         }
     }
 }

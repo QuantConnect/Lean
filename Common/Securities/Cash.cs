@@ -165,7 +165,7 @@ namespace QuantConnect.Securities
                              select config.Market).FirstOrDefault() ?? Market.FXCM;
 
             // if we've made it here we didn't find a subscription, so we'll need to add one
-            var currencyPairs = Forex.Forex.CurrencyPairs.Select(x => new Symbol(SecurityIdentifier.GenerateForex(x, market), x));
+            var currencyPairs = Forex.Forex.CurrencyPairs.Select(x => QuantConnect.Symbol.Create(x, SecurityType.Forex, market));
             var minimumResolution = subscriptions.Subscriptions.Min(x => x.Resolution);
             var objectType = minimumResolution == Resolution.Tick ? typeof (Tick) : typeof (TradeBar);
             foreach (var symbol in currencyPairs)
@@ -173,7 +173,7 @@ namespace QuantConnect.Securities
                 if (symbol.Value == normal || symbol.Value == invert)
                 {
                     _invertRealTimePrice = symbol.Value == invert;
-                    var marketHoursDbEntry = marketHoursDatabase.GetEntry(market, symbol, SecurityType.Forex);
+                    var marketHoursDbEntry = marketHoursDatabase.GetEntry(market, symbol.Value, SecurityType.Forex);
                     var exchangeHours = marketHoursDbEntry.ExchangeHours;
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
                     var config = subscriptions.Add(objectType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);

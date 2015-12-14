@@ -54,6 +54,14 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets the collection of universes for the algorithm
+        /// </summary>
+        UniverseManager Universes
+        {
+            get;
+        }
+
+        /// <summary>
         /// Security portfolio management class provides wrapper and helper methods for the Security.Holdings class such as
         /// IsLong, IsShort, TotalProfit
         /// </summary>
@@ -198,14 +206,6 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
-        /// Gets the list of universes for the algorithm
-        /// </summary>
-        List<Universe> Universes
-        {
-            get;
-        }
-
-        /// <summary>
         /// Gets the subscription settings to be used when adding securities via universe selection
         /// </summary>
         SubscriptionSettings UniverseSettings
@@ -289,6 +289,35 @@ namespace QuantConnect.Interfaces
         /// the data gather in the Initialize method
         /// </summary>
         void PostInitialize();
+
+        /// <summary>
+        /// Gets the parameter with the specified name. If a parameter
+        /// with the specified name does not exist, null is returned
+        /// </summary>
+        /// <param name="name">The name of the parameter to get</param>
+        /// <returns>The value of the specified parameter, or null if not found</returns>
+        string GetParameter(string name);
+
+        /// <summary>
+        /// Sets the parameters from the dictionary
+        /// </summary>
+        /// <param name="parameters">Dictionary containing the parameter names to values</param>
+        void SetParameters(Dictionary<string, string> parameters);
+
+        /// <summary>
+        /// Sets the default markets to be used by the algorithm
+        /// </summary>
+        /// <param name="defaultMarkets">A security typ to market string dictionary containing the default values</param>
+        void SetDefaultMarkets(Dictionary<SecurityType, string> defaultMarkets);
+
+        /// <summary>
+        /// Sets the brokerage model used to resolve transaction models, settlement models,
+        /// and brokerage specified ordering behaviors.
+        /// </summary>
+        /// <param name="brokerageModel">The brokerage model used to emulate the real
+        /// brokerage</param>
+        /// <param name="accountType">Specifies if this is a margin or cash account</param>
+        void SetBrokerageModel(IBrokerageModel brokerageModel, AccountType accountType = AccountType.Margin);
 
         // <summary>
         // v1.0 Handler for Tick Events [DEPRECATED June-2014]
@@ -425,7 +454,7 @@ namespace QuantConnect.Interfaces
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
-        void AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours);
+        Security AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours);
 
         /// <summary>
         /// Set the starting capital for the strategy

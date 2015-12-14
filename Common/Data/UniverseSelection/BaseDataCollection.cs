@@ -50,5 +50,17 @@ namespace QuantConnect.Data.UniverseSelection
             Time = time;
             if (data != null) Data = data.ToList();
         }
+
+        /// <summary>
+        /// Return a new instance clone of this object, used in fill forward
+        /// </summary>
+        /// <remarks>
+        /// This base implementation uses reflection to copy all public fields and properties
+        /// </remarks>
+        /// <returns>A clone of the current object</returns>
+        public override BaseData Clone()
+        {
+            return new BaseDataCollection(Time, Symbol, Data);
+        }
     }
 }

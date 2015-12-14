@@ -113,18 +113,18 @@ namespace QuantConnect.Tests.Engine
             Messages.Enqueue(new RuntimeErrorPacket(_job.AlgorithmId, message, stacktrace));
         }
 
-        public void Sample(string chartName, ChartType chartType, string seriesName, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
+        public void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
         {
             //Add a copy locally:
             if (!Charts.ContainsKey(chartName))
             {
-                Charts.AddOrUpdate(chartName, new Chart(chartName, chartType));
+                Charts.AddOrUpdate(chartName, new Chart(chartName));
             }
 
             //Add the sample to our chart:
             if (!Charts[chartName].Series.ContainsKey(seriesName))
             {
-                Charts[chartName].Series.Add(seriesName, new Series(seriesName, seriesType));
+                Charts[chartName].Series.Add(seriesName, new Series(seriesName, seriesType, seriesIndex, unit));
             }
 
             //Add our value:
@@ -133,22 +133,22 @@ namespace QuantConnect.Tests.Engine
 
         public void SampleEquity(DateTime time, decimal value)
         {
-            Sample("Strategy Equity", ChartType.Stacked, "Equity", SeriesType.Candle, time, value);
+            Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value);
         }
 
         public void SamplePerformance(DateTime time, decimal value)
         {
-            Sample("Strategy Equity", ChartType.Overlay, "Daily Performance", SeriesType.Line, time, value, "%");
+            Sample("Strategy Equity", "Daily Performance", 1, SeriesType.Line, time, value, "%");
         }
 
         public void SampleBenchmark(DateTime time, decimal value)
         {
-            Sample("Benchmark", ChartType.Stacked, "Benchmark", SeriesType.Line, time, value);
+            Sample("Benchmark", "Benchmark", 0, SeriesType.Line, time, value);
         }
 
         public void SampleAssetPrices(Symbol symbol, DateTime time, decimal value)
         {
-            Sample("Stockplot: " + symbol.Value, ChartType.Overlay, "Stockplot: " + symbol.Value, SeriesType.Line, time, value);
+            Sample("Stockplot: " + symbol.Value, "Stockplot: " + symbol.Value, 0, SeriesType.Line, time, value);
         }
 
         public void SampleRange(List<Chart> updates)
@@ -167,7 +167,7 @@ namespace QuantConnect.Tests.Engine
                     //If we don't already have this record, its the first packet
                     if (!Charts[update.Name].Series.ContainsKey(series.Name))
                     {
-                        Charts[update.Name].Series.Add(series.Name, new Series(series.Name, series.SeriesType));
+                        Charts[update.Name].Series.Add(series.Name, new Series(series.Name, series.SeriesType, series.Index, series.Unit));
                     }
 
                     //We already have this record, so just the new samples to the end:

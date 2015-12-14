@@ -37,6 +37,8 @@ namespace QuantConnect
     {
         #region Empty, DefaultDate Fields
 
+        private static readonly string MapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
+
         /// <summary>
         /// Gets an instance of <see cref="SecurityIdentifier"/> that is empty, that is, one with no symbol specified
         /// </summary>
@@ -257,8 +259,7 @@ namespace QuantConnect
         /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified symbol today</returns>
         public static SecurityIdentifier GenerateEquity(string symbol, string market)
         {
-            var mapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
-            var provider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(mapFileProviderTypeName);
+            var provider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(MapFileProviderTypeName);
             var resolver = provider.Get(market);
             var mapFile = resolver.ResolveMapFile(symbol, DateTime.Today);
             var firstDate = mapFile.FirstDate;
@@ -470,7 +471,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Attempts to parse the specified <see cref="value"/> as a <see cref="SecurityIdentifier"/>.
+        /// Attempts to parse the specified <see paramref="value"/> as a <see cref="SecurityIdentifier"/>.
         /// </summary>
         /// <param name="value">The string value to be parsed</param>
         /// <param name="identifier">The result of parsing, when this function returns true, <paramref name="identifier"/>

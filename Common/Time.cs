@@ -82,7 +82,7 @@ namespace QuantConnect
             private readonly TimeZoneInfo timeZone;
 
             /// <summary>
-            /// Initializes a new instance of the <see cref="QuantConnect.Time+DateTimeWithZone"/> struct.
+            /// Initializes a new instance of the <see cref="QuantConnect.Time.DateTimeWithZone"/> struct.
             /// </summary>
             /// <param name="dateTime">Date time.</param>
             /// <param name="timeZone">Time zone.</param>

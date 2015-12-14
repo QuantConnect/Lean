@@ -928,7 +928,7 @@ namespace QuantConnect.Brokerages.Tradier
             var cachedOpenOrder = _cachedOpenOrdersByTradierOrderID.FirstOrDefault(x => x.Value.Symbol == order.Symbol.Value).Value;
             if (cachedOpenOrder != null)
             {
-                var qcOrder = _orderProvider.GetOrderByBrokerageId((int) cachedOpenOrder.Id);
+                var qcOrder = _orderProvider.GetOrderByBrokerageId(cachedOpenOrder.Id);
                 if (qcOrder == null)
                 {
                     // clean up our mess, this should never be encountered.
@@ -1376,7 +1376,7 @@ namespace QuantConnect.Brokerages.Tradier
                         {
                             // verify we don't have them in the order provider
                             Log.Trace("TradierBrokerage.CheckForFills(): Verifying missing brokerage IDs: " + string.Join(",", localUnknownTradierOrderIDs));
-                            var orders = localUnknownTradierOrderIDs.Select(x => _orderProvider.GetOrderByBrokerageId((int) x)).Where(x => x != null);
+                            var orders = localUnknownTradierOrderIDs.Select(x => _orderProvider.GetOrderByBrokerageId(x)).Where(x => x != null);
                             var stillUnknownOrderIDs = localUnknownTradierOrderIDs.Where(x => !orders.Any(y => y.BrokerId.Contains(x))).ToList();
                             if (stillUnknownOrderIDs.Count > 0)
                             {
@@ -1441,7 +1441,7 @@ namespace QuantConnect.Brokerages.Tradier
             if (updatedOrder.RemainingQuantity != cachedOrder.RemainingQuantity 
              || ConvertStatus(updatedOrder.Status) != ConvertStatus(cachedOrder.Status))
             {
-                var qcOrder = _orderProvider.GetOrderByBrokerageId((int)updatedOrder.Id);
+                var qcOrder = _orderProvider.GetOrderByBrokerageId(updatedOrder.Id);
                 const int orderFee = 0;
                 var fill = new OrderEvent(qcOrder, DateTime.UtcNow, orderFee, "Tradier Fill Event")
                 {
@@ -1602,14 +1602,14 @@ namespace QuantConnect.Brokerages.Tradier
                 default:
                     throw new NotImplementedException("The Tradier order type " + order.Type + " is not implemented.");
             }
-            qcOrder.Symbol = new Symbol(SecurityIdentifier.GenerateEquity(order.Symbol, Market.USA), order.Symbol);
+            qcOrder.Symbol = Symbol.Create(order.Symbol, SecurityType.Equity, Market.USA);
             qcOrder.Quantity = ConvertQuantity(order);
             qcOrder.SecurityType = SecurityType.Equity; // tradier only support equities? but also options??
             qcOrder.Status = ConvertStatus(order.Status);
             qcOrder.BrokerId.Add(order.Id);
             //qcOrder.ContingentId =
             qcOrder.Duration = ConvertDuration(order.Duration);
-            var orderByBrokerageId = _orderProvider.GetOrderByBrokerageId((int) order.Id);
+            var orderByBrokerageId = _orderProvider.GetOrderByBrokerageId(order.Id);
             if (orderByBrokerageId != null)
             {
                 qcOrder.Id = orderByBrokerageId.Id;
@@ -1763,7 +1763,7 @@ namespace QuantConnect.Brokerages.Tradier
         {
             return new Holding
             {
-                Symbol = new Symbol(SecurityIdentifier.GenerateEquity(position.Symbol, Market.USA), position.Symbol),
+                Symbol = Symbol.Create(position.Symbol, SecurityType.Equity, Market.USA),
                 Type = SecurityType.Equity,
                 AveragePrice = position.CostBasis/position.Quantity,
                 ConversionRate = 1.0m,

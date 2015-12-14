@@ -197,10 +197,8 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="config">The config to copy, then overrides are applied and all option</param>
         /// <param name="objectType">Type of the data objects.</param>
-        /// <param name="securityType">SecurityType Enum Set Equity/FOREX/Futures etc.</param>
         /// <param name="symbol">Symbol of the asset we're requesting</param>
         /// <param name="resolution">Resolution of the asset we're requesting</param>
-        /// <param name="market">The market this subscription comes from</param>
         /// <param name="dataTimeZone">The time zone the raw data is time stamped in</param>
         /// <param name="exchangeTimeZone">Specifies the time zone of the exchange for the security this subscription is for. This
         /// is this output time zone, that is, the time zone that will be used on BaseData instances</param>
@@ -211,10 +209,8 @@ namespace QuantConnect.Data
         /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
         public SubscriptionDataConfig(SubscriptionDataConfig config,
             Type objectType = null,
-            SecurityType? securityType = null,
             Symbol symbol = null,
             Resolution? resolution = null,
-            string market = null,
             DateTimeZone dataTimeZone = null,
             DateTimeZone exchangeTimeZone = null,
             bool? fillForward = null,

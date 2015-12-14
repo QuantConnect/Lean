@@ -21,10 +21,12 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Timers;
+using System.Threading;
+using Newtonsoft.Json;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Securities;
+using Timer = System.Timers.Timer;
 
 namespace QuantConnect 
 {
@@ -232,6 +234,30 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Breaks the specified string into csv components, all commas are considered separators
+        /// </summary>
+        /// <param name="str">The string to be broken into csv</param>
+        /// <param name="size">The expected size of the output list</param>
+        /// <returns>A list of the csv pieces</returns>
+        public static List<string> ToCsv(this string str, int size = 4)
+        {
+            int last = 0;
+            var csv = new List<string>(size);
+            for (int i = 0; i < str.Length; i++)
+            {
+                if (str[i] == ',')
+                {
+                    if (last != 0) last = last + 1;
+                    csv.Add(str.Substring(last, i - last));
+                    last = i;
+                }
+            }
+            if (last != 0) last = last + 1;
+            csv.Add(str.Substring(last));
+            return csv;
+        }
+
+        /// <summary>
         /// Check if a number is NaN or equal to zero
         /// </summary>
         /// <param name="value">The double value to check</param>
@@ -392,6 +418,8 @@ namespace QuantConnect
         /// <returns>The time in terms of the to time zone</returns>
         public static DateTime ConvertTo(this DateTime time, DateTimeZone from, DateTimeZone to, bool strict = false)
         {
+            if (ReferenceEquals(from, to)) return time;
+
             if (strict)
             {
                 return from.AtStrictly(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
@@ -543,21 +571,86 @@ namespace QuantConnect
         /// <returns>The converted value</returns>
         public static T ConvertTo<T>(this string value)
         {
-            var conversionType = typeof (T);
-            if (conversionType.IsEnum)
+            return (T) value.ConvertTo(typeof (T));
+        }
+
+        /// <summary>
+        /// Converts the specified string value into the specified type
+        /// </summary>
+        /// <param name="value">The string value to be converted</param>
+        /// <param name="type">The output type</param>
+        /// <returns>The converted value</returns>
+        public static object ConvertTo(this string value, Type type)
+        {
+            if (type.IsEnum)
             {
-                return (T) Enum.Parse(conversionType, value);
-            }
-            if (typeof (IConvertible).IsAssignableFrom(conversionType))
-            {
-                return (T)Convert.ChangeType(value, conversionType, CultureInfo.InvariantCulture);
-            }
-            if (typeof (TimeSpan) == conversionType)
-            {
-                return (T)(object)TimeSpan.Parse(value, CultureInfo.InvariantCulture);
+                return Enum.Parse(type, value);
             }
 
-            throw new ArgumentException("Extensions.ConvertTo is unable to convert to type: " + typeof (T).Name);
+            if (typeof (IConvertible).IsAssignableFrom(type))
+            {
+                return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
+            }
+
+            // try and find a static parse method
+            var parse = type.GetMethod("Parse", new[] {typeof (string)});
+            if (parse != null)
+            {
+                var result = parse.Invoke(null, new object[] {value});
+                return result;
+            }
+
+            return JsonConvert.DeserializeObject(value, type);
+        }
+
+        /// <summary>
+        /// Blocks the current thread until the current <see cref="T:System.Threading.WaitHandle"/> receives a signal, while observing a <see cref="T:System.Threading.CancellationToken"/>.
+        /// </summary>
+        /// <param name="waitHandle">The wait handle to wait on</param>
+        /// <param name="cancellationToken">The <see cref="T:System.Threading.CancellationToken"/> to observe.</param>
+        /// <exception cref="T:System.InvalidOperationException">The maximum number of waiters has been exceeded.</exception>
+        /// <exception cref="T:System.OperationCanceledExcepton"><paramref name="cancellationToken"/> was canceled.</exception>
+        /// <exception cref="T:System.ObjectDisposedException">The object has already been disposed or the <see cref="T:System.Threading.CancellationTokenSource"/> that created <paramref name="cancellationToken"/> has been disposed.</exception>
+        public static bool WaitOne(this WaitHandle waitHandle, CancellationToken cancellationToken)
+        {
+            return waitHandle.WaitOne(Timeout.Infinite, cancellationToken);
+        }
+
+        /// <summary>
+        /// Blocks the current thread until the current <see cref="T:System.Threading.WaitHandle"/> is set, using a <see cref="T:System.TimeSpan"/> to measure the time interval, while observing a <see cref="T:System.Threading.CancellationToken"/>.
+        /// </summary>
+        /// 
+        /// <returns>
+        /// true if the <see cref="T:System.Threading.WaitHandle"/> was set; otherwise, false.
+        /// </returns>
+        /// <param name="waitHandle">The wait handle to wait on</param>
+        /// <param name="timeout">A <see cref="T:System.TimeSpan"/> that represents the number of milliseconds to wait, or a <see cref="T:System.TimeSpan"/> that represents -1 milliseconds to wait indefinitely.</param>
+        /// <param name="cancellationToken">The <see cref="T:System.Threading.CancellationToken"/> to observe.</param>
+        /// <exception cref="T:System.Threading.OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="timeout"/> is a negative number other than -1 milliseconds, which represents an infinite time-out -or- timeout is greater than <see cref="F:System.Int32.MaxValue"/>.</exception>
+        /// <exception cref="T:System.InvalidOperationException">The maximum number of waiters has been exceeded. </exception><exception cref="T:System.ObjectDisposedException">The object has already been disposed or the <see cref="T:System.Threading.CancellationTokenSource"/> that created <paramref name="cancellationToken"/> has been disposed.</exception>
+        public static bool WaitOne(this WaitHandle waitHandle, TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            return waitHandle.WaitOne((int) timeout.TotalMilliseconds, cancellationToken);
+        }
+
+        /// <summary>
+        /// Blocks the current thread until the current <see cref="T:System.Threading.WaitHandle"/> is set, using a 32-bit signed integer to measure the time interval, while observing a <see cref="T:System.Threading.CancellationToken"/>.
+        /// </summary>
+        /// 
+        /// <returns>
+        /// true if the <see cref="T:System.Threading.WaitHandle"/> was set; otherwise, false.
+        /// </returns>
+        /// <param name="waitHandle">The wait handle to wait on</param>
+        /// <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="F:System.Threading.Timeout.Infinite"/>(-1) to wait indefinitely.</param>
+        /// <param name="cancellationToken">The <see cref="T:System.Threading.CancellationToken"/> to observe.</param>
+        /// <exception cref="T:System.Threading.OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
+        /// <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="millisecondsTimeout"/> is a negative number other than -1, which represents an infinite time-out.</exception>
+        /// <exception cref="T:System.InvalidOperationException">The maximum number of waiters has been exceeded.</exception>
+        /// <exception cref="T:System.ObjectDisposedException">The object has already been disposed or the <see cref="T:System.Threading.CancellationTokenSource"/> that created <paramref name="cancellationToken"/> has been disposed.</exception>
+        public static bool WaitOne(this WaitHandle waitHandle, int millisecondsTimeout, CancellationToken cancellationToken)
+        {
+            return WaitHandle.WaitAny(new[] { waitHandle, cancellationToken.WaitHandle }, millisecondsTimeout) == 0;
         }
     }
 }

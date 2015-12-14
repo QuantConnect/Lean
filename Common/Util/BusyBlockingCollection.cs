@@ -33,13 +33,12 @@ namespace QuantConnect.Util
         private readonly object _lock = new object();
 
         /// <summary>
-        /// Gets true if an item is currently being processed or needs to be processed,
-        /// gets false when the collection is empty and the consumer is blocked, waiting
-        /// for more items to process
+        /// Gets a wait handle that can be used to wait until this instance is done
+        /// processing all of it's item
         /// </summary>
-        public bool IsBusy
+        public WaitHandle WaitHandle
         {
-            get { return !_processingCompletedEvent.IsSet; }
+            get { return _processingCompletedEvent.WaitHandle; }
         }
 
         /// <summary>
@@ -100,58 +99,6 @@ namespace QuantConnect.Util
             {
                 _collection.Add(item, cancellationToken);
             }
-        }
-
-        /// <summary>
-        /// Blocks the current thread until a consumer is blocked inside <see cref="GetConsumingEnumerable()"/>
-        /// This effectively waits until the consumer has 'caught up' with the producer and finished processing
-        /// everything in the collection
-        /// </summary>
-        /// <param name="milliseconds">The number of milliseconds to wait, or <see cref="Timeout.Infinite"/> (-1), 
-        /// to wait indefinitely</param>
-        /// <returns>True if the event was set, false if the timeout was reached</returns>
-        public bool Wait(int milliseconds)
-        {
-            return _processingCompletedEvent.Wait(milliseconds);
-        }
-
-        /// <summary>
-        /// Blocks the current thread until a consumer is blocked inside <see cref="GetConsumingEnumerable()"/>
-        /// This effectively waits until the consumer has 'caught up' with the producer and finished processing
-        /// everything in the collection
-        /// </summary>
-        /// <param name="milliseconds">The number of milliseconds to wait, or <see cref="Timeout.Infinite"/> (-1), 
-        /// to wait indefinitely</param>
-        /// <param name="cancellationToken">A cancellation token to observe</param>
-        /// <returns>True if the event was set, false if the timeout was reached</returns>
-        public bool Wait(int milliseconds, CancellationToken cancellationToken)
-        {
-            return _processingCompletedEvent.Wait(milliseconds, cancellationToken);
-        }
-
-        /// <summary>
-        /// Blocks the current thread until a consumer is blocked inside <see cref="GetConsumingEnumerable()"/>
-        /// This effectively waits until the consumer has 'caught up' with the producer and finished processing
-        /// everything in the collection
-        /// </summary>
-        /// <param name="timeout">The duration of time to wait, or -1 milliseconds to wait indefinitely</param>
-        /// <returns>True if the event was set, false if the timeout was reached</returns>
-        public bool Wait(TimeSpan timeout)
-        {
-            return _processingCompletedEvent.Wait(timeout);
-        }
-
-        /// <summary>
-        /// Blocks the current thread until a consumer is blocked inside <see cref="GetConsumingEnumerable()"/>
-        /// This effectively waits until the consumer has 'caught up' with the producer and finished processing
-        /// everything in the collection
-        /// </summary>
-        /// <param name="timeout">The duration of time to wait, or -1 milliseconds to wait indefinitely</param>
-        /// <param name="cancellationToken">A cancellation token to observe</param>
-        /// <returns>True if the event was set, false if the timeout was reached</returns>
-        public bool Wait(TimeSpan timeout, CancellationToken cancellationToken)
-        {
-            return _processingCompletedEvent.Wait(timeout, cancellationToken);
         }
 
         /// <summary>

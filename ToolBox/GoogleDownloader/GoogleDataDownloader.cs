@@ -38,18 +38,17 @@ namespace QuantConnect.ToolBox.GoogleDownloader
         /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
         /// </summary>
         /// <param name="symbol">Symbol for the data we're looking for.</param>
-        /// <param name="type">Security type</param>
         /// <param name="resolution">Resolution of the data request</param>
         /// <param name="startUtc">Start time of the data in UTC</param>
         /// <param name="endUtc">End time of the data in UTC</param>
         /// <returns>Enumerable of base data for this symbol</returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, SecurityType type, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
             if (resolution != Resolution.Minute && resolution != Resolution.Hour)
                 throw new NotSupportedException("Resolution not available: " + resolution);
 
-            if (type != SecurityType.Equity)
-                throw new NotSupportedException("SecurityType not available: " + type);
+            if (symbol.ID.SecurityType != SecurityType.Equity)
+                throw new NotSupportedException("SecurityType not available: " + symbol.ID.SecurityType);
 
             if (endUtc < startUtc)
                 throw new ArgumentException("The end date must be greater or equal than the start date.");

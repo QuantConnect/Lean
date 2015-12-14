@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Logging;
 
@@ -97,7 +98,7 @@ namespace QuantConnect.Configuration
                 Log.Trace(string.Format("Config.Get(): Configuration key not found. Key: {0} - Using default value: {1}", key, defaultValue));
                 return defaultValue;
             }
-            return token.Value<string>();
+            return token.ToString();
         }
 
         /// <summary>
@@ -195,12 +196,26 @@ namespace QuantConnect.Configuration
             try
             {
                 var parse = type.GetMethod("Parse", new[]{typeof(string)});
-                var result = parse.Invoke(null, new object[] {value});
-                return (T) result;
+                if (parse != null)
+                {
+                    var result = parse.Invoke(null, new object[] {value});
+                    return (T) result;
+                }
             }
             catch (Exception err)
             {
                 Log.Trace("Config.GetValue<{0}>({1},{2}): Failed to parse: {3}. Using default value.", typeof (T).Name, key, defaultValue, value);
+                Log.Error(err);
+                return defaultValue;
+            }
+
+            try
+            {
+                return JsonConvert.DeserializeObject<T>(value);
+            }
+            catch (Exception err)
+            {
+                Log.Trace("Config.GetValue<{0}>({1},{2}): Failed to JSON deserialize: {3}. Using default value.", typeof(T).Name, key, defaultValue, value);
                 Log.Error(err);
                 return defaultValue;
             }

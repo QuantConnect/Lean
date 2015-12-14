@@ -20,12 +20,13 @@ using QuantConnect.Brokerages.Oanda.DataType.Communications;
 
 namespace QuantConnect.Brokerages.Oanda.DataType
 {
+#pragma warning disable 1591
     /// <summary>
     /// Represents an order on Oanda.
     /// </summary>
     public class Order : Response
     {
-        public int id { get; set; }
+        public long id { get; set; }
 		public string instrument { get; set; }
 		public int units { get; set; }
 		public string side { get; set; }
@@ -39,4 +40,5 @@ namespace QuantConnect.Brokerages.Oanda.DataType
         public double lowerBound { get; set; }
         public int trailingStop { get; set; }
     }
+#pragma warning restore 1591
 }

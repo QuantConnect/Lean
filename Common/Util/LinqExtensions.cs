@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace QuantConnect.Util
@@ -41,11 +42,23 @@ namespace QuantConnect.Util
         /// </summary>
         /// <typeparam name="K">The key type</typeparam>
         /// <typeparam name="V">The value type</typeparam>
-        /// <param name="lookup">The IEnumerable of KeyValuePair instance to convert to a dictionary</param>
-        /// <returns>A dictionary holding the same data as 'lookup'</returns>
-        public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>> lookup)
+        /// <param name="enumerable">The IEnumerable of KeyValuePair instances to convert to a dictionary</param>
+        /// <returns>A dictionary holding the same data as the enumerable</returns>
+        public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>> enumerable)
         {
-            return lookup.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            return enumerable.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
+        /// <summary>
+        /// Creates a new read-only dictionary from the key value pairs
+        /// </summary>
+        /// <typeparam name="K">The key type</typeparam>
+        /// <typeparam name="V">The value type</typeparam>
+        /// <param name="enumerable">The IEnumerable of KeyValuePair instances to convert to a dictionary</param>
+        /// <returns>A read-only dictionary holding the same data as the enumerable</returns>
+        public static IReadOnlyDictionary<K, V> ToReadOnlyDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>> enumerable)
+        {
+            return new ReadOnlyDictionary<K, V>(enumerable.ToDictionary());
         }
 
         /// <summary>

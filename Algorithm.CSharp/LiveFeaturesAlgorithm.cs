@@ -154,7 +154,7 @@ namespace QuantConnect
 
             //return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip";
             // OR simply return a fixed small data file. Large files will slow down your backtest
-            return new SubscriptionDataSource("http://www.quandl.com/api/v1/datasets/BITCOIN/BITSTAMPUSD.csv?sort_order=asc", SubscriptionTransportMedium.RemoteFile);
+            return new SubscriptionDataSource("http://www.quandl.com/api/v1/datasets/BCHARTS/BITSTAMPUSD.csv?sort_order=asc", SubscriptionTransportMedium.RemoteFile);
         }
 
         /// <summary>

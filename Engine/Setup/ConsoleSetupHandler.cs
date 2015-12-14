@@ -27,6 +27,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -115,10 +116,14 @@ namespace QuantConnect.Lean.Engine.Setup
                 if (baseJob.Type == PacketType.BacktestNode)
                 {
                     var backtestJob = baseJob as BacktestNodePacket;
-                    
+
+                    //Set our default markets
+                    algorithm.SetDefaultMarkets(BacktestingBrokerageFactory.DefaultMarketMap.ToDictionary());
                     //Set the limits on the algorithm assets (for local no limits)
                     algorithm.SetAssetLimits(999, 999, 999);
                     algorithm.SetMaximumOrders(int.MaxValue);
+                    // set our parameters
+                    algorithm.SetParameters(baseJob.Parameters);
                     algorithm.SetLiveMode(false);
                     //Set the source impl for the event scheduling
                     algorithm.Schedule.SetEventSchedule(realTimeHandler);

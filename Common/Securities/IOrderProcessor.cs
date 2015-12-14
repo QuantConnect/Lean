@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System.Threading;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Securities
@@ -23,11 +22,6 @@ namespace QuantConnect.Securities
     /// </summary>
     public interface IOrderProcessor : IOrderProvider
     {
-        /// <summary>
-        /// Reset event that signals when this order processor is not busy processing orders
-        /// </summary>
-        ManualResetEventSlim ProcessingCompletedEvent { get; }
-
         /// <summary>
         /// Adds the specified order to be processed
         /// </summary>

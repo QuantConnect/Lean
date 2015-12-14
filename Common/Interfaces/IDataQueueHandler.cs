@@ -38,13 +38,13 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        void Subscribe(LiveNodePacket job, IDictionary<SecurityType, List<Symbol>> symbols);
+        void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols);
 
         /// <summary>
         /// Removes the specified symbols to the subscription
         /// </summary>
         /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        void Unsubscribe(LiveNodePacket job, IDictionary<SecurityType, List<Symbol>> symbols);
+        void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols);
     }
 }

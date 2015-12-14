@@ -20,6 +20,7 @@ using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
+using QuantConnect.Packets;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Launcher
@@ -91,6 +92,7 @@ namespace QuantConnect.Lean.Launcher
             Log.Trace("         Transactions: " + leanEngineAlgorithmHandlers.Transactions.GetType().FullName);
             Log.Trace("         History:      " + leanEngineAlgorithmHandlers.HistoryProvider.GetType().FullName);
             Log.Trace("         Commands:     " + leanEngineAlgorithmHandlers.CommandQueue.GetType().FullName);
+            if (job is LiveNodePacket) Log.Trace("         Brokerage:    " + ((LiveNodePacket)job).Brokerage);
 
             // if the job version doesn't match this instance version then we can't process it
             // we also don't want to reprocess redelivered jobs

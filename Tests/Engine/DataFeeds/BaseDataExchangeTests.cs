@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -40,18 +41,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var firedHandler = false;
             var firedWrongHandler = false;
-            exchange.SetHandler(Symbols.SPY, spy =>
+            exchange.SetDataHandler(Symbols.SPY, spy =>
             {
                 firedHandler = true;
             });
-            exchange.SetHandler(Symbols.EURUSD, eurusd =>
+            exchange.SetDataHandler(Symbols.EURUSD, eurusd =>
             {
                 firedWrongHandler = true;
             });
 
             dataQueue.Enqueue(new Tick{Symbol = Symbols.SPY});
 
-            exchange.Start();
+            Task.Run(() => exchange.Start());
 
             Thread.Sleep(10);
 
@@ -66,15 +67,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var exchange = CreateExchange(dataQueue);
 
             var firedHandler = false;
-            exchange.SetHandler(Symbols.SPY, spy =>
+            exchange.SetDataHandler(Symbols.SPY, spy =>
             {
                 firedHandler = true;
             });
-            exchange.RemoveHandler(Symbols.SPY);
+            exchange.RemoveDataHandler(Symbols.SPY);
 
             dataQueue.Enqueue(new Tick {Symbol = Symbols.SPY});
 
-            exchange.Start();
+            Task.Run(() => exchange.Start());
 
             Thread.Sleep(10);
 
@@ -87,7 +88,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataQueue = new ConcurrentQueue<BaseData>();
             var exchange = CreateExchange(dataQueue);
 
-            Task.Factory.StartNew(() =>
+            Task.Run(() =>
             {
                 while (true)
                 {
@@ -97,12 +98,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
 
             BaseData last = null;
-            exchange.SetHandler(Symbols.SPY, spy =>
+            exchange.SetDataHandler(Symbols.SPY, spy =>
             {
                 last = spy;
             });
 
-            exchange.Start();
+            Task.Run(() => exchange.Start());
 
             Thread.Sleep(1);
 
@@ -122,7 +123,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataQueue = new ConcurrentQueue<BaseData>();
             var exchange = CreateExchange(dataQueue);
 
-            Task.Factory.StartNew(() =>
+            Task.Run(() =>
             {
                 while (true)
                 {
@@ -133,7 +134,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var first = true;
             BaseData last = null;
-            exchange.SetHandler(Symbols.SPY, spy =>
+            exchange.SetDataHandler(Symbols.SPY, spy =>
             {
                 if (first)
                 {
@@ -143,7 +144,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 last = spy;
             });
 
-            exchange.Start();
+            Task.Run(() => exchange.Start());
 
             Thread.Sleep(50);
 
@@ -169,7 +170,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var first = true;
             BaseData last = null;
-            exchange.SetHandler(Symbols.SPY, spy =>
+            exchange.SetDataHandler(Symbols.SPY, spy =>
             {
                 if (first)
                 {
@@ -181,13 +182,54 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             exchange.SetErrorHandler(error => true);
 
-            exchange.Start();
+            Task.Run(() => exchange.Start());
 
             Thread.Sleep(25);
 
             exchange.Stop();
 
             Assert.IsNull(last);
+        }
+
+        [Test]
+        public void RespectsShouldMoveNext()
+        {
+            var exchange = new BaseDataExchange();
+            exchange.SetErrorHandler(exception => true);
+            exchange.AddEnumerator(new List<BaseData> {new Tick()}.GetEnumerator(), () => false);
+
+            var isFaultedEvent = new ManualResetEvent(false);
+            var isCompletedEvent = new ManualResetEvent(false);
+            Task.Run(() => exchange.Start(new CancellationTokenSource(50).Token)).ContinueWith(task =>
+            {
+                if (task.IsFaulted) isFaultedEvent.Set();
+                isCompletedEvent.Set();
+            });
+
+            isCompletedEvent.WaitOne();
+            Assert.IsFalse(isFaultedEvent.WaitOne(0));
+        }
+
+        [Test]
+        public void FiresOnEnumeratorFinishedEvents()
+        {
+            var exchange = new BaseDataExchange();
+            IEnumerator<BaseData> enumerator = new List<BaseData>().GetEnumerator();
+
+            var isCompletedEvent = new ManualResetEvent(false);
+            exchange.AddEnumerator(enumerator, () => true, handler => isCompletedEvent.Set());
+            Task.Run(() => exchange.Start(new CancellationTokenSource(50).Token));
+
+            isCompletedEvent.WaitOne();
+        }
+
+        private sealed class ExceptionEnumerator<T> : IEnumerator<T>
+        {
+            public void Reset() { }
+            public void Dispose() { }
+            public T Current { get; private set; }
+            object IEnumerator.Current { get { return Current; } }
+            public bool MoveNext() { throw new Exception("ExceptionEnumerator.MoveNext always throws exceptions!"); }
         }
 
         private static BaseDataExchange CreateExchange(ConcurrentQueue<BaseData> dataQueue)
@@ -201,7 +243,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return list;
             });
             var exchange = new BaseDataExchange();
-            exchange.AddEnumerator(GetNextTicksEnumerator(dataQueueHandler));
+            IEnumerator<BaseData> enumerator = GetNextTicksEnumerator(dataQueueHandler);
+            exchange.AddEnumerator(enumerator, null, null);
             return exchange;
         }
 

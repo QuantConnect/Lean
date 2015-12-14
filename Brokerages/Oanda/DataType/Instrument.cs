@@ -20,6 +20,7 @@ using System;
 
 namespace QuantConnect.Brokerages.Oanda.DataType
 {
+#pragma warning disable 1591
     /// <summary>
     /// Represents whether a property is optional.
     /// </summary>
@@ -134,4 +135,5 @@ namespace QuantConnect.Brokerages.Oanda.DataType
 			}
 		}
     }
+#pragma warning restore 1591
 }

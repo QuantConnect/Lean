@@ -133,7 +133,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var symbol = kvp.Key.Symbol;
                 
                 // keep count of all data points
-                count += list.Count;
+                if (list.Count == 1 && list[0] is BaseDataCollection)
+                {
+                    count += ((BaseDataCollection) list[0]).Data.Count;
+                }
+                else
+                {
+                    count += list.Count;
+                }
 
                 BaseData update = null;
                 var consolidatorUpdate = new List<BaseData>(list.Count);
@@ -217,7 +224,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 consolidator.Add(new KeyValuePair<SubscriptionDataConfig, List<BaseData>>(kvp.Key.SubscriptionDataConfig, consolidatorUpdate));
             }
 
-            var slice = new Slice(utcDateTime.ConvertFromUtc(algorithmTimeZone), allDataForAlgorithm, tradeBars, ticks, splits, dividends, delistings, symbolChanges);
+            var slice = new Slice(utcDateTime.ConvertFromUtc(algorithmTimeZone), allDataForAlgorithm, tradeBars, ticks, splits, dividends, delistings, symbolChanges, allDataForAlgorithm.Count > 0);
 
             return new TimeSlice(utcDateTime, count, slice, data, cash, security, consolidator, custom, changes);
         }

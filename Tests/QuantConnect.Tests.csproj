@@ -75,12 +75,16 @@
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmLimitOrderTestParameters.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmStopMarketOrderTestParameters.cs" />
+    <Compile Include="Brokerages\Fxcm\FxcmSymbolMapperTests.cs" />
     <Compile Include="Brokerages\HoldingsProvider.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageDataQueueHandlerTest.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersOrderTests.cs" />
+    <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersSymbolMapperTests.cs" />
     <Compile Include="Brokerages\LimitOrderTestParameters.cs" />
     <Compile Include="Brokerages\MarketOrderTestParameters.cs" />
+    <Compile Include="Brokerages\Oanda\OandaBrokerageDataQueueHandlerTests.cs" />
     <Compile Include="Brokerages\Oanda\OandaBrokerageTests.cs" />
+    <Compile Include="Brokerages\Oanda\OandaSymbolMapperTests.cs" />
     <Compile Include="Brokerages\OrderProvider.cs" />
     <Compile Include="Brokerages\OrderTestParameters.cs" />
     <Compile Include="Brokerages\StopLimitOrderTestParameters.cs" />
@@ -93,9 +97,9 @@
     <Compile Include="Common\Data\Market\TradeBarTests.cs" />
     <Compile Include="Common\Data\SliceTests.cs" />
     <Compile Include="Common\Data\SubscriptionDataSourceTests.cs" />
-    <Compile Include="Common\HoldingTests.cs" />
     <Compile Include="Common\MarketTests.cs" />
     <Compile Include="Common\Orders\OrderJsonConverterTests.cs" />
+    <Compile Include="Common\Parameters\ParameterAttributeTests.cs" />
     <Compile Include="Common\Scheduling\DateRulesTests.cs" />
     <Compile Include="Common\Scheduling\ScheduledEventTests.cs" />
     <Compile Include="Common\Scheduling\TimeRulesTests.cs" />
@@ -110,7 +114,9 @@
     <Compile Include="Common\Securities\MarketHoursDatabaseTests.cs" />
     <Compile Include="Common\Securities\SecurityExchangeHoursTests.cs" />
     <Compile Include="Common\Securities\SecurityIdentifierTests.cs" />
+    <Compile Include="Common\Securities\SecurityManagerTests.cs" />
     <Compile Include="Common\Securities\SecurityTransactionModelTests.cs" />
+    <Compile Include="Common\Securities\UniverseManagerTests.cs" />
     <Compile Include="Common\SeriesTests.cs" />
     <Compile Include="Common\SymbolCacheTests.cs" />
     <Compile Include="Common\SymbolTests.cs" />

@@ -122,12 +122,14 @@
     <Compile Include="Brokerages\BrokerageName.cs" />
     <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
+    <Compile Include="Brokerages\OandaTransactionModel.cs" />
     <Compile Include="Brokerages\FxcmTransactionModel.cs" />
     <Compile Include="Brokerages\IBrokerageMessageHandler.cs" />
     <Compile Include="Brokerages\IBrokerageModel.cs" />
     <Compile Include="Brokerages\InteractiveBrokersBrokerageModel.cs" />
     <Compile Include="Brokerages\OandaBrokerageModel.cs" />
     <Compile Include="Brokerages\TradierBrokerageModel.cs" />
+    <Compile Include="Commands\AddSecurityCommand.cs" />
     <Compile Include="Commands\AlgorithmStatusCommand.cs" />
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\LiquidateCommand.cs" />
@@ -211,6 +213,7 @@
     <Compile Include="Packets\CommandResultPacket.cs" />
     <Compile Include="Packets\HandledErrorPacket.cs" />
     <Compile Include="Packets\HistoryPacket.cs" />
+    <Compile Include="Parameters\ParameterAttribute.cs" />
     <Compile Include="Properties\SharedAssemblyInfo.cs" />
     <Compile Include="Scheduling\CompositeTimeRule.cs" />
     <Compile Include="Scheduling\DateRules.cs" />
@@ -244,6 +247,7 @@
     <Compile Include="Securities\SecurityPortfolioModel.cs" />
     <Compile Include="Securities\SecurityMarginModel.cs" />
     <Compile Include="Securities\ImmediateSettlementModel.cs" />
+    <Compile Include="Securities\UniverseManager.cs" />
     <Compile Include="Securities\UnsettledCashAmount.cs" />
     <Compile Include="SecurityIdentifier.cs" />
     <Compile Include="SeriesSampler.cs" />
@@ -331,7 +335,11 @@
     <Compile Include="Util\ExpressionBuilder.cs" />
     <Compile Include="Util\FixedSizeQueue.cs" />
     <Compile Include="Util\FixedSizeHashQueue.cs" />
+    <Compile Include="Util\FuncParallelRunnerWorkItem.cs" />
     <Compile Include="Util\FuncTextWriter.cs" />
+    <Compile Include="Util\IParallelRunnerWorkItem.cs" />
+    <Compile Include="Util\ParallelRunner.cs" />
+    <Compile Include="Util\ParallelRunnerWorker.cs" />
     <Compile Include="Util\SecurityIdentifierJsonConverter.cs" />
     <Compile Include="Util\TypeChangeJsonConverter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />

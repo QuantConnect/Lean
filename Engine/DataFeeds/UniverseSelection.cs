@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -40,8 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="dataFeed">The data feed to add/remove subscriptions from</param>
         /// <param name="algorithm">The algorithm to add securities to</param>
-        /// <param name="isLiveMode">True for live mode, false for back test mode</param>
-        public UniverseSelection(IDataFeed dataFeed, IAlgorithm algorithm, bool isLiveMode)
+        public UniverseSelection(IDataFeed dataFeed, IAlgorithm algorithm)
         {
             _dataFeed = dataFeed;
             _algorithm = algorithm;
@@ -50,11 +48,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Applies universe selection the the data feed and algorithm
         /// </summary>
-        /// <param name="args">The arguments from a universe selection event, containing the universe and
-        /// the data produced for selection</param>
-        public SecurityChanges ApplyUniverseSelection(UniverseSelectionEventArgs args)
+        /// <param name="universe">The universe to perform selection on</param>
+        /// <param name="dateTimeUtc">The current date time in utc</param>
+        /// <param name="universeData">The data provided to perform selection with</param>
+        public SecurityChanges ApplyUniverseSelection(Universe universe, DateTime dateTimeUtc, BaseDataCollection universeData)
         {
-            var universe = args.Universe;
             var settings = universe.SubscriptionSettings;
 
             var limit = 1000; //daily/hourly limit
@@ -83,7 +81,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // perform initial filtering and limit the result
-            var selections = universe.SelectSymbols(args.Data).Take(limit).ToHashSet();
+            var selectSymbolsResult = universe.SelectSymbols(dateTimeUtc, universeData.Data);
+
+            // check for no changes first
+            if (ReferenceEquals(selectSymbolsResult, Universe.Unchanged))
+            {
+                return SecurityChanges.None;
+            }
+
+            var selections = selectSymbolsResult.Take(limit).ToHashSet();
 
             // create a hash set of our existing subscriptions by sid
             var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol);
@@ -144,13 +150,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         settings.Leverage,
                         settings.ExtendedMarketHours,
                         false,
+                        false,
                         false);
                 }
 
                 additions.Add(security);
 
                 // add the new subscriptions to the data feed
-                if (_dataFeed.AddSubscription(universe, security, args.DateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)))
+                if (_dataFeed.AddSubscription(universe, security, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)))
                 {
                     universe.AddMember(security);
                 }

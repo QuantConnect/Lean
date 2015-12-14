@@ -20,6 +20,7 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages.Oanda.DataType.Communications
 {
+#pragma warning disable 1591
     /// <summary>
     /// Represent the web response of the current price of active instruments from Oanda.
     /// </summary>
@@ -28,4 +29,5 @@ namespace QuantConnect.Brokerages.Oanda.DataType.Communications
         public long time;
         public List<Price> prices;
     }
+#pragma warning restore 1591
 }

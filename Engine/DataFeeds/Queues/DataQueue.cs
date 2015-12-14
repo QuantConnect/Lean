@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <summary>
         /// Desktop/Local doesn't support live data from this handler
         /// </summary>
-        public virtual void Subscribe(LiveNodePacket job, IDictionary<SecurityType, List<Symbol>> symbols)
+        public virtual void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
             throw new NotImplementedException("QuantConnect.Queues.LiveDataQueue has not implemented live data.");
         }
@@ -46,7 +46,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <summary>
         /// Desktop/Local doesn't support live data from this handler
         /// </summary>
-        public virtual void Unsubscribe(LiveNodePacket job, IDictionary<SecurityType, List<Symbol>> symbols)
+        public virtual void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
             throw new NotImplementedException("QuantConnect.Queues.LiveDataQueue has not implemented live data.");
         }

@@ -14,6 +14,7 @@
  *
 */
 
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
@@ -119,6 +120,12 @@ namespace QuantConnect.Packets
         /// </summary>
         [JsonProperty(PropertyName = "iMaxRamAllocation")]
         public int RamAllocation;
+
+        /// <summary>
+        /// The parameter values used to set algorithm parameters
+        /// </summary>
+        [JsonProperty(PropertyName = "aParameters")]
+        public Dictionary<string, string> Parameters = new Dictionary<string, string>();
     } // End Node Packet:
 
 } // End of Namespace:

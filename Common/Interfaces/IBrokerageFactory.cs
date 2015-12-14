@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using QuantConnect.Brokerages;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Interfaces
@@ -39,6 +40,17 @@ namespace QuantConnect.Interfaces
         /// running live jobs. See <see cref="IJobQueueHandler.NextJob"/>
         /// </remarks>
         Dictionary<string, string> BrokerageData { get; }
+
+        /// <summary>
+        /// Gets a brokerage model that can be used to model this brokerage's unique
+        /// behaviors
+        /// </summary>
+        IBrokerageModel BrokerageModel { get; }
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; }
 
         /// <summary>
         /// Creates a new IBrokerage instance

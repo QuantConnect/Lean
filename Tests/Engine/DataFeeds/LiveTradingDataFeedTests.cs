@@ -304,7 +304,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             RestApiBaseData last = null;
 
             var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-            foreach (var ts in feed.Bridge.GetConsumingEnumerable(timeout.Token))
+            foreach (var ts in feed)
             {
                 //timeProvider.AdvanceSeconds(0.5);
 
@@ -336,7 +336,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var algorithm = new AlgorithmStub();
             Symbol symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
-            algorithm.SetUniverse(new FuncUniverse(
+            algorithm.AddUniverse(new FuncUniverse(
                 new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
                 new SubscriptionSettings(Resolution.Second, 1, true, false),
                 coarse => coarse.Take(10).Select(x => x.Symbol) 
@@ -384,12 +384,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(feed.Subscriptions.Any(x => x.IsUniverseSelectionSubscription));
 
             var universeSelectionHadAllData = false;
-            feed.UniverseSelection += (sender, args) =>
-            {
-                universeSelectionHadAllData = args.Data.Count == coarseDataPointCount;
-                Console.WriteLine(DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork).ToString("o") + ": Fired universe selection. Count: " + args.Data.Count);
-                return SecurityChanges.None;
-            };
 
 
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
@@ -448,8 +442,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private static void ConsumeBridge(IDataFeed feed, TimeSpan timeout, bool alwaysInvoke, Action<TimeSlice> handler, bool noOutput = false)
         {
             bool startedReceivingata = false;
-            var cancellationTokenSource = new CancellationTokenSource(timeout);
-            foreach (var timeSlice in feed.Bridge.GetConsumingEnumerable(cancellationTokenSource.Token))
+            foreach (var timeSlice in feed)
             {
                 if (!noOutput)
                 {

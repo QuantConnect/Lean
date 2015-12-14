@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Util
         public void IsNotBusyWithZeroItemsWaiting()
         {
             var collection = new BusyBlockingCollection<int>();
-            Assert.IsFalse(collection.IsBusy);
+            Assert.IsTrue(collection.WaitHandle.WaitOne(0));
         }
 
         [Test]
@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var collection = new BusyBlockingCollection<int>();
             collection.Add(1);
-            Assert.IsTrue(collection.IsBusy);
+            Assert.IsFalse(collection.WaitHandle.WaitOne(0));
         }
 
         [Test]
@@ -58,15 +58,12 @@ namespace QuantConnect.Tests.Common.Util
             collection.Add(2);
             collection.Add(3);
             collection.CompleteAdding();
-            Assert.IsTrue(collection.IsBusy);
-            Assert.IsFalse(collection.Wait(0));
+            Assert.IsFalse(collection.WaitHandle.WaitOne(0));
             foreach (var item in collection.GetConsumingEnumerable())
             {
-                Assert.IsTrue(collection.IsBusy);
-                Assert.IsFalse(collection.Wait(0));
+                Assert.IsFalse(collection.WaitHandle.WaitOne(0));
             }
-            Assert.IsFalse(collection.IsBusy);
-            Assert.IsTrue(collection.Wait(0));
+            Assert.IsTrue(collection.WaitHandle.WaitOne(0));
         }
     }
 }

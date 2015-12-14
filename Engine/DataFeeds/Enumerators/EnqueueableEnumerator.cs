@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -28,21 +29,41 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// is called
     /// </summary>
     /// <typeparam name="T">The item type yielded by the enumerator</typeparam>
-    public class EnqueableEnumerator<T> : IEnumerator<T>
+    public class EnqueueableEnumerator<T> : IEnumerator<T>
     {
         private T _current;
-        private bool _end;
+        private T _lastEnqueued;
+        private volatile bool _end;
 
-        private readonly ConcurrentQueue<T> _queue;
+        private readonly int _timeout;
         private readonly ReaderWriterLockSlim _lock;
+        private readonly BlockingCollection<T> _blockingCollection;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EnqueableEnumerator{T}"/> class
+        /// Gets the current number of items held in the internal queue
         /// </summary>
-        public EnqueableEnumerator()
+        public int Count
         {
-            _queue = new ConcurrentQueue<T>();
+            get { return _blockingCollection.Count; }
+        }
+
+        /// <summary>
+        /// Gets the last item that was enqueued
+        /// </summary>
+        public T LastEnqueued
+        {
+            get { return _lastEnqueued; }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EnqueueableEnumerator{T}"/> class
+        /// </summary>
+        /// <param name="blocking">Specifies whether or not to use the blocking behavior</param>
+        public EnqueueableEnumerator(bool blocking = false)
+        {
+            _blockingCollection = new BlockingCollection<T>();
             _lock = new ReaderWriterLockSlim();
+            _timeout = blocking ? Timeout.Infinite : 0;
         }
 
         /// <summary>
@@ -52,30 +73,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public void Enqueue(T data)
         {
             if (_end) return;
-            _queue.Enqueue(data);
-        }
-
-        /// <summary>
-        /// Enqueues a range of data. This operation will lock this enumerator
-        /// such that it will not MoveNext until the enqueueing has completed
-        /// </summary>
-        /// <param name="data"></param>
-        public void EnqueueRange(IEnumerable<T> data)
-        {
-            if (_end) return;
-
-            // only enqueueing a batch is senstive to being locked, since we wouldn't
-            // want the feed to split up a series of data at the same timestamp that
-            // should be emitted together, this is especially the case with universe
-            // selection data, ~10k records
-
-            using (_lock.Write())
-            {
-                foreach (var datum in data)
-                {
-                    _queue.Enqueue(datum);
-                }
-            }
+            _blockingCollection.Add(data);
+            _lastEnqueued = data;
         }
 
         /// <summary>
@@ -84,7 +83,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public void Stop()
         {
+            // no more items can be added, so no need to wait anymore
             _end = true;
+            _blockingCollection.CompleteAdding();
         }
 
         /// <summary>
@@ -96,18 +97,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
-            using (_lock.Read())
+            T current;
+            if (!_blockingCollection.TryTake(out current, _timeout))
             {
-                if (!_queue.TryDequeue(out _current))
-                {
-                    return !_end;
-                }
-
-                // even if we don't have data to return, we haven't technically
-                // passed the end of the collection, so always return true until
-                // the enumerator is explicitly disposed or ended
-                return true;
+                _current = default(T);
+                return !_end;
             }
+
+            _current = current;
+
+            // even if we don't have data to return, we haven't technically
+            // passed the end of the collection, so always return true until
+            // the enumerator is explicitly disposed or ended
+            return true;
         }
 
         /// <summary>
@@ -116,7 +118,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public void Reset()
         {
-            _queue.Clear();
+            throw new NotImplementedException("EnqueableEnumerator.Reset() has not been implemented yet.");
         }
 
         /// <summary>
@@ -149,7 +151,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public void Dispose()
         {
             Stop();
-            if (_queue != null) _queue.Clear();
+            if (_blockingCollection != null) _blockingCollection.Dispose();
             if (_lock != null) _lock.Dispose();
         }
     }

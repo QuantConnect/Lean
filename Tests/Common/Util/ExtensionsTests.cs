@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Securities;
 
@@ -52,14 +53,6 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
-        public void ConvertsTimeSpanFromString()
-        {
-            const string input = "16:00";
-            var timespan = input.ConvertTo<TimeSpan>();
-            Assert.AreEqual(TimeSpan.FromHours(16), timespan);
-        }
-
-        [Test]
         public void GetBetterTypeNameHandlesRecursiveGenericTypes()
         {
             var type = typeof (Dictionary<List<int>, Dictionary<int, string>>);
@@ -76,18 +69,6 @@ namespace QuantConnect.Tests.Common.Util
             var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.FXCM, null, SecurityType.Forex);
             var exchangeRounded = time.ExchangeRoundDown(Time.OneDay, hours, false);
             Assert.AreEqual(expected, exchangeRounded);
-        }
-
-        private class Super<T>
-        {
-        }
-
-        private class Derived1 : Super<int>
-        {
-        }
-
-        private class Derived2 : Derived1
-        {
         }
 
         [Test]
@@ -130,5 +111,33 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(1.45678m, value);
         }
 
+        [Test]
+        public void ConvertsTimeSpanFromString()
+        {
+            const string input = "16:00";
+            var timespan = input.ConvertTo<TimeSpan>();
+            Assert.AreEqual(TimeSpan.FromHours(16), timespan);
+        }
+
+        [Test]
+        public void ConvertsDictionaryFromString()
+        {
+            var expected = new Dictionary<string, int> {{"a", 1}, {"b", 2}};
+            var input = JsonConvert.SerializeObject(expected);
+            var actual = input.ConvertTo<Dictionary<string, int>>();
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        private class Super<T>
+        {
+        }
+
+        private class Derived1 : Super<int>
+        {
+        }
+
+        private class Derived2 : Derived1
+        {
+        }
     }
 }

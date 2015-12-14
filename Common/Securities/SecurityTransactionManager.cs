@@ -150,6 +150,22 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Cancels all open orders for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol whose orders are to be cancelled</param>
+        /// <returns>List containing the cancelled order tickets</returns>
+        public List<OrderTicket> CancelOpenOrders(Symbol symbol)
+        {
+            var cancelledOrders = new List<OrderTicket>();
+            foreach (var ticket in GetOrderTickets(x => x.Symbol == symbol && x.Status.IsOpen()))
+            {
+                ticket.Cancel();
+                cancelledOrders.Add(ticket);
+            }
+            return cancelledOrders;
+        }
+
+        /// <summary>
         /// Remove this order from outstanding queue: user is requesting a cancel.
         /// </summary>
         /// <param name="orderId">Specific order id to remove</param>
@@ -169,32 +185,38 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the order ticket for the specified order id. Returns null if not found
+        /// </summary>
+        /// <param name="orderId">The order's id</param>
+        /// <returns>The order ticket with the specified id, or null if not found</returns>
+        public OrderTicket GetOrderTicket(int orderId)
+        {
+            return GetOrderTickets(x => x.OrderId == orderId).FirstOrDefault();
+        }
+
+        /// <summary>
         /// Wait for a specific order to be either Filled, Invalid or Canceled
         /// </summary>
         /// <param name="orderId">The id of the order to wait for</param>
-        public void WaitForOrder(int orderId)
+        /// <returns>True if we successfully wait for the fill, false if we were unable
+        /// to wait. This may be because it is not a market order or because the timeout
+        /// was reached</returns>
+        public bool WaitForOrder(int orderId)
         {
-            // wait for the processor to finish processing his orders
-            while(true)
+            var orderTicket = GetOrderTicket(orderId);
+            if (orderTicket == null)
             {
-                var order = GetOrderById(orderId);
-                if (order == null || !Completed(order))
-                {
-                    if (order != null && order.Type != OrderType.Market)
-                    {
-                        // can't wait for non-market orders to fill
-                        return;
-                    }
-                    Thread.Sleep(1);
-                }
-                else
-                {
-                    break;
-                }
+                Log.Error("SecurityTransactionManager.WaitForOrder(): Unable to locate ticket for order: " + orderId);
+                return false;
             }
 
-            // wait for the processor to finish processing the order
-            _orderProcessor.ProcessingCompletedEvent.Wait();
+            if (!orderTicket.OrderFilled.WaitOne(Time.OneSecond))
+            {
+                Log.Error("SecurityTransactionManager.WaitForOrder(): Order did not fill within 1 second.");
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -229,7 +251,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="brokerageId">The brokerage id to fetch</param>
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        public Order GetOrderByBrokerageId(int brokerageId)
+        public Order GetOrderByBrokerageId(long brokerageId)
         {
             return _orderProcessor.GetOrderByBrokerageId(brokerageId);
         }

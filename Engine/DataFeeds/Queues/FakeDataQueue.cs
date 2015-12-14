@@ -37,7 +37,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
 
         private readonly Timer _timer;
         private readonly ConcurrentQueue<BaseData> _ticks;
-        private readonly Dictionary<SecurityType, List<Symbol>> _symbols;
+        private readonly HashSet<Symbol> _symbols;
+        private readonly object _sync = new object();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FakeDataQueue"/> class to randomly emit data for each symbol
@@ -45,7 +46,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         public FakeDataQueue()
         {
             _ticks = new ConcurrentQueue<BaseData>();
-            _symbols = new Dictionary<SecurityType, List<Symbol>>();
+            _symbols = new HashSet<Symbol>();
             
             // load it up to start
             PopulateQueue();
@@ -92,17 +93,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// </summary>
         /// <param name="job">Job we're subscribing for:</param>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(LiveNodePacket job, IDictionary<SecurityType, List<Symbol>> symbols)
+        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            foreach (var securityType in symbols)
+            foreach (var symbol in symbols)
             {
-                List<Symbol> securities;
-                if (!_symbols.TryGetValue(securityType.Key, out securities))
+                lock (_sync)
                 {
-                    securities = new List<Symbol>();
-                    _symbols[securityType.Key] = securities;
+                    _symbols.Add(symbol);
                 }
-                securities.AddRange(securityType.Value);
             }
         }
 
@@ -111,14 +109,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// </summary>
         /// <param name="job">Job we're processing.</param>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(LiveNodePacket job, IDictionary<SecurityType, List<Symbol>> symbols)
+        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            foreach (var securityType in symbols)
+            foreach (var symbol in symbols)
             {
-                List<Symbol> securities;
-                if (_symbols.TryGetValue(securityType.Key, out securities))
+                lock (_sync)
                 {
-                    securities.RemoveAll(x => securityType.Value.Contains(x));
+                    _symbols.Remove(symbol);
                 }
             }
         }
@@ -128,7 +125,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// </summary>
         private void PopulateQueue()
         {
-            foreach (var symbol in _symbols.SelectMany(x => x.Value))
+            List<Symbol> symbols;
+            lock (_sync)
+            {
+                symbols = _symbols.ToList();
+            }
+
+            foreach (var symbol in symbols)
             {
                 // emits 500k per second
                 for (int i = 0; i < 500000; i++)

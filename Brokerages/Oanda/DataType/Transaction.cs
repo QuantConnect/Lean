@@ -20,12 +20,13 @@ using QuantConnect.Brokerages.Oanda.DataType.Communications;
 
 namespace QuantConnect.Brokerages.Oanda.DataType
 {
+#pragma warning disable 1591
     /// <summary>
     /// Represents a Transaction object with details about an Oanda transaction.
     /// </summary>
     public class Transaction : Response
     {
-        public int id { get; set; }
+        public long id { get; set; }
         public int accountId { get; set; }
 		public string time { get; set; }
 		public string type { get; set; }
@@ -41,8 +42,8 @@ namespace QuantConnect.Brokerages.Oanda.DataType
 		public double pl { get; set; }
 		public double interest { get; set; }
 		public double accountBalance { get; set; }
-		public int tradeId { get; set; }
-	    public int orderId { get; set; }
+		public long tradeId { get; set; }
+	    public long orderId { get; set; }
 		public TradeData tradeOpened { get; set; }
 		public TradeData tradeReduced { get; set; }
 		public string reason { get; set; }
@@ -80,4 +81,5 @@ namespace QuantConnect.Brokerages.Oanda.DataType
             return readable;
         }
     }
+#pragma warning restore 1591
 }

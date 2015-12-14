@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Backtesting
 {
@@ -25,6 +26,18 @@ namespace QuantConnect.Brokerages.Backtesting
     /// </summary>
     public class BacktestingBrokerageFactory : IBrokerageFactory
     {
+        /// <summary>
+        /// The default markets for the backtesting brokerage
+        /// </summary>
+        public static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
+        {
+            {SecurityType.Base, Market.USA},
+            {SecurityType.Equity, Market.USA},
+            {SecurityType.Option, Market.USA},
+            {SecurityType.Forex, Market.FXCM},
+            {SecurityType.Cfd, Market.FXCM}
+        }.ToReadOnlyDictionary();
+
         /// <summary>
         /// Gets the type of brokerage produced by this factory
         /// </summary>
@@ -43,6 +56,22 @@ namespace QuantConnect.Brokerages.Backtesting
         public Dictionary<string, string> BrokerageData
         {
             get { return new Dictionary<string, string>(); }
+        }
+
+        /// <summary>
+        /// Gets a new instance of the <see cref="InteractiveBrokersBrokerageModel"/>
+        /// </summary>
+        public IBrokerageModel BrokerageModel
+        {
+            get { return new InteractiveBrokersBrokerageModel(); }
+        }
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public IReadOnlyDictionary<SecurityType, string> DefaultMarkets
+        {
+            get { return DefaultMarketMap; }
         }
 
         /// <summary>

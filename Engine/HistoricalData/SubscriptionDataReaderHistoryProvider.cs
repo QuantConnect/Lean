@@ -237,7 +237,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             public void LogMessage(string message) { }
             public void ErrorMessage(string error, string stacktrace = "") { }
             public void RuntimeError(string message, string stacktrace = "") { }
-            public void Sample(string chartName, ChartType chartType, string seriesName, SeriesType seriesType, DateTime time, decimal value, string unit = "$") { }
+            public void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$") { }
             public void SampleEquity(DateTime time, decimal value) { }
             public void SamplePerformance(DateTime time, decimal value) { }
             public void SampleBenchmark(DateTime time, decimal value) { }

@@ -22,6 +22,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Tradier
 {
@@ -30,6 +31,18 @@ namespace QuantConnect.Brokerages.Tradier
     /// </summary>
     public class TradierBrokerageFactory : BrokerageFactory
     {
+        /// <summary>
+        /// The default markets for the fxcm brokerage
+        /// </summary>
+        public static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
+        {
+            {SecurityType.Base, Market.USA},
+            {SecurityType.Equity, Market.USA},
+            {SecurityType.Option, Market.USA},
+            {SecurityType.Forex, Market.FXCM},
+            {SecurityType.Cfd, Market.FXCM}
+        }.ToReadOnlyDictionary();
+
         /// <summary>
         /// Gets tradier values from configuration
         /// </summary>
@@ -135,6 +148,22 @@ namespace QuantConnect.Brokerages.Tradier
                 data.Add("tradier-lifespan", lifeSpan);
                 return data;
             }
+        }
+
+        /// <summary>
+        /// Gets a new instance of the <see cref="TradierBrokerageModel"/>
+        /// </summary>
+        public override IBrokerageModel BrokerageModel
+        {
+            get { return new TradierBrokerageModel(); }
+        }
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets
+        {
+            get { return DefaultMarketMap; }
         }
 
         /// <summary>

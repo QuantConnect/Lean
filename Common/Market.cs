@@ -29,7 +29,7 @@ namespace QuantConnect
         private static readonly object _lock = new object();
         private static readonly Dictionary<string, int> Markets = new Dictionary<string, int>();
         private static readonly Dictionary<int, string> ReverseMarkets = new Dictionary<int, string>();
-        private static readonly IEnumerable<Tuple<string, int>> HardcodeMarkets = new List<Tuple<string, int>>
+        private static readonly IEnumerable<Tuple<string, int>> HardcodedMarkets = new List<Tuple<string, int>>
         {
             Tuple.Create("empty", 0),
             Tuple.Create(USA, 1),
@@ -40,8 +40,8 @@ namespace QuantConnect
 
         static Market()
         {
-            // initialize our concurrent maps
-            foreach (var market in HardcodeMarkets)
+            // initialize our maps
+            foreach (var market in HardcodedMarkets)
             {
                 Markets[market.Item1] = market.Item2;
                 ReverseMarkets[market.Item2] = market.Item1;

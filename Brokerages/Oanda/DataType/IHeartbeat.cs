@@ -18,6 +18,7 @@
 */
 namespace QuantConnect.Brokerages.Oanda.DataType
 {
+#pragma warning disable 1591
     /// <summary>
     /// Represents the interface for the HeartBeat and RateStreamResponse class.
     /// </summary>
@@ -25,4 +26,5 @@ namespace QuantConnect.Brokerages.Oanda.DataType
 	{
 		bool IsHeartbeat();
 	}
+#pragma warning restore 1591
 }
