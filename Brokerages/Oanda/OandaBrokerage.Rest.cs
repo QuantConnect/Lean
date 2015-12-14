@@ -22,7 +22,6 @@ using System.Linq;
 using System.Net;
 using System.Runtime.Serialization.Json;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Brokerages.Oanda.DataType.Communications;
@@ -233,7 +232,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="instruments">list of instruments to stream rates for</param>
         /// <param name="accountId">the account ID you want to stream on</param>
         /// <returns>the WebResponse object that can be used to retrieve the rates as they stream</returns>
-        public async Task<WebResponse> StartRatesSession(List<Instrument> instruments, int accountId)
+        public WebResponse StartRatesSession(List<Instrument> instruments, int accountId)
         {
             var instrumentList = string.Join(",", instruments.Select(x => x.instrument));
 
@@ -246,7 +245,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             try
             {
-                var response = await request.GetResponseAsync();
+                var response = request.GetResponse();
                 return response;
             }
             catch (WebException ex)
@@ -263,7 +262,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="accountId">the account IDs you want to stream on</param>
         /// <returns>the WebResponse object that can be used to retrieve the events as they stream</returns>
-        public async Task<WebResponse> StartEventsSession(List<int> accountId = null)
+        public WebResponse StartEventsSession(List<int> accountId = null)
         {
             var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.StreamingEvents) + "events";
 
@@ -279,7 +278,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             try
             {
-                var response = await request.GetResponseAsync();
+                var response = request.GetResponse();
                 return response;
             }
             catch (WebException ex)

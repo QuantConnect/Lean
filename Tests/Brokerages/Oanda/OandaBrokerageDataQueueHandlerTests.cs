@@ -35,7 +35,6 @@ namespace QuantConnect.Tests.Brokerages.Oanda
                 Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda),
                 Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda),
             });
-            Thread.Sleep(1000);
 
             brokerage.Subscribe(null, new List<Symbol>
             {

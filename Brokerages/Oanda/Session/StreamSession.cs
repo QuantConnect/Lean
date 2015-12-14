@@ -53,12 +53,12 @@ namespace QuantConnect.Brokerages.Oanda.Session
             if (handler != null) handler(data);
         }
 
-        protected abstract Task<WebResponse> GetSession();
+        protected abstract WebResponse GetSession();
 
-        public async void StartSession()
+        public void StartSession()
         {
             _shutdown = false;
-            _response = await GetSession();
+            _response = GetSession();
 
             _runningTask = Task.Run(() =>
             {
