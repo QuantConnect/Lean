@@ -896,9 +896,6 @@ namespace QuantConnect.Algorithm
         /// <param name="startingCash">Starting cash for the strategy backtest</param>
         public void SetCash(decimal startingCash)
         {
-            // don't set cash in live mode, we get this value from the brokerage
-            if (_liveMode) return;
-
             if (!_locked)
             {
                 Portfolio.SetCash(startingCash);
@@ -917,9 +914,6 @@ namespace QuantConnect.Algorithm
         /// <param name="conversionRate">The current conversion rate for the</param>
         public void SetCash(string symbol, decimal startingCash, decimal conversionRate)
         {
-            // don't set cash in live mode, we get this value from the brokerage
-            if (_liveMode) return;
-
             if (!_locked)
             {
                 Portfolio.SetCash(symbol, startingCash, conversionRate);
