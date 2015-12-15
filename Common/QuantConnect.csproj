@@ -194,6 +194,7 @@
     <Compile Include="Orders\CancelOrderRequest.cs" />
     <Compile Include="Orders\ConstantSlippageModel.cs" />
     <Compile Include="Orders\DefaultSlippageModel.cs" />
+    <Compile Include="Orders\ConstantOrderFeeModel.cs" />
     <Compile Include="Orders\IOrderFeeModel.cs" />
     <Compile Include="Orders\IFillModel.cs" />
     <Compile Include="Orders\ISlippageModel.cs" />
