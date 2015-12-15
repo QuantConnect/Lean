@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Specialized;
 using System.Linq;
 using NUnit.Framework;
@@ -31,7 +32,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var manager = new UniverseManager();
 
-            var universe = new FuncUniverse(CreateTradeBarConfig(), new UniverseSettings(Resolution.Minute, 2, true, false), 
+            var universe = new FuncUniverse(CreateTradeBarConfig(), new UniverseSettings(Resolution.Minute, 2, true, false, TimeSpan.Zero), 
                 data => data.Select(x => x.Symbol)
                 );
 
@@ -56,7 +57,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var manager = new UniverseManager();
 
-            var universe = new FuncUniverse(CreateTradeBarConfig(), new UniverseSettings(Resolution.Minute, 2, true, false),
+            var universe = new FuncUniverse(CreateTradeBarConfig(), new UniverseSettings(Resolution.Minute, 2, true, false, TimeSpan.Zero),
                 data => data.Select(x => x.Symbol)
                 );
 
@@ -81,7 +82,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var manager = new UniverseManager();
 
-            var universe = new FuncUniverse(CreateTradeBarConfig(), new UniverseSettings(Resolution.Minute, 2, true, false),
+            var universe = new FuncUniverse(CreateTradeBarConfig(), new UniverseSettings(Resolution.Minute, 2, true, false, TimeSpan.Zero),
                 data => data.Select(x => x.Symbol)
                 );
 
