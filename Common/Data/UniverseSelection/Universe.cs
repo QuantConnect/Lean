@@ -98,7 +98,16 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>True if we can remove the security, false otherwise</returns>
         public virtual bool CanRemoveMember(DateTime utcTime, Security security)
         {
-            return true;
+            Member member;
+            if (_securities.TryGetValue(security.Symbol, out member))
+            {
+                var timeInUniverse = utcTime - member.Added;
+                if (timeInUniverse >= UniverseSettings.MinimumTimeInUniverse)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
