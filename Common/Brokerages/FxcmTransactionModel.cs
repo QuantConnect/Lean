@@ -30,6 +30,8 @@ namespace QuantConnect.Brokerages
     /// <seealso cref="ISecurityTransactionModel"/>
     public class FxcmTransactionModel : SecurityTransactionModel
     {
+        private static readonly ISlippageModel SlippageModel = new ConstantSlippageModel(0.0001m);
+
         private readonly HashSet<Symbol> _groupCommissionSchedule1 = new HashSet<Symbol>
         {
             Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM),
@@ -41,12 +43,13 @@ namespace QuantConnect.Brokerages
             Symbol.Create("GBPJPY", SecurityType.Forex, Market.FXCM),
         };
 
-        /// <summary>
-        /// Initialise the transaction model class
-        /// </summary>
-        public FxcmTransactionModel()
-        {
-        }
+        ///// <summary>
+        ///// Initialise the transaction model class
+        ///// </summary>
+        //public FxcmTransactionModel()
+        //    : base(new DefaultFillModel(SlippageModel), new 
+        //{
+        //}
 
         /// <summary>
         /// Get the fee for this order
