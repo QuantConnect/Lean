@@ -58,12 +58,12 @@ namespace QuantConnect.Securities.Forex
             }
             else if (monthlyTradeAmountInUSDollars <= 5000000000) // 5 billion
             {
-                _commissionRate = 0.20m*bp;
+                _commissionRate = 0.10m*bp;
                 _minimumOrderFee = 1.25m;
             }
             else
             {
-                _commissionRate = 0.20m*bp;
+                _commissionRate = 0.08m*bp;
                 _minimumOrderFee = 1.00m;
             }
         }
