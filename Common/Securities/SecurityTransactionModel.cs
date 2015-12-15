@@ -27,12 +27,6 @@ namespace QuantConnect.Securities
     public class SecurityTransactionModel : ISecurityTransactionModel
     {
         /// <summary>
-        /// Initialize the default transaction model class
-        /// </summary>
-        public SecurityTransactionModel() 
-        {  }
-
-        /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.
         /// </summary>
         /// <param name="asset">Security asset we're filling</param>
