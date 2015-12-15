@@ -140,6 +140,15 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="data">The data object containing the received tick</param>
         private void OnDataReceived(RateStreamResponse data)
         {
+            if (data.IsHeartbeat())
+            {
+                lock (_lockerConnectionMonitor)
+                {
+                    _lastHeartbeatUtcTime = GetDateTimeFromString(data.heartbeat.time);
+                }
+                return;
+            }
+
             if (data.tick == null) return;
 
             var securityType = _symbolMapper.GetBrokerageSecurityType(data.tick.instrument);

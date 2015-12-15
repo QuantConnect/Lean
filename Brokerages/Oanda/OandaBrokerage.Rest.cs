@@ -122,6 +122,15 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="data">The event object</param>
         private void OnEventReceived(Event data)
         {
+            if (data.IsHeartbeat())
+            {
+                lock (_lockerConnectionMonitor)
+                {
+                    _lastHeartbeatUtcTime = GetDateTimeFromString(data.heartbeat.time);
+                }
+                return;
+            }
+
             if (data.transaction != null)
             {
                 if (data.transaction.type == "ORDER_FILLED")

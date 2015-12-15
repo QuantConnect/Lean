@@ -74,11 +74,7 @@ namespace QuantConnect.Brokerages.Oanda.Session
 
                     var data = (T) serializer.ReadObject(memStream);
 
-                    // Don't send heartbeats
-                    if (!data.IsHeartbeat())
-                    {
-                        OnDataReceived(data);
-                    }
+                    OnDataReceived(data);
                 }
             });
         }

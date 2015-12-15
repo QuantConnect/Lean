@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Brokerages.Oanda.Framework;
 using QuantConnect.Brokerages.Oanda.Session;
@@ -42,7 +43,13 @@ namespace QuantConnect.Brokerages.Oanda
         private Dictionary<string, Instrument> _oandaInstruments; 
         private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
 
-        private bool _isConnected = false;
+        private bool _isConnected;
+
+        private DateTime _lastHeartbeatUtcTime;
+        private Thread _connectionMonitorThread;
+        private readonly object _lockerConnectionMonitor = new object();
+        private volatile bool _connectionLost;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaBrokerage"/> class.
@@ -73,7 +80,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override bool IsConnected
         {
-            get { return _isConnected; }
+            get { return _isConnected && !_connectionLost; }
         }
 
         /// <summary>
@@ -92,6 +99,103 @@ namespace QuantConnect.Brokerages.Oanda
             _eventsSession.StartSession();
 
             _isConnected = true;
+
+            // create new thread to manage disconnections and reconnections
+            _cancellationTokenSource = new CancellationTokenSource();
+            _connectionMonitorThread = new Thread(() =>
+            {
+                var nextReconnectionAttemptUtcTime = DateTime.UtcNow;
+                double nextReconnectionAttemptSeconds = 1;
+
+                lock (_lockerConnectionMonitor)
+                {
+                    _lastHeartbeatUtcTime = DateTime.UtcNow;
+                }
+
+                try
+                {
+                    while (!_cancellationTokenSource.IsCancellationRequested)
+                    {
+                        TimeSpan elapsed;
+                        lock (_lockerConnectionMonitor)
+                        {
+                            elapsed = DateTime.UtcNow - _lastHeartbeatUtcTime;
+                        }
+
+                        if (!_connectionLost && elapsed > TimeSpan.FromSeconds(20))
+                        {
+                            _connectionLost = true;
+                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+
+                            OnMessage(BrokerageMessageEvent.Disconnected("Connection with Oanda server lost. " +
+                                                                         "This could be because of internet connectivity issues. "));
+                        }
+                        else if (_connectionLost)
+                        {
+                            try
+                            {
+                                if (elapsed <= TimeSpan.FromSeconds(20))
+                                {
+                                    _connectionLost = false;
+                                    nextReconnectionAttemptSeconds = 1;
+
+                                    OnMessage(BrokerageMessageEvent.Reconnected("Connection with Oanda server restored."));
+                                }
+                                else
+                                {
+                                    if (DateTime.UtcNow > nextReconnectionAttemptUtcTime)
+                                    {
+                                        try
+                                        {
+                                            GetInstruments();
+
+                                            // restore events session
+                                            if (_eventsSession != null) _eventsSession.StopSession();
+                                            _eventsSession = new EventsSession(this, _accountId);
+                                            _eventsSession.DataReceived += OnEventReceived;
+                                            _eventsSession.StartSession();
+
+                                            // restore rates session
+                                            SubscribeSymbols(_subscribedSymbols.ToList());
+
+                                            _connectionLost = false;
+                                            nextReconnectionAttemptSeconds = 1;
+
+                                            lock (_lockerConnectionMonitor)
+                                            {
+                                                _lastHeartbeatUtcTime = DateTime.UtcNow;
+                                            }
+
+                                            OnMessage(BrokerageMessageEvent.Reconnected("Connection with Oanda server restored."));
+                                        }
+                                        catch (Exception)
+                                        {
+                                            // double the interval between attempts (capped to 1 minute)
+                                            nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, 60);
+                                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception exception)
+                            {
+                                Log.Error(exception);
+                            }
+                        }
+
+                        Thread.Sleep(1000);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception);
+                }
+            });
+            _connectionMonitorThread.Start();
+            while (!_connectionMonitorThread.IsAlive)
+            {
+                Thread.Sleep(1);
+            }
         }
 
         /// <summary>
@@ -99,8 +203,15 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void Disconnect()
         {
-            _eventsSession.StopSession();
-            _ratesSession.StopSession();
+            if (_eventsSession != null) 
+                _eventsSession.StopSession();
+
+            if (_ratesSession != null) 
+                _ratesSession.StopSession();
+
+            // request and wait for thread to stop
+            _cancellationTokenSource.Cancel();
+            _connectionMonitorThread.Join();
 
             _isConnected = false;
         }
