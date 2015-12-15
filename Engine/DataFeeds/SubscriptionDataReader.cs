@@ -260,6 +260,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         continue;
                     }
 
+                    // prevent emitting past data, this can happen when switching symbols on daily data
+                    if (_previous != null && _config.Resolution != Resolution.Tick)
+                    {
+                        if (_config.Resolution == Resolution.Tick)
+                        {
+                            // allow duplicate times for tick data
+                            if (instance.EndTime < _previous.EndTime) continue;
+                        }
+                        else
+                        {
+                            // all other resolutions don't allow duplicate end times
+                            if (instance.EndTime <= _previous.EndTime) continue;
+                        }
+                    }
+
                     if (instance.EndTime < _periodStart)
                     {
                         // keep reading until we get a value on or after the start
@@ -361,12 +376,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // save off for comparison next time
                     _source = newSource;
                     var subscriptionFactory = CreateSubscriptionFactory(newSource);
-
-                    var previousTime = _previous == null ? DateTime.MinValue : _previous.EndTime;
-                    return subscriptionFactory.Read(newSource)
-                        // prevent the enumerator from emitting data before the last emitted time
-                        .Where(instance => instance != null && previousTime < instance.EndTime)
-                        .GetEnumerator();
+                    return subscriptionFactory.Read(newSource).GetEnumerator();
                 }
 
                 // if there's still more in the enumerator and we received the same source from the GetSource call
