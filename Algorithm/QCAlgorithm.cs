@@ -1181,7 +1181,11 @@ namespace QuantConnect.Algorithm
                     }
                 }
 
-                var symbolObject = QuantConnect.Symbol.Create(symbol, securityType, market);
+                Symbol symbolObject;
+                if (!SymbolCache.TryGetSymbol(symbol, out symbolObject))
+                {
+                    symbolObject = QuantConnect.Symbol.Create(symbol, securityType, market);
+                }
 
                 var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase,
                     symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false);
