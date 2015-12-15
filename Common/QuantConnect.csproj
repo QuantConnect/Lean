@@ -235,6 +235,7 @@
     <Compile Include="Securities\Cash.cs" />
     <Compile Include="Securities\CashBook.cs" />
     <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
+    <Compile Include="Securities\DefaultFillModel.cs" />
     <Compile Include="Securities\Equity\EquityMarginModel.cs" />
     <Compile Include="Securities\Equity\EquityPortfolioModel.cs" />
     <Compile Include="Securities\DelayedSettlementModel.cs" />

@@ -26,6 +26,8 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityTransactionModel : ISecurityTransactionModel
     {
+        private readonly DefaultFillModel _defaultFillModel = new DefaultFillModel();
+
         /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.
         /// </summary>
@@ -36,44 +38,7 @@ namespace QuantConnect.Securities
         /// <seealso cref="LimitFill(Security, LimitOrder)"/>
         public virtual OrderEvent MarketFill(Security asset, MarketOrder order)
         {
-            //Default order event to return.
-            var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
-            var fill = new OrderEvent(order, utcTime, 0);
-
-            if (order.Status == OrderStatus.Canceled) return fill;
-
-            // make sure the exchange is open before filling
-            if (!IsExchangeOpen(asset)) return fill;
-
-            try
-            {
-                //Order [fill]price for a market order model is the current security price
-                fill.FillPrice = asset.Price;
-                fill.Status = OrderStatus.Filled;
-
-                //Calculate the model slippage: e.g. 0.01c
-                var slip = GetSlippageApproximation(asset, order);
-
-                //Apply slippage
-                switch (order.Direction)
-                {
-                    case OrderDirection.Buy:
-                        fill.FillPrice += slip;
-                        break;
-                    case OrderDirection.Sell:
-                        fill.FillPrice -= slip;
-                        break;
-                }
-
-                // assume the order completely filled
-                if (fill.Status == OrderStatus.Filled) fill.FillQuantity = order.Quantity;
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-
-            return fill;
+            return _defaultFillModel.MarketFill(asset, order);
         }
 
         /// <summary>
@@ -86,59 +51,7 @@ namespace QuantConnect.Securities
         /// <seealso cref="LimitFill(Security, LimitOrder)"/>
         public virtual OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
-            //Default order event to return.
-            var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
-            var fill = new OrderEvent(order, utcTime, 0);
-
-            // make sure the exchange is open before filling
-            if (!IsExchangeOpen(asset)) return fill;
-
-            try
-            {
-                //If its cancelled don't need anymore checks:
-                if (order.Status == OrderStatus.Canceled) return fill;
-
-                //Get the range of prices in the last bar:
-                decimal minimumPrice;
-                decimal maximumPrice;
-                DataMinMaxPrices(asset, out minimumPrice, out maximumPrice);
-
-                //Calculate the model slippage: e.g. 0.01c
-                var slip = GetSlippageApproximation(asset, order);
-
-                //Check if the Stop Order was filled: opposite to a limit order
-                switch (order.Direction)
-                {
-                    case OrderDirection.Sell:
-                        //-> 1.1 Sell Stop: If Price below setpoint, Sell:
-                        if (minimumPrice < order.StopPrice)
-                        {
-                            fill.Status = OrderStatus.Filled;
-                            // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
-                            fill.FillPrice = Math.Min(order.StopPrice, asset.Price - slip); 
-                        }
-                        break;
-
-                    case OrderDirection.Buy:
-                        //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
-                        if (maximumPrice > order.StopPrice)
-                        {
-                            fill.Status = OrderStatus.Filled;
-                            // Assuming worse case scenario fill - fill at highest of the stop & asset price.
-                            fill.FillPrice = Math.Max(order.StopPrice, asset.Price + slip);
-                        }
-                        break;
-                }
-
-                // assume the order completely filled
-                if (fill.Status == OrderStatus.Filled) fill.FillQuantity = order.Quantity;
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-
-            return fill;
+            return _defaultFillModel.StopMarketFill(asset, order);
         }
 
         /// <summary>
@@ -158,65 +71,7 @@ namespace QuantConnect.Securities
         /// </remarks>
         public virtual OrderEvent StopLimitFill(Security asset, StopLimitOrder order)
         {
-            //Default order event to return.
-            var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
-            var fill = new OrderEvent(order, utcTime, 0);
-
-            try
-            {
-                //If its cancelled don't need anymore checks:
-                if (order.Status == OrderStatus.Canceled) return fill;
-
-                //Get the range of prices in the last bar:
-                decimal minimumPrice;
-                decimal maximumPrice;
-                DataMinMaxPrices(asset, out minimumPrice, out maximumPrice);
-
-                //Check if the Stop Order was filled: opposite to a limit order
-                switch (order.Direction)
-                {
-                    case OrderDirection.Buy:
-                        //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
-                        if (maximumPrice > order.StopPrice || order.StopTriggered)
-                        {
-                            order.StopTriggered = true;
-
-                            // Fill the limit order, using closing price of bar:
-                            // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
-                            if (asset.Price < order.LimitPrice)
-                            {
-                                fill.Status = OrderStatus.Filled;
-                                fill.FillPrice = order.LimitPrice;
-                            }
-                        }
-                        break;
-
-                    case OrderDirection.Sell:
-                        //-> 1.1 Sell Stop: If Price below setpoint, Sell:
-                        if (minimumPrice < order.StopPrice || order.StopTriggered)
-                        {
-                            order.StopTriggered = true;
-
-                            // Fill the limit order, using minimum price of the bar
-                            // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
-                            if (asset.Price > order.LimitPrice)
-                            {
-                                fill.Status = OrderStatus.Filled;
-                                fill.FillPrice = order.LimitPrice; // Fill at limit price not asset price.
-                            }
-                        }
-                        break;
-                }
-
-                // assume the order completely filled
-                if (fill.Status == OrderStatus.Filled) fill.FillQuantity = order.Quantity;
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-
-            return fill;
+            return _defaultFillModel.StopLimitFill(asset, order);
         }
 
         /// <summary>
@@ -229,55 +84,7 @@ namespace QuantConnect.Securities
         /// <seealso cref="MarketFill(Security, MarketOrder)"/>
         public virtual OrderEvent LimitFill(Security asset, LimitOrder order)
         {
-            //Initialise;
-            var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
-            var fill = new OrderEvent(order, utcTime, 0);
-
-            try
-            {
-                //If its cancelled don't need anymore checks:
-                if (order.Status == OrderStatus.Canceled) return fill;
-
-                //Get the range of prices in the last bar:
-                decimal minimumPrice;
-                decimal maximumPrice;
-                DataMinMaxPrices(asset, out minimumPrice, out maximumPrice);
-
-                //-> Valid Live/Model Order: 
-                switch (order.Direction)
-                {
-                    case OrderDirection.Buy:
-                        //Buy limit seeks lowest price
-                        if (minimumPrice < order.LimitPrice)
-                        {
-                            //Set order fill:
-                            fill.Status = OrderStatus.Filled;
-                            // fill at the worse price this bar or the limit price, this allows far out of the money limits
-                            // to be executed properly
-                            fill.FillPrice = Math.Min(maximumPrice, order.LimitPrice); 
-                        }
-                        break;
-                    case OrderDirection.Sell:
-                        //Sell limit seeks highest price possible
-                        if (maximumPrice > order.LimitPrice)
-                        {
-                            fill.Status = OrderStatus.Filled;
-                            // fill at the worse price this bar or the limit price, this allows far out of the money limits
-                            // to be executed properly
-                            fill.FillPrice = Math.Max(minimumPrice, order.LimitPrice);
-                        }
-                        break;
-                }
-
-                // assume the order completely filled
-                if (fill.Status == OrderStatus.Filled) fill.FillQuantity = order.Quantity;
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-
-            return fill;
+            return _defaultFillModel.LimitFill(asset, order);
         }
 
         /// <summary>
@@ -288,59 +95,7 @@ namespace QuantConnect.Securities
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order)
         {
-            var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
-            var fill = new OrderEvent(order, utcTime, 0);
-
-            if (order.Status == OrderStatus.Canceled) return fill;
-
-            try
-            {
-                // MOO should never fill on the same bar or on stale data
-                // Imagine the case where we have a thinly traded equity, ASUR, and another liquid
-                // equity, say SPY, SPY gets data every minute but ASUR, if not on fill forward, maybe
-                // have large gaps, in which case the currentBar.EndTime will be in the past
-                // ASUR  | | |      [order]        | | | | | | |
-                //  SPY  | | | | | | | | | | | | | | | | | | | |
-                var currentBar = asset.GetLastData();
-                var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
-                if (currentBar == null || localOrderTime >= currentBar.EndTime) return fill;
-
-                // if the MOO was submitted during market the previous day, wait for a day to turn over
-                if (asset.Exchange.DateTimeIsOpen(localOrderTime) && localOrderTime.Date == asset.LocalTime.Date)
-                {
-                    return fill;
-                }
-
-                // wait until market open
-                // make sure the exchange is open before filling
-                if (!IsExchangeOpen(asset)) return fill;
-
-                fill.FillPrice = asset.Open;
-                fill.Status = OrderStatus.Filled;
-
-                //Calculate the model slippage: e.g. 0.01c
-                var slip = GetSlippageApproximation(asset, order);
-
-                //Apply slippage
-                switch (order.Direction)
-                {
-                    case OrderDirection.Buy:
-                        fill.FillPrice += slip;
-                        break;
-                    case OrderDirection.Sell:
-                        fill.FillPrice -= slip;
-                        break;
-                }
-
-                // assume the order completely filled
-                if (fill.Status == OrderStatus.Filled) fill.FillQuantity = order.Quantity;
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-
-            return fill;
+            return _defaultFillModel.MarketOnOpenFill(asset, order);
         }
 
         /// <summary>
@@ -351,48 +106,7 @@ namespace QuantConnect.Securities
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order)
         {
-            var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
-            var fill = new OrderEvent(order, utcTime, 0);
-
-            if (order.Status == OrderStatus.Canceled) return fill;
-
-            try
-            {
-                var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
-                var nextMarketClose = asset.Exchange.Hours.GetNextMarketClose(localOrderTime, false);
-                
-                // wait until market closes after the order time 
-                if (asset.LocalTime < nextMarketClose)
-                {
-                    return fill;
-                }
-
-                fill.FillPrice = asset.Close;
-                fill.Status = OrderStatus.Filled;
-
-                //Calculate the model slippage: e.g. 0.01c
-                var slip = GetSlippageApproximation(asset, order);
-
-                //Apply slippage
-                switch (order.Direction)
-                {
-                    case OrderDirection.Buy:
-                        fill.FillPrice += slip;
-                        break;
-                    case OrderDirection.Sell:
-                        fill.FillPrice -= slip;
-                        break;
-                }
-
-                // assume the order completely filled
-                if (fill.Status == OrderStatus.Filled) fill.FillQuantity = order.Quantity;
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-
-            return fill;
+            return _defaultFillModel.MarketOnCloseFill(asset, order);
         }
 
         /// <summary>
@@ -403,7 +117,7 @@ namespace QuantConnect.Securities
         /// <returns>decimal approximation for slippage</returns>
         public virtual decimal GetSlippageApproximation(Security security, Order order)
         {
-            return 0m;
+            return _defaultFillModel.GetSlippageApproximation(security, order);
         }
 
         /// <summary>
@@ -429,46 +143,6 @@ namespace QuantConnect.Securities
 
             var price = order.Status.IsFill() ? order.Price : security.Price;
             return GetOrderFee(order.Quantity, order.GetValue(price) / order.Quantity);
-        }
-
-        /// <summary>
-        /// Get the minimum and maximum price for this security in the last bar:
-        /// </summary>
-        /// <param name="asset">Security asset we're checking</param>
-        /// <param name="minimumPrice">Minimum price in the last data bar</param>
-        /// <param name="maximumPrice">Minimum price in the last data bar</param>
-        public virtual void DataMinMaxPrices(Security asset, out decimal minimumPrice, out decimal maximumPrice)
-        {
-            var marketData = asset.GetLastData();
-
-            var tradeBar = marketData as TradeBar;
-            if (tradeBar != null)
-            {
-                minimumPrice = tradeBar.Low;
-                maximumPrice = tradeBar.High;
-            }
-            else
-            {
-                minimumPrice = marketData.Value;
-                maximumPrice = marketData.Value;
-            }
-        }
-
-        /// <summary>
-        /// Determines if the exchange is open using the current time of the asset
-        /// </summary>
-        private static bool IsExchangeOpen(Security asset)
-        {
-            if (!asset.Exchange.DateTimeIsOpen(asset.LocalTime))
-            {
-                // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
-                var currentBar = asset.GetLastData();
-                if (asset.LocalTime.Date != currentBar.EndTime.Date || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, false))
-                {
-                    return false;
-                }
-            }
-            return true;
         }
     }
 }
