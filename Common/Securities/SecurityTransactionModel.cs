@@ -132,14 +132,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Default security transaction model - no fees.
-        /// </summary>
-        public virtual decimal GetOrderFee(decimal quantity, decimal price)
-        {
-            return 0m;
-        }
-
-        /// <summary>
         /// Default implementation returns 0 for fees.
         /// </summary>
         /// <param name="security">The security matching the order</param>
@@ -147,13 +139,7 @@ namespace QuantConnect.Securities
         /// <returns>The cost of the order in units of the account currency</returns>
         public virtual decimal GetOrderFee(Security security, Order order)
         {
-            if (order.Quantity == 0)
-            {
-                return 0m;
-            }
-
-            var price = order.Status.IsFill() ? order.Price : security.Price;
-            return GetOrderFee(order.Quantity, order.GetValue(price) / order.Quantity);
+            return 0m;
         }
     }
 }

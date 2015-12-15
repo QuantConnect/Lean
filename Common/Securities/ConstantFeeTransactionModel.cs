@@ -43,13 +43,5 @@ namespace QuantConnect.Securities
         {
             return _fee;
         }
-
-        /// <summary>
-        /// Returns the constant fee for the model
-        /// </summary>
-        public override decimal GetOrderFee(decimal quantity, decimal price)
-        {
-            return _fee;
-        }
     }
 }

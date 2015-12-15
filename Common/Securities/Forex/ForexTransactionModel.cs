@@ -107,22 +107,6 @@ namespace QuantConnect.Securities.Forex
         }
 
         /// <summary>
-        /// Get the fees from this order
-        /// </summary>
-        /// <param name="quantity">Quantity of purchase</param>
-        /// <param name="price">Price of the currency</param>
-        /// <remarks>
-        ///     FXCM now uses a flat fee per trade instead of a spread model. This spread model is 
-        ///     out of date but the data has the spread built into historical data. >> New data source needed.
-        /// </remarks>
-        /// <returns>Decimal value of the order fee</returns>
-        public override decimal GetOrderFee(decimal quantity, decimal price)
-        {
-            var fee = _commissionRate*quantity*price;
-            return Math.Max(_minimumOrderFee, fee);
-        }
-
-        /// <summary>
         /// Default implementation returns 0 for fees.
         /// </summary>
         /// <param name="security">The security matching the order</param>
