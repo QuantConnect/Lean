@@ -114,6 +114,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // if we've selected this subscription again, keep it
                 if (selections.Contains(config.Symbol)) continue;
 
+                // don't remove if the universe wants to keep him in
+                if (!universe.CanRemoveMember(dateTimeUtc, subscription.Security)) continue;
+
                 // let the algorithm know this security has been removed from the universe
                 removals.Add(subscription.Security);
 
@@ -128,7 +131,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     if (_dataFeed.RemoveSubscription(subscription))
                     {
-                        universe.RemoveMember(subscription.Security);
+                        universe.RemoveMember(dateTimeUtc, subscription.Security);
                     }
                 }
             }
@@ -159,7 +162,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // add the new subscriptions to the data feed
                 if (_dataFeed.AddSubscription(universe, security, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)))
                 {
-                    universe.AddMember(security);
+                    universe.AddMember(dateTimeUtc, security);
                 }
             }
 

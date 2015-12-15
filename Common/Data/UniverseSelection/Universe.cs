@@ -17,6 +17,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using QuantConnect.Securities;
 
@@ -32,7 +33,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public static readonly UnchangedUniverse Unchanged = UnchangedUniverse.Instance;
 
-        private readonly ConcurrentDictionary<Symbol, Security> _securities;
+        private readonly ConcurrentDictionary<Symbol, Member> _securities;
 
         /// <summary>
         /// Gets the security type of this universe
@@ -72,7 +73,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public Dictionary<Symbol, Security> Members
         {
-            get { return new Dictionary<Symbol, Security>(_securities); }
+            get { return _securities.Select(x => x.Value.Security).ToDictionary(x => x.Symbol); }
         }
 
         /// <summary>
@@ -81,7 +82,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="config">The configuration used to source data for this universe</param>
         protected Universe(SubscriptionDataConfig config)
         {
-            _securities = new ConcurrentDictionary<Symbol, Security>();
+            _securities = new ConcurrentDictionary<Symbol, Member>();
 
             Configuration = config;
         }
@@ -92,9 +93,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// out of a universe before the algorithm has had enough time to make
         /// decisions on the security
         /// </summary>
+        /// <param name="utcTime">The current utc time</param>
         /// <param name="security">The security to check if its ok to remove</param>
         /// <returns>True if we can remove the security, false otherwise</returns>
-        public virtual bool CanRemoveMember(Security security)
+        public virtual bool CanRemoveMember(DateTime utcTime, Security security)
         {
             return true;
         }
@@ -120,16 +122,17 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Adds the specified security to this universe
         /// </summary>
+        /// <param name="utcTime">The current utc date time</param>
         /// <param name="security">The security to be added</param>
         /// <returns>True if the security was successfully added,
         /// false if the security was already in the universe</returns>
-        internal bool AddMember(Security security)
+        internal bool AddMember(DateTime utcTime, Security security)
         {
             if (_securities.ContainsKey(security.Symbol))
             {
                 return false;
             }
-            return _securities.TryAdd(security.Symbol, security);
+            return _securities.TryAdd(security.Symbol, new Member(utcTime, security));
         }
 
         /// <summary>
@@ -137,14 +140,16 @@ namespace QuantConnect.Data.UniverseSelection
         /// will first check to verify that we can remove the security by
         /// calling the <see cref="CanRemoveMember"/> function.
         /// </summary>
+        /// <param name="utcTime">The current utc time</param>
         /// <param name="security">The security to be removed</param>
         /// <returns>True if the security was successfully removed, false if
         /// we're not allowed to remove or if the security didn't exist</returns>
-        internal bool RemoveMember(Security security)
+        internal bool RemoveMember(DateTime utcTime, Security security)
         {
-            if (CanRemoveMember(security))
+            if (CanRemoveMember(utcTime, security))
             {
-                return _securities.TryRemove(security.Symbol, out security);
+                Member member;
+                return _securities.TryRemove(security.Symbol, out member);
             }
             return false;
         }
@@ -163,6 +168,17 @@ namespace QuantConnect.Data.UniverseSelection
             IEnumerator<Symbol> IEnumerable<Symbol>.GetEnumerator() { yield break; }
             IEnumerator<string> IEnumerable<string>.GetEnumerator() { yield break; }
             IEnumerator IEnumerable.GetEnumerator() { yield break; }
+        }
+
+        private sealed class Member
+        {
+            public readonly DateTime Added;
+            public readonly Security Security;
+            public Member(DateTime added, Security security)
+            {
+                Added = added;
+                Security = security;
+            }
         }
     }
 }
