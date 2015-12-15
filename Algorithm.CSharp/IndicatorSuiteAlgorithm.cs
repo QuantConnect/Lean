@@ -32,8 +32,9 @@ namespace QuantConnect
 
         Indicators _indicators;
         Indicators _selectorIndicators;
+        IndicatorBase<IndicatorDataPoint> _ratio;
 
-        //RSI Custom Data:
+            //RSI Custom Data:
         RelativeStrengthIndex _rsiCustom;
         Minimum _minCustom;
         Maximum _maxCustom;
@@ -103,6 +104,16 @@ namespace QuantConnect
             _rsiCustom = RSI(_customSymbol, 14, MovingAverageType.Simple, Resolution.Daily);
             _minCustom = MIN(_customSymbol, 14, Resolution.Daily);
             _maxCustom = MAX(_customSymbol, 14, Resolution.Daily);
+
+            // in addition to defining indicators on a single security, you can all define 'composite' indicators.
+            // these are indicators that require multiple inputs. the most common of which is a ratio.
+            // suppose we seek the ratio of BTC to SPY, we could write the following:
+            var spyClose = Identity(_symbol);
+            var btcClose = Identity(_customSymbol);
+            // this will create a new indicator whose value is BTC/SPY
+            _ratio = btcClose.Over(spyClose);
+            // we can also easily plot our indicators each time they update using th PlotIndicator function
+            PlotIndicator("Ratio", _ratio);
         }
 
         /// <summary>
