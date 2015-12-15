@@ -192,6 +192,7 @@
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
     <Compile Include="Orders\CancelOrderRequest.cs" />
+    <Compile Include="Orders\DefaultSlippageModel.cs" />
     <Compile Include="Orders\IOrderFeeModel.cs" />
     <Compile Include="Orders\IFillModel.cs" />
     <Compile Include="Orders\ISlippageModel.cs" />
