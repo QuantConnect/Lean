@@ -27,6 +27,7 @@ namespace QuantConnect.Securities
     public class SecurityTransactionModel : ISecurityTransactionModel
     {
         private readonly DefaultFillModel _defaultFillModel;
+        private readonly ConstantOrderFeeModel _constantFeeModel;
         private readonly DefaultSlippageModel _defaultSlippageModel;
 
         /// <summary>
@@ -37,6 +38,7 @@ namespace QuantConnect.Securities
         {
             _defaultSlippageModel = new DefaultSlippageModel();
             _defaultFillModel = new DefaultFillModel(this);
+            _constantFeeModel = new ConstantOrderFeeModel(0);
         }
 
         /// <summary>
@@ -139,7 +141,7 @@ namespace QuantConnect.Securities
         /// <returns>The cost of the order in units of the account currency</returns>
         public virtual decimal GetOrderFee(Security security, Order order)
         {
-            return 0m;
+            return _constantFeeModel.GetOrderFee(security, order);
         }
     }
 }
