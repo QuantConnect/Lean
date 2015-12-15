@@ -26,7 +26,18 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityTransactionModel : ISecurityTransactionModel
     {
-        private readonly DefaultFillModel _defaultFillModel = new DefaultFillModel();
+        private readonly DefaultFillModel _defaultFillModel;
+        private readonly DefaultSlippageModel _defaultSlippageModel;
+
+        /// <summary>
+        /// Initializes a new default instance of the <see cref="SecurityTransactionModel"/> class.
+        /// This will use default slippage and fill models.
+        /// </summary>
+        public SecurityTransactionModel()
+        {
+            _defaultSlippageModel = new DefaultSlippageModel();
+            _defaultFillModel = new DefaultFillModel(this);
+        }
 
         /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.
@@ -117,7 +128,7 @@ namespace QuantConnect.Securities
         /// <returns>decimal approximation for slippage</returns>
         public virtual decimal GetSlippageApproximation(Security security, Order order)
         {
-            return _defaultFillModel.GetSlippageApproximation(security, order);
+            return _defaultSlippageModel.GetSlippageApproximation(security, order);
         }
 
         /// <summary>
