@@ -194,6 +194,7 @@
     <Compile Include="Orders\CancelOrderRequest.cs" />
     <Compile Include="Orders\IOrderFeeModel.cs" />
     <Compile Include="Orders\IFillModel.cs" />
+    <Compile Include="Orders\ISlippageModel.cs" />
     <Compile Include="Orders\MarketOnCloseOrder.cs" />
     <Compile Include="Orders\MarketOnOpenOrder.cs" />
     <Compile Include="Orders\OrderField.cs" />

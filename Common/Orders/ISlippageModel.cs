@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,18 +13,18 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
-using QuantConnect.Securities.Equity;
-using QuantConnect.Securities.Forex;
+using QuantConnect.Securities;
 
-namespace QuantConnect.Securities.Interfaces
+namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Security transaction model interface for QuantConnect security objects
+    /// Represents a model that simulates market order slippage
     /// </summary>
-    /// <seealso cref="EquityTransactionModel"/>
-    /// <seealso cref="ForexTransactionModel"/>
-    public interface ISecurityTransactionModel : IFillModel, IOrderFeeModel, ISlippageModel
+    public interface ISlippageModel
     {
+        /// <summary>
+        /// Slippage Model. Return a decimal cash slippage approximation on the order.
+        /// </summary>
+        decimal GetSlippageApproximation(Security asset, Order order);
     }
 }

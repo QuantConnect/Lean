@@ -66,10 +66,5 @@ namespace QuantConnect.Orders
         /// <param name="order">Order to be filled</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order);
-
-        /// <summary>
-        /// Slippage Model. Return a decimal cash slippage approximation on the order.
-        /// </summary>
-        decimal GetSlippageApproximation(Security asset, Order order);
     }
 }
