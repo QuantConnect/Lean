@@ -125,7 +125,7 @@ namespace QuantConnect.Parameters
                     if (attribute != null)
                     {
                         var parameterName = attribute.Name ?? field.Name;
-                        parameters[parameterName] = field.FieldType.Name;
+                        parameters[parameterName] = field.FieldType.GetBetterTypeName();
                     }
                 }
                 foreach (var property in type.GetProperties(ParameterAttribute.BindingFlags))
