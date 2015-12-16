@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -65,15 +66,20 @@ namespace QuantConnect.Data.Auxiliary
         public static IEnumerable<FactorFileRow> Read(string permtick, string market)
         {
             string path = Path.Combine(Constants.DataFolder, "equity", market, "factor_files", permtick.ToLower() + ".csv");
-            foreach (var line in File.ReadAllLines(path))
-            {
-                var csv = line.Split(',');
-                yield return new FactorFileRow(
-                    DateTime.ParseExact(csv[0], DateFormat.EightCharacter, CultureInfo.InvariantCulture, DateTimeStyles.None),
-                    decimal.Parse(csv[1], CultureInfo.InvariantCulture),
-                    decimal.Parse(csv[2], CultureInfo.InvariantCulture)
-                    );
-            }
+            return File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l)).Select(Parse);
+        }
+
+        /// <summary>
+        /// Parses the specified line as a factor file row
+        /// </summary>
+        public static FactorFileRow Parse(string line)
+        {
+            var csv = line.Split(',');
+            return new FactorFileRow(
+                DateTime.ParseExact(csv[0], DateFormat.EightCharacter, CultureInfo.InvariantCulture, DateTimeStyles.None),
+                decimal.Parse(csv[1], CultureInfo.InvariantCulture),
+                decimal.Parse(csv[2], CultureInfo.InvariantCulture)
+                );
         }
 
         /// <summary>

@@ -30,7 +30,7 @@ namespace QuantConnect.Data.Auxiliary
     /// </summary>
     public class MapFileResolver : IEnumerable<MapFile>
     {
-        private readonly Dictionary<string, MapFile> _mapFilesByEntitySymbol;
+        private readonly Dictionary<string, MapFile> _mapFilesByPermtick;
         private readonly Dictionary<string, SortedList<DateTime, MapFileRowEntry>> _bySymbol;
 
         /// <summary>
@@ -46,13 +46,13 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="mapFiles">The data used to initialize this resolver.</param>
         public MapFileResolver(IEnumerable<MapFile> mapFiles)
         {
-            _mapFilesByEntitySymbol = new Dictionary<string, MapFile>(StringComparer.InvariantCultureIgnoreCase);
+            _mapFilesByPermtick = new Dictionary<string, MapFile>(StringComparer.InvariantCultureIgnoreCase);
             _bySymbol = new Dictionary<string, SortedList<DateTime, MapFileRowEntry>>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var mapFile in mapFiles)
             {
                 // add to our by path map
-                _mapFilesByEntitySymbol.Add(mapFile.Permtick, mapFile);
+                _mapFilesByPermtick.Add(mapFile.Permtick, mapFile);
 
                 foreach (var row in mapFile)
                 {
@@ -105,6 +105,18 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
+        /// Gets the map file matching the specified permtick
+        /// </summary>
+        /// <param name="permtick">The permtick to match on</param>
+        /// <returns>The map file matching the permtick, or null if not found</returns>
+        public MapFile GetByPermtick(string permtick)
+        {
+            MapFile mapFile;
+            _mapFilesByPermtick.TryGetValue(permtick.ToUpper(), out mapFile);
+            return mapFile;
+        }
+
+        /// <summary>
         /// Resolves the map file path containing the mapping information for the symbol defined at <paramref name="date"/>
         /// </summary>
         /// <param name="symbol">The symbol as of <paramref name="date"/> to be mapped</param>
@@ -139,7 +151,7 @@ namespace QuantConnect.Data.Auxiliary
             }
             // secondary search for exact mapping, find path than ends with symbol.csv
             MapFile mapFile;
-            if (!_mapFilesByEntitySymbol.TryGetValue(symbol, out mapFile))
+            if (!_mapFilesByPermtick.TryGetValue(symbol, out mapFile))
             {
                 return new MapFile(symbol, new List<MapFileRow>());
             }
@@ -210,7 +222,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <filterpriority>1</filterpriority>
         public IEnumerator<MapFile> GetEnumerator()
         {
-            return _mapFilesByEntitySymbol.Values.GetEnumerator();
+            return _mapFilesByPermtick.Values.GetEnumerator();
         }
 
         /// <summary>
