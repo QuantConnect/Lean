@@ -91,6 +91,7 @@
     <Compile Include="Brokerages\StopMarketOrderTestParameters.cs" />
     <Compile Include="Brokerages\Tradier\TradierBrokerageSerializationTests.cs" />
     <Compile Include="Brokerages\Tradier\TradierBrokerageTests.cs" />
+    <Compile Include="Common\Data\Auxiliary\LocalDiskFactorFileProviderTests.cs" />
     <Compile Include="Common\Data\Auxiliary\LocalDiskMapFileProviderTests.cs" />
     <Compile Include="Common\Data\Market\BarTests.cs" />
     <Compile Include="Common\Data\Market\TickTests.cs" />

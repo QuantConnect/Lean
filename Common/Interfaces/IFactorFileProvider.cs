@@ -14,29 +14,22 @@
  *
 */
 
-using NUnit.Framework;
+using System.ComponentModel.Composition;
 using QuantConnect.Data.Auxiliary;
 
-namespace QuantConnect.Tests.Common.Data.Auxiliary
+namespace QuantConnect.Interfaces
 {
-    [TestFixture]
-    public class LocalDiskMapFileProviderTests
+    /// <summary>
+    /// Provides instances of <see cref="FactorFile"/> at run time
+    /// </summary>
+    [InheritedExport(typeof(IFactorFileProvider))]
+    public interface IFactorFileProvider
     {
-        [Test]
-        public void RetrievesFromDisk()
-        {
-            var provider = new LocalDiskMapFileProvider();
-            var mapFiles = provider.Get(QuantConnect.Market.USA);
-            Assert.IsNotEmpty(mapFiles);
-        }
-
-        [Test]
-        public void CachesValueAndReturnsSameReference()
-        {
-            var provider = new LocalDiskMapFileProvider();
-            var mapFiles1 = provider.Get(QuantConnect.Market.USA);
-            var mapFiles2 = provider.Get(QuantConnect.Market.USA);
-            Assert.IsTrue(ReferenceEquals(mapFiles1, mapFiles2));
-        }
+        /// <summary>
+        /// Gets a <see cref="FactorFile"/> instance for the specified symbol, or null if not found
+        /// </summary>
+        /// <param name="symbol">The security's symbol whose factor file we seek</param>
+        /// <returns>The resolved factor file, or null if not found</returns>
+        FactorFile Get(Symbol symbol);
     }
 }

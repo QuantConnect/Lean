@@ -138,6 +138,7 @@
     <Compile Include="Constants.cs" />
     <Compile Include="Data\Auxiliary\FactorFile.cs" />
     <Compile Include="Data\Auxiliary\FactorFileRow.cs" />
+    <Compile Include="Data\Auxiliary\LocalDiskFactorFileProvider.cs" />
     <Compile Include="Data\Auxiliary\MapFile.cs" />
     <Compile Include="Data\Auxiliary\LocalDiskMapFileProvider.cs" />
     <Compile Include="Data\Auxiliary\MapFileResolver.cs" />
@@ -181,6 +182,7 @@
     <Compile Include="Interfaces\IBrokerageFactory.cs" />
     <Compile Include="Interfaces\ICommandQueueHandler.cs" />
     <Compile Include="Interfaces\IDataQueueHandler.cs" />
+    <Compile Include="Interfaces\IFactorFileProvider.cs" />
     <Compile Include="Interfaces\IHistoryProvider.cs" />
     <Compile Include="Interfaces\IJobQueueHandler.cs" />
     <Compile Include="Interfaces\IMapFileProvider.cs" />

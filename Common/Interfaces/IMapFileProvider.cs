@@ -30,7 +30,7 @@ namespace QuantConnect.Interfaces
         /// files for the specified market
         /// </summary>
         /// <param name="market">The equity market, for example, 'usa'</param>
-        /// <returns>A <see cref="MapFileRow"/> containing all map files for the specified market</returns>
+        /// <returns>A <see cref="MapFileResolver"/> containing all map files for the specified market</returns>
         MapFileResolver Get(string market);
     }
 }
