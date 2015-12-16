@@ -20,10 +20,13 @@ using System.Threading;
 using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Brokerages.Oanda.Framework;
 using QuantConnect.Brokerages.Oanda.Session;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Forex;
 using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Oanda

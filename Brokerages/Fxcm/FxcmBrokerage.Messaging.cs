@@ -24,9 +24,12 @@ using com.fxcm.fix.posttrade;
 using com.fxcm.fix.pretrade;
 using com.fxcm.fix.trade;
 using com.fxcm.messaging;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Brokerages.Fxcm
 {
@@ -35,6 +38,9 @@ namespace QuantConnect.Brokerages.Fxcm
     /// </summary>
     public partial class FxcmBrokerage
     {
+        private static readonly IOrderFeeModel OrderFeeModel = new FxcmOrderFeeModel();
+        private static readonly Security Security = new Forex(new Cash("USD", 0, 1), new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create(string.Empty, SecurityType.Forex, Market.FXCM), Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false), 1);
+
         private IGateway _gateway;
 
         private readonly object _locker = new object();
@@ -356,6 +362,12 @@ namespace QuantConnect.Brokerages.Fxcm
                             FillPrice = Convert.ToDecimal(message.getPrice()),
                             FillQuantity = Convert.ToInt32(message.getSide() == SideFactory.BUY ? message.getLastQty() : -message.getLastQty())
                         };
+
+                        // we're catching the first fill so we apply the fees only once
+                        if ((int)message.getCumQty() == (int)message.getLastQty())
+                        {
+                            orderEvent.OrderFee = OrderFeeModel.GetOrderFee(Security, order);
+                        }
 
                         _orderEventQueue.Enqueue(orderEvent);
                     }

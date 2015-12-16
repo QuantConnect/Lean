@@ -122,6 +122,7 @@
     <Compile Include="Brokerages\BrokerageName.cs" />
     <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
+    <Compile Include="Brokerages\FxcmOrderFeeModel.cs" />
     <Compile Include="Brokerages\OandaTransactionModel.cs" />
     <Compile Include="Brokerages\FxcmTransactionModel.cs" />
     <Compile Include="Brokerages\IBrokerageMessageHandler.cs" />
@@ -242,7 +243,7 @@
     <Compile Include="Securities\Equity\EquityMarginModel.cs" />
     <Compile Include="Securities\Equity\EquityPortfolioModel.cs" />
     <Compile Include="Securities\DelayedSettlementModel.cs" />
-    <Compile Include="Securities\Forex\ForexSlippageModel.cs" />
+    <Compile Include="Securities\Forex\ConstantOrSpreadSlippageModel.cs" />
     <Compile Include="Securities\ISettlementModel.cs" />
     <Compile Include="Securities\LocalMarketHours.cs" />
     <Compile Include="Securities\SecurityExchangeHours.cs" />

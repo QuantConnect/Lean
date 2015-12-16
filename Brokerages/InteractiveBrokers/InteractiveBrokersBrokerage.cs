@@ -30,6 +30,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Util;
 using IB = Krs.Ats.IBNet;
@@ -41,6 +42,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// </summary>
     public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler
     {
+        private static readonly IOrderFeeModel OrderFeeModel = new DefaultOrderFeeModel();
+        private static readonly Security Equity = new Equity(new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create(string.Empty, SecurityType.Equity, Market.USA), Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false), 1);
+        private static readonly Security Forex = new Forex(new Cash("USD", 0, 1), new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create(string.Empty, SecurityType.Forex, Market.FXCM), Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false), 1);
+
         // next valid order id for this client
         private int _nextValidID;
         // next valid client id for the gateway/tws
@@ -623,7 +628,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // determine the correct symbol to choose
             string invertedSymbol = "USD" + currency;
             string normalSymbol = currency + "USD";
-            var currencyPair = Forex.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
+            var currencyPair = Securities.Forex.Forex.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
             if (currencyPair == null)
             {
                 return 1m;
@@ -846,11 +851,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return;
                 }
 
+                var orderFee = 0m;
                 int filledThisTime;
                 lock (_orderFillsLock)
                 {
                     // lock since we're getting and updating in multiple operations
                     var currentFilled = _orderFills.GetOrAdd(order.Symbol, 0);
+                    if (currentFilled == 0)
+                    {
+                        // apply order fees on the first fill event TODO: What about partial filled orders that get cancelled?
+                        var security = order.Symbol.ID.SecurityType == SecurityType.Forex ? Forex : Equity;
+                        orderFee = OrderFeeModel.GetOrderFee(security, order);
+                    }
                     filledThisTime = update.Filled - currentFilled;
                     _orderFills.AddOrUpdate(order.Symbol, currentFilled, (sym, filled) => update.Filled);
                 }
@@ -864,7 +876,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // mark sells as negative quantities
                 var fillQuantity = order.Direction == OrderDirection.Buy ? filledThisTime : -filledThisTime;
-                const int orderFee = 0;
                 var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee, "Interactive Brokers Fill Event")
                 {
                     Status = status,
@@ -1218,7 +1229,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private Holding CreateHolding(IB.UpdatePortfolioEventArgs e)
         {
             string currencySymbol;
-            if (!Forex.CurrencySymbols.TryGetValue(e.Contract.Currency, out currencySymbol))
+            if (!Securities.Forex.Forex.CurrencySymbols.TryGetValue(e.Contract.Currency, out currencySymbol))
             {
                 currencySymbol = "$";
             }
