@@ -193,6 +193,7 @@
     <Compile Include="Notifications\NotificationManager.cs" />
     <Compile Include="Orders\CancelOrderRequest.cs" />
     <Compile Include="Orders\ConstantSlippageModel.cs" />
+    <Compile Include="Orders\DefaultOrderFeeModel.cs" />
     <Compile Include="Orders\DefaultSlippageModel.cs" />
     <Compile Include="Orders\ConstantOrderFeeModel.cs" />
     <Compile Include="Orders\IOrderFeeModel.cs" />
@@ -241,6 +242,7 @@
     <Compile Include="Securities\Equity\EquityMarginModel.cs" />
     <Compile Include="Securities\Equity\EquityPortfolioModel.cs" />
     <Compile Include="Securities\DelayedSettlementModel.cs" />
+    <Compile Include="Securities\Forex\ForexSlippageModel.cs" />
     <Compile Include="Securities\ISettlementModel.cs" />
     <Compile Include="Securities\LocalMarketHours.cs" />
     <Compile Include="Securities\SecurityExchangeHours.cs" />

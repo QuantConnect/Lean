@@ -20,7 +20,7 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Represents a slippage model that uses a constant percentage of slip
     /// </summary>
-    public class ConstantSlippageModel : ISlippageModel
+    public class ConstantSlippageModel : DefaultSlippageModel
     {
         private readonly decimal _slippagePercent;
         /// <summary>
@@ -35,7 +35,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Slippage Model. Return a decimal cash slippage approximation on the order.
         /// </summary>
-        public decimal GetSlippageApproximation(Security asset, Order order)
+        public override decimal GetSlippageApproximation(Security asset, Order order)
         {
             return asset.GetLastData().Value*_slippagePercent;
         }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -14,24 +14,24 @@
 */
 
 using QuantConnect.Orders;
-using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities.Forex
 {
     /// <summary>
-    /// Forex Transaction Model Class: Specific transaction fill models for FOREX orders
+    /// Represents the default slippage model used for forex securities
     /// </summary>
-    /// <seealso cref="SecurityTransactionModel"/>
-    /// <seealso cref="ISecurityTransactionModel"/>
-    public class ForexTransactionModel : SecurityTransactionModel
+    public class ForexSlippageModel : ISlippageModel
     {
+        private readonly ISlippageModel _defaultSlippageModel = new DefaultSlippageModel();
+        private readonly ISlippageModel _constantSlippageModel = new ConstantSlippageModel(0.0001m);
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="ForexTransactionModel"/> class
+        /// Slippage Model. Return a decimal cash slippage approximation on the order.
         /// </summary>
-        /// <param name="monthlyTradeAmountInUSDollars">The monthly dollar volume traded</param>
-        public ForexTransactionModel(decimal monthlyTradeAmountInUSDollars = 0)
-            : base(new DefaultOrderFillModel(), new DefaultOrderFeeModel(monthlyTradeAmountInUSDollars), new ConstantSlippageModel(0.0001m))
-        {   
+        public decimal GetSlippageApproximation(Security asset, Order order)
+        {
+            if (asset.Resolution == Resolution.Tick) return _defaultSlippageModel.GetSlippageApproximation(asset, order);
+            return _constantSlippageModel.GetSlippageApproximation(asset, order);
         }
     }
 }
