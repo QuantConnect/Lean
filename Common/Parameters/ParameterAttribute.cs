@@ -33,6 +33,9 @@ namespace QuantConnect.Parameters
         /// </summary>
         public const BindingFlags BindingFlags = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Instance;
 
+        private static readonly string ParameterAttributeNameProperty = "Name";
+        private static readonly string ParameterAttributeFullName = typeof (ParameterAttribute).FullName;
+        
         /// <summary>
         /// Gets the name of this parameter
         /// </summary>
@@ -136,6 +139,43 @@ namespace QuantConnect.Parameters
                     if (attribute != null)
                     {
                         var parameterName = attribute.Name ?? property.Name;
+                        parameters[parameterName] = property.PropertyType.Name;
+                    }
+                }
+            }
+            return parameters;
+        }
+
+        /// <summary>
+        /// Resolves all parameter attributes from the specified compiled assembly path using only reflection
+        /// technique to locate the attributes and resolve their names
+        /// </summary>
+        /// <param name="assembly">The assembly to inspect</param>
+        /// <returns>Parameters dictionary keyed by parameter name with a value of the member type</returns>
+        public static Dictionary<string, string> GetParametersFromAssemblyReflection(Assembly assembly)
+        {
+            Attribute attribute = null;
+            var parameters = new Dictionary<string, string>();
+            var nameProperty = new Lazy<PropertyInfo>(() => attribute.GetType().GetProperty(ParameterAttributeNameProperty));
+            foreach (var type in assembly.GetTypes())
+            {
+                foreach (var field in type.GetFields(BindingFlags))
+                {
+                    attribute = field.GetCustomAttributes().FirstOrDefault(x => x.GetType().FullName == ParameterAttributeFullName);
+                    if (attribute != null)
+                    {
+                        var parameterName = (string)nameProperty.Value.GetValue(attribute) ?? field.Name;
+                        parameters[parameterName] = field.FieldType.GetBetterTypeName();
+                    }
+                }
+                foreach (var property in type.GetProperties(BindingFlags))
+                {
+                    // ignore non-writeable properties
+                    if (!property.CanWrite) continue;
+                    attribute = property.GetCustomAttribute<ParameterAttribute>();
+                    if (attribute != null)
+                    {
+                        var parameterName = (string)nameProperty.Value.GetValue(attribute) ?? property.Name;
                         parameters[parameterName] = property.PropertyType.Name;
                     }
                 }
