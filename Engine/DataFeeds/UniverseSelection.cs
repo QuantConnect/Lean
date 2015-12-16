@@ -71,7 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // subtract current subscriptions that can't be removed
-            limit -= _algorithm.Securities.Count(x => x.Value.Resolution == resolution && x.Value.HoldStock);
+            limit -= _dataFeed.Subscriptions.Count(x => x.Security.Resolution == resolution && x.Security.HoldStock);
 
             if (limit < 1)
             {
