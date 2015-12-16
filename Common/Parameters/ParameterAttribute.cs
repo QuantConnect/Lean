@@ -128,7 +128,7 @@ namespace QuantConnect.Parameters
                         parameters[parameterName] = field.FieldType.GetBetterTypeName();
                     }
                 }
-                foreach (var property in type.GetProperties(ParameterAttribute.BindingFlags))
+                foreach (var property in type.GetProperties(BindingFlags))
                 {
                     // ignore non-writeable properties
                     if (!property.CanWrite) continue;
