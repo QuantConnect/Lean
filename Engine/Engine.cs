@@ -113,13 +113,13 @@ namespace QuantConnect.Lean.Engine
                     brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, algorithm);
 
                     // Initialize the data feed before we initialize so he can intercept added securities/universes via events
-                    _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider);
+                    _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider);
 
                     // initialize command queue system
                     _algorithmHandlers.CommandQueue.Initialize(job, algorithm);
 
                     // set the history provider before setting up the algorithm
-                    _algorithmHandlers.HistoryProvider.Initialize(job, _algorithmHandlers.MapFileProvider, progress =>
+                    _algorithmHandlers.HistoryProvider.Initialize(job, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider, progress =>
                     {
                         // send progress updates to the result handler only during initialization
                         if (!algorithm.GetLocked() || algorithm.IsWarmingUp)

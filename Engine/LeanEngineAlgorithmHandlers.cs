@@ -40,6 +40,7 @@ namespace QuantConnect.Lean.Engine
         private readonly IHistoryProvider _historyProvider;
         private readonly ICommandQueueHandler _commandQueue;
         private readonly IMapFileProvider _mapFileProvider;
+        private readonly IFactorFileProvider _factorFileProvider;
 
         /// <summary>
         /// Gets the result handler used to communicate results from the algorithm
@@ -106,6 +107,14 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
+        /// Gets the map file provider used as a map file source for the data feed
+        /// </summary>
+        public IFactorFileProvider FactorFileProvider
+        {
+            get { return _factorFileProvider; }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="LeanEngineAlgorithmHandlers"/> class from the specified handlers
         /// </summary>
         /// <param name="results">The result handler for communicating results from the algorithm</param>
@@ -123,7 +132,8 @@ namespace QuantConnect.Lean.Engine
             IRealTimeHandler realTime,
             IHistoryProvider historyProvider,
             ICommandQueueHandler commandQueue,
-            IMapFileProvider mapFileProvider
+            IMapFileProvider mapFileProvider,
+            IFactorFileProvider factorFileProvider
             )
         {
             if (results == null)
@@ -158,6 +168,10 @@ namespace QuantConnect.Lean.Engine
             {
                 throw new ArgumentNullException("mapFileProvider");
             }
+            if (factorFileProvider == null)
+            {
+                throw new ArgumentNullException("factorFileProvider");
+            }
             _results = results;
             _setup = setup;
             _dataFeed = dataFeed;
@@ -166,6 +180,7 @@ namespace QuantConnect.Lean.Engine
             _historyProvider = historyProvider;
             _commandQueue = commandQueue;
             _mapFileProvider = mapFileProvider;
+            _factorFileProvider = factorFileProvider;
         }
         
         /// <summary>
@@ -184,6 +199,7 @@ namespace QuantConnect.Lean.Engine
             var historyProviderTypeName = Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider");
             var commandQueueHandlerTypeName = Config.Get("command-queue-handler", "EmptyCommandQueueHandler");
             var mapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
+            var factorFileProviderTypeName = Config.Get("factor-file-provider", "LocalDiskFactorFileProvider");
 
             return new LeanEngineAlgorithmHandlers(
                 composer.GetExportedValueByTypeName<IResultHandler>(resultHandlerTypeName),
@@ -193,7 +209,8 @@ namespace QuantConnect.Lean.Engine
                 composer.GetExportedValueByTypeName<IRealTimeHandler>(realTimeHandlerTypeName),
                 composer.GetExportedValueByTypeName<IHistoryProvider>(historyProviderTypeName),
                 composer.GetExportedValueByTypeName<ICommandQueueHandler>(commandQueueHandlerTypeName),
-                composer.GetExportedValueByTypeName<IMapFileProvider>(mapFileProviderTypeName)
+                composer.GetExportedValueByTypeName<IMapFileProvider>(mapFileProviderTypeName),
+                composer.GetExportedValueByTypeName<IFactorFileProvider>(factorFileProviderTypeName)
                 );
         }
 

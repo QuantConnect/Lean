@@ -46,6 +46,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     {
         private int _dataPointCount;
         private IMapFileProvider _mapFileProvider;
+        private IFactorFileProvider _factorFileProvider;
 
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
@@ -60,10 +61,12 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// </summary>
         /// <param name="job">The job</param>
         /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
+        /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
         /// <param name="statusUpdate">Function used to send status updates</param>
-        public void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, Action<int> statusUpdate)
+        public void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
         {
             _mapFileProvider = mapFileProvider;
+            _factorFileProvider = factorFileProvider;
         }
 
         /// <summary>
@@ -112,7 +115,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 start, 
                 end, 
                 ResultHandlerStub.Instance,
-                config.SecurityType == SecurityType.Equity ? _mapFileProvider.Get(config.Market) : MapFileResolver.Empty,
+                config.SecurityType == SecurityType.Equity ? _mapFileProvider.Get(config.Market) : MapFileResolver.Empty, 
+                _factorFileProvider,
                 Time.EachTradeableDay(request.ExchangeHours, start, end), 
                 false,
                 includeAuxilliaryData: false

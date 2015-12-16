@@ -23,6 +23,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -115,6 +116,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="periodFinish">Finish date for the data request/backtest</param>
         /// <param name="resultHandler">Result handler used to push error messages and perform sampling on skipped days</param>
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
+        /// <param name="factorFileProvider">Used for getting factor files</param>
         /// <param name="tradeableDates">Defines the dates for which we'll request data, in order</param>
         /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
         /// <param name="includeAuxilliaryData">True if we want to emit aux data, false to only emit price data</param>
@@ -123,10 +125,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             DateTime periodFinish,
             IResultHandler resultHandler,
             MapFileResolver mapFileResolver,
+            IFactorFileProvider factorFileProvider,
             IEnumerable<DateTime> tradeableDates,
             bool isLiveMode,
-            bool includeAuxilliaryData = true
-            )
+            bool includeAuxilliaryData = true)
         {
             //Save configuration of data-subscription:
             _config = config;
@@ -156,7 +158,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             //Create an instance of the "Type":
-            var userObj = objectActivator.Invoke(new object[] { });
+            var userObj = objectActivator.Invoke(new object[] {});
             _dataFactory = userObj as BaseData;
 
             //If its quandl set the access token in data factory:
@@ -182,10 +184,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any()) _mapFile = mapFile;
 
-                    _hasScaleFactors = FactorFile.HasScalingFactors(_mapFile.Permtick, config.Market);
+                    var factorFile = factorFileProvider.Get(_config.Symbol);
+                    _hasScaleFactors = factorFile != null;
                     if (_hasScaleFactors)
                     {
-                        _factorFile = FactorFile.Read(_mapFile.Permtick, config.Market);
+                        _factorFile = factorFile;
                     }
                 }
                 catch (Exception err)

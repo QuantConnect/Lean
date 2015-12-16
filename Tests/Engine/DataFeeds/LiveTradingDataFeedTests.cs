@@ -57,7 +57,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, timeProvider);
-            feed.Initialize(algorithm, job, resultHandler, new LocalDiskMapFileProvider());
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider));
 
             var feedThreadStarted = new ManualResetEvent(false);
             Task.Factory.StartNew(() =>
@@ -414,7 +415,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             dataQueueHandler = new FuncDataQueueHandler(getNextTicksFunction);
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, timeProvider);
-            feed.Initialize(algorithm, job, resultHandler, new LocalDiskMapFileProvider());
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider));
 
             var feedThreadStarted = new ManualResetEvent(false);
             Task.Factory.StartNew(() =>
