@@ -147,26 +147,21 @@ namespace QuantConnect.Brokerages.Oanda
                                     {
                                         try
                                         {
+                                            // check if we have a connection
                                             GetInstruments();
 
                                             // restore events session
-                                            if (_eventsSession != null) _eventsSession.StopSession();
+                                            if (_eventsSession != null)
+                                            {
+                                                _eventsSession.DataReceived -= OnEventReceived;
+                                                _eventsSession.StopSession();
+                                            }
                                             _eventsSession = new EventsSession(this, _accountId);
                                             _eventsSession.DataReceived += OnEventReceived;
                                             _eventsSession.StartSession();
 
                                             // restore rates session
                                             SubscribeSymbols(_subscribedSymbols.ToList());
-
-                                            _connectionLost = false;
-                                            nextReconnectionAttemptSeconds = 1;
-
-                                            lock (_lockerConnectionMonitor)
-                                            {
-                                                _lastHeartbeatUtcTime = DateTime.UtcNow;
-                                            }
-
-                                            OnMessage(BrokerageMessageEvent.Reconnected("Connection with Oanda server restored."));
                                         }
                                         catch (Exception)
                                         {
@@ -203,11 +198,17 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void Disconnect()
         {
-            if (_eventsSession != null) 
+            if (_eventsSession != null)
+            {
+                _eventsSession.DataReceived -= OnEventReceived;
                 _eventsSession.StopSession();
+            }
 
-            if (_ratesSession != null) 
+            if (_ratesSession != null)
+            {
+                _ratesSession.DataReceived -= OnDataReceived;
                 _ratesSession.StopSession();
+            }
 
             // request and wait for thread to stop
             _cancellationTokenSource.Cancel();

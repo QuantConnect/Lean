@@ -113,8 +113,8 @@ namespace QuantConnect.Brokerages.Oanda
 
             if (_ratesSession != null)
             {
-                _ratesSession.StopSession();
                 _ratesSession.DataReceived -= OnDataReceived;
+                _ratesSession.StopSession();
             }
 
             if (instruments.Count > 0)
@@ -144,7 +144,7 @@ namespace QuantConnect.Brokerages.Oanda
             {
                 lock (_lockerConnectionMonitor)
                 {
-                    _lastHeartbeatUtcTime = GetDateTimeFromString(data.heartbeat.time);
+                    _lastHeartbeatUtcTime = DateTime.UtcNow;
                 }
                 return;
             }

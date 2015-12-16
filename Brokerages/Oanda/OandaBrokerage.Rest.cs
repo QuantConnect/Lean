@@ -126,7 +126,7 @@ namespace QuantConnect.Brokerages.Oanda
             {
                 lock (_lockerConnectionMonitor)
                 {
-                    _lastHeartbeatUtcTime = GetDateTimeFromString(data.heartbeat.time);
+                    _lastHeartbeatUtcTime = DateTime.UtcNow;
                 }
                 return;
             }
