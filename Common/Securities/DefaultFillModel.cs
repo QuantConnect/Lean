@@ -25,17 +25,6 @@ namespace QuantConnect.Securities
     /// </summary>
     public class DefaultFillModel : IFillModel
     {
-        private readonly ISlippageModel _slippageModel;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DefaultFillModel"/> class
-        /// </summary>
-        /// <param name="slippageModel">Slippage model used to calculate market order slippage</param>
-        public DefaultFillModel(ISlippageModel slippageModel)
-        {
-            _slippageModel = slippageModel;
-        }
-
         /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.
         /// </summary>
@@ -62,7 +51,7 @@ namespace QuantConnect.Securities
                 fill.Status = OrderStatus.Filled;
 
                 //Calculate the model slippage: e.g. 0.01c
-                var slip = _slippageModel.GetSlippageApproximation(asset, order);
+                var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
                 //Apply slippage
                 switch (order.Direction)
@@ -114,7 +103,7 @@ namespace QuantConnect.Securities
                 DataMinMaxPrices(asset, out minimumPrice, out maximumPrice);
 
                 //Calculate the model slippage: e.g. 0.01c
-                var slip = _slippageModel.GetSlippageApproximation(asset, order);
+                var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
                 //Check if the Stop Order was filled: opposite to a limit order
                 switch (order.Direction)
@@ -329,7 +318,7 @@ namespace QuantConnect.Securities
                 fill.Status = OrderStatus.Filled;
 
                 //Calculate the model slippage: e.g. 0.01c
-                var slip = _slippageModel.GetSlippageApproximation(asset, order);
+                var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
                 //Apply slippage
                 switch (order.Direction)
@@ -381,7 +370,7 @@ namespace QuantConnect.Securities
                 fill.Status = OrderStatus.Filled;
 
                 //Calculate the model slippage: e.g. 0.01c
-                var slip = _slippageModel.GetSlippageApproximation(asset, order);
+                var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
                 //Apply slippage
                 switch (order.Direction)
