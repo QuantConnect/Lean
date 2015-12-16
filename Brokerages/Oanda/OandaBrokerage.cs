@@ -235,7 +235,27 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            var holdings = GetPositions(_accountId).Select(ConvertHolding).ToList();
+            var holdings = GetPositions(_accountId).Select(ConvertHolding).Where(x => x.Quantity != 0).ToList();
+
+            // Set MarketPrice in each Holding
+            var oandaSymbols = holdings
+                .Select(x => _symbolMapper.GetBrokerageSymbol(x.Symbol))
+                .ToList();
+
+            if (oandaSymbols.Count > 0)
+            {
+                var quotes = GetRates(oandaSymbols).ToDictionary(x => x.instrument);
+                foreach (var holding in holdings)
+                {
+                    var oandaSymbol = _symbolMapper.GetBrokerageSymbol(holding.Symbol);
+                    Price quote;
+                    if (quotes.TryGetValue(oandaSymbol, out quote))
+                    {
+                        holding.MarketPrice = Convert.ToDecimal((quote.bid + quote.ask) / 2);
+                    }
+                }
+            }
+
             return holdings;
         }
 
