@@ -23,7 +23,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Represents the default fill model used to simulate order fills
     /// </summary>
-    public class DefaultFillModel : IFillModel
+    public class DefaultOrderFillModel : IOrderFillModel
     {
         /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.

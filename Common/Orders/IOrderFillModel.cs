@@ -20,7 +20,7 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Represents a model that simulates order fill events
     /// </summary>
-    public interface IFillModel
+    public interface IOrderFillModel
     {
         /// <summary>
         /// Model the slippage on a market order: fixed percentage of order price

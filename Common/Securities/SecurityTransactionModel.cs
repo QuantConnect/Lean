@@ -23,7 +23,7 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityTransactionModel : ISecurityTransactionModel
     {
-        private readonly IFillModel _fillModel;
+        private readonly IOrderFillModel _orderFillModel;
         private readonly IOrderFeeModel _orderFeeModel;
         private readonly ISlippageModel _slippageModel;
 
@@ -34,19 +34,19 @@ namespace QuantConnect.Securities
         public SecurityTransactionModel()
         {
             _slippageModel = new DefaultSlippageModel();
-            _fillModel = new DefaultFillModel(this);
+            _orderFillModel = new DefaultOrderFillModel(this);
             _orderFeeModel = new ConstantOrderFeeModel(0);
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityTransactionManager"/> class
         /// </summary>
-        /// <param name="fillModel">The fill model to use</param>
+        /// <param name="orderFillModel">The fill model to use</param>
         /// <param name="orderFeeModel">The order fee model to use</param>
         /// <param name="slippageModel">The slippage model to use</param>
-        public SecurityTransactionModel(IFillModel fillModel, IOrderFeeModel orderFeeModel, ISlippageModel slippageModel)
+        public SecurityTransactionModel(IOrderFillModel orderFillModel, IOrderFeeModel orderFeeModel, ISlippageModel slippageModel)
         {
-            _fillModel = fillModel;
+            _orderFillModel = orderFillModel;
             _orderFeeModel = orderFeeModel;
             _slippageModel = slippageModel;
         }
@@ -61,7 +61,7 @@ namespace QuantConnect.Securities
         /// <seealso cref="LimitFill(Security, LimitOrder)"/>
         public virtual OrderEvent MarketFill(Security asset, MarketOrder order)
         {
-            return _fillModel.MarketFill(asset, order);
+            return _orderFillModel.MarketFill(asset, order);
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace QuantConnect.Securities
         /// <seealso cref="LimitFill(Security, LimitOrder)"/>
         public virtual OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
-            return _fillModel.StopMarketFill(asset, order);
+            return _orderFillModel.StopMarketFill(asset, order);
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace QuantConnect.Securities
         /// </remarks>
         public virtual OrderEvent StopLimitFill(Security asset, StopLimitOrder order)
         {
-            return _fillModel.StopLimitFill(asset, order);
+            return _orderFillModel.StopLimitFill(asset, order);
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace QuantConnect.Securities
         /// <seealso cref="MarketFill(Security, MarketOrder)"/>
         public virtual OrderEvent LimitFill(Security asset, LimitOrder order)
         {
-            return _fillModel.LimitFill(asset, order);
+            return _orderFillModel.LimitFill(asset, order);
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace QuantConnect.Securities
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order)
         {
-            return _fillModel.MarketOnOpenFill(asset, order);
+            return _orderFillModel.MarketOnOpenFill(asset, order);
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace QuantConnect.Securities
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order)
         {
-            return _fillModel.MarketOnCloseFill(asset, order);
+            return _orderFillModel.MarketOnCloseFill(asset, order);
         }
 
         /// <summary>
