@@ -34,7 +34,7 @@ namespace QuantConnect.Securities
         public SecurityTransactionModel()
         {
             _slippageModel = new DefaultSlippageModel();
-            _orderFillModel = new DefaultOrderFillModel(this);
+            _orderFillModel = new DefaultOrderFillModel();
             _orderFeeModel = new ConstantOrderFeeModel(0);
         }
 

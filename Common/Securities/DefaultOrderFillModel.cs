@@ -72,6 +72,11 @@ namespace QuantConnect.Securities
                 Log.Error(err);
             }
 
+            if (fill.Status == OrderStatus.Filled)
+            {
+                fill.OrderFee = asset.OrderFeeModel.GetOrderFee(asset, order);
+            }
+
             return fill;
         }
 
@@ -135,6 +140,11 @@ namespace QuantConnect.Securities
             catch (Exception err)
             {
                 Log.Error(err);
+            }
+
+            if (fill.Status == OrderStatus.Filled)
+            {
+                fill.OrderFee = asset.OrderFeeModel.GetOrderFee(asset, order);
             }
 
             return fill;
@@ -207,6 +217,11 @@ namespace QuantConnect.Securities
                         break;
                 }
 
+                if (fill.Status == OrderStatus.Filled)
+                {
+                    fill.OrderFee = asset.OrderFeeModel.GetOrderFee(asset, order);
+                }
+
                 // assume the order completely filled
                 if (fill.Status == OrderStatus.Filled) fill.FillQuantity = order.Quantity;
             }
@@ -276,6 +291,11 @@ namespace QuantConnect.Securities
                 Log.Error(err);
             }
 
+            if (fill.Status == OrderStatus.Filled)
+            {
+                fill.OrderFee = asset.OrderFeeModel.GetOrderFee(asset, order);
+            }
+
             return fill;
         }
 
@@ -339,6 +359,11 @@ namespace QuantConnect.Securities
                 Log.Error(err);
             }
 
+            if (fill.Status == OrderStatus.Filled)
+            {
+                fill.OrderFee = asset.OrderFeeModel.GetOrderFee(asset, order);
+            }
+
             return fill;
         }
 
@@ -389,6 +414,11 @@ namespace QuantConnect.Securities
             catch (Exception err)
             {
                 Log.Error(err);
+            }
+
+            if (fill.Status == OrderStatus.Filled)
+            {
+                fill.OrderFee = asset.OrderFeeModel.GetOrderFee(asset, order);
             }
 
             return fill;

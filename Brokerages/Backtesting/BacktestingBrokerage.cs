@@ -211,6 +211,8 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
+                    var fill = new OrderEvent(order, Algorithm.UtcTime, 0);
+
                     Security security;
                     if (!Algorithm.Securities.TryGetValue(order.Symbol, out security))
                     {
@@ -227,9 +229,6 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    var orderFee = security.TransactionModel.GetOrderFee(security, order);
-                    var fill = new OrderEvent(order, Algorithm.UtcTime, orderFee);
-
                     // verify sure we have enough cash to perform the fill
                     bool sufficientBuyingPower;
                     try
@@ -242,7 +241,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         Order pending;
                         _pending.TryRemove(order.Id, out pending);
                         order.Status = OrderStatus.Invalid;
-                        OnOrderEvent(new OrderEvent(order, Algorithm.UtcTime, orderFee, "Error in GetSufficientCapitalForOrder"));
+                        OnOrderEvent(new OrderEvent(order, Algorithm.UtcTime, 0, "Error in GetSufficientCapitalForOrder"));
 
                         Log.Error(err);
                         Algorithm.Error(string.Format("Order Error: id: {0}, Error executing margin models: {1}", order.Id, err.Message));
