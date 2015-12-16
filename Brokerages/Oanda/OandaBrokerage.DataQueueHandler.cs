@@ -113,8 +113,8 @@ namespace QuantConnect.Brokerages.Oanda
 
             if (_ratesSession != null)
             {
-                _ratesSession.StopSession();
                 _ratesSession.DataReceived -= OnDataReceived;
+                _ratesSession.StopSession();
             }
 
             if (instruments.Count > 0)
@@ -140,6 +140,15 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="data">The data object containing the received tick</param>
         private void OnDataReceived(RateStreamResponse data)
         {
+            if (data.IsHeartbeat())
+            {
+                lock (_lockerConnectionMonitor)
+                {
+                    _lastHeartbeatUtcTime = DateTime.UtcNow;
+                }
+                return;
+            }
+
             if (data.tick == null) return;
 
             var securityType = _symbolMapper.GetBrokerageSecurityType(data.tick.instrument);

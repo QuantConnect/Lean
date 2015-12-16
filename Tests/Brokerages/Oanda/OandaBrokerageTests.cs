@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Oanda;
 using QuantConnect.Configuration;
@@ -162,5 +164,41 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             order = new StopLimitOrder(symbol, -1, stopPrice, limitPrice, DateTime.Now);
             Assert.IsTrue(oanda.PlaceOrder(order));
         }
+
+        [Test, Ignore("This test requires disconnecting the internet to test for connection resiliency")]
+        public void ClientReconnectsAfterInternetDisconnect()
+        {
+            var brokerage = Brokerage;
+            Assert.IsTrue(brokerage.IsConnected);
+
+            var tenMinutes = TimeSpan.FromMinutes(10);
+
+            Console.WriteLine("------");
+            Console.WriteLine("Waiting for internet disconnection ");
+            Console.WriteLine("------");
+
+            // spin while we manually disconnect the internet
+            while (brokerage.IsConnected)
+            {
+                Thread.Sleep(2500);
+                Console.Write(".");
+            }
+
+            var stopwatch = Stopwatch.StartNew();
+
+            Console.WriteLine("------");
+            Console.WriteLine("Trying to reconnect ");
+            Console.WriteLine("------");
+
+            // spin until we're reconnected
+            while (!brokerage.IsConnected && stopwatch.Elapsed < tenMinutes)
+            {
+                Thread.Sleep(2500);
+                Console.Write(".");
+            }
+
+            Assert.IsTrue(brokerage.IsConnected);
+        }
+
     }
 }

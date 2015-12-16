@@ -17,6 +17,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+using System;
 using System.IO;
 using System.Net;
 using System.Runtime.Serialization.Json;
@@ -74,11 +75,7 @@ namespace QuantConnect.Brokerages.Oanda.Session
 
                     var data = (T) serializer.ReadObject(memStream);
 
-                    // Don't send heartbeats
-                    if (!data.IsHeartbeat())
-                    {
-                        OnDataReceived(data);
-                    }
+                    OnDataReceived(data);
                 }
             });
         }
@@ -87,18 +84,32 @@ namespace QuantConnect.Brokerages.Oanda.Session
         {
             _shutdown = true;
 
-            // wait for task to finish
-            if (_runningTask != null)
+            try
             {
-                _runningTask.Wait();
+                // wait for task to finish
+                if (_runningTask != null)
+                {
+                    _runningTask.Wait();
+                }
+            }
+            catch (Exception)
+            {
+                // we can get here if the socket has been closed (i.e. after a long disconnection)
             }
 
-            // close and dispose of previous session
-            var httpResponse = _response as HttpWebResponse;
-            if (httpResponse != null)
+            try
             {
-                httpResponse.Close();
-                httpResponse.Dispose();
+                // close and dispose of previous session
+                var httpResponse = _response as HttpWebResponse;
+                if (httpResponse != null)
+                {
+                    httpResponse.Close();
+                    httpResponse.Dispose();
+                }
+            }
+            catch (Exception)
+            {
+                // we can get here if the socket has been closed (i.e. after a long disconnection)
             }
         }
     }
