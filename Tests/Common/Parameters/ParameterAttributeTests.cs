@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -43,6 +44,36 @@ namespace QuantConnect.Tests.Common.Parameters
             };
 
             ParameterAttribute.ApplyAttributes(parameters, instance);
+        }
+
+        [Test]
+        public void FindsParameters()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var parameters = ParameterAttribute.GetParametersFromAssembly(assembly);
+            foreach (var field in typeof(Instance).GetFields(ParameterAttribute.BindingFlags).Where(x => !x.Name.Contains(">k__")))
+            {
+                Assert.IsTrue(parameters.ContainsKey(field.Name), "Failed on Field: " + field.Name);
+            }
+            foreach (var property in typeof(Instance).GetProperties(ParameterAttribute.BindingFlags))
+            {
+                Assert.IsTrue(parameters.ContainsKey(property.Name), "Failed on Property: " + property.Name);
+            }
+        }
+
+        [Test]
+        public void FindsParametersUsingReflection()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var parameters = ParameterAttribute.GetParametersFromAssembly(assembly);
+            foreach (var field in typeof(Instance).GetFields(ParameterAttribute.BindingFlags).Where(x => !x.Name.Contains(">k__")))
+            {
+                Assert.IsTrue(parameters.ContainsKey(field.Name), "Failed on Field: " + field.Name);
+            }
+            foreach (var property in typeof(Instance).GetProperties(ParameterAttribute.BindingFlags))
+            {
+                Assert.IsTrue(parameters.ContainsKey(property.Name), "Failed on Property: " + property.Name);
+            }
         }
 
         class Instance
