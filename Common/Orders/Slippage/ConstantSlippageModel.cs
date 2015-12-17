@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Slippage
@@ -37,7 +38,10 @@ namespace QuantConnect.Orders.Slippage
         /// </summary>
         public override decimal GetSlippageApproximation(Security asset, Order order)
         {
-            return asset.GetLastData().Value*_slippagePercent;
+            var lastData = asset.GetLastData();
+            if (lastData == null) return 0;
+
+            return lastData.Value*_slippagePercent;
         }
     }
 }

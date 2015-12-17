@@ -62,10 +62,9 @@ namespace QuantConnect.Orders.Fills
             }
 
             // assume the order completely filled
-            if (fill.Status == OrderStatus.Filled) fill.FillQuantity = order.Quantity;
-
             if (fill.Status == OrderStatus.Filled)
             {
+                fill.FillQuantity = order.Quantity;
                 fill.OrderFee = asset.FeeModel.GetOrderFee(asset, order);
             }
 
@@ -125,10 +124,9 @@ namespace QuantConnect.Orders.Fills
             }
 
             // assume the order completely filled
-            if (fill.Status == OrderStatus.Filled) fill.FillQuantity = order.Quantity;
-
             if (fill.Status == OrderStatus.Filled)
             {
+                fill.FillQuantity = order.Quantity;
                 fill.OrderFee = asset.FeeModel.GetOrderFee(asset, order);
             }
 
@@ -201,10 +199,9 @@ namespace QuantConnect.Orders.Fills
             }
 
             // assume the order completely filled
-            if (fill.Status == OrderStatus.Filled) fill.FillQuantity = order.Quantity;
-
             if (fill.Status == OrderStatus.Filled)
             {
+                fill.FillQuantity = order.Quantity;
                 fill.OrderFee = asset.FeeModel.GetOrderFee(asset, order);
             }
 
@@ -260,10 +257,9 @@ namespace QuantConnect.Orders.Fills
             }
 
             // assume the order completely filled
-            if (fill.Status == OrderStatus.Filled) fill.FillQuantity = order.Quantity;
-
             if (fill.Status == OrderStatus.Filled)
             {
+                fill.FillQuantity = order.Quantity;
                 fill.OrderFee = asset.FeeModel.GetOrderFee(asset, order);
             }
 
@@ -321,10 +317,9 @@ namespace QuantConnect.Orders.Fills
             }
 
             // assume the order completely filled
-            if (fill.Status == OrderStatus.Filled) fill.FillQuantity = order.Quantity;
-
             if (fill.Status == OrderStatus.Filled)
             {
+                fill.FillQuantity = order.Quantity;
                 fill.OrderFee = asset.FeeModel.GetOrderFee(asset, order);
             }
 
@@ -371,10 +366,9 @@ namespace QuantConnect.Orders.Fills
             }
 
             // assume the order completely filled
-            if (fill.Status == OrderStatus.Filled) fill.FillQuantity = order.Quantity;
-
             if (fill.Status == OrderStatus.Filled)
             {
+                fill.FillQuantity = order.Quantity;
                 fill.OrderFee = asset.FeeModel.GetOrderFee(asset, order);
             }
 

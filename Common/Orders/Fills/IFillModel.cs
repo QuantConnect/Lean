@@ -27,6 +27,7 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         /// <param name="asset">Asset we're trading this order</param>
         /// <param name="order">Order to update</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         OrderEvent MarketFill(Security asset, MarketOrder order);
 
         /// <summary>
@@ -34,14 +35,15 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         /// <param name="asset">Asset we're trading this order</param>
         /// <param name="order">Stop Order to Check, return filled if true</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         OrderEvent StopMarketFill(Security asset, StopMarketOrder order);
 
         /// <summary>
         /// Stop Limit Fill Model. Return an order event with the fill details.
         /// </summary>
-        /// <param name="asset"></param>
-        /// <param name="order"></param>
-        /// <returns></returns>
+        /// <param name="asset">Asset we're trading this order</param>
+        /// <param name="order">Stop Limit Order to Check, return filled if true</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         OrderEvent StopLimitFill(Security asset, StopLimitOrder order);
 
         /// <summary>
@@ -49,6 +51,7 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         /// <param name="asset">Stock Object to use to help model limit fill</param>
         /// <param name="order">Order to fill. Alter the values directly if filled.</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         OrderEvent LimitFill(Security asset, LimitOrder order);
 
         /// <summary>
