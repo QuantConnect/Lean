@@ -217,7 +217,17 @@ namespace QuantConnect.Lean.Engine
                 {
                     if (command == null) continue;
                     Log.Trace("AlgorithmManager.Run(): Executing {0}", command);
-                    var result = command.Run(algorithm);
+                    CommandResultPacket result;
+                    try
+                    {
+                        result = command.Run(algorithm);
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err);
+                        algorithm.Error(string.Format("{0} Error: {1}", command.GetType().Name, err.Message));
+                        result = new CommandResultPacket(command, false);
+                    }
 
                     // send the result of the command off to the result handler
                     results.Messages.Enqueue(result);
