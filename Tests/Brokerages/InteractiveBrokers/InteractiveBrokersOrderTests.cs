@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             throw new NotImplementedException();
         }
 
-        protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider)
+        protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
             if (!_manualGatewayControl && !_gatewayLaunched)
             {

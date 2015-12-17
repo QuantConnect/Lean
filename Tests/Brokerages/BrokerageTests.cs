@@ -18,6 +18,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -32,7 +34,7 @@ namespace QuantConnect.Tests.Brokerages
 
         private IBrokerage _brokerage;
         private OrderProvider _orderProvider;
-        private HoldingsProvider _holdingsProvider;
+        private SecurityProvider _securityProvider;
 
         /// <summary>
         /// Provides the data required to test each order type in various cases
@@ -64,7 +66,7 @@ namespace QuantConnect.Tests.Brokerages
             // we want to regenerate these for each test
             _brokerage = null;
             _orderProvider = null;
-            _holdingsProvider = null;
+            _securityProvider = null;
             Thread.Sleep(1000);
             CancelOpenOrders();
             LiquidateHoldings();
@@ -113,7 +115,7 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("- INITIALIZING BROKERAGE -");
             Log.Trace("");
 
-            var brokerage = CreateBrokerage(OrderProvider, HoldingsProvider);
+            var brokerage = CreateBrokerage(OrderProvider, SecurityProvider);
             brokerage.Connect();
 
             if (!brokerage.IsConnected)
@@ -134,7 +136,10 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("");
             foreach (var accountHolding in brokerage.GetAccountHoldings())
             {
-                HoldingsProvider[accountHolding.Symbol] = accountHolding;
+                // these securities don't need to be real, just used for the ISecurityProvider impl, required
+                // by brokerages to track holdings
+                SecurityProvider[accountHolding.Symbol] = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                    new SubscriptionDataConfig(typeof (TradeBar), accountHolding.Symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false), 1);
             }
             brokerage.OrderStatusChanged += (sender, args) =>
             {
@@ -147,25 +152,28 @@ namespace QuantConnect.Tests.Brokerages
                 {
                     Log.Trace("FILL EVENT: " + args.FillQuantity + " units of " + args.Symbol.ToString());
 
-                    Holding holding;
-                    if (_holdingsProvider.TryGetValue(args.Symbol, out holding))
+                    Security security;
+                    if (_securityProvider.TryGetValue(args.Symbol, out security))
                     {
-                        _holdingsProvider[args.Symbol].Quantity += args.FillQuantity;
+                        var holding = _securityProvider[args.Symbol].Holdings;
+                        holding.SetHoldings(args.FillPrice, holding.Quantity + args.FillQuantity);
                     }
                     else
                     {
                         var accountHoldings = brokerage.GetAccountHoldings().ToDictionary(x => x.Symbol);
                         if (accountHoldings.ContainsKey(args.Symbol))
                         {
-                            _holdingsProvider[args.Symbol] = accountHoldings[args.Symbol];
+                            _securityProvider[args.Symbol].Holdings.SetHoldings(args.FillPrice, args.FillQuantity);
                         }
                         else
                         {
-                            _holdingsProvider[args.Symbol] = new Holding {Symbol = args.Symbol};
+                            _securityProvider[args.Symbol] = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                                new SubscriptionDataConfig(typeof (TradeBar), args.Symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false), 1);
+                            _securityProvider[args.Symbol].Holdings.SetHoldings(args.FillPrice, args.FillQuantity);
                         }
                     }
 
-                    Log.Trace("--HOLDINGS: " + _holdingsProvider[args.Symbol]);
+                    Log.Trace("--HOLDINGS: " + _securityProvider[args.Symbol]);
 
                     // update order mapping
                     var order = _orderProvider.GetOrderById(args.OrderId);
@@ -180,16 +188,16 @@ namespace QuantConnect.Tests.Brokerages
             get { return _orderProvider ?? (_orderProvider = new OrderProvider()); }
         }
 
-        public HoldingsProvider HoldingsProvider
+        public SecurityProvider SecurityProvider
         {
-            get { return _holdingsProvider ?? (_holdingsProvider = new HoldingsProvider()); }
+            get { return _securityProvider ?? (_securityProvider = new SecurityProvider()); }
         }
 
         /// <summary>
         /// Creates the brokerage under test and connects it
         /// </summary>
         /// <returns>A connected brokerage instance</returns>
-        protected abstract IBrokerage CreateBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider);
+        protected abstract IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider);
 
         /// <summary>
         /// Disposes of the brokerage and any external resources started in order to create it

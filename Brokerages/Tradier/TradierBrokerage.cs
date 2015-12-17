@@ -69,7 +69,7 @@ namespace QuantConnect.Brokerages.Tradier
         //Endpoints:
         private const string RequestEndpoint = @"https://api.tradier.com/v1/";
         private readonly IOrderProvider _orderProvider;
-        private readonly IHoldingsProvider _holdingsProvider;
+        private readonly ISecurityProvider _securityProvider;
 
         private readonly object _fillLock = new object();
         private readonly DateTime _initializationDateTime = DateTime.Now;
@@ -124,11 +124,11 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Create a new Tradier Object:
         /// </summary>
-        public TradierBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider, long accountID)
+        public TradierBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, long accountID)
             : base("Tradier Brokerage")
         {
             _orderProvider = orderProvider;
-            _holdingsProvider = holdingsProvider;
+            _securityProvider = securityProvider;
             _accountID = accountID;
 
             _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
@@ -979,7 +979,7 @@ namespace QuantConnect.Brokerages.Tradier
                 // even though 't' goes out of scope here, the internal scheduler (TimerQueue) maintains a reference
             }
 
-            var holdingQuantity = _holdingsProvider.GetHoldingsQuantity(order.Symbol);
+            var holdingQuantity = _securityProvider.GetHoldingsQuantity(order.Symbol);
 
             var orderRequest = new TradierPlaceOrderRequest(order, TradierOrderClass.Equity,  holdingQuantity);
 
@@ -1843,7 +1843,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         protected bool OrderCrossesZero(Order order)
         {
-            var holdingQuantity = _holdingsProvider.GetHoldingsQuantity(order.Symbol);
+            var holdingQuantity = _securityProvider.GetHoldingsQuantity(order.Symbol);
 
             //We're reducing position or flipping:
             if (holdingQuantity > 0 && order.Quantity < 0)

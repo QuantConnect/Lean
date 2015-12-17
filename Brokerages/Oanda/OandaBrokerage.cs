@@ -37,7 +37,7 @@ namespace QuantConnect.Brokerages.Oanda
     public partial class OandaBrokerage : Brokerage, IDataQueueHandler
     {
         private readonly IOrderProvider _orderProvider;
-        private readonly IHoldingsProvider _holdingsProvider;
+        private readonly ISecurityProvider _securityProvider;
         private readonly Environment _environment;
         private readonly string _accessToken;
         private readonly int _accountId;
@@ -58,15 +58,15 @@ namespace QuantConnect.Brokerages.Oanda
         /// Initializes a new instance of the <see cref="OandaBrokerage"/> class.
         /// </summary>
         /// <param name="orderProvider">The order provider.</param>
-        /// <param name="holdingsProvider">The holdings provider.</param>
+        /// <param name="securityProvider">The holdings provider.</param>
         /// <param name="environment">The Oanda environment (Trade or Practice)</param>
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
-        public OandaBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider, Environment environment, string accessToken, int accountId)
+        public OandaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, int accountId)
             : base("Oanda Brokerage")
         {
             _orderProvider = orderProvider;
-            _holdingsProvider = holdingsProvider;
+            _securityProvider = securityProvider;
 
             if (environment != Environment.Trade && environment != Environment.Practice)
                 throw new NotSupportedException("Oanda Environment not supported: " + environment);
