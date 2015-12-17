@@ -125,7 +125,7 @@ namespace QuantConnect.Algorithm
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
             // universe selection
-            Universes = new UniverseManager();
+            UniverseManager = new UniverseManager();
             Universe = new UniverseDefinitions(this);
             UniverseSettings = new UniverseSettings(Resolution.Minute, 2m, true, false, TimeSpan.FromDays(1));
             _userDefinedUniverses = new Dictionary<SecurityTypeMarket, UserDefinedUniverse>();
@@ -450,7 +450,7 @@ namespace QuantConnect.Algorithm
                     {
                         // check to see if any universes arn't the ones added via AddSecurity
                         var hasNonAddSecurityUniverses = (
-                            from kvp in Universes
+                            from kvp in UniverseManager
                             let config = kvp.Value.Configuration
                             let symbol = UserDefinedUniverse.CreateSymbol(config.SecurityType, config.Market)
                             where config.Symbol != symbol

@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets the current universe selector, or null if no selection is to be performed
         /// </summary>
-        public UniverseManager Universes
+        public UniverseManager UniverseManager
         {
             get;
             private set;
@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm
         /// <param name="universe">The universe to be added</param>
         public void AddUniverse(Universe universe)
         {
-            Universes.Add(universe.Configuration.Symbol, universe);
+            UniverseManager.Add(universe.Configuration.Symbol, universe);
         }
 
         /// <summary>
@@ -326,7 +326,7 @@ namespace QuantConnect.Algorithm
                     );
                 _userDefinedUniverses[key] = universe;
 
-                Universes.Add(universe.Configuration.Symbol, universe);
+                UniverseManager.Add(universe.Configuration.Symbol, universe);
             }
         }
     }

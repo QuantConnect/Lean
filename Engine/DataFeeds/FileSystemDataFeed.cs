@@ -91,7 +91,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             ffres = ResolveFillForwardResolution(algorithm);
 
             // wire ourselves up to receive notifications when universes are added/removed
-            algorithm.Universes.CollectionChanged += (sender, args) =>
+            algorithm.UniverseManager.CollectionChanged += (sender, args) =>
             {
                 switch (args.Action)
                 {
@@ -407,7 +407,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return algorithm.SubscriptionManager.Subscriptions
                 .Where(x => !x.IsInternalFeed)
                 .Select(x => x.Resolution)
-                .Union(algorithm.Universes.Select(x => x.Value.UniverseSettings.Resolution))
+                .Union(algorithm.UniverseManager.Select(x => x.Value.UniverseSettings.Resolution))
                 .Where(x => x != Resolution.Tick)
                 .DefaultIfEmpty(Resolution.Second)
                 .Min().ToTimeSpan();
