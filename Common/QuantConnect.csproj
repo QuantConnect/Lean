@@ -136,6 +136,7 @@
     <Compile Include="Commands\LiquidateCommand.cs" />
     <Compile Include="Commands\OrderCommand.cs" />
     <Compile Include="Commands\QuitCommand.cs" />
+    <Compile Include="Commands\UpdateOrderCommand.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Data\Auxiliary\FactorFile.cs" />
     <Compile Include="Data\Auxiliary\FactorFileRow.cs" />
