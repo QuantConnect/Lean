@@ -632,10 +632,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // determine the correct symbol to choose
             string invertedSymbol = "USD" + currency;
             string normalSymbol = currency + "USD";
-            var currencyPair = Securities.Forex.Forex.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
+            var currencyPair = Forex.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
             if (currencyPair == null)
             {
-                return 1m;
+                throw new Exception("Unable to resolve currency conversion pair for currency: " + currency);
             }
 
             // is it XXXUSD or USDXXX
