@@ -131,6 +131,7 @@
     <Compile Include="Brokerages\TradierBrokerageModel.cs" />
     <Compile Include="Commands\AddSecurityCommand.cs" />
     <Compile Include="Commands\AlgorithmStatusCommand.cs" />
+    <Compile Include="Commands\CancelOrderCommand.cs" />
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\LiquidateCommand.cs" />
     <Compile Include="Commands\OrderCommand.cs" />
