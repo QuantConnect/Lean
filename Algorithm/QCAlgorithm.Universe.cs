@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm
         private readonly Dictionary<SecurityTypeMarket, UserDefinedUniverse> _userDefinedUniverses;
 
         /// <summary>
-        /// Gets the current universe selector, or null if no selection is to be performed
+        /// Gets universe manager which holds universes keyed by their symbol
         /// </summary>
         public UniverseManager UniverseManager
         {
