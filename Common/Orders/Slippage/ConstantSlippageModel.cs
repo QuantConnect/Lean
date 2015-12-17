@@ -20,7 +20,7 @@ namespace QuantConnect.Orders.Slippage
     /// <summary>
     /// Represents a slippage model that uses a constant percentage of slip
     /// </summary>
-    public class ConstantSlippageModel : DefaultSlippageModel
+    public class ConstantSlippageModel : SpreadSlippageModel
     {
         private readonly decimal _slippagePercent;
         /// <summary>

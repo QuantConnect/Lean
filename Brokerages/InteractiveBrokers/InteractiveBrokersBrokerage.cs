@@ -865,7 +865,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     {
                         // apply order fees on the first fill event TODO: What about partial filled orders that get cancelled?
                         var security = _securityProvider.GetSecurity(order.Symbol);
-                        orderFee = security.OrderFeeModel.GetOrderFee(security, order);
+                        orderFee = security.FeeModel.GetOrderFee(security, order);
                     }
                     filledThisTime = update.Filled - currentFilled;
                     _orderFills.AddOrUpdate(order.Symbol, currentFilled, (sym, filled) => update.Filled);

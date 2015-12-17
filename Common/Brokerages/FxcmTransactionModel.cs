@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
+using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Brokerages
@@ -32,7 +32,7 @@ namespace QuantConnect.Brokerages
         /// Initializes a new instance of the <see cref="FxcmTransactionModel"/> class
         /// </summary>
         public FxcmTransactionModel()
-            : base(new DefaultOrderFillModel(), new FxcmOrderFeeModel(), new ConstantOrSpreadSlippageModel())
+            : base(new ImmediateFillModel(), new FxcmFeeModel(), new SpreadSlippageModel())
         {
         }
     }

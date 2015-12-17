@@ -24,13 +24,9 @@ using com.fxcm.fix.posttrade;
 using com.fxcm.fix.pretrade;
 using com.fxcm.fix.trade;
 using com.fxcm.messaging;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
-using QuantConnect.Securities;
-using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Brokerages.Fxcm
 {
@@ -365,7 +361,7 @@ namespace QuantConnect.Brokerages.Fxcm
                         if ((int)message.getCumQty() == (int)message.getLastQty())
                         {
                             var security = _securityProvider.GetSecurity(order.Symbol);
-                            orderEvent.OrderFee = security.OrderFeeModel.GetOrderFee(security, order);
+                            orderEvent.OrderFee = security.FeeModel.GetOrderFee(security, order);
                         }
 
                         _orderEventQueue.Enqueue(orderEvent);

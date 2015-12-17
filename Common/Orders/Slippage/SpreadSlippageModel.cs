@@ -23,7 +23,7 @@ namespace QuantConnect.Orders.Slippage
     /// A slippage model that uses half of the bid/ask spread if available,
     /// if not available, zero slippage is assumed.
     /// </summary>
-    public class DefaultSlippageModel : ISlippageModel
+    public class SpreadSlippageModel : ISlippageModel
     {
         /// <summary>
         /// Slippage Model. Return a decimal cash slippage approximation on the order.

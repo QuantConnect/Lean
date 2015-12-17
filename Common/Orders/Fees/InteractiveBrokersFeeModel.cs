@@ -21,18 +21,18 @@ using QuantConnect.Securities.Forex;
 namespace QuantConnect.Orders.Fees
 {
     /// <summary>
-    /// Provides the default implementation of <see cref="IOrderFeeModel"/>
+    /// Provides the default implementation of <see cref="IFeeModel"/>
     /// </summary>
-    public class DefaultOrderFeeModel : IOrderFeeModel
+    public class InteractiveBrokersFeeModel : IFeeModel
     {
         private readonly decimal _commissionRate;
         private readonly decimal _minimumOrderFee;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DefaultOrderFillModel"/>
+        /// Initializes a new instance of the <see cref="ImmediateFillModel"/>
         /// </summary>
         /// <param name="monthlyTradeAmountInUSDollars">Monthly dollar volume traded</param>
-        public DefaultOrderFeeModel(decimal monthlyTradeAmountInUSDollars = 0)
+        public InteractiveBrokersFeeModel(decimal monthlyTradeAmountInUSDollars = 0)
         {
             const decimal bp = 0.0001m;
             if (monthlyTradeAmountInUSDollars <= 1000000000) // 1 billion

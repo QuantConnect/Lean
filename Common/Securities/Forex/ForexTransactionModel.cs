@@ -33,7 +33,7 @@ namespace QuantConnect.Securities.Forex
         /// </summary>
         /// <param name="monthlyTradeAmountInUSDollars">The monthly dollar volume traded</param>
         public ForexTransactionModel(decimal monthlyTradeAmountInUSDollars = 0)
-            : base(new DefaultOrderFillModel(), new DefaultOrderFeeModel(monthlyTradeAmountInUSDollars), new ConstantSlippageModel(0.0001m))
+            : base(new ImmediateFillModel(), new InteractiveBrokersFeeModel(monthlyTradeAmountInUSDollars), new SpreadSlippageModel())
         {   
         }
     }

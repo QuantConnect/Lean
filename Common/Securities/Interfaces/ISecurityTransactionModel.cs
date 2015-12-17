@@ -27,7 +27,7 @@ namespace QuantConnect.Securities.Interfaces
     /// </summary>
     /// <seealso cref="EquityTransactionModel"/>
     /// <seealso cref="ForexTransactionModel"/>
-    public interface ISecurityTransactionModel : IOrderFillModel, IOrderFeeModel, ISlippageModel
+    public interface ISecurityTransactionModel : IFillModel, IFeeModel, ISlippageModel
     {
     }
 }

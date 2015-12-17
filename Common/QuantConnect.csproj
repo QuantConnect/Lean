@@ -122,7 +122,6 @@
     <Compile Include="Brokerages\BrokerageName.cs" />
     <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
-    <Compile Include="Brokerages\FxcmOrderFeeModel.cs" />
     <Compile Include="Brokerages\OandaTransactionModel.cs" />
     <Compile Include="Brokerages\FxcmTransactionModel.cs" />
     <Compile Include="Brokerages\IBrokerageMessageHandler.cs" />
@@ -193,11 +192,12 @@
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
     <Compile Include="Orders\CancelOrderRequest.cs" />
-    <Compile Include="Orders\ConstantOrderFeeModel.cs" />
-    <Compile Include="Orders\Fees\DefaultOrderFeeModel.cs" />
-    <Compile Include="Orders\Fees\IOrderFeeModel.cs" />
-    <Compile Include="Orders\Fills\DefaultOrderFillModel.cs" />
-    <Compile Include="Orders\Fills\IOrderFillModel.cs" />
+    <Compile Include="Orders\Fees\ConstantFeeModel.cs" />
+    <Compile Include="Orders\Fees\InteractiveBrokersFeeModel.cs" />
+    <Compile Include="Orders\Fees\FxcmFeeModel.cs" />
+    <Compile Include="Orders\Fees\IFeeModel.cs" />
+    <Compile Include="Orders\Fills\ImmediateFillModel.cs" />
+    <Compile Include="Orders\Fills\IFillModel.cs" />
     <Compile Include="Orders\MarketOnCloseOrder.cs" />
     <Compile Include="Orders\MarketOnOpenOrder.cs" />
     <Compile Include="Orders\OrderField.cs" />
@@ -209,9 +209,8 @@
     <Compile Include="Orders\OrderResponseErrorCode.cs" />
     <Compile Include="Orders\OrderExtensions.cs" />
     <Compile Include="Orders\OrderTicket.cs" />
-    <Compile Include="Orders\Slippage\ConstantOrSpreadSlippageModel.cs" />
     <Compile Include="Orders\Slippage\ConstantSlippageModel.cs" />
-    <Compile Include="Orders\Slippage\DefaultSlippageModel.cs" />
+    <Compile Include="Orders\Slippage\SpreadSlippageModel.cs" />
     <Compile Include="Orders\Slippage\ISlippageModel.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />
     <Compile Include="Orders\StopMarketOrder.cs" />

@@ -14,16 +14,14 @@
 */
 
 using System.Collections.Generic;
-using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Brokerages
+namespace QuantConnect.Orders.Fees
 {
     /// <summary>
-    /// Provides an implementation of <see cref="IOrderFeeModel"/> that models FXCM order fees
+    /// Provides an implementation of <see cref="IFeeModel"/> that models FXCM order fees
     /// </summary>
-    public class FxcmOrderFeeModel : IOrderFeeModel
+    public class FxcmFeeModel : IFeeModel
     {
         private readonly HashSet<Symbol> _groupCommissionSchedule1 = new HashSet<Symbol>
         {

@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities.Equity 
@@ -24,5 +27,12 @@ namespace QuantConnect.Securities.Equity
     /// <seealso cref="ISecurityTransactionModel"/>
     public class EquityTransactionModel : SecurityTransactionModel 
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EquityTransactionModel"/>
+        /// </summary>
+        public EquityTransactionModel()
+            : base(new ImmediateFillModel(), new InteractiveBrokersFeeModel(), new ConstantSlippageModel(0))
+        {
+        }
     }
 }

@@ -172,12 +172,12 @@ namespace QuantConnect.Securities
             // these methods provided for backwards compatibility
             get
             {
-                return new SecurityTransactionModel(OrderOrderFillModel, OrderFeeModel, SlippageModel);
+                return new SecurityTransactionModel(FillModel, FeeModel, SlippageModel);
             }
             set
             {
-                OrderFeeModel = value;
-                OrderOrderFillModel = value;
+                FeeModel = value;
+                FillModel = value;
                 SlippageModel = value;
             }
         }
@@ -185,7 +185,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Fee model used to compute order fees for this security
         /// </summary>
-        public IOrderFeeModel OrderFeeModel
+        public IFeeModel FeeModel
         {
             get; 
             set;
@@ -194,7 +194,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Fill model used to produce fill events for this security
         /// </summary>
-        public IOrderFillModel OrderOrderFillModel
+        public IFillModel FillModel
         {
             get; 
             set;

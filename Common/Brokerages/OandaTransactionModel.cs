@@ -14,10 +14,10 @@
 */
 
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Brokerages
@@ -33,7 +33,7 @@ namespace QuantConnect.Brokerages
         /// Initializes a new instance of the <see cref="OandaTransactionModel"/> class
         /// </summary>
         public OandaTransactionModel()
-            : base(new DefaultOrderFillModel(), new ConstantOrderFeeModel(0), new ConstantOrSpreadSlippageModel())
+            : base(new ImmediateFillModel(), new ConstantFeeModel(0), new SpreadSlippageModel())
         {
         }
     }
