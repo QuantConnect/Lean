@@ -15,7 +15,7 @@
 
 using QuantConnect.Securities;
 
-namespace QuantConnect.Orders
+namespace QuantConnect.Orders.Slippage
 {
     /// <summary>
     /// Represents a slippage model that uses a constant percentage of slip

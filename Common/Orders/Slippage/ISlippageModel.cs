@@ -15,7 +15,7 @@
 
 using QuantConnect.Securities;
 
-namespace QuantConnect.Orders
+namespace QuantConnect.Orders.Slippage
 {
     /// <summary>
     /// Represents a model that simulates market order slippage

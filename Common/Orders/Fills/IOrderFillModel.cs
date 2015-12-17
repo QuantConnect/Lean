@@ -15,7 +15,7 @@
 
 using QuantConnect.Securities;
 
-namespace QuantConnect.Orders
+namespace QuantConnect.Orders.Fills
 {
     /// <summary>
     /// Represents a model that simulates order fill events

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders

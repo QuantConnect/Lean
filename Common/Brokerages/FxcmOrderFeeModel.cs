@@ -15,6 +15,7 @@
 
 using System.Collections.Generic;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages

@@ -14,6 +14,8 @@
 */
 
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
 using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities.Forex

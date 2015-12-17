@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
+using QuantConnect.Securities;
 
-namespace QuantConnect.Securities.Forex
+namespace QuantConnect.Orders.Slippage
 {
     /// <summary>
     /// Represents a slippage model which will use the spread if available (tick data)

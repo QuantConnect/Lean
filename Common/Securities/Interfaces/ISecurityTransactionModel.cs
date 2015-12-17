@@ -14,6 +14,9 @@
 */
 
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 

@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Interfaces;

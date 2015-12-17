@@ -254,9 +254,6 @@ namespace QuantConnect.Brokerages.Backtesting
                         //Model:
                         var model = security.TransactionModel;
 
-                        // calculate the order fee
-                        fill.OrderFee = model.GetOrderFee(security, order);
-
                         //Based on the order type: refresh its model to get fill price and quantity
                         try
                         {

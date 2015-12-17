@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -14,10 +14,11 @@
 */
 
 using System;
+using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 
-namespace QuantConnect.Orders
+namespace QuantConnect.Orders.Fees
 {
     /// <summary>
     /// Provides the default implementation of <see cref="IOrderFeeModel"/>
