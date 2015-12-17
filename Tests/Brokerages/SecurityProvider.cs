@@ -20,38 +20,38 @@ using QuantConnect.Securities;
 namespace QuantConnect.Tests.Brokerages
 {
     /// <summary>
-    /// Provides a test implementation of a holdings provider
+    /// Provides a test implementation of a security provider
     /// </summary>
-    public class HoldingsProvider : IHoldingsProvider
+    public class SecurityProvider : ISecurityProvider
     {
-        private readonly IDictionary<Symbol, Holding> _holdings;
+        private readonly Dictionary<Symbol, Security> _securities;
 
-        public HoldingsProvider(IDictionary<Symbol, Holding> holdings)
+        public SecurityProvider(Dictionary<Symbol, Security> securities)
         {
-            _holdings = holdings;
+            _securities = securities;
         }
 
-        public HoldingsProvider()
+        public SecurityProvider()
         {
-            _holdings = new Dictionary<Symbol, Holding>();
+            _securities = new Dictionary<Symbol, Security>();
         }
 
-        public Holding this[Symbol symbol]
+        public Security this[Symbol symbol]
         {
-            get { return _holdings[symbol]; }
-            set { _holdings[symbol] = value; }
+            get { return _securities[symbol]; }
+            set { _securities[symbol] = value; }
         }
 
-        public Holding GetHoldings(Symbol symbol)
+        public Security GetSecurity(Symbol symbol)
         {
-            Holding holding;
-            _holdings.TryGetValue(symbol, out holding);
+            Security holding;
+            _securities.TryGetValue(symbol, out holding);
             return holding;
         }
 
-        public bool TryGetValue(Symbol symbol, out Holding holding)
+        public bool TryGetValue(Symbol symbol, out Security security)
         {
-            return _holdings.TryGetValue(symbol, out holding);
+            return _securities.TryGetValue(symbol, out security);
         }
     }
 }

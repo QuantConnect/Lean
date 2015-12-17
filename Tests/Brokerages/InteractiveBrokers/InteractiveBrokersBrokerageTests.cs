@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 );
 
             // grabs account info from configuration
-            _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(new OrderProvider(_orders));
+            _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(new OrderProvider(_orders), new SecurityProvider());
             _interactiveBrokersBrokerage.Connect();
         }
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,27 +13,18 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders.Fees;
-using QuantConnect.Orders.Fills;
-using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Interfaces;
 
-namespace QuantConnect.Brokerages
+namespace QuantConnect.Orders.Slippage
 {
     /// <summary>
-    /// Fxcm Transaction Model Class: Specific transaction fill models for FXCM orders
+    /// Represents a model that simulates market order slippage
     /// </summary>
-    /// <seealso cref="SecurityTransactionModel"/>
-    /// <seealso cref="ISecurityTransactionModel"/>
-    public class FxcmTransactionModel : SecurityTransactionModel
+    public interface ISlippageModel
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="FxcmTransactionModel"/> class
+        /// Slippage Model. Return a decimal cash slippage approximation on the order.
         /// </summary>
-        public FxcmTransactionModel()
-            : base(new ImmediateFillModel(), new FxcmFeeModel(), new SpreadSlippageModel())
-        {
-        }
+        decimal GetSlippageApproximation(Security asset, Order order);
     }
 }

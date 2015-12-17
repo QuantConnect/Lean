@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         /// Creates the brokerage under test
         /// </summary>
         /// <returns>A connected brokerage instance</returns>
-        protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider)
+        protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
             var server = Config.Get("fxcm-server");
             var terminal = Config.Get("fxcm-terminal");
@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             var password = Config.Get("fxcm-password");
             var accountId = Config.Get("fxcm-account-id");
 
-            return new FxcmBrokerage(orderProvider, holdingsProvider, server, terminal, userName, password, accountId);
+            return new FxcmBrokerage(orderProvider, securityProvider, server, terminal, userName, password, accountId);
         }
 
         /// <summary>

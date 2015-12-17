@@ -13,8 +13,9 @@
  * limitations under the License.
 */
 
-using System;
-using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities.Equity 
@@ -27,37 +28,11 @@ namespace QuantConnect.Securities.Equity
     public class EquityTransactionModel : SecurityTransactionModel 
     {
         /// <summary>
-        /// Uses the Interactive Brokers equities fixes fee schedule.
+        /// Initializes a new instance of the <see cref="EquityTransactionModel"/>
         /// </summary>
-        /// <remarks>
-        /// Default implementation uses the Interactive Brokers fee model of 0.5c per share with a maximum of 0.5% per order
-        /// and minimum of $1.00.
-        /// </remarks>
-        /// <param name="security">The security matching the order</param>
-        /// <param name="order">The order to compute fees for</param>
-        /// <returns>The cost of the order in units of the account currency</returns>
-        public override decimal GetOrderFee(Security security, Order order)
+        public EquityTransactionModel()
+            : base(new ImmediateFillModel(), new InteractiveBrokersFeeModel(), new ConstantSlippageModel(0))
         {
-            var price = order.Status.IsFill() ? order.Price : security.Price;
-            var tradeValue = Math.Abs(order.GetValue(price));
-
-            //Per share fees
-            var tradeFee = 0.005m*order.AbsoluteQuantity;
-
-            //Maximum Per Order: 0.5%
-            //Minimum per order. $1.0
-            var maximumPerOrder = 0.005m*tradeValue;
-            if (tradeFee < 1)
-            {
-                tradeFee = 1;
-            }
-            else if (tradeFee > maximumPerOrder)
-            {
-                tradeFee = maximumPerOrder;
-            }
-
-            //Always return a positive fee.
-            return Math.Abs(tradeFee);
         }
     }
 }

@@ -425,12 +425,14 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.CashBook.Add("EUR", 0, 1.1000m);
 
             securities.Add(Symbols.EURUSD, new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, portfolio.CashBook["USD"], CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURUSD), 1));
-            Assert.AreEqual(0, securities[Symbols.EURUSD].Holdings.Quantity);
+            var security = securities[Symbols.EURUSD];
+            Assert.AreEqual(0, security.Holdings.Quantity);
             Assert.AreEqual(1000, portfolio.Cash);
 
-            var fill = new OrderEvent(1, Symbols.EURUSD, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 1.1000m, 100, 0);
+            var orderFee = security.FeeModel.GetOrderFee(security, new MarketOrder(Symbols.EURUSD, 100, DateTime.MinValue));
+            var fill = new OrderEvent(1, Symbols.EURUSD, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 1.1000m, 100, orderFee);
             portfolio.ProcessFill(fill);
-            Assert.AreEqual(100, securities[Symbols.EURUSD].Holdings.Quantity);
+            Assert.AreEqual(100, security.Holdings.Quantity);
             Assert.AreEqual(998, portfolio.Cash);
             Assert.AreEqual(100, portfolio.CashBook["EUR"].Amount);
             Assert.AreEqual(888, portfolio.CashBook["USD"].Amount);
@@ -445,24 +447,27 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.SetCash(1000);
             securities.Add(Symbols.AAPL, new QuantConnect.Securities.Equity.Equity(securityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL), 1));
-            securities[Symbols.AAPL].SettlementModel = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
-            Assert.AreEqual(0, securities[Symbols.AAPL].Holdings.Quantity);
+            var security = securities[Symbols.AAPL];
+            security.SettlementModel = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
+            Assert.AreEqual(0, security.Holdings.Quantity);
             Assert.AreEqual(1000, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
             // Buy on Monday
             var timeUtc = new DateTime(2015, 10, 26, 15, 30, 0);
-            var fill = new OrderEvent(1, Symbols.AAPL, timeUtc, OrderStatus.Filled, OrderDirection.Buy, 100, 10, 0);
+            var orderFee = security.FeeModel.GetOrderFee(security,new MarketOrder(Symbols.AAPL, 10, timeUtc));
+            var fill = new OrderEvent(1, Symbols.AAPL, timeUtc, OrderStatus.Filled, OrderDirection.Buy, 100, 10, orderFee);
             portfolio.ProcessFill(fill);
-            Assert.AreEqual(10, securities[Symbols.AAPL].Holdings.Quantity);
+            Assert.AreEqual(10, security.Holdings.Quantity);
             Assert.AreEqual(-1, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
             // Sell on Tuesday, cash unsettled
             timeUtc = timeUtc.AddDays(1);
-            fill = new OrderEvent(2, Symbols.AAPL, timeUtc, OrderStatus.Filled, OrderDirection.Sell, 100, -10, 0);
+            orderFee = security.FeeModel.GetOrderFee(security, new MarketOrder(Symbols.AAPL, 10, timeUtc));
+            fill = new OrderEvent(2, Symbols.AAPL, timeUtc, OrderStatus.Filled, OrderDirection.Sell, 100, -10, orderFee);
             portfolio.ProcessFill(fill);
-            Assert.AreEqual(0, securities[Symbols.AAPL].Holdings.Quantity);
+            Assert.AreEqual(0, security.Holdings.Quantity);
             Assert.AreEqual(-2, portfolio.Cash);
             Assert.AreEqual(1000, portfolio.UnsettledCash);
 

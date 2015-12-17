@@ -16,6 +16,10 @@
 using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Interfaces;
@@ -165,7 +169,43 @@ namespace QuantConnect.Securities
         /// <seealso cref="ForexTransactionModel"/>
         public ISecurityTransactionModel TransactionModel
         {
-            get;
+            // these methods provided for backwards compatibility
+            get
+            {
+                return new SecurityTransactionModel(FillModel, FeeModel, SlippageModel);
+            }
+            set
+            {
+                FeeModel = value;
+                FillModel = value;
+                SlippageModel = value;
+            }
+        }
+
+        /// <summary>
+        /// Fee model used to compute order fees for this security
+        /// </summary>
+        public IFeeModel FeeModel
+        {
+            get; 
+            set;
+        }
+
+        /// <summary>
+        /// Fill model used to produce fill events for this security
+        /// </summary>
+        public IFillModel FillModel
+        {
+            get; 
+            set;
+        }
+
+        /// <summary>
+        /// Slippage model use to compute slippage of market orders
+        /// </summary>
+        public ISlippageModel SlippageModel
+        {
+            get; 
             set;
         }
 

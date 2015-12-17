@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             throw new NotImplementedException();
         }
 
-        protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider)
+        protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
             if (!_manualGatewayControl && !_gatewayLaunched)
             {
@@ -64,7 +64,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                     Config.GetBool("ib-use-tws")
                     );
             }
-            return new InteractiveBrokersBrokerage(orderProvider);
+            return new InteractiveBrokersBrokerage(orderProvider, securityProvider);
         }
 
         protected override void DisposeBrokerage(IBrokerage brokerage)

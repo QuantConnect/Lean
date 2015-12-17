@@ -13,9 +13,10 @@
  * limitations under the License.
 */
 
-using System;
-using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Interfaces;
 
@@ -29,54 +30,11 @@ namespace QuantConnect.Brokerages
     public class OandaTransactionModel : SecurityTransactionModel
     {
         /// <summary>
-        /// Get the fee for this order
+        /// Initializes a new instance of the <see cref="OandaTransactionModel"/> class
         /// </summary>
-        /// <param name="security">The security matching the order</param>
-        /// <param name="order">The order to compute fees for</param>
-        /// <returns>The cost of the order in units of the account currency</returns>
-        public override decimal GetOrderFee(Security security, Order order)
+        public OandaTransactionModel()
+            : base(new ImmediateFillModel(), new ConstantFeeModel(0), new SpreadSlippageModel())
         {
-            // Oanda fees are spread-only, so we always return zero
-            return 0m;
         }
-
-        /// <summary>
-        /// Get the slippage approximation for this order
-        /// </summary>
-        /// <returns>Decimal value of the slippage approximation</returns>
-        /// <seealso cref="Order"/>
-        public override decimal GetSlippageApproximation(Security security, Order order)
-        {
-            //Return 0 by default
-            decimal slippage = 0;
-            //For FOREX, the slippage is the Bid/Ask Spread for Tick, and an approximation for TradeBars
-            switch (security.Resolution)
-            {
-                case Resolution.Minute:
-                case Resolution.Second:
-                    //Get the last data packet:
-                    //Assume slippage is 1/10,000th of the price
-                    slippage = security.GetLastData().Value * 0.0001m;
-                    break;
-
-                case Resolution.Tick:
-                    var lastTick = (Tick)security.GetLastData();
-                    switch (order.Direction)
-                    {
-                        case OrderDirection.Buy:
-                            //We're buying, assume slip to Asking Price.
-                            slippage = Math.Abs(order.Price - lastTick.AskPrice);
-                            break;
-
-                        case OrderDirection.Sell:
-                            //We're selling, assume slip to the bid price.
-                            slippage = Math.Abs(order.Price - lastTick.BidPrice);
-                            break;
-                    }
-                    break;
-            }
-            return slippage;
-        }
-
     }
 }

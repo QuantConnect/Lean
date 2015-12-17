@@ -13,22 +13,22 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
+using QuantConnect.Securities;
 
-namespace QuantConnect.Securities
+namespace QuantConnect.Orders.Fees
 {
     /// <summary>
-    /// Provides a transaction model that always returns the same order fee.
+    /// Provides an order fee model that always returns the same order fee.
     /// </summary>
-    public sealed class ConstantFeeTransactionModel : SecurityTransactionModel
+    public class ConstantFeeModel : IFeeModel
     {
         private readonly decimal _fee;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConstantFeeTransactionModel"/> class with the specified <paramref name="fee"/>
+        /// Initializes a new instance of the <see cref="ConstantFeeModel"/> class with the specified <paramref name="fee"/>
         /// </summary>
         /// <param name="fee">The constant order fee used by the model</param>
-        public ConstantFeeTransactionModel(decimal fee)
+        public ConstantFeeModel(decimal fee)
         {
             _fee = fee;
         }
@@ -39,7 +39,7 @@ namespace QuantConnect.Securities
         /// <param name="security">The security matching the order</param>
         /// <param name="order">The order to compute fees for</param>
         /// <returns>The cost of the order in units of the account currency</returns>
-        public override decimal GetOrderFee(Security security, Order order)
+        public decimal GetOrderFee(Security security, Order order)
         {
             return _fee;
         }

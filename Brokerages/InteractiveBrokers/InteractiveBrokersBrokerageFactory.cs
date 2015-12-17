@@ -116,43 +116,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // launch the IB gateway
             InteractiveBrokersGatewayRunner.Start(ibControllerDirectory, twsDirectory, userID, password, useTws);
 
-            var ib = new InteractiveBrokersBrokerage(algorithm.Transactions, account, host, port, agentDescription);
+            var ib = new InteractiveBrokersBrokerage(algorithm.Transactions, algorithm.Portfolio, account, host, port, agentDescription);
             Composer.Instance.AddPart<IDataQueueHandler>(ib);
             return ib;
-        }
-
-        /// <summary>
-        /// Creates a new IBrokerage instance and set ups the environment for the brokerage
-        /// </summary>
-        /// <param name="brokerageData">Brokerage data containing necessary parameters for initialization</param>
-        /// <param name="orderProvider">IOrderMapping instance to maintain IB -> QC order id mapping</param>
-        /// <returns>A new brokerage instance</returns>
-        public IBrokerage CreateBrokerage(Dictionary<string, string> brokerageData, IOrderProvider orderProvider)
-        {
-            var errors = new List<string>();
-
-            // read values from the brokerage datas
-            var useTws = Config.GetBool("ib-use-tws");
-            var port = Config.GetInt("ib-port", 4001);
-            var host = Config.Get("ib-host", "127.0.0.1");
-            var twsDirectory = Config.Get("ib-tws-dir", "C:\\Jts");
-            var ibControllerDirectory = Config.Get("ib-controller-dir", "C:\\IBController");
-
-            var account = Read<string>(brokerageData, "ib-account", errors);
-            var userID = Read<string>(brokerageData, "ib-user-name", errors);
-            var password = Read<string>(brokerageData, "ib-password", errors);
-            var agentDescription = Read<AgentDescription>(brokerageData, "ib-agent-description", errors);
-
-            if (errors.Count != 0)
-            {
-                // if we had errors then we can't create the instance
-                throw new Exception(string.Join(Environment.NewLine, errors));
-            }
-
-            // launch the IB gateway
-            InteractiveBrokersGatewayRunner.Start(ibControllerDirectory, twsDirectory, userID, password, useTws);
-
-            return new InteractiveBrokersBrokerage(orderProvider, account, host, port, agentDescription);
         }
 
         /// <summary>

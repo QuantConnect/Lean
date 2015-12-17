@@ -192,8 +192,12 @@
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
     <Compile Include="Orders\CancelOrderRequest.cs" />
-    <Compile Include="Orders\IOrderFeeModel.cs" />
-    <Compile Include="Orders\IFillModel.cs" />
+    <Compile Include="Orders\Fees\ConstantFeeModel.cs" />
+    <Compile Include="Orders\Fees\InteractiveBrokersFeeModel.cs" />
+    <Compile Include="Orders\Fees\FxcmFeeModel.cs" />
+    <Compile Include="Orders\Fees\IFeeModel.cs" />
+    <Compile Include="Orders\Fills\ImmediateFillModel.cs" />
+    <Compile Include="Orders\Fills\IFillModel.cs" />
     <Compile Include="Orders\MarketOnCloseOrder.cs" />
     <Compile Include="Orders\MarketOnOpenOrder.cs" />
     <Compile Include="Orders\OrderField.cs" />
@@ -205,6 +209,9 @@
     <Compile Include="Orders\OrderResponseErrorCode.cs" />
     <Compile Include="Orders\OrderExtensions.cs" />
     <Compile Include="Orders\OrderTicket.cs" />
+    <Compile Include="Orders\Slippage\ConstantSlippageModel.cs" />
+    <Compile Include="Orders\Slippage\SpreadSlippageModel.cs" />
+    <Compile Include="Orders\Slippage\ISlippageModel.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />
     <Compile Include="Orders\StopMarketOrder.cs" />
     <Compile Include="Orders\LimitOrder.cs" />
@@ -242,7 +249,7 @@
     <Compile Include="Securities\MarketHoursDatabase.cs" />
     <Compile Include="Securities\Forex\ForexMarginModel.cs" />
     <Compile Include="Securities\Forex\ForexPortfolioModel.cs" />
-    <Compile Include="Securities\IHoldingsProvider.cs" />
+    <Compile Include="Securities\ISecurityProvider.cs" />
     <Compile Include="Securities\IOrderProcessor.cs" />
     <Compile Include="Securities\ISecurityMarginModel.cs" />
     <Compile Include="Securities\IOrderProvider.cs" />
