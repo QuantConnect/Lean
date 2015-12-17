@@ -441,7 +441,23 @@ namespace QuantConnect.Algorithm
                 if (!Securities.TryGetValue(_benchmarkSymbol, out security))
                 {
                     // add the security as an internal feed so the algorithm doesn't receive the data
-                    var resolution = _liveMode ? Resolution.Second : Resolution.Daily;
+                    Resolution resolution;
+                    if (_liveMode)
+                    {
+                        resolution = Resolution.Second;
+                    }
+                    else
+                    {
+                        // check to see if any universes arn't the ones added via AddSecurity
+                        var hasNonAddSecurityUniverses = (
+                            from kvp in Universes
+                            let config = kvp.Value.Configuration
+                            let symbol = UserDefinedUniverse.CreateSymbol(config.SecurityType, config.Market)
+                            where config.Symbol != symbol
+                            select kvp).Any();
+
+                        resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
+                    }
                     security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _benchmarkSymbol, resolution, true, 1m, false, true, false);
                     Securities.Add(security.Symbol, security);
                 }

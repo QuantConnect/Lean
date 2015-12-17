@@ -39,9 +39,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);
             SetCash(100*1000);
 
-            // use hour SPY data for the benchmark (defaults to daily if not specified)
-            //AddSecurity(SecurityType.Equity, "SPY", Resolution.Hour);
-
             // add universe for the top 50 stocks by dollar volume
             AddUniverse(Universe.DollarVolume.Top(50));
 
