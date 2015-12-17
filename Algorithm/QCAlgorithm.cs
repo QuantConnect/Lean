@@ -126,6 +126,7 @@ namespace QuantConnect.Algorithm
 
             // universe selection
             Universes = new UniverseManager();
+            Universe = new UniverseDefinitions(this);
             UniverseSettings = new UniverseSettings(Resolution.Minute, 2m, true, false, TimeSpan.FromDays(1));
             _userDefinedUniverses = new Dictionary<SecurityTypeMarket, UserDefinedUniverse>();
 

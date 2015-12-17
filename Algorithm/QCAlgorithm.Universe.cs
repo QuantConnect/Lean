@@ -38,11 +38,20 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Gets the subscription settings to be used when adding securities via universe selection
+        /// Gets the universe settings to be used when adding securities via universe selection
         /// </summary>
         public UniverseSettings UniverseSettings
         {
             get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets a helper that provides pre-defined universe defintions, such as top dollar volume
+        /// </summary>
+        public UniverseDefinitions Universe
+        {
+            get; 
             private set;
         }
 
