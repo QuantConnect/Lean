@@ -31,18 +31,27 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets the current universe selector, or null if no selection is to be performed
         /// </summary>
-        public UniverseManager Universes
+        public UniverseManager UniverseManager
         {
             get;
             private set;
         }
 
         /// <summary>
-        /// Gets the subscription settings to be used when adding securities via universe selection
+        /// Gets the universe settings to be used when adding securities via universe selection
         /// </summary>
         public UniverseSettings UniverseSettings
         {
             get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets a helper that provides pre-defined universe defintions, such as top dollar volume
+        /// </summary>
+        public UniverseDefinitions Universe
+        {
+            get; 
             private set;
         }
 
@@ -52,7 +61,7 @@ namespace QuantConnect.Algorithm
         /// <param name="universe">The universe to be added</param>
         public void AddUniverse(Universe universe)
         {
-            Universes.Add(universe.Configuration.Symbol, universe);
+            UniverseManager.Add(universe.Configuration.Symbol, universe);
         }
 
         /// <summary>
@@ -317,7 +326,7 @@ namespace QuantConnect.Algorithm
                     );
                 _userDefinedUniverses[key] = universe;
 
-                Universes.Add(universe.Configuration.Symbol, universe);
+                UniverseManager.Add(universe.Configuration.Symbol, universe);
             }
         }
     }

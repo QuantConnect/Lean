@@ -125,8 +125,9 @@ namespace QuantConnect.Algorithm
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
             // universe selection
-            Universes = new UniverseManager();
-            UniverseSettings = new UniverseSettings(Resolution.Minute, 2m, true, false, TimeSpan.FromDays(7));
+            UniverseManager = new UniverseManager();
+            Universe = new UniverseDefinitions(this);
+            UniverseSettings = new UniverseSettings(Resolution.Minute, 2m, true, false, TimeSpan.FromDays(1));
             _userDefinedUniverses = new Dictionary<SecurityTypeMarket, UserDefinedUniverse>();
 
             // initialize our scheduler, this acts as a liason to the real time handler
@@ -440,7 +441,23 @@ namespace QuantConnect.Algorithm
                 if (!Securities.TryGetValue(_benchmarkSymbol, out security))
                 {
                     // add the security as an internal feed so the algorithm doesn't receive the data
-                    var resolution = _liveMode ? Resolution.Second : Resolution.Daily;
+                    Resolution resolution;
+                    if (_liveMode)
+                    {
+                        resolution = Resolution.Second;
+                    }
+                    else
+                    {
+                        // check to see if any universes arn't the ones added via AddSecurity
+                        var hasNonAddSecurityUniverses = (
+                            from kvp in UniverseManager
+                            let config = kvp.Value.Configuration
+                            let symbol = UserDefinedUniverse.CreateSymbol(config.SecurityType, config.Market)
+                            where config.Symbol != symbol
+                            select kvp).Any();
+
+                        resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
+                    }
                     security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _benchmarkSymbol, resolution, true, 1m, false, true, false);
                     Securities.Add(security.Symbol, security);
                 }

@@ -56,7 +56,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets the collection of universes for the algorithm
         /// </summary>
-        UniverseManager Universes
+        UniverseManager UniverseManager
         {
             get;
         }
