@@ -358,7 +358,7 @@ namespace QuantConnect.Brokerages.Fxcm
                         };
 
                         // we're catching the first fill so we apply the fees only once
-                        if ((int)message.getCumQty() == (int)message.getLastQty())
+                        if ((int)message.getCumQty() == (int)message.getLastQty() && message.getLastQty() > 0)
                         {
                             var security = _securityProvider.GetSecurity(order.Symbol);
                             orderEvent.OrderFee = security.FeeModel.GetOrderFee(security, order);
