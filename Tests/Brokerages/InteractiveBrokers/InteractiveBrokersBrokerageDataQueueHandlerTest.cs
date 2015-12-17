@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             InteractiveBrokersGatewayRunner.StartFromConfiguration();
             
-            var ib = new InteractiveBrokersBrokerage(new OrderProvider());
+            var ib = new InteractiveBrokersBrokerage(new OrderProvider(), new SecurityProvider());
             ib.Connect();
 
             ib.Subscribe(null, new List<Symbol> {Symbols.USDJPY, Symbols.EURGBP});

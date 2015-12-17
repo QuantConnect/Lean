@@ -43,10 +43,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// </summary>
     public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler
     {
-        private static readonly IOrderFeeModel OrderFeeModel = new DefaultOrderFeeModel();
-        private static readonly Security Equity = new Equity(new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create(string.Empty, SecurityType.Equity, Market.USA), Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false), 1);
-        private static readonly Security Forex = new Forex(new Cash("USD", 0, 1), new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create(string.Empty, SecurityType.Forex, Market.FXCM), Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false), 1);
-
         // next valid order id for this client
         private int _nextValidID;
         // next valid client id for the gateway/tws
@@ -61,6 +57,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly string _host;
         private readonly int _clientID;
         private readonly IOrderProvider _orderProvider;
+        private ISecurityProvider _securityProvider;
         private readonly IB.IBClient _client;
         private readonly IB.AgentDescription _agentDescription;
 
@@ -101,10 +98,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         ///     ib-port (optional, defaults to 4001)
         ///     ib-agent-description (optional, defaults to Individual)
         /// </summary>
-        /// <param name="orderProvider">An instance of IOrderMapping used to fetch Order objects by brokerage ID</param>
-        public InteractiveBrokersBrokerage(IOrderProvider orderProvider)
+        /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
+        /// <param name="securityProvider">The security provider used to give access to algorithm securities</param>
+        public InteractiveBrokersBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
             : this(
                 orderProvider,
+                securityProvider,
                 Config.Get("ib-account"),
                 Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
@@ -116,10 +115,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Creates a new InteractiveBrokersBrokerage for the specified account
         /// </summary>
-        /// <param name="orderProvider">An instance of IOrderMapping used to fetch Order objects by brokerage ID</param>
+        /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
+        /// <param name="securityProvider">The security provider used to give access to algorithm securities</param>
         /// <param name="account">The account used to connect to IB</param>
-        public InteractiveBrokersBrokerage(IOrderProvider orderProvider, string account)
+        public InteractiveBrokersBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string account)
             : this(orderProvider,
+                securityProvider,
                 account,
                 Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
@@ -131,15 +132,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Creates a new InteractiveBrokersBrokerage from the specified values
         /// </summary>
-        /// <param name="orderProvider">An instance of IOrderMapping used to fetch Order objects by brokerage ID</param>
+        /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
+        /// <param name="securityProvider">The security provider used to give access to algorithm securities</param>
         /// <param name="account">The Interactive Brokers account name</param>
         /// <param name="host">host name or IP address of the machine where TWS is running. Leave blank to connect to the local host.</param>
         /// <param name="port">must match the port specified in TWS on the Configure&gt;API&gt;Socket Port field.</param>
         /// <param name="agentDescription">Used for Rule 80A describes the type of trader.</param>
-        public InteractiveBrokersBrokerage(IOrderProvider orderProvider, string account, string host, int port, IB.AgentDescription agentDescription = IB.AgentDescription.Individual)
+        public InteractiveBrokersBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string account, string host, int port, IB.AgentDescription agentDescription = IB.AgentDescription.Individual)
             : base("Interactive Brokers Brokerage")
         {
             _orderProvider = orderProvider;
+            _securityProvider = securityProvider;
             _account = account;
             _host = host;
             _port = port;
@@ -861,8 +864,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     if (currentFilled == 0)
                     {
                         // apply order fees on the first fill event TODO: What about partial filled orders that get cancelled?
-                        var security = order.Symbol.ID.SecurityType == SecurityType.Forex ? Forex : Equity;
-                        orderFee = OrderFeeModel.GetOrderFee(security, order);
+                        var security = _securityProvider.GetSecurity(order.Symbol);
+                        orderFee = security.OrderFeeModel.GetOrderFee(security, order);
                     }
                     filledThisTime = update.Filled - currentFilled;
                     _orderFills.AddOrUpdate(order.Symbol, currentFilled, (sym, filled) => update.Filled);

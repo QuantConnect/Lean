@@ -1463,7 +1463,8 @@ namespace QuantConnect.Brokerages.Tradier
                 if (!cachedOrder.EmittedOrderFee)
                 {
                     cachedOrder.EmittedOrderFee = true;
-                    fill.OrderFee = 1;
+                    var security = _securityProvider.GetSecurity(qcOrder.Symbol);
+                    fill.OrderFee = security.OrderFeeModel.GetOrderFee(security, qcOrder);
                 }
 
                 // if we filled the order and have another contingent order waiting, submit it

@@ -64,7 +64,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                     Config.GetBool("ib-use-tws")
                     );
             }
-            return new InteractiveBrokersBrokerage(orderProvider);
+            return new InteractiveBrokersBrokerage(orderProvider, securityProvider);
         }
 
         protected override void DisposeBrokerage(IBrokerage brokerage)

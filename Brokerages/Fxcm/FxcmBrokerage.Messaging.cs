@@ -39,9 +39,6 @@ namespace QuantConnect.Brokerages.Fxcm
     /// </summary>
     public partial class FxcmBrokerage
     {
-        private static readonly IOrderFeeModel OrderFeeModel = new FxcmOrderFeeModel();
-        private static readonly Security Security = new Forex(new Cash("USD", 0, 1), new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create(string.Empty, SecurityType.Forex, Market.FXCM), Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false), 1);
-
         private IGateway _gateway;
 
         private readonly object _locker = new object();
@@ -367,7 +364,8 @@ namespace QuantConnect.Brokerages.Fxcm
                         // we're catching the first fill so we apply the fees only once
                         if ((int)message.getCumQty() == (int)message.getLastQty())
                         {
-                            orderEvent.OrderFee = OrderFeeModel.GetOrderFee(Security, order);
+                            var security = _securityProvider.GetSecurity(order.Symbol);
+                            orderEvent.OrderFee = security.OrderFeeModel.GetOrderFee(security, order);
                         }
 
                         _orderEventQueue.Enqueue(orderEvent);
