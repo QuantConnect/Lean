@@ -263,12 +263,6 @@ namespace QuantConnect.Lean.Engine
                         }
                     }
 
-                    //Send result data back: this entire code block could be rewritten.
-                    // todo: - Split up statistics class, its enormous. 
-                    // todo: - Make a dedicated Statistics.Benchmark class.
-                    // todo: - Move all creation and transmission of statistics out of primary engine loop.
-                    // todo: - Statistics.Generate(algorithm, resulthandler, transactionhandler);
-
                     try
                     {
                         var trades = algorithm.TradeBuilder.ClosedTrades;
