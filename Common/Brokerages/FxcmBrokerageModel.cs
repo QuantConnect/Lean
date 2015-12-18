@@ -104,9 +104,19 @@ namespace QuantConnect.Brokerages
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
             message = null;
+
+            // validate order quantity
+            if (request.Quantity != null && request.Quantity % 1000 != 0)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "The order quantity must be a multiple of 1000."
+                    );
+
+                return false;
+            }
             
             // determine direction via the new, updated quantity
-            var newQuantity = order.Quantity + request.Quantity ?? 0;
+            var newQuantity = request.Quantity ?? order.Quantity;
             var direction = newQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
 
             // use security.Price if null, allows to pass checks
