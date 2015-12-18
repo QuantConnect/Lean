@@ -663,6 +663,18 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return OrderResponse.InvalidStatus(request, order);
             }
 
+            // verify that our current brokerage can actually update the order
+            BrokerageMessageEvent message;
+            if (!_algorithm.LiveMode && !_algorithm.BrokerageModel.CanUpdateOrder(_algorithm.Securities[order.Symbol], order, request, out message))
+            {
+                // if we couldn't actually process the order, mark it as invalid and bail
+                order.Status = OrderStatus.Invalid;
+                if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrder", "BrokerageModel declared unable to update order: " + order.Id);
+                var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToUpdateOrder, "OrderID: " + order.Id + " " + message);
+                _algorithm.Error(response.ErrorMessage);
+                return response;
+            }
+
             // modify the values of the order object
             order.ApplyUpdateOrderRequest(request);
             ticket.SetOrder(order);
