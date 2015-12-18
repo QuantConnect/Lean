@@ -352,7 +352,7 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 // perform margin calls, in live mode we can also use realtime to emit these
-                if (time >= nextMarginCallTime || (_liveMode && nextMarginCallTime > DateTime.Now))
+                if (time >= nextMarginCallTime || (_liveMode && nextMarginCallTime > DateTime.UtcNow))
                 {
                     // determine if there are possible margin call orders to be executed
                     bool issueMarginCallWarning;
@@ -403,7 +403,7 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 // perform check for settlement of unsettled funds
-                if (time >= nextSettlementScanTime || (_liveMode && nextSettlementScanTime > DateTime.Now))
+                if (time >= nextSettlementScanTime || (_liveMode && nextSettlementScanTime > DateTime.UtcNow))
                 {
                     algorithm.Portfolio.ScanForCashSettlement(algorithm.UtcTime);
 
