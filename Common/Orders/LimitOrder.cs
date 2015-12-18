@@ -70,7 +70,19 @@ namespace QuantConnect.Orders
         /// <returns>The value of this order given the current market price</returns>
         public override decimal GetValue(decimal currentMarketPrice)
         {
-            return Quantity*LimitPrice;
+            // selling, so higher price will be used
+            if (Quantity < 0)
+            {
+                return Math.Max(LimitPrice, currentMarketPrice);
+            }
+
+            // buying, so lower price will be used
+            if (Quantity > 0)
+            {
+                return Math.Min(LimitPrice, currentMarketPrice);
+            }
+
+            return 0m;
         }
 
         /// <summary>
