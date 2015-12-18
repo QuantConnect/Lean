@@ -221,6 +221,7 @@ namespace QuantConnect.Lean.Engine
         public void Dispose()
         {
             Setup.Dispose();
+            CommandQueue.Dispose();
         }
     }
 }
