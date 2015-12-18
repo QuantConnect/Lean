@@ -52,7 +52,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="security">The security of the order</param>
         /// <param name="order">The order to be updated</param>
-        /// <param name="request">The requested updated to be made to the order</param>
+        /// <param name="request">The requested update to be made to the order</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
         public virtual bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)

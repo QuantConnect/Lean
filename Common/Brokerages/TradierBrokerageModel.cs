@@ -37,7 +37,7 @@ namespace QuantConnect.Brokerages
         /// <remarks>
         /// For example, a brokerage may have no connectivity at certain times, or an order rate/size limit
         /// </remarks>
-        /// <param name="security"></param>
+        /// <param name="security">The security of the order</param>
         /// <param name="order">The order to be processed</param>
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
@@ -63,6 +63,31 @@ namespace QuantConnect.Brokerages
             }
 
             // tradier order limits
+            return true;
+        }
+
+        /// <summary>
+        /// Returns true if the brokerage would allow updating the order as specified by the request
+        /// </summary>
+        /// <param name="security">The security of the order</param>
+        /// <param name="order">The order to be updated</param>
+        /// <param name="request">The requested update to be made to the order</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
+        /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
+        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        {
+            message = null;
+
+            // Tradier doesn't allow updating order quantities
+            if (request.Quantity != null && request.Quantity != order.Quantity)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateRejected",
+                    "Traider does not support updating order quantities."
+                    );
+
+                return false;
+            }
+
             return true;
         }
 
