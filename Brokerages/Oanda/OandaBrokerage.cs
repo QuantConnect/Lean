@@ -161,7 +161,12 @@ namespace QuantConnect.Brokerages.Oanda
                                             _eventsSession.StartSession();
 
                                             // restore rates session
-                                            SubscribeSymbols(_subscribedSymbols.ToList());
+                                            List<Symbol> symbolsToSubscribe;
+                                            lock (_lockerSubscriptions)
+                                            {
+                                                symbolsToSubscribe = _subscribedSymbols.ToList();
+                                            }
+                                            SubscribeSymbols(symbolsToSubscribe);
                                         }
                                         catch (Exception)
                                         {

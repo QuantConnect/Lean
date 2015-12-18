@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Oanda;
@@ -65,5 +67,44 @@ namespace QuantConnect.Tests.Brokerages.Oanda
 
             Thread.Sleep(5000);
         }
+
+        [Test]
+        public void GroupsMultipleSubscriptions()
+        {
+            var symbols = new List<string>
+            {
+                "AUDJPY", "AUDUSD", "EURCHF", "EURGBP", "EURJPY", "EURUSD", "GBPAUD", 
+                "GBPJPY", "GBPUSD", "NZDUSD", "USDCAD", "USDCHF", "USDJPY"
+            };
+
+            var brokerage = (OandaBrokerage)Brokerage;
+
+            var stopwatch = Stopwatch.StartNew();
+            foreach (var symbol in symbols)
+            {
+                brokerage.Subscribe(null, new List<Symbol>
+                {
+                    Symbol.Create(symbol, SecurityType.Forex, Market.Oanda),
+                });
+                //Thread.Sleep(50);
+            }
+            stopwatch.Stop();
+            Console.WriteLine("Subscribe: Elapsed time: " + stopwatch.Elapsed);
+
+            Thread.Sleep(10000);
+
+            stopwatch.Restart();
+            foreach (var symbol in symbols)
+            {
+                brokerage.Unsubscribe(null, new List<Symbol>
+                {
+                    Symbol.Create(symbol, SecurityType.Forex, Market.Oanda),
+                });
+            }
+            Console.WriteLine("Unsubscribe: Elapsed time: " + stopwatch.Elapsed);
+
+            Thread.Sleep(5000);
+        }
+
     }
 }
