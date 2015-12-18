@@ -37,7 +37,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Brokerage Id for this order for when the brokerage splits orders into multiple pieces
         /// </summary>
-        public List<long> BrokerId { get; internal set; }
+        public List<string> BrokerId { get; internal set; }
 
         /// <summary>
         /// Symbol of the Asset
@@ -133,7 +133,7 @@ namespace QuantConnect.Orders
             Tag = "";
             SecurityType = SecurityType.Base;
             Duration = OrderDuration.GTC;
-            BrokerId = new List<long>();
+            BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
         }
@@ -156,7 +156,7 @@ namespace QuantConnect.Orders
             Tag = tag;
             SecurityType = type;
             Duration = OrderDuration.GTC;
-            BrokerId = new List<long>();
+            BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
         }
@@ -179,7 +179,7 @@ namespace QuantConnect.Orders
             Tag = tag;
             SecurityType = type;
             Duration = OrderDuration.GTC;
-            BrokerId = new List<long>();
+            BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
         }

@@ -1013,7 +1013,7 @@ namespace QuantConnect.Brokerages.Tradier
                 }
 
                 var closingOrderID = response.Order.Id;
-                order.BrokerId.Add(closingOrderID);
+                order.BrokerId.Add(closingOrderID.ToString());
                 return true;
             }
             else
@@ -1023,7 +1023,7 @@ namespace QuantConnect.Brokerages.Tradier
                 {
                     return false;
                 }
-                order.BrokerId.Add(response.Order.Id);
+                order.BrokerId.Add(response.Order.Id.ToString());
                 return true;
             }
         }
@@ -1043,9 +1043,15 @@ namespace QuantConnect.Brokerages.Tradier
                 Log.Trace("TradierBrokerage.UpdateOrder(): Unable to update order without BrokerId.");
                 return false;
             }
-            
+
             // there's only one active tradier order per qc order, find it
-            var activeOrder = order.BrokerId.Where(x => _cachedOpenOrdersByTradierOrderID.ContainsKey(x)).Select(x => _cachedOpenOrdersByTradierOrderID[x]).SingleOrDefault();
+            var activeOrder = (
+                from brokerId in order.BrokerId
+                let id = long.Parse(brokerId)
+                where _cachedOpenOrdersByTradierOrderID.ContainsKey(id)
+                select _cachedOpenOrdersByTradierOrderID[id]
+                ).SingleOrDefault();
+            
             if (activeOrder == null)
             {
                 Log.Trace("Unable to locate active Tradier order for QC order id: " + order.Id + " with Tradier ids: " + string.Join(", ", order.BrokerId));
@@ -1129,7 +1135,8 @@ namespace QuantConnect.Brokerages.Tradier
 
             foreach (var orderID in order.BrokerId)
             {
-                var response = CancelOrder(_accountID, orderID);
+                var id = long.Parse(orderID);
+                var response = CancelOrder(_accountID, id);
                 if (response == null)
                 {
                     // this can happen if the order has already been filled
@@ -1138,7 +1145,7 @@ namespace QuantConnect.Brokerages.Tradier
                 if (response.Errors.Errors.IsNullOrEmpty() && response.Order.Status == "ok")
                 {
                     TradierCachedOpenOrder tradierOrder;
-                    _cachedOpenOrdersByTradierOrderID.TryRemove(orderID, out tradierOrder);
+                    _cachedOpenOrdersByTradierOrderID.TryRemove(id, out tradierOrder);
                     const int orderFee = 0;
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Tradier Fill Event") { Status = OrderStatus.Canceled });
                 }
@@ -1275,7 +1282,7 @@ namespace QuantConnect.Brokerages.Tradier
                             return;
                         }
 
-                        order.QCOrder.BrokerId.Add(recentOrder.Id);
+                        order.QCOrder.BrokerId.Add(recentOrder.Id.ToString());
                         Log.Trace("TradierBrokerage.TradierPlaceOrder(): Successfully resolved missing order ID: " + recentOrder.Id);
                     });
                 }
@@ -1377,7 +1384,7 @@ namespace QuantConnect.Brokerages.Tradier
                             // verify we don't have them in the order provider
                             Log.Trace("TradierBrokerage.CheckForFills(): Verifying missing brokerage IDs: " + string.Join(",", localUnknownTradierOrderIDs));
                             var orders = localUnknownTradierOrderIDs.Select(x => _orderProvider.GetOrderByBrokerageId(x)).Where(x => x != null);
-                            var stillUnknownOrderIDs = localUnknownTradierOrderIDs.Where(x => !orders.Any(y => y.BrokerId.Contains(x))).ToList();
+                            var stillUnknownOrderIDs = localUnknownTradierOrderIDs.Where(x => !orders.Any(y => y.BrokerId.Contains(x.ToString()))).ToList();
                             if (stillUnknownOrderIDs.Count > 0)
                             {
                                 // fetch all rejected intraday orders within the last minute, we're going to exclude rejected orders from the error condition
@@ -1497,7 +1504,7 @@ namespace QuantConnect.Brokerages.Tradier
                                     if (response.Errors.Errors.IsNullOrEmpty())
                                     {
                                         // add the new brokerage id for retrieval later
-                                        qcOrder.BrokerId.Add(response.Order.Id);
+                                        qcOrder.BrokerId.Add(response.Order.Id.ToString());
                                     }
                                     else
                                     {
@@ -1626,7 +1633,7 @@ namespace QuantConnect.Brokerages.Tradier
             qcOrder.Quantity = ConvertQuantity(order);
             qcOrder.SecurityType = SecurityType.Equity; // tradier only support equities? but also options??
             qcOrder.Status = ConvertStatus(order.Status);
-            qcOrder.BrokerId.Add(order.Id);
+            qcOrder.BrokerId.Add(order.Id.ToString());
             //qcOrder.ContingentId =
             qcOrder.Duration = ConvertDuration(order.Duration);
             var orderByBrokerageId = _orderProvider.GetOrderByBrokerageId(order.Id);

@@ -333,7 +333,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         /// <param name="brokerageId">The brokerage id to fetch</param>
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        public Order GetOrderByBrokerageId(long brokerageId)
+        public Order GetOrderByBrokerageId(string brokerageId)
         {
             // this function can be invoked by brokerages when getting open orders, guard against null ref
             if (_orders == null) return null;

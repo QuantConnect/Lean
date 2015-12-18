@@ -370,7 +370,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 else if (_mapRequestsToOrders.TryGetValue(message.getRequestID(), out order))
                 {
                     _mapFxcmOrderIdsToOrders[orderId] = order;
-                    order.BrokerId.Add(Convert.ToInt64(orderId));
+                    order.BrokerId.Add(orderId);
 
                     // new order
                     var orderEvent = new OrderEvent(order, DateTime.UtcNow, 0)

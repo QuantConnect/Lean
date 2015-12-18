@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Brokerages
             return _orders.FirstOrDefault(x => x.Id == orderId);
         }
 
-        public Order GetOrderByBrokerageId(long brokerageId)
+        public Order GetOrderByBrokerageId(string brokerageId)
         {
             return _orders.FirstOrDefault(x => x.BrokerId.Contains(brokerageId));
         }

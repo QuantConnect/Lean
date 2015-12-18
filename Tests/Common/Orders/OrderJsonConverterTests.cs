@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Common.Orders
                 Id = 12345,
                 Price = 209.03m,
                 ContingentId = 123456,
-                BrokerId = new List<long> {727, 54970}
+                BrokerId = new List<string> {"727", "54970"}
             };
 
             TestOrderType(expected);
@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Common.Orders
                 Id = 12345,
                 Price = 209.03m,
                 ContingentId = 123456,
-                BrokerId = new List<long> {727, 54970}
+                BrokerId = new List<string> {"727", "54970"}
             };
 
             TestOrderType(expected);
@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Common.Orders
                 Id = 12345,
                 Price = 209.03m,
                 ContingentId = 123456,
-                BrokerId = new List<long> {727, 54970}
+                BrokerId = new List<string> {"727", "54970"}
             };
 
             TestOrderType(expected);
@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Common.Orders
                 Id = 12345,
                 Price = 209.03m,
                 ContingentId = 123456,
-                BrokerId = new List<long> {727, 54970}
+                BrokerId = new List<string> {"727", "54970"}
             };
 
             var actual = TestOrderType(expected);
@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Common.Orders
                 Id = 12345,
                 Price = 209.03m,
                 ContingentId = 123456,
-                BrokerId = new List<long> {727, 54970}
+                BrokerId = new List<string> {"727", "54970"}
             };
 
             var actual = TestOrderType(expected);
@@ -107,7 +107,7 @@ namespace QuantConnect.Tests.Common.Orders
                 Id = 12345,
                 Price = 209.03m,
                 ContingentId = 123456,
-                BrokerId = new List<long> {727, 54970}
+                BrokerId = new List<string> {"727", "54970"}
             };
 
             var actual = TestOrderType(expected);

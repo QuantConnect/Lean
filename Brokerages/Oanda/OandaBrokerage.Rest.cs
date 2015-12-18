@@ -27,6 +27,7 @@ using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Brokerages.Oanda.DataType.Communications;
 using QuantConnect.Brokerages.Oanda.Framework;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Oanda
@@ -451,7 +452,7 @@ namespace QuantConnect.Brokerages.Oanda
             qcOrder.Symbol = _symbolMapper.GetLeanSymbol(order.instrument, qcOrder.SecurityType, Market.Oanda);
             qcOrder.Quantity = ConvertQuantity(order);
             qcOrder.Status = OrderStatus.None;
-            qcOrder.BrokerId.Add(order.id);
+            qcOrder.BrokerId.Add(order.id.ToString());
             var orderByBrokerageId = _orderProvider.GetOrderByBrokerageId(order.id);
             if (orderByBrokerageId != null)
             {

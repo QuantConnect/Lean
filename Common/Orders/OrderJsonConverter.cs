@@ -88,7 +88,7 @@ namespace QuantConnect.Orders
             order.Quantity = jObject["Quantity"].Value<int>();
             order.Price = jObject["Price"].Value<decimal>();
             order.SecurityType = (SecurityType)jObject["SecurityType"].Value<int>();
-            order.BrokerId = jObject["BrokerId"].Select(x => x.Value<long>()).ToList();
+            order.BrokerId = jObject["BrokerId"].Select(x => x.Value<string>()).ToList();
             order.ContingentId = jObject["ContingentId"].Value<int>();
 
             if (jObject.SelectTokens("Symbol.ID").Any())

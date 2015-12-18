@@ -311,7 +311,7 @@ namespace QuantConnect.Brokerages.Oanda
                 }
                 else
                 {
-                    order.BrokerId.Add(postOrderResponse.tradeOpened.id);
+                    order.BrokerId.Add(postOrderResponse.tradeOpened.id.ToString());
                 }
             }
 
@@ -323,7 +323,7 @@ namespace QuantConnect.Brokerages.Oanda
                 }
                 else
                 {
-                    order.BrokerId.Add(postOrderResponse.tradeReduced.id);
+                    order.BrokerId.Add(postOrderResponse.tradeReduced.id.ToString());
                 }
             }
 
@@ -331,7 +331,7 @@ namespace QuantConnect.Brokerages.Oanda
             {
                 if (order.Type != OrderType.Market)
                 {
-                    order.BrokerId.Add(postOrderResponse.orderOpened.id);
+                    order.BrokerId.Add(postOrderResponse.orderOpened.id.ToString());
                 }
             }
 
@@ -386,7 +386,7 @@ namespace QuantConnect.Brokerages.Oanda
             // we need the brokerage order id in order to perform an update
             PopulateOrderRequestParameters(order, requestParams);
 
-            UpdateOrder(order.BrokerId.First(), requestParams);
+            UpdateOrder(long.Parse(order.BrokerId.First()), requestParams);
 
             return true;
         }
@@ -408,7 +408,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             foreach (var orderId in order.BrokerId)
             {
-                CancelOrder(orderId);
+                CancelOrder(long.Parse(orderId));
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Oanda Cancel Order Event") { Status = OrderStatus.Canceled });
             }
 

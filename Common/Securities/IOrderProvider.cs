@@ -41,7 +41,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="brokerageId">The brokerage id to fetch</param>
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        Order GetOrderByBrokerageId(long brokerageId);
+        Order GetOrderByBrokerageId(string brokerageId);
 
         /// <summary>
         /// Gets and enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
@@ -57,5 +57,33 @@ namespace QuantConnect.Securities
         /// <param name="filter">Delegate used to filter the orders</param>
         /// <returns>All open orders this order provider currently holds</returns>
         IEnumerable<Order> GetOrders(Func<Order, bool> filter = null);
+    }
+
+    /// <summary>
+    /// Provides extension methods for the <see cref="IOrderProvider"/> interface
+    /// </summary>
+    public static class OrderProviderExtensions
+    {
+        /// <summary>
+        /// Gets the order by its brokerage id
+        /// </summary>
+        /// <param name="orderProvider">The order provider to search</param>
+        /// <param name="brokerageId">The brokerage id to fetch</param>
+        /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
+        public static Order GetOrderByBrokerageId(this IOrderProvider orderProvider, long brokerageId)
+        {
+            return orderProvider.GetOrderByBrokerageId(brokerageId.ToString());
+        }
+
+        /// <summary>
+        /// Gets the order by its brokerage id
+        /// </summary>
+        /// <param name="orderProvider">The order provider to search</param>
+        /// <param name="brokerageId">The brokerage id to fetch</param>
+        /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
+        public static Order GetOrderByBrokerageId(this IOrderProvider orderProvider, int brokerageId)
+        {
+            return orderProvider.GetOrderByBrokerageId(brokerageId.ToString());
+        }
     }
 }

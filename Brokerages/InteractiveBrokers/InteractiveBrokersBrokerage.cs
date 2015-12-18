@@ -236,7 +236,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // this could be better
                 foreach (var id in order.BrokerId)
                 {
-                    _client.CancelOrder((int) id);
+                    _client.CancelOrder(int.Parse(id));
                 }
 
                 // canceled order events fired upon confirmation, see HandleError
@@ -534,13 +534,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 // the order ids are generated for us by the SecurityTransactionManaer
                 int id = GetNextBrokerageOrderID();
-                order.BrokerId.Add(id);
+                order.BrokerId.Add(id.ToString());
                 ibOrderID = id;
             }
             else if (order.BrokerId.Any())
             {
                 // this is *not* perfect code
-                ibOrderID = (int)order.BrokerId[0];
+                ibOrderID = int.Parse(order.BrokerId[0]);
             }
             else
             {
@@ -1031,7 +1031,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             order.SecurityType = ConvertSecurityType(contract.SecurityType);
-            order.BrokerId.Add(ibOrder.OrderId);
+            order.BrokerId.Add(ibOrder.OrderId.ToString());
 
             return order;
         }

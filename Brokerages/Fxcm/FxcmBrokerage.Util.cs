@@ -66,7 +66,7 @@ namespace QuantConnect.Brokerages.Fxcm
             order.Symbol = _symbolMapper.GetLeanSymbol(fxcmOrder.getInstrument().getSymbol(), order.SecurityType, Market.FXCM);
             order.Quantity = Convert.ToInt32(fxcmOrder.getOrderQty() * (fxcmOrder.getSide() == SideFactory.BUY ? +1 : -1));
             order.Status = ConvertOrderStatus(fxcmOrder.getFXCMOrdStatus());
-            order.BrokerId.Add(Convert.ToInt64(fxcmOrder.getOrderID()));
+            order.BrokerId.Add(fxcmOrder.getOrderID());
             order.Duration = ConvertDuration(fxcmOrder.getTimeInForce());
             order.Time = FromJavaDate(fxcmOrder.getTransactTime().toDate());
 
