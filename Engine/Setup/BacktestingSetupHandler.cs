@@ -172,6 +172,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 return false;
             }
 
+            var controls = job.Controls;
             var isolator = new Isolator();
             var initializeComplete = isolator.ExecuteWithTimeLimit(TimeSpan.FromMinutes(5), () =>
             {
@@ -184,7 +185,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Algorithm is backtesting, not live:
                     algorithm.SetLiveMode(false);
                     //Set the backtest level asset ram allocation limits
-                    algorithm.SetAssetLimits(500, 100, 30);
+                    algorithm.SetAssetLimits(controls.MinuteLimit, controls.SecondLimit, controls.TickLimit);
                     //Set the algorithm time before we even initialize:
                     algorithm.SetDateTime(job.PeriodStart.ConvertToUtc(algorithm.TimeZone));
                     //Set the source impl for the event scheduling

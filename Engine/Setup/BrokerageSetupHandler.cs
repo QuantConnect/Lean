@@ -176,6 +176,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 resultHandler.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Initializing, "Initializing algorithm...");
 
                 //Execute the initialize code:
+                var controls = job.Controls;
                 var isolator = new Isolator();
                 var initializeComplete = isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(300), () =>
                 {
@@ -183,20 +184,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     {
                         //Set the live trading level asset/ram allocation limits. 
                         //Protects algorithm from linux killing the job by excess memory:
-                        switch (job.ServerType)
-                        {
-                            case ServerType.Server1024:
-                                algorithm.SetAssetLimits(100, 20, 10);
-                                break;
-
-                            case ServerType.Server2048:
-                                algorithm.SetAssetLimits(400, 50, 30);
-                                break;
-
-                            default: //512
-                                algorithm.SetAssetLimits(50, 25, 15);
-                                break;
-                        }
+                        algorithm.SetAssetLimits(controls.MinuteLimit, controls.SecondLimit, controls.TickLimit);
                         //Set the default brokerage model before initialize
                         algorithm.SetBrokerageModel(_factory.BrokerageModel);
                         //Set our default markets

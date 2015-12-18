@@ -224,6 +224,7 @@
     <Compile Include="Orders\UpdateOrderFields.cs" />
     <Compile Include="Orders\UpdateOrderRequest.cs" />
     <Compile Include="Packets\CommandResultPacket.cs" />
+    <Compile Include="Packets\Controls.cs" />
     <Compile Include="Packets\HandledErrorPacket.cs" />
     <Compile Include="Packets\HistoryPacket.cs" />
     <Compile Include="Parameters\ParameterAttribute.cs" />

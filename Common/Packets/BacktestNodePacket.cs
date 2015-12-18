@@ -68,6 +68,12 @@ namespace QuantConnect.Packets
         public BacktestNodePacket() 
             : base(PacketType.BacktestNode)
         {
+            Controls = new Controls
+            {
+                MinuteLimit = 500,
+                SecondLimit = 100,
+                TickLimit = 30
+            };
         }
 
         /// <summary>
@@ -83,6 +89,12 @@ namespace QuantConnect.Packets
             UserPlan = userPlan;
             Name = name;
             Language = Language.CSharp;
+            Controls = new Controls
+            {
+                MinuteLimit = 500,
+                SecondLimit = 100,
+                TickLimit = 30
+            };
         }
     }
 }

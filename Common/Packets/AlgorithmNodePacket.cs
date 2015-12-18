@@ -122,6 +122,12 @@ namespace QuantConnect.Packets
         public int RamAllocation;
 
         /// <summary>
+        /// Specifies values to control algorithm limits
+        /// </summary>
+        [JsonProperty(PropertyName = "oControls")]
+        public Controls Controls;
+
+        /// <summary>
         /// The parameter values used to set algorithm parameters
         /// </summary>
         [JsonProperty(PropertyName = "aParameters")]
