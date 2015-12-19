@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-using System.Globalization;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -26,23 +24,14 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ComparesAgainstExternalData()
         {
-            var onBalanceVolumeIndicator = new OnBalanceVolume("OBV")
-            {
-                Current =
-                {
-                    Time = new DateTime(2013, 4, 30),
-                    Value = decimal.Parse("1.156486E+08", NumberStyles.Float, CultureInfo.InvariantCulture)
-                }
-            };
+            var onBalanceVolumeIndicator = new OnBalanceVolume("OBV");
 
             TestHelper.TestIndicator(onBalanceVolumeIndicator, "spy_with_obv.txt", "OBV",
                 (ind, expected) => Assert.AreEqual(
                     expected.ToString("0.##E-00"),
                     (onBalanceVolumeIndicator.Current.Value).ToString("0.##E-00")
                     )
-
                 );
-          
         }
 
         [Test]
@@ -57,6 +46,8 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsTrue(onBalanceVolumeIndicator.IsReady);
 
             onBalanceVolumeIndicator.Reset();
+
+            TestHelper.AssertIndicatorIsInDefaultState(onBalanceVolumeIndicator);
         }
     }
 }
