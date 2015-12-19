@@ -50,11 +50,12 @@ namespace QuantConnect.Brokerages
             switch (security.Type)
             {
                 case SecurityType.Forex:
-                case SecurityType.Cfd:
                     return new OandaTransactionModel();
 
+                case SecurityType.Cfd:
                 default:
-                    throw new ArgumentOutOfRangeException("securityType", security.Type, null);
+                    throw new Exception("Oanda does not support the asset type " + security.Type + ". " +
+                                        "Please ensure your algorithm only uses Forex (CFD assets are not currently supported).");
             }
         }
     }
