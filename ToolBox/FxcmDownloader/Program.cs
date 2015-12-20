@@ -33,12 +33,13 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             if (args.Length != 4)
             {
                 Console.WriteLine("Usage: FxcmDownloader SYMBOLS RESOLUTION FROMDATE TODATE");
-                Console.WriteLine("SYMBOLS = eg EURUSD,USDJPY");
-                Console.WriteLine("RESOLUTION = Second/Minute/Hour/Daily/All");
-                Console.WriteLine("FROMDATE = yyyymmdd");
-                Console.WriteLine("TODATE = yyyymmdd");
+                Console.WriteLine("SYMBOLS      = eg EURUSD,USDJPY");
+                Console.WriteLine("RESOLUTION   = Second/Minute/Hour/Daily/All");
+                Console.WriteLine("FROMDATE     = yyyymmdd");
+                Console.WriteLine("TODATE       = yyyymmdd");
                 Environment.Exit(1);
             }
+
 
             try
             {
@@ -48,9 +49,12 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 // Load settings from command line
                 var tickers = args[0].Split(',');
                 var allResolutions = args[1].ToLower() == "all";
-                var resolution = allResolutions ? Resolution.Second : (Resolution)Enum.Parse(typeof(Resolution), args[1]);
+                var resolution = allResolutions ? Resolution.Tick : (Resolution)Enum.Parse(typeof(Resolution), args[1]);
+
                 var startDate = DateTime.ParseExact(args[2], "yyyyMMdd", CultureInfo.InvariantCulture);
                 var endDate = DateTime.ParseExact(args[3], "yyyyMMdd", CultureInfo.InvariantCulture);
+                endDate = endDate.AddDays(1).AddMilliseconds(-1);
+
 
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
@@ -78,20 +82,21 @@ namespace QuantConnect.ToolBox.FxcmDownloader
 
                     if (allResolutions)
                     {
-                        var bars = data.Cast<TradeBar>().ToList();
+                        var ticks = data.Cast<Tick>().ToList();
 
                         // Save the data (second resolution)
                         var writer = new LeanDataWriter(securityType, resolution, symbol, dataDirectory, market);
-                        writer.Write(bars);
+                        writer.Write(ticks);
 
                         // Save the data (other resolutions)
-                        foreach (var res in new[] {Resolution.Minute, Resolution.Hour, Resolution.Daily})
+                        foreach (var res in new[] { Resolution.Second, Resolution.Minute, Resolution.Hour, Resolution.Daily })
                         {
-                            var resData = FxcmDataDownloader.AggregateBars(symbol, bars, res.ToTimeSpan());
+                            var resData = FxcmDataDownloader.AggregateTicks(symbol, ticks, res.ToTimeSpan());
 
                             writer = new LeanDataWriter(securityType, res, symbol, dataDirectory, market);
                             writer.Write(resData);
                         }
+
                     }
                     else
                     {
