@@ -41,13 +41,15 @@ namespace QuantConnect.ToolBox.FxcmDownloader
         private readonly string _userName;
         private readonly string _password;
 
+        private DateTime _lastReceived = new DateTime();
+
         private IGateway _gateway;
         private readonly object _locker = new object();
         private string _currentRequest;
         private const int ResponseTimeout = 2500;
         private readonly Dictionary<string, AutoResetEvent> _mapRequestsToAutoResetEvents = new Dictionary<string, AutoResetEvent>();
         private readonly Dictionary<string, TradingSecurity> _fxcmInstruments = new Dictionary<string, TradingSecurity>();
-        private readonly List<TradeBar> _currentBars = new List<TradeBar>();
+        private readonly List<BaseData> _currentBaseData = new List<BaseData>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FxcmDataDownloader"/> class
@@ -136,14 +138,11 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             if (!_symbolMapper.IsKnownLeanSymbol(symbol))
                 throw new ArgumentException("Invalid symbol requested: " + symbol.Value);
 
-            if (resolution == Resolution.Tick)
-                throw new NotSupportedException("Resolution not available: " + resolution);
-
             if (symbol.ID.SecurityType != SecurityType.Forex && symbol.ID.SecurityType != SecurityType.Cfd)
                 throw new NotSupportedException("SecurityType not available: " + symbol.ID.SecurityType);
 
-            if (endUtc < startUtc)
-                throw new ArgumentException("The end date must be greater or equal than the start date.");
+            if (endUtc <= startUtc)
+                throw new ArgumentException("The end date must be greater than the start date.");
 
             Console.WriteLine("Logging in...");
 
@@ -163,27 +162,32 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             // initialize session
             RequestTradingSessionStatus();
 
-            Console.WriteLine("Downloading data from {0} to {1}...", startUtc.ToShortDateString(), endUtc.ToShortDateString());
+            Console.WriteLine("Downloading {0} data from {1} to {2}...", Enum.GetName(typeof(Resolution), resolution), startUtc.ToShortDateString(), endUtc.ToShortDateString());
 
-            // download bars
-            var totalBars = new List<TradeBar>();
+            //Find best FXCM  paramrs
+            IFXCMTimingInterval interval;
+            TimeSpan timeSpanPerRequest;
+            findBestFXCMParams(resolution, out interval, out timeSpanPerRequest);
 
-            // calculate the maximum time span for one request (using 10-second bars)
-            const int maxBarsPerRequest = 300;
-            var timeSpanPerRequest = TimeSpan.FromSeconds(maxBarsPerRequest * 10);
+
+            // download data
+            var totalBaseData = new List<BaseData>();
 
             var start = startUtc;
-            var end = startUtc + timeSpanPerRequest;
+            var end = new DateTime(Math.Min((startUtc + timeSpanPerRequest).Ticks, endUtc.Ticks));
 
             // request loop
-            while (start < endUtc.AddDays(1))
+            while (start < endUtc)
             {
-                _currentBars.Clear();
+                //show progress
+                Console.Write("\r{0} {1}  ", end.ToShortDateString(), end.ToLongTimeString());
+                _currentBaseData.Clear();
+
 
                 var mdr = new MarketDataRequest();
                 mdr.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SNAPSHOT);
                 mdr.setResponseFormat(IFixMsgTypeDefs.__Fields.MSGTYPE_FXCMRESPONSE);
-                mdr.setFXCMTimingInterval(FXCMTimingIntervalFactory.SEC10);
+                mdr.setFXCMTimingInterval(interval);
                 mdr.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
 
                 mdr.setFXCMStartDate(new UTCDate(ToJavaDateUtc(start)));
@@ -199,28 +203,31 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                     autoResetEvent = new AutoResetEvent(false);
                     _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
                 }
-                if (!autoResetEvent.WaitOne(1000))
+                if (!autoResetEvent.WaitOne(1000 * 5))
                 {
                     // no response, continue loop
-                    start = end.AddSeconds(10);
+                    start = end;
+
                     // if saturday, fast-forward to sunday
-                    if (start.DayOfWeek == DayOfWeek.Saturday) start = start.AddDays(1);
+                    if (start.DayOfWeek == DayOfWeek.Saturday) start = start.AddDays(1).Date;
+
                     end = start + timeSpanPerRequest;
                     continue;
                 }
 
-                var lastBarTime = _currentBars[_currentBars.Count - 1].Time;
-                if (lastBarTime < start)
+                var lastDataTime = _currentBaseData[_currentBaseData.Count - 1].Time;
+
+                if (lastDataTime < start)
                 {
                     // no more data available, exit loop
                     break;
                 }
 
-                // add bars received
-                totalBars.AddRange(_currentBars.Where(x => x.Time.Date <= endUtc.Date));
+                // Add bars
+                totalBaseData.AddRange(_currentBaseData.Where(x => x.Time.Date <= endUtc.Date));
 
                 // calculate time span for next request
-                start = lastBarTime.AddSeconds(10);
+                start = lastDataTime;
                 end = start + timeSpanPerRequest;
 
                 if (start >= DateTime.UtcNow)
@@ -229,6 +236,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                     break;
                 }
             }
+
 
             Console.WriteLine("Logging out...");
 
@@ -239,18 +247,36 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             _gateway.removeGenericMessageListener(this);
             _gateway.removeStatusMessageListener(this);
 
+            return totalBaseData;
+
+        }
+
+        private void findBestFXCMParams(Resolution resolution, out IFXCMTimingInterval interval, out TimeSpan increment)
+        {
+            interval = null;
+            increment = new TimeSpan();
+
             switch (resolution)
             {
-                case Resolution.Second:
-                    foreach (var bar in totalBars) 
-                        yield return bar;
+                case Resolution.Tick:
+                    interval = FXCMTimingIntervalFactory.TICK;
+                    increment = new TimeSpan(0, 3, 0); // 3 min
                     break;
-
+                case Resolution.Second:
+                    interval = FXCMTimingIntervalFactory.SEC10;
+                    increment = new TimeSpan(0, 10, 0); // 10 minutes
+                    break;
                 case Resolution.Minute:
+                    interval = FXCMTimingIntervalFactory.MIN1;
+                    increment = new TimeSpan(5, 0, 0); // 5 hours
+                    break;
                 case Resolution.Hour:
+                    interval = FXCMTimingIntervalFactory.HOUR1;
+                    increment = new TimeSpan(12, 0, 0, 0); // 12 days
+                    break;
                 case Resolution.Daily:
-                    foreach (var bar in AggregateBars(symbol, totalBars, resolution.ToTimeSpan())) 
-                        yield return bar;
+                    interval = FXCMTimingIntervalFactory.DAY1;
+                    increment = new TimeSpan(300, 0, 0, 0); // 300 days
                     break;
             }
         }
@@ -316,18 +342,38 @@ namespace QuantConnect.ToolBox.FxcmDownloader
         {
             if (message.getRequestID() == _currentRequest)
             {
-                // create new TradeBar from FXCM response message
                 var securityType = _symbolMapper.GetBrokerageSecurityType(message.getInstrument().getSymbol());
                 var symbol = _symbolMapper.GetLeanSymbol(message.getInstrument().getSymbol(), securityType, Market.FXCM);
                 var time = FromJavaDateUtc(message.getDate().toDate());
-                var open = Convert.ToDecimal((message.getBidOpen() + message.getAskOpen()) / 2);
-                var high = Convert.ToDecimal((message.getBidHigh() + message.getAskHigh()) / 2);
-                var low = Convert.ToDecimal((message.getBidLow() + message.getAskLow()) / 2);
-                var close = Convert.ToDecimal((message.getBidClose() + message.getAskClose()) / 2);
-                var bar = new TradeBar(time, symbol, open, high, low, close, 0);
 
-                // add bar to list
-                _currentBars.Add(bar);
+                //remove dups.
+                if (time <= _lastReceived) return;
+
+                _lastReceived = time;
+
+                if (message.getFXCMTimingInterval() == FXCMTimingIntervalFactory.TICK)
+                {
+                    var bid = Convert.ToDecimal(message.getBidClose());
+                    var ask = Convert.ToDecimal(message.getAskClose());
+
+                    var tick = new Tick(time, symbol, bid, ask);
+
+                    //Add tick
+                    _currentBaseData.Add(tick);
+
+                }
+                else // it bars
+                {
+                    var open = Convert.ToDecimal((message.getBidOpen() + message.getAskOpen()) / 2);
+                    var high = Convert.ToDecimal((message.getBidHigh() + message.getAskHigh()) / 2);
+                    var low = Convert.ToDecimal((message.getBidLow() + message.getAskLow()) / 2);
+                    var close = Convert.ToDecimal((message.getBidClose() + message.getAskClose()) / 2);
+
+                    var bar = new TradeBar(time, symbol, open, high, low, close, 0);
+
+                    // add bar to list
+                    _currentBaseData.Add(bar);
+                }
 
                 if (message.getFXCMContinuousFlag() == IFixValueDefs.__Fields.FXCMCONTINUOUS_END)
                 {
@@ -352,28 +398,33 @@ namespace QuantConnect.ToolBox.FxcmDownloader
 
         #endregion
 
+
+
+
         /// <summary>
-        /// Aggregates a list of 10-second bars at the requested resolution
+        /// Aggregates a list of ticks at the requested resolution
         /// </summary>
         /// <param name="symbol"></param>
-        /// <param name="bars"></param>
+        /// <param name="ticks"></param>
         /// <param name="resolution"></param>
         /// <returns></returns>
-        internal static IEnumerable<TradeBar> AggregateBars(Symbol symbol, IEnumerable<TradeBar> bars, TimeSpan resolution)
+        internal static IEnumerable<TradeBar> AggregateTicks(Symbol symbol, IEnumerable<Tick> ticks, TimeSpan resolution)
         {
             return
-                (from b in bars
-                    group b by b.Time.RoundDown(resolution)
-                    into g
-                    select new TradeBar
-                    {
-                        Symbol = symbol,
-                        Time = g.Key,
-                        Open = g.First().Open,
-                        High = g.Max(b => b.High),
-                        Low = g.Min(b => b.Low),
-                        Close = g.Last().Close
-                    });
+                (from t in ticks
+                 group t by t.Time.RoundDown(resolution)
+                     into g
+                 select new TradeBar
+                 {
+                     Symbol = symbol,
+                     Time = g.Key,
+                     Open = g.First().LastPrice,
+                     High = g.Max(t => t.LastPrice),
+                     Low = g.Min(t => t.LastPrice),
+                     Close = g.Last().LastPrice
+                 });
         }
+
+
     }
 }

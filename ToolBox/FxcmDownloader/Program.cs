@@ -40,6 +40,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 Environment.Exit(1);
             }
 
+          
             try
             {
                 Logger.getRootLogger().setLevel(Level.ERROR);
@@ -48,10 +49,11 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 // Load settings from command line
                 var tickers = args[0].Split(',');
                 var allResolutions = args[1].ToLower() == "all";
-                var resolution = allResolutions ? Resolution.Second : (Resolution)Enum.Parse(typeof(Resolution), args[1]);
+                var resolution = allResolutions ? Resolution.Tick : (Resolution)Enum.Parse(typeof(Resolution), args[1]);
                 var startDate = DateTime.ParseExact(args[2], "yyyyMMdd", CultureInfo.InvariantCulture);
                 var endDate = DateTime.ParseExact(args[3], "yyyyMMdd", CultureInfo.InvariantCulture);
 
+                
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
                 var server = Config.Get("fxcm-server", "http://www.fxcorporate.com/Hosts.jsp");
@@ -78,20 +80,21 @@ namespace QuantConnect.ToolBox.FxcmDownloader
 
                     if (allResolutions)
                     {
-                        var bars = data.Cast<TradeBar>().ToList();
+                        var ticks = data.Cast<Tick>().ToList();
 
                         // Save the data (second resolution)
                         var writer = new LeanDataWriter(securityType, resolution, symbol, dataDirectory, market);
-                        writer.Write(bars);
+                        writer.Write(ticks);
 
                         // Save the data (other resolutions)
-                        foreach (var res in new[] {Resolution.Minute, Resolution.Hour, Resolution.Daily})
+                        foreach (var res in new[] {Resolution.Second,Resolution.Minute, Resolution.Hour, Resolution.Daily})
                         {
-                            var resData = FxcmDataDownloader.AggregateBars(symbol, bars, res.ToTimeSpan());
+                            var resData = FxcmDataDownloader.AggregateTicks(symbol, ticks, res.ToTimeSpan());
 
                             writer = new LeanDataWriter(securityType, res, symbol, dataDirectory, market);
                             writer.Write(resData);
                         }
+                        
                     }
                     else
                     {
@@ -104,6 +107,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             catch (Exception err)
             {
                 Log.Error(err);
+                Console.ReadLine();
             }
         }
     }
