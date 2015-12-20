@@ -73,7 +73,7 @@ namespace QuantConnect.Orders.Fees
                 // get the total order value in the account currency
                 var price = order.Status.IsFill() ? order.Price : security.Price;
                 var totalOrderValue = order.GetValue(price) * forex.QuoteCurrency.ConversionRate;
-                var fee = _commissionRate * totalOrderValue;
+                var fee = Math.Abs(_commissionRate*totalOrderValue);
                 return Math.Max(_minimumOrderFee, fee);
             }
 

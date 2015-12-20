@@ -54,28 +54,23 @@ namespace QuantConnect.Indicators
         {
             var obv = Current.Value;
 
-            if (_previousInput != null && input.Value > _previousInput.Value)
+            if (_previousInput != null)
             {
-                if (Current.Value != 0)
+                if (input.Value > _previousInput.Value)
                 {
-                    obv = input.Volume + Current.Value;
+                    obv += input.Volume;
                     Update(input);
-
-                    _previousInput = input;
-                    return obv;
+                }
+                else if (input.Value < _previousInput.Value)
+                {
+                    obv -= input.Volume;
+                    Update(input);
                 }
             }
-
-            if (_previousInput != null && input.Value < _previousInput.Value)
+            else
             {
-                if (Current.Value != 0)
-                { 
-                    obv = Current.Value - input.Volume;
-                    Update(input);
-
-                    _previousInput = input;
-                    return obv;
-                }
+                obv = input.Volume;
+                Update(input);
             }
 
             _previousInput = input;
