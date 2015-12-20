@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio.Invested)
             {
                 SetHoldings("SPY", 1);
-                Debug("Purchased Stock");
+                Debug("Purchased Stock Sachmermal");
             }
         }
     }
