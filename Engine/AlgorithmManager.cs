@@ -20,7 +20,6 @@ using System.Linq;
 using System.Threading;
 using Fasterflect;
 using QuantConnect.Algorithm;
-using QuantConnect.Commands;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -201,7 +200,7 @@ namespace QuantConnect.Lean.Engine
                 //Check this backtest is still running:
                 if (_algorithm.Status != AlgorithmStatus.Running)
                 {
-                    Log.Error(string.Format("AlgorithmManager.Run(): Algorthm state changed to {0} at {1}", _algorithm.Status, timeSlice.Time));
+                    Log.Error(string.Format("AlgorithmManager.Run(): Algorithm state changed to {0} at {1}", _algorithm.Status, timeSlice.Time));
                     break;
                 }
 
@@ -667,7 +666,8 @@ namespace QuantConnect.Lean.Engine
             if (historyRequests.Count != 0)
             {
                 // rewrite internal feed requests
-                var minResolution = algorithm.SubscriptionManager.Subscriptions.Where(x => !x.IsInternalFeed).Min(x => x.Resolution);
+                var subscriptions = algorithm.SubscriptionManager.Subscriptions.Where(x => !x.IsInternalFeed).ToList();
+                var minResolution = subscriptions.Count > 0 ? subscriptions.Min(x => x.Resolution) : Resolution.Tick;
                 foreach (var request in historyRequests)
                 {
                     Security security;
