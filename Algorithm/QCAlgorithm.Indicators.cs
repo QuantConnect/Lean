@@ -727,7 +727,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbo whose data is to be consolidated</param>
         /// <param name="resolution">The resolution for the consolidator, if null, uses the resolution from subscription</param>
         /// <returns>The new default consolidator</returns>
-        protected IDataConsolidator ResolveConsolidator(Symbol symbol, Resolution? resolution)
+        public IDataConsolidator ResolveConsolidator(Symbol symbol, Resolution? resolution)
         {
             var subscription = GetSubscription(symbol);
 
@@ -760,7 +760,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbo whose data is to be consolidated</param>
         /// <param name="timeSpan">The requested time span for the consolidator, if null, uses the resolution from subscription</param>
         /// <returns>The new default consolidator</returns>
-        protected IDataConsolidator ResolveConsolidator(Symbol symbol, TimeSpan? timeSpan)
+        public IDataConsolidator ResolveConsolidator(Symbol symbol, TimeSpan? timeSpan)
         {
             var subscription = GetSubscription(symbol);
 
