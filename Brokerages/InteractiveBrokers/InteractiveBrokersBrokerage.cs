@@ -414,10 +414,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
                 catch (Exception err)
                 {
-                    // max out at 10 attempts to connect
-                    if (attempt++ < 10)
+                    // max out at 60 attempts to connect ~1 minute
+                    if (attempt++ < 60)
                     {
-                        Thread.Sleep(5000);
+                        Thread.Sleep(1000);
                         continue;
                     }
 
