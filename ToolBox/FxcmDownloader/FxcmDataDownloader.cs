@@ -41,15 +41,14 @@ namespace QuantConnect.ToolBox.FxcmDownloader
         private readonly string _userName;
         private readonly string _password;
 
-        private DateTime _lastReceived = new DateTime();
-
+        
         private IGateway _gateway;
         private readonly object _locker = new object();
         private string _currentRequest;
         private const int ResponseTimeout = 2500;
         private readonly Dictionary<string, AutoResetEvent> _mapRequestsToAutoResetEvents = new Dictionary<string, AutoResetEvent>();
         private readonly Dictionary<string, TradingSecurity> _fxcmInstruments = new Dictionary<string, TradingSecurity>();
-        private readonly List<BaseData> _currentBaseData = new List<BaseData>();
+        private readonly IList<BaseData> _currentBaseData = new List<BaseData>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FxcmDataDownloader"/> class
@@ -165,24 +164,22 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             Console.WriteLine("Downloading {0} data from {1} to {2}...", Enum.GetName(typeof(Resolution), resolution), startUtc.ToShortDateString(), endUtc.ToShortDateString());
 
             //Find best FXCM  paramrs
-            IFXCMTimingInterval interval;
-            TimeSpan timeSpanPerRequest;
-            findBestFXCMParams(resolution, out interval, out timeSpanPerRequest);
-
+            IFXCMTimingInterval interval = ToFXCMInterval(resolution);
+            
 
             // download data
             var totalBaseData = new List<BaseData>();
 
-            var start = startUtc;
-            var end = new DateTime(Math.Min((startUtc + timeSpanPerRequest).Ticks, endUtc.Ticks));
+            //var start = startUtc;
+            var end = endUtc;
 
-            // request loop
-            while (start < endUtc)
+            do // 
             {
                 //show progress
                 Console.Write("\r{0} {1}  ", end.ToShortDateString(), end.ToLongTimeString());
                 _currentBaseData.Clear();
 
+               
 
                 var mdr = new MarketDataRequest();
                 mdr.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SNAPSHOT);
@@ -190,11 +187,12 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 mdr.setFXCMTimingInterval(interval);
                 mdr.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
 
-                mdr.setFXCMStartDate(new UTCDate(ToJavaDateUtc(start)));
-                mdr.setFXCMStartTime(new UTCTimeOnly(ToJavaDateUtc(start)));
+                mdr.setFXCMStartDate(new UTCDate(ToJavaDateUtc(startUtc)));
+                mdr.setFXCMStartTime(new UTCTimeOnly(ToJavaDateUtc(startUtc)));
                 mdr.setFXCMEndDate(new UTCDate(ToJavaDateUtc(end)));
                 mdr.setFXCMEndTime(new UTCTimeOnly(ToJavaDateUtc(end)));
                 mdr.addRelatedSymbol(_fxcmInstruments[_symbolMapper.GetBrokerageSymbol(symbol)]);
+
 
                 AutoResetEvent autoResetEvent;
                 lock (_locker)
@@ -205,37 +203,26 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 }
                 if (!autoResetEvent.WaitOne(1000 * 5))
                 {
-                    // no response, continue loop
-                    start = end;
-
-                    // if saturday, fast-forward to sunday
-                    if (start.DayOfWeek == DayOfWeek.Saturday) start = start.AddDays(1).Date;
-
-                    end = start + timeSpanPerRequest;
-                    continue;
-                }
-
-                var lastDataTime = _currentBaseData[_currentBaseData.Count - 1].Time;
-
-                if (lastDataTime < start)
-                {
-                    // no more data available, exit loop
+                    // no response, exit
                     break;
                 }
 
-                // Add bars
-                totalBaseData.AddRange(_currentBaseData.Where(x => x.Time.Date <= endUtc.Date));
-
-                // calculate time span for next request
-                start = lastDataTime;
-                end = start + timeSpanPerRequest;
-
-                if (start >= DateTime.UtcNow)
+                // Add data
+                totalBaseData.InsertRange(0, _currentBaseData.Where(x => x.Time.Date >= startUtc.Date));
+                
+                if (end != _currentBaseData[0].Time)
                 {
-                    // data in the future not available, exit loop
+                    // new end date = first datapoint date.
+                    end = _currentBaseData[0].Time;
+                }
+                else
+                {
                     break;
                 }
-            }
+               
+              
+
+            } while (end > startUtc);
 
 
             Console.WriteLine("Logging out...");
@@ -247,38 +234,39 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             _gateway.removeGenericMessageListener(this);
             _gateway.removeStatusMessageListener(this);
 
-            return totalBaseData;
+            return totalBaseData.ToList();
 
         }
 
-        private void findBestFXCMParams(Resolution resolution, out IFXCMTimingInterval interval, out TimeSpan increment)
+        private IFXCMTimingInterval ToFXCMInterval(Resolution resolution)
         {
-            interval = null;
-            increment = new TimeSpan();
-
+            IFXCMTimingInterval interval = null;
+            
             switch (resolution)
             {
                 case Resolution.Tick:
                     interval = FXCMTimingIntervalFactory.TICK;
-                    increment = new TimeSpan(0, 3, 0); // 3 min
+                 
                     break;
                 case Resolution.Second:
                     interval = FXCMTimingIntervalFactory.SEC10;
-                    increment = new TimeSpan(0, 10, 0); // 10 minutes
+                   
                     break;
                 case Resolution.Minute:
                     interval = FXCMTimingIntervalFactory.MIN1;
-                    increment = new TimeSpan(5, 0, 0); // 5 hours
+                    
                     break;
                 case Resolution.Hour:
                     interval = FXCMTimingIntervalFactory.HOUR1;
-                    increment = new TimeSpan(12, 0, 0, 0); // 12 days
+                    
                     break;
                 case Resolution.Daily:
                     interval = FXCMTimingIntervalFactory.DAY1;
-                    increment = new TimeSpan(300, 0, 0, 0); // 300 days
+                  
                     break;
             }
+
+            return interval;
         }
 
         private void RequestTradingSessionStatus()
@@ -346,10 +334,6 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 var symbol = _symbolMapper.GetLeanSymbol(message.getInstrument().getSymbol(), securityType, Market.FXCM);
                 var time = FromJavaDateUtc(message.getDate().toDate());
 
-                //remove dups.
-                if (time <= _lastReceived) return;
-
-                _lastReceived = time;
 
                 if (message.getFXCMTimingInterval() == FXCMTimingIntervalFactory.TICK)
                 {
