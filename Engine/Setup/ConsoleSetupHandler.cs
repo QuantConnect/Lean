@@ -130,8 +130,6 @@ namespace QuantConnect.Lean.Engine.Setup
 
                     //Set our default markets
                     algorithm.SetDefaultMarkets(BacktestingBrokerageFactory.DefaultMarketMap.ToDictionary());
-                    //Set the limits on the algorithm assets (for local no limits)
-                    algorithm.SetAssetLimits(999, 999, 999);
                     algorithm.SetMaximumOrders(int.MaxValue);
                     // set our parameters
                     algorithm.SetParameters(baseJob.Parameters);

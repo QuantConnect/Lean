@@ -76,7 +76,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
             _subscriptions = new ConcurrentDictionary<Symbol, Subscription>();
-            _universeSelection = new UniverseSelection(this, algorithm);
+            _universeSelection = new UniverseSelection(this, algorithm, job.Controls);
             _cancellationTokenSource = new CancellationTokenSource();
 
             IsActive = true;

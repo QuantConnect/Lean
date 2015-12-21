@@ -19,7 +19,9 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -32,6 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly IDataFeed _dataFeed;
         private readonly IAlgorithm _algorithm;
+        private readonly SubscriptionLimiter _limiter;
         private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
         /// <summary>
@@ -39,10 +42,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="dataFeed">The data feed to add/remove subscriptions from</param>
         /// <param name="algorithm">The algorithm to add securities to</param>
-        public UniverseSelection(IDataFeed dataFeed, IAlgorithm algorithm)
+        /// <param name="controls">Specifies limits on the algorithm's memory usage</param>
+        public UniverseSelection(IDataFeed dataFeed, IAlgorithm algorithm, Controls controls)
         {
             _dataFeed = dataFeed;
             _algorithm = algorithm;
+            _limiter = new SubscriptionLimiter(() => dataFeed.Subscriptions, controls.TickLimit, controls.SecondLimit, controls.MinuteLimit);
         }
 
         /// <summary>
@@ -55,31 +60,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var settings = universe.UniverseSettings;
 
-            var limit = 1000; //daily/hourly limit
-            var resolution = settings.Resolution;
-            switch (resolution)
-            {
-                case Resolution.Tick:
-                    limit = _algorithm.Securities.TickLimit;
-                    break;
-                case Resolution.Second:
-                    limit = _algorithm.Securities.SecondLimit;
-                    break;
-                case Resolution.Minute:
-                    limit = _algorithm.Securities.MinuteLimit;
-                    break;
-            }
-
-            // subtract current subscriptions that can't be removed
-            limit -= _dataFeed.Subscriptions.Count(x => x.Security.Resolution == resolution && x.Security.HoldStock);
-
-            if (limit < 1)
-            {
-                // if we don't have room for more securities then we can't really do anything here.
-                _algorithm.Error("Unable to add  more securities from universe selection due to holding stock.");
-                return SecurityChanges.None;
-            }
-
             // perform initial filtering and limit the result
             var selectSymbolsResult = universe.SelectSymbols(dateTimeUtc, universeData.Data);
 
@@ -89,7 +69,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return SecurityChanges.None;
             }
 
-            var selections = selectSymbolsResult.Take(limit).ToHashSet();
+            // materialize the enumerable into a set for processing
+            var selections = selectSymbolsResult.ToHashSet();
 
             // create a hash set of our existing subscriptions by sid
             var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol);
@@ -141,6 +122,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // we already have a subscription for this symbol so don't re-add it
                 if (existingSubscriptions.Contains(symbol)) continue;
+
+                // ask the limiter if we can add another subscription at that resolution
+                string reason;
+                if (!_limiter.CanAddSubscription(settings.Resolution, out reason))
+                {
+                    _algorithm.Error(reason);
+                    Log.Trace("UniverseSelection.ApplyUniverseSelection(): Skipping adding subscriptions: " + reason);
+                    break;
+                }
                 
                 // create the new security, the algorithm thread will add this at the appropriate time
                 Security security;

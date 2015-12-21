@@ -182,9 +182,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     try
                     {
-                        //Set the live trading level asset/ram allocation limits. 
-                        //Protects algorithm from linux killing the job by excess memory:
-                        algorithm.SetAssetLimits(controls.MinuteLimit, controls.SecondLimit, controls.TickLimit);
                         //Set the default brokerage model before initialize
                         algorithm.SetBrokerageModel(_factory.BrokerageModel);
                         //Set our default markets

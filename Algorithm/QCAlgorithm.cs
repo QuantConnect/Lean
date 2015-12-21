@@ -1128,21 +1128,6 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Set the maximum number of assets allowable to ensure good memory usage / avoid linux killing job.
-        /// </summary>
-        /// <param name="minuteLimit">Maximum number of minute level assets the live mode can support with selected server</param>
-        /// <param name="secondLimit">Maximum number of second level assets the live mode can support with selected server</param>
-        /// /// <param name="tickLimit">Maximum number of tick level assets the live mode can support with selected server</param>
-        /// <remarks>Sets the live behaviour of the algorithm including the selected server (ram) limits.</remarks>
-        public void SetAssetLimits(int minuteLimit = 500, int secondLimit = 100, int tickLimit = 30)
-        {
-            if (!_locked)
-            {
-                Securities.SetLimits(minuteLimit, secondLimit, tickLimit);
-            }
-        }
-
-        /// <summary>
         /// Add specified data to our data subscriptions. QuantConnect will funnel this data to the handle data routine.
         /// </summary>
         /// <param name="securityType">MarketType Type: Equity, Commodity, Future or FOREX</param>

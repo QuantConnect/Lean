@@ -499,14 +499,5 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="max">Maximum order count int</param>
         void SetMaximumOrders(int max);
-
-        /// <summary>
-        /// Set the maximum number of assets allowable to ensure good memory usage / avoid linux killing job.
-        /// </summary>
-        /// <param name="minuteLimit">Maximum number of minute level assets the live mode can support with selected server</param>
-        /// <param name="secondLimit">Maximum number of second level assets the live mode can support with selected server</param>
-        /// /// <param name="tickLimit">Maximum number of tick level assets the live mode can support with selected server</param>
-        /// <remarks>Sets the live behaviour of the algorithm including the selected server (ram) limits.</remarks>
-        void SetAssetLimits(int minuteLimit = 50, int secondLimit = 10, int tickLimit = 5);
     }
 }
