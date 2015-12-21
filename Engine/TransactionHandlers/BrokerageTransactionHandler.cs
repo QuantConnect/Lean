@@ -105,7 +105,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _brokerage.OrderStatusChanged += (sender, fill) =>
             {
                 // log every fill in live mode
-                if (algorithm.LiveMode) Log.Trace("BrokerageTransactionHandler.OrderStatusChanged(): " + fill);
+                if (algorithm.LiveMode)
+                {
+                    var brokerIds = string.Empty;
+                    var order = GetOrderById(fill.OrderId);
+                    if (order != null && order.BrokerId.Count > 0) brokerIds = string.Join(", ", order.BrokerId);
+                    Log.Trace("BrokerageTransactionHandler.OrderStatusChanged(): " + fill + " BrokerId: " + brokerIds);
+                }
 
                 HandleOrderEvent(fill);
             };
