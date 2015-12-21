@@ -660,8 +660,12 @@ namespace QuantConnect.Lean.Engine
             // initialize variables for progress computation
             var start = DateTime.UtcNow.Ticks;
             var nextStatusTime = DateTime.UtcNow.AddSeconds(1);
-            var minimumIncrement = algorithm.Securities.Min(x => x.Value.SubscriptionDataConfig.Increment);
-            minimumIncrement = (minimumIncrement == TimeSpan.Zero ? Time.OneSecond : minimumIncrement);
+            var minimumIncrement = algorithm.UniverseManager
+                .Select(x => x.Value.Configuration.Resolution.ToTimeSpan())
+                .DefaultIfEmpty(Time.OneSecond)
+                .Min();
+
+            minimumIncrement = minimumIncrement == TimeSpan.Zero ? Time.OneSecond : minimumIncrement;
 
             if (historyRequests.Count != 0)
             {

@@ -459,7 +459,7 @@ namespace QuantConnect.Algorithm
                         resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
                     }
                     security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _benchmarkSymbol, resolution, true, 1m, false, true, false);
-                    Securities.Add(security.Symbol, security);
+                    AddToUserDefinedUniverse(security);
                 }
 
                 // just return the current price
