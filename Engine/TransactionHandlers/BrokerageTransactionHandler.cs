@@ -629,14 +629,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 orderPlaced = false;
              }
 
-            if (orderPlaced)
+            if (!orderPlaced)
             {
-                order.Status = OrderStatus.Submitted;
-            }
-            else
-            {
+                // we failed to submit the order, invalidate it
                 order.Status = OrderStatus.Invalid;
-                var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToSubmitOrder, "Brokerage failed to place order: " + order.Id);
+                var errorMessage = "Brokerage failed to place order: " + order.Id;
+                var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToSubmitOrder, errorMessage);
                 _algorithm.Error(response.ErrorMessage);
                 return response;
             }
@@ -693,8 +691,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!orderUpdated)
             {
                 // we failed to update the order for some reason
-                order.Status = OrderStatus.Invalid;
-                return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToUpdateOrder, "Brokerage failed to update order with id " + request.OrderId);
+                var errorMessage = "Brokerage failed to update order with id " + request.OrderId;
+                _algorithm.Error(errorMessage);
+                return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToUpdateOrder, errorMessage);
             }
 
             return OrderResponse.Success(request);
@@ -725,7 +724,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 Log.Error("BrokerageTransactionHandler.HandleCancelOrderRequest(): Unable to cancel order with ID " + request.OrderId + ".");
                 return OrderResponse.UnableToFindOrder(request);
             }
-            
+
             if (order.Status.IsClosed())
             {
                 return OrderResponse.InvalidStatus(request, order);
@@ -746,14 +745,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             if (!orderCanceled)
             {
-                // we failed to cancel the order for some reason
-                order.Status = OrderStatus.Invalid;
+                // failed to cancel the order
+                var message = _brokerage.Name + " failed to cancel order with id " + order.Id;
+                _algorithm.Error(message);
+                return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToCancelOrder, message);
             }
-            else
-            {
-                // we succeeded to cancel the order
-                order.Status = OrderStatus.Canceled;
-            }
+
+            // we succeeded to cancel the order
+            order.Status = OrderStatus.Canceled;
 
             if (request.Tag != null)
             {
