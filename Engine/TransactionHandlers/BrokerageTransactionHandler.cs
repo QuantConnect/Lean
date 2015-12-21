@@ -104,6 +104,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _brokerage = brokerage;
             _brokerage.OrderStatusChanged += (sender, fill) =>
             {
+                // log every fill in live mode
+                if (algorithm.LiveMode) Log.Trace("BrokerageTransactionHandler.OrderStatusChanged(): " + fill);
+
                 HandleOrderEvent(fill);
             };
 
