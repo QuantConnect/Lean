@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -224,6 +225,8 @@ namespace QuantConnect.Tests.Common.Securities
             const int quantity = (int) (1000*leverage);
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(securities);
+            var orderProcessor = new OrderProcessor();
+            transactions.SetOrderProcessor(orderProcessor);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.CashBook["USD"].SetAmount(quantity);
 
@@ -237,7 +240,10 @@ namespace QuantConnect.Tests.Common.Securities
 
             var order = new MarketOrder(Symbols.AAPL, quantity, time) {Price = buyPrice};
             var fill = new OrderEvent(order, DateTime.UtcNow, 0) { FillPrice = buyPrice, FillQuantity = quantity };
-
+            orderProcessor.AddOrder(order);
+            var request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, order.Quantity, 0, 0, order.Time, null);
+            request.SetOrderId(0);
+            orderProcessor.AddTicket(new OrderTicket(null, request));
             Assert.AreEqual(portfolio.CashBook["USD"].Amount, fill.FillPrice*fill.FillQuantity);
 
             portfolio.ProcessFill(fill);
@@ -303,6 +309,8 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(securities);
+            var orderProcessor = new OrderProcessor();
+            transactions.SetOrderProcessor(orderProcessor);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.CashBook["USD"].SetAmount(1000);
             portfolio.CashBook.Add("EUR",  1000, 1.1m);
@@ -352,7 +360,11 @@ namespace QuantConnect.Tests.Common.Securities
             //Console.WriteLine("Total Portfolio Value: " + portfolio.TotalPortfolioValue);
 
 
-            var acceptedOrder = new MarketOrder(Symbols.AAPL, 101, DateTime.Now) {Price = 100};
+            var acceptedOrder = new MarketOrder(Symbols.AAPL, 101, DateTime.Now) { Price = 100 };
+            orderProcessor.AddOrder(acceptedOrder);
+            var request = new SubmitOrderRequest(OrderType.Market, acceptedOrder.SecurityType, acceptedOrder.Symbol, acceptedOrder.Quantity, 0, 0, acceptedOrder.Time, null);
+            request.SetOrderId(0);
+            orderProcessor.AddTicket(new OrderTicket(null, request));
             var sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, acceptedOrder);
             Assert.IsTrue(sufficientCapital);
 
@@ -496,6 +508,48 @@ namespace QuantConnect.Tests.Common.Securities
         private static TimeKeeper TimeKeeper
         {
             get { return new TimeKeeper(DateTime.Now, new[] { TimeZones.NewYork }); }
+        }
+
+        class OrderProcessor : IOrderProcessor
+        {
+            private readonly ConcurrentDictionary<int, Order> _orders = new ConcurrentDictionary<int, Order>();
+            private readonly ConcurrentDictionary<int, OrderTicket> _tickets = new ConcurrentDictionary<int, OrderTicket>();
+            public void AddOrder(Order order)
+            {
+                _orders[order.Id] = order;
+            }
+
+            public void AddTicket(OrderTicket ticket)
+            {
+                _tickets[ticket.OrderId] = ticket;
+            }
+            public int OrdersCount { get; private set; }
+            public Order GetOrderById(int orderId)
+            {
+                Order order;
+                _orders.TryGetValue(orderId, out order);
+                return order;
+            }
+
+            public Order GetOrderByBrokerageId(string brokerageId)
+            {
+                return _orders.Values.FirstOrDefault(x => x.BrokerId.Contains(brokerageId));
+            }
+
+            public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)
+            {
+                return _tickets.Values.Where(filter ?? (x => true));
+            }
+
+            public IEnumerable<Order> GetOrders(Func<Order, bool> filter = null)
+            {
+                return _orders.Values.Where(filter ?? (x => true));
+            }
+
+            public OrderTicket Process(OrderRequest request)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

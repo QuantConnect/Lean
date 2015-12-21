@@ -275,12 +275,24 @@ namespace QuantConnect.Securities
         public bool GetSufficientCapitalForOrder(SecurityPortfolioManager portfolio, Order order)
         {
             var security = _securities[order.Symbol];
-            
+
+            var ticket = GetOrderTicket(order.Id);
+            if (ticket == null)
+            {
+                Log.Error("SecurityTransactionManager.GetSufficientCapitalForOrder(): Null order ticket for id: " + order.Id);
+                return false;
+            }
+
             var freeMargin = security.MarginModel.GetMarginRemaining(portfolio, security, order.Direction);
             var initialMarginRequiredForOrder = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
-            if (Math.Abs(initialMarginRequiredForOrder) > freeMargin)
+
+            // pro-rate the initial margin required for order based on how much has already been filled
+            var percentUnfilled = (Math.Abs(order.Quantity) - Math.Abs(ticket.QuantityFilled))/Math.Abs(order.Quantity);
+            var initialMarginRequiredForRemainderOfOrder = percentUnfilled*initialMarginRequiredForOrder;
+
+            if (Math.Abs(initialMarginRequiredForRemainderOfOrder) > freeMargin)
             {
-                Log.Error(string.Format("Transactions.GetSufficientCapitalForOrder(): Id: {0}, Initial Margin: {1}, Free Margin: {2}", order.Id, initialMarginRequiredForOrder, freeMargin));
+                Log.Error(string.Format("SecurityTransactionManager.GetSufficientCapitalForOrder(): Id: {0}, Initial Margin: {1}, Free Margin: {2}", order.Id, initialMarginRequiredForOrder, freeMargin));
                 return false;
             }
             return true;
