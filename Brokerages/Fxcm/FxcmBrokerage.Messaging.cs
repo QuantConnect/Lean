@@ -254,19 +254,6 @@ namespace QuantConnect.Brokerages.Fxcm
 
                 _mapRequestsToAutoResetEvents[_currentRequest].Set();
                 _mapRequestsToAutoResetEvents.Remove(_currentRequest);
-
-                // unsubscribe all instruments (only at first logon)
-                if (_subscribedSymbols.Count == 0)
-                {
-                    var request = new MarketDataRequest();
-                    foreach (var fxcmSymbol in _fxcmInstruments.Keys)
-                    {
-                        request.addRelatedSymbol(_fxcmInstruments[fxcmSymbol]);
-                    }
-                    request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.UNSUBSCRIBE);
-                    request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
-                    _gateway.sendMessage(request);
-                }
             }
         }
 
