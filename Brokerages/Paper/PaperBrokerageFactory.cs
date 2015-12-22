@@ -52,7 +52,7 @@ namespace QuantConnect.Brokerages.Paper
         /// </summary>
         public IBrokerageModel BrokerageModel
         {
-            get { return new InteractiveBrokersBrokerageModel(); }
+            get { return new DefaultBrokerageModel(); }
         }
 
         /// <summary>
