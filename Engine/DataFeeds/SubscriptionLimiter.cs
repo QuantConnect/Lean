@@ -133,7 +133,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 case Resolution.Hour:
                 case Resolution.Daily:
-                    return int.MinValue;
+                    return int.MaxValue;
 
                 default:
                     throw new ArgumentOutOfRangeException("resolution", resolution, null);
