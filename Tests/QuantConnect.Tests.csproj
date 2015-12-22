@@ -99,6 +99,7 @@
     <Compile Include="Common\Data\SliceTests.cs" />
     <Compile Include="Common\Data\SubscriptionDataSourceTests.cs" />
     <Compile Include="Common\MarketTests.cs" />
+    <Compile Include="Common\Orders\Fills\PartialMarketFillModelTests.cs" />
     <Compile Include="Common\Orders\OrderJsonConverterTests.cs" />
     <Compile Include="Common\Parameters\ParameterAttributeTests.cs" />
     <Compile Include="Common\Scheduling\DateRulesTests.cs" />
