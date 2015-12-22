@@ -161,25 +161,23 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             // initialize session
             RequestTradingSessionStatus();
 
-            Console.WriteLine("Downloading {0} data from {1} to {2}...", Enum.GetName(typeof(Resolution), resolution), startUtc.ToShortDateString(), endUtc.ToShortDateString());
+            Console.WriteLine("Downloading {0} data from {1} to {2}...", resolution, startUtc.ToString("yyyyMMdd HH:mm:ss"), endUtc.ToString("yyyyMMdd HH:mm:ss"));
 
             //Find best FXCM  paramrs
             IFXCMTimingInterval interval = ToFXCMInterval(resolution);
-            
+
+            var totalTicks = (endUtc - startUtc).Ticks;
 
             // download data
             var totalBaseData = new List<BaseData>();
 
-            //var start = startUtc;
             var end = endUtc;
 
             do // 
             {
                 //show progress
-                Console.Write("\r{0} {1}  ", end.ToShortDateString(), end.ToLongTimeString());
+                progressBar(Math.Abs((end - endUtc).Ticks), totalTicks, Console.WindowWidth / 2,'█');
                 _currentBaseData.Clear();
-
-               
 
                 var mdr = new MarketDataRequest();
                 mdr.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SNAPSHOT);
@@ -225,7 +223,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             } while (end > startUtc);
 
 
-            Console.WriteLine("Logging out...");
+            Console.WriteLine("\nLogging out...");
 
             // log out
             _gateway.logout();
@@ -409,6 +407,29 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                  });
         }
 
+
+        #region Console Helper
+
+        /// <summary>
+        /// Draw a progress bar 
+        /// </summary>
+        /// <param name="complete"></param>
+        /// <param name="maxVal"></param>
+        /// <param name="barSize"></param>
+        /// <param name="progressCharacter"></param>
+        private static void progressBar(long complete, long maxVal, long barSize, char progressCharacter)
+        {
+          
+            decimal p   = (decimal)complete / (decimal)maxVal;
+            int chars   = (int)Math.Floor(p / ((decimal)1 / (decimal)barSize));
+            string bar = string.Empty;
+            bar = bar.PadLeft(chars, progressCharacter);
+            bar = bar.PadRight(Convert.ToInt32(barSize)-1);
+            
+            Console.Write(string.Format("\r[{0}] {1}%", bar, (p * 100).ToString("N2")));           
+        }
+
+        #endregion
 
     }
 }
