@@ -69,7 +69,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly FixedSizeHashQueue<string> _recentOrderEvents = new FixedSizeHashQueue<string>(50);
 
         private readonly object _orderFillsLock = new object();
-        private readonly ConcurrentDictionary<Symbol, int> _orderFills = new ConcurrentDictionary<Symbol, int>(); 
+        private readonly ConcurrentDictionary<int, int> _orderFills = new ConcurrentDictionary<int, int>(); 
         private readonly ConcurrentDictionary<string, decimal> _cashBalances = new ConcurrentDictionary<string, decimal>(); 
         private readonly ConcurrentDictionary<string, string> _accountProperties = new ConcurrentDictionary<string, string>();
         // number of shares per symbol
@@ -826,28 +826,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             try
             {
-                if (update.Status == IB.OrderStatus.PreSubmitted
-                 || update.Status == IB.OrderStatus.PendingSubmit)
-                {
-                    return;
-                }
-
-                var status = ConvertOrderStatus(update.Status);
-                if (status != OrderStatus.PartiallyFilled &&
-                    status != OrderStatus.Filled &&
-                    status != OrderStatus.Canceled &&
-                    status != OrderStatus.Submitted &&
-                    status != OrderStatus.Invalid)
-                {
-                    Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Status: " + status);
-                    return;
-                }
-
-                if (status == OrderStatus.Invalid)
-                {
-                    Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ERROR -- " + update.OrderId);
-                }
-
                 var order = _orderProvider.GetOrderByBrokerageId(update.OrderId);
                 if (order == null)
                 {
@@ -855,12 +833,21 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return;
                 }
 
+
+                var status = ConvertOrderStatus(update.Status);
+                if (order.Status == OrderStatus.Filled && update.Filled == 0 && update.Remaining == 0)
+                {
+                    // we're done with this order, remove from our state
+                    int value;
+                    _orderFills.TryRemove(order.Id, out value);
+                }
+
                 var orderFee = 0m;
                 int filledThisTime;
                 lock (_orderFillsLock)
                 {
                     // lock since we're getting and updating in multiple operations
-                    var currentFilled = _orderFills.GetOrAdd(order.Symbol, 0);
+                    var currentFilled = _orderFills.GetOrAdd(order.Id, 0);
                     if (currentFilled == 0)
                     {
                         // apply order fees on the first fill event TODO: What about partial filled orders that get cancelled?
@@ -868,11 +855,21 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         orderFee = security.FeeModel.GetOrderFee(security, order);
                     }
                     filledThisTime = update.Filled - currentFilled;
-                    _orderFills.AddOrUpdate(order.Symbol, currentFilled, (sym, filled) => update.Filled);
+                    _orderFills.AddOrUpdate(order.Id, currentFilled, (sym, filled) => update.Filled);
                 }
 
+                if (status == OrderStatus.Invalid)
+                {
+                    Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ERROR -- " + update.OrderId);
+                }
+
+                // set status based on filled this time
+                if (filledThisTime != 0)
+                {
+                    status = update.Remaining != 0 ? OrderStatus.PartiallyFilled : OrderStatus.Filled;
+                }
                 // don't send empty fill events
-                if (filledThisTime == 0 && (status == OrderStatus.PartiallyFilled || status == OrderStatus.Filled))
+                else if (status == OrderStatus.PartiallyFilled || status == OrderStatus.Filled)
                 {
                     Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Ignored zero fill event: OrderId: " + update.OrderId + " Remaining: " + update.Remaining);
                     return;
