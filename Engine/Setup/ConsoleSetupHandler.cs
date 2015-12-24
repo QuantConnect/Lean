@@ -140,8 +140,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     algorithm.Initialize();
                     //Set the time frontier of the algorithm
                     algorithm.SetDateTime(algorithm.StartDate.ConvertToUtc(algorithm.TimeZone));
-                    //Add currency data feeds that weren't explicity added in Initialize
-                    algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager, MarketHoursDatabase.FromDataFolder());
 
                     //Construct the backtest job packet:
                     backtestJob.PeriodStart = algorithm.StartDate;

@@ -120,20 +120,21 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Ensures that we have a data feed to conver this currency into the base currency.
+        /// Ensures that we have a data feed to convert this currency into the base currency.
         /// This will add a subscription at the lowest resolution if one is not found.
         /// </summary>
         /// <param name="securities">The security manager</param>
         /// <param name="subscriptions">The subscription manager used for searching and adding subscriptions</param>
         /// <param name="marketHoursDatabase">A security exchange hours provider instance used to resolve exchange hours for new subscriptions</param>
-        public void EnsureCurrencyDataFeed(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase)
+        /// <returns>Returns the added currency security if needed, otherwise null</returns>
+        public Security EnsureCurrencyDataFeed(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase)
         {
             if (Symbol == CashBook.AccountCurrency)
             {
                 SecuritySymbol = QuantConnect.Symbol.Empty;
                 _isBaseCurrency = true;
                 ConversionRate = 1.0m;
-                return;
+                return null;
             }
 
             if (subscriptions.Count == 0)
@@ -149,13 +150,13 @@ namespace QuantConnect.Securities
                 if (config.Symbol.Value == normal)
                 {
                     SecuritySymbol = config.Symbol;
-                    return;
+                    return null;
                 }
                 if (config.Symbol.Value == invert)
                 {
                     SecuritySymbol = config.Symbol;
                     _invertRealTimePrice = true;
-                    return;
+                    return null;
                 }
             }
 
@@ -180,8 +181,8 @@ namespace QuantConnect.Securities
                     var security = new Forex.Forex(exchangeHours, this, config, 1m);
                     SecuritySymbol = config.Symbol;
                     securities.Add(config.Symbol, security);
-                    Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.ToString() + " for cash " + Symbol + " currency feed");
-                    return;
+                    Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
+                    return security;
                 }
             }
 
