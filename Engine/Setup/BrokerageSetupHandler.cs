@@ -335,11 +335,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     return false;
                 }
 
-                Log.Trace("BrokerageSetupHandler.Setup(): Ensuring currency data feeds present...");
-
-                // call this after we've initialized everything from the brokerage since we may have added some holdings/currencies
-                algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager, MarketHoursDatabase.FromDataFolder());
-
                 //Set the starting portfolio value for the strategy to calculate performance:
                 StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
                 StartingDate = DateTime.Now;

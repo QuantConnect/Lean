@@ -156,6 +156,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
+            // Add currency data feeds that weren't explicitly added in Initialize
+            if (additions.Count > 0)
+            {
+                var addedSecurities = _algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(_algorithm.Securities, _algorithm.SubscriptionManager, MarketHoursDatabase.FromDataFolder());
+                foreach (var security in addedSecurities)
+                {
+                    _dataFeed.AddSubscription(universe, security, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone));
+                }
+            }
+
             // return None if there's no changes, otherwise return what we've modified
             return additions.Count + removals.Count != 0
                 ? new SecurityChanges(additions, removals)
