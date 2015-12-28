@@ -1186,9 +1186,6 @@ namespace QuantConnect.Algorithm
                 var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase,
                     symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false);
 
-                //Add the symbol to Securities Manager -- manage collection of portfolio entities for easy access.
-                Securities.Add(security.Symbol, security);
-
                 AddToUserDefinedUniverse(security);
                 return security;
             }
@@ -1283,8 +1280,6 @@ namespace QuantConnect.Algorithm
             //Add this new generic data as a tradeable security: 
             var security = SecurityManager.CreateSecurity(typeof (T), Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone, symbolObject, resolution,
                 fillDataForward, leverage, true, false, true);
-
-            Securities.Add(symbolObject, security);
 
             AddToUserDefinedUniverse(security);
         }
