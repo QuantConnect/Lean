@@ -1335,8 +1335,10 @@ namespace QuantConnect.Brokerages.Tradier
                     if (hasUpdatedOrder)
                     {
                         // determine if the order has been updated and produce fills accordingly
-                        UpdateCachedOpenOrder(cachedOrder.Key, updatedOrder);
                         ProcessPotentiallyUpdatedOrder(cachedOrder.Value, updatedOrder);
+
+                        // if the order is still open, update the cached value
+                        if (!OrderIsClosed(updatedOrder)) UpdateCachedOpenOrder(cachedOrder.Key, updatedOrder);
                         continue;
                     }
 
