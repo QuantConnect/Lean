@@ -14,6 +14,9 @@
 */
 
 using System;
+using System.IO;
+using System.Linq;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 
@@ -32,6 +35,18 @@ namespace QuantConnect.Tests.Configuration
 
             bool betaMode2 = Config.GetBool("beta-mode");
             Assert.AreNotEqual(betaMode, betaMode2);
+        }
+
+        [Test]
+        public void FlattenTest()
+        {
+            // read in and rewrite the environment based on the settings
+            const string overrideEnvironment = "live-paper.beta";
+
+            var clone = Config.Flatten(overrideEnvironment);
+
+            Assert.IsNull(clone.Property("environments"));
+            Assert.AreEqual(overrideEnvironment, clone.Property("environment").Value.ToString());
         }
 
         [Test]
