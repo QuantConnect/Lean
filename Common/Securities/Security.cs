@@ -172,6 +172,13 @@ namespace QuantConnect.Securities
             // these methods provided for backwards compatibility
             get
             {
+                // check if the FillModel/FeeModel/Slippage models are all the same reference
+                if (FillModel is ISecurityTransactionModel 
+                 && ReferenceEquals(FillModel, FeeModel)
+                 && ReferenceEquals(FeeModel, SlippageModel))
+                {
+                    return (ISecurityTransactionModel) FillModel;
+                }
                 return new SecurityTransactionModel(FillModel, FeeModel, SlippageModel);
             }
             set
