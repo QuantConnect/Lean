@@ -142,7 +142,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         settings.FillForward,
                         settings.Leverage,
                         settings.ExtendedMarketHours,
-                        false,
+                        universe.Configuration.IsInternalFeed,
                         false,
                         false);
                 }
