@@ -114,7 +114,10 @@ namespace QuantConnect.Lean.Engine
                         Log.Trace("DefaultBrokerageMessageHandler.Handle(): Disconnect when exchanges are closed, checking back before exchange open.");
 
                         // if they aren't open, we'll need to check again a little bit before markets open
-                        var nextMarketOpenUtc = (from kvp in _algorithm.Securities
+                        DateTime nextMarketOpenUtc;
+                        if (_algorithm.Securities.Count != 0)
+                        {
+                            nextMarketOpenUtc = (from kvp in _algorithm.Securities
                                                  let security = kvp.Value
                                                  where security.Type != SecurityType.Base
                                                  let exchange = security.Exchange
@@ -122,6 +125,12 @@ namespace QuantConnect.Lean.Engine
                                                  let marketOpen = exchange.Hours.GetNextMarketOpen(localTime, security.IsExtendedMarketHours)
                                                  let marketOpenUtc = marketOpen.ConvertToUtc(exchange.TimeZone)
                                                  select marketOpenUtc).Min();
+                        }
+                        else
+                        {
+                            // if we have no securities just make next market open an hour from now
+                            nextMarketOpenUtc = DateTime.UtcNow.AddHours(1);
+                        }
 
                         var timeUntilNextMarketOpen = nextMarketOpenUtc - DateTime.UtcNow - _openThreshold;
 
