@@ -21,7 +21,7 @@ using QuantConnect.Securities.Interfaces;
 namespace QuantConnect.Brokerages
 {
     /// <summary>
-    ///     Oanda Brokerage Model Implemenatation for Back Testing.
+    /// Oanda Brokerage Model Implementation for Back Testing.
     /// </summary>
     public class OandaBrokerageModel : DefaultBrokerageModel
     {
@@ -37,7 +37,7 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
         public override bool CanExecuteOrder(Security security, Order order)
         {
-            return order.DurationValue <= DateTime.Now.AddMonths(3);
+            return order.DurationValue == DateTime.MaxValue || order.DurationValue <= order.Time.AddMonths(3);
         }
 
         /// <summary>
