@@ -15,6 +15,7 @@
 
 using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -24,9 +25,12 @@ namespace QuantConnect.Lean.Engine.Setup
     public static class SetupHandler
     {
         /// <summary>
-        /// Sets the transaction and settlement models in the algorithm based on the selected brokerage properties
+        /// Sets the transaction and settlement models in the algorithm based on the selected brokerage properties.
+        /// If the <see cref="DefaultBrokerageModel"/> is specified, then no update is performed.
         /// </summary>
-        public static void UpdateModels(IAlgorithm algorithm, IBrokerageModel model)
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="model">The brokerage model</param>
+        public static void UpdateModels(this IAlgorithm algorithm, IBrokerageModel model)
         {
             if (model.GetType() == typeof (DefaultBrokerageModel))
             {
@@ -36,9 +40,27 @@ namespace QuantConnect.Lean.Engine.Setup
 
             foreach (var security in algorithm.Securities.Values)
             {
-                security.TransactionModel = model.GetTransactionModel(security);
-                security.SettlementModel = model.GetSettlementModel(security, algorithm.AccountType);
+                algorithm.UpdateModel(model, security);
             }
+        }
+
+        /// <summary>
+        /// Updates the models for the specified security. If the <see cref="DefaultBrokerageModel"/> is specified,
+        /// then no update is performed.
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="model">The brokerage model</param>
+        /// <param name="security">The security to be updated</param>
+        public static void UpdateModel(this IAlgorithm algorithm, IBrokerageModel model, Security security)
+        {
+            if (model.GetType() == typeof(DefaultBrokerageModel))
+            {
+                // if we're using the default don't do anything
+                return;
+            }
+
+            security.TransactionModel = model.GetTransactionModel(security);
+            security.SettlementModel = model.GetSettlementModel(security, algorithm.AccountType);
         }
     }
 }

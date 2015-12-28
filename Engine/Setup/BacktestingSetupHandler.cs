@@ -201,7 +201,7 @@ namespace QuantConnect.Lean.Engine.Setup
             if (!initializeComplete) return false;
 
             // set the transaction and settlement models based on the brokerage properties
-            SetupHandler.UpdateModels(algorithm, algorithm.BrokerageModel);
+            algorithm.UpdateModels(algorithm.BrokerageModel);
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
             algorithm.PostInitialize();
 

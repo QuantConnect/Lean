@@ -19,6 +19,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -145,6 +146,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         false,
                         false,
                         false);
+
+                    // added securities should use the brokerage model provided models
+                    _algorithm.UpdateModel(_algorithm.BrokerageModel, security);
                 }
 
                 additions.Add(security);
