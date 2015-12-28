@@ -305,6 +305,8 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private void AddToUserDefinedUniverse(Security security)
         {
+            Securities.Add(security);
+
             // add this security to the user defined universe
             UserDefinedUniverse universe;
             var key = new SecurityTypeMarket(security.Type, security.SubscriptionDataConfig.Market);

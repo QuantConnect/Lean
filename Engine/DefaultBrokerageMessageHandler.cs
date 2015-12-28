@@ -15,6 +15,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
@@ -43,7 +44,8 @@ namespace QuantConnect.Lean.Engine
         private readonly IResultHandler _results;
         private readonly TimeSpan _openThreshold;
         private readonly AlgorithmNodePacket _job;
-        private TimeSpan _initialDelay;
+        private readonly TimeSpan _initialDelay;
+        private CancellationTokenSource _cancellationTokenSource;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageMessageHandler"/> class
@@ -105,7 +107,7 @@ namespace QuantConnect.Lean.Engine
                     if (open)
                     {
                         // wait 15 minutes before killing algorithm
-                        Task.Delay(_initialDelay).ContinueWith(_ => CheckReconnected(message));
+                        StartCheckReconnected(_initialDelay, message);
                     }
                     else
                     {
@@ -124,15 +126,36 @@ namespace QuantConnect.Lean.Engine
                         var timeUntilNextMarketOpen = nextMarketOpenUtc - DateTime.UtcNow - _openThreshold;
 
                         // wake up 5 minutes before market open and check if we've reconnected
-                        Task.Delay(timeUntilNextMarketOpen).ContinueWith(_ => CheckReconnected(message));
+                        StartCheckReconnected(timeUntilNextMarketOpen, message);
                     }
                     break;
 
                 case BrokerageMessageType.Reconnect:
                     _connected = true;
                     Log.Trace("DefaultBrokerageMessageHandler.Handle(): Reconnected.");
+
+                    if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
+                    {
+                        _cancellationTokenSource.Cancel();
+                    }
                     break;
             }
+        }
+
+        private void StartCheckReconnected(TimeSpan delay, BrokerageMessageEvent message)
+        {
+            _cancellationTokenSource = new CancellationTokenSource(delay);
+
+            Task.Run(() =>
+            {
+                while (!_cancellationTokenSource.IsCancellationRequested)
+                {
+                    Thread.Sleep(TimeSpan.FromMinutes(1));
+                }
+
+                CheckReconnected(message);
+
+            }, _cancellationTokenSource.Token);
         }
 
         private void CheckReconnected(BrokerageMessageEvent message)

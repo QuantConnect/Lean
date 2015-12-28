@@ -671,7 +671,7 @@ namespace QuantConnect.Lean.Engine
             {
                 // rewrite internal feed requests
                 var subscriptions = algorithm.SubscriptionManager.Subscriptions.Where(x => !x.IsInternalFeed).ToList();
-                var minResolution = subscriptions.Count > 0 ? subscriptions.Min(x => x.Resolution) : Resolution.Tick;
+                var minResolution = subscriptions.Count > 0 ? subscriptions.Min(x => x.Resolution) : Resolution.Second;
                 foreach (var request in historyRequests)
                 {
                     Security security;
