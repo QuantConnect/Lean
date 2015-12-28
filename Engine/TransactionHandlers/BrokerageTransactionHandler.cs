@@ -567,6 +567,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public void Exit()
         {
+            var timeout = TimeSpan.FromSeconds(60);
+            if (!_orderRequestQueue.WaitHandle.WaitOne(timeout))
+            {
+                Log.Error("BrokerageTransactionHandler.Exit(): Exceed timeout: " + (int)(timeout.TotalSeconds) + " seconds.");
+            }
             _cancellationTokenSource.Cancel();
         }
 
