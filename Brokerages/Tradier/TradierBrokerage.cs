@@ -1104,6 +1104,9 @@ namespace QuantConnect.Brokerages.Tradier
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateFailed", "Failed to update Tradier order id: " + activeOrder.Order.Id + ". " + errors));
                 return false;
             }
+            
+            // success
+            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0) {Status = OrderStatus.Submitted});
 
             // if we have contingents, update them as well
             if (contingent != null)
