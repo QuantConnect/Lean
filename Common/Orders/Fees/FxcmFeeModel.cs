@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Securities;
 
@@ -54,7 +55,7 @@ namespace QuantConnect.Orders.Fees
 
             var commissionRate = _groupCommissionSchedule1.Contains(security.Symbol) ? 0.04m : 0.06m;
 
-            return commissionRate * order.AbsoluteQuantity / 1000;
+            return Math.Abs(commissionRate*order.AbsoluteQuantity/1000);
         }
     }
 }

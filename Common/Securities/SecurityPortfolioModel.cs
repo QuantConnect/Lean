@@ -50,7 +50,7 @@ namespace QuantConnect.Securities
                 security.Holdings.AddNewSale(fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity));
 
                 //Get the Fee for this Order - Update the Portfolio Cash Balance: Remove Transacion Fees.
-                var feeThisOrder = fill.OrderFee;
+                var feeThisOrder = Math.Abs(fill.OrderFee);
                 security.Holdings.AddNewFee(feeThisOrder);
                 portfolio.CashBook[CashBook.AccountCurrency].AddAmount(-feeThisOrder);
 

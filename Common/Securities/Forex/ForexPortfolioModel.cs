@@ -65,7 +65,7 @@ namespace QuantConnect.Securities.Forex
                 security.Holdings.AddNewSale(saleValue);
 
                 //Get the Fee for this Order - Update the Portfolio Cash Balance: Remove Transaction Fees.
-                var feeThisOrder = fill.OrderFee;
+                var feeThisOrder = Math.Abs(fill.OrderFee);
                 security.Holdings.AddNewFee(feeThisOrder);
                 portfolio.CashBook[CashBook.AccountCurrency].AddAmount(-feeThisOrder);
 

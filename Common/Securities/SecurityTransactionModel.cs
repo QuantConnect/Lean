@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
@@ -154,7 +155,7 @@ namespace QuantConnect.Securities
         /// <returns>The cost of the order in units of the account currency</returns>
         public virtual decimal GetOrderFee(Security security, Order order)
         {
-            return _feeModel.GetOrderFee(security, order);
+            return Math.Abs(_feeModel.GetOrderFee(security, order));
         }
     }
 }

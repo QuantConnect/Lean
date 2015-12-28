@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Securities
@@ -30,7 +31,7 @@ namespace QuantConnect.Securities
         /// <param name="fee">The constant order fee used by the model</param>
         public ConstantFeeTransactionModel(decimal fee)
         {
-            _fee = fee;
+            _fee = Math.Abs(fee);
         }
 
         /// <summary>
