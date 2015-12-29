@@ -123,7 +123,7 @@ namespace QuantConnect.Parameters
             var parameters = new Dictionary<string, string>();
             foreach (var type in assembly.GetTypes())
             {
-                Log.Trace("ParameterAttribute.GetParametersFromAssembly(): Checking type " + type.Name);
+                Log.Debug("ParameterAttribute.GetParametersFromAssembly(): Checking type " + type.Name);
                 foreach (var field in type.GetFields(BindingFlags))
                 {
                     var attribute = field.GetCustomAttribute<ParameterAttribute>();
