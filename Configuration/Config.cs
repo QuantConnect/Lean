@@ -282,7 +282,7 @@ namespace QuantConnect.Configuration
             var clone = (JObject)config.DeepClone();
 
             // remove the environment declaration
-            var environmentProperty = clone.Property("environment");
+            var environmentProperty = config.Property("environment");
             if (environmentProperty != null) environmentProperty.Remove();
 
             if (!string.IsNullOrEmpty(overrideEnvironment))
@@ -291,19 +291,22 @@ namespace QuantConnect.Configuration
 
                 for (int i = 0; i < environmentSections.Length; i++)
                 {
-                    var env = string.Join(".", environmentSections.Where((x, j) => j <= i));
+                    var env = string.Join(".environments.", environmentSections.Where((x, j) => j <= i));
 
-                    var environmentSettings = clone["environments"][env];
-                    if (environmentSettings == null) continue;
+                    var environments = config["environments"];
+                    if (!(environments is JObject)) continue;
+
+                    var settings = ((JObject) environments).SelectToken(env);
+                    if (settings == null) continue;
 
                     // copy values for the selected environment to the root
-                    foreach (var token in environmentSettings)
+                    foreach (var token in settings)
                     {
                         var path = Path.GetExtension(token.Path);
                         var dot = path.IndexOf(".", StringComparison.InvariantCulture);
                         if (dot != -1) path = path.Substring(dot + 1);
 
-                        // remove if already exists
+                        // remove if already exists on clone
                         var jProperty = clone.Property(path);
                         if (jProperty != null) jProperty.Remove();
 

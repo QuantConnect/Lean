@@ -43,10 +43,30 @@ namespace QuantConnect.Tests.Configuration
             // read in and rewrite the environment based on the settings
             const string overrideEnvironment = "live-paper.beta";
 
-            var clone = Config.Flatten(overrideEnvironment);
+            var config = JObject.Parse(
+@"{
+   'some-setting': 'false',                 
+    environments: {
+        'live-paper': {
+            'some-setting': 'true',
+            'environments': {
+                'beta': {
+                    'some-setting2': 'true'
+                }
+            }
+        }
+    }
+}");
 
+            var clone = Config.Flatten(config, overrideEnvironment);
+
+            // remove environments
+            Assert.IsNull(clone.Property("environment"));
             Assert.IsNull(clone.Property("environments"));
-            Assert.AreEqual(overrideEnvironment, clone.Property("environment").Value.ToString());
+
+            // properly applied environment
+            Assert.AreEqual("true", clone.Property("some-setting").Value.ToString());
+            Assert.AreEqual("true", clone.Property("some-setting2").Value.ToString());
         }
 
         [Test]
