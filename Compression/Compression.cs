@@ -289,6 +289,31 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Zips the specified directory, preserving folder structure
+        /// </summary>
+        /// <param name="directory">The directory to be zipped</param>
+        /// <param name="destination">The output zip file destination</param>
+        /// <returns>True on a successful zip, false otherwise</returns>
+        public static bool ZipDirectory(string directory, string destination)
+        {
+            try
+            {
+                using (var zip = new ZipFile())
+                {
+                    var root = new DirectoryInfo(directory).Name;
+                    zip.AddDirectory(directory, root);
+                    zip.Save(destination);
+                }
+                return true;
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Zips all files specified to a new zip at the destination path
         /// </summary>
         public static void ZipFiles(string destination, IEnumerable<string> files)
