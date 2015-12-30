@@ -16,15 +16,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
-using Ionic.Zip;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using ZipEntry = ICSharpCode.SharpZipLib.Zip.ZipEntry;
+using ZipFile = Ionic.Zip.ZipFile;
 using ZipInputStream = ICSharpCode.SharpZipLib.Zip.ZipInputStream;
 using ZipOutputStream = ICSharpCode.SharpZipLib.Zip.ZipOutputStream;
 
@@ -298,12 +299,8 @@ namespace QuantConnect
         {
             try
             {
-                using (var zip = new ZipFile())
-                {
-                    var root = new DirectoryInfo(directory).Name;
-                    zip.AddDirectory(directory, root);
-                    zip.Save(destination);
-                }
+                if (File.Exists(destination)) File.Delete(destination);
+                System.IO.Compression.ZipFile.CreateFromDirectory(directory, destination, CompressionLevel.Fastest, true);
                 return true;
             }
             catch (Exception err)
