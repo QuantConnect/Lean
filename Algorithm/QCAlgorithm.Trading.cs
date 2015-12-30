@@ -420,10 +420,7 @@ namespace QuantConnect.Algorithm
                     continue;
 
                 // get open orders
-                var orders = Transactions.GetOrders(x => 
-                    x.Symbol == symbol &&
-                    (x.Status == OrderStatus.Submitted || x.Status == OrderStatus.New || x.Status == OrderStatus.PartiallyFilled))
-                    .ToList();
+                var orders = Transactions.GetOrders(x => x.Symbol == symbol && x.Status.IsOpen()).ToList();
 
                 // get quantity in portfolio
                 var quantity = Portfolio[symbol].Quantity;
