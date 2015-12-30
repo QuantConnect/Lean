@@ -851,6 +851,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     Log.Trace("AlgorithmManager.Run(): Security delisting warning: " + delisting.Symbol.ToString());
                     var security = algorithm.Securities[delisting.Symbol];
+                    if (security.Holdings.Quantity == 0) continue;
                     var submitOrderRequest = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
                         -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
                     var ticket = algorithm.Transactions.ProcessRequest(submitOrderRequest);
