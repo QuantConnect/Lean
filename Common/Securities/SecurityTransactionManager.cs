@@ -274,6 +274,9 @@ namespace QuantConnect.Securities
         /// <returns>True if suficient capital.</returns>
         public bool GetSufficientCapitalForOrder(SecurityPortfolioManager portfolio, Order order)
         {
+            // short circuit the div 0 case
+            if (order.Quantity == 0) return true;
+
             var security = _securities[order.Symbol];
 
             var ticket = GetOrderTicket(order.Id);
