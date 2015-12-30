@@ -312,6 +312,27 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Unzips the specified zip file to the specified directory
+        /// </summary>
+        /// <param name="zip">The zip to be unzipped</param>
+        /// <param name="directory">The directory to place the unzipped files</param>
+        public static bool Unzip(string zip, string directory)
+        {
+            if (!File.Exists(zip)) return false;
+
+            try
+            {
+                System.IO.Compression.ZipFile.ExtractToDirectory(zip, directory);
+                return true;
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Zips all files specified to a new zip at the destination path
         /// </summary>
         public static void ZipFiles(string destination, IEnumerable<string> files)
