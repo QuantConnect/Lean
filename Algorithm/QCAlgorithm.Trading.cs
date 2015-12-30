@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
@@ -402,7 +403,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Liquidate all holdings. Called at the end of day for tick-strategies.
+        /// Liquidate all holdings and cancel open orders. Called at the end of day for tick-strategies.
         /// </summary>
         /// <param name="symbolToLiquidate">Symbols we wish to liquidate</param>
         /// <returns>Array of order ids for liquidated symbols</returns>
@@ -414,24 +415,52 @@ namespace QuantConnect.Algorithm
 
             foreach (var symbol in Securities.Keys)
             {
-                //Send market order to liquidate if 1, we have stock, 2, symbol matches.
-                if (!Portfolio[symbol].HoldStock || (symbol != symbolToLiquidate && symbolToLiquidate != QuantConnect.Symbol.Empty)) continue;
+                // symbol not matching, do nothing
+                if (symbol != symbolToLiquidate && symbolToLiquidate != QuantConnect.Symbol.Empty) 
+                    continue;
 
-                var quantity = 0;
-                if (Portfolio[symbol].IsLong)
+                // get open orders
+                var orders = Transactions.GetOrders(x => 
+                    x.Symbol == symbol &&
+                    (x.Status == OrderStatus.Submitted || x.Status == OrderStatus.New || x.Status == OrderStatus.PartiallyFilled))
+                    .ToList();
+
+                // get quantity in portfolio
+                var quantity = Portfolio[symbol].Quantity;
+
+                // if there is only one open market order that would close the position, do nothing
+                if (orders.Count == 1 && quantity != 0 && orders[0].Quantity == -quantity && orders[0].Type == OrderType.Market)
+                    continue;
+
+                // cancel all open orders
+                var marketOrdersQuantity = 0m;
+                foreach (var order in orders)
                 {
-                    quantity = -Portfolio[symbol].Quantity;
-                }
-                else
-                {
-                    quantity = Math.Abs(Portfolio[symbol].Quantity);
+                    if (order.Type == OrderType.Market)
+                    {
+                        // pending market order
+                        var ticket = Transactions.GetOrderTicket(order.Id);
+                        if (ticket != null)
+                        {
+                            // get remaining quantity
+                            marketOrdersQuantity += ticket.Quantity - ticket.QuantityFilled;
+                        }
+                    }
+                    else
+                    {
+                        Transactions.CancelOrder(order.Id);
+                    }
                 }
 
-                //Liquidate at market price.
-                var ticket = Order(symbol, quantity);
-                if (ticket.Status == OrderStatus.Filled)
+                // Liquidate at market price
+                if (quantity != 0)
                 {
-                    orderIdList.Add(ticket.OrderId);
+                    // calculate quantity for closing market order
+                    var ticket = Order(symbol, -quantity - marketOrdersQuantity);
+                    if (ticket.Status == OrderStatus.Filled)
+                    {
+                        orderIdList.Add(ticket.OrderId);
+                    }
                 }
             }
 
