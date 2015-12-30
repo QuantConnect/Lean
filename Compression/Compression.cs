@@ -294,13 +294,14 @@ namespace QuantConnect
         /// </summary>
         /// <param name="directory">The directory to be zipped</param>
         /// <param name="destination">The output zip file destination</param>
+        /// <param name="includeRootInZip">True to include the root 'directory' in the zip, false otherwise</param>
         /// <returns>True on a successful zip, false otherwise</returns>
-        public static bool ZipDirectory(string directory, string destination)
+        public static bool ZipDirectory(string directory, string destination, bool includeRootInZip = true)
         {
             try
             {
                 if (File.Exists(destination)) File.Delete(destination);
-                System.IO.Compression.ZipFile.CreateFromDirectory(directory, destination, CompressionLevel.Fastest, true);
+                System.IO.Compression.ZipFile.CreateFromDirectory(directory, destination, CompressionLevel.Fastest, includeRootInZip);
                 return true;
             }
             catch (Exception err)
