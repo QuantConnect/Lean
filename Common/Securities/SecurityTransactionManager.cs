@@ -225,7 +225,17 @@ namespace QuantConnect.Securities
         /// <returns>List of open orders.</returns>
         public List<Order> GetOpenOrders()
         {
-            return _orderProcessor.GetOrders(x => x.Status == OrderStatus.Submitted || x.Status == OrderStatus.New).ToList();
+            return _orderProcessor.GetOrders(x => x.Status.IsOpen()).ToList();
+        }
+
+        /// <summary>
+        /// Get a list of all open orders for a symbol.
+        /// </summary>
+        /// <param name="symbol">The symbol for which to return the orders</param>
+        /// <returns>List of open orders.</returns>
+        public List<Order> GetOpenOrders(Symbol symbol)
+        {
+            return _orderProcessor.GetOrders(x => x.Symbol == symbol && x.Status.IsOpen()).ToList();
         }
 
         /// <summary>
