@@ -58,6 +58,8 @@ namespace QuantConnect.Tests.Configuration
     }
 }");
 
+            var configCopy = config.DeepClone();
+
             var clone = Config.Flatten(config, overrideEnvironment);
 
             // remove environments
@@ -67,6 +69,8 @@ namespace QuantConnect.Tests.Configuration
             // properly applied environment
             Assert.AreEqual("true", clone.Property("some-setting").Value.ToString());
             Assert.AreEqual("true", clone.Property("some-setting2").Value.ToString());
+
+            Assert.AreEqual(configCopy, config);
         }
 
         [Test]

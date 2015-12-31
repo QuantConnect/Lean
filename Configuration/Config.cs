@@ -123,7 +123,12 @@ namespace QuantConnect.Configuration
             {
                 var envName = key.Substring(0, key.IndexOf("."));
                 key = key.Substring(key.IndexOf(".") + 1);
-                environment = environment["environments"][envName];
+                var environments = environment["environments"];
+                if (environments == null)
+                {
+                    environment["environments"] = environments = new JObject();
+                }
+                environment = environments[envName];
             }
             environment[key] = value;
         }
@@ -282,7 +287,7 @@ namespace QuantConnect.Configuration
             var clone = (JObject)config.DeepClone();
 
             // remove the environment declaration
-            var environmentProperty = config.Property("environment");
+            var environmentProperty = clone.Property("environment");
             if (environmentProperty != null) environmentProperty.Remove();
 
             if (!string.IsNullOrEmpty(overrideEnvironment))
