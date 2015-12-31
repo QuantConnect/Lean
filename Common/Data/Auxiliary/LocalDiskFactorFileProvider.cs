@@ -34,7 +34,7 @@ namespace QuantConnect.Data.Auxiliary
         /// to resolve an instance of <see cref="IMapFileProvider"/> from the <see cref="Composer.Instance"/>
         /// </summary>
         public LocalDiskFactorFileProvider()
-            : this(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider")))
+            : this(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider")))
         {
         }
 
