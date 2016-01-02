@@ -51,6 +51,13 @@ namespace QuantConnect.Securities
         IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null);
 
         /// <summary>
+        /// Gets the order ticket for the specified order id. Returns null if not found
+        /// </summary>
+        /// <param name="orderId">The order's id</param>
+        /// <returns>The order ticket with the specified id, or null if not found</returns>
+        OrderTicket GetOrderTicket(int orderId);
+
+        /// <summary>
         /// Gets all orders matching the specified filter. Specifying null will return an enumerable
         /// of all orders.
         /// </summary>

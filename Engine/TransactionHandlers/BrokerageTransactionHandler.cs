@@ -315,6 +315,18 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             return _orderTickets.Select(x => x.Value).Where(filter ?? (x => true));
         }
 
+        /// <summary>
+        /// Gets the order ticket for the specified order id. Returns null if not found
+        /// </summary>
+        /// <param name="orderId">The order's id</param>
+        /// <returns>The order ticket with the specified id, or null if not found</returns>
+        public OrderTicket GetOrderTicket(int orderId)
+        {
+            OrderTicket ticket;
+            _orderTickets.TryGetValue(orderId, out ticket);
+            return ticket;
+        }
+
         #endregion
 
         /// <summary>
