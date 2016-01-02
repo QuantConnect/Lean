@@ -626,8 +626,8 @@ namespace QuantConnect.Lean.Engine.Results
             }
             // Dequeue and processes notification messages
             //Send all the notification messages but timeout within a second
-            var start = DateTime.Now;
-            while (_algorithm.Notify.Messages.Count > 0 && DateTime.Now < start.AddSeconds(1))
+            var start = DateTime.UtcNow;
+            while (_algorithm.Notify.Messages.Count > 0 && DateTime.UtcNow < start.AddSeconds(1))
             {
                 Notification message;
                 if (_algorithm.Notify.Messages.TryDequeue(out message))
