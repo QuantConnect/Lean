@@ -434,7 +434,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // in backtesting we need to wait for orders to be removed from the queue and finished processing
             if (!_algorithm.LiveMode)
             {
-                if (!_orderRequestQueue.WaitHandle.WaitOne(Time.OneSecond, _cancellationTokenSource.Token))
+                if (_orderRequestQueue.IsBusy && !_orderRequestQueue.WaitHandle.WaitOne(Time.OneSecond, _cancellationTokenSource.Token))
                 {
                     Log.Error("BrokerageTransactionHandler.ProcessSynchronousEvents(): Timed out waiting for request queue to finish processing.");
                 }
