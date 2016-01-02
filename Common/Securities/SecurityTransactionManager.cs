@@ -191,7 +191,7 @@ namespace QuantConnect.Securities
         /// <returns>The order ticket with the specified id, or null if not found</returns>
         public OrderTicket GetOrderTicket(int orderId)
         {
-            return GetOrderTickets(x => x.OrderId == orderId).FirstOrDefault();
+            return _orderProcessor.GetOrderTicket(orderId);
         }
 
         /// <summary>

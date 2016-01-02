@@ -541,6 +541,13 @@ namespace QuantConnect.Tests.Common.Securities
                 return _tickets.Values.Where(filter ?? (x => true));
             }
 
+            public OrderTicket GetOrderTicket(int orderId)
+            {
+                OrderTicket ticket;
+                _tickets.TryGetValue(orderId, out ticket);
+                return ticket;
+            }
+
             public IEnumerable<Order> GetOrders(Func<Order, bool> filter = null)
             {
                 return _orders.Values.Where(filter ?? (x => true));
