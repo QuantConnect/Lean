@@ -54,7 +54,7 @@ namespace QuantConnect.Logging
         /// <param name="text">The debug text to log</param>
         public void Debug(string text)
         {
-            _console.WriteLine(DateTime.Now.ToString(DateFormat) + " DEBUGGING :: " + text);
+            _console.WriteLine(DateTime.Now.ToString(DateFormat) + " DEBUG:: " + text);
         }
 
         /// <summary>
