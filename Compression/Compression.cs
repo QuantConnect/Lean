@@ -316,13 +316,37 @@ namespace QuantConnect
         /// </summary>
         /// <param name="zip">The zip to be unzipped</param>
         /// <param name="directory">The directory to place the unzipped files</param>
-        public static bool Unzip(string zip, string directory)
+        /// <param name="overwrite">Flag specifying whether or not to overwrite existing files</param>
+        public static bool Unzip(string zip, string directory, bool overwrite = false)
         {
             if (!File.Exists(zip)) return false;
 
             try
             {
-                System.IO.Compression.ZipFile.ExtractToDirectory(zip, directory);
+                if (!overwrite)
+                {
+                    System.IO.Compression.ZipFile.ExtractToDirectory(zip, directory);
+                }
+                else
+                {
+                    using (var archive = new ZipArchive(File.OpenRead(zip)))
+                    {
+                        foreach (var file in archive.Entries)
+                        {
+                            // skip directories
+                            if (file.Name == "") continue;
+                            var filepath = Path.Combine(directory, file.FullName);
+                            if (OS.IsLinux) filepath = filepath.Replace(@"\", "/");
+                            var outputFile = new FileInfo(filepath);
+                            if (!outputFile.Directory.Exists)
+                            {
+                                outputFile.Directory.Create();
+                            }
+                            file.ExtractToFile(outputFile.FullName, true);
+                        }
+                    }
+                }
+
                 return true;
             }
             catch (Exception err)
