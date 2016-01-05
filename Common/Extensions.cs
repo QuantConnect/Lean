@@ -652,5 +652,18 @@ namespace QuantConnect
         {
             return WaitHandle.WaitAny(new[] { waitHandle, cancellationToken.WaitHandle }, millisecondsTimeout) == 0;
         }
+
+        /// <summary>
+        /// Gets the MD5 hash from a stream
+        /// </summary>
+        /// <param name="stream">The stream to compute a hash for</param>
+        /// <returns>The MD5 hash</returns>
+        public static byte[] GetMD5Hash(this Stream stream)
+        {
+            using (var md5 = MD5.Create())
+            {
+                return md5.ComputeHash(stream);
+            }
+        }
     }
 }
