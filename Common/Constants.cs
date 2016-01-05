@@ -26,6 +26,16 @@ namespace QuantConnect
     {
         private static readonly string DataFolderPath = Config.Get("data-folder", Config.Get("data-directory", @"../../../Data/"));
 
+        static Constants()
+        {
+            Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            var versionid = Config.Get("version-id");
+            if (!string.IsNullOrWhiteSpace(versionid))
+            {
+                Version += "." + versionid;
+            }
+        }
+
         /// <summary>
         /// The root directory of the data folder for this application
         /// </summary>
@@ -42,6 +52,6 @@ namespace QuantConnect
         /// <summary>
         /// The version of lean
         /// </summary>
-        public static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        public static readonly string Version;
     }
 }
