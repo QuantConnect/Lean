@@ -43,8 +43,8 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open before filling
             if (!IsExchangeOpen(asset)) return fill;
 
-            //Order [fill]price for a market order model is the security open price
-            fill.FillPrice = asset.Open;
+            //Order [fill]price for a market order model is the current security price
+            fill.FillPrice = asset.Price;
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c

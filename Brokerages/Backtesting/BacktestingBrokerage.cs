@@ -215,8 +215,8 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    // all order fills are processed on the next bar
-                    if (order.Time == Algorithm.UtcTime)
+                    // all order fills are processed on the next bar (except for market orders)
+                    if (order.Time == Algorithm.UtcTime && order.Type != OrderType.Market)
                     {
                         stillNeedsScan = true;
                         continue;

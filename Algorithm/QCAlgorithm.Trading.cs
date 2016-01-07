@@ -188,8 +188,8 @@ namespace QuantConnect.Algorithm
             //Add the order and create a new order Id.
             var ticket = Transactions.AddOrder(request);
 
-            // In live mode, wait for the order event to process, only if the exchange is open
-            if (!asynchronous && LiveMode)
+            // Wait for the order event to process, only if the exchange is open
+            if (!asynchronous)
             {
                 Transactions.WaitForOrder(ticket.OrderId);
             }
