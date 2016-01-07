@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
@@ -36,16 +35,7 @@ namespace QuantConnect.Orders.Slippage
             // if we have tick data use the spread
             if (lastTick != null)
             {
-                if (order.Direction == OrderDirection.Buy)
-                {
-                    //We're buying, assume slip to Asking Price.
-                    return Math.Abs(order.Price - lastTick.AskPrice);
-                }
-                if (order.Direction == OrderDirection.Sell)
-                {
-                    //We're selling, assume slip to the bid price.
-                    return Math.Abs(order.Price - lastTick.BidPrice);
-                }
+                return (lastTick.AskPrice - lastTick.BidPrice) / 2;
             }
 
             return 0m;
