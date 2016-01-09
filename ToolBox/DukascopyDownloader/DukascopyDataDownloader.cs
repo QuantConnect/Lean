@@ -30,46 +30,8 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
     /// </summary>
     public class DukascopyDataDownloader : IDataDownloader
     {
-        private const string InstrumentsFileName = "instruments_dukascopy.txt";
+        private readonly DukascopySymbolMapper _symbolMapper = new DukascopySymbolMapper();
         private const int DukascopyTickLength = 20;
-
-        private Dictionary<string, LeanInstrument> _instruments = new Dictionary<string, LeanInstrument>();
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DukascopyDataDownloader"/> class
-        /// </summary>
-        public DukascopyDataDownloader()
-        {
-            LoadInstruments();
-        }
-
-        /// <summary>
-        /// Loads the instrument list from the instruments.txt file
-        /// </summary>
-        /// <returns></returns>
-        private void LoadInstruments()
-        {
-            if (!File.Exists(InstrumentsFileName))
-                throw new FileNotFoundException(InstrumentsFileName + " file not found.");
-
-            _instruments = new Dictionary<string, LeanInstrument>();
-
-            var lines = File.ReadAllLines(InstrumentsFileName);
-            foreach (var line in lines)
-            {
-                var tokens = line.Split(',');
-                if (tokens.Length >= 4)
-                {
-                    _instruments.Add(tokens[0], new LeanInstrument
-                    {
-                        Symbol = tokens[0],
-                        Name = tokens[1],
-                        Type = (SecurityType)Enum.Parse(typeof(SecurityType), tokens[2]),
-                        PointValue = Convert.ToInt32(tokens[3])
-                    });
-                }
-            }
-        }
 
         /// <summary>
         /// Checks if downloader can get the data for the symbol
@@ -78,7 +40,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <returns>Returns true if the symbol is available</returns>
         public bool HasSymbol(string symbol)
         {
-            return _instruments.ContainsKey(symbol);
+            return _symbolMapper.IsKnownLeanSymbol(Symbol.Create(symbol, GetSecurityType(symbol), Market.Dukascopy));
         }
 
         /// <summary>
@@ -88,7 +50,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <returns>The security type</returns>
         public SecurityType GetSecurityType(string symbol)
         {
-            return _instruments[symbol].Type;
+            return _symbolMapper.GetLeanSecurityType(symbol);
         }
 
         /// <summary>
@@ -101,7 +63,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <returns>Enumerable of base data for this symbol</returns>
         public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-            if (!_instruments.ContainsKey(symbol.Value))
+            if (!_symbolMapper.IsKnownLeanSymbol(symbol))
                 throw new ArgumentException("Invalid symbol requested: " + symbol.Value);
 
             if (symbol.ID.SecurityType != SecurityType.Forex && symbol.ID.SecurityType != SecurityType.Cfd)
@@ -175,14 +137,15 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <returns>An enumerable of ticks</returns>
         private IEnumerable<Tick> DownloadTicks(Symbol symbol, DateTime date)
         {
-            var pointValue = _instruments[symbol.Value].PointValue;
+            var dukascopySymbol = _symbolMapper.GetBrokerageSymbol(symbol);
+            var pointValue = _symbolMapper.GetPointValue(symbol);
 
             for (var hour = 0; hour < 24; hour++)
             {
                 var timeOffset = hour * 3600000;
 
                 var url = string.Format(@"http://www.dukascopy.com/datafeed/{0}/{1:D4}/{2:D2}/{3:D2}/{4:D2}h_ticks.bi5",
-                    symbol.Value, date.Year, date.Month - 1, date.Day, hour);
+                    dukascopySymbol, date.Year, date.Month - 1, date.Day, hour);
 
                 using (var client = new WebClient())
                 {
