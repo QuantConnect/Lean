@@ -207,10 +207,18 @@ namespace QuantConnect.Brokerages.Backtesting
                 foreach (var kvp in _pending)
                 {
                     var order = kvp.Value;
+
                     if (order.Status.IsClosed())
                     {
                         // this should never actually happen as we always remove closed orders as they happen
                         _pending.TryRemove(order.Id, out order);
+                        continue;
+                    }
+
+                    // all order fills are processed on the next bar (except for market orders)
+                    if (order.Time == Algorithm.UtcTime && order.Type != OrderType.Market)
+                    {
+                        stillNeedsScan = true;
                         continue;
                     }
 
