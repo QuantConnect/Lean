@@ -463,8 +463,14 @@ namespace QuantConnect.Lean.Engine.Results
                 var charts = new Dictionary<string, Chart>(Charts);
                 _processingFinalPacket = true;
 
+                // clear the trades collection before placing inside the backtest result
+                foreach (var ap in statisticsResults.RollingPerformances.Values)
+                {
+                    ap.ClosedTrades.Clear();
+                }
+
                 //Create a result packet to send to the browser.
-                BacktestResultPacket result = new BacktestResultPacket((BacktestNodePacket) job,
+                var result = new BacktestResultPacket((BacktestNodePacket) job,
                     new BacktestResult(charts, orders, profitLoss, statisticsResults.Summary, statisticsResults.RollingPerformances), 1m)
                 {
                     ProcessingTime = (DateTime.Now - _startTime).TotalSeconds,
