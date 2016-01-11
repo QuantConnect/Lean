@@ -84,9 +84,10 @@ namespace QuantConnect.Interfaces
         /// Algorithm status change signal from the Lean Engine triggering GUI updates.
         /// </summary>
         /// <param name="algorithmId">Algorithm id associated with this status message</param>
+        /// <param name="projectId">The project id associated with this statis message</param>
         /// <param name="status">State(enum) status message</param>
         /// <param name="message">Additional string message information</param>
-        void AlgorithmStatus(string algorithmId, AlgorithmStatus status, string message = "");
+        void AlgorithmStatus(string algorithmId, int projectId, AlgorithmStatus status, string message = "");
 
         /// <summary>
         /// Send a backtest result message via the messaging plugin system.
