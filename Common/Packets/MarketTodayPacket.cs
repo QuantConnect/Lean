@@ -144,19 +144,12 @@ namespace QuantConnect.Packets
                     return ClosedAllDay(date);
                 }
 
-                // determine if we're not within normal market hours
-                var status = "open";
-                if (date.TimeOfDay > TimeSpan.FromHours(16) || date.TimeOfDay < TimeSpan.FromHours(9.5))
-                {
-                    status = "closed";
-                }
-
                 return new MarketToday
                 {
                     PreMarket = new MarketHours(date, 4, 9.5),
                     Open = new MarketHours(date, 9.5, 16),
                     PostMarket = new MarketHours(date, 16, 20),
-                    Status = status
+                    Status = "open"
                 };
             }
             else
