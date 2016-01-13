@@ -44,10 +44,9 @@ namespace QuantConnect.Logging
         /// <param name="text">The error text to log</param>
         public void Error(string text)
         {
-            var original = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Red;
             _error.WriteLine(DateTime.Now.ToString(DateFormat) + " ERROR:: " + text);
-            Console.ForegroundColor = original;
+            Console.ResetColor();
         }
 
         /// <summary>
