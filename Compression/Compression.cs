@@ -721,7 +721,10 @@ namespace QuantConnect
             }
 
             //All fx is quote data.
-            if (securityType == SecurityType.Forex) dataType = TickType.Quote;
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+            {
+                dataType = TickType.Quote;
+            }
 
             return String.Format("{0}_{1}_{2}_{3}.csv", date.ToString(DateFormat.EightCharacter), symbol, resolution.ToString().ToLower(), dataType.ToString().ToLower());
         }
@@ -737,7 +740,7 @@ namespace QuantConnect
             }
 
             var zipFileName = date.ToString(DateFormat.EightCharacter);
-            if (securityType == SecurityType.Forex)
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
             {
                 return zipFileName + "_quote.zip";
             }
