@@ -187,7 +187,16 @@ namespace QuantConnect.Configuration
             }
 
             var type = typeof(T);
-            var value = token.Value<string>();
+            string value;
+            try
+            {
+                value = token.Value<string>();
+            }
+            catch (Exception err)
+            {
+                value = token.ToString();
+            }
+
             if (type.IsEnum)
             {
                 return (T) Enum.Parse(type, value);
