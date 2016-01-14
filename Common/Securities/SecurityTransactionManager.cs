@@ -31,6 +31,7 @@ namespace QuantConnect.Securities
         private readonly SecurityManager _securities;
         private const decimal _minimumOrderSize = 0;
         private const int _minimumOrderQuantity = 1;
+        private TimeSpan _marketOrderFillTimeout = TimeSpan.FromSeconds(5);
 
         private IOrderProcessor _orderProcessor;
         private Dictionary<DateTime, decimal> _transactionRecord;
@@ -51,7 +52,7 @@ namespace QuantConnect.Securities
             //Private reference for processing transactions
             _securities = security;
 
-            //Interal storage for transaction records:
+            //Internal storage for transaction records:
             _transactionRecord = new Dictionary<DateTime, decimal>();
         }
 
@@ -102,6 +103,22 @@ namespace QuantConnect.Securities
             get
             {
                 return _orderId;
+            }
+        }
+
+        /// <summary>
+        /// Configurable timeout for market order fills
+        /// </summary>
+        /// <remarks>Default value is 5 seconds</remarks>
+        public TimeSpan MarketOrderFillTimeout
+        {
+            get
+            {
+                return _marketOrderFillTimeout;
+            }
+            set
+            {
+                _marketOrderFillTimeout = value;
             }
         }
 
@@ -210,9 +227,9 @@ namespace QuantConnect.Securities
                 return false;
             }
 
-            if (!orderTicket.OrderFilled.WaitOne(Time.OneSecond))
+            if (!orderTicket.OrderFilled.WaitOne(_marketOrderFillTimeout))
             {
-                Log.Error("SecurityTransactionManager.WaitForOrder(): Order did not fill within 1 second.");
+                Log.Error("SecurityTransactionManager.WaitForOrder(): Order did not fill within {0} seconds.", _marketOrderFillTimeout.TotalSeconds);
                 return false;
             }
 

@@ -345,11 +345,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Send an algorithm status update to the browser.
         /// </summary>
-        /// <param name="algorithmId">Algorithm id for the status update.</param>
         /// <param name="status">Status enum value.</param>
         /// <param name="message">Additional optional status message.</param>
         /// <remarks>In backtesting we do not send the algorithm status updates.</remarks>
-        public void SendStatusUpdate(string algorithmId, AlgorithmStatus status, string message = "")
+        public void SendStatusUpdate(AlgorithmStatus status, string message = "")
         {
             Log.Trace("ConsoleResultHandler.SendStatusUpdate(): Algorithm Status: " + status + " : " + message);
         }

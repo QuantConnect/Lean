@@ -178,7 +178,7 @@ namespace QuantConnect.Algorithm
 
             var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag);
 
-            //Initalize the Market order parameters:
+            //Initialize the Market order parameters:
             var preOrderCheckResponse = PreOrderChecks(request);
             if (preOrderCheckResponse.IsError)
             {
@@ -188,7 +188,7 @@ namespace QuantConnect.Algorithm
             //Add the order and create a new order Id.
             var ticket = Transactions.AddOrder(request);
 
-            //Wait for the order event to process, only if the exchange is open
+            // Wait for the order event to process, only if the exchange is open
             if (!asynchronous)
             {
                 Transactions.WaitForOrder(ticket.OrderId);

@@ -247,7 +247,7 @@ namespace QuantConnect.Lean.Engine.Results
                             case PacketType.AlgorithmStatus:
                                 var statusPacket = packet as AlgorithmStatusPacket;
                                 Log.Debug("LiveTradingResultHandler.Run(): Algorithm Status Packet:" + statusPacket.Status + " " + statusPacket.AlgorithmId);
-                                _messagingHandler.AlgorithmStatus(statusPacket.AlgorithmId, statusPacket.Status, statusPacket.Message);
+                                _messagingHandler.AlgorithmStatus(statusPacket.AlgorithmId, statusPacket.ProjectId, statusPacket.Status, statusPacket.Message);
                                 break;
 
                             default:
@@ -756,14 +756,13 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Send a algorithm status update to the user of the algorithms running state.
         /// </summary>
-        /// <param name="algorithmId">String Id of the algorithm.</param>
         /// <param name="status">Status enum of the algorithm.</param>
         /// <param name="message">Optional string message describing reason for status change.</param>
-        public void SendStatusUpdate(string algorithmId, AlgorithmStatus status, string message = "")
+        public void SendStatusUpdate(AlgorithmStatus status, string message = "")
         {
             var msg = status + (string.IsNullOrEmpty(message) ? string.Empty : message);
             Log.Trace("LiveTradingResultHandler.SendStatusUpdate(): " + msg);
-            var packet = new AlgorithmStatusPacket(algorithmId, status, message);
+            var packet = new AlgorithmStatusPacket(_job.AlgorithmId, _job.ProjectId, status, message);
             Messages.Enqueue(packet);
         }
 

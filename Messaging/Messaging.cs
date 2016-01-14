@@ -92,7 +92,7 @@ namespace QuantConnect.Messaging
         /// <summary>
         /// Send an algorithm status update
         /// </summary>
-        public void AlgorithmStatus(string algorithmId, AlgorithmStatus status, string message = "")
+        public void AlgorithmStatus(string algorithmId, int projectId, AlgorithmStatus status, string message = "")
         {
             //
         }

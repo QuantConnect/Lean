@@ -124,7 +124,7 @@ namespace QuantConnect.Lean.Engine
                         // send progress updates to the result handler only during initialization
                         if (!algorithm.GetLocked() || algorithm.IsWarmingUp)
                         {
-                            _algorithmHandlers.Results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.History, 
+                            _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History, 
                                 string.Format("Processing history {0}%...", progress));
                         }
                     });
@@ -192,7 +192,7 @@ namespace QuantConnect.Lean.Engine
                     };
 
                     //Send status to user the algorithm is now executing.
-                    _algorithmHandlers.Results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Running);
+                    _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.Running);
 
                     //Launch the data, transaction and realtime handlers into dedicated threads
                     threadFeed = new Thread(_algorithmHandlers.DataFeed.Run) {Name = "DataFeed Thread"};
