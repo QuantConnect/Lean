@@ -26,6 +26,44 @@ namespace QuantConnect.Brokerages
     public class OandaBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
+        /// Returns true if the brokerage could accept this order. This takes into account
+        /// order type, security type, and order size limits.
+        /// </summary>
+        /// <remarks>
+        /// For example, a brokerage may have no connectivity at certain times, or an order rate/size limit
+        /// </remarks>
+        /// <param name="security"></param>
+        /// <param name="order">The order to be processed</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
+        /// <returns>True if the brokerage could process the order, false otherwise</returns>
+        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        {
+            message = null;
+
+            // validate security type
+            if (security.Type != SecurityType.Forex && security.Type != SecurityType.Cfd)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "This model does not support " + security.Type + " security type."
+                    );
+
+                return false;
+            }
+
+            // validate order type
+            if (order.Type != OrderType.Limit && order.Type != OrderType.Market && order.Type != OrderType.StopMarket)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "This model does not support " + order.Type + " order type."
+                    );
+
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Returns true if the brokerage would be able to execute this order at this time assuming
         /// market prices are sufficient for the fill to take place. This is used to emulate the 
         /// brokerage fills in backtesting and paper trading. For example some brokerages may not perform
@@ -54,8 +92,8 @@ namespace QuantConnect.Brokerages
 
                 case SecurityType.Cfd:
                 default:
-                    throw new Exception("Oanda does not support the asset type " + security.Type + ". " +
-                                        "Please ensure your algorithm only uses Forex (CFD assets are not currently supported).");
+                    // use the default model, it's ok if we subscribe to data for this security, but the CanSubmitOrder will block it
+                    return new SecurityTransactionModel();
             }
         }
     }

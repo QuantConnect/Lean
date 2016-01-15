@@ -140,8 +140,8 @@ namespace QuantConnect.Brokerages
 
                 case SecurityType.Cfd:
                 default:
-                    throw new Exception("FXCM does not support the asset type " + security.Type + ". " +
-                                        "Please ensure your algorithm only uses Forex (CFD assets are not currently supported).");
+                    // use the default model, it's ok if we subscribe to data for this security, but the CanSubmitOrder will block it
+                    return new SecurityTransactionModel();
             }
         }
 
