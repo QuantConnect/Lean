@@ -211,6 +211,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="utcEndTime">The end time of the subscription</param>
         public bool AddSubscription(Universe universe, Security security, DateTime utcStartTime, DateTime utcEndTime)
         {
+            _fillForwardResolution.Value = ResolveFillForwardResolution(_algorithm);
+
             var subscription = CreateSubscription(universe, _resultHandler, security, utcStartTime, utcEndTime, _fillForwardResolution);
             if (subscription == null)
             {
