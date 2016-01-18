@@ -1120,9 +1120,9 @@ namespace QuantConnect.Lean.Engine.Results
                 RuntimeStatistic(pair.Key, pair.Value);
             }
 
-            //Send all the notification messages but timeout within a second
+            //Send all the notification messages but timeout within a second, or if this is a force process, wait till its done.
             var start = DateTime.Now;
-            while (_algorithm.Notify.Messages.Count > 0 && DateTime.Now < start.AddSeconds(1))
+            while (_algorithm.Notify.Messages.Count > 0 && (DateTime.Now < start.AddSeconds(1) || forceProcess))
             {
                 Notification message;
                 if (_algorithm.Notify.Messages.TryDequeue(out message))
