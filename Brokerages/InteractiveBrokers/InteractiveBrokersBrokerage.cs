@@ -912,7 +912,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             _accountHoldingsResetEvent.Reset();
             var holding = CreateHolding(e);
-            _accountHoldings[holding.Symbol] = holding;
+            _accountHoldings[holding.Symbol.Value] = holding;
         }
 
         /// <summary>

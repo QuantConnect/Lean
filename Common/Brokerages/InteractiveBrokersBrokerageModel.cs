@@ -75,7 +75,7 @@ namespace QuantConnect.Brokerages
 
             if (order.SecurityType == SecurityType.Forex && request.Quantity != null)
             {
-                return IsForexWithinOrderSizeLimits(order.Symbol, request.Quantity.Value, out message);
+                return IsForexWithinOrderSizeLimits(order.Symbol.Value, request.Quantity.Value, out message);
             }
 
             return true;
