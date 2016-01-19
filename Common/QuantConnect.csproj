@@ -247,6 +247,7 @@
     <Compile Include="Securities\Equity\EquityMarginModel.cs" />
     <Compile Include="Securities\Equity\EquityPortfolioModel.cs" />
     <Compile Include="Securities\DelayedSettlementModel.cs" />
+    <Compile Include="Securities\FuncSecurityInitializer.cs" />
     <Compile Include="Securities\ISecurityInitializer.cs" />
     <Compile Include="Securities\ISettlementModel.cs" />
     <Compile Include="Securities\LocalMarketHours.cs" />
