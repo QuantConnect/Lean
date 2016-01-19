@@ -312,6 +312,7 @@ namespace QuantConnect.Securities
             SubscriptionManager subscriptionManager,
             SecurityExchangeHours exchangeHours,
             DateTimeZone dataTimeZone,
+            ISecurityInitializer securityInitializer,
             Symbol symbol,
             Resolution resolution,
             bool fillDataForward,
@@ -369,6 +370,10 @@ namespace QuantConnect.Securities
                     security = new Security(exchangeHours, config, leverage);
                     break;
             }
+
+            // invoke the security initializer
+            securityInitializer.Initialize(security);
+
             return security;
         }
 
@@ -380,6 +385,7 @@ namespace QuantConnect.Securities
         public static Security CreateSecurity(SecurityPortfolioManager securityPortfolioManager,
             SubscriptionManager subscriptionManager,
             MarketHoursDatabase marketHoursDatabase,
+            ISecurityInitializer securityInitializer,
             Symbol symbol,
             Resolution resolution,
             bool fillDataForward,
@@ -393,7 +399,7 @@ namespace QuantConnect.Securities
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
             var tradeBarType = typeof(TradeBar);
             var type = resolution == Resolution.Tick ? typeof(Tick) : tradeBarType;
-            return CreateSecurity(type, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbol, resolution,
+            return CreateSecurity(type, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, securityInitializer, symbol, resolution,
                 fillDataForward, leverage, extendedMarketHours, isInternalFeed, isCustomData, addToSymbolCache);
         }
     }

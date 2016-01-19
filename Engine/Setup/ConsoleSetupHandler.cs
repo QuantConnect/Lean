@@ -168,8 +168,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 initializeComplete = true;
             }
 
-            // set the transaction and settlement models based on the brokerage properties
-            algorithm.UpdateModels(algorithm.BrokerageModel);
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
             algorithm.PostInitialize();
 

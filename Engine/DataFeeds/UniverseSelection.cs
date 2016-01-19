@@ -137,7 +137,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Security security;
                 if (!_algorithm.Securities.TryGetValue(symbol, out security))
                 {
-                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _marketHoursDatabase,
+                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _marketHoursDatabase, _algorithm.SecurityInitializer,
                         symbol,
                         settings.Resolution,
                         settings.FillForward,
@@ -146,9 +146,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         false,
                         false,
                         false);
-
-                    // added securities should use the brokerage model provided models
-                    _algorithm.UpdateModel(_algorithm.BrokerageModel, security);
                 }
 
                 additions.Add(security);

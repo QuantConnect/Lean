@@ -217,7 +217,6 @@
     <Compile Include="Results\DesktopResultHandler.cs" />
     <Compile Include="Results\IResultHandler.cs" />
     <Compile Include="Setup\BrokerageSetupHandler.cs" />
-    <Compile Include="Setup\SetupHandler.cs" />
     <Compile Include="StateCheck.cs" />
     <Compile Include="Setup\ConsoleSetupHandler.cs" />
     <Compile Include="Setup\BacktestingSetupHandler.cs" />

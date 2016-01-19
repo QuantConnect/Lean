@@ -468,7 +468,7 @@ namespace QuantConnect.Algorithm
 
                         resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
                     }
-                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _benchmarkSymbol, resolution, true, 1m, false, true, false);
+                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, SecurityInitializer, _benchmarkSymbol, resolution, true, 1m, false, true, false);
                     AddToUserDefinedUniverse(security);
                 }
 
@@ -1193,7 +1193,7 @@ namespace QuantConnect.Algorithm
                     symbolObject = QuantConnect.Symbol.Create(symbol, securityType, market);
                 }
 
-                var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase,
+                var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, SecurityInitializer,
                     symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false);
 
                 AddToUserDefinedUniverse(security);
@@ -1288,8 +1288,8 @@ namespace QuantConnect.Algorithm
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
 
             //Add this new generic data as a tradeable security: 
-            var security = SecurityManager.CreateSecurity(typeof (T), Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone, symbolObject, resolution,
-                fillDataForward, leverage, true, false, true);
+            var security = SecurityManager.CreateSecurity(typeof(T), Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone, 
+                SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true);
 
             AddToUserDefinedUniverse(security);
         }
