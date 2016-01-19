@@ -69,6 +69,9 @@ namespace QuantConnect.Algorithm
         // set by SetBenchmark helper API functions
         private Symbol _benchmarkSymbol = QuantConnect.Symbol.Empty;
 
+        // flips to true when the user
+        private bool _userSetSecurityInitializer = false;
+
         // warmup resolution variables
         private TimeSpan? _warmupTimeSpan;
         private int? _warmupBarCount;
@@ -136,7 +139,7 @@ namespace QuantConnect.Algorithm
             // initialize the trade builder
             TradeBuilder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO);
 
-            SecurityInitializer = new BrokerageModelSecurityInitializer(this);
+            SecurityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(AccountType.Margin));
         }
 
         /// <summary>
@@ -512,6 +515,8 @@ namespace QuantConnect.Algorithm
         /// <param name="securityInitializer">The security initializer</param>
         public void SetSecurityInitializer(ISecurityInitializer securityInitializer)
         {
+            // this flag will prevent calls to SetBrokerageModel from overwriting this initializer
+            _userSetSecurityInitializer = true;
             SecurityInitializer = securityInitializer;
         }
 
@@ -782,7 +787,7 @@ namespace QuantConnect.Algorithm
         /// <param name="accountType">The account type (Cash or Margin)</param>
         public void SetBrokerageModel(BrokerageName brokerage, AccountType accountType = AccountType.Margin)
         {
-            BrokerageModel = Brokerages.BrokerageModel.Create(brokerage, accountType);
+            SetBrokerageModel(Brokerages.BrokerageModel.Create(brokerage, accountType));
         }
 
         /// <summary>
@@ -793,6 +798,11 @@ namespace QuantConnect.Algorithm
         public void SetBrokerageModel(IBrokerageModel model)
         {
             BrokerageModel = model;
+            if (!_userSetSecurityInitializer)
+            {
+                // purposefully use the direct setter vs Set method so we don't flip the switch :/
+                SecurityInitializer = new BrokerageModelSecurityInitializer(model);
+            }
         }
 
         /// <summary>
