@@ -109,7 +109,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 request.IsCustomData
                 );
 
-            var security = new Security(request.ExchangeHours, config, 1.0m);
+            var security = new Security(request.ExchangeHours, config);
 
             IEnumerator<BaseData> reader = new SubscriptionDataReader(config, 
                 start, 

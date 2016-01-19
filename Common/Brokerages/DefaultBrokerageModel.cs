@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
@@ -94,6 +95,31 @@ namespace QuantConnect.Brokerages
                 LimitPrice = ticket.OrderType.IsLimitOrder() ? ticket.Get(OrderField.LimitPrice)*splitFactor : (decimal?) null,
                 StopPrice = ticket.OrderType.IsStopOrder() ? ticket.Get(OrderField.StopPrice)*splitFactor : (decimal?) null
             }));
+        }
+
+        /// <summary>
+        /// Gets the brokerage's leverage for the specified security
+        /// </summary>
+        /// <param name="security">The security's whose leverage we seek</param>
+        /// <returns>The leverage for the specified security</returns>
+        public decimal GetLeverage(Security security)
+        {
+            switch (security.Type)
+            {
+                case SecurityType.Equity:
+                    return 2m;
+
+                case SecurityType.Forex:
+                    return 50m;
+
+                case SecurityType.Base:
+                case SecurityType.Commodity:
+                case SecurityType.Option:
+                case SecurityType.Future:
+                case SecurityType.Cfd:
+                default:
+                    return 1m;
+            }
         }
 
         /// <summary>

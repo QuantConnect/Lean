@@ -332,7 +332,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var exchangeHours = marketHoursDatabase.GetExchangeHours(config);
 
             // create a canonical security object
-            var security = new Security(exchangeHours, config, universe.UniverseSettings.Leverage);
+            var security = new Security(exchangeHours, config);
 
             var localStartTime = startTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
             var localEndTime = endTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);

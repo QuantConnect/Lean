@@ -72,6 +72,13 @@ namespace QuantConnect.Brokerages
         void ApplySplit(List<OrderTicket> tickets, Split split);
 
         /// <summary>
+        /// Gets the brokerage's leverage for the specified security
+        /// </summary>
+        /// <param name="security">The security's whose leverage we seek</param>
+        /// <returns>The leverage for the specified security</returns>
+        decimal GetLeverage(Security security);
+
+        /// <summary>
         /// Gets a new fill model that represents this brokerage's fill behavior
         /// </summary>
         /// <param name="security">The security to get fill model for</param>

@@ -41,7 +41,7 @@ namespace QuantConnect.Securities.Equity
         /// Construct the Equity Object
         /// </summary>
         public Equity(SubscriptionDataConfig config, decimal leverage)
-            : this(MarketHoursDatabase.FromDataFolder().GetExchangeHours(config), config, leverage)
+            : this(MarketHoursDatabase.FromDataFolder().GetExchangeHours(config), config)
         {
             // this constructor is provided for backward compatibility
 
@@ -51,7 +51,7 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
-        public Equity(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, decimal leverage)
+        public Equity(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config)
             : base(
                 config,
                 new EquityExchange(exchangeHours),
@@ -61,7 +61,7 @@ namespace QuantConnect.Securities.Equity
                 new InteractiveBrokersFeeModel(),
                 new ConstantSlippageModel(0m),
                 new ImmediateSettlementModel(),
-                new EquityMarginModel(leverage),
+                new EquityMarginModel(2m),
                 new EquityDataFilter()
                 )
         {

@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Securities
             // settlement at T+3, 8:00 AM
             var model = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
 
             portfolio.SetCash(3000);
             Assert.AreEqual(3000, portfolio.Cash);
@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Common.Securities
             // settlement at T+3, 8:00 AM
             var model = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
 
             portfolio.SetCash(3000);
             Assert.AreEqual(3000, portfolio.Cash);

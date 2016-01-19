@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 
@@ -44,6 +45,8 @@ namespace QuantConnect.Securities
         /// <param name="security">The security to be initialized</param>
         public void Initialize(Security security)
         {
+            // set leverage and models
+            security.SetLeverage(_algorithm.BrokerageModel.GetLeverage(security));
             security.FillModel = _algorithm.BrokerageModel.GetFillModel(security);
             security.FeeModel = _algorithm.BrokerageModel.GetFeeModel(security);
             security.SlippageModel = _algorithm.BrokerageModel.GetSlippageModel(security);

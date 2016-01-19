@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Common.Securities
             var model = new SecurityTransactionModel();
             var order = new MarketOrder(Symbols.SPY, 100, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
 
@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Common.Securities
             var model = new SecurityTransactionModel();
             var order = new MarketOrder(Symbols.SPY, -100, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
 
@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Common.Securities
             var model = new SecurityTransactionModel();
             var order = new LimitOrder(Symbols.SPY, 100, 101.5m, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102m));
 
@@ -92,7 +92,7 @@ namespace QuantConnect.Tests.Common.Securities
             var model = new SecurityTransactionModel();
             var order = new LimitOrder(Symbols.SPY, -100, 101.5m, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101m));
 
@@ -118,7 +118,7 @@ namespace QuantConnect.Tests.Common.Securities
             var model = new SecurityTransactionModel();
             var order = new StopLimitOrder(Symbols.SPY, 100, 101.5m, 101.75m, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 100m));
 
@@ -152,7 +152,7 @@ namespace QuantConnect.Tests.Common.Securities
             var model = new SecurityTransactionModel();
             var order = new StopLimitOrder(Symbols.SPY, -100, 101.75m, 101.50m, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102m));
 
@@ -186,7 +186,7 @@ namespace QuantConnect.Tests.Common.Securities
             var model = new SecurityTransactionModel();
             var order = new StopMarketOrder(Symbols.SPY, 100, 101.5m, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101m));
 
@@ -212,7 +212,7 @@ namespace QuantConnect.Tests.Common.Securities
             var model = new SecurityTransactionModel();
             var order = new StopMarketOrder(Symbols.SPY, -100, 101.5m, Noon, type: SecurityType.Equity);
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102m));
 
@@ -239,7 +239,7 @@ namespace QuantConnect.Tests.Common.Securities
             var model = new SecurityTransactionModel();
             var order = new MarketOnOpenOrder(Symbols.SPY, SecurityType.Equity, 100, reference);
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             var time = reference;
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
@@ -273,7 +273,7 @@ namespace QuantConnect.Tests.Common.Securities
             var model = new SecurityTransactionModel();
             var order = new MarketOnCloseOrder(Symbols.SPY, SecurityType.Equity, 100, reference);
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, 1);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             var time = reference;
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));

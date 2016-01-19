@@ -260,7 +260,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, decimal leverage)
+        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config)
             : this(config,
                 new SecurityExchange(exchangeHours),
                 new SecurityCache(),
@@ -269,7 +269,7 @@ namespace QuantConnect.Securities
                 new InteractiveBrokersFeeModel(),
                 new SpreadSlippageModel(),
                 new ImmediateSettlementModel(),
-                new SecurityMarginModel(leverage),
+                new SecurityMarginModel(1m),
                 new SecurityDataFilter())
         {
         }

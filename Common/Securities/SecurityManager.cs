@@ -324,15 +324,6 @@ namespace QuantConnect.Securities
         {
             var sid = symbol.ID;
 
-            //If it hasn't been set, use some defaults based on the security type
-            if (leverage <= 0)
-            {
-                if (sid.SecurityType == SecurityType.Equity) leverage = 2;
-                else if (sid.SecurityType == SecurityType.Forex) leverage = 50;
-                // default to 1 for everything else
-                else leverage = 1m;
-            }
-
             // add the symbol to our cache
             if (addToSymbolCache) SymbolCache.Set(symbol.Value, symbol);
 
@@ -344,7 +335,7 @@ namespace QuantConnect.Securities
             switch (config.SecurityType)
             {
                 case SecurityType.Equity:
-                    security = new Equity.Equity(exchangeHours, config, leverage);
+                    security = new Equity.Equity(exchangeHours, config);
                     break;
 
                 case SecurityType.Forex:
@@ -362,17 +353,24 @@ namespace QuantConnect.Securities
                         // since we have none it's safe to say the conversion is zero
                         securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
                     }
-                    security = new Forex.Forex(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, leverage);
+                    security = new Forex.Forex(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config);
                     break;
 
                 default:
                 case SecurityType.Base:
-                    security = new Security(exchangeHours, config, leverage);
+                    security = new Security(exchangeHours, config);
                     break;
             }
 
             // invoke the security initializer
             securityInitializer.Initialize(security);
+
+            // if leverage was specified then apply to security after the initializer has run, parameters of this
+            // method take precedence over the intializer
+            if (leverage > 0)
+            {
+                security.SetLeverage(leverage);
+            }
 
             return security;
         }
