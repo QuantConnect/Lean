@@ -263,7 +263,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     if (sufficientBuyingPower)
                     {
                         //Model:
-                        var model = security.TransactionModel;
+                        var model = security.FillModel;
 
                         //Based on the order type: refresh its model to get fill price and quantity
                         try

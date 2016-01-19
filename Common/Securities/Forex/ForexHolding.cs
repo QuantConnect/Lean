@@ -78,7 +78,7 @@ namespace QuantConnect.Securities.Forex
             {
                 // this is in the account currency
                 var marketOrder = new MarketOrder(_forex.Symbol, -Quantity, _forex.LocalTime.ConvertToUtc(_forex.Exchange.TimeZone), type:_forex.Type);
-                orderFee = _forex.TransactionModel.GetOrderFee(_forex, marketOrder);
+                orderFee = _forex.FeeModel.GetOrderFee(_forex, marketOrder);
             }
 
             // we need to add a conversion since the data is in terms of the quote currency
