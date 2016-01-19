@@ -57,6 +57,9 @@
     <Compile Include="CustomDataRegressionAlgorithm.cs" />
     <Compile Include="CustomDataUniverseAlgorithm.cs" />
     <Compile Include="CustomModelsAlgorithm.cs" />
+    <Compile Include="CustomSecurityInitializerAlgorithm.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="DelistingEventsAlgorithm.cs" />
     <Compile Include="DropboxBaseDataUniverseSelectionAlgorithm.cs" />
     <Compile Include="EquitiesLabAlgorithm.cs" />
