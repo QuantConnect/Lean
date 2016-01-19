@@ -782,31 +782,7 @@ namespace QuantConnect.Algorithm
         /// <param name="accountType">The account type (Cash or Margin)</param>
         public void SetBrokerageModel(BrokerageName brokerage, AccountType accountType = AccountType.Margin)
         {
-            switch (brokerage)
-            {
-                case BrokerageName.Default:
-                    BrokerageModel = new DefaultBrokerageModel(accountType);
-                    break;
-
-                case BrokerageName.InteractiveBrokersBrokerage:
-                    BrokerageModel = new InteractiveBrokersBrokerageModel(accountType);
-                    break;
-
-                case BrokerageName.TradierBrokerage:
-                    BrokerageModel = new TradierBrokerageModel(accountType);
-                    break;
-
-                case BrokerageName.OandaBrokerage:
-                    BrokerageModel = new OandaBrokerageModel(accountType);
-                    break;
-
-                case BrokerageName.FxcmBrokerage:
-                    BrokerageModel = new FxcmBrokerageModel(accountType);
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException("brokerage", brokerage, null);
-            }
+            BrokerageModel = Brokerages.BrokerageModel.Create(brokerage, accountType);
         }
 
         /// <summary>

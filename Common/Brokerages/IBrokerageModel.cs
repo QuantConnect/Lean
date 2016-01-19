@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
@@ -114,5 +115,41 @@ namespace QuantConnect.Brokerages
         /// <param name="accountType">The account type</param>
         /// <returns>The settlement model for this brokerage</returns>
         ISettlementModel GetSettlementModel(Security security, AccountType accountType);
+    }
+
+    /// <summary>
+    /// Provides factory method for creating an <see cref="IBrokerageModel"/> from the <see cref="BrokerageName"/> enum
+    /// </summary>
+    public static class BrokerageModel
+    {
+        /// <summary>
+        /// Creates a new <see cref="IBrokerageModel"/> for the specified <see cref="BrokerageName"/>
+        /// </summary>
+        /// <param name="brokerage">The name of the brokerage</param>
+        /// <param name="accountType">The account type</param>
+        /// <returns>The model for the specified brokerage</returns>
+        public static IBrokerageModel Create(BrokerageName brokerage, AccountType accountType)
+        {
+            switch (brokerage)
+            {
+                case BrokerageName.Default:
+                    return new DefaultBrokerageModel(accountType);
+
+                case BrokerageName.InteractiveBrokersBrokerage:
+                    return new InteractiveBrokersBrokerageModel(accountType);
+
+                case BrokerageName.TradierBrokerage:
+                    return new TradierBrokerageModel(accountType);
+                    
+                case BrokerageName.OandaBrokerage:
+                    return new OandaBrokerageModel(accountType);
+                    
+                case BrokerageName.FxcmBrokerage:
+                    return new FxcmBrokerageModel(accountType);
+                    
+                default:
+                    throw new ArgumentOutOfRangeException("brokerage", brokerage, null);
+            }
+        }
     }
 }
