@@ -75,10 +75,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 processStartInfo.RedirectStandardOutput = false;
                 var process = Process.Start(processStartInfo);
                 ScriptProcessID = process.Id;
-
-                // wait for 5 seconds so it can start up completely. this is impossible to get
-                // correct for every machine, so the IB Connect method will keep trying for a while as well
-                Thread.Sleep(5*1000);
             }
             catch (Exception err)
             {
