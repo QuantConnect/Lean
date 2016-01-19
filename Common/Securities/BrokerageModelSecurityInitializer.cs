@@ -41,7 +41,7 @@ namespace QuantConnect.Securities
         /// Initializes the specified security by setting up the models
         /// </summary>
         /// <param name="security">The security to be initialized</param>
-        public void Initialize(Security security)
+        public virtual void Initialize(Security security)
         {
             // set leverage and models
             security.SetLeverage(_brokerageModel.GetLeverage(security));
