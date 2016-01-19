@@ -14,9 +14,7 @@
  *
 */
 
-using System;
 using QuantConnect.Brokerages;
-using QuantConnect.Interfaces;
 
 namespace QuantConnect.Securities
 {
@@ -27,16 +25,16 @@ namespace QuantConnect.Securities
     /// </summary>
     public class BrokerageModelSecurityInitializer : ISecurityInitializer
     {
-        private readonly IAlgorithm _algorithm;
+        private readonly IBrokerageModel _brokerageModel;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BrokerageModelSecurityInitializer"/> class
         /// for the specified algorithm
         /// </summary>
-        /// <param name="algorithm">The algorithm instance used to retrieve the current <see cref="IBrokerageModel"/></param>
-        public BrokerageModelSecurityInitializer(IAlgorithm algorithm)
+        /// <param name="brokerageModel">The brokerage model used to initialize the security models</param>
+        public BrokerageModelSecurityInitializer(IBrokerageModel brokerageModel)
         {
-            _algorithm = algorithm;
+            _brokerageModel = brokerageModel;
         }
 
         /// <summary>
@@ -46,11 +44,11 @@ namespace QuantConnect.Securities
         public void Initialize(Security security)
         {
             // set leverage and models
-            security.SetLeverage(_algorithm.BrokerageModel.GetLeverage(security));
-            security.FillModel = _algorithm.BrokerageModel.GetFillModel(security);
-            security.FeeModel = _algorithm.BrokerageModel.GetFeeModel(security);
-            security.SlippageModel = _algorithm.BrokerageModel.GetSlippageModel(security);
-            security.SettlementModel = _algorithm.BrokerageModel.GetSettlementModel(security, _algorithm.BrokerageModel.AccountType);
+            security.SetLeverage(_brokerageModel.GetLeverage(security));
+            security.FillModel = _brokerageModel.GetFillModel(security);
+            security.FeeModel = _brokerageModel.GetFeeModel(security);
+            security.SlippageModel = _brokerageModel.GetSlippageModel(security);
+            security.SettlementModel = _brokerageModel.GetSettlementModel(security, _brokerageModel.AccountType);
         }
     }
 }
