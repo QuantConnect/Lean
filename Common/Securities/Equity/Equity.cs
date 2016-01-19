@@ -15,6 +15,9 @@
 
 using System;
 using QuantConnect.Data;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 
 namespace QuantConnect.Securities.Equity 
 {
@@ -48,19 +51,21 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
-        public Equity(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, decimal leverage) 
-            : base(exchangeHours, config, leverage) 
+        public Equity(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, decimal leverage)
+            : base(
+                config,
+                new EquityExchange(exchangeHours),
+                new EquityCache(),
+                new EquityPortfolioModel(),
+                new ImmediateFillModel(),
+                new InteractiveBrokersFeeModel(),
+                new ConstantSlippageModel(0m),
+                new ImmediateSettlementModel(),
+                new EquityMarginModel(leverage),
+                new EquityDataFilter()
+                )
         {
-            //Holdings for new Vehicle:
-            Cache = new EquityCache();
-            Exchange = new EquityExchange(exchangeHours);
-            DataFilter = new EquityDataFilter();
-            //Set the Equity Transaction Model
-            TransactionModel = new EquityTransactionModel();
-            PortfolioModel = new EquityPortfolioModel();
-            MarginModel = new EquityMarginModel(leverage);
-            SettlementModel = new ImmediateSettlementModel();
-            Holdings = new EquityHolding(this, TransactionModel, MarginModel);
+            Holdings = new EquityHolding(this);
         }
     }
 }

@@ -126,14 +126,17 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <seealso cref="EquityCache"/>
         /// <seealso cref="ForexCache"/>
-        public virtual SecurityCache Cache { get; set; }
+        public SecurityCache Cache
+        {
+            get; set;
+        }
 
         /// <summary>
         /// Holdings class contains the portfolio, cash and processes order fills.
         /// </summary>
         /// <seealso cref="EquityHolding"/>
         /// <seealso cref="ForexHolding"/>
-        public virtual SecurityHolding Holdings
+        public SecurityHolding Holdings
         {
             get; 
             set;
@@ -144,7 +147,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <seealso cref="EquityExchange"/>
         /// <seealso cref="ForexExchange"/>
-        public virtual SecurityExchange Exchange
+        public SecurityExchange Exchange
         {
             get;
             set;
@@ -279,17 +282,45 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, decimal leverage) 
+        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, decimal leverage)
+            : this(config,
+                new SecurityExchange(exchangeHours),
+                new SecurityCache(),
+                new SecurityPortfolioModel(),
+                new ImmediateFillModel(),
+                new InteractiveBrokersFeeModel(),
+                new SpreadSlippageModel(),
+                new ImmediateSettlementModel(),
+                new SecurityMarginModel(leverage),
+                new SecurityDataFilter())
+        {
+        }
+
+        /// <summary>
+        /// Construct a new security vehicle based on the user options.
+        /// </summary>
+        protected Security(SubscriptionDataConfig config,
+            SecurityExchange exchange,
+            SecurityCache cache,
+            ISecurityPortfolioModel portfolioModel,
+            IFillModel fillModel,
+            IFeeModel feeModel,
+            ISlippageModel slippageModel,
+            ISettlementModel settlementModel,
+            ISecurityMarginModel marginModel,
+            ISecurityDataFilter dataFilter
+            )
         {
             _config = config;
-
-            Cache = new SecurityCache();
-            Exchange = new SecurityExchange(exchangeHours);
-            DataFilter = new SecurityDataFilter();
-            PortfolioModel = new SecurityPortfolioModel();
-            TransactionModel = new SecurityTransactionModel();
-            MarginModel = new SecurityMarginModel(leverage);
-            SettlementModel = new ImmediateSettlementModel();
+            Cache = cache;
+            Exchange = exchange;
+            DataFilter = dataFilter;
+            PortfolioModel = portfolioModel;
+            MarginModel = marginModel;
+            _fillModel = fillModel;
+            _feeModel = feeModel;
+            _slippageModel = slippageModel;
+            _settlementModel = settlementModel;
             Holdings = new SecurityHolding(this);
         }
 

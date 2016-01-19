@@ -16,6 +16,9 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 
 namespace QuantConnect.Securities.Forex 
 {
@@ -47,17 +50,19 @@ namespace QuantConnect.Securities.Forex
         /// <param name="config">The subscription configuration for this security</param>
         /// <param name="leverage">The leverage used for this security</param>
         public Forex(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config, decimal leverage)
-            : base(exchangeHours, config, leverage)
+            : base(config,
+                new ForexExchange(exchangeHours),
+                new ForexCache(),
+                new ForexPortfolioModel(),
+                new ImmediateFillModel(),
+                new InteractiveBrokersFeeModel(),
+                new SpreadSlippageModel(),
+                new ImmediateSettlementModel(),
+                new ForexMarginModel(leverage),
+                new ForexDataFilter()
+                )
         {
             QuoteCurrency = quoteCurrency;
-            //Holdings for new Vehicle:
-            Cache = new ForexCache();
-            Exchange = new ForexExchange(exchangeHours); 
-            DataFilter = new ForexDataFilter();
-            TransactionModel = new ForexTransactionModel();
-            PortfolioModel = new ForexPortfolioModel();
-            MarginModel = new ForexMarginModel(leverage);
-            SettlementModel = new ImmediateSettlementModel();
             Holdings = new ForexHolding(this);
 
             // decompose the symbol into each currency pair
