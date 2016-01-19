@@ -137,6 +137,7 @@ namespace QuantConnect.Algorithm
             TradeBuilder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO);
 
             AccountType = AccountType.Margin;
+            SecurityInitializer = new BrokerageModelSecurityInitializer(this);
         }
 
         /// <summary>
@@ -213,6 +214,15 @@ namespace QuantConnect.Algorithm
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Gets an instance that is to be used to initialize newly created securities.
+        /// </summary>
+        public ISecurityInitializer SecurityInitializer
+        {
+            get; 
+            private set;
         }
 
         /// <summary>
