@@ -240,12 +240,14 @@
     <Compile Include="Scheduling\ScheduleManager.cs" />
     <Compile Include="Scheduling\FuncTimeRule.cs" />
     <Compile Include="Scheduling\TimeRules.cs" />
+    <Compile Include="Securities\BrokerageModelSecurityInitializer.cs" />
     <Compile Include="Securities\Cash.cs" />
     <Compile Include="Securities\CashBook.cs" />
     <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
     <Compile Include="Securities\Equity\EquityMarginModel.cs" />
     <Compile Include="Securities\Equity\EquityPortfolioModel.cs" />
     <Compile Include="Securities\DelayedSettlementModel.cs" />
+    <Compile Include="Securities\ISecurityInitializer.cs" />
     <Compile Include="Securities\ISettlementModel.cs" />
     <Compile Include="Securities\LocalMarketHours.cs" />
     <Compile Include="Securities\SecurityExchangeHours.cs" />
