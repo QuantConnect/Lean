@@ -35,8 +35,12 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class Security 
     {
-        private LocalTimeKeeper _localTimeKeeper;
+        private IFeeModel _feeModel;
+        private IFillModel _fillModel;
+        private ISlippageModel _slippageModel;
+        private ISettlementModel _settlementModel;
 
+        private LocalTimeKeeper _localTimeKeeper;
         private readonly SubscriptionDataConfig _config;
 
         /// <summary>
@@ -194,8 +198,12 @@ namespace QuantConnect.Securities
         /// </summary>
         public IFeeModel FeeModel
         {
-            get; 
-            set;
+            get { return _feeModel; }
+            set
+            {
+                IsFeeModelSet = true;
+                _feeModel = value;
+            }
         }
 
         /// <summary>
@@ -203,8 +211,12 @@ namespace QuantConnect.Securities
         /// </summary>
         public IFillModel FillModel
         {
-            get; 
-            set;
+            get { return _fillModel; }
+            set
+            {
+                IsFillModelSet = true;
+                _fillModel = value;
+            }
         }
 
         /// <summary>
@@ -212,8 +224,12 @@ namespace QuantConnect.Securities
         /// </summary>
         public ISlippageModel SlippageModel
         {
-            get; 
-            set;
+            get { return _slippageModel; }
+            set
+            {
+                IsSlippageModelSet = true;
+                _slippageModel = value;
+            }
         }
 
         /// <summary>
@@ -239,8 +255,12 @@ namespace QuantConnect.Securities
         /// </summary>
         public ISettlementModel SettlementModel
         {
-            get;
-            set;
+            get { return _settlementModel; }
+            set
+            {
+                IsSettlementModelSet = true;
+                _settlementModel = value;
+            }
         }
 
         /// <summary>
@@ -484,5 +504,22 @@ namespace QuantConnect.Securities
         {
             return Symbol.ToString();
         }
+
+        /// <summary>
+        /// Gets whether or not the fee model property has been directly set
+        /// </summary>
+        internal bool IsFeeModelSet { get; private set; }
+        /// <summary>
+        /// Gets whether or not the fill model property has been directly set
+        /// </summary>
+        internal bool IsFillModelSet { get; private set; }
+        /// <summary>
+        /// Gets whether or not the slippage model property has been directly set
+        /// </summary>
+        internal bool IsSlippageModelSet { get; private set; }
+        /// <summary>
+        /// Gets whether or not the settlement model property has been directly set
+        /// </summary>
+        internal bool IsSettlementModelSet { get; private set; }
     }
 }

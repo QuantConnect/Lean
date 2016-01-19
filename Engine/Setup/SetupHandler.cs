@@ -53,17 +53,23 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="security">The security to be updated</param>
         public static void UpdateModel(this IAlgorithm algorithm, IBrokerageModel model, Security security)
         {
-            if (model.GetType() == typeof(DefaultBrokerageModel))
+            // set our models if the user hasn't already set them manually
+            if (!security.IsFillModelSet)
             {
-                // if we're using the default don't do anything
-                return;
+                security.FillModel = model.GetFillModel(security);
             }
-
-            // set our models
-            security.FillModel = model.GetFillModel(security);
-            security.FeeModel = model.GetFeeModel(security);
-            security.SlippageModel = model.GetSlippageModel(security);
-            security.SettlementModel = model.GetSettlementModel(security, algorithm.AccountType);
+            if (!security.IsFeeModelSet)
+            {
+                security.FeeModel = model.GetFeeModel(security);
+            }
+            if (!security.IsSlippageModelSet)
+            {
+                security.SlippageModel = model.GetSlippageModel(security);
+            }
+            if (!security.IsSettlementModelSet)
+            {
+                security.SettlementModel = model.GetSettlementModel(security, algorithm.AccountType);
+            }
         }
     }
 }
