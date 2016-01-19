@@ -272,6 +272,15 @@ namespace QuantConnect.Configuration
             }
         }
 
+        /// <summary>
+        /// Write the contents of the serialized configuration back to the disk.
+        /// </summary>
+        public static void Write()
+        {
+            if (!Settings.IsValueCreated) return;
+            var serialized = JsonConvert.SerializeObject(Settings.Value, Formatting.Indented);
+            File.WriteAllText("config.json", serialized);
+        }
 
         /// <summary>
         /// Flattens the jobject with respect to the selected environment and then
