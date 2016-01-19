@@ -56,6 +56,7 @@
     <Compile Include="CustomBrokerageMessageHandlerAlgorithm.cs" />
     <Compile Include="CustomDataRegressionAlgorithm.cs" />
     <Compile Include="CustomDataUniverseAlgorithm.cs" />
+    <Compile Include="CustomModelsAlgorithm.cs" />
     <Compile Include="DelistingEventsAlgorithm.cs" />
     <Compile Include="DropboxBaseDataUniverseSelectionAlgorithm.cs" />
     <Compile Include="EquitiesLabAlgorithm.cs" />
