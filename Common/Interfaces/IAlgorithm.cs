@@ -280,14 +280,6 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
-        /// The account type determines which settlement model will be used (Cash or Margin).
-        /// </summary>
-        AccountType AccountType
-        {
-            get;
-        }
-
-        /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
         /// </summary>
         void Initialize();
@@ -324,8 +316,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="brokerageModel">The brokerage model used to emulate the real
         /// brokerage</param>
-        /// <param name="accountType">Specifies if this is a margin or cash account</param>
-        void SetBrokerageModel(IBrokerageModel brokerageModel, AccountType accountType = AccountType.Margin);
+        void SetBrokerageModel(IBrokerageModel brokerageModel);
 
         // <summary>
         // v1.0 Handler for Tick Events [DEPRECATED June-2014]

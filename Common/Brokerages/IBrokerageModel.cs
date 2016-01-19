@@ -30,6 +30,14 @@ namespace QuantConnect.Brokerages
     public interface IBrokerageModel
     {
         /// <summary>
+        /// Gets or sets the account type used by this model
+        /// </summary>
+        AccountType AccountType
+        {
+            get;
+        }
+
+        /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.
         /// </summary>

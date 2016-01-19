@@ -50,7 +50,7 @@ namespace QuantConnect.Securities
             security.FillModel = _algorithm.BrokerageModel.GetFillModel(security);
             security.FeeModel = _algorithm.BrokerageModel.GetFeeModel(security);
             security.SlippageModel = _algorithm.BrokerageModel.GetSlippageModel(security);
-            security.SettlementModel = _algorithm.BrokerageModel.GetSettlementModel(security, _algorithm.AccountType);
+            security.SettlementModel = _algorithm.BrokerageModel.GetSettlementModel(security, _algorithm.BrokerageModel.AccountType);
         }
     }
 }

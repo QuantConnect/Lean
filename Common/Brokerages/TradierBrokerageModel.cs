@@ -21,7 +21,6 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
-using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Brokerages
 {
@@ -32,6 +31,16 @@ namespace QuantConnect.Brokerages
     {
         private static readonly EquityExchange EquityExchange = 
             new EquityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity, TimeZones.NewYork));
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
+        /// </summary>
+        /// <param name="accountType">The type of account to be modelled, defaults to 
+        /// <see cref="QuantConnect.AccountType.Margin"/></param>
+        public TradierBrokerageModel(AccountType accountType = AccountType.Margin)
+            : base(accountType)
+        {
+        }
 
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account

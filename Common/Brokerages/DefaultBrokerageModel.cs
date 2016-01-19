@@ -32,6 +32,25 @@ namespace QuantConnect.Brokerages
     public class DefaultBrokerageModel : IBrokerageModel
     {
         /// <summary>
+        /// Gets or sets the account type used by this model
+        /// </summary>
+        public virtual AccountType AccountType
+        {
+            get; 
+            private set;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
+        /// </summary>
+        /// <param name="accountType">The type of account to be modelled, defaults to 
+        /// <see cref="QuantConnect.AccountType.Margin"/></param>
+        public DefaultBrokerageModel(AccountType accountType = AccountType.Margin)
+        {
+            AccountType = accountType;
+        }
+
+        /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.
         /// </summary>
