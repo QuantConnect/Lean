@@ -80,6 +80,7 @@ namespace QuantConnect.Tests.Common.Securities
             var subscriptions = new SubscriptionManager(TimeKeeper);
             var securities = new SecurityManager(TimeKeeper);
             var security = new Security(SecurityExchangeHours, subscriptions.Add(CASH, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork));
+            security.SetLeverage(10m);
             securities.Add(CASH, security);
             var transactions = new SecurityTransactionManager(securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
@@ -152,8 +153,11 @@ namespace QuantConnect.Tests.Common.Securities
             var usdCash = portfolio.CashBook["USD"];
 
             var mchJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, jwbCash, subscriptions.Add(MCHJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork));
+            mchJwbSecurity.SetLeverage(10m);
             var mchUsdSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, subscriptions.Add(MCHUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork));
+            mchUsdSecurity.SetLeverage(10m);
             var usdJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, mchCash, subscriptions.Add(USDJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork));
+            usdJwbSecurity.SetLeverage(10m);
             
             // no fee model
             mchJwbSecurity.TransactionModel = new SecurityTransactionModel();
@@ -232,10 +236,11 @@ namespace QuantConnect.Tests.Common.Securities
 
             var config = CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL);
             securities.Add(new Security(SecurityExchangeHours, config));
+            var security = securities[Symbols.AAPL];
+            security.SetLeverage(leverage);
 
             var time = DateTime.Now;
             const decimal buyPrice = 1m;
-            var security = securities[Symbols.AAPL];
             security.SetMarketPrice(new TradeBar(time, Symbols.AAPL, buyPrice, buyPrice, buyPrice, buyPrice, 1));
 
             var order = new MarketOrder(Symbols.AAPL, quantity, time) {Price = buyPrice};
@@ -323,6 +328,7 @@ namespace QuantConnect.Tests.Common.Securities
             var time = DateTime.Now;
             var config1 = CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL);
             securities.Add(new Security(SecurityExchangeHours, config1));
+            securities[Symbols.AAPL].SetLeverage(2m);
             securities[Symbols.AAPL].Holdings.SetHoldings(100, 100);
             securities[Symbols.AAPL].SetMarketPrice(new TradeBar{Time = time, Value = 100});
             //Console.WriteLine("AAPL TMU: " + securities[Symbols.AAPL].MarginModel.GetMaintenanceMargin(securities[Symbols.AAPL]));
@@ -332,6 +338,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var config2 = CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURUSD);
             securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, config2));
+            securities[Symbols.EURUSD].SetLeverage(100m);
             securities[Symbols.EURUSD].Holdings.SetHoldings(1.1m, 1000);
             securities[Symbols.EURUSD].SetMarketPrice(new TradeBar { Time = time, Value = 1.1m });
             //Console.WriteLine("EURUSD TMU: " + securities[Symbols.EURUSD].MarginModel.GetMaintenanceMargin(securities[Symbols.EURUSD]));
@@ -341,6 +348,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var config3 = CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURGBP);
             securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, gbpCash, config3));
+            securities[Symbols.EURGBP].SetLeverage(100m);
             securities[Symbols.EURGBP].Holdings.SetHoldings(1m, 1000);
             securities[Symbols.EURGBP].SetMarketPrice(new TradeBar { Time = time, Value = 1m });
             //Console.WriteLine("EURGBP TMU: " + securities[Symbols.EURGBP].MarginModel.GetMaintenanceMargin(securities[Symbols.EURGBP]));
