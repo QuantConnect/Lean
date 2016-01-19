@@ -16,7 +16,6 @@
 using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
@@ -35,11 +34,6 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class Security 
     {
-        private IFeeModel _feeModel;
-        private IFillModel _fillModel;
-        private ISlippageModel _slippageModel;
-        private ISettlementModel _settlementModel;
-
         private LocalTimeKeeper _localTimeKeeper;
         private readonly SubscriptionDataConfig _config;
 
@@ -201,12 +195,8 @@ namespace QuantConnect.Securities
         /// </summary>
         public IFeeModel FeeModel
         {
-            get { return _feeModel; }
-            set
-            {
-                IsFeeModelSet = true;
-                _feeModel = value;
-            }
+            get;
+            set;
         }
 
         /// <summary>
@@ -214,12 +204,8 @@ namespace QuantConnect.Securities
         /// </summary>
         public IFillModel FillModel
         {
-            get { return _fillModel; }
-            set
-            {
-                IsFillModelSet = true;
-                _fillModel = value;
-            }
+            get;
+            set;
         }
 
         /// <summary>
@@ -227,12 +213,8 @@ namespace QuantConnect.Securities
         /// </summary>
         public ISlippageModel SlippageModel
         {
-            get { return _slippageModel; }
-            set
-            {
-                IsSlippageModelSet = true;
-                _slippageModel = value;
-            }
+            get;
+            set;
         }
 
         /// <summary>
@@ -258,12 +240,8 @@ namespace QuantConnect.Securities
         /// </summary>
         public ISettlementModel SettlementModel
         {
-            get { return _settlementModel; }
-            set
-            {
-                IsSettlementModelSet = true;
-                _settlementModel = value;
-            }
+            get; 
+            set;
         }
 
         /// <summary>
@@ -317,10 +295,10 @@ namespace QuantConnect.Securities
             DataFilter = dataFilter;
             PortfolioModel = portfolioModel;
             MarginModel = marginModel;
-            _fillModel = fillModel;
-            _feeModel = feeModel;
-            _slippageModel = slippageModel;
-            _settlementModel = settlementModel;
+            FillModel = fillModel;
+            FeeModel = feeModel;
+            SlippageModel = slippageModel;
+            SettlementModel = settlementModel;
             Holdings = new SecurityHolding(this);
         }
 
@@ -535,22 +513,5 @@ namespace QuantConnect.Securities
         {
             return Symbol.ToString();
         }
-
-        /// <summary>
-        /// Gets whether or not the fee model property has been directly set
-        /// </summary>
-        internal bool IsFeeModelSet { get; private set; }
-        /// <summary>
-        /// Gets whether or not the fill model property has been directly set
-        /// </summary>
-        internal bool IsFillModelSet { get; private set; }
-        /// <summary>
-        /// Gets whether or not the slippage model property has been directly set
-        /// </summary>
-        internal bool IsSlippageModelSet { get; private set; }
-        /// <summary>
-        /// Gets whether or not the settlement model property has been directly set
-        /// </summary>
-        internal bool IsSettlementModelSet { get; private set; }
     }
 }

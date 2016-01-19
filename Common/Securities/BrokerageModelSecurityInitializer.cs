@@ -44,23 +44,10 @@ namespace QuantConnect.Securities
         /// <param name="security">The security to be initialized</param>
         public void Initialize(Security security)
         {
-            // set our models if the user hasn't already set them manually
-            if (!security.IsFillModelSet)
-            {
-                security.FillModel = _algorithm.BrokerageModel.GetFillModel(security);
-            }
-            if (!security.IsFeeModelSet)
-            {
-                security.FeeModel = _algorithm.BrokerageModel.GetFeeModel(security);
-            }
-            if (!security.IsSlippageModelSet)
-            {
-                security.SlippageModel = _algorithm.BrokerageModel.GetSlippageModel(security);
-            }
-            if (!security.IsSettlementModelSet)
-            {
-                security.SettlementModel = _algorithm.BrokerageModel.GetSettlementModel(security, _algorithm.AccountType);
-            }
+            security.FillModel = _algorithm.BrokerageModel.GetFillModel(security);
+            security.FeeModel = _algorithm.BrokerageModel.GetFeeModel(security);
+            security.SlippageModel = _algorithm.BrokerageModel.GetSlippageModel(security);
+            security.SettlementModel = _algorithm.BrokerageModel.GetSettlementModel(security, _algorithm.AccountType);
         }
     }
 }
