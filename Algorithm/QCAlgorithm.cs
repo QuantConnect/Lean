@@ -507,6 +507,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Sets the security initializer, used to initialize/configure securities after creation
+        /// </summary>
+        /// <param name="securityInitializer">The security initializer</param>
+        public void SetSecurityInitializer(ISecurityInitializer securityInitializer)
+        {
+            SecurityInitializer = securityInitializer;
+        }
+
+        /// <summary>
+        /// Sets the security initializer function, used to initialize/configure securities after creation
+        /// </summary>
+        /// <param name="securityInitializer">The security initializer function</param>
+        public void SetSecurityInitializer(Action<Security> securityInitializer)
+        {
+            SetSecurityInitializer(new FuncSecurityInitializer(securityInitializer));
+        }
+
+        /// <summary>
         /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
         /// </summary>
         /// <code>
