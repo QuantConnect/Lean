@@ -59,7 +59,10 @@ namespace QuantConnect.Lean.Engine.Setup
                 return;
             }
 
-            security.TransactionModel = model.GetTransactionModel(security);
+            // set our models
+            security.FillModel = model.GetFillModel(security);
+            security.FeeModel = model.GetFeeModel(security);
+            security.SlippageModel = model.GetSlippageModel(security);
             security.SettlementModel = model.GetSettlementModel(security, algorithm.AccountType);
         }
     }

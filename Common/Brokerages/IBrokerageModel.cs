@@ -17,8 +17,10 @@
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Brokerages
 {
@@ -70,11 +72,25 @@ namespace QuantConnect.Brokerages
         void ApplySplit(List<OrderTicket> tickets, Split split);
 
         /// <summary>
-        /// Gets a new transaction model the represents this brokerage's fee structure and fill behavior
+        /// Gets a new fill model that represents this brokerage's fill behavior
         /// </summary>
-        /// <param name="security">The security to get a transaction model for</param>
-        /// <returns>The transaction model for this brokerage</returns>
-        ISecurityTransactionModel GetTransactionModel(Security security);
+        /// <param name="security">The security to get fill model for</param>
+        /// <returns>The new fill model for this brokerage</returns>
+        IFillModel GetFillModel(Security security);
+
+        /// <summary>
+        /// Gets a new fee model that represents this brokerage's fee structure
+        /// </summary>
+        /// <param name="security">The security to get a fee model for</param>
+        /// <returns>The new fee model for this brokerage</returns>
+        IFeeModel GetFeeModel(Security security);
+
+        /// <summary>
+        /// Gets a new slippage model that represents this brokerage's fill slippage behavior
+        /// </summary>
+        /// <param name="security">The security to get a slippage model for</param>
+        /// <returns>The new slippage model for this brokerage</returns>
+        ISlippageModel GetSlippageModel(Security security);
 
         /// <summary>
         /// Gets a new settlement model for the security

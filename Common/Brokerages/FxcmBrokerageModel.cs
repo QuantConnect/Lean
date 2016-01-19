@@ -15,6 +15,9 @@
 
 using System;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Interfaces;
@@ -127,22 +130,33 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Gets a new transaction model that represents this brokerage's fee structure and fill behavior
+        /// Gets a new fill model that represents this brokerage's fill behavior
         /// </summary>
-        /// <param name="security">The security to get a transaction model for</param>
-        /// <returns>The transaction model for this brokerage</returns>
-        public override ISecurityTransactionModel GetTransactionModel(Security security)
+        /// <param name="security">The security to get fill model for</param>
+        /// <returns>The new fill model for this brokerage</returns>
+        public override IFillModel GetFillModel(Security security)
         {
-            switch (security.Type)
-            {
-                case SecurityType.Forex:
-                    return new FxcmTransactionModel();
+            return new ImmediateFillModel();
+        }
 
-                case SecurityType.Cfd:
-                default:
-                    // use the default model, it's ok if we subscribe to data for this security, but the CanSubmitOrder will block it
-                    return new SecurityTransactionModel();
-            }
+        /// <summary>
+        /// Gets a new fee model that represents this brokerage's fee structure
+        /// </summary>
+        /// <param name="security">The security to get a fee model for</param>
+        /// <returns>The new fee model for this brokerage</returns>
+        public override IFeeModel GetFeeModel(Security security)
+        {
+            return new FxcmFeeModel();
+        }
+
+        /// <summary>
+        /// Gets a new slippage model that represents this brokerage's fill slippage behavior
+        /// </summary>
+        /// <param name="security">The security to get a slippage model for</param>
+        /// <returns>The new slippage model for this brokerage</returns>
+        public override ISlippageModel GetSlippageModel(Security security)
+        {
+            return new SpreadSlippageModel();
         }
 
         /// <summary>
