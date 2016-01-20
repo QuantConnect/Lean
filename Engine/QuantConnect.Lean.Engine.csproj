@@ -225,7 +225,6 @@
     <None Include="packages.config" />
     <Compile Include="Results\BacktestingResultHandler.cs" />
     <Compile Include="DataFeeds\FileSystemDataFeed.cs" />
-    <Compile Include="Results\ConsoleResultHandler.cs" />
     <Compile Include="TransactionHandlers\BacktestingTransactionHandler.cs" />
     <Compile Include="TransactionHandlers\BrokerageTransactionHandler.cs" />
     <Compile Include="TransactionHandlers\ITransactionHandler.cs" />
