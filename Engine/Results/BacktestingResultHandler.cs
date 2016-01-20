@@ -445,9 +445,6 @@ namespace QuantConnect.Lean.Engine.Results
                 //Place result into storage.
                 StoreResult(result);
 
-                //Truncate packet to fit within 32kb of messaging limits.
-                result.Results = new BacktestResult();
-
                 //Second, send the truncated packet:
                 _messagingHandler.Send(result);
 
