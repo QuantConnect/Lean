@@ -124,9 +124,12 @@ namespace QuantConnect.Data.UniverseSelection
                     sid = SecurityIdentifier.GenerateForex(ticker, market);
                     break;
 
+                case SecurityType.Cfd:
+                    sid = SecurityIdentifier.GenerateCfd(ticker, market);
+                    break;
+
                 case SecurityType.Commodity:
                 case SecurityType.Future:
-                case SecurityType.Cfd:
                 default:
                     throw new NotImplementedException("The specified security type is not implemented yet: " + securityType);
             }
