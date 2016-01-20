@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Notifications;
 using QuantConnect.Packets;
 
@@ -25,7 +27,8 @@ namespace QuantConnect.Messaging
     public class Messaging : IMessagingHandler
     {
         /// <summary>
-        /// The default implementation doesn't send messages, so this does nothing.
+        /// This implementation ignores the <seealso cref="HasSubscribers"/> flag and
+        /// instead will always write to the log.
         /// </summary>
         public bool HasSubscribers
         {
@@ -54,7 +57,38 @@ namespace QuantConnect.Messaging
         /// </summary>
         public void Send(Packet packet)
         {
-            //
+            switch (packet.Type)
+            {
+                case PacketType.Debug:
+                    var debug = (DebugPacket) packet;
+                    Log.Trace("Debug: " + debug.Message);
+                    break;
+
+                case PacketType.Log:
+                    var log = (LogPacket) packet;
+                    Log.Trace("Log: " + log.Message);
+                    break;
+
+                case PacketType.RuntimeError:
+                    var runtime = (RuntimeErrorPacket) packet;
+                    var rstack = (!string.IsNullOrEmpty(runtime.StackTrace) ? (Environment.NewLine + " " + runtime.StackTrace) : string.Empty);
+                    Log.Error(runtime.Message + rstack);
+                    break;
+
+                case PacketType.HandledError:
+                    var handled = (HandledErrorPacket) packet;
+                    var hstack = (!string.IsNullOrEmpty(handled.StackTrace) ? (Environment.NewLine + " " + handled.StackTrace) : string.Empty);
+                    Log.Error(handled.Message + hstack);
+                    break;
+
+                case PacketType.BacktestResult:
+                    var result = (BacktestResultPacket) packet;
+                    foreach (var pair in result.Results.Statistics)
+                    {
+                        Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
+                    }
+                    break;
+            }
         }
 
         /// <summary>
@@ -62,7 +96,15 @@ namespace QuantConnect.Messaging
         /// </summary>
         public void SendNotification(Notification notification)
         {
-            //
+            var type = notification.GetType();
+            if (type == typeof (NotificationEmail)
+             || type == typeof (NotificationWeb)
+             || type == typeof (NotificationSms))
+            {
+                Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + type.Name);
+                return;
+            }
+            notification.Send();
         }
     }
 }
