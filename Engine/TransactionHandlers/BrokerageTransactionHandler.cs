@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Util;
 
@@ -821,6 +822,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     {
                         string baseCurrency, quoteCurrency;
                         Forex.DecomposeCurrencyPair(fill.Symbol.Value, out baseCurrency, out quoteCurrency);
+                        conversionRate = _algorithm.Portfolio.CashBook[quoteCurrency].ConversionRate;
+                    }
+                    else if (order.SecurityType == SecurityType.Cfd)
+                    {
+                        var quoteCurrency = Cfd.GetQuoteCurrency(fill.Symbol);
                         conversionRate = _algorithm.Portfolio.CashBook[quoteCurrency].ConversionRate;
                     }
 
