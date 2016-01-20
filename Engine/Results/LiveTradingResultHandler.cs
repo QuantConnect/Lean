@@ -208,13 +208,6 @@ namespace QuantConnect.Lean.Engine.Results
                     {
                         switch (packet.Type)
                         {
-                            //New Debug Message:
-                            case PacketType.Debug:
-                                var debug = packet as DebugPacket;
-                                Log.Debug("LiveTradingResultHandlerRun(): Debug Packet: " + debug.Message);
-                                _messagingHandler.DebugMessage(debug.Message, debug.ProjectId, _deployId, _compileId);
-                                break;
-
                             case PacketType.RuntimeError:
                                 var runtimeError = packet as RuntimeErrorPacket;
                                 _messagingHandler.RuntimeError(_deployId, runtimeError.Message, runtimeError.StackTrace);

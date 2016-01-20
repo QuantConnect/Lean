@@ -58,14 +58,6 @@ namespace QuantConnect.Messaging
         }
 
         /// <summary>
-        /// Send a debug message packet
-        /// </summary>
-        public void DebugMessage(string line, int projectId, string algorithmId = "", string compileId = "")
-        {
-            //
-        }
-
-        /// <summary>
         /// Send a security types in algorithm information packet
         /// </summary>
         public void SecurityTypes(SecurityTypesPacket types)

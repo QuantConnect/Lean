@@ -240,17 +240,6 @@ namespace QuantConnect.Lean.Engine.Results
                         {
                             switch (packet.Type)
                             {
-                                //New Debug Message:
-                                case PacketType.Debug:
-                                    var debug = packet as DebugPacket;
-                                    if (lastMessage != debug.Message)
-                                    {
-                                        //Log.Trace("BacktestingResultHandlerRun(): Debug Packet: " + debug.Message);
-                                        _messagingHandler.DebugMessage(debug.Message, debug.ProjectId, _backtestId, _compileId);
-                                        lastMessage = debug.Message;
-                                    }
-                                    break;
-
                                 //Send log messages to the browser as well for live trading:
                                 case PacketType.SecurityTypes:
                                     var securityPacket = packet as SecurityTypesPacket;

@@ -51,15 +51,6 @@ namespace QuantConnect.Interfaces
         void Send(Packet packet);
 
         /// <summary>
-        /// Send a string debug message to the user
-        /// </summary>
-        /// <param name="line">String message data to send</param>
-        /// <param name="projectId">Project id associated with this message</param>
-        /// <param name="algorithmId">Algorithm id associated with this message</param>
-        /// <param name="compileId">Compile id associated with this message</param>
-        void DebugMessage(string line, int projectId, string algorithmId = "", string compileId = "");
-
-        /// <summary>
         /// Send a security types packet: what securities are being used in this algorithm? What markets are we trading?
         /// </summary>
         /// <param name="types">List of security types to be passed to the GUI.</param>
