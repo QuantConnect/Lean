@@ -217,13 +217,6 @@ namespace QuantConnect.Lean.Engine.Results
                                 _messagingHandler.Send(orderEvent);
                                 break;
 
-                            //Status Update
-                            case PacketType.AlgorithmStatus:
-                                var statusPacket = packet as AlgorithmStatusPacket;
-                                Log.Debug("LiveTradingResultHandler.Run(): Algorithm Status Packet:" + statusPacket.Status + " " + statusPacket.AlgorithmId);
-                                _messagingHandler.AlgorithmStatus(statusPacket.AlgorithmId, statusPacket.ProjectId, statusPacket.Status, statusPacket.Message);
-                                break;
-
                             default:
                                 _messagingHandler.Send(packet);
                                 Log.Debug("LiveTradingResultHandler.Run(): Case Unhandled: " + packet.Type);

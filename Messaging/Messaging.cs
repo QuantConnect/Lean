@@ -58,14 +58,6 @@ namespace QuantConnect.Messaging
         }
 
         /// <summary>
-        /// Send an algorithm status update
-        /// </summary>
-        public void AlgorithmStatus(string algorithmId, int projectId, AlgorithmStatus status, string message = "")
-        {
-            //
-        }
-
-        /// <summary>
         /// Send a backtest result packet
         /// </summary>
         public void BacktestResult(BacktestResultPacket packet, bool finalPacket = false)
