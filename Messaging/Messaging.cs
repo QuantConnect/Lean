@@ -58,14 +58,6 @@ namespace QuantConnect.Messaging
         }
 
         /// <summary>
-        /// Send a backtest result packet
-        /// </summary>
-        public void BacktestResult(BacktestResultPacket packet, bool finalPacket = false)
-        {
-            //
-        }
-
-        /// <summary>
         /// Send a live trading packet result.
         /// </summary>
         public void LiveTradingResult(LiveResultPacket packet)

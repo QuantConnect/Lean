@@ -51,13 +51,6 @@ namespace QuantConnect.Interfaces
         void Send(Packet packet);
 
         /// <summary>
-        /// Send a backtest result message via the messaging plugin system.
-        /// </summary>
-        /// <param name="packet">Backtest result packet containing updated chart and progress information</param>
-        /// <param name="finalPacket">This is the final packet. Backtests can return before 100% if they have failed or the data does not contain the expected number of days</param>
-        void BacktestResult(BacktestResultPacket packet, bool finalPacket = false);
-
-        /// <summary>
         /// Send live trading result packet to the user interface via the messaging plugin system
         /// </summary>
         /// <param name="packet">Live result packet containing live result information to update the GUI</param>

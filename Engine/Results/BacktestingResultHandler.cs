@@ -462,7 +462,7 @@ namespace QuantConnect.Lean.Engine.Results
                 result.Results = new BacktestResult();
 
                 //Second, send the truncated packet:
-                _messagingHandler.BacktestResult(result, finalPacket: true);
+                _messagingHandler.Send(result);
 
                 Log.Trace("BacktestingResultHandler.SendAnalysisResult(): Processed final packet"); 
             } 
