@@ -222,13 +222,6 @@ namespace QuantConnect.Lean.Engine.Results
                                 _messagingHandler.Send(orderEvent);
                                 break;
 
-                            //Send log messages to the browser as well for live trading:
-                            case PacketType.Log:
-                                var log = packet as LogPacket;
-                                Log.Debug("LiveTradingResultHandler.Run(): Log Packet: " + log.Message);
-                                _messagingHandler.LogMessage(_deployId, log.Message);
-                                break;
-
                             //Status Update
                             case PacketType.AlgorithmStatus:
                                 var statusPacket = packet as AlgorithmStatusPacket;

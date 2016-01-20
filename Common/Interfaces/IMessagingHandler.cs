@@ -51,13 +51,6 @@ namespace QuantConnect.Interfaces
         void Send(Packet packet);
 
         /// <summary>
-        /// Send a log message to the final user interface via messaging system plugin.
-        /// </summary>
-        /// <param name="algorithmId">Algorithm id associated with this log message</param>
-        /// <param name="message">String log message to be saved and passed to user interface</param>
-        void LogMessage(string algorithmId, string message);
-
-        /// <summary>
         /// Runtime error handler. Triggered when the user algorithm has an unhandled error while the algorithm was running.
         /// </summary>
         /// <param name="algorithmId">Algorithm id associated with this backtest</param>
