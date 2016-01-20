@@ -30,6 +30,8 @@ namespace QuantConnect.Messaging
         // used to aid in generating regression tests via Cosole.WriteLine(...)
         private static readonly TextWriter Console = System.Console.Out;
 
+        private AlgorithmNodePacket _job;
+
         /// <summary>
         /// This implementation ignores the <seealso cref="HasSubscribers"/> flag and
         /// instead will always write to the log.
@@ -53,7 +55,7 @@ namespace QuantConnect.Messaging
         /// </summary>
         public void SetAuthentication(AlgorithmNodePacket job)
         {
-            //
+            _job = job;
         }
 
         /// <summary>
@@ -107,6 +109,8 @@ namespace QuantConnect.Messaging
                     }
                     break;
             }
+            
+            StreamingApi.Transmit(_job.UserId, _job.Channel, packet);
         }
 
         /// <summary>
