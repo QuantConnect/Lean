@@ -51,14 +51,6 @@ namespace QuantConnect.Interfaces
         void Send(Packet packet);
 
         /// <summary>
-        /// Runtime error handler. Triggered when the user algorithm has an unhandled error while the algorithm was running.
-        /// </summary>
-        /// <param name="algorithmId">Algorithm id associated with this backtest</param>
-        /// <param name="error">String error message captured from the unhandled error event</param>
-        /// <param name="stacktrace">String stack trace of the runtime error</param>
-        void RuntimeError(string algorithmId, string error, string stacktrace = "");
-
-        /// <summary>
         /// Algorithm status change signal from the Lean Engine triggering GUI updates.
         /// </summary>
         /// <param name="algorithmId">Algorithm id associated with this status message</param>

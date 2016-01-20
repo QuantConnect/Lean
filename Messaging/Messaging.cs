@@ -58,14 +58,6 @@ namespace QuantConnect.Messaging
         }
 
         /// <summary>
-        /// Send a runtime error packet:
-        /// </summary>
-        public void RuntimeError(string algorithmId, string error, string stacktrace)
-        {
-            //
-        }
-
-        /// <summary>
         /// Send an algorithm status update
         /// </summary>
         public void AlgorithmStatus(string algorithmId, int projectId, AlgorithmStatus status, string message = "")

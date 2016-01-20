@@ -208,11 +208,6 @@ namespace QuantConnect.Lean.Engine.Results
                     {
                         switch (packet.Type)
                         {
-                            case PacketType.RuntimeError:
-                                var runtimeError = packet as RuntimeErrorPacket;
-                                _messagingHandler.RuntimeError(_deployId, runtimeError.Message, runtimeError.StackTrace);
-                                break;
-
                             //Log all order events to the frontend:
                             case PacketType.OrderEvent:
                                 var orderEvent = packet as OrderEventPacket;

@@ -240,12 +240,6 @@ namespace QuantConnect.Lean.Engine.Results
                         {
                             switch (packet.Type)
                             {
-                                case PacketType.RuntimeError:
-                                    //Log.Error("QC.AlgorithmWorker.Run(): " + packet.Message);
-                                    var runtime = packet as RuntimeErrorPacket;
-                                    _messagingHandler.RuntimeError(_backtestId, runtime.Message, runtime.StackTrace);
-                                    break;
-
                                 case PacketType.HandledError:
                                     var handled = packet as HandledErrorPacket;
                                     Log.Error("BacktestingResultHandler.Run(): HandledError Packet: " + handled.Message);
