@@ -53,14 +53,14 @@ namespace QuantConnect.Tests
         {
             AlgorithmRunner.RunLocalBacktest("LimitFillRegressionAlgorithm", new Dictionary<string, string>
             {
-                {"Total Trades", "35"},
+                {"Total Trades", "34"},
                 {"Average Win", "0.02%"},
                 {"Average Loss", "-0.02%"},
-                {"Compounding Annual Return", "8.265%"},
+                {"Compounding Annual Return", "8.350%"},
                 {"Drawdown", "0.200%"},
                 {"Expectancy", "0.447"},
-                {"Net Profit", "0.102%"},
-                {"Sharpe Ratio", "1.729"},
+                {"Net Profit", "0.103%"},
+                {"Sharpe Ratio", "1.747"},
                 {"Loss Rate", "31%"},
                 {"Win Rate", "69%"},
                 {"Profit-Loss Ratio", "1.10"},
@@ -68,10 +68,10 @@ namespace QuantConnect.Tests
                 {"Beta", "0.002"},
                 {"Annual Standard Deviation", "0.03"},
                 {"Annual Variance", "0.001"},
-                {"Information Ratio", "-2.454"},
+                {"Information Ratio", "-2.451"},
                 {"Tracking Error", "0.194"},
-                {"Treynor Ratio", "28.639"},
-                {"Total Fees", "$35.00"}
+                {"Treynor Ratio", "29.506"},
+                {"Total Fees", "$34.00"}
             });
         }
 
@@ -164,7 +164,7 @@ namespace QuantConnect.Tests
                 {"Total Trades", "1"},
                 {"Average Win", "0%"},
                 {"Average Loss", "0%"},
-                {"Compounding Annual Return", "155.200%"},
+                {"Compounding Annual Return", "155.210%"},
                 {"Drawdown", "99.900%"},
                 {"Expectancy", "0"},
                 {"Net Profit", "0%"},
@@ -172,13 +172,13 @@ namespace QuantConnect.Tests
                 {"Loss Rate", "0%"},
                 {"Win Rate", "0%"},
                 {"Profit-Loss Ratio", "0"},
-                {"Alpha", "0"},
-                {"Beta", "0"},
+                {"Alpha", "48.714"},
+                {"Beta", "50.259"},
                 {"Annual Standard Deviation", "118.922"},
                 {"Annual Variance", "14142.47"},
-                {"Information Ratio", "0"},
-                {"Tracking Error", "0"},
-                {"Treynor Ratio", "0"},
+                {"Information Ratio", "0.452"},
+                {"Tracking Error", "118.917"},
+                {"Treynor Ratio", "1.072"},
                 {"Total Fees", "$0.00"}
             });
         }
@@ -215,25 +215,25 @@ namespace QuantConnect.Tests
         {
             AlgorithmRunner.RunLocalBacktest("DropboxBaseDataUniverseSelectionAlgorithm", new Dictionary<string, string>
             {
-                {"Total Trades", "90"},
-                {"Average Win", "0.78%"},
-                {"Average Loss", "-0.40%"},
-                {"Compounding Annual Return", "18.606%"},
-                {"Drawdown", "4.700%"},
-                {"Expectancy", "1.068"},
-                {"Net Profit", "18.606%"},
-                {"Sharpe Ratio", "1.804"},
+                {"Total Trades", "67"},
+                {"Average Win", "1.07%"},
+                {"Average Loss", "-0.69%"},
+                {"Compounding Annual Return", "17.697%"},
+                {"Drawdown", "5.100%"},
+                {"Expectancy", "0.776"},
+                {"Net Profit", "17.697%"},
+                {"Sharpe Ratio", "1.379"},
                 {"Loss Rate", "30%"},
                 {"Win Rate", "70%"},
-                {"Profit-Loss Ratio", "1.96"},
-                {"Alpha", "0"},
-                {"Beta", "0"},
-                {"Annual Standard Deviation", "0.078"},
-                {"Annual Variance", "0.006"},
-                {"Information Ratio", "0"},
-                {"Tracking Error", "0"},
-                {"Treynor Ratio", "0"},
-                {"Total Fees", "$240.52"}
+                {"Profit-Loss Ratio", "1.55"},
+                {"Alpha", "0.151"},
+                {"Beta", "-0.073"},
+                {"Annual Standard Deviation", "0.099"},
+                {"Annual Variance", "0.01"},
+                {"Information Ratio", "-0.507"},
+                {"Tracking Error", "0.146"},
+                {"Treynor Ratio", "-1.871"},
+                {"Total Fees", "$300.29"}
             });
         }
 
@@ -242,25 +242,25 @@ namespace QuantConnect.Tests
         {
             AlgorithmRunner.RunLocalBacktest("DropboxUniverseSelectionAlgorithm", new Dictionary<string, string>
             {
-                {"Total Trades", "66"},
-                {"Average Win", "1.01%"},
-                {"Average Loss", "-0.50%"},
-                {"Compounding Annual Return", "18.591%"},
-                {"Drawdown", "7.100%"},
-                {"Expectancy", "0.785"},
-                {"Net Profit", "18.591%"},
-                {"Sharpe Ratio", "1.435"},
-                {"Loss Rate", "41%"},
-                {"Win Rate", "59%"},
-                {"Profit-Loss Ratio", "2.01"},
-                {"Alpha", "0"},
-                {"Beta", "0"},
-                {"Annual Standard Deviation", "0.1"},
-                {"Annual Variance", "0.01"},
-                {"Information Ratio", "0"},
-                {"Tracking Error", "0"},
-                {"Treynor Ratio", "0"},
-                {"Total Fees", "$185.60"}
+                {"Total Trades", "49"},
+                {"Average Win", "1.58%"},
+                {"Average Loss", "-1.03%"},
+                {"Compounding Annual Return", "21.280%"},
+                {"Drawdown", "8.200%"},
+                {"Expectancy", "0.646"},
+                {"Net Profit", "21.280%"},
+                {"Sharpe Ratio", "1.363"},
+                {"Loss Rate", "35%"},
+                {"Win Rate", "65%"},
+                {"Profit-Loss Ratio", "1.52"},
+                {"Alpha", "0.178"},
+                {"Beta", "-0.071"},
+                {"Annual Standard Deviation", "0.12"},
+                {"Annual Variance", "0.014"},
+                {"Information Ratio", "-0.297"},
+                {"Tracking Error", "0.161"},
+                {"Treynor Ratio", "-2.319"},
+                {"Total Fees", "$233.07"}
             });
         }
 
