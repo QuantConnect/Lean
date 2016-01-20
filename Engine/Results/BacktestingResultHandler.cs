@@ -238,20 +238,7 @@ namespace QuantConnect.Lean.Engine.Results
                         Packet packet;
                         if (Messages.TryDequeue(out packet))
                         {
-                            switch (packet.Type)
-                            {
-                                case PacketType.HandledError:
-                                    var handled = packet as HandledErrorPacket;
-                                    Log.Error("BacktestingResultHandler.Run(): HandledError Packet: " + handled.Message);
-                                    _messagingHandler.Send(handled);
-                                    break;
-
-                                default:
-                                    //Default case..
-                                    _messagingHandler.Send(packet);
-                                    Log.Trace("BacktestingResultHandler.Run(): Default packet type: " + packet.Type);
-                                    break;
-                            }
+                            _messagingHandler.Send(packet);
                         }
                     }
 
