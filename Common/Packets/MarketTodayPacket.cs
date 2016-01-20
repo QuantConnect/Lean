@@ -129,6 +129,16 @@ namespace QuantConnect.Packets
         }
 
         /// <summary>
+        /// Gets a MarketToday instance that represents the CFD markets on the
+        /// specified date. For simplicity, we assume CFD markets are always open from 
+        /// 5pm sunday EST to 5pm friday EST
+        /// </summary>
+        public static MarketToday Cfd(DateTime date)
+        {
+            return Forex(date);
+        }
+
+        /// <summary>
         /// Gets a MarketToday instance that represents equity markets in the united states.
         /// Closed all day on Saturday and Sunday as well as for USHolidays, otherwise open
         /// between 9:30 and 4:00pm EST

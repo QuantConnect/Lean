@@ -119,6 +119,9 @@ namespace QuantConnect.Api
                 case SecurityType.Forex:
                     return Packets.MarketToday.Forex(time);
 
+                case SecurityType.Cfd:
+                    return Packets.MarketToday.Cfd(time);
+
                 default:
                     throw new ArgumentOutOfRangeException("type");
             }
