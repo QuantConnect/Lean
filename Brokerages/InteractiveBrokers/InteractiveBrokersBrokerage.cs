@@ -400,11 +400,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _accountProperties.Clear();
 
             int attempt = 1;
+            const int maxAttempts = 65;
             while (true)
             {
                 try
                 {
-                    Log.Trace("InteractiveBrokersBrokerage.Connect(): Attempting to connect (" + attempt + "/10) ...");
+                    Log.Trace("InteractiveBrokersBrokerage.Connect(): Attempting to connect ({0}/{1}) ...", attempt, maxAttempts);
 
                     // we're going to try and connect several times, if successful break
                     _client.Connect(_host, _port, _clientID);
@@ -415,7 +416,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 catch (Exception err)
                 {
                     // max out at 65 attempts to connect ~1 minute
-                    if (attempt++ < 65)
+                    if (attempt++ < maxAttempts)
                     {
                         Thread.Sleep(1000);
                         continue;
