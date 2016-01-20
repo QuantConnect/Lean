@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.IO;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
@@ -26,6 +27,9 @@ namespace QuantConnect.Messaging
     /// </summary>
     public class Messaging : IMessagingHandler
     {
+        // used to aid in generating regression tests via Cosole.WriteLine(...)
+        private static readonly TextWriter Console = System.Console.Out;
+
         /// <summary>
         /// This implementation ignores the <seealso cref="HasSubscribers"/> flag and
         /// instead will always write to the log.
@@ -83,9 +87,23 @@ namespace QuantConnect.Messaging
 
                 case PacketType.BacktestResult:
                     var result = (BacktestResultPacket) packet;
-                    foreach (var pair in result.Results.Statistics)
+
+                    if (result.Progress == 1)
                     {
-                        Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
+                        // uncomment these code traces to help write regression tests
+                        //Console.WriteLine("new Dictionary<string, string>");
+                        //Console.WriteLine("\t\t\t{");
+                        foreach (var pair in result.Results.Statistics)
+                        {
+                            Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
+                            //Console.WriteLine("\t\t\t\t{{\"{0}\",\"{1}\"}},", pair.Key, pair.Value);
+                        }
+                        //Console.WriteLine("\t\t\t});");
+
+                        //foreach (var pair in statisticsResults.RollingPerformances)
+                        //{
+                        //    Log.Trace("ROLLINGSTATS:: " + pair.Key + " SharpeRatio: " + Math.Round(pair.Value.PortfolioStatistics.SharpeRatio, 3));
+                        //}
                     }
                     break;
             }

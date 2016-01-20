@@ -161,6 +161,11 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// A dictionary containing summary statistics
+        /// </summary>
+        public Dictionary<string, string> FinalStatistics { get; private set; }
+
+        /// <summary>
         /// Default initializer for 
         /// </summary>
         public BacktestingResultHandler()
@@ -421,8 +426,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="banner">Runtime statistics banner information</param>
         public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, StatisticsResults statisticsResults, Dictionary<string, string> banner)
         { 
-            try 
+            try
             {
+                FinalStatistics = statisticsResults.Summary;
+
                 //Convert local dictionary:
                 var charts = new Dictionary<string, Chart>(Charts);
                 _processingFinalPacket = true;

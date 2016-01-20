@@ -195,7 +195,7 @@ namespace QuantConnect.Lean.Engine
             var transactionHandlerTypeName = Config.Get("transaction-handler", "BacktestingTransactionHandler");
             var realTimeHandlerTypeName = Config.Get("real-time-handler", "BacktestingRealTimeHandler");
             var dataFeedHandlerTypeName = Config.Get("data-feed-handler", "FileSystemDataFeed");
-            var resultHandlerTypeName = Config.Get("result-handler", "ConsoleResultHandler");
+            var resultHandlerTypeName = Config.Get("result-handler", "BacktestingResultHandler");
             var historyProviderTypeName = Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider");
             var commandQueueHandlerTypeName = Config.Get("command-queue-handler", "EmptyCommandQueueHandler");
             var mapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");

@@ -46,7 +46,7 @@ namespace QuantConnect.Configuration
                     {"queue-handler", "QuantConnect.Queues.Queues"},
                     {"api-handler", "QuantConnect.Api.Api"},
                     {"setup-handler", "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler"},
-                    {"result-handler", "QuantConnect.Lean.Engine.Results.ConsoleResultHandler"},
+                    {"result-handler", "QuantConnect.Lean.Engine.Results.BacktestingResultHandler"},
                     {"data-feed-handler", "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed"},
                     {"real-time-handler", "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler"},
                     {"transaction-handler", "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"}
