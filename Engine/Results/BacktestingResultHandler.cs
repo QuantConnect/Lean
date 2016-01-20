@@ -240,12 +240,6 @@ namespace QuantConnect.Lean.Engine.Results
                         {
                             switch (packet.Type)
                             {
-                                //Send log messages to the browser as well for live trading:
-                                case PacketType.SecurityTypes:
-                                    var securityPacket = packet as SecurityTypesPacket;
-                                    _messagingHandler.SecurityTypes(securityPacket);
-                                    break;
-
                                 case PacketType.RuntimeError:
                                     //Log.Error("QC.AlgorithmWorker.Run(): " + packet.Message);
                                     var runtime = packet as RuntimeErrorPacket;

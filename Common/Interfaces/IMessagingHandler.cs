@@ -51,12 +51,6 @@ namespace QuantConnect.Interfaces
         void Send(Packet packet);
 
         /// <summary>
-        /// Send a security types packet: what securities are being used in this algorithm? What markets are we trading?
-        /// </summary>
-        /// <param name="types">List of security types to be passed to the GUI.</param>
-        void SecurityTypes(SecurityTypesPacket types);
-
-        /// <summary>
         /// Send a log message to the final user interface via messaging system plugin.
         /// </summary>
         /// <param name="algorithmId">Algorithm id associated with this log message</param>

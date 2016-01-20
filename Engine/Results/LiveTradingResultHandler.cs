@@ -229,13 +229,6 @@ namespace QuantConnect.Lean.Engine.Results
                                 _messagingHandler.LogMessage(_deployId, log.Message);
                                 break;
 
-                            //Send log messages to the browser as well for live trading:
-                            case PacketType.SecurityTypes:
-                                var securityPacket = packet as SecurityTypesPacket;
-                                Log.Debug("LiveTradingResultHandler.Run(): Security Types Packet: " + securityPacket.TypesCSV);
-                                _messagingHandler.SecurityTypes(securityPacket);
-                                break;
-
                             //Status Update
                             case PacketType.AlgorithmStatus:
                                 var statusPacket = packet as AlgorithmStatusPacket;

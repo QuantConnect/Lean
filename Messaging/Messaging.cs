@@ -58,14 +58,6 @@ namespace QuantConnect.Messaging
         }
 
         /// <summary>
-        /// Send a security types in algorithm information packet
-        /// </summary>
-        public void SecurityTypes(SecurityTypesPacket types)
-        {
-            //
-        }
-
-        /// <summary>
         /// Send a log message packet
         /// </summary>
         public void LogMessage(string algorithmId, string message)
