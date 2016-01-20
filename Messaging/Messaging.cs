@@ -58,14 +58,6 @@ namespace QuantConnect.Messaging
         }
 
         /// <summary>
-        /// Send a live trading packet result.
-        /// </summary>
-        public void LiveTradingResult(LiveResultPacket packet)
-        {
-            //
-        }
-
-        /// <summary>
         /// Send a rate limited email notification triggered during live trading from a user algorithm
         /// </summary>
         /// <param name="notification"></param>

@@ -782,7 +782,7 @@ namespace QuantConnect.Lean.Engine.Results
                 result.Results = new LiveResult();
 
                 //Send the truncated packet:
-                _messagingHandler.LiveTradingResult(result);
+                _messagingHandler.Send(result);
             }
             catch (Exception err)
             {

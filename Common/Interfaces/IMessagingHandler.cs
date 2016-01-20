@@ -51,12 +51,6 @@ namespace QuantConnect.Interfaces
         void Send(Packet packet);
 
         /// <summary>
-        /// Send live trading result packet to the user interface via the messaging plugin system
-        /// </summary>
-        /// <param name="packet">Live result packet containing live result information to update the GUI</param>
-        void LiveTradingResult(LiveResultPacket packet);
-
-        /// <summary>
         /// Send a rate limited email notification triggered during live trading from a user algorithm
         /// </summary>
         /// <param name="notification">Notification object class</param>
