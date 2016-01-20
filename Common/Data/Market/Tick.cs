@@ -241,6 +241,7 @@ namespace QuantConnect.Data.Market
                     }
 
                     case SecurityType.Forex:
+                    case SecurityType.Cfd:
                     {
                         var csv = line.ToCsv(3);
                         Symbol = config.Symbol;
@@ -296,7 +297,7 @@ namespace QuantConnect.Data.Market
             }
 
             var dateFormat = "yyyyMMdd";
-            if (config.SecurityType == SecurityType.Forex)
+            if (config.SecurityType == SecurityType.Forex || config.SecurityType == SecurityType.Cfd)
             {
                 dataType = TickType.Quote;
             }
