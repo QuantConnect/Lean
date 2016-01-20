@@ -243,6 +243,13 @@
     <Compile Include="Securities\BrokerageModelSecurityInitializer.cs" />
     <Compile Include="Securities\Cash.cs" />
     <Compile Include="Securities\CashBook.cs" />
+    <Compile Include="Securities\Cfd\Cfd.cs" />
+    <Compile Include="Securities\Cfd\CfdCache.cs" />
+    <Compile Include="Securities\Cfd\CfdDataFilter.cs" />
+    <Compile Include="Securities\Cfd\CfdExchange.cs" />
+    <Compile Include="Securities\Cfd\CfdHolding.cs" />
+    <Compile Include="Securities\Cfd\CfdMarginModel.cs" />
+    <Compile Include="Securities\Cfd\CfdPortfolioModel.cs" />
     <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
     <Compile Include="Securities\Equity\EquityMarginModel.cs" />
     <Compile Include="Securities\Equity\EquityPortfolioModel.cs" />
