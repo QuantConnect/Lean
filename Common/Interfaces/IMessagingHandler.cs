@@ -41,8 +41,8 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Set the user communication channel
         /// </summary>
-        /// <param name="channelId">Unique channel id for the communication</param>
-        void SetChannel(string channelId);
+        /// <param name="job"></param>
+        void SetAuthentication(AlgorithmNodePacket job);
 
         /// <summary>
         /// Send any message with a base type of Packet.

@@ -44,7 +44,7 @@ namespace QuantConnect.Messaging
         /// <summary>
         /// Set the messaging channel
         /// </summary>
-        public void SetChannel(string channelId)
+        public void SetAuthentication(AlgorithmNodePacket job)
         {
             //
         }

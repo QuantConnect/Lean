@@ -95,7 +95,7 @@ namespace QuantConnect.Lean.Engine
                 Thread threadRealTime = null;
 
                 //-> Initialize messaging system
-                _systemHandlers.Notify.SetChannel(job.Channel);
+                _systemHandlers.Notify.SetAuthentication(job);
 
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
                 _algorithmHandlers.Results.Initialize(job, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.DataFeed, _algorithmHandlers.Setup, _algorithmHandlers.Transactions);
