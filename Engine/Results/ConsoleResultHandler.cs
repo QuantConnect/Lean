@@ -633,38 +633,16 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     //Process the notification messages:
                     Log.Trace("ConsoleResultHandler.ProcessSynchronousEvents(): Processing Notification...");
-
-                    switch (message.GetType().Name)
+                    try
                     {
-                        case "NotificationEmail":
-                            _messagingHandler.Email(message as NotificationEmail);
-                            break;
-
-                        case "NotificationSms":
-                            _messagingHandler.Sms(message as NotificationSms);
-                            break;
-
-                        case "NotificationWeb":
-                            _messagingHandler.Web(message as NotificationWeb);
-                            break;
-
-                        default:
-                            try
-                            {
-                                //User code.
-                                message.Send();
-                            }
-                            catch (Exception err)
-                            {
-                                Log.Error(err, "Custom send notification:");
-                                ErrorMessage("Custom send notification: " + err.Message, err.StackTrace);
-                            }
-                            break;
+                        _messagingHandler.SendNotification(message);
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err, "Sending notification: " + message.GetType().FullName);
                     }
                 }
             }
         }
-
-    } // End Result Handler Thread:
-
-} // End Namespace
+    }
+}

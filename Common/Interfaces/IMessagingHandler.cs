@@ -51,21 +51,9 @@ namespace QuantConnect.Interfaces
         void Send(Packet packet);
 
         /// <summary>
-        /// Send a rate limited email notification triggered during live trading from a user algorithm
+        /// Send any notification with a base type of Notification.
         /// </summary>
-        /// <param name="notification">Notification object class</param>
-        void Email(NotificationEmail notification);
-
-        /// <summary>
-        /// Send a rate limited SMS notification triggered duing live trading from a user algorithm.
-        /// </summary>
-        /// <param name="notification">Notification object class</param>
-        void Sms(NotificationSms notification);
-
-        /// <summary>
-        /// Send a web REST request notification triggered during live trading from a user algorithm.
-        /// </summary>
-        /// <param name="notification">Notification object class</param>
-        void Web(NotificationWeb notification);
+        /// <param name="notification">The notification to be sent.</param>
+        void SendNotification(Notification notification);
     }
 }

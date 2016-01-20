@@ -58,28 +58,9 @@ namespace QuantConnect.Messaging
         }
 
         /// <summary>
-        /// Send a rate limited email notification triggered during live trading from a user algorithm
+        /// Send any notification with a base type of Notification.
         /// </summary>
-        /// <param name="notification"></param>
-        public void Email(NotificationEmail notification)
-        {
-            //
-        }
-
-        /// <summary>
-        /// Send a rate limited SMS notification triggered duing live trading from a user algorithm.
-        /// </summary>
-        /// <param name="notification"></param>
-        public void Sms(NotificationSms notification)
-        {
-            //
-        }
-
-        /// <summary>
-        /// Send a web REST request notification triggered during live trading from a user algorithm.
-        /// </summary>
-        /// <param name="notification"></param>
-        public void Web(NotificationWeb notification)
+        public void SendNotification(Notification notification)
         {
             //
         }

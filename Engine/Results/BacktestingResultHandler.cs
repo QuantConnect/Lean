@@ -865,7 +865,5 @@ namespace QuantConnect.Lean.Engine.Results
             _algorithm.LogMessages.ForEach(x => LogMessage(x));
             _algorithm.LogMessages.Clear();
         }
-
-    } // End Result Handler Thread:
-
-} // End Namespace
+    }
+}
