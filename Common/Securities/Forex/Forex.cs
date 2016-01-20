@@ -124,6 +124,9 @@ namespace QuantConnect.Securities.Forex
         /// <summary>
         /// A mapping of currency codes to their display symbols
         /// </summary>
+        /// <remarks>
+        /// Now used by Forex and CFD, should probably be moved out into its own class
+        /// </remarks>
         public static readonly IReadOnlyDictionary<string, string> CurrencySymbols = new Dictionary<string, string>
         {
             {"USD", "$"},
@@ -133,7 +136,8 @@ namespace QuantConnect.Securities.Forex
             {"NZD", "$"},
             {"AUD", "$"},
             {"CAD", "$"},
-            {"CHF", "Fr"}
+            {"CHF", "Fr"},
+            {"XAG", "Ag"}
         };
     }
 }

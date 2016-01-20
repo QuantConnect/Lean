@@ -19,6 +19,7 @@ using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Forex;
 
 namespace QuantConnect
@@ -99,6 +100,13 @@ namespace QuantConnect
                 Forex.DecomposeCurrencyPair(holding.Symbol.Value, out basec, out quotec);
                 CurrencySymbol = Forex.CurrencySymbols[quotec];
                 ConversionRate = ((ForexHolding) holding).ConversionRate;
+            }
+            else if (holding.Type == SecurityType.Cfd)
+            {
+                rounding = 5;
+                var quotec = Cfd.GetQuoteCurrency(holding.Symbol);
+                CurrencySymbol = Forex.CurrencySymbols[quotec];
+                ConversionRate = ((CfdHolding)holding).ConversionRate;
             }
 
             AveragePrice = Math.Round(holding.AveragePrice, rounding);
