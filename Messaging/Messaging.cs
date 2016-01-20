@@ -109,8 +109,12 @@ namespace QuantConnect.Messaging
                     }
                     break;
             }
-            
-            StreamingApi.Transmit(_job.UserId, _job.Channel, packet);
+
+
+            if (StreamingApi.IsEnabled)
+            {
+                StreamingApi.Transmit(_job.UserId, _job.Channel, packet);
+            }
         }
 
         /// <summary>

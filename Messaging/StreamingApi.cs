@@ -28,7 +28,10 @@ namespace QuantConnect.Messaging
     /// </summary>
     public static class StreamingApi
     {
-        private static readonly bool IsEnabled = Config.GetBool("send-via-api");
+        /// <summary>
+        /// Gets a flag indicating whether or not the streaming api is enabled
+        /// </summary>
+        public static readonly bool IsEnabled = Config.GetBool("send-via-api");
 
         /// <summary>
         /// Send a message to the QuantConnect Chart Streaming API.
@@ -38,9 +41,6 @@ namespace QuantConnect.Messaging
         /// <param name="packet">Packet to transmit</param>
         public static void Transmit(int userId, string apiToken, Packet packet)
         {
-            // do nothing if we're not enabled
-            if (!IsEnabled) return;
-
             try
             {
                 using (var client = new WebClient())
