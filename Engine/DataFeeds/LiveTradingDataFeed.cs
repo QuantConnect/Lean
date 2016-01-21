@@ -568,6 +568,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 if (ticks == 0) Thread.Sleep(1);
             }
+
+            Log.Trace("LiveTradingDataFeed.GetNextTicksEnumerator(): Exiting enumerator thread...");
         }
 
         private static TimeSpan ResolveFillForwardResolution(IAlgorithm algorithm)
