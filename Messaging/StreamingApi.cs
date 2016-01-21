@@ -58,8 +58,6 @@ namespace QuantConnect.Messaging
                         {"tx", tx}
                     });
 
-                    Log.Trace("StreamingApi.Transmit():  Sending Packet ({0})", packet.GetType());
-
                     //Deserialize the response from the streaming API and throw in error case.
                     var result = JsonConvert.DeserializeObject<Response>(System.Text.Encoding.UTF8.GetString(response));
                     if (result.Type == "error")
@@ -70,7 +68,7 @@ namespace QuantConnect.Messaging
             }
             catch (Exception err)
             {
-                Log.Error(err);
+                Log.Error(err, "PacketType: " + packet.Type);
             }
         }
 
