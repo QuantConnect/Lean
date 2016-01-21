@@ -57,9 +57,9 @@ namespace QuantConnect.Securities.Cfd
         /// <param name="symbol">The symbol for which to get the quote currency</param>
         public static string GetQuoteCurrency(Symbol symbol)
         {
-            if (symbol.Value == null || symbol.Value.Length <= 3)
+            if (symbol == null || symbol.Value == null || symbol.Value.Length <= 3)
             {
-                throw new ArgumentException("The CFD symbol length must be greater than 3 characters: " + symbol.Value);
+                throw new ArgumentException("The CFD symbol length must be greater than 3 characters: " + (symbol == null ? "" : symbol.Value));
             }
 
             return symbol.Value.Substring(symbol.Value.Length - 3);
