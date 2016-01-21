@@ -138,6 +138,7 @@
     <Compile Include="Commands\QuitCommand.cs" />
     <Compile Include="Commands\UpdateOrderCommand.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="Currencies.cs" />
     <Compile Include="Data\Auxiliary\FactorFile.cs" />
     <Compile Include="Data\Auxiliary\FactorFileRow.cs" />
     <Compile Include="Data\Auxiliary\LocalDiskFactorFileProvider.cs" />

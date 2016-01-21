@@ -98,14 +98,14 @@ namespace QuantConnect
                 rounding = 5;
                 string basec, quotec;
                 Forex.DecomposeCurrencyPair(holding.Symbol.Value, out basec, out quotec);
-                CurrencySymbol = Forex.CurrencySymbols[quotec];
+                CurrencySymbol = Currencies.CurrencySymbols[quotec];
                 ConversionRate = ((ForexHolding) holding).ConversionRate;
             }
             else if (holding.Type == SecurityType.Cfd)
             {
                 rounding = 5;
                 var quotec = Cfd.GetQuoteCurrency(holding.Symbol);
-                CurrencySymbol = Forex.CurrencySymbols[quotec];
+                CurrencySymbol = Currencies.CurrencySymbols[quotec];
                 ConversionRate = ((CfdHolding)holding).ConversionRate;
             }
 

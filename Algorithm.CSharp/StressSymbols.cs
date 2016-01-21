@@ -23,7 +23,7 @@ namespace QuantConnect.Algorithm.Examples
         /// <summary>
         /// The forex symbols.
         /// </summary>
-        public static HashSet<string> ForexSymbols = new HashSet<string>(Forex.CurrencyPairs);
+        public static HashSet<string> ForexSymbols = new HashSet<string>(Currencies.CurrencyPairs);
 
         /// <summary>
         /// The stock symbols.
