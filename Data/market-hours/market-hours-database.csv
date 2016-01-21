@@ -14,3 +14,5 @@ America/New_York,America/New_York,usa,,equity,-,-,-,-,4,9.5,16,20,4,9.5,16,20,4,
 # fxcm data uses EST, does not use EDT, so use a fixed offset
 UTC-05,UTC-05,fxcm,,forex,17,17,24,24,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,0,0,17,17,-,-,-,-
 UTC+00,America/New_York,oanda,,forex,17,17,24,24,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,0,0,17,17,-,-,-,-
+UTC-05,UTC-05,fxcm,,cfd,17,17,24,24,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,0,0,17,17,-,-,-,-
+UTC+00,America/New_York,oanda,,cfd,17,17,24,24,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,+,0,0,17,17,-,-,-,-
