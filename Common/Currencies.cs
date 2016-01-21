@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Securities;
 
 namespace QuantConnect
 {
@@ -27,10 +28,12 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>
         /// This listing should be in sync with the data available at: https://www.quantconnect.com/data/FOREX#2.1.1
+        /// It must include all currency pairs needed to resolve quote currencies in <see cref="Cash.EnsureCurrencyDataFeed"/>
         /// </remarks>
         public static readonly IReadOnlyList<string> CurrencyPairs = new[]
         {
-            "AUDJPY", "AUDUSD", "EURCHF", "EURGBP", "EURJPY", "EURUSD", "GBPAUD", "GBPJPY", "GBPUSD", "NZDUSD", "USDCAD", "USDCHF", "USDJPY"
+            "AUDJPY", "AUDUSD", "EURCHF", "EURGBP", "EURJPY", "EURUSD", "GBPAUD", "GBPJPY", "GBPUSD", "NZDUSD", "USDCAD", "USDCHF", "USDJPY",
+            "USDHKD", "USDSGD", "XAGUSD"
         };
 
         /// <summary>
@@ -49,6 +52,8 @@ namespace QuantConnect
             {"AUD", "$"},
             {"CAD", "$"},
             {"CHF", "Fr"},
+            {"HKD", "$"},
+            {"SGD", "$"},
             {"XAG", "Ag"}
         };
     }
