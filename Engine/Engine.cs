@@ -345,10 +345,12 @@ namespace QuantConnect.Lean.Engine
 
                 if (brokerage != null)
                 {
+                    Log.Trace("Engine.Run(): Disconnecting from brokerage...");
                     brokerage.Disconnect();
                 }
                 if (_algorithmHandlers.Setup != null)
                 {
+                    Log.Trace("Engine.Run(): Disposing of setup handler...");
                     _algorithmHandlers.Setup.Dispose();
                 }
                 Log.Trace("Engine.Main(): Analysis Completed and Results Posted.");

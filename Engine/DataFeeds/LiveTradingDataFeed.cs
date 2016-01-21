@@ -313,6 +313,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Log.Error(err);
                 _algorithm.RunTimeError = err;
             }
+
+            Log.Trace("LiveTradingDataFeed.Run(): Exited thread.");
             IsActive = false;
         }
 
@@ -336,15 +338,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
             }
-            
+
             if (_exchange != null) _exchange.Stop();
             if (_customExchange != null) _customExchange.Stop();
 
-            if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
-            {
-                _cancellationTokenSource.Cancel();
-                if (_bridge != null) _bridge.Dispose();
-            }
+            Log.Trace("LiveTradingDataFeed.Exit(): Setting cancellation token...");
+            _cancellationTokenSource.Cancel();
+            
+            if (_bridge != null) _bridge.Dispose();
         }
 
         /// <summary>
