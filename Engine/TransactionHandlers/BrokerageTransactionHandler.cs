@@ -619,6 +619,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 Log.Error(err);
                 _algorithm.Error(string.Format("Order Error: id: {0}, Error executing margin models: {1}", order.Id, err.Message));
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Error executing margin models"));
                 return OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, "Error in GetSufficientCapitalForOrder");
             }
 
@@ -628,6 +629,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 var security = _algorithm.Securities[order.Symbol];
                 var response = OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.GetValue(security.Price).SmartRounding()));
                 _algorithm.Error(response.ErrorMessage);
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Insufficient buying power to complete order"));
                 return response;
             }
 
@@ -640,6 +642,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrder", "BrokerageModel declared unable to submit order: " + order.Id);
                 var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToSubmitOrder, "OrderID: " + order.Id + " " + message);
                 _algorithm.Error(response.ErrorMessage);
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "BrokerageModel declared unable to submit order"));
                 return response;
             }
 
@@ -662,6 +665,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 var errorMessage = "Brokerage failed to place order: " + order.Id;
                 var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToSubmitOrder, errorMessage);
                 _algorithm.Error(response.ErrorMessage);
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Brokerage failed to place order"));
                 return response;
             }
             
@@ -696,6 +700,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrder", "BrokerageModel declared unable to update order: " + order.Id);
                 var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToUpdateOrder, "OrderID: " + order.Id + " " + message);
                 _algorithm.Error(response.ErrorMessage);
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "BrokerageModel declared unable to update order"));
                 return response;
             }
 
@@ -719,6 +724,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 // we failed to update the order for some reason
                 var errorMessage = "Brokerage failed to update order with id " + request.OrderId;
                 _algorithm.Error(errorMessage);
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Brokerage failed to update order"));
                 return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToUpdateOrder, errorMessage);
             }
 
@@ -772,8 +778,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!orderCanceled)
             {
                 // failed to cancel the order
-                var message = _brokerage.Name + " failed to cancel order with id " + order.Id;
+                var message = "Brokerage failed to cancel order with id " + order.Id;
                 _algorithm.Error(message);
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Brokerage failed to cancel order"));
                 return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToCancelOrder, message);
             }
 
