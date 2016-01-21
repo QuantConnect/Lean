@@ -529,6 +529,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             if (Messages.Count > 500) return;
             Messages.Enqueue(new HandledErrorPacket(_deployId, message, stacktrace));
+            AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
         }
 
         /// <summary>
@@ -549,6 +550,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void RuntimeError(string message, string stacktrace = "")
         {
             Messages.Enqueue(new RuntimeErrorPacket(_deployId, message, stacktrace));
+            AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
         }
 
         /// <summary>
