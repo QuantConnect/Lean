@@ -49,6 +49,8 @@ namespace QuantConnect.Securities.Cfd
             QuoteCurrency = quoteCurrency;
             Holdings = new CfdHolding(this);
             QuoteCurrencySymbol = GetQuoteCurrency(config.Symbol);
+            ContractMultiplier = 1;
+            PipSize = 1;
         }
 
         /// <summary>
