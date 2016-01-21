@@ -227,7 +227,7 @@ namespace QuantConnect.Securities
                 return false;
             }
 
-            if (!orderTicket.OrderFilled.WaitOne(_marketOrderFillTimeout))
+            if (!orderTicket.OrderClosed.WaitOne(_marketOrderFillTimeout))
             {
                 Log.Error("SecurityTransactionManager.WaitForOrder(): Order did not fill within {0} seconds.", _marketOrderFillTimeout.TotalSeconds);
                 return false;
