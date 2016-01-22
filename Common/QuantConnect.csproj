@@ -273,6 +273,8 @@
     <Compile Include="Securities\SecurityPortfolioModel.cs" />
     <Compile Include="Securities\SecurityMarginModel.cs" />
     <Compile Include="Securities\ImmediateSettlementModel.cs" />
+    <Compile Include="Securities\SymbolProperties.cs" />
+    <Compile Include="Securities\SymbolPropertiesDatabase.cs" />
     <Compile Include="Securities\UniverseManager.cs" />
     <Compile Include="Securities\UnsettledCashAmount.cs" />
     <Compile Include="SecurityIdentifier.cs" />
