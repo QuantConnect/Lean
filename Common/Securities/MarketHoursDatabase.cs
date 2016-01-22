@@ -33,7 +33,7 @@ namespace QuantConnect.Securities
         private static MarketHoursDatabase _dataFolderMarketHoursDatabase;
         private static readonly object DataFolderMarketHoursDatabaseLock = new object();
 
-        private readonly IReadOnlyDictionary<Key, Entry> _entries;
+        private readonly IReadOnlyDictionary<SecurityKey, Entry> _entries;
 
         /// <summary>
         /// Gets an instant of <see cref="MarketHoursDatabase"/> that will always return <see cref="SecurityExchangeHours.AlwaysOpen"/>
@@ -52,7 +52,7 @@ namespace QuantConnect.Securities
             get { return _entries.Values.Select(x => x.ExchangeHours).ToList(); }
         }
 
-        private MarketHoursDatabase(IReadOnlyDictionary<Key, Entry> exchangeHours)
+        private MarketHoursDatabase(IReadOnlyDictionary<SecurityKey, Entry> exchangeHours)
         {
             _entries = exchangeHours.ToDictionary();
         }
@@ -135,7 +135,7 @@ namespace QuantConnect.Securities
         /// <returns>A new instance of the <see cref="MarketHoursDatabase"/> class representing the data in the specified file</returns>
         public static MarketHoursDatabase FromCsvFile(string file, IReadOnlyDictionary<string, IEnumerable<DateTime>> holidaysByMarket)
         {
-            var exchangeHours = new Dictionary<Key, Entry>();
+            var exchangeHours = new Dictionary<SecurityKey, Entry>();
 
             if (!File.Exists(file))
             {
@@ -145,7 +145,7 @@ namespace QuantConnect.Securities
             // skip the first header line, also skip #'s as these are comment lines
             foreach (var line in File.ReadLines(file).Where(x => !x.StartsWith("#")).Skip(1))
             {
-                Key key;
+                SecurityKey key;
                 var hours = FromCsvLine(line, holidaysByMarket, out key);
                 if (exchangeHours.ContainsKey(key))
                 {
@@ -171,11 +171,11 @@ namespace QuantConnect.Securities
         public virtual Entry GetEntry(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
         {
             Entry entry;
-            var key = new Key(market, symbol, securityType);
+            var key = new SecurityKey(market, symbol, securityType);
             if (!_entries.TryGetValue(key, out entry))
             {
                 // now check with null symbol key
-                if (!_entries.TryGetValue(new Key(market, null, securityType), out entry))
+                if (!_entries.TryGetValue(new SecurityKey(market, null, securityType), out entry))
                 {
                     if (securityType == SecurityType.Base)
                     {
@@ -212,7 +212,7 @@ namespace QuantConnect.Securities
         /// <param name="holidaysByMarket">The holidays this exchange isn't open for trading by market</param>
         /// <param name="key">The key used to uniquely identify these market hours</param>
         /// <returns>A new <see cref="SecurityExchangeHours"/> for the specified csv line and holidays</returns>
-        private static Entry FromCsvLine(string line, IReadOnlyDictionary<string, IEnumerable<DateTime>> holidaysByMarket, out Key key)
+        private static Entry FromCsvLine(string line, IReadOnlyDictionary<string, IEnumerable<DateTime>> holidaysByMarket, out SecurityKey key)
         {
             var csv = line.Split(',');
             var marketHours = new List<LocalMarketHours>(7);
@@ -227,7 +227,7 @@ namespace QuantConnect.Securities
             //var symbol = csv[3];
             //var type = csv[4];
             var symbol = string.IsNullOrEmpty(csv[3]) ? null : csv[3];
-            key = new Key(csv[2], symbol, (SecurityType)Enum.Parse(typeof(SecurityType), csv[4], true));
+            key = new SecurityKey(csv[2], symbol, (SecurityType)Enum.Parse(typeof(SecurityType), csv[4], true));
 
             int csvLength = csv.Length;
             for (int i = 1; i < 8; i++) // 7 days, so < 8
@@ -350,65 +350,6 @@ namespace QuantConnect.Securities
             {
                 DataTimeZone = dataTimeZone;
                 ExchangeHours = exchangeHours;
-            }
-        }
-
-        class Key : IEquatable<Key>
-        {
-            public readonly string Market;
-            public readonly string Symbol;
-            public readonly SecurityType SecurityType;
-
-            public Key(string market, string symbol, SecurityType securityType)
-            {
-                Market = market;
-                SecurityType = securityType;
-                Symbol = symbol;
-            }
-
-            #region Equality members
-
-            public bool Equals(Key other)
-            {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
-                return string.Equals(Market, other.Market) && Equals(Symbol, other.Symbol) && SecurityType == other.SecurityType;
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
-                return Equals((Key)obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    var hashCode = (Market != null ? Market.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (Symbol != null ? Symbol.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (int)SecurityType;
-                    return hashCode;
-                }
-            }
-
-            public static bool operator ==(Key left, Key right)
-            {
-                return Equals(left, right);
-            }
-
-            public static bool operator !=(Key left, Key right)
-            {
-                return !Equals(left, right);
-            }
-
-            #endregion
-
-            public override string ToString()
-            {
-                return string.Format("{0}-{1}-{2}", Market ?? "[null]", Symbol ?? "[null]", SecurityType);
             }
         }
 
