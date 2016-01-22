@@ -311,6 +311,7 @@ namespace QuantConnect.Securities
             SubscriptionManager subscriptionManager,
             SecurityExchangeHours exchangeHours,
             DateTimeZone dataTimeZone,
+            SymbolPropertiesDatabase symbolPropertiesDatabase,
             ISecurityInitializer securityInitializer,
             Symbol symbol,
             Resolution resolution,
@@ -397,6 +398,7 @@ namespace QuantConnect.Securities
         public static Security CreateSecurity(SecurityPortfolioManager securityPortfolioManager,
             SubscriptionManager subscriptionManager,
             MarketHoursDatabase marketHoursDatabase,
+            SymbolPropertiesDatabase symbolPropertiesDatabase,
             ISecurityInitializer securityInitializer,
             Symbol symbol,
             Resolution resolution,
@@ -411,7 +413,7 @@ namespace QuantConnect.Securities
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
             var tradeBarType = typeof(TradeBar);
             var type = resolution == Resolution.Tick ? typeof(Tick) : tradeBarType;
-            return CreateSecurity(type, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, securityInitializer, symbol, resolution,
+            return CreateSecurity(type, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbolPropertiesDatabase, securityInitializer, symbol, resolution,
                 fillDataForward, leverage, extendedMarketHours, isInternalFeed, isCustomData, addToSymbolCache);
         }
     }
