@@ -61,6 +61,7 @@ namespace QuantConnect.Algorithm
         private bool _sentNoDataError = false;
 
         private readonly MarketHoursDatabase _marketHoursDatabase;
+        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
 
         // used for calling through to void OnData(Slice) if no override specified
         private bool _checkedForOnDataSlice;
@@ -126,6 +127,9 @@ namespace QuantConnect.Algorithm
 
             // get exchange hours loaded from the market-hours-database.csv in /Data/market-hours
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+
+            // get symbol properties loaded from the symbol-properties-database.csv in /Data/symbol-properties
+            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
             // universe selection
             UniverseManager = new UniverseManager();
