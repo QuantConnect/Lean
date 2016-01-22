@@ -331,6 +331,8 @@ namespace QuantConnect.Securities
             var config = subscriptionManager.Add(factoryType, symbol, resolution, dataTimeZone, exchangeHours.TimeZone, isCustomData, fillDataForward,
                 extendedMarketHours, isInternalFeed);
 
+            var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
+
             Security security;
             switch (config.SecurityType)
             {
