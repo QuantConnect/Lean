@@ -331,6 +331,7 @@ namespace QuantConnect.Securities
             var config = subscriptionManager.Add(factoryType, symbol, resolution, dataTimeZone, exchangeHours.TimeZone, isCustomData, fillDataForward,
                 extendedMarketHours, isInternalFeed);
 
+            // only used in CFD security type, for now
             var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
 
             Security security;
@@ -369,7 +370,7 @@ namespace QuantConnect.Securities
                             // since we have none it's safe to say the conversion is zero
                             securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
                         }
-                        security = new Cfd.Cfd(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config);
+                        security = new Cfd.Cfd(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, symbolProperties);
                     }
                     break;
 

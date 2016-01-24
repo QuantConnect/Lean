@@ -187,10 +187,12 @@ namespace QuantConnect.Securities
                     var config = subscriptions.Add(objectType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
                     SecuritySymbol = config.Symbol;
 
+                    var securityType = symbol.ID.SecurityType;
                     Security security;
-                    if (symbol.ID.SecurityType == SecurityType.Cfd)
+                    if (securityType == SecurityType.Cfd)
                     {
-                        security = new Cfd.Cfd(exchangeHours, this, config);
+                        var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, securityType);
+                        security = new Cfd.Cfd(exchangeHours, this, config, symbolProperties);
                     }
                     else
                     {

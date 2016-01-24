@@ -33,7 +33,8 @@ namespace QuantConnect.Securities.Cfd
         /// <param name="exchangeHours">Defines the hours this exchange is open</param>
         /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
         /// <param name="config">The subscription configuration for this security</param>
-        public Cfd(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config)
+        /// <param name="symbolProperties">The symbol properties for this security</param>
+        public Cfd(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config, SymbolProperties symbolProperties)
             : base(config,
                 new CfdExchange(exchangeHours),
                 new CfdCache(),
@@ -48,9 +49,7 @@ namespace QuantConnect.Securities.Cfd
         {
             QuoteCurrency = quoteCurrency;
             Holdings = new CfdHolding(this);
-            QuoteCurrencySymbol = GetQuoteCurrency(config.Symbol);
-            ContractMultiplier = 1;
-            PipSize = 1;
+            SymbolProperties = symbolProperties;
         }
 
         /// <summary>
@@ -73,9 +72,18 @@ namespace QuantConnect.Securities.Cfd
         public Cash QuoteCurrency { get; private set; }
 
         /// <summary>
+        /// Gets the symbol properties for this security
+        /// </summary>
+        /// <remarks>Could possibly be moved to the base Security class</remarks>
+        public SymbolProperties SymbolProperties { get; private set; }
+
+        /// <summary>
         /// Gets the quote currency for this CFD security
         /// </summary>
-        public string QuoteCurrencySymbol { get; private set; }
+        public string QuoteCurrencySymbol
+        {
+            get { return SymbolProperties != null ? SymbolProperties.QuoteCurrency : QuoteCurrency.Symbol; }
+        }
 
         /// <summary>
         /// Gets the contract multiplier for this CFD security
@@ -83,11 +91,17 @@ namespace QuantConnect.Securities.Cfd
         /// <remarks>
         /// PipValue := ContractMultiplier * PipSize
         /// </remarks>
-        public decimal ContractMultiplier { get; private set; }
+        public decimal ContractMultiplier
+        {
+            get { return SymbolProperties != null ? SymbolProperties.ContractMultiplier : 1m; }
+        }
 
         /// <summary>
         /// Gets the pip size for this CFD security
         /// </summary>
-        public decimal PipSize { get; private set; }
+        public decimal PipSize
+        {
+            get { return SymbolProperties != null ? SymbolProperties.PipSize : 0.01m; }
+        }
     }
 }
