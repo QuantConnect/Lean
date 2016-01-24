@@ -374,7 +374,8 @@ namespace QuantConnect.Algorithm
             else if (security.Type == SecurityType.Cfd)
             {
                 // for CFD we need to verify that the conversion to USD has a value as well
-                var quoteCurrency = Cfd.GetQuoteCurrency(security.Symbol);
+                var cfd = (Cfd) security;
+                var quoteCurrency = cfd.QuoteCurrencySymbol;
 
                 // verify it's in the portfolio
                 Cash quoteCash;

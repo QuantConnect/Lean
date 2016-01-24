@@ -826,7 +826,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     }
                     else if (order.SecurityType == SecurityType.Cfd)
                     {
-                        var quoteCurrency = Cfd.GetQuoteCurrency(fill.Symbol);
+                        var cfd = (Cfd)_algorithm.Securities[fill.Symbol];
+                        var quoteCurrency = cfd.QuoteCurrencySymbol;
                         conversionRate = _algorithm.Portfolio.CashBook[quoteCurrency].ConversionRate;
                     }
 

@@ -53,20 +53,6 @@ namespace QuantConnect.Securities.Cfd
         }
 
         /// <summary>
-        /// Returns the quote currency of the specified symbol
-        /// </summary>
-        /// <param name="symbol">The symbol for which to get the quote currency</param>
-        public static string GetQuoteCurrency(Symbol symbol)
-        {
-            if (symbol == null || symbol.Value == null || symbol.Value.Length <= 3)
-            {
-                throw new ArgumentException("The CFD symbol length must be greater than 3 characters: " + (symbol == null ? "" : symbol.Value));
-            }
-
-            return symbol.Value.Substring(symbol.Value.Length - 3);
-        }
-
-        /// <summary>
         /// Gets the Cash object used for converting the quote currency to the account currency
         /// </summary>
         public Cash QuoteCurrency { get; private set; }

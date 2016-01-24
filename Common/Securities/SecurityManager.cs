@@ -363,7 +363,7 @@ namespace QuantConnect.Securities
 
                 case SecurityType.Cfd:
                     {
-                        var quoteCurrency = Cfd.Cfd.GetQuoteCurrency(symbol);
+                        var quoteCurrency = symbolProperties.QuoteCurrency;
 
                         if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
                         {

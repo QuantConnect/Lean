@@ -104,7 +104,8 @@ namespace QuantConnect
             else if (holding.Type == SecurityType.Cfd)
             {
                 rounding = 5;
-                var quotec = Cfd.GetQuoteCurrency(holding.Symbol);
+                var cfd = (Cfd) holding.Security;
+                var quotec =  cfd.QuoteCurrencySymbol;
                 CurrencySymbol = Currencies.CurrencySymbols[quotec];
                 ConversionRate = ((CfdHolding)holding).ConversionRate;
             }

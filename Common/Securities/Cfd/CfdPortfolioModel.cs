@@ -34,7 +34,7 @@ namespace QuantConnect.Securities.Cfd
         {
             var cfd = (Cfd) security;
 
-            var quoteCurrency = Cfd.GetQuoteCurrency(security.Symbol);
+            var quoteCurrency = cfd.QuoteCurrencySymbol;
 
             var quoteCash = portfolio.CashBook[quoteCurrency];
 
