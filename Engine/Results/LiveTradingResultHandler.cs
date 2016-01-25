@@ -206,22 +206,7 @@ namespace QuantConnect.Lean.Engine.Results
                     Packet packet;
                     if (Messages.TryDequeue(out packet))
                     {
-                        switch (packet.Type)
-                        {
-                            //Log all order events to the frontend:
-                            case PacketType.OrderEvent:
-                                var orderEvent = packet as OrderEventPacket;
-                                DebugMessage("New Order Event: OrderId:" + orderEvent.Event.OrderId + " Symbol:" +
-                                                orderEvent.Event.Symbol.ToString() + " Quantity:" + orderEvent.Event.FillQuantity +
-                                                " Status:" + orderEvent.Event.Status);
-                                _messagingHandler.Send(orderEvent);
-                                break;
-
-                            default:
-                                _messagingHandler.Send(packet);
-                                Log.Debug("LiveTradingResultHandler.Run(): Case Unhandled: " + packet.Type);
-                                break;
-                        }
+                        _messagingHandler.Send(packet);
                     }
 
                     //2. Update the packet scanner:
@@ -544,6 +529,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             if (Messages.Count > 500) return;
             Messages.Enqueue(new HandledErrorPacket(_deployId, message, stacktrace));
+            AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
         }
 
         /// <summary>
@@ -564,6 +550,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void RuntimeError(string message, string stacktrace = "")
         {
             Messages.Enqueue(new RuntimeErrorPacket(_deployId, message, stacktrace));
+            AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
         }
 
         /// <summary>
@@ -926,6 +913,8 @@ namespace QuantConnect.Lean.Engine.Results
             //Send the message to frontend as packet:
             Log.Trace("LiveTradingResultHandler.OrderEvent(): " + newEvent, true);
             Messages.Enqueue(new OrderEventPacket(_deployId, newEvent));
+
+            DebugMessage(string.Format("New Order Event: OrderId:{0} Symbol:{1} Quantity:{2} Status:{3}", newEvent.OrderId, newEvent.Symbol, newEvent.FillQuantity, newEvent.Status));
 
             //Add the order event message to the log:
             LogMessage("New Order Event: Id:" + newEvent.OrderId + " Symbol:" + newEvent.Symbol.ToString() + " Quantity:" + newEvent.FillQuantity + " Status:" + newEvent.Status);
