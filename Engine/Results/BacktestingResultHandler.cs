@@ -207,12 +207,6 @@ namespace QuantConnect.Lean.Engine.Results
             if (_job == null) throw new Exception("BacktestingResultHandler.Constructor(): Submitted Job type invalid.");
             _compileId = _job.CompileId;
             _backtestId = _job.BacktestId;
-
-            //Get the resample period:
-            var totalMinutes = (_job.PeriodFinish - _job.PeriodStart).TotalMinutes;
-            var resampleMinutes = (totalMinutes < (_minimumSamplePeriod * _samples)) ? _minimumSamplePeriod : (totalMinutes / _samples); // Space out the sampling every 
-            _resamplePeriod = TimeSpan.FromMinutes(resampleMinutes);
-            Log.Trace("BacktestingResultHandler(): Sample Period Set: " + resampleMinutes.ToString("00.00"));
         }
         
         /// <summary>
@@ -471,6 +465,12 @@ namespace QuantConnect.Lean.Engine.Results
         public void SetAlgorithm(IAlgorithm algorithm)
         {
             _algorithm = algorithm;
+
+            //Get the resample period:
+            var totalMinutes = (_job.PeriodFinish - _job.PeriodStart).TotalMinutes;
+            var resampleMinutes = (totalMinutes < (_minimumSamplePeriod * _samples)) ? _minimumSamplePeriod : (totalMinutes / _samples); // Space out the sampling every 
+            _resamplePeriod = TimeSpan.FromMinutes(resampleMinutes);
+            Log.Trace("BacktestingResultHandler(): Sample Period Set: " + resampleMinutes.ToString("00.00"));
             
             //Setup the sampling periods:
             _jobDays = Time.TradeableDates(Algorithm.Securities.Values, _job.PeriodStart, _job.PeriodFinish);
