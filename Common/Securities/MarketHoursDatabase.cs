@@ -143,7 +143,7 @@ namespace QuantConnect.Securities
             }
 
             // skip the first header line, also skip #'s as these are comment lines
-            foreach (var line in File.ReadLines(file).Where(x => !x.StartsWith("#")).Skip(1))
+            foreach (var line in File.ReadLines(file).Where(x => !x.StartsWith("#") && !string.IsNullOrWhiteSpace(x)).Skip(1))
             {
                 SecurityKey key;
                 var hours = FromCsvLine(line, holidaysByMarket, out key);
