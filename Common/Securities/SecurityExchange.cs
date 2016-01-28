@@ -45,38 +45,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the market open time for the current day
-        /// </summary>
-        public TimeSpan MarketOpen
-        {
-            get { return _exchangeHours.GetMarketHours(_localFrontier).MarketOpen; }
-        }
-
-        /// <summary>
-        /// Gets the market close time for the current day
-        /// </summary>
-        public TimeSpan MarketClose
-        {
-            get { return _exchangeHours.GetMarketHours(_localFrontier).MarketClose; }
-        }
-
-        /// <summary>
-        /// Gets the extended market open time for the current day
-        /// </summary>
-        public TimeSpan ExtendedMarketOpen
-        {
-            get { return _exchangeHours.GetMarketHours(_localFrontier).ExtendedMarketOpen; }
-        }
-
-        /// <summary>
-        /// Gets the extended market close time for the current day
-        /// </summary>
-        public TimeSpan ExtendedMarketClose
-        {
-            get { return _exchangeHours.GetMarketHours(_localFrontier).ExtendedMarketClose; }
-        }
-
-        /// <summary>
         /// Number of trading days per year for this security. By default the market is open 365 days per year.
         /// </summary>
         /// <remarks>Used for performance statistics to calculate sharpe ratio accurately</remarks>
