@@ -253,11 +253,14 @@ namespace QuantConnect.Statistics
             // will not be affected much
             var listBenchmark = new List<double> { 0 };
 
+            var minDate = equity.Keys.FirstOrDefault().AddDays(-1);
+            var maxDate = equity.Keys.LastOrDefault();
+
             // Get benchmark performance array for same period:
             var dtPrevious = new DateTime();
             benchmark.Keys.ToList().ForEach(dt =>
             {
-                if (dt >= equity.Keys.FirstOrDefault().AddDays(-1) && dt < equity.Keys.LastOrDefault())
+                if (dt >= minDate && dt < maxDate)
                 {
                     decimal previous;
                     if (benchmark.TryGetValue(dtPrevious, out previous) && previous != 0)
