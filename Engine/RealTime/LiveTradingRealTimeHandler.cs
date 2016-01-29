@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
@@ -23,6 +24,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -158,18 +160,31 @@ namespace QuantConnect.Lean.Engine.RealTime
                     // if the market is not open today, set it as closed all day
                     if (marketToday.Status != "open")
                     {
-                        security.Exchange.SetMarketHours(TimeSpan.Zero, TimeSpan.Zero, date.DayOfWeek);
+                        security.Exchange.SetMarketHours(Enumerable.Empty<MarketHoursSegment>(), date.DayOfWeek);
                     }
                     else
                     {
                         // set the market hours using data returned from the api
-                        var extendedMarketOpen = marketToday.PreMarket.Start.TimeOfDay;
-                        var marketOpen = marketToday.Open.Start.TimeOfDay;
-                        var marketClose = marketToday.Open.End.TimeOfDay;
-                        var extendedMarketClose = marketToday.PostMarket.End.TimeOfDay;
-                        security.Exchange.SetMarketHours(extendedMarketOpen, marketOpen, marketClose, extendedMarketClose, date.DayOfWeek);
-                        Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents({0}): Market hours set: Symbol: {1} Extended Start: {2} Start: {3} End: {4} Extended End: {5}",
-                                securityType, symbol, extendedMarketOpen, marketOpen, marketClose, extendedMarketClose));
+                        var marketHoursSegments = new List<MarketHoursSegment>();
+                        var premarket = marketToday.PreMarket;
+                        if (premarket != null && premarket.Start != premarket.End)
+                        {
+                            marketHoursSegments.Add(new MarketHoursSegment(MarketHoursState.PreMarket, premarket.Start.TimeOfDay, premarket.End.TimeOfDay));
+                        }
+                        var market = marketToday.Open;
+                        if (market != null && market.Start != market.End)
+                        {
+                            marketHoursSegments.Add(new MarketHoursSegment(MarketHoursState.Market, market.Start.TimeOfDay, market.End.TimeOfDay));
+                        }
+                        var postmarket = marketToday.PostMarket;
+                        if (postmarket != null && postmarket.Start != postmarket.End)
+                        {
+                            marketHoursSegments.Add(new MarketHoursSegment(MarketHoursState.PostMarket, postmarket.Start.TimeOfDay, postmarket.End.TimeOfDay));
+                        }
+
+                        security.Exchange.SetMarketHours(marketHoursSegments, date.DayOfWeek);
+                        Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents({0}): Market hours set: Symbol: {1} {2}",
+                                securityType, symbol, string.Join(" | ", marketHoursSegments)));
                     }
                 }
             }
