@@ -498,7 +498,9 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1000, portfolio.UnsettledCash);
 
             // Friday at open, cash settled
-            timeUtc = timeUtc.AddDays(1).Date.Add(securityExchangeHours.MarketHours[timeUtc.DayOfWeek].MarketOpen).ConvertToUtc(securityExchangeHours.TimeZone);
+            var marketOpen = securityExchangeHours.MarketHours[timeUtc.DayOfWeek].GetMarketOpen(TimeSpan.Zero, false);
+            Assert.IsTrue(marketOpen.HasValue);
+            timeUtc = timeUtc.AddDays(1).Date.Add(marketOpen.Value).ConvertToUtc(securityExchangeHours.TimeZone);
             portfolio.ScanForCashSettlement(timeUtc);
             Assert.AreEqual(998, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);

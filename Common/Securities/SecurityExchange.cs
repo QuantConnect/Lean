@@ -45,38 +45,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the market open time for the current day
-        /// </summary>
-        public TimeSpan MarketOpen
-        {
-            get { return _exchangeHours.GetMarketHours(_localFrontier).MarketOpen; }
-        }
-
-        /// <summary>
-        /// Gets the market close time for the current day
-        /// </summary>
-        public TimeSpan MarketClose
-        {
-            get { return _exchangeHours.GetMarketHours(_localFrontier).MarketClose; }
-        }
-
-        /// <summary>
-        /// Gets the extended market open time for the current day
-        /// </summary>
-        public TimeSpan ExtendedMarketOpen
-        {
-            get { return _exchangeHours.GetMarketHours(_localFrontier).ExtendedMarketOpen; }
-        }
-
-        /// <summary>
-        /// Gets the extended market close time for the current day
-        /// </summary>
-        public TimeSpan ExtendedMarketClose
-        {
-            get { return _exchangeHours.GetMarketHours(_localFrontier).ExtendedMarketClose; }
-        }
-
-        /// <summary>
         /// Number of trading days per year for this security. By default the market is open 365 days per year.
         /// </summary>
         /// <remarks>Used for performance statistics to calculate sharpe ratio accurately</remarks>
@@ -132,26 +100,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the date time the market opens on the specified day
-        /// </summary>
-        /// <param name="time">DateTime object for this date</param>
-        /// <returns>DateTime the market is considered open</returns>
-        public DateTime TimeOfDayOpen(DateTime time)
-        {
-            return time.Date + _exchangeHours.GetMarketHours(time).MarketOpen;
-        }
-
-        /// <summary>
-        /// Gets the date time the market closes on the specified day
-        /// </summary>
-        /// <param name="time">DateTime object for this date</param>
-        /// <returns>DateTime the market day is considered closed</returns>
-        public DateTime TimeOfDayClosed(DateTime time)
-        {
-            return time.Date + _exchangeHours.GetMarketHours(time).MarketClose;
-        }
-
-        /// <summary>
         /// Check if this DateTime is open.
         /// </summary>
         /// <param name="dateTime">DateTime to check</param>
@@ -159,16 +107,6 @@ namespace QuantConnect.Securities
         public bool DateTimeIsOpen(DateTime dateTime)
         {
             return _exchangeHours.IsOpen(dateTime, false);
-        }
-
-        /// <summary>
-        /// Check if the object is open including the *Extended* market hours
-        /// </summary>
-        /// <param name="time">Current time of day</param>
-        /// <returns>True if we are in extended or primary marketing hours.</returns>
-        public bool DateTimeIsExtendedOpen(DateTime time)
-        {
-            return _exchangeHours.IsOpen(time, true);
         }
 
         /// <summary>

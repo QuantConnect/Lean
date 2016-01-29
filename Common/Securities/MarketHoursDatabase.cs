@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Logging;
@@ -28,12 +29,13 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Provides access to exchange hours and raw data times zones in various markets
     /// </summary>
+    [JsonConverter(typeof(MarketHoursDatabaseJsonConverter))]
     public class MarketHoursDatabase
     {
         private static MarketHoursDatabase _dataFolderMarketHoursDatabase;
         private static readonly object DataFolderMarketHoursDatabaseLock = new object();
 
-        private readonly IReadOnlyDictionary<SecurityKey, Entry> _entries;
+        private readonly IReadOnlyDictionary<Key, Entry> _entries;
 
         /// <summary>
         /// Gets an instant of <see cref="MarketHoursDatabase"/> that will always return <see cref="SecurityExchangeHours.AlwaysOpen"/>
@@ -47,12 +49,16 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets all the exchange hours held by this provider
         /// </summary>
-        public List<SecurityExchangeHours> ExchangeHoursListing
+        public List<KeyValuePair<Key,Entry>> ExchangeHoursListing
         {
-            get { return _entries.Values.Select(x => x.ExchangeHours).ToList(); }
+            get { return _entries.ToList(); }
         }
 
-        private MarketHoursDatabase(IReadOnlyDictionary<SecurityKey, Entry> exchangeHours)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MarketHoursDatabase"/> class
+        /// </summary>
+        /// <param name="exchangeHours">The full listing of exchange hours by key</param>
+        public MarketHoursDatabase(IReadOnlyDictionary<Key, Entry> exchangeHours)
         {
             _entries = exchangeHours.ToDictionary();
         }
@@ -119,43 +125,21 @@ namespace QuantConnect.Securities
             {
                 if (_dataFolderMarketHoursDatabase == null)
                 {
-                    var directory = Path.Combine(Constants.DataFolder, "market-hours");
-                    var holidays = ReadHolidaysFromDirectory(directory);
-                    _dataFolderMarketHoursDatabase = FromCsvFile(Path.Combine(directory, "market-hours-database.csv"), holidays);
+                    var path = Path.Combine(Constants.DataFolder, "market-hours", "market-hours-database.json");
+                    _dataFolderMarketHoursDatabase = FromFile(path);
                 }
             }
             return _dataFolderMarketHoursDatabase;
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="MarketHoursDatabase"/> class by reading the specified csv file
+        /// Reads the specified file as a market hours database instance
         /// </summary>
-        /// <param name="file">The csv file to be read</param>
-        /// <param name="holidaysByMarket">The holidays for each market in the file, if no holiday is present then none is used</param>
-        /// <returns>A new instance of the <see cref="MarketHoursDatabase"/> class representing the data in the specified file</returns>
-        public static MarketHoursDatabase FromCsvFile(string file, IReadOnlyDictionary<string, IEnumerable<DateTime>> holidaysByMarket)
+        /// <param name="path">The market hours database file path</param>
+        /// <returns>A new instance of the <see cref="MarketHoursDatabase"/> class</returns>
+        public static MarketHoursDatabase FromFile(string path)
         {
-            var exchangeHours = new Dictionary<SecurityKey, Entry>();
-
-            if (!File.Exists(file))
-            {
-                throw new FileNotFoundException("Unable to locate market hours file: " + file);
-            }
-
-            // skip the first header line, also skip #'s as these are comment lines
-            foreach (var line in File.ReadLines(file).Where(x => !x.StartsWith("#") && !string.IsNullOrWhiteSpace(x)).Skip(1))
-            {
-                SecurityKey key;
-                var hours = FromCsvLine(line, holidaysByMarket, out key);
-                if (exchangeHours.ContainsKey(key))
-                {
-                    throw new Exception("Encountered duplicate key while processing file: " + file + ". Key: " + key);
-                }
-
-                exchangeHours[key] = hours;
-            }
-
-            return new MarketHoursDatabase(exchangeHours);
+            return JsonConvert.DeserializeObject<MarketHoursDatabase>(File.ReadAllText(path));
         }
 
         /// <summary>
@@ -171,11 +155,11 @@ namespace QuantConnect.Securities
         public virtual Entry GetEntry(string market, string symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
         {
             Entry entry;
-            var key = new SecurityKey(market, symbol, securityType);
+            var key = new Key(market, symbol, securityType);
             if (!_entries.TryGetValue(key, out entry))
             {
                 // now check with null symbol key
-                if (!_entries.TryGetValue(new SecurityKey(market, null, securityType), out entry))
+                if (!_entries.TryGetValue(new Key(market, null, securityType), out entry))
                 {
                     if (securityType == SecurityType.Base)
                     {
@@ -206,129 +190,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="SecurityExchangeHours"/> from the specified csv line and holiday set
-        /// </summary>
-        /// <param name="line">The csv line to be parsed</param>
-        /// <param name="holidaysByMarket">The holidays this exchange isn't open for trading by market</param>
-        /// <param name="key">The key used to uniquely identify these market hours</param>
-        /// <returns>A new <see cref="SecurityExchangeHours"/> for the specified csv line and holidays</returns>
-        private static Entry FromCsvLine(string line, IReadOnlyDictionary<string, IEnumerable<DateTime>> holidaysByMarket, out SecurityKey key)
-        {
-            var csv = line.Split(',');
-            var marketHours = new List<LocalMarketHours>(7);
-
-            // timezones can be specified using Tzdb names (America/New_York) or they can
-            // be specified using offsets, UTC-5
-
-            var dataTimeZone = ParseTimeZone(csv[0]);
-            var exchangeTimeZone = ParseTimeZone(csv[1]);
-
-            //var market = csv[2];
-            //var symbol = csv[3];
-            //var type = csv[4];
-            var symbol = string.IsNullOrEmpty(csv[3]) ? null : csv[3];
-            key = new SecurityKey(csv[2], symbol, (SecurityType)Enum.Parse(typeof(SecurityType), csv[4], true));
-
-            int csvLength = csv.Length;
-            for (int i = 1; i < 8; i++) // 7 days, so < 8
-            {
-                // the 4 here is because 4 times per day, ex_open,open,close,ex_close
-                if (4*i + 4 > csvLength - 1)
-                {
-                    break;
-                }
-                var hours = ReadCsvHours(csv, 4*i + 1, (DayOfWeek) (i - 1));
-                marketHours.Add(hours);
-            }
-
-            IEnumerable<DateTime> holidays;
-            if (!holidaysByMarket.TryGetValue(key.Market, out holidays))
-            {
-                holidays = Enumerable.Empty<DateTime>();
-            }
-
-            var exchangeHours = new SecurityExchangeHours(exchangeTimeZone, holidays, marketHours.ToDictionary(x => x.DayOfWeek));
-            return new Entry(dataTimeZone, exchangeHours);
-        }
-
-        private static DateTimeZone ParseTimeZone(string tz)
-        {
-            // handle UTC directly
-            if (tz == "UTC") return TimeZones.Utc;
-            // if it doesn't start with UTC then it's a name, like America/New_York
-            if (!tz.StartsWith("UTC")) return DateTimeZoneProviders.Tzdb[tz];
-
-            // it must be a UTC offset, parse the offset as hours
-            
-            // define the time zone as a constant offset time zone in the form: 'UTC-3.5' or 'UTC+10'
-            var millisecondsOffset = (int) TimeSpan.FromHours(double.Parse(tz.Replace("UTC", string.Empty))).TotalMilliseconds;
-            return DateTimeZone.ForOffset(Offset.FromMilliseconds(millisecondsOffset));
-        }
-
-        private static LocalMarketHours ReadCsvHours(string[] csv, int startIndex, DayOfWeek dayOfWeek)
-        {
-            var ex_open = csv[startIndex];
-            if (ex_open == "-")
-            {
-                return LocalMarketHours.ClosedAllDay(dayOfWeek);
-            }
-            if (ex_open == "+")
-            {
-                return LocalMarketHours.OpenAllDay(dayOfWeek);
-            }
-
-            var open = csv[startIndex + 1];
-            var close = csv[startIndex + 2];
-            var ex_close = csv[startIndex + 3];
-
-            var ex_open_time = ParseHoursToTimeSpan(ex_open);
-            var open_time = ParseHoursToTimeSpan(open);
-            var close_time = ParseHoursToTimeSpan(close);
-            var ex_close_time = ParseHoursToTimeSpan(ex_close);
-
-            if (ex_open_time == TimeSpan.Zero
-                && open_time == TimeSpan.Zero
-                && close_time == TimeSpan.Zero
-                && ex_close_time == TimeSpan.Zero)
-            {
-                return LocalMarketHours.ClosedAllDay(dayOfWeek);
-            }
-
-            return new LocalMarketHours(dayOfWeek, ex_open_time, open_time, close_time, ex_close_time);
-        }
-
-        /// <summary>
-        /// Extracts the holiday information from the specified directory. Holiday file names are expectd to be of the
-        /// following form: 'holidays-{market}.csv' and should be a csv file with year,month,day
-        /// </summary>
-        private static IReadOnlyDictionary<string, IEnumerable<DateTime>> ReadHolidaysFromDirectory(string directory)
-        {
-            if (!Directory.Exists(directory))
-            {
-                throw new ArgumentException("The specified directory does not exist: " + directory);
-            }
-
-            var holidays = new Dictionary<string, IEnumerable<DateTime>>();
-            foreach (var file in Directory.EnumerateFiles(directory, "holidays-*.csv"))
-            {
-                var dates = new List<DateTime>();
-                var market = Path.GetFileNameWithoutExtension(file).Replace("holidays-", string.Empty);
-                foreach (var line in File.ReadLines(file).Where(x => !x.StartsWith("#")).Skip(1))
-                {
-                    var csv = line.Split(',');
-                    dates.Add(new DateTime(int.Parse(csv[0], CultureInfo.InvariantCulture), int.Parse(csv[1], CultureInfo.InvariantCulture), int.Parse(csv[2], CultureInfo.InvariantCulture)));
-                }
-                holidays[market] = dates;
-            }
-            return holidays;
-        }
-
-        private static TimeSpan ParseHoursToTimeSpan(string ex_open)
-        {
-            return TimeSpan.FromHours(double.Parse(ex_open, CultureInfo.InvariantCulture));
-        }
-
-        /// <summary>
         /// Represents a single entry in the <see cref="MarketHoursDatabase"/>
         /// </summary>
         public class Entry
@@ -350,6 +211,111 @@ namespace QuantConnect.Securities
             {
                 DataTimeZone = dataTimeZone;
                 ExchangeHours = exchangeHours;
+            }
+        }
+
+        /// <summary>
+        /// Represents the key to a single entry in the <see cref="MarketHoursDatabase"/>
+        /// </summary>
+        public class Key : IEquatable<Key>
+        {
+            private const string Wildcard = "[*]";
+
+            /// <summary>
+            /// The market. If null, ignore market filtering
+            /// </summary>
+            public readonly string Market;
+            /// <summary>
+            /// The symbol. If null, ignore symbol filtering
+            /// </summary>
+            public readonly string Symbol;
+            /// <summary>
+            /// The security type
+            /// </summary>
+            public readonly SecurityType SecurityType;
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Key"/> class
+            /// </summary>
+            /// <param name="market">The market</param>
+            /// <param name="symbol">The symbol. specify null to apply to all symbols in market/security type</param>
+            /// <param name="securityType">The security type</param>
+            public Key(string market, string symbol, SecurityType securityType)
+            {
+                Market = market;
+                SecurityType = securityType;
+                Symbol = symbol;
+            }
+
+            /// <summary>
+            /// Parses the specified string as a <see cref="Key"/>
+            /// </summary>
+            /// <param name="key">The string representation of the key</param>
+            /// <returns>A new <see cref="Key"/> instance</returns>
+            public static Key Parse(string key)
+            {
+                var parts = key.Split('-');
+                if (parts.Length != 3)
+                {
+                    throw new ArgumentException("The specified key was not in the expected format: " + key);
+                }
+                SecurityType type;
+                if (!Enum.TryParse(parts[0], out type))
+                {
+                    throw new ArgumentException("Unable to parse '" + parts[2] + "' as a SecurityType.");
+                }
+
+                var market = parts[1];
+                if (market == Wildcard) market = null;
+
+                var symbol = parts[2];
+                if (symbol == Wildcard) symbol = null;
+
+                return new Key(market, symbol, type);
+            }
+
+            #region Equality members
+
+            public bool Equals(Key other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return string.Equals(Market, other.Market) && Equals(Symbol, other.Symbol) && SecurityType == other.SecurityType;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((Key)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = (Market != null ? Market.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Symbol != null ? Symbol.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (int)SecurityType;
+                    return hashCode;
+                }
+            }
+
+            public static bool operator ==(Key left, Key right)
+            {
+                return Equals(left, right);
+            }
+
+            public static bool operator !=(Key left, Key right)
+            {
+                return !Equals(left, right);
+            }
+
+            #endregion
+
+            public override string ToString()
+            {
+                return string.Format("{0}-{1}-{2}", SecurityType, Market ?? Wildcard, Symbol ?? Wildcard);
             }
         }
 

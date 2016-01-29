@@ -615,10 +615,8 @@ namespace QuantConnect.Lean.Engine.Results
             Security security;
             if (_algorithm.Securities.TryGetValue(symbol, out security) && !security.SubscriptionDataConfig.IsInternalFeed && value > 0)
             {
-                var now = DateTime.Now;
-                var open = now.Date + security.Exchange.MarketOpen;
-                var close = now.Date + security.Exchange.MarketClose;
-                if (now > open && now < close)
+                var now = DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone);
+                if (security.Exchange.Hours.IsOpen(now, security.IsExtendedMarketHours))
                 {
                     Sample("Stockplot: " + symbol.Value, "Stockplot: " + symbol.Value, 0, SeriesType.Line, time, value);
                 }
