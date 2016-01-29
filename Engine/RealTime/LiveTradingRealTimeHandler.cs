@@ -141,40 +141,14 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             date = date.Date;
 
-            // group securities by security type to make calls to api one security type at a time
+            // update market hours for each security
             foreach (var security in _algorithm.Securities.Values)
             {
-                var marketToday = _api.MarketToday(date, security.Symbol);
-                // if the market is not open today, set it as closed all day
-                if (marketToday.Status != "open")
-                {
-                    security.Exchange.SetMarketHours(Enumerable.Empty<MarketHoursSegment>(), date.DayOfWeek);
-                }
-                else
-                {
-                    // set the market hours using data returned from the api
-                    var marketHoursSegments = new List<MarketHoursSegment>();
-                    var premarket = marketToday.PreMarket;
-                    if (premarket != null && premarket.Start != premarket.End)
-                    {
-                        marketHoursSegments.Add(new MarketHoursSegment(MarketHoursState.PreMarket, premarket.Start.TimeOfDay, premarket.End.TimeOfDay));
-                    }
-                    var market = marketToday.Open;
-                    if (market != null && market.Start != market.End)
-                    {
-                        marketHoursSegments.Add(new MarketHoursSegment(MarketHoursState.Market, market.Start.TimeOfDay, market.End.TimeOfDay));
-                    }
-                    var postmarket = marketToday.PostMarket;
-                    if (postmarket != null && postmarket.Start != postmarket.End)
-                    {
-                        marketHoursSegments.Add(new MarketHoursSegment(MarketHoursState.PostMarket, postmarket.Start.TimeOfDay, postmarket.End.TimeOfDay));
-                    }
-
-                    security.Exchange.SetMarketHours(marketHoursSegments, date.DayOfWeek);
-                    var localMarketHours = security.Exchange.Hours.MarketHours[date.DayOfWeek];
-                    Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents({0}): Market hours set: Symbol: {1} {2}",
-                            security.Type, security.Symbol, localMarketHours));
-                }
+                var marketHours = _api.MarketToday(date, security.Symbol);
+                security.Exchange.SetMarketHours(marketHours, date.DayOfWeek);
+                var localMarketHours = security.Exchange.Hours.MarketHours[date.DayOfWeek];
+                Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents({0}): Market hours set: Symbol: {1} {2}",
+                        security.Type, security.Symbol, localMarketHours));
             }
         }
 

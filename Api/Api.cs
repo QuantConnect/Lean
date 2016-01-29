@@ -14,8 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
-using QuantConnect.Packets;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Api
 {
@@ -27,7 +29,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Initialize the API.
         /// </summary>
-        public void Initialize()
+        public virtual void Initialize()
         {
             //Nothing to initialize in the local copy of the engine.
         }
@@ -38,9 +40,9 @@ namespace QuantConnect.Api
         /// <param name="userId">User ID</param>
         /// <param name="userToken">User API token</param>
         /// <returns>int[3] iUserBacktestLimit, iUserDailyLimit, remaining</returns>
-        public int[] ReadLogAllowance(int userId, string userToken) 
+        public virtual int[] ReadLogAllowance(int userId, string userToken) 
         {
-            return new[] { Int32.MaxValue, Int32.MaxValue, Int32.MaxValue };
+            return new[] { int.MaxValue, int.MaxValue, int.MaxValue };
         }
 
         /// <summary>
@@ -53,7 +55,7 @@ namespace QuantConnect.Api
         /// <param name="userToken">User access token</param>
         /// <param name="hitLimit">Boolean signifying hit log limit</param>
         /// <returns>Number of bytes remaining</returns>
-        public void UpdateDailyLogUsed(int userId, string backtestId, string url, int length, string userToken, bool hitLimit = false)
+        public virtual void UpdateDailyLogUsed(int userId, string backtestId, string url, int length, string userToken, bool hitLimit = false)
         {
             //
         }
@@ -64,7 +66,7 @@ namespace QuantConnect.Api
         /// <param name="algorithmId">String algorithm id we're searching for.</param>
         /// <param name="userId">The user id of the algorithm</param>
         /// <returns>Algorithm status enum</returns>
-        public AlgorithmControl GetAlgorithmStatus(string algorithmId, int userId)
+        public virtual AlgorithmControl GetAlgorithmStatus(string algorithmId, int userId)
         {
             return new AlgorithmControl();
         }
@@ -76,7 +78,7 @@ namespace QuantConnect.Api
         /// <param name="algorithmId">String algorithm id we're setting.</param>
         /// <param name="message">Message for the algorithm status event</param>
         /// <returns>Algorithm status enum</returns>
-        public void SetAlgorithmStatus(string algorithmId, AlgorithmStatus status, string message = "")
+        public virtual void SetAlgorithmStatus(string algorithmId, AlgorithmStatus status, string message = "")
         {
             //
         }
@@ -94,7 +96,7 @@ namespace QuantConnect.Api
         /// <param name="volume">Volume traded</param>
         /// <param name="trades">Total trades since inception</param>
         /// <param name="sharpe">Sharpe ratio since inception</param>
-        public void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe)
+        public virtual void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe)
         {
             // 
         }
@@ -102,8 +104,14 @@ namespace QuantConnect.Api
         /// <summary>
         /// Get the calendar open hours for the date.
         /// </summary>
-        public MarketToday MarketToday(DateTime time, Symbol symbol)
+        public virtual IEnumerable<MarketHoursSegment> MarketToday(DateTime time, Symbol symbol)
         {
+            if (Config.GetBool("force-exchange-always-open"))
+            {
+                yield return MarketHoursSegment.OpenAllDay();
+                yield break;
+            }
+
             switch (symbol.ID.SecurityType)
             {
                 // since we don't directly support these types, we'll just mark them as always open
@@ -111,13 +119,41 @@ namespace QuantConnect.Api
                 case SecurityType.Future:
                 case SecurityType.Option:
                 case SecurityType.Commodity:
-                    return Packets.MarketToday.OpenAllDay(time);
+                    yield return MarketHoursSegment.OpenAllDay();
+                    yield break;
 
                 case SecurityType.Equity:
-                    return Packets.MarketToday.Equity(time);
+                    if (time.DayOfWeek == DayOfWeek.Saturday
+                     || time.DayOfWeek == DayOfWeek.Sunday)
+                    {
+                        yield return MarketHoursSegment.ClosedAllDay();
+                        yield break;
+                    }
+
+                    yield return new MarketHoursSegment(MarketHoursState.PreMarket, TimeSpan.FromHours(4), TimeSpan.FromHours(9.5));
+                    yield return new MarketHoursSegment(MarketHoursState.Market, TimeSpan.FromHours(9.5), TimeSpan.FromHours(16));
+                    yield return new MarketHoursSegment(MarketHoursState.PostMarket, TimeSpan.FromHours(16), TimeSpan.FromHours(20));
+                    yield break;
 
                 case SecurityType.Forex:
-                    return Packets.MarketToday.Forex(time);
+                    switch (time.DayOfWeek)
+                    {
+                        case DayOfWeek.Friday:
+                            yield return new MarketHoursSegment(MarketHoursState.Market, TimeSpan.Zero, TimeSpan.FromHours(17));
+                            yield break;
+
+                        case DayOfWeek.Saturday:
+                            yield return new MarketHoursSegment(MarketHoursState.Closed, TimeSpan.Zero, TimeSpan.FromHours(24));
+                            yield break;
+
+                        case DayOfWeek.Sunday:
+                            yield return new MarketHoursSegment(MarketHoursState.Market, TimeSpan.FromHours(17), TimeSpan.FromHours(24));
+                            yield break;
+
+                        default:
+                            yield return MarketHoursSegment.OpenAllDay();
+                            yield break;
+                    }
 
                 default:
                     throw new ArgumentOutOfRangeException("symbol");
@@ -127,7 +163,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Store logs with these authentication type
         /// </summary>
-        public void Store(string data, string location, StoragePermissions permissions, bool async = false)
+        public virtual void Store(string data, string location, StoragePermissions permissions, bool async = false)
         {
             //
         }
@@ -138,7 +174,7 @@ namespace QuantConnect.Api
         /// <param name="algorithmId">The algorithm id</param>
         /// <param name="subject">The email subject</param>
         /// <param name="body">The email message body</param>
-        public void SendUserEmail(string algorithmId, string subject, string body)
+        public virtual void SendUserEmail(string algorithmId, string subject, string body)
         {
             //
         }
@@ -147,7 +183,7 @@ namespace QuantConnect.Api
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
+        public virtual void Dispose()
         {
             // NOP
         }
