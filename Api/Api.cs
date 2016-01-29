@@ -102,9 +102,9 @@ namespace QuantConnect.Api
         /// <summary>
         /// Get the calendar open hours for the date.
         /// </summary>
-        public MarketToday MarketToday(DateTime time, SecurityType type)
+        public MarketToday MarketToday(DateTime time, Symbol symbol)
         {
-            switch (type)
+            switch (symbol.ID.SecurityType)
             {
                 // since we don't directly support these types, we'll just mark them as always open
                 case SecurityType.Base:
@@ -120,7 +120,7 @@ namespace QuantConnect.Api
                     return Packets.MarketToday.Forex(time);
 
                 default:
-                    throw new ArgumentOutOfRangeException("type");
+                    throw new ArgumentOutOfRangeException("symbol");
             }
         }
 
