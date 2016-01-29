@@ -28,19 +28,19 @@ namespace QuantConnect.Securities
         /// Gets the start time for this segment
         /// </summary>
         [JsonProperty("start")]
-        public TimeSpan Start { get; }
+        public TimeSpan Start { get; private set; }
 
         /// <summary>
         /// Gets the end time for this segment
         /// </summary>
         [JsonProperty("end")]
-        public TimeSpan End { get; }
+        public TimeSpan End { get; private set; }
 
         /// <summary>
         /// Gets the market hours state for this segment
         /// </summary>
         [JsonProperty("state")]
-        public MarketHoursState State { get; }
+        public MarketHoursState State { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MarketHoursSegment"/> class

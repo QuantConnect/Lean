@@ -185,13 +185,13 @@ namespace QuantConnect.Util
             {
                 var hours = new Dictionary<DayOfWeek, LocalMarketHours>
                 {
-                    [DayOfWeek.Sunday] = new LocalMarketHours(DayOfWeek.Sunday, Sunday),
-                    [DayOfWeek.Monday] = new LocalMarketHours(DayOfWeek.Monday, Monday),
-                    [DayOfWeek.Tuesday] = new LocalMarketHours(DayOfWeek.Tuesday, Tuesday),
-                    [DayOfWeek.Wednesday] = new LocalMarketHours(DayOfWeek.Wednesday, Wednesday),
-                    [DayOfWeek.Thursday] = new LocalMarketHours(DayOfWeek.Thursday, Thursday),
-                    [DayOfWeek.Friday] = new LocalMarketHours(DayOfWeek.Friday, Friday),
-                    [DayOfWeek.Saturday] = new LocalMarketHours(DayOfWeek.Saturday, Saturday)
+                    { DayOfWeek.Sunday, new LocalMarketHours(DayOfWeek.Sunday, Sunday) },
+                    { DayOfWeek.Monday, new LocalMarketHours(DayOfWeek.Monday, Monday) },
+                    { DayOfWeek.Tuesday, new LocalMarketHours(DayOfWeek.Tuesday, Tuesday) },
+                    { DayOfWeek.Wednesday, new LocalMarketHours(DayOfWeek.Wednesday, Wednesday) },
+                    { DayOfWeek.Thursday, new LocalMarketHours(DayOfWeek.Thursday, Thursday) },
+                    { DayOfWeek.Friday, new LocalMarketHours(DayOfWeek.Friday, Friday) },
+                    { DayOfWeek.Saturday, new LocalMarketHours(DayOfWeek.Saturday, Saturday) }
                 };
                 var holidayDates = Holidays.Select(x => DateTime.ParseExact(x, "M/d/yyyy", null)).ToHashSet();
                 var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours);
