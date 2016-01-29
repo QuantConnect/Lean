@@ -127,6 +127,7 @@ namespace QuantConnect.Data.Market
             Quantity = original.Quantity;
             Suspicious = original.Suspicious;
             DataType = MarketDataType.Tick;
+            TickType = original.TickType;
             BidSize = original.BidSize;
             AskSize = original.AskSize;
         }
