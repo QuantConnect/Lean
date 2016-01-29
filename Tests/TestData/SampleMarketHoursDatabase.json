@@ -2,7 +2,7 @@
   "entries": {
     "Equity-usa-[*]": {
       "dataTimeZone": "America/New_York",
-      "exhangeTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
       "sunday": [],
       "monday": [
         {
@@ -272,7 +272,7 @@
     },
     "Forex-fxcm-[*]": {
       "dataTimeZone": "UTC-05",
-      "exhangeTimeZone": "UTC-05",
+      "exchangeTimeZone": "UTC-05",
       "sunday": [
         {
           "start": "17:00:00",

@@ -114,7 +114,7 @@ namespace QuantConnect.Util
             /// <summary>
             /// The exchange's time zone id from the tzdb
             /// </summary>
-            [JsonProperty("exhangeTimeZone")]
+            [JsonProperty("exchangeTimeZone")]
             public string ExchangeTimeZone;
             /// <summary>
             /// Sunday market hours segments
