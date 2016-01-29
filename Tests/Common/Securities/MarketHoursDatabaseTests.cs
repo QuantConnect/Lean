@@ -25,9 +25,9 @@ namespace QuantConnect.Tests.Common.Securities
     public class MarketHoursDatabaseTests
     {
         [Test]
-        public void InitializesFromCsv()
+        public void InitializesFromFile()
         {
-            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
+            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
             var exchangeHours = GetMarketHoursDatabase(file);
 
             Assert.AreEqual(2, exchangeHours.ExchangeHoursListing.Count);
@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void RetrievesExchangeHoursWithAndWithoutSymbol()
         {
-            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
+            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
             var exchangeHours = GetMarketHoursDatabase(file);
 
             var hours = exchangeHours.GetExchangeHours(Market.USA, Symbols.SPY, SecurityType.Equity);
@@ -48,25 +48,25 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void CorrectlyReadsClosedAllDayHours()
         {
-            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
+            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
             var exchangeHours = GetMarketHoursDatabase(file);
 
             var hours = exchangeHours.GetExchangeHours(Market.USA, null, SecurityType.Equity);
             Assert.IsNotNull(hours);
 
-            Assert.AreEqual(LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday), hours.MarketHours[DayOfWeek.Saturday]);
+            Assert.IsTrue(hours.MarketHours[DayOfWeek.Saturday].IsClosedAllDay);
         }
 
         [Test]
         public void CorrectlyReadsOpenAllDayHours()
         {
-            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
+            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
             var exchangeHours = GetMarketHoursDatabase(file);
 
             var hours = exchangeHours.GetExchangeHours(Market.FXCM, null, SecurityType.Forex);
             Assert.IsNotNull(hours);
 
-            Assert.AreEqual(LocalMarketHours.OpenAllDay(DayOfWeek.Monday), hours.MarketHours[DayOfWeek.Monday]);
+            Assert.IsTrue(hours.MarketHours[DayOfWeek.Monday].IsOpenAllDay);
         }
 
         [Test]
@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void CorrectlyReadsUsEquityMarketHours()
         {
-            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
+            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
             var exchangeHours = GetMarketHoursDatabase(file);
 
             var equityHours = exchangeHours.GetExchangeHours(Market.USA, null, SecurityType.Equity);
@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Common.Securities
                 var marketHours = equityHours.MarketHours[day];
                 if (day == DayOfWeek.Saturday || day == DayOfWeek.Sunday)
                 {
-                    Assert.AreEqual(LocalMarketHours.ClosedAllDay(day), marketHours);
+                    Assert.IsTrue(marketHours.IsClosedAllDay);
                     continue;
                 }
                 Assert.AreEqual(new TimeSpan(4, 0, 0), marketHours.GetMarketOpen(TimeSpan.Zero, true));
@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void CorrectlyReadFxcmForexMarketHours()
         {
-            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
+            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
             var exchangeHours = GetMarketHoursDatabase(file);
 
             var equityHours = exchangeHours.GetExchangeHours(Market.FXCM, null, SecurityType.Forex);
@@ -110,11 +110,11 @@ namespace QuantConnect.Tests.Common.Securities
                 var marketHours = equityHours.MarketHours[day];
                 if (day == DayOfWeek.Saturday)
                 {
-                    Assert.AreEqual(LocalMarketHours.ClosedAllDay(day), marketHours);
+                    Assert.IsTrue(marketHours.IsClosedAllDay);
                 }
                 else if (day != DayOfWeek.Sunday && day != DayOfWeek.Friday)
                 {
-                    Assert.AreEqual(LocalMarketHours.OpenAllDay(day), marketHours);
+                    Assert.IsTrue(marketHours.IsOpenAllDay);
                 }
                 else if (day == DayOfWeek.Sunday)
                 {
@@ -136,7 +136,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void ReadsUsEquityDataTimeZone()
         {
-            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
+            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
             var marketHoursDatabase = GetMarketHoursDatabase(file);
 
             Assert.AreEqual(TimeZones.NewYork, marketHoursDatabase.GetDataTimeZone(Market.USA, null, SecurityType.Equity));
@@ -145,7 +145,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void ReadsFxcmForexDataTimeZone()
         {
-            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.csv");
+            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
             var marketHoursDatabase = GetMarketHoursDatabase(file);
 
             Assert.AreEqual(TimeZones.EasternStandard, marketHoursDatabase.GetDataTimeZone(Market.FXCM, null, SecurityType.Forex));
@@ -153,10 +153,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         private static MarketHoursDatabase GetMarketHoursDatabase(string file)
         {
-            return MarketHoursDatabase.FromCsvFile(file, new Dictionary<string, IEnumerable<DateTime>>
-            {
-                {Market.USA, USHoliday.Dates}
-            });
+            return MarketHoursDatabase.FromFile(file);
         }
     }
 }

@@ -15,9 +15,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using NodaTime;
 
 namespace QuantConnect.Securities
 {
@@ -26,17 +24,9 @@ namespace QuantConnect.Securities
     /// </summary>
     public class LocalMarketHours
     {
-        private static readonly IReadOnlyDictionary<DayOfWeek, LocalMarketHours> Open = new ReadOnlyDictionary<DayOfWeek, LocalMarketHours>(
-            Enum.GetValues(typeof(IsoDayOfWeek)).Cast<DayOfWeek>()
-                .ToDictionary(x => x, x => new LocalMarketHours(x, TimeSpan.Zero, Time.OneDay))
-            ); 
-        private static readonly IReadOnlyDictionary<DayOfWeek, LocalMarketHours> Closed = new ReadOnlyDictionary<DayOfWeek, LocalMarketHours>(
-            Enum.GetValues(typeof(IsoDayOfWeek)).Cast<DayOfWeek>()
-                .ToDictionary(x => x, x => new LocalMarketHours(x, Enumerable.Empty<MarketHoursSegment>()))
-            );
-
         private readonly bool _hasPreMarket;
         private readonly bool _hasPostMarket;
+        private readonly bool _isOpenAllDay;
         private readonly bool _isClosedAllDay;
         private readonly DayOfWeek _dayOfWeek;
         private readonly MarketHoursSegment[] _segments;
@@ -47,6 +37,14 @@ namespace QuantConnect.Securities
         public bool IsClosedAllDay
         {
             get { return _isClosedAllDay; }
+        }
+
+        /// <summary>
+        /// Gets whether or not this exchange is closed all day
+        /// </summary>
+        public bool IsOpenAllDay
+        {
+            get { return _isOpenAllDay; }
         }
 
         /// <summary>
@@ -70,12 +68,26 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="day">The day of the week these hours are applicable</param>
         /// <param name="segments">The open/close segments defining the market hours for one day</param>
+        public LocalMarketHours(DayOfWeek day, params MarketHoursSegment[] segments)
+            : this(day, (IEnumerable<MarketHoursSegment>) segments)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LocalMarketHours"/> class
+        /// </summary>
+        /// <param name="day">The day of the week these hours are applicable</param>
+        /// <param name="segments">The open/close segments defining the market hours for one day</param>
         public LocalMarketHours(DayOfWeek day, IEnumerable<MarketHoursSegment> segments)
         {
             _dayOfWeek = day;
             // filter out the closed states, we'll assume closed if no segment exists
-            _segments = segments.Where(x => x.State != MarketHoursState.Closed).ToArray();
+            _segments = (segments ?? Enumerable.Empty<MarketHoursSegment>()).Where(x => x.State != MarketHoursState.Closed).ToArray();
             _isClosedAllDay = _segments.Length == 0;
+            _isOpenAllDay = _segments.Length == 1 
+                && _segments[0].Start == TimeSpan.Zero 
+                && _segments[0].End == Time.OneDay
+                && _segments[0].State == MarketHoursState.Market;
 
             foreach (var segment in _segments)
             {
@@ -282,7 +294,7 @@ namespace QuantConnect.Securities
         /// <returns>A <see cref="LocalMarketHours"/> instance that is always closed</returns>
         public static LocalMarketHours ClosedAllDay(DayOfWeek dayOfWeek)
         {
-            return Closed[dayOfWeek];
+            return new LocalMarketHours(dayOfWeek);
         }
 
         /// <summary>
@@ -292,7 +304,7 @@ namespace QuantConnect.Securities
         /// <returns>A <see cref="LocalMarketHours"/> instance that is always open</returns>
         public static LocalMarketHours OpenAllDay(DayOfWeek dayOfWeek)
         {
-            return Open[dayOfWeek];
+            return new LocalMarketHours(dayOfWeek, new MarketHoursSegment(MarketHoursState.Market, TimeSpan.Zero, Time.OneDay));
         }
 
         /// <summary>
@@ -304,11 +316,11 @@ namespace QuantConnect.Securities
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            if (this == ClosedAllDay(DayOfWeek))
+            if (IsClosedAllDay)
             {
                 return "Closed All Day";
             }
-            if (this == OpenAllDay(DayOfWeek))
+            if (IsOpenAllDay)
             {
                 return "Open All Day";
             }

@@ -193,7 +193,7 @@ namespace QuantConnect.Util
                     [DayOfWeek.Friday] = new LocalMarketHours(DayOfWeek.Friday, Friday),
                     [DayOfWeek.Saturday] = new LocalMarketHours(DayOfWeek.Saturday, Saturday)
                 };
-                var holidayDates = Holidays.Select(DateTime.Parse).ToHashSet();
+                var holidayDates = Holidays.Select(x => DateTime.ParseExact(x, "M/d/yyyy", null)).ToHashSet();
                 var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours);
                 return new MarketHoursDatabase.Entry(DateTimeZoneProviders.Tzdb[DataTimeZone], exchangeHours);
             }
