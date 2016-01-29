@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Logging;
@@ -28,6 +29,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Provides access to exchange hours and raw data times zones in various markets
     /// </summary>
+    [JsonConverter(typeof(MarketHoursDatabaseJsonConverter))]
     public class MarketHoursDatabase
     {
         private static MarketHoursDatabase _dataFolderMarketHoursDatabase;
@@ -47,12 +49,16 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets all the exchange hours held by this provider
         /// </summary>
-        public List<SecurityExchangeHours> ExchangeHoursListing
+        public List<KeyValuePair<Key,Entry>> ExchangeHoursListing
         {
-            get { return _entries.Values.Select(x => x.ExchangeHours).ToList(); }
+            get { return _entries.ToList(); }
         }
 
-        private MarketHoursDatabase(IReadOnlyDictionary<Key, Entry> exchangeHours)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MarketHoursDatabase"/> class
+        /// </summary>
+        /// <param name="exchangeHours">The full listing of exchange hours by key</param>
+        public MarketHoursDatabase(IReadOnlyDictionary<Key, Entry> exchangeHours)
         {
             _entries = exchangeHours.ToDictionary();
         }
@@ -353,17 +359,63 @@ namespace QuantConnect.Securities
             }
         }
 
-        class Key : IEquatable<Key>
+        /// <summary>
+        /// Represents the key to a single entry in the <see cref="MarketHoursDatabase"/>
+        /// </summary>
+        public class Key : IEquatable<Key>
         {
-            public readonly string Market;
-            public readonly string Symbol;
-            public readonly SecurityType SecurityType;
+            private const string Wildcard = "[*]";
 
+            /// <summary>
+            /// The market. If null, ignore market filtering
+            /// </summary>
+            public readonly string Market;
+            /// <summary>
+            /// The symbol. If null, ignore symbol filtering
+            /// </summary>
+            public readonly string Symbol;
+            /// <summary>
+            /// The security type
+            /// </summary>
+            public readonly SecurityType SecurityType;
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Key"/> class
+            /// </summary>
+            /// <param name="market">The market</param>
+            /// <param name="symbol">The symbol. specify null to apply to all symbols in market/security type</param>
+            /// <param name="securityType">The security type</param>
             public Key(string market, string symbol, SecurityType securityType)
             {
                 Market = market;
                 SecurityType = securityType;
                 Symbol = symbol;
+            }
+
+            /// <summary>
+            /// Parses the specified string as a <see cref="Key"/>
+            /// </summary>
+            /// <param name="key">The string representation of the key</param>
+            /// <returns>A new <see cref="Key"/> instance</returns>
+            public static Key Parse(string key)
+            {
+                var parts = key.Split('-');
+                if (parts.Length != 3)
+                {
+                    throw new ArgumentException("The specified key was not in the expected format: " + key);
+                }
+                SecurityType type;
+                if (!Enum.TryParse(parts[0], out type))
+                {
+                    throw new ArgumentException("Unable to parse '" + parts[2] + "' as a SecurityType.");
+                }
+
+                var market = parts[1];
+                if (market == Wildcard) market = null;
+
+                var symbol = parts[2];
+                if (symbol == Wildcard) symbol = null;
+
+                return new Key(market, symbol, type);
             }
 
             #region Equality members
@@ -408,7 +460,7 @@ namespace QuantConnect.Securities
 
             public override string ToString()
             {
-                return string.Format("{0}-{1}-{2}", Market ?? "[null]", Symbol ?? "[null]", SecurityType);
+                return string.Format("{0}-{1}-{2}", SecurityType, Market ?? Wildcard, Symbol ?? Wildcard);
             }
         }
 

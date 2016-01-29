@@ -28,7 +28,7 @@ namespace QuantConnect.Securities
     {
         private static readonly IReadOnlyDictionary<DayOfWeek, LocalMarketHours> Open = new ReadOnlyDictionary<DayOfWeek, LocalMarketHours>(
             Enum.GetValues(typeof(IsoDayOfWeek)).Cast<DayOfWeek>()
-                .ToDictionary(x => x, x => new LocalMarketHours(x, TimeSpan.Zero, TimeSpan.FromTicks(Time.OneDay.Ticks - 1)))
+                .ToDictionary(x => x, x => new LocalMarketHours(x, TimeSpan.Zero, Time.OneDay))
             ); 
         private static readonly IReadOnlyDictionary<DayOfWeek, LocalMarketHours> Closed = new ReadOnlyDictionary<DayOfWeek, LocalMarketHours>(
             Enum.GetValues(typeof(IsoDayOfWeek)).Cast<DayOfWeek>()
@@ -55,6 +55,14 @@ namespace QuantConnect.Securities
         public DayOfWeek DayOfWeek 
         {
             get { return _dayOfWeek; }
+        }
+
+        /// <summary>
+        /// Gets the individual market hours segments that define the hours of operation for this day
+        /// </summary>
+        public IEnumerable<MarketHoursSegment> Segments
+        {
+            get { return _segments; }
         }
 
         /// <summary>

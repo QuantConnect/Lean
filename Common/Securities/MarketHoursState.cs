@@ -13,31 +13,40 @@
  * limitations under the License.
 */
 
+using System.Runtime.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
 namespace QuantConnect.Securities
 {
     /// <summary>
     /// Specifies the open/close state for a <see cref="MarketHoursSegment"/>
     /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum MarketHoursState
     {
         /// <summary>
         /// The market is not open
         /// </summary>
+        [EnumMember(Value = "closed")]
         Closed,
 
         /// <summary>
         /// The market is open, but before normal trading hours
         /// </summary>
+        [EnumMember(Value = "premarket")]
         PreMarket,
 
         /// <summary>
         /// The market is open and within normal trading hours
         /// </summary>
+        [EnumMember(Value = "market")]
         Market,
 
         /// <summary>
         /// The market is open, but after normal trading hours
         /// </summary>
+        [EnumMember(Value = "postmarket")]
         PostMarket
     }
 }

@@ -14,27 +14,32 @@
 */
 
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Securities
 {
     /// <summary>
     /// Represents the state of an exchange during a specified time range
     /// </summary>
+    [JsonObject(MemberSerialization.OptIn)]
     public class MarketHoursSegment
     {
         /// <summary>
         /// Gets the start time for this segment
         /// </summary>
+        [JsonProperty("start")]
         public TimeSpan Start { get; }
 
         /// <summary>
         /// Gets the end time for this segment
         /// </summary>
+        [JsonProperty("end")]
         public TimeSpan End { get; }
 
         /// <summary>
         /// Gets the market hours state for this segment
         /// </summary>
+        [JsonProperty("state")]
         public MarketHoursState State { get; }
 
         /// <summary>
