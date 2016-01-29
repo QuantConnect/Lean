@@ -32,21 +32,21 @@ namespace QuantConnect.Securities
             ); 
         private static readonly IReadOnlyDictionary<DayOfWeek, LocalMarketHours> Closed = new ReadOnlyDictionary<DayOfWeek, LocalMarketHours>(
             Enum.GetValues(typeof(IsoDayOfWeek)).Cast<DayOfWeek>()
-                .ToDictionary(x => x, x => new LocalMarketHours(x, TimeSpan.Zero, TimeSpan.Zero))
+                .ToDictionary(x => x, x => new LocalMarketHours(x, Enumerable.Empty<MarketHoursSegment>()))
             );
 
+        private readonly bool _hasPreMarket;
+        private readonly bool _hasPostMarket;
+        private readonly bool _isClosedAllDay;
         private readonly DayOfWeek _dayOfWeek;
-        private readonly TimeSpan _extendedMarketOpen;
-        private readonly TimeSpan _marketOpen;
-        private readonly TimeSpan _marketClose;
-        private readonly TimeSpan _extendedMarketClose;
+        private readonly MarketHoursSegment[] _segments;
 
         /// <summary>
         /// Gets whether or not this exchange is closed all day
         /// </summary>
         public bool IsClosedAllDay
         {
-            get { return _extendedMarketOpen == _marketOpen && _marketOpen == _marketClose && _marketClose == _extendedMarketClose; }
+            get { return _isClosedAllDay; }
         }
 
         /// <summary>
@@ -58,35 +58,28 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the regular market opening time
+        /// Initializes a new instance of the <see cref="LocalMarketHours"/> class
         /// </summary>
-        public TimeSpan MarketOpen
+        /// <param name="day">The day of the week these hours are applicable</param>
+        /// <param name="segments">The open/close segments defining the market hours for one day</param>
+        public LocalMarketHours(DayOfWeek day, IEnumerable<MarketHoursSegment> segments)
         {
-            get { return _marketOpen; }
-        }
+            _dayOfWeek = day;
+            // filter out the closed states, we'll assume closed if no segment exists
+            _segments = segments.Where(x => x.State != MarketHoursState.Closed).ToArray();
+            _isClosedAllDay = _segments.Length == 0;
 
-        /// <summary>
-        /// Gets the regular market closing time
-        /// </summary>
-        public TimeSpan MarketClose
-        {
-            get { return _marketClose; }
-        }
-
-        /// <summary>
-        /// Gets the extended market opening time
-        /// </summary>
-        public TimeSpan ExtendedMarketOpen
-        {
-            get { return _extendedMarketOpen; }
-        }
-
-        /// <summary>
-        /// Gets the extended market closing time
-        /// </summary>
-        public TimeSpan ExtendedMarketClose
-        {
-            get { return _extendedMarketClose; }
+            foreach (var segment in _segments)
+            {
+                if (segment.State == MarketHoursState.PreMarket)
+                {
+                    _hasPreMarket = true;
+                }
+                if (segment.State == MarketHoursState.PostMarket)
+                {
+                    _hasPostMarket = true;
+                }
+            }
         }
 
         /// <summary>
@@ -100,21 +93,39 @@ namespace QuantConnect.Securities
         public LocalMarketHours(DayOfWeek day, TimeSpan extendedMarketOpen, TimeSpan marketOpen, TimeSpan marketClose, TimeSpan extendedMarketClose)
         {
             _dayOfWeek = day;
-            _extendedMarketOpen = extendedMarketOpen;
-            _marketOpen = marketOpen;
-            _marketClose = marketClose;
-            _extendedMarketClose = extendedMarketClose;
+
+            var segments = new List<MarketHoursSegment>();
+
+            if (extendedMarketOpen != marketOpen)
+            {
+                _hasPreMarket = true;
+                segments.Add(new MarketHoursSegment(MarketHoursState.PreMarket, extendedMarketOpen, marketOpen));
+            }
+
+            if (marketOpen != TimeSpan.Zero || marketClose != TimeSpan.Zero)
+            {
+                segments.Add(new MarketHoursSegment(MarketHoursState.Market, marketOpen, marketClose));
+            }
+
+            if (marketClose != extendedMarketClose)
+            {
+                _hasPostMarket = true;
+                segments.Add(new MarketHoursSegment(MarketHoursState.PostMarket, marketClose, extendedMarketClose));
+            }
+
+            _segments = segments.ToArray();
+            _isClosedAllDay = _segments.Length == 0;
 
             // perform some sanity checks
-            if (_marketOpen < _extendedMarketOpen)
+            if (marketOpen < extendedMarketOpen)
             {
                 throw new ArgumentException("Extended market open time must be less than or equal to market open time.");
             }
-            if (_marketClose < _marketOpen)
+            if (marketClose < marketOpen)
             {
                 throw new ArgumentException("Market close time must be after market open time.");
             }
-            if (_extendedMarketClose < _marketClose)
+            if (extendedMarketClose < marketClose)
             {
                 throw new ArgumentException("Extended market close time must be greater than or equal to market close time.");
             }
@@ -136,21 +147,65 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the market opening time of day
         /// </summary>
+        /// <param name="time">The reference time, the open returned will be the first open after the specified time if there are multiple market open segments</param>
         /// <param name="extendedMarket">True to include extended market hours, false for regular market hours</param>
         /// <returns>The market's opening time of day</returns>
-        public TimeSpan GetMarketOpen(bool extendedMarket)
+        public TimeSpan? GetMarketOpen(TimeSpan time, bool extendedMarket)
         {
-            return extendedMarket ? ExtendedMarketOpen : MarketOpen;
+            for (int i = 0; i < _segments.Length; i++)
+            {
+                if (_segments[i].State == MarketHoursState.Closed || _segments[i].End <= time)
+                {
+                    continue;
+                }
+
+                if (extendedMarket && _hasPreMarket)
+                {
+                    if (_segments[i].State == MarketHoursState.PreMarket)
+                    {
+                        return _segments[i].Start;
+                    }
+                }
+                else if (_segments[i].State == MarketHoursState.Market)
+                {
+                    return _segments[i].Start;
+                }
+            }
+
+            // we couldn't locate an open segment after the specified time
+            return null;
         }
 
         /// <summary>
         /// Gets the market closing time of day
         /// </summary>
+        /// <param name="time">The reference time, the close returned will be the first close after the specified time if there are multiple market open segments</param>
         /// <param name="extendedMarket">True to include extended market hours, false for regular market hours</param>
         /// <returns>The market's closing time of day</returns>
-        public TimeSpan GetMarketClose(bool extendedMarket)
+        public TimeSpan? GetMarketClose(TimeSpan time, bool extendedMarket)
         {
-            return extendedMarket ? ExtendedMarketClose : MarketClose;
+            for (int i = 0; i < _segments.Length; i++)
+            {
+                if (_segments[i].State == MarketHoursState.Closed || _segments[i].End <= time)
+                {
+                    continue;
+                }
+
+                if (extendedMarket && _hasPostMarket)
+                {
+                    if (_segments[i].State == MarketHoursState.PostMarket)
+                    {
+                        return _segments[i].End;
+                    }
+                }
+                else if (_segments[i].State == MarketHoursState.Market)
+                {
+                    return _segments[i].End;
+                }
+            }
+            
+            // we couldn't locate an open segment after the specified time
+            return null;
         }
 
         /// <summary>
@@ -161,14 +216,21 @@ namespace QuantConnect.Securities
         /// <returns>True if the exchange is considered open, false otherwise</returns>
         public bool IsOpen(TimeSpan time, bool extendedMarket)
         {
-            // the market open is included but market close is excluded
-            if (extendedMarket)
+            for (int i = 0; i < _segments.Length; i++)
             {
-                return time >= _extendedMarketOpen
-                    && time < _extendedMarketClose;
+                if (_segments[i].State == MarketHoursState.Closed)
+                {
+                    continue;
+                }
+
+                if (_segments[i].Contains(time))
+                {
+                    return extendedMarket || _segments[i].State == MarketHoursState.Market;
+                }
             }
-            return time >= _marketOpen
-                && time < _marketClose;
+
+            // if we didn't find a segment then we're closed
+            return false;
         }
 
         /// <summary>
@@ -184,14 +246,25 @@ namespace QuantConnect.Securities
             {
                 return IsOpen(start, extendedMarket);
             }
-
-            if (extendedMarket)
+            
+            for (int i = 0; i < _segments.Length; i++)
             {
-                return end > _extendedMarketOpen
-                    && start < _extendedMarketClose;
+                if (_segments[i].State == MarketHoursState.Closed)
+                {
+                    continue;
+                }
+
+                if (extendedMarket || _segments[i].State == MarketHoursState.Market)
+                {
+                    if (_segments[i].Overlaps(start, end))
+                    {
+                        return true;
+                    }
+                }
             }
-            return end > _marketOpen
-                && start < _marketClose;
+
+            // if we didn't find a segment then we're closed
+            return false;
         }
 
         /// <summary>
@@ -231,11 +304,7 @@ namespace QuantConnect.Securities
             {
                 return "Open All Day";
             }
-            if (ExtendedMarketOpen != MarketOpen && ExtendedMarketClose != MarketClose)
-            {
-                return string.Format("{0} - {1},{2},{3},{4}", DayOfWeek, ExtendedMarketOpen, MarketOpen, MarketClose, ExtendedMarketClose);
-            }
-            return string.Format("{0} - {1},{2}", DayOfWeek, MarketOpen, MarketClose);
+            return DayOfWeek + ": " + string.Join(" | ", (IEnumerable<MarketHoursSegment>) _segments);
         }
     }
 }
