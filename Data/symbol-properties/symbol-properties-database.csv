@@ -4,8 +4,6 @@
 # Use # signs for comments
 #
 
-fxcm,USB10YUSD,cfd,US 10-Year Treasury Notes,USD,100,0.01
-fxcm,USB05YUSD,cfd,US 5-Year Treasury Notes,USD,1,0.01
 fxcm,AU200AUD,cfd,S&P/ASX index of Australian listed shares,AUD,0.1,1
 fxcm,DE10YBEUR,cfd,Euro-Bund,EUR,10,0.01
 fxcm,XCUUSD,cfd,Copper,USD,100,0.001
@@ -16,15 +14,11 @@ fxcm,DE30EUR,cfd,DAX index of German listed shares,EUR,0.1,1
 fxcm,HK33HKD,cfd,Hang Seng index of Hong Kong listed shares,HKD,1,1
 fxcm,IT40EUR,cfd,FTSE MIB index of Italian listed shares,EUR,0.1,1
 fxcm,JP225JPY,cfd,Nikkei 225 index of Japanese listed shares,JPY,1,1
-fxcm,JP10YBJPY,cfd,Japanese Bonds,JPY,1,0.01
 fxcm,NAS100USD,cfd,TECH 100 index of US listed shares,USD,0.1,1
-fxcm,NL25EUR,cfd,AEX 25 index of Dutch listed shares,EUR,1,0.1
 fxcm,NATGASUSD,cfd,Natural Gas (Henry Hub),USD,100,0.001
 fxcm,SPX500USD,cfd,S&P 500 index of US listed shares,USD,1,0.1
 fxcm,CH20CHF,cfd,Swiss Market Index of Swiss listed shares,CHF,0.1,1
-fxcm,USB30YUSD,cfd,US Treasury Bond,USD,1,0.01
 fxcm,UK100GBP,cfd,FTSE 100 index of UK listed shares,GBP,0.1,1
-fxcm,UK10YBGBP,cfd,UK Treasury Bills,GBP,1,0.01
 fxcm,BCOUSD,cfd,Crude Oil (Brent),USD,10,0.01
 fxcm,US30USD,cfd,Index of top 30 shares on Wall Street,USD,0.1,1
 fxcm,DXYUSD,cfd,Dow Jones FXCM Dollar Index Basket,USD,1,1
