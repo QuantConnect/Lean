@@ -143,7 +143,7 @@ namespace QuantConnect.Api
                             yield break;
 
                         case DayOfWeek.Saturday:
-                            yield return new MarketHoursSegment(MarketHoursState.Closed, TimeSpan.Zero, TimeSpan.FromHours(24));
+                            yield return MarketHoursSegment.ClosedAllDay();
                             yield break;
 
                         case DayOfWeek.Sunday:
