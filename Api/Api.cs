@@ -26,6 +26,8 @@ namespace QuantConnect.Api
     /// </summary>
     public class Api : IApi
     {
+        private static readonly MarketHoursDatabase MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+
         /// <summary>
         /// Initialize the API.
         /// </summary>
@@ -112,51 +114,10 @@ namespace QuantConnect.Api
                 yield break;
             }
 
-            switch (symbol.ID.SecurityType)
+            var hours = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+            foreach (var segment in hours.MarketHours[time.DayOfWeek].Segments)
             {
-                // since we don't directly support these types, we'll just mark them as always open
-                case SecurityType.Base:
-                case SecurityType.Future:
-                case SecurityType.Option:
-                case SecurityType.Commodity:
-                    yield return MarketHoursSegment.OpenAllDay();
-                    yield break;
-
-                case SecurityType.Equity:
-                    if (time.DayOfWeek == DayOfWeek.Saturday
-                     || time.DayOfWeek == DayOfWeek.Sunday)
-                    {
-                        yield return MarketHoursSegment.ClosedAllDay();
-                        yield break;
-                    }
-
-                    yield return new MarketHoursSegment(MarketHoursState.PreMarket, TimeSpan.FromHours(4), TimeSpan.FromHours(9.5));
-                    yield return new MarketHoursSegment(MarketHoursState.Market, TimeSpan.FromHours(9.5), TimeSpan.FromHours(16));
-                    yield return new MarketHoursSegment(MarketHoursState.PostMarket, TimeSpan.FromHours(16), TimeSpan.FromHours(20));
-                    yield break;
-
-                case SecurityType.Forex:
-                    switch (time.DayOfWeek)
-                    {
-                        case DayOfWeek.Friday:
-                            yield return new MarketHoursSegment(MarketHoursState.Market, TimeSpan.Zero, TimeSpan.FromHours(17));
-                            yield break;
-
-                        case DayOfWeek.Saturday:
-                            yield return MarketHoursSegment.ClosedAllDay();
-                            yield break;
-
-                        case DayOfWeek.Sunday:
-                            yield return new MarketHoursSegment(MarketHoursState.Market, TimeSpan.FromHours(17), TimeSpan.FromHours(24));
-                            yield break;
-
-                        default:
-                            yield return MarketHoursSegment.OpenAllDay();
-                            yield break;
-                    }
-
-                default:
-                    throw new ArgumentOutOfRangeException("symbol");
+                yield return segment;
             }
         }
 
