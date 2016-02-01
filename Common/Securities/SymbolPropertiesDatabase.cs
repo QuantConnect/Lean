@@ -29,9 +29,9 @@ namespace QuantConnect.Securities
         private static SymbolPropertiesDatabase _dataFolderSymbolPropertiesDatabase;
         private static readonly object DataFolderSymbolPropertiesDatabaseLock = new object();
 
-        private readonly IReadOnlyDictionary<SecurityKey, SymbolProperties> _entries;
+        private readonly IReadOnlyDictionary<SecurityDatabaseKey, SymbolProperties> _entries;
 
-        private SymbolPropertiesDatabase(IReadOnlyDictionary<SecurityKey, SymbolProperties> entries)
+        private SymbolPropertiesDatabase(IReadOnlyDictionary<SecurityDatabaseKey, SymbolProperties> entries)
         {
             _entries = entries.ToDictionary();
         }
@@ -46,12 +46,12 @@ namespace QuantConnect.Securities
         public SymbolProperties GetSymbolProperties(string market, string symbol, SecurityType securityType)
         {
             SymbolProperties symbolProperties;
-            var key = new SecurityKey(market, symbol, securityType);
+            var key = new SecurityDatabaseKey(market, symbol, securityType);
 
             if (!_entries.TryGetValue(key, out symbolProperties))
             {
                 // now check with null symbol key
-                if (!_entries.TryGetValue(new SecurityKey(market, null, securityType), out symbolProperties))
+                if (!_entries.TryGetValue(new SecurityDatabaseKey(market, null, securityType), out symbolProperties))
                 {
                     // no properties found, return object with default property values
                     return new SymbolProperties(
@@ -90,7 +90,7 @@ namespace QuantConnect.Securities
         /// <returns>A new instance of the <see cref="SymbolPropertiesDatabase"/> class representing the data in the specified file</returns>
         private static SymbolPropertiesDatabase FromCsvFile(string file)
         {
-            var entries = new Dictionary<SecurityKey, SymbolProperties>();
+            var entries = new Dictionary<SecurityDatabaseKey, SymbolProperties>();
 
             if (!File.Exists(file))
             {
@@ -100,7 +100,7 @@ namespace QuantConnect.Securities
             // skip the first header line, also skip #'s as these are comment lines
             foreach (var line in File.ReadLines(file).Where(x => !x.StartsWith("#") && !string.IsNullOrWhiteSpace(x)).Skip(1))
             {
-                SecurityKey key;
+                SecurityDatabaseKey key;
                 var entry = FromCsvLine(line, out key);
                 if (entries.ContainsKey(key))
                 {
@@ -119,11 +119,11 @@ namespace QuantConnect.Securities
         /// <param name="line">The csv line to be parsed</param>
         /// <param name="key">The key used to uniquely identify this security</param>
         /// <returns>A new <see cref="SymbolProperties"/> for the specified csv line</returns>
-        private static SymbolProperties FromCsvLine(string line, out SecurityKey key)
+        private static SymbolProperties FromCsvLine(string line, out SecurityDatabaseKey key)
         {
             var csv = line.Split(',');
 
-            key = new SecurityKey(
+            key = new SecurityDatabaseKey(
                 market: csv[0], 
                 symbol: string.IsNullOrEmpty(csv[1]) ? null : csv[1], 
                 securityType: (SecurityType)Enum.Parse(typeof(SecurityType), csv[2], true));
