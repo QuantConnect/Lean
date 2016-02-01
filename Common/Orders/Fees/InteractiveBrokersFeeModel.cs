@@ -46,35 +46,34 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The cost of the order in units of the account currency</returns>
         public decimal GetOrderFee(Security security, Order order)
         {
-            if (security.Type == SecurityType.Forex)
+            switch (security.Type)
             {
-                // get the total order value in the account currency
-                var totalOrderValue = order.GetValue(security);
-                var fee = Math.Abs(_forexCommissionRate*totalOrderValue);
-                return Math.Max(_forexMinimumOrderFee, fee);
-            }
+                case SecurityType.Forex:
+                    // get the total order value in the account currency
+                    var totalOrderValue = order.GetValue(security);
+                    var fee = Math.Abs(_forexCommissionRate*totalOrderValue);
+                    return Math.Max(_forexMinimumOrderFee, fee);
 
-            if (security.Type == SecurityType.Equity)
-            {
-                var tradeValue = Math.Abs(order.GetValue(security));
+                case SecurityType.Equity:
+                    var tradeValue = Math.Abs(order.GetValue(security));
 
-                //Per share fees
-                var tradeFee = 0.005m * order.AbsoluteQuantity;
+                    //Per share fees
+                    var tradeFee = 0.005m * order.AbsoluteQuantity;
 
-                //Maximum Per Order: 0.5%
-                //Minimum per order. $1.0
-                var maximumPerOrder = 0.005m * tradeValue;
-                if (tradeFee < 1)
-                {
-                    tradeFee = 1;
-                }
-                else if (tradeFee > maximumPerOrder)
-                {
-                    tradeFee = maximumPerOrder;
-                }
+                    //Maximum Per Order: 0.5%
+                    //Minimum per order. $1.0
+                    var maximumPerOrder = 0.005m * tradeValue;
+                    if (tradeFee < 1)
+                    {
+                        tradeFee = 1;
+                    }
+                    else if (tradeFee > maximumPerOrder)
+                    {
+                        tradeFee = maximumPerOrder;
+                    }
 
-                //Always return a positive fee.
-                return Math.Abs(tradeFee);
+                    //Always return a positive fee.
+                    return Math.Abs(tradeFee);
             }
 
             // all other types default to zero fees
