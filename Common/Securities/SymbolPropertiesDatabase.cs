@@ -53,8 +53,12 @@ namespace QuantConnect.Securities
                 // now check with null symbol key
                 if (!_entries.TryGetValue(new SecurityKey(market, null, securityType), out symbolProperties))
                 {
-                    // no properties found
-                    return null;
+                    // no properties found, return object with default property values
+                    return new SymbolProperties(
+                        description: "", 
+                        quoteCurrency: "USD", 
+                        contractMultiplier: 1m,
+                        pipSize: 0.01m);
                 }
             }
 
