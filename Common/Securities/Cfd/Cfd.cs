@@ -50,6 +50,12 @@ namespace QuantConnect.Securities.Cfd
             QuoteCurrency = quoteCurrency;
             Holdings = new CfdHolding(this);
             SymbolProperties = symbolProperties;
+
+            if (symbolProperties == null)
+                throw new ArgumentException("CFD requires a valid SymbolProperties argument");
+
+            if (symbolProperties.QuoteCurrency != quoteCurrency.Symbol)
+                throw new ArgumentException("CFD SymbolProperties.QuoteCurrency and QuoteCurrency.Symbol do not match.");
         }
 
         /// <summary>
@@ -68,7 +74,7 @@ namespace QuantConnect.Securities.Cfd
         /// </summary>
         public string QuoteCurrencySymbol
         {
-            get { return SymbolProperties != null ? SymbolProperties.QuoteCurrency : QuoteCurrency.Symbol; }
+            get { return SymbolProperties.QuoteCurrency; }
         }
 
         /// <summary>
@@ -79,7 +85,7 @@ namespace QuantConnect.Securities.Cfd
         /// </remarks>
         public decimal ContractMultiplier
         {
-            get { return SymbolProperties != null ? SymbolProperties.ContractMultiplier : 1m; }
+            get { return SymbolProperties.ContractMultiplier; }
         }
 
         /// <summary>
@@ -87,7 +93,7 @@ namespace QuantConnect.Securities.Cfd
         /// </summary>
         public decimal PipSize
         {
-            get { return SymbolProperties != null ? SymbolProperties.PipSize : 0.01m; }
+            get { return SymbolProperties.PipSize; }
         }
     }
 }
