@@ -15,8 +15,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Interfaces
 {
@@ -76,9 +78,9 @@ namespace QuantConnect.Interfaces
         /// Market Status Today: REST call.
         /// </summary>
         /// <param name="time">The date we need market hours for</param>
-        /// <param name="type">Security asset</param>
+        /// <param name="symbol"></param>
         /// <returns>Market open hours.</returns>
-        MarketToday MarketToday(DateTime time, SecurityType type);
+        IEnumerable<MarketHoursSegment> MarketToday(DateTime time, Symbol symbol);
 
         /// <summary>
         /// Store the algorithm logs.

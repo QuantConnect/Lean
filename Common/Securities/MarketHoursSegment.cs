@@ -56,6 +56,22 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets a new market hours segment representing being open all day
+        /// </summary>
+        public static MarketHoursSegment OpenAllDay()
+        {
+            return new MarketHoursSegment(MarketHoursState.Market, TimeSpan.Zero, Time.OneDay);
+        }
+
+        /// <summary>
+        /// Gets a new market hours segment representing being open all day
+        /// </summary>
+        public static MarketHoursSegment ClosedAllDay()
+        {
+            return new MarketHoursSegment(MarketHoursState.Closed, TimeSpan.Zero, Time.OneDay);
+        }
+
+        /// <summary>
         /// Determines whether or not the specified time is contained within this segment
         /// </summary>
         /// <param name="time">The time to check</param>
