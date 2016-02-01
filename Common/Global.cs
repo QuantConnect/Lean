@@ -84,8 +84,9 @@ namespace QuantConnect
         /// <summary>
         /// Create a simple JSON holdings from a Security holding class.
         /// </summary>
+        /// <param name="security">The security instance</param>
         /// <param name="holding">Holdings object we'll use to initialize the transport</param>
-        public Holding(SecurityHolding holding)
+        public Holding(Security security, SecurityHolding holding)
              : this()
         {
             Symbol = holding.Symbol;
@@ -104,7 +105,7 @@ namespace QuantConnect
             else if (holding.Type == SecurityType.Cfd)
             {
                 rounding = 5;
-                var cfd = (Cfd) holding.Security;
+                var cfd = (Cfd)security;
                 var quotec =  cfd.QuoteCurrencySymbol;
                 CurrencySymbol = Currencies.CurrencySymbols[quotec];
                 ConversionRate = ((CfdHolding)holding).ConversionRate;

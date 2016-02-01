@@ -46,17 +46,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// The security being held
-        /// </summary>
-        public Security Security
-        {
-            get
-            {
-                return _security;
-            }
-        }
-
-        /// <summary>
         /// Average price of the security holdings.
         /// </summary>
         public decimal AveragePrice
