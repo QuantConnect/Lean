@@ -83,12 +83,12 @@ namespace QuantConnect.Util
             /// <returns>A new instance of the <see cref="MarketHoursDatabase"/> class</returns>
             public MarketHoursDatabase Convert()
             {
-                var entries = new Dictionary<MarketHoursDatabase.Key, MarketHoursDatabase.Entry>();
+                var entries = new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>();
                 foreach (var entry in Entries)
                 {
                     try
                     {
-                        var key = MarketHoursDatabase.Key.Parse(entry.Key);
+                        var key = SecurityDatabaseKey.Parse(entry.Key);
                         entries[key] = entry.Value.Convert();
                     }
                     catch (Exception err)
