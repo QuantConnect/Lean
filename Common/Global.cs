@@ -85,10 +85,11 @@ namespace QuantConnect
         /// Create a simple JSON holdings from a Security holding class.
         /// </summary>
         /// <param name="security">The security instance</param>
-        /// <param name="holding">Holdings object we'll use to initialize the transport</param>
-        public Holding(Security security, SecurityHolding holding)
+        public Holding(Security security)
              : this()
         {
+            var holding = security.Holdings;
+
             Symbol = holding.Symbol;
             Type = holding.Type;
             Quantity = holding.Quantity;

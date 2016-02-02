@@ -91,7 +91,7 @@ namespace QuantConnect.Brokerages.Backtesting
             // grab everything from the portfolio with a non-zero absolute quantity
             return (from security in Algorithm.Portfolio.Securities.Values.OrderBy(x => x.Symbol) 
                     where security.Holdings.AbsoluteQuantity > 0 
-                    select new Holding(security, security.Holdings)).ToList();
+                    select new Holding(security)).ToList();
         }
 
         /// <summary>
