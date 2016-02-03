@@ -19,7 +19,7 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     /// This indicator computes the Balance Of Power (BOP). 
-    /// The On Balance Volume is calculated with the following formula:
+    /// The Balance Of Power is calculated with the following formula:
     /// BOP = (Close - Open) / (High - Low)
     /// </summary>
     public class BalanceOfPower : TradeBarIndicator
