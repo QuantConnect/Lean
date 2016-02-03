@@ -108,6 +108,7 @@
     <Compile Include="Common\Scheduling\TimeRulesTests.cs" />
     <Compile Include="Common\Securities\CashBookTests.cs" />
     <Compile Include="Common\Securities\CashTests.cs" />
+    <Compile Include="Common\Securities\Cfd\CfdTests.cs" />
     <Compile Include="Common\Securities\Equity\EquityTransactionModelTests.cs" />
     <Compile Include="Common\Securities\Forex\ForexTests.cs" />
     <Compile Include="Common\Securities\Forex\ForexTransactionModelTests.cs" />

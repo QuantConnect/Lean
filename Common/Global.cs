@@ -19,6 +19,7 @@ using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Forex;
 
 namespace QuantConnect
@@ -83,10 +84,12 @@ namespace QuantConnect
         /// <summary>
         /// Create a simple JSON holdings from a Security holding class.
         /// </summary>
-        /// <param name="holding">Holdings object we'll use to initialize the transport</param>
-        public Holding(SecurityHolding holding)
+        /// <param name="security">The security instance</param>
+        public Holding(Security security)
              : this()
         {
+            var holding = security.Holdings;
+
             Symbol = holding.Symbol;
             Type = holding.Type;
             Quantity = holding.Quantity;
@@ -97,8 +100,16 @@ namespace QuantConnect
                 rounding = 5;
                 string basec, quotec;
                 Forex.DecomposeCurrencyPair(holding.Symbol.Value, out basec, out quotec);
-                CurrencySymbol = Forex.CurrencySymbols[quotec];
+                CurrencySymbol = Currencies.CurrencySymbols[quotec];
                 ConversionRate = ((ForexHolding) holding).ConversionRate;
+            }
+            else if (holding.Type == SecurityType.Cfd)
+            {
+                rounding = 5;
+                var cfd = (Cfd)security;
+                var quotec =  cfd.QuoteCurrencySymbol;
+                CurrencySymbol = Currencies.CurrencySymbols[quotec];
+                ConversionRate = ((CfdHolding)holding).ConversionRate;
             }
 
             AveragePrice = Math.Round(holding.AveragePrice, rounding);

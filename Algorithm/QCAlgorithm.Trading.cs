@@ -15,9 +15,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Algorithm
@@ -123,7 +123,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Issue an order/trade for asset: Alias wrapper for Order(string, int);
         /// </summary>
-        /// <seealso cref="Order(Symbol, double)"/>
+        /// <seealso cref="Order(Symbol, decimal)"/>
         public OrderTicket Order(Symbol symbol, double quantity)
         {
             return Order(symbol, (int) quantity);
@@ -369,6 +369,24 @@ namespace QuantConnect.Algorithm
                 if (baseCash.ConversionRate == 0m || quoteCash.ConversionRate == 0m)
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.ForexConversionRateZero, request.Symbol.Value + ": requires " + baseCurrency + " and " + quoteCurrency + " to have non-zero conversion rates. This can be caused by lack of data.");
+                }
+            }
+            else if (security.Type == SecurityType.Cfd)
+            {
+                // for CFD we need to verify that the conversion to USD has a value as well
+                var cfd = (Cfd) security;
+                var quoteCurrency = cfd.QuoteCurrencySymbol;
+
+                // verify it's in the portfolio
+                Cash quoteCash;
+                if (!Portfolio.CashBook.TryGetValue(quoteCurrency, out quoteCash))
+                {
+                    return OrderResponse.Error(request, OrderResponseErrorCode.CfdQuoteCurrencyRequired, request.Symbol.Value + ": requires " + quoteCurrency + " in the cashbook to trade.");
+                }
+                // verify we have a conversion rate back into the account currency
+                if (quoteCash.ConversionRate == 0m)
+                {
+                    return OrderResponse.Error(request, OrderResponseErrorCode.CfdConversionRateZero, request.Symbol.Value + ": requires " + quoteCurrency + " to have a non-zero conversion rate. This can be caused by lack of data.");
                 }
             }
             

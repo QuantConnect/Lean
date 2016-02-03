@@ -28,11 +28,8 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Equity;
-using QuantConnect.Securities.Forex;
 using QuantConnect.Util;
 using IB = Krs.Ats.IBNet;
 
@@ -633,7 +630,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // determine the correct symbol to choose
             string invertedSymbol = "USD" + currency;
             string normalSymbol = currency + "USD";
-            var currencyPair = Forex.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
+            var currencyPair = Currencies.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
             if (currencyPair == null)
             {
                 throw new Exception("Unable to resolve currency conversion pair for currency: " + currency);
@@ -1231,7 +1228,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private Holding CreateHolding(IB.UpdatePortfolioEventArgs e)
         {
             string currencySymbol;
-            if (!Securities.Forex.Forex.CurrencySymbols.TryGetValue(e.Contract.Currency, out currencySymbol))
+            if (!Currencies.CurrencySymbols.TryGetValue(e.Contract.Currency, out currencySymbol))
             {
                 currencySymbol = "$";
             }

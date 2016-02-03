@@ -61,6 +61,7 @@ namespace QuantConnect.Algorithm
         private bool _sentNoDataError = false;
 
         private readonly MarketHoursDatabase _marketHoursDatabase;
+        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
 
         // used for calling through to void OnData(Slice) if no override specified
         private bool _checkedForOnDataSlice;
@@ -126,6 +127,9 @@ namespace QuantConnect.Algorithm
 
             // get exchange hours loaded from the market-hours-database.csv in /Data/market-hours
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+
+            // get symbol properties loaded from the symbol-properties-database.csv in /Data/symbol-properties
+            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
             // universe selection
             UniverseManager = new UniverseManager();
@@ -461,7 +465,7 @@ namespace QuantConnect.Algorithm
 
                         resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
                     }
-                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, SecurityInitializer, _benchmarkSymbol, resolution, true, 1m, false, true, false);
+                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer, _benchmarkSymbol, resolution, true, 1m, false, true, false);
                     AddToUserDefinedUniverse(security);
                 }
 
@@ -1183,7 +1187,7 @@ namespace QuantConnect.Algorithm
                     symbolObject = QuantConnect.Symbol.Create(symbol, securityType, market);
                 }
 
-                var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, SecurityInitializer,
+                var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
                     symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false);
 
                 AddToUserDefinedUniverse(security);
@@ -1277,9 +1281,12 @@ namespace QuantConnect.Algorithm
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
 
+            // only used in CFD security type, for now
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(Market.USA, symbol, SecurityType.Base);
+
             //Add this new generic data as a tradeable security: 
             var security = SecurityManager.CreateSecurity(typeof(T), Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone, 
-                SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true);
+                symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true);
 
             AddToUserDefinedUniverse(security);
         }

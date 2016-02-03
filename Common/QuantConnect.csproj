@@ -139,6 +139,7 @@
     <Compile Include="Commands\QuitCommand.cs" />
     <Compile Include="Commands\UpdateOrderCommand.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="Currencies.cs" />
     <Compile Include="Data\Auxiliary\FactorFile.cs" />
     <Compile Include="Data\Auxiliary\FactorFileRow.cs" />
     <Compile Include="Data\Auxiliary\LocalDiskFactorFileProvider.cs" />
@@ -244,6 +245,13 @@
     <Compile Include="Securities\BrokerageModelSecurityInitializer.cs" />
     <Compile Include="Securities\Cash.cs" />
     <Compile Include="Securities\CashBook.cs" />
+    <Compile Include="Securities\Cfd\Cfd.cs" />
+    <Compile Include="Securities\Cfd\CfdCache.cs" />
+    <Compile Include="Securities\Cfd\CfdDataFilter.cs" />
+    <Compile Include="Securities\Cfd\CfdExchange.cs" />
+    <Compile Include="Securities\Cfd\CfdHolding.cs" />
+    <Compile Include="Securities\Cfd\CfdMarginModel.cs" />
+    <Compile Include="Securities\Cfd\CfdPortfolioModel.cs" />
     <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
     <Compile Include="Securities\Equity\EquityMarginModel.cs" />
     <Compile Include="Securities\Equity\EquityPortfolioModel.cs" />
@@ -254,6 +262,7 @@
     <Compile Include="Securities\LocalMarketHours.cs" />
     <Compile Include="Securities\MarketHoursSegment.cs" />
     <Compile Include="Securities\MarketHoursState.cs" />
+    <Compile Include="Securities\SecurityDatabaseKey.cs" />
     <Compile Include="Securities\SecurityExchangeHours.cs" />
     <Compile Include="Securities\MarketHoursDatabase.cs" />
     <Compile Include="Securities\Forex\ForexMarginModel.cs" />
@@ -267,6 +276,8 @@
     <Compile Include="Securities\SecurityPortfolioModel.cs" />
     <Compile Include="Securities\SecurityMarginModel.cs" />
     <Compile Include="Securities\ImmediateSettlementModel.cs" />
+    <Compile Include="Securities\SymbolProperties.cs" />
+    <Compile Include="Securities\SymbolPropertiesDatabase.cs" />
     <Compile Include="Securities\UniverseManager.cs" />
     <Compile Include="Securities\UnsettledCashAmount.cs" />
     <Compile Include="SecurityIdentifier.cs" />

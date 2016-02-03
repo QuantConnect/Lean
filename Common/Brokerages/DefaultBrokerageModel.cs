@@ -129,13 +129,13 @@ namespace QuantConnect.Brokerages
                     return 2m;
 
                 case SecurityType.Forex:
+                case SecurityType.Cfd:
                     return 50m;
 
                 case SecurityType.Base:
                 case SecurityType.Commodity:
                 case SecurityType.Option:
                 case SecurityType.Future:
-                case SecurityType.Cfd:
                 default:
                     return 1m;
             }
@@ -190,12 +190,12 @@ namespace QuantConnect.Brokerages
                     return new ConstantSlippageModel(0);
 
                 case SecurityType.Forex:
+                case SecurityType.Cfd:
                     return new SpreadSlippageModel();
 
                 case SecurityType.Commodity:
                 case SecurityType.Option:
                 case SecurityType.Future:
-                case SecurityType.Cfd:
                 default:
                     return new ConstantSlippageModel(0);
             }

@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
@@ -109,31 +108,5 @@ namespace QuantConnect.Securities.Forex
             baseCurrency = currencyPair.Substring(0, 3);
             quoteCurrency = currencyPair.Substring(3);
         }
-
-        /// <summary>
-        /// Gets the listing of currently supported currency pairs.
-        /// </summary>
-        /// <remarks>
-        /// This listing should be in sync with the data available at: https://www.quantconnect.com/data/FOREX#2.1.1
-        /// </remarks>
-        public static readonly IReadOnlyList<string> CurrencyPairs = new []
-        {
-            "AUDJPY", "AUDUSD", "EURCHF", "EURGBP", "EURJPY", "EURUSD", "GBPAUD", "GBPJPY", "GBPUSD", "NZDUSD", "USDCAD", "USDCHF", "USDJPY"
-        };
-
-        /// <summary>
-        /// A mapping of currency codes to their display symbols
-        /// </summary>
-        public static readonly IReadOnlyDictionary<string, string> CurrencySymbols = new Dictionary<string, string>
-        {
-            {"USD", "$"},
-            {"GBP", "₤"},
-            {"JPY", "¥"},
-            {"EUR", "€"},
-            {"NZD", "$"},
-            {"AUD", "$"},
-            {"CAD", "$"},
-            {"CHF", "Fr"}
-        };
     }
 }

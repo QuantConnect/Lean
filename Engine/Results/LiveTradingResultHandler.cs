@@ -298,7 +298,7 @@ namespace QuantConnect.Lean.Engine.Results
                     // only send holdings updates when we have changes in orders, except for first time, then we want to send all
                     foreach (var asset in _algorithm.Securities.Values.Where(x => !x.SubscriptionDataConfig.IsInternalFeed).OrderBy(x => x.Symbol.Value))
                     {
-                        holdings.Add(asset.Symbol.Value, new Holding(asset.Holdings));
+                        holdings.Add(asset.Symbol.Value, new Holding(asset));
                     }
 
                     //Add the algorithm statistics first.

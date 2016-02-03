@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Common.Util
         /// <returns>A new instance of the <see cref="MarketHoursDatabase"/> class representing the data in the specified file</returns>
         public static MarketHoursDatabase FromCsvFile(string file, IReadOnlyDictionary<string, IEnumerable<DateTime>> holidaysByMarket)
         {
-            var exchangeHours = new Dictionary<MarketHoursDatabase.Key, MarketHoursDatabase.Entry>();
+            var exchangeHours = new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>();
 
             if (!File.Exists(file))
             {
@@ -98,7 +98,7 @@ namespace QuantConnect.Tests.Common.Util
             // skip the first header line, also skip #'s as these are comment lines
             foreach (var line in File.ReadLines(file).Where(x => !x.StartsWith("#")).Skip(1))
             {
-                MarketHoursDatabase.Key key;
+                SecurityDatabaseKey key;
                 var hours = FromCsvLine(line, holidaysByMarket, out key);
                 if (exchangeHours.ContainsKey(key))
                 {
@@ -120,7 +120,7 @@ namespace QuantConnect.Tests.Common.Util
         /// <returns>A new <see cref="SecurityExchangeHours"/> for the specified csv line and holidays</returns>
         private static MarketHoursDatabase.Entry FromCsvLine(string line,
             IReadOnlyDictionary<string, IEnumerable<DateTime>> holidaysByMarket,
-            out MarketHoursDatabase.Key key)
+            out SecurityDatabaseKey key)
         {
             var csv = line.Split(',');
             var marketHours = new List<LocalMarketHours>(7);
@@ -135,7 +135,7 @@ namespace QuantConnect.Tests.Common.Util
             //var symbol = csv[3];
             //var type = csv[4];
             var symbol = string.IsNullOrEmpty(csv[3]) ? null : csv[3];
-            key = new MarketHoursDatabase.Key(csv[2], symbol, (SecurityType) Enum.Parse(typeof (SecurityType), csv[4], true));
+            key = new SecurityDatabaseKey(csv[2], symbol, (SecurityType)Enum.Parse(typeof(SecurityType), csv[4], true));
 
             int csvLength = csv.Length;
             for (int i = 1; i < 8; i++) // 7 days, so < 8
