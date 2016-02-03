@@ -609,6 +609,22 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Balance Of Power indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Balance Of Power we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Balance Of Power indicator for the requested symbol.</returns>
+        public BalanceOfPower BOP(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "BOP", resolution);
+            var bop = new BalanceOfPower(name);
+            RegisterIndicator(symbol, bop, resolution, selector);
+            return bop;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
