@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
     [TestFixture]
     public class PartialMarketFillModelTests
     {
-        [Test]
+        [Test, Category("TravisExclude")]
         public void CreatesSpecificNumberOfFills()
         {
             Security security;
