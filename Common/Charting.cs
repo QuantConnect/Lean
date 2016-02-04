@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Logging;
+using System.Drawing;
 
 namespace QuantConnect 
 {
@@ -138,7 +139,7 @@ namespace QuantConnect
         /// <summary>
         /// Color the series 
         /// </summary>
-        public SeriesColor SeriesColor = SeriesColor.Black;
+        public Color Color = Color.Black;
         
         /// <summary>
         /// Shape or symbol for the marker in a scatter plot
@@ -163,7 +164,7 @@ namespace QuantConnect
             SeriesType = SeriesType.Line;
             Unit = "$";
             Index = 0;
-            SeriesColor = SeriesColor.Black;
+            Color = Color.Black;
             ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
         }
 
@@ -178,7 +179,7 @@ namespace QuantConnect
             SeriesType = type;
             Index = 0;
             Unit = "$";
-            SeriesColor = SeriesColor.Black;
+            Color = Color.Black;
             ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
         }
 
@@ -194,7 +195,7 @@ namespace QuantConnect
             SeriesType = type;
             Index = index;
             Unit = "$";
-            SeriesColor = SeriesColor.Black;
+            Color = Color.Black;
             ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
         }
 
@@ -211,7 +212,7 @@ namespace QuantConnect
             SeriesType = type;
             Index = index;
             Unit = unit;
-            SeriesColor = SeriesColor.Black;
+            Color = Color.Black;
             ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
         }
 
@@ -228,7 +229,7 @@ namespace QuantConnect
             SeriesType = type;
             Unit = unit;
             Index = 0;
-            SeriesColor = SeriesColor.Black;
+            Color = Color.Black;
             ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
         }
 
@@ -239,14 +240,14 @@ namespace QuantConnect
         /// <param name="type">Type of the chart series</param>
         /// <param name="unit">Unit of the serier</param>
         /// <param name="color">Color of the series</param>
-        public Series(string name, SeriesType type = SeriesType.Line, string unit = "$", SeriesColor color = SeriesColor.Black)
+        public Series(string name, SeriesType type, string unit, Color color)
         {
             Name = name;
             Values = new List<ChartPoint>();
             SeriesType = type;
             Unit = unit;
             Index = 0;
-            SeriesColor = color;
+            Color = color;
             ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
         }
 
@@ -258,14 +259,14 @@ namespace QuantConnect
         /// <param name="unit">Unit of the serier</param>
         /// <param name="color">Color of the series</param>
         /// <param name="symbol">Symbol for the marker in a scatter plot series</param>
-        public Series(string name, SeriesType type = SeriesType.Line, string unit = "$", SeriesColor color = SeriesColor.Black, ScatterMarkerSymbol symbol = ScatterMarkerSymbol.Circle)
+        public Series(string name, SeriesType type, string unit, Color color, ScatterMarkerSymbol symbol = ScatterMarkerSymbol.Circle)
         {
             Name = name;
             Values = new List<ChartPoint>();
             SeriesType = type;
             Unit = unit;
             Index = 0;
-            SeriesColor = color;
+            Color = color;
             ScatterMarkerSymbol = symbol;
         }
 
@@ -390,46 +391,6 @@ namespace QuantConnect
         Overlay,
         /// Stacked series on top of each other.
         Stacked
-    }
-
-    /// <summary>
-    /// Color to the series object
-    /// Basic colors
-    /// </summary>
-    public enum SeriesColor
-    {
-        /// Black	#000000	(0,0,0)
-        Black,
- 	    /// White	#FFFFFF	(255,255,255)
-        White,
- 	    /// Red	    #FF0000	(255,0,0)
-        Red,
- 	    /// Lime	#00FF00	(0,255,0)
-        Lime,
- 	    /// Blue	#0000FF	(0,0,255)
-        Blue,
- 	    /// Yellow	#FFFF00	(255,255,0)
-        Yellow,
- 	    /// Cyan 	#00FFFF	(0,255,255) aka Aqua
-        Cyan,
- 	    /// Magenta #FF00FF	(255,0,255) aka Fuchsia
-        Magenta,
- 	    /// Silver	#C0C0C0	(192,192,192)
-        Silver,
- 	    /// Gray	#808080	(128,128,128)
-        Gray,
- 	    /// Maroon	#800000	(128,0,0)
-        Maroon,
- 	    /// Olive	#808000	(128,128,0)
-        Olive,
- 	    /// Green	#008000	(0,128,0)
-        Green,
- 	    /// Purple	#800080	(128,0,128)
-        Purple,
- 	    /// Teal	#008080	(0,128,128)
-        Teal,
- 	    /// Navy	#000080	(0,0,128)
-        Navy
     }
 
     /// <summary>
