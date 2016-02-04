@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
 {
@@ -63,22 +64,21 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Gets the value of this order at the given market price.
+        /// Gets the order value in units of the security's quote currency
         /// </summary>
-        /// <param name="currentMarketPrice">The current market price of the security</param>
-        /// <returns>The value of this order given the current market price</returns>
-        public override decimal GetValue(decimal currentMarketPrice)
+        /// <param name="security">The security matching this order's symbol</param>
+        protected override decimal GetValueImpl(Security security)
         {
             // selling, so higher price will be used
             if (Quantity < 0)
             {
-                return Quantity*Math.Max(LimitPrice, currentMarketPrice);
+                return Quantity*Math.Max(LimitPrice, security.Price);
             }
 
             // buying, so lower price will be used
             if (Quantity > 0)
             {
-                return Quantity*Math.Min(LimitPrice, currentMarketPrice);
+                return Quantity*Math.Min(LimitPrice, security.Price);
             }
 
             return 0m;

@@ -634,7 +634,7 @@ namespace QuantConnect.Algorithm
                 var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime);
                 var fee = security.FeeModel.GetOrderFee(security, order);
 
-                orderValue = Math.Abs(order.GetValue(price)) + fee;
+                orderValue = Math.Abs(order.GetValue(security)) + fee;
 
                 // we need to add the fee in as well, even though it's not value, it's still a cost for the transaction
                 // and we need to account for it to be sure we can make the trade produced by this method, imagine

@@ -16,6 +16,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Cfd;
+using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Orders
 {
@@ -159,12 +162,34 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Gets the value of this order at the given market price.
+        /// Gets the value of this order at the given market price in units of the account currency
         /// NOTE: Some order types derive value from other parameters, such as limit prices
         /// </summary>
-        /// <param name="currentMarketPrice">The current market price of the security</param>
+        /// <param name="security">The security matching this order's symbol</param>
         /// <returns>The value of this order given the current market price</returns>
-        public abstract decimal GetValue(decimal currentMarketPrice);
+        public decimal GetValue(Security security)
+        {
+            var value = GetValueImpl(security);
+            switch (security.Type)
+            {
+                // this is here until QuoteCurrency is on the base Security
+                case SecurityType.Forex:
+                    var forex = (Forex) security;
+                    value = value*forex.QuoteCurrency.ConversionRate;
+                    break;
+                case SecurityType.Cfd:
+                    var cfd = (Cfd) security;
+                    value = value*cfd.ContractMultiplier*cfd.QuoteCurrency.ConversionRate;
+                    break;
+            }
+            return value;
+        }
+
+        /// <summary>
+        /// Gets the order value in units of the security's quote currency
+        /// </summary>
+        /// <param name="security">The security matching this order's symbol</param>
+        protected abstract decimal GetValueImpl(Security security);
 
         /// <summary>
         /// Modifies the state of this order to match the update request
@@ -261,6 +286,7 @@ namespace QuantConnect.Orders
             }
             return order;
         }
+
         /// <summary>
         /// Order Expiry on a specific UTC time.
         /// </summary>

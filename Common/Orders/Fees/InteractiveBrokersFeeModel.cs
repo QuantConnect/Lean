@@ -68,19 +68,15 @@ namespace QuantConnect.Orders.Fees
         {
             if (security.Type == SecurityType.Forex)
             {
-                var forex = (Forex)security;
-
                 // get the total order value in the account currency
-                var price = order.Status.IsFill() ? order.Price : security.Price;
-                var totalOrderValue = order.GetValue(price) * forex.QuoteCurrency.ConversionRate;
+                var totalOrderValue = order.GetValue(security);
                 var fee = Math.Abs(_commissionRate*totalOrderValue);
                 return Math.Max(_minimumOrderFee, fee);
             }
 
             if (security.Type == SecurityType.Equity)
             {
-                var price = order.Status.IsFill() ? order.Price : security.Price;
-                var tradeValue = Math.Abs(order.GetValue(price));
+                var tradeValue = Math.Abs(order.GetValue(security));
 
                 //Per share fees
                 var tradeFee = 0.005m * order.AbsoluteQuantity;
