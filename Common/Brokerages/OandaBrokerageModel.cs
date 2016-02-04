@@ -14,11 +14,13 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -27,6 +29,26 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class OandaBrokerageModel : DefaultBrokerageModel
     {
+        /// <summary>
+        /// The default markets for the fxcm brokerage
+        /// </summary>
+        public new static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
+        {
+            {SecurityType.Base, Market.USA},
+            {SecurityType.Equity, Market.USA},
+            {SecurityType.Option, Market.USA},
+            {SecurityType.Forex, Market.Oanda},
+            {SecurityType.Cfd, Market.Oanda}
+        }.ToReadOnlyDictionary();
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets
+        {
+            get { return DefaultMarketMap; }
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
         /// </summary>

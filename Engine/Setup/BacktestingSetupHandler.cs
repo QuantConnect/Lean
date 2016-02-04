@@ -20,6 +20,7 @@ using System.Linq;
 using System.Timers;
 using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory;
+using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.RealTime;
@@ -178,8 +179,6 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 try
                 {
-                    //Set our default markets
-                    algorithm.SetDefaultMarkets(BacktestingBrokerageFactory.DefaultMarketMap.ToDictionary());
                     //Set our parameters
                     algorithm.SetParameters(job.Parameters);
                     //Algorithm is backtesting, not live:

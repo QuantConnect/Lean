@@ -182,8 +182,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     {
                         //Set the default brokerage model before initialize
                         algorithm.SetBrokerageModel(_factory.BrokerageModel);
-                        //Set our default markets
-                        algorithm.SetDefaultMarkets(_factory.DefaultMarkets.ToDictionary());
                         //Set our parameters
                         algorithm.SetParameters(job.Parameters);
                         //Algorithm is live, not backtesting:
