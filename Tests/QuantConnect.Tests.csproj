@@ -134,6 +134,7 @@
     <Compile Include="Common\TimeZoneOffsetProviderTests.cs" />
     <Compile Include="Common\TimeZonesTest.cs" />
     <Compile Include="Common\Util\BusyBlockingCollectionTests.cs" />
+    <Compile Include="Common\Util\ColorJsonConverterTests.cs" />
     <Compile Include="Common\Util\MarketHoursDatabaseJsonConverterTests.cs" />
     <Compile Include="Common\Util\MemoizingEnumerableTests.cs" />
     <Compile Include="Common\Util\ObjectActivatorTests.cs" />

@@ -17,6 +17,10 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Logging;
+using System.Drawing;
+using Newtonsoft.Json.Converters;
+using System.Runtime.Serialization;
+using QuantConnect.Util;
 
 namespace QuantConnect 
 {
@@ -135,6 +139,17 @@ namespace QuantConnect
         /// </summary>
         public SeriesType SeriesType = SeriesType.Line;
 
+        /// <summary>
+        /// Color the series 
+        /// </summary>
+        [JsonConverter(typeof(ColorJsonConverter))]
+        public Color Color = Color.Empty;
+
+        /// <summary>
+        /// Shape or symbol for the marker in a scatter plot
+        /// </summary>
+        public ScatterMarkerSymbol ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
+
         /// Get the index of the last fetch update request to only retrieve the "delta" of the previous request.
         private int _updatePosition;
 
@@ -153,6 +168,8 @@ namespace QuantConnect
             SeriesType = SeriesType.Line;
             Unit = "$";
             Index = 0;
+            Color = Color.Empty;
+            ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
         }
 
         /// <summary>
@@ -166,6 +183,8 @@ namespace QuantConnect
             SeriesType = type;
             Index = 0;
             Unit = "$";
+            Color = Color.Empty;
+            ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
         }
 
         /// <summary>
@@ -180,6 +199,8 @@ namespace QuantConnect
             SeriesType = type;
             Index = index;
             Unit = "$";
+            Color = Color.Empty;
+            ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
         }
 
         /// <summary>
@@ -195,6 +216,8 @@ namespace QuantConnect
             SeriesType = type;
             Index = index;
             Unit = unit;
+            Color = Color.Empty;
+            ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
         }
 
         /// <summary>
@@ -210,6 +233,45 @@ namespace QuantConnect
             SeriesType = type;
             Unit = unit;
             Index = 0;
+            Color = Color.Empty;
+            ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
+        }
+
+        /// <summary>
+        /// Constructor method for Chart Series
+        /// </summary>
+        /// <param name="name">Name of the chart series</param>
+        /// <param name="type">Type of the chart series</param>
+        /// <param name="unit">Unit of the serier</param>
+        /// <param name="color">Color of the series</param>
+        public Series(string name, SeriesType type, string unit, Color color)
+        {
+            Name = name;
+            Values = new List<ChartPoint>();
+            SeriesType = type;
+            Unit = unit;
+            Index = 0;
+            Color = color;
+            ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
+        }
+
+        /// <summary>
+        /// Constructor method for Chart Series
+        /// </summary>
+        /// <param name="name">Name of the chart series</param>
+        /// <param name="type">Type of the chart series</param>
+        /// <param name="unit">Unit of the serier</param>
+        /// <param name="color">Color of the series</param>
+        /// <param name="symbol">Symbol for the marker in a scatter plot series</param>
+        public Series(string name, SeriesType type, string unit, Color color, ScatterMarkerSymbol symbol = ScatterMarkerSymbol.Circle)
+        {
+            Name = name;
+            Values = new List<ChartPoint>();
+            SeriesType = type;
+            Unit = unit;
+            Index = 0;
+            Color = color;
+            ScatterMarkerSymbol = symbol;
         }
 
         /// <summary>
@@ -333,5 +395,28 @@ namespace QuantConnect
         Overlay,
         /// Stacked series on top of each other.
         Stacked
+    }
+
+    /// <summary>
+    /// Shape or symbol for the marker in a scatter plot
+    /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum ScatterMarkerSymbol
+    {
+        /// Circle symbol
+        [EnumMember(Value = "circle")]
+        Circle,
+        /// Square symbol
+        [EnumMember(Value = "square")]
+        Square,
+        /// Diamond symbol
+        [EnumMember(Value = "diamond")]
+        Diamond,
+        /// Triangle symbol
+        [EnumMember(Value = "triangle")]
+        Triangle,
+        /// Triangle-down symbol
+        [EnumMember(Value = "triangle-down")]
+        TriangleDown,
     }
 }
