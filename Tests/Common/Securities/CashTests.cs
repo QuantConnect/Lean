@@ -83,8 +83,8 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, abcConfig));
             cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen, SymbolPropertiesDatabase.FromDataFolder());
-            Assert.AreEqual(1, subscriptions.Subscriptions.Count(x => x.Symbol == Symbols.USDJPY));
-            Assert.AreEqual(1, securities.Values.Count(x => x.Symbol == Symbols.USDJPY));
+            Assert.AreEqual(1, subscriptions.Subscriptions.Count(x => x.Symbol == Symbols.JPYUSD));
+            Assert.AreEqual(1, securities.Values.Count(x => x.Symbol == Symbols.JPYUSD));
         }
 
         [Test]
@@ -114,7 +114,7 @@ namespace QuantConnect.Tests.Common.Securities
             securities.Add(Symbols.EURUSD, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.EURUSD, minimumResolution, TimeZone, TimeZone)));
 
             cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen, SymbolPropertiesDatabase.FromDataFolder());
-            Assert.AreEqual(minimumResolution, subscriptions.Subscriptions.Single(x => x.Symbol == Symbols.USDJPY).Resolution);
+            Assert.AreEqual(minimumResolution, subscriptions.Subscriptions.Single(x => x.Symbol == Symbols.JPYUSD).Resolution);
         }
 
         [Test]
@@ -129,7 +129,7 @@ namespace QuantConnect.Tests.Common.Securities
             securities.Add(Symbols.EURUSD, new Security(SecurityExchangeHours, subscriptions.Add(Symbols.EURUSD, Resolution.Minute, TimeZone, TimeZone)));
 
             cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen, SymbolPropertiesDatabase.FromDataFolder());
-            var config = subscriptions.Subscriptions.Single(x => x.Symbol == Symbols.USDJPY);
+            var config = subscriptions.Subscriptions.Single(x => x.Symbol == Symbols.JPYUSD);
             Assert.IsTrue(config.IsInternalFeed);
         }
 

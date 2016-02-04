@@ -19,6 +19,7 @@ namespace QuantConnect.Tests
         public static readonly Symbol FXE = CreateEquitySymbol("FXE");
 
         public static readonly Symbol USDJPY = CreateForexSymbol("USDJPY");
+        public static readonly Symbol JPYUSD = CreateForexSymbol("JPYUSD");
         public static readonly Symbol EURUSD = CreateForexSymbol("EURUSD");
         public static readonly Symbol EURGBP = CreateForexSymbol("EURGBP");
         public static readonly Symbol GBPUSD = CreateForexSymbol("GBPUSD");
