@@ -214,6 +214,7 @@ namespace QuantConnect
             "USDTRY",
             "USDTWD",
             "USDZAR",
+            "XAGUSD",
             "ZARJPY"
         });
 
