@@ -129,8 +129,9 @@ namespace QuantConnect.Securities
         /// <param name="marketHoursDatabase">A security exchange hours provider instance used to resolve exchange hours for new subscriptions</param>
         /// <param name="symbolPropertiesDatabase">A symbol properties database instance</param>
         /// <param name="marketMap">The market map that decides which market the new security should be in</param>
+        /// <param name="cashBook">The cash book - used for resolving quote currencies for created conversion securities</param>
         /// <returns>Returns the added currency security if needed, otherwise null</returns>
-        public Security EnsureCurrencyDataFeed(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, IReadOnlyDictionary<SecurityType, string> marketMap)
+        public Security EnsureCurrencyDataFeed(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, IReadOnlyDictionary<SecurityType, string> marketMap, CashBook cashBook)
         {
             if (Symbol == CashBook.AccountCurrency)
             {
@@ -188,7 +189,12 @@ namespace QuantConnect.Securities
                     if (securityType == SecurityType.Cfd)
                     {
                         var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, securityType);
-                        security = new Cfd.Cfd(exchangeHours, this, config, symbolProperties);
+                        Cash quoteCash;
+                        if (!cashBook.TryGetValue(symbolProperties.QuoteCurrency, out quoteCash))
+                        {
+                            throw new Exception("Unable to resolve quote cash: " + symbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + symbol.ToString());
+                        }
+                        security = new Cfd.Cfd(exchangeHours, quoteCash, config, symbolProperties);
                     }
                     else
                     {

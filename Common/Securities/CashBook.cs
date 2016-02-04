@@ -80,7 +80,7 @@ namespace QuantConnect.Securities
             var addedSecurities = new List<Security>();
             foreach (var cash in _currencies.Values)
             {
-                var security = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase, symbolPropertiesDatabase, marketMap);
+                var security = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase, symbolPropertiesDatabase, marketMap, this);
                 if (security != null)
                 {
                     addedSecurities.Add(security);
