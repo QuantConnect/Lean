@@ -73,13 +73,14 @@ namespace QuantConnect.Securities
         /// <param name="subscriptions">The SubscriptionManager for the algorithm</param>
         /// <param name="marketHoursDatabase">A security exchange hours provider instance used to resolve exchange hours for new subscriptions</param>
         /// <param name="symbolPropertiesDatabase">A symbol properties database instance</param>
+        /// <param name="marketMap">The market map that decides which market the new security should be in</param>
         /// <returns>Returns a list of added currency securities</returns>
-        public List<Security> EnsureCurrencyDataFeeds(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
+        public List<Security> EnsureCurrencyDataFeeds(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, IReadOnlyDictionary<SecurityType, string> marketMap)
         {
             var addedSecurities = new List<Security>();
             foreach (var cash in _currencies.Values)
             {
-                var security = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase, symbolPropertiesDatabase);
+                var security = cash.EnsureCurrencyDataFeed(securities, subscriptions, marketHoursDatabase, symbolPropertiesDatabase, marketMap);
                 if (security != null)
                 {
                     addedSecurities.Add(security);

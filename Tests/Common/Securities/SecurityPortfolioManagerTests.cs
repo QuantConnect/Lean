@@ -20,6 +20,7 @@ using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -168,7 +169,7 @@ namespace QuantConnect.Tests.Common.Securities
             securities.Add(usdJwbSecurity);
             securities.Add(mchUsdSecurity);
 
-            portfolio.CashBook.EnsureCurrencyDataFeeds(securities, subscriptions, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder());
+            portfolio.CashBook.EnsureCurrencyDataFeeds(securities, subscriptions, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(), DefaultBrokerageModel.DefaultMarketMap);
 
             for (int i = 0; i < fills.Count; i++)
             {
