@@ -253,7 +253,6 @@
     <Compile Include="Securities\Cfd\CfdMarginModel.cs" />
     <Compile Include="Securities\Cfd\CfdPortfolioModel.cs" />
     <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
-    <Compile Include="Securities\Equity\PatternDayTraderMarginModel.cs" />
     <Compile Include="Securities\Equity\EquityMarginModel.cs" />
     <Compile Include="Securities\Equity\EquityPortfolioModel.cs" />
     <Compile Include="Securities\DelayedSettlementModel.cs" />
