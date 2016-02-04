@@ -14,16 +14,13 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using MathNetStatistics = MathNet.Numerics.Statistics.Statistics;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
     /// This indicator computes the n-period population standard deviation.
     /// </summary>
-    public class StandardDeviation : WindowIndicator<IndicatorDataPoint>
+    public class StandardDeviation : Variance
     {
         /// <summary>
         /// Initializes a new instance of the StandardDeviation class with the specified period.
@@ -66,13 +63,7 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            if (Samples < 2)
-            {
-                return 0m;
-            }
-            IEnumerable<double> doubleValues = window.Select(i => Convert.ToDouble(i.Value));
-            double std = MathNetStatistics.PopulationStandardDeviation(doubleValues);
-            return Convert.ToDecimal(std);
+            return (decimal)Math.Sqrt((double)base.ComputeNextValue(window, input));
         }
     }
 }
