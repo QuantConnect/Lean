@@ -82,7 +82,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The symbol's security type
         /// </summary>
-        public SecurityType SecurityType { get; internal set; }
+        public SecurityType SecurityType { get { return Symbol.ID.SecurityType; } }
 
         /// <summary>
         /// Order Direction Property based off Quantity.
@@ -131,7 +131,6 @@ namespace QuantConnect.Orders
             Symbol = Symbol.Empty;
             Status = OrderStatus.None;
             Tag = "";
-            SecurityType = SecurityType.Base;
             Duration = OrderDuration.GTC;
             BrokerId = new List<string>();
             ContingentId = 0;
@@ -153,7 +152,6 @@ namespace QuantConnect.Orders
             Symbol = symbol;
             Status = OrderStatus.None;
             Tag = tag;
-            SecurityType = symbol.ID.SecurityType;
             Duration = OrderDuration.GTC;
             BrokerId = new List<string>();
             ContingentId = 0;
@@ -219,7 +217,6 @@ namespace QuantConnect.Orders
             order.Duration = Duration;
             order.Price = Price;
             order.Quantity = Quantity;
-            order.SecurityType = SecurityType;
             order.Status = Status;
             order.Symbol = Symbol;
             order.Tag = Tag;
