@@ -30,8 +30,29 @@ namespace QuantConnect
         /// This listing should be in sync with the data available at: https://www.quantconnect.com/data/FOREX#2.1.1
         /// It must include all currency pairs needed to resolve quote currencies in <see cref="Cash.EnsureCurrencyDataFeed"/>
         /// </remarks>
-        public static readonly HashSet<string> CurrencyPairs = new HashSet<string>(new[]
+        public static readonly IReadOnlyList<string> CurrencyPairs = new List<string>
         {
+            // these are listed at the top to ensure they get selected first when resolving
+            // currency data feeds. the case that showcases the issue is we would select jpyusd
+            // instead of usdjpy, even though jpyusd is much less common
+            "AUDJPY",
+            "AUDUSD",
+            "EURCHF",
+            "EURGBP",
+            "EURJPY",
+            "EURUSD",
+            "GBPAUD",
+            "GBPJPY",
+            "GBPUSD",
+            "NZDUSD",
+            "USDCAD",
+            "USDCHF",
+            "USDJPY",
+            "USDHKD",
+            "USDSGD",
+            "XAGUSD",
+
+
             "AUDCAD",
             "AUDCHF",
             "AUDCNY",
@@ -40,7 +61,6 @@ namespace QuantConnect
             "AUDHKD",
             "AUDHUF",
             "AUDINR",
-            "AUDJPY",
             "AUDMXN",
             "AUDNOK",
             "AUDNZD",
@@ -51,7 +71,6 @@ namespace QuantConnect
             "AUDTHB",
             "AUDTRY",
             "AUDTWD",
-            "AUDUSD",
             "AUDZAR",
             "CADAUD",
             "CADCHF",
@@ -99,15 +118,12 @@ namespace QuantConnect
             "DKKJPY",
             "EURAUD",
             "EURCAD",
-            "EURCHF",
             "EURCNY",
             "EURCZK",
             "EURDKK",
-            "EURGBP",
             "EURHKD",
             "EURHUF",
             "EURINR",
-            "EURJPY",
             "EURMXN",
             "EURNOK",
             "EURNZD",
@@ -118,9 +134,7 @@ namespace QuantConnect
             "EURTHB",
             "EURTRY",
             "EURTWD",
-            "EURUSD",
             "EURZAR",
-            "GBPAUD",
             "GBPCAD",
             "GBPCHF",
             "GBPCNY",
@@ -129,7 +143,6 @@ namespace QuantConnect
             "GBPHKD",
             "GBPHUF",
             "GBPINR",
-            "GBPJPY",
             "GBPMXN",
             "GBPNOK",
             "GBPNZD",
@@ -140,7 +153,6 @@ namespace QuantConnect
             "GBPTHB",
             "GBPTRY",
             "GBPTWD",
-            "GBPUSD",
             "GBPZAR",
             "HKDCNY",
             "HKDCZK",
@@ -168,7 +180,6 @@ namespace QuantConnect
             "NZDHKD",
             "NZDJPY",
             "NZDSGD",
-            "NZDUSD",
             "PLNJPY",
             "SARJPY",
             "SEKJPY",
@@ -193,30 +204,24 @@ namespace QuantConnect
             "TRYJPY",
             "TWDJPY",
             "USDAUD",
-            "USDCAD",
-            "USDCHF",
             "USDCNY",
             "USDCZK",
             "USDDKK",
             "USDEUR",
             "USDGBP",
-            "USDHKD",
             "USDHUF",
             "USDINR",
-            "USDJPY",
             "USDMXN",
             "USDNOK",
             "USDPLN",
             "USDSAR",
             "USDSEK",
-            "USDSGD",
             "USDTHB",
             "USDTRY",
             "USDTWD",
             "USDZAR",
-            "XAGUSD",
             "ZARJPY"
-        });
+        };
 
         /// <summary>
         /// A mapping of currency codes to their display symbols
