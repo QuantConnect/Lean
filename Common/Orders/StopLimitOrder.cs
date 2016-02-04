@@ -56,14 +56,13 @@ namespace QuantConnect.Orders
         /// New Stop Market Order constructor - 
         /// </summary>
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
-        /// <param name="type">Type of the security order</param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="limitPrice">Maximum price to fill the order</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="stopPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public StopLimitOrder(Symbol symbol, int quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag = "", SecurityType type = SecurityType.Base)
-            : base(symbol, quantity, time, tag, type)
+        public StopLimitOrder(Symbol symbol, int quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag = "")
+            : base(symbol, quantity, time, tag)
         {
             StopPrice = stopPrice;
             LimitPrice = limitPrice;

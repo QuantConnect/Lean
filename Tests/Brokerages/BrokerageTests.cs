@@ -222,7 +222,7 @@ namespace QuantConnect.Tests.Brokerages
             {
                 if (holding.Quantity == 0) continue;
                 Log.Trace("Liquidating: " + holding);
-                var order = new MarketOrder(holding.Symbol, (int)-holding.Quantity, DateTime.Now, type: holding.Type);
+                var order = new MarketOrder(holding.Symbol, (int)-holding.Quantity, DateTime.Now);
                 _orderProvider.Add(order);
                 PlaceOrderWaitForStatus(order, OrderStatus.Filled);
             }
@@ -380,7 +380,7 @@ namespace QuantConnect.Tests.Brokerages
             Log.Trace("");
             var before = Brokerage.GetAccountHoldings();
 
-            PlaceOrderWaitForStatus(new MarketOrder(Symbol, GetDefaultQuantity(), DateTime.Now, type: SecurityType));
+            PlaceOrderWaitForStatus(new MarketOrder(Symbol, GetDefaultQuantity(), DateTime.Now));
 
             var after = Brokerage.GetAccountHoldings();
 
@@ -418,7 +418,7 @@ namespace QuantConnect.Tests.Brokerages
 
             // pick a security with low, but some, volume
             var symbol = Symbols.EURUSD;
-            var order = new MarketOrder(symbol, qty, DateTime.UtcNow, type: symbol.ID.SecurityType) { Id = 1 };
+            var order = new MarketOrder(symbol, qty, DateTime.UtcNow) { Id = 1 };
             Brokerage.PlaceOrder(order);
 
             // pause for a while to wait for fills to come in

@@ -77,7 +77,7 @@ namespace QuantConnect.Securities.Cfd
             if (AbsoluteQuantity > 0)
             {
                 // this is in the account currency
-                var marketOrder = new MarketOrder(_cfd.Symbol, -Quantity, _cfd.LocalTime.ConvertToUtc(_cfd.Exchange.TimeZone), type:_cfd.Type);
+                var marketOrder = new MarketOrder(_cfd.Symbol, -Quantity, _cfd.LocalTime.ConvertToUtc(_cfd.Exchange.TimeZone));
                 orderFee = _cfd.FeeModel.GetOrderFee(_cfd, marketOrder);
             }
 

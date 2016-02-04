@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Common.Orders
         {
             const decimal price = 195m;
             var time = new DateTime(2016, 2, 4, 16, 0, 0).ConvertToUtc(TimeZones.NewYork);
-            var order = new MarketOnOpenOrder(Symbols.SPY, SecurityType.Equity, 100, time);
+            var order = new MarketOnOpenOrder(Symbols.SPY, 100, time);
             var value = order.GetValue(price);
             Assert.AreEqual(price * order.Quantity, value);
 

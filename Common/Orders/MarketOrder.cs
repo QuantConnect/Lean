@@ -41,12 +41,11 @@ namespace QuantConnect.Orders
         /// New market order constructor
         /// </summary>
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
-        /// <param name="type">Type of the security order</param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public MarketOrder(Symbol symbol, int quantity, DateTime time, string tag = "", SecurityType type = SecurityType.Base)
-            : base(symbol, quantity, time, tag, type)
+        public MarketOrder(Symbol symbol, int quantity, DateTime time, string tag = "")
+            : base(symbol, quantity, time, tag)
         {
         }
 

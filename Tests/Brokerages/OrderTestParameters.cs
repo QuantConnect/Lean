@@ -35,11 +35,11 @@ namespace QuantConnect.Tests.Brokerages
 
         public MarketOrder CreateLongMarketOrder(int quantity)
         {
-            return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.Now, type: SecurityType);
+            return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.Now);
         }
         public MarketOrder CreateShortMarketOrder(int quantity)
         {
-            return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.Now, type: SecurityType);
+            return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.Now);
         }
 
         /// <summary>

@@ -41,12 +41,11 @@ namespace QuantConnect.Orders
         /// Intiializes a new instance of the <see cref="MarketOnCloseOrder"/> class.
         /// </summary>
         /// <param name="symbol">The security's symbol being ordered</param>
-        /// <param name="type">The security type of the symbol</param>
         /// <param name="quantity">The number of units to order</param>
         /// <param name="time">The current time</param>
         /// <param name="tag">A user defined tag for the order</param>
-        public MarketOnCloseOrder(Symbol symbol, SecurityType type, int quantity, DateTime time, string tag = "")
-            : base(symbol, quantity, time, tag, type)
+        public MarketOnCloseOrder(Symbol symbol, int quantity, DateTime time, string tag = "")
+            : base(symbol, quantity, time, tag)
         {
         }
 

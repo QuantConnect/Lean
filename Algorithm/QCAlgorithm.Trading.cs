@@ -631,7 +631,7 @@ namespace QuantConnect.Algorithm
                 orderQuantity += deltaQuantity;
 
                 // recompute order fees
-                var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime, type: security.Type);
+                var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime);
                 var fee = security.FeeModel.GetOrderFee(security, order);
 
                 orderValue = Math.Abs(order.GetValue(price)) + fee;

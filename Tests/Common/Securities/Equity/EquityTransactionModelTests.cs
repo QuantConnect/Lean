@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         public void PerformsMarketFillBuy()
         {
             var model = new EquityTransactionModel();
-            var order = new MarketOrder(Symbols.SPY, 100, Noon, type: SecurityType.Equity);
+            var order = new MarketOrder(Symbols.SPY, 100, Noon);
             var config = CreateTradeBarConfig();
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         public void PerformsMarketFillSell()
         {
             var model = new EquityTransactionModel();
-            var order = new MarketOrder(Symbols.SPY, -100, Noon, type: SecurityType.Equity);
+            var order = new MarketOrder(Symbols.SPY, -100, Noon);
             var config = CreateTradeBarConfig();
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         public void PerformsLimitFillBuy()
         {
             var model = new EquityTransactionModel();
-            var order = new LimitOrder(Symbols.SPY, 100, 101.5m, Noon, type: SecurityType.Equity);
+            var order = new LimitOrder(Symbols.SPY, 100, 101.5m, Noon);
             var config = CreateTradeBarConfig();
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         public void PerformsLimitFillSell()
         {
             var model = new EquityTransactionModel();
-            var order = new LimitOrder(Symbols.SPY, -100, 101.5m, Noon, type: SecurityType.Equity);
+            var order = new LimitOrder(Symbols.SPY, -100, 101.5m, Noon);
             var config = CreateTradeBarConfig();
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -117,7 +117,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         public void PerformsStopLimitFillBuy()
         {
             var model = new EquityTransactionModel();
-            var order = new StopLimitOrder(Symbols.SPY, 100, 101.5m, 101.75m, Noon, type: SecurityType.Equity);
+            var order = new StopLimitOrder(Symbols.SPY, 100, 101.5m, 101.75m, Noon);
             var config = CreateTradeBarConfig();
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -151,7 +151,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         public void PerformsStopLimitFillSell()
         {
             var model = new EquityTransactionModel();
-            var order = new StopLimitOrder(Symbols.SPY, -100, 101.75m, 101.50m, Noon, type: SecurityType.Equity);
+            var order = new StopLimitOrder(Symbols.SPY, -100, 101.75m, 101.50m, Noon);
             var config = CreateTradeBarConfig();
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -185,7 +185,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         public void PerformsStopMarketFillBuy()
         {
             var model = new EquityTransactionModel();
-            var order = new StopMarketOrder(Symbols.SPY, 100, 101.5m, Noon, type: SecurityType.Equity);
+            var order = new StopMarketOrder(Symbols.SPY, 100, 101.5m, Noon);
             var config = CreateTradeBarConfig();
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -211,7 +211,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         public void PerformsStopMarketFillSell()
         {
             var model = new EquityTransactionModel();
-            var order = new StopMarketOrder(Symbols.SPY, -100, 101.5m, Noon, type: SecurityType.Equity);
+            var order = new StopMarketOrder(Symbols.SPY, -100, 101.5m, Noon);
             var config = CreateTradeBarConfig();
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));

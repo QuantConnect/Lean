@@ -983,14 +983,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 case OrderType.MarketOnOpen:
                     order = new MarketOnOpenOrder(mappedSymbol, 
-                        securityType, 
                         ibOrder.TotalQuantity,
                         new DateTime());
                     break;
 
                 case OrderType.MarketOnClose:
                     order = new MarketOnCloseOrder(mappedSymbol,
-                        securityType,
                         ibOrder.TotalQuantity,
                         new DateTime()
                         );
