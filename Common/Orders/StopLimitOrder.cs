@@ -85,13 +85,13 @@ namespace QuantConnect.Orders
             // selling, so higher price will be used
             if (Quantity < 0)
             {
-                return Math.Max(LimitPrice, currentMarketPrice);
+                return Quantity*Math.Max(LimitPrice, currentMarketPrice);
             }
 
             // buying, so lower price will be used
             if (Quantity > 0)
             {
-                return Math.Min(LimitPrice, currentMarketPrice);
+                return Quantity*Math.Min(LimitPrice, currentMarketPrice);
             }
 
             return 0m;
