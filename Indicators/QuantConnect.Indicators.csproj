@@ -60,6 +60,7 @@
     </Compile>
     <Compile Include="LinearWeightedMovingAverage.cs" />
     <Compile Include="ParabolicStopAndReverse.cs" />
+    <Compile Include="Variance.cs" />
     <Compile Include="WilliamsPercentR.cs" />
     <Compile Include="AroonOscillator.cs" />
     <Compile Include="AverageTrueRange.cs" />
