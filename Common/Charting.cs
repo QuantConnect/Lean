@@ -143,7 +143,7 @@ namespace QuantConnect
         /// Color the series 
         /// </summary>
         [JsonConverter(typeof(ColorJsonConverter))]
-        public Color Color = Color.Black;
+        public Color Color = Color.Empty;
 
         /// <summary>
         /// Shape or symbol for the marker in a scatter plot
@@ -168,7 +168,7 @@ namespace QuantConnect
             SeriesType = SeriesType.Line;
             Unit = "$";
             Index = 0;
-            Color = Color.Black;
+            Color = Color.Empty;
             ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
         }
 
@@ -183,7 +183,7 @@ namespace QuantConnect
             SeriesType = type;
             Index = 0;
             Unit = "$";
-            Color = Color.Black;
+            Color = Color.Empty;
             ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
         }
 
@@ -199,7 +199,7 @@ namespace QuantConnect
             SeriesType = type;
             Index = index;
             Unit = "$";
-            Color = Color.Black;
+            Color = Color.Empty;
             ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
         }
 
@@ -216,7 +216,7 @@ namespace QuantConnect
             SeriesType = type;
             Index = index;
             Unit = unit;
-            Color = Color.Black;
+            Color = Color.Empty;
             ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
         }
 
@@ -233,7 +233,7 @@ namespace QuantConnect
             SeriesType = type;
             Unit = unit;
             Index = 0;
-            Color = Color.Black;
+            Color = Color.Empty;
             ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
         }
 

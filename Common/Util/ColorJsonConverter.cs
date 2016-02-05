@@ -22,7 +22,8 @@ using System.Drawing;
 namespace QuantConnect.Util
 {
     /// <summary>
-    /// A <see cref="JsonConverter"/> implementation that serializes a <see cref="Color"/> as a string
+    /// A <see cref="JsonConverter"/> implementation that serializes a <see cref="Color"/> as a string.
+    /// If Color is empty, string is also empty and vice-versa. Meaning that color is autogen.
     /// </summary>
     public class ColorJsonConverter : TypeChangeJsonConverter<Color, string>
     {
@@ -35,12 +36,11 @@ namespace QuantConnect.Util
         {
             try
             {
-                return string.Format("#{0:X2}{1:X2}{2:X2}", value.R, value.G, value.B);
+                return value.IsEmpty ? string.Empty : string.Format("#{0:X2}{1:X2}{2:X2}", value.R, value.G, value.B);
             }
             catch (Exception e)
             {
-                Log.Error(e.Message);
-                return "#000000";
+                throw e;
             }
         }
 
@@ -51,7 +51,18 @@ namespace QuantConnect.Util
         /// <returns>The converted value</returns>
         protected override Color Convert(string value)
         {
-            return Color.FromArgb(HexToint(value.Substring(1, 2)), HexToint(value.Substring(3, 2)), HexToint(value.Substring(5, 2)));
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return Color.Empty;
+            }
+            else if (value.Length == 7)
+            {
+                return Color.FromArgb(HexToInt(value.Substring(1, 2)), HexToInt(value.Substring(3, 2)), HexToInt(value.Substring(5, 2)));
+            }
+            else
+            {
+                throw new FormatException("Unable to convert '" + value + "' to a Color. Requires string length of 7 including the leading hashtag.");
+            }
         }
 
         /// <summary>
@@ -59,20 +70,23 @@ namespace QuantConnect.Util
         /// </summary>
         /// <param name="hexValue">Hexadecimal number</param>
         /// <returns>Integer representation of the hexadecimal</returns>
-        private int HexToint(string hexValue)
+        private int HexToInt(string hexValue)
         {
-            int x = 0;
-
-            try
+            if (hexValue.Length == 2)
             {
-                x = hexValue.Length == 2 ? int.Parse(hexValue, System.Globalization.NumberStyles.HexNumber) : 0;
+                try
+                {
+                    return int.Parse(hexValue, System.Globalization.NumberStyles.HexNumber);
+                }
+                catch (Exception)
+                {
+                    throw new FormatException("Invalid hex number " + hexValue);
+                }
             }
-            catch (Exception)
+            else
             {
-                Log.Error("Invalid hex number " + hexValue);
+                throw new FormatException("Unable to convert '" + hexValue + "' to an Integer. Requires string length of 2.");
             }
-
-            return x;
         }
     }
 }
