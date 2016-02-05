@@ -612,10 +612,12 @@ namespace QuantConnect.Algorithm
             var targetOrderValue = Math.Abs(targetPortfolioValue - currentHoldingsValue);
             var direction = targetPortfolioValue > currentHoldingsValue ? OrderDirection.Buy : OrderDirection.Sell;
 
+            // determine the unit price in terms of the account currency
+            var unitPrice = new MarketOrder(symbol, 1, UtcTime).GetValue(security);
 
             // define lower and upper thresholds for the iteration
-            var lowerThreshold = targetOrderValue - price/2;
-            var upperThreshold = targetOrderValue + price/2;
+            var lowerThreshold = targetOrderValue - unitPrice / 2;
+            var upperThreshold = targetOrderValue + unitPrice / 2;
 
             // continue iterating while  we're still not within the specified thresholds
             var iterations = 0;
@@ -626,7 +628,7 @@ namespace QuantConnect.Algorithm
                 // find delta from where we are to where we want to be
                 var delta = targetOrderValue - orderValue;
                 // use delta value to compute a change in quantity required
-                var deltaQuantity = (int)(delta / price);
+                var deltaQuantity = (int)(delta / unitPrice);
 
                 orderQuantity += deltaQuantity;
 
