@@ -103,13 +103,8 @@
     <Compile Include="Common\Data\SubscriptionDataSourceTests.cs" />
     <Compile Include="Common\MarketTests.cs" />
     <Compile Include="Common\Orders\Fills\PartialMarketFillModelTests.cs" />
-    <Compile Include="Common\Orders\LimitOrderTests.cs" />
-    <Compile Include="Common\Orders\MarketOnCloseOrderTests.cs" />
-    <Compile Include="Common\Orders\MarketOnOpenOrderTests.cs" />
-    <Compile Include="Common\Orders\MarketOrderTests.cs" />
     <Compile Include="Common\Orders\OrderJsonConverterTests.cs" />
-    <Compile Include="Common\Orders\StopLimitOrderTests.cs" />
-    <Compile Include="Common\Orders\StopMarketOrderTests.cs" />
+    <Compile Include="Common\Orders\OrderTests.cs" />
     <Compile Include="Common\Parameters\ParameterAttributeTests.cs" />
     <Compile Include="Common\Scheduling\DateRulesTests.cs" />
     <Compile Include="Common\Scheduling\ScheduledEventTests.cs" />
