@@ -14,15 +14,15 @@
  *
 */
 
-using Newtonsoft.Json;
-using QuantConnect.Logging;
 using System;
 using System.Drawing;
+using System.Globalization;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Util
 {
     /// <summary>
-    /// A <see cref="JsonConverter"/> implementation that serializes a <see cref="Color"/> as a string.
+    /// A <see cref="JsonConverter" /> implementation that serializes a <see cref="Color" /> as a string.
     /// If Color is empty, string is also empty and vice-versa. Meaning that color is autogen.
     /// </summary>
     public class ColorJsonConverter : TypeChangeJsonConverter<Color, string>
@@ -55,14 +55,13 @@ namespace QuantConnect.Util
             {
                 return Color.Empty;
             }
-            else if (value.Length == 7)
+            if (value.Length == 7)
             {
-                return Color.FromArgb(HexToInt(value.Substring(1, 2)), HexToInt(value.Substring(3, 2)), HexToInt(value.Substring(5, 2)));
+                return Color.FromArgb(HexToInt(value.Substring(1, 2)), HexToInt(value.Substring(3, 2)),
+                    HexToInt(value.Substring(5, 2)));
             }
-            else
-            {
-                throw new FormatException("Unable to convert '" + value + "' to a Color. Requires string length of 7 including the leading hashtag.");
-            }
+            throw new FormatException("Unable to convert '" + value +
+                                      "' to a Color. Requires string length of 7 including the leading hashtag.");
         }
 
         /// <summary>
@@ -72,20 +71,16 @@ namespace QuantConnect.Util
         /// <returns>Integer representation of the hexadecimal</returns>
         private int HexToInt(string hexValue)
         {
-            if (hexValue.Length == 2)
+            if (hexValue.Length != 2)
+                throw new FormatException("Unable to convert '" + hexValue +
+                                          "' to an Integer. Requires string length of 2.");
+            try
             {
-                try
-                {
-                    return int.Parse(hexValue, System.Globalization.NumberStyles.HexNumber);
-                }
-                catch (Exception)
-                {
-                    throw new FormatException("Invalid hex number " + hexValue);
-                }
+                return int.Parse(hexValue, NumberStyles.HexNumber);
             }
-            else
+            catch (Exception)
             {
-                throw new FormatException("Unable to convert '" + hexValue + "' to an Integer. Requires string length of 2.");
+                throw new FormatException("Invalid hex number " + hexValue);
             }
         }
     }
