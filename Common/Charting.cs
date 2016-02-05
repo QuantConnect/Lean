@@ -20,6 +20,7 @@ using QuantConnect.Logging;
 using System.Drawing;
 using Newtonsoft.Json.Converters;
 using System.Runtime.Serialization;
+using QuantConnect.Util;
 
 namespace QuantConnect 
 {
@@ -141,8 +142,9 @@ namespace QuantConnect
         /// <summary>
         /// Color the series 
         /// </summary>
+        [JsonConverter(typeof(ColorJsonConverter))]
         public Color Color = Color.Black;
-        
+
         /// <summary>
         /// Shape or symbol for the marker in a scatter plot
         /// </summary>
