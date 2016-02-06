@@ -688,6 +688,22 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new ChandeMomentumOscillator indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose CMO we want</param>
+        /// <param name="period">The period over which to compute the VAR</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The ChandeMomentumOscillator indicator for the requested symbol over the specified period</returns>
+        public ChandeMomentumOscillator CMO(Symbol symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "CMO" + period, resolution);
+            var cmo = new ChandeMomentumOscillator(name, period);
+            RegisterIndicator(symbol, cmo, resolution, selector);
+            return cmo;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
