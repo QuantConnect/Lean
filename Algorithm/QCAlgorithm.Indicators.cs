@@ -631,13 +631,45 @@ namespace QuantConnect.Algorithm
         /// <param name="period">The period over which to compute the VAR</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <returns>The StandardDeviation indicator for the requested symbol over the speified period</returns>
+        /// <returns>The Variance indicator for the requested symbol over the speified period</returns>
         public Variance VAR(Symbol symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
         {
             var name = CreateIndicatorName(symbol, "VAR" + period, resolution);
             var variance = new Variance(name, period);
             RegisterIndicator(symbol, variance, resolution, selector);
             return variance;
+        }
+
+        /// <summary>
+        /// Creates a new AccumulationDistribution indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose AD we want</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The AccumulationDistribution indicator for the requested symbol over the speified period</returns>
+        public AccumulationDistribution AD(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "AD", resolution);
+            var ad = new AccumulationDistribution(name);
+            RegisterIndicator(symbol, ad, resolution, selector);
+            return ad;
+        }
+
+        /// <summary>
+        /// Creates a new AccumulationDistributionOscillator indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose ADOSC we want</param>
+        /// <param name="fastPeriod">The fast moving average period</param>
+        /// <param name="slowPeriod">The slow moving average period</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The AccumulationDistributionOscillator indicator for the requested symbol over the speified period</returns>
+        public AccumulationDistributionOscillator ADOSC(Symbol symbol, int fastPeriod, int slowPeriod, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, string.Format("ADOSC({0},{1})", fastPeriod, slowPeriod), resolution);
+            var adOsc = new AccumulationDistributionOscillator(name, fastPeriod, slowPeriod);
+            RegisterIndicator(symbol, adOsc, resolution, selector);
+            return adOsc;
         }
 
         /// <summary>
