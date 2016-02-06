@@ -673,6 +673,21 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new TrueRange indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose TR we want</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The TrueRange indicator for the requested symbol.</returns>
+        public TrueRange TR(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "TR", resolution);
+            var tr = new TrueRange(name);
+            RegisterIndicator(symbol, tr, resolution, selector);
+            return tr;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
