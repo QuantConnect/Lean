@@ -164,6 +164,7 @@
     <Compile Include="Engine\TestResultHandler.cs" />
     <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
     <Compile Include="Indicators\BalanceOfPowerTests.cs" />
+    <Compile Include="Indicators\ChandeMomentumOscillatorTests.cs" />
     <Compile Include="Indicators\DonchianChannelTest.cs" />
     <Compile Include="Indicators\IchimokuKinkoHyoTests.cs" />
     <Compile Include="Indicators\KeltnerChannelsTests.cs" />
@@ -336,6 +337,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_bop.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_cmo.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_logr14.txt">
