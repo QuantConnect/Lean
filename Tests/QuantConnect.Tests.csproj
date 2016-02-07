@@ -177,6 +177,7 @@
     <Compile Include="Indicators\OnBalanceVolumeTest.cs" />
     <Compile Include="Indicators\ParabolicStopAndReverseTests.cs" />
     <Compile Include="Indicators\TrueRangeTests.cs" />
+    <Compile Include="Indicators\TripleExponentialMovingAverageTests.cs" />
     <Compile Include="Indicators\TriangularMovingAverageTests.cs" />
     <Compile Include="Indicators\VarianceTests.cs" />
     <Compile Include="Indicators\WilliamsPercentRTests.cs" />
@@ -369,6 +370,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_tr.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_tema.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_trima.txt">

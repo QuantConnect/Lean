@@ -41,6 +41,10 @@ namespace QuantConnect.Indicators
         /// </summary>
         DoubleExponential,
         /// <summary>
+        /// The triple exponential moving average
+        /// </summary>
+        TripleExponential,
+        /// <summary>
         /// The triangular moving average
         /// </summary>
         Triangular
