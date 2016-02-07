@@ -52,6 +52,7 @@
     <Compile Include="BalanceOfPower.cs" />
     <Compile Include="ChandeMomentumOscillator.cs" />
     <Compile Include="DonchianChannel.cs" />
+    <Compile Include="DoubleExponentialMovingAverage.cs" />
     <Compile Include="IchimokuKinkoHyo.cs" />
     <Compile Include="KeltnerChannels.cs" />
     <Compile Include="LeastSquaresMovingAverage.cs" />

@@ -37,6 +37,10 @@ namespace QuantConnect.Indicators
         /// </summary>
         LinearWeightedMovingAverage,
         /// <summary>
+        /// The double exponential moving average
+        /// </summary>
+        DoubleExponential,
+        /// <summary>
         /// The triangular moving average
         /// </summary>
         Triangular

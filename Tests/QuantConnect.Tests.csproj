@@ -168,6 +168,7 @@
     <Compile Include="Indicators\BalanceOfPowerTests.cs" />
     <Compile Include="Indicators\ChandeMomentumOscillatorTests.cs" />
     <Compile Include="Indicators\DonchianChannelTest.cs" />
+    <Compile Include="Indicators\DoubleExponentialMovingAverageTests.cs" />
     <Compile Include="Indicators\IchimokuKinkoHyoTests.cs" />
     <Compile Include="Indicators\KeltnerChannelsTests.cs" />
     <Compile Include="Indicators\LeastSquaresMovingAverageTest.cs" />
@@ -350,6 +351,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_cmo.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_dema.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_logr14.txt">
