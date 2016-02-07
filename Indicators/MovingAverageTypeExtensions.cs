@@ -41,6 +41,8 @@ namespace QuantConnect.Indicators
                     return new ExponentialMovingAverage(period, 1m/period);
                 case MovingAverageType.LinearWeightedMovingAverage:
                     return new LinearWeightedMovingAverage(period);
+                case MovingAverageType.Triangular:
+                    return new TriangularMovingAverage(period);
                 default:
                     throw new ArgumentOutOfRangeException("movingAverageType");
             }
@@ -66,6 +68,8 @@ namespace QuantConnect.Indicators
                     return new ExponentialMovingAverage(name, period, 1m / period);
                 case MovingAverageType.LinearWeightedMovingAverage:
                     return new LinearWeightedMovingAverage(name, period);
+                case MovingAverageType.Triangular:
+                    return new TriangularMovingAverage(name, period);
                 default:
                     throw new ArgumentOutOfRangeException("movingAverageType");
             }
