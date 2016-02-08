@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             var model = new ForexTransactionModel();
             var security = CreateSecurity();
-            var order = new MarketOrder(Symbols.USDJPY, 100, DateTime.Now, type: SecurityType.Forex);
+            var order = new MarketOrder(Symbols.USDJPY, 100, DateTime.Now);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.USDJPY, DateTime.Now, 101.123m));
 
@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             var model = new ForexTransactionModel();
             var security = CreateSecurity();
-            var order = new MarketOrder(Symbols.USDJPY, -100, DateTime.Now, type: SecurityType.Forex);
+            var order = new MarketOrder(Symbols.USDJPY, -100, DateTime.Now);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.USDJPY, DateTime.Now, 101.123m));
 
@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             var model = new ForexTransactionModel();
             var security = CreateSecurity();
-            var order = new LimitOrder(Symbols.USDJPY, 100, 101.5m, DateTime.Now, type: SecurityType.Forex);
+            var order = new LimitOrder(Symbols.USDJPY, 100, 101.5m, DateTime.Now);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.USDJPY, DateTime.Now, 102m));
 
@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             var model = new ForexTransactionModel();
             var security = CreateSecurity();
-            var order = new LimitOrder(Symbols.USDJPY, -100, 101.5m, DateTime.Now, type: SecurityType.Forex);
+            var order = new LimitOrder(Symbols.USDJPY, -100, 101.5m, DateTime.Now);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.USDJPY, DateTime.Now, 101m));
 
@@ -127,7 +127,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             var model = new ForexTransactionModel();
             var security = CreateSecurity();
-            var order = new StopLimitOrder(Symbols.USDJPY, 100, 101.5m, 101.75m, DateTime.Now, type: SecurityType.Forex);
+            var order = new StopLimitOrder(Symbols.USDJPY, 100, 101.5m, 101.75m, DateTime.Now);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.USDJPY, DateTime.Now, 100m));
 
@@ -160,7 +160,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             var model = new ForexTransactionModel();
             var security = CreateSecurity();
-            var order = new StopLimitOrder(Symbols.USDJPY, -100, 101.75m, 101.50m, DateTime.Now, type: SecurityType.Forex);
+            var order = new StopLimitOrder(Symbols.USDJPY, -100, 101.75m, 101.50m, DateTime.Now);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.USDJPY, DateTime.Now, 102m));
 
@@ -193,7 +193,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             var model = new ForexTransactionModel();
             var security = CreateSecurity();
-            var order = new StopMarketOrder(Symbols.USDJPY, 100, 101.5m, DateTime.Now, type: SecurityType.Forex);
+            var order = new StopMarketOrder(Symbols.USDJPY, 100, 101.5m, DateTime.Now);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.USDJPY, DateTime.Now, 101m));
 
@@ -220,7 +220,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             var model = new ForexTransactionModel();
             var security = CreateSecurity();
-            var order = new StopMarketOrder(Symbols.USDJPY, -100, 101.5m, DateTime.Now, type: SecurityType.Forex);
+            var order = new StopMarketOrder(Symbols.USDJPY, -100, 101.5m, DateTime.Now);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.USDJPY, DateTime.Now, 102m));
 

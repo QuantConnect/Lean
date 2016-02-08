@@ -970,7 +970,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             Order order;
             var mappedSymbol = MapSymbol(contract);
-            var securityType = ConvertSecurityType(contract.SecurityType);
             var orderType = ConvertOrderType(ibOrder);
             switch (orderType)
             {
@@ -983,14 +982,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 case OrderType.MarketOnOpen:
                     order = new MarketOnOpenOrder(mappedSymbol, 
-                        securityType, 
                         ibOrder.TotalQuantity,
                         new DateTime());
                     break;
 
                 case OrderType.MarketOnClose:
                     order = new MarketOnCloseOrder(mappedSymbol,
-                        securityType,
                         ibOrder.TotalQuantity,
                         new DateTime()
                         );
@@ -1025,7 +1022,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     throw new InvalidEnumArgumentException("orderType", (int) orderType, typeof (OrderType));
             }
 
-            order.SecurityType = ConvertSecurityType(contract.SecurityType);
             order.BrokerId.Add(ibOrder.OrderId.ToString());
 
             return order;

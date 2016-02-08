@@ -54,14 +54,11 @@ namespace QuantConnect.Securities.Forex
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
         public override decimal GetInitialMarginRequiredForOrder(Security security, Order order)
         {
-            var forex = (Forex)security;
-
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
             var orderFees = security.FeeModel.GetOrderFee(security, order);
-
-            var price = order.Status.IsFill() ? order.Price : security.Price;
-            var orderCostInAccountCurrency = order.GetValue(price)*forex.QuoteCurrency.ConversionRate;
+            
+            var orderCostInAccountCurrency = order.GetValue(security);
             return orderCostInAccountCurrency*InitialMarginRequirement + orderFees;
         }
 

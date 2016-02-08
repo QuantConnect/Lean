@@ -1647,7 +1647,6 @@ namespace QuantConnect.Brokerages.Tradier
             }
             qcOrder.Symbol = Symbol.Create(order.Symbol, SecurityType.Equity, Market.USA);
             qcOrder.Quantity = ConvertQuantity(order);
-            qcOrder.SecurityType = SecurityType.Equity; // tradier only support equities? but also options??
             qcOrder.Status = ConvertStatus(order.Status);
             qcOrder.BrokerId.Add(order.Id.ToString());
             //qcOrder.ContingentId =

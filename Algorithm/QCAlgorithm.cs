@@ -77,14 +77,6 @@ namespace QuantConnect.Algorithm
         private TimeSpan? _warmupTimeSpan;
         private int? _warmupBarCount;
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
-        private Dictionary<SecurityType, string> _defaultMarkets = new Dictionary<SecurityType, string>
-        {
-            {SecurityType.Base, Market.USA},
-            {SecurityType.Equity, Market.USA},
-            {SecurityType.Option, Market.USA},
-            {SecurityType.Forex, Market.FXCM},
-            {SecurityType.Cfd, Market.FXCM}
-        };
 
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
@@ -502,15 +494,6 @@ namespace QuantConnect.Algorithm
             {
                 Error("Error applying parameter values: " + err.Message);
             }
-        }
-
-        /// <summary>
-        /// Sets the default markets to be used by the algorithm
-        /// </summary>
-        /// <param name="defaultMarkets">A security typ to market string dictionary containing the default values</param>
-        public void SetDefaultMarkets(Dictionary<SecurityType, string> defaultMarkets)
-        {
-            _defaultMarkets = new Dictionary<SecurityType, string>(defaultMarkets);
         }
 
         /// <summary>
@@ -1175,7 +1158,7 @@ namespace QuantConnect.Algorithm
             {
                 if (market == null)
                 {
-                    if (!_defaultMarkets.TryGetValue(securityType, out market))
+                    if (!BrokerageModel.DefaultMarkets.TryGetValue(securityType, out market))
                     {
                         throw new Exception("No default market set for security type: " + securityType);
                     }

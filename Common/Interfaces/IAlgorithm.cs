@@ -305,12 +305,6 @@ namespace QuantConnect.Interfaces
         void SetParameters(Dictionary<string, string> parameters);
 
         /// <summary>
-        /// Sets the default markets to be used by the algorithm
-        /// </summary>
-        /// <param name="defaultMarkets">A security typ to market string dictionary containing the default values</param>
-        void SetDefaultMarkets(Dictionary<SecurityType, string> defaultMarkets);
-
-        /// <summary>
         /// Sets the brokerage model used to resolve transaction models, settlement models,
         /// and brokerage specified ordering behaviors.
         /// </summary>

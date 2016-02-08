@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
 {
@@ -46,13 +47,12 @@ namespace QuantConnect.Orders
         /// New Stop Market Order constructor - 
         /// </summary>
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
-        /// <param name="type">Type of the security order</param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="stopPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public StopMarketOrder(Symbol symbol, int quantity, decimal stopPrice, DateTime time, string tag = "", SecurityType type = SecurityType.Base)
-            : base(symbol, quantity, time, tag, type)
+        public StopMarketOrder(Symbol symbol, int quantity, decimal stopPrice, DateTime time, string tag = "")
+            : base(symbol, quantity, time, tag)
         {
             StopPrice = stopPrice;
 
@@ -64,22 +64,21 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Gets the value of this order at the given market price.
+        /// Gets the order value in units of the security's quote currency
         /// </summary>
-        /// <param name="currentMarketPrice">The current market price of the security</param>
-        /// <returns>The value of this order given the current market price</returns>
-        public override decimal GetValue(decimal currentMarketPrice)
+        /// <param name="security">The security matching this order's symbol</param>
+        protected override decimal GetValueImpl(Security security)
         {
             // selling, so higher price will be used
             if (Quantity < 0)
             {
-                return Math.Max(StopPrice, currentMarketPrice);
+                return Quantity*Math.Max(StopPrice, security.Price);
             }
 
             // buying, so lower price will be used
             if (Quantity > 0)
             {
-                return Math.Min(StopPrice, currentMarketPrice);
+                return Quantity*Math.Min(StopPrice, security.Price);
             }
 
             return 0m;

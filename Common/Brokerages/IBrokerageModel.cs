@@ -39,6 +39,11 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; }
+
+        /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.
         /// </summary>

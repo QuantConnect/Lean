@@ -28,12 +28,12 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateShortOrder(int quantity)
         {
-            return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.Now, type: SecurityType);
+            return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.Now);
         }
 
         public override Order CreateLongOrder(int quantity)
         {
-            return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.Now, type: SecurityType);
+            return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.Now);
         }
 
         public override bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice)

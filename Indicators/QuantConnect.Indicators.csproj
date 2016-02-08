@@ -46,8 +46,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AccumulationDistribution.cs" />
+    <Compile Include="AccumulationDistributionOscillator.cs" />
     <Compile Include="AverageDirectionalIndex.cs" />
+    <Compile Include="BalanceOfPower.cs" />
+    <Compile Include="ChandeMomentumOscillator.cs" />
     <Compile Include="DonchianChannel.cs" />
+    <Compile Include="DoubleExponentialMovingAverage.cs" />
     <Compile Include="IchimokuKinkoHyo.cs" />
     <Compile Include="KeltnerChannels.cs" />
     <Compile Include="LeastSquaresMovingAverage.cs" />
@@ -59,6 +64,10 @@
     </Compile>
     <Compile Include="LinearWeightedMovingAverage.cs" />
     <Compile Include="ParabolicStopAndReverse.cs" />
+    <Compile Include="TrueRange.cs" />
+    <Compile Include="TripleExponentialMovingAverage.cs" />
+    <Compile Include="TriangularMovingAverage.cs" />
+    <Compile Include="Variance.cs" />
     <Compile Include="WilliamsPercentR.cs" />
     <Compile Include="AroonOscillator.cs" />
     <Compile Include="AverageTrueRange.cs" />

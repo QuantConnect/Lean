@@ -22,6 +22,7 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -32,12 +33,32 @@ namespace QuantConnect.Brokerages
     public class DefaultBrokerageModel : IBrokerageModel
     {
         /// <summary>
+        /// The default markets for the backtesting brokerage
+        /// </summary>
+        public static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
+        {
+            {SecurityType.Base, Market.USA},
+            {SecurityType.Equity, Market.USA},
+            {SecurityType.Option, Market.USA},
+            {SecurityType.Forex, Market.FXCM},
+            {SecurityType.Cfd, Market.FXCM}
+        }.ToReadOnlyDictionary();
+
+        /// <summary>
         /// Gets or sets the account type used by this model
         /// </summary>
         public virtual AccountType AccountType
         {
             get; 
             private set;
+        }
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public virtual IReadOnlyDictionary<SecurityType, string> DefaultMarkets
+        {
+            get { return DefaultMarketMap; }
         }
 
         /// <summary>

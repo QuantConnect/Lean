@@ -612,10 +612,12 @@ namespace QuantConnect.Algorithm
             var targetOrderValue = Math.Abs(targetPortfolioValue - currentHoldingsValue);
             var direction = targetPortfolioValue > currentHoldingsValue ? OrderDirection.Buy : OrderDirection.Sell;
 
+            // determine the unit price in terms of the account currency
+            var unitPrice = new MarketOrder(symbol, 1, UtcTime).GetValue(security);
 
             // define lower and upper thresholds for the iteration
-            var lowerThreshold = targetOrderValue - price/2;
-            var upperThreshold = targetOrderValue + price/2;
+            var lowerThreshold = targetOrderValue - unitPrice / 2;
+            var upperThreshold = targetOrderValue + unitPrice / 2;
 
             // continue iterating while  we're still not within the specified thresholds
             var iterations = 0;
@@ -626,15 +628,15 @@ namespace QuantConnect.Algorithm
                 // find delta from where we are to where we want to be
                 var delta = targetOrderValue - orderValue;
                 // use delta value to compute a change in quantity required
-                var deltaQuantity = (int)(delta / price);
+                var deltaQuantity = (int)(delta / unitPrice);
 
                 orderQuantity += deltaQuantity;
 
                 // recompute order fees
-                var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime, type: security.Type);
+                var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime);
                 var fee = security.FeeModel.GetOrderFee(security, order);
 
-                orderValue = Math.Abs(order.GetValue(price)) + fee;
+                orderValue = Math.Abs(order.GetValue(security)) + fee;
 
                 // we need to add the fee in as well, even though it's not value, it's still a cost for the transaction
                 // and we need to account for it to be sure we can make the trade produced by this method, imagine
