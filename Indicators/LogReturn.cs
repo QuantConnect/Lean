@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -58,7 +58,7 @@ namespace QuantConnect.Indicators
                 ? window[window.Count - 1]
                 : window.MostRecentlyRemoved;
 
-            return (decimal)Math.Log((double)(valuef / value0));
+            return (decimal)Math.Log((double)( (valuef - value0) / value0));
         }
     }
 }
