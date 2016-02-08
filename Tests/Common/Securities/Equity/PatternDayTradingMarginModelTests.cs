@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
 
             var model = new PatternDayTradingMarginModel();
             var security = CreateSecurity(Noon);
-            var order = new MarketOrder(security.Symbol, 100, security.LocalTime, type: security.Type);
+            var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             var expected = 100 * 100m / leverage + 1;
             var actual = model.GetInitialMarginRequiredForOrder(security, order);
@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
 
             var model = new PatternDayTradingMarginModel(2m, leverage);
             var security = CreateSecurity(Noon);
-            var order = new MarketOrder(security.Symbol, 100, security.LocalTime, type: security.Type);
+            var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             var expected = 100 * 100m / leverage + 1;
             var actual = model.GetInitialMarginRequiredForOrder(security, order);
@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
 
             var model = new PatternDayTradingMarginModel();
             var security = CreateSecurity(MidNight);
-            var order = new MarketOrder(security.Symbol, 100, security.LocalTime, type: security.Type);
+            var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             var expected = 100*100m/leverage + 1;
             var actual = model.GetInitialMarginRequiredForOrder(security, order);
@@ -111,7 +111,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
 
             var model = new PatternDayTradingMarginModel(leverage, 4m);
             var security = CreateSecurity(MidNight);
-            var order = new MarketOrder(security.Symbol, 100, security.LocalTime, type: security.Type);
+            var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             var expected = 100*100m/leverage + 1;
             var actual = model.GetInitialMarginRequiredForOrder(security, order);
@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
 
             var model = new PatternDayTradingMarginModel();
             var security = CreateSecurity(NoonHoliday);
-            var order = new MarketOrder(security.Symbol, 100, security.LocalTime, type: security.Type);
+            var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             var expected = 100*100m/leverage + 1;
             var actual = model.GetInitialMarginRequiredForOrder(security, order);
@@ -145,7 +145,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
 
             var model = new PatternDayTradingMarginModel(leverage, 4m);
             var security = CreateSecurity(NoonHoliday);
-            var order = new MarketOrder(security.Symbol, 100, security.LocalTime, type: security.Type);
+            var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             var expected = 100*100m/leverage + 1;
             var actual = model.GetInitialMarginRequiredForOrder(security, order);
@@ -162,7 +162,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
 
             var model = new PatternDayTradingMarginModel(leverage, 4m);
             var security = CreateSecurity(NoonWeekend);
-            var order = new MarketOrder(security.Symbol, 100, security.LocalTime, type: security.Type);
+            var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             var expected = 100*100m/leverage + 1;
             var actual = model.GetInitialMarginRequiredForOrder(security, order);
@@ -179,7 +179,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
 
             var model = new PatternDayTradingMarginModel();
             var security = CreateSecurity(NoonWeekend);
-            var order = new MarketOrder(security.Symbol, 100, security.LocalTime, type: security.Type);
+            var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             var expected = 100*100m/leverage + 1;
             var actual = model.GetInitialMarginRequiredForOrder(security, order);

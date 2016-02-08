@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Orders;
+using System;
 
 namespace QuantConnect.Securities.Equity
 {
@@ -23,25 +24,37 @@ namespace QuantConnect.Securities.Equity
     /// </summary>
     public class PatternDayTradingMarginModel : SecurityMarginModel
     {
-        private decimal _openMarketLeverage = 4.0m;
-        private decimal _closedMarketLeverage = 2.0m;
+        private readonly decimal _openMarketLeverage;
+        private readonly decimal _closedMarketLeverage;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PatternDayTradingMarginModel" />
         /// </summary>
-        /// <remarks>
-        /// Set the base leverage to 4x (regular trading hours)
-        /// </remarks>
         public PatternDayTradingMarginModel()
             : this(2.0m, 4.0m)
         {
         }
-
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PatternDayTradingMarginModel" />
+        /// </summary>
+        /// <param name="closedmarketleverage"></param>
+        /// <param name="openmarketleverage"></param>
         public PatternDayTradingMarginModel(decimal closedmarketleverage, decimal openmarketleverage):
             base(openmarketleverage)
         {
             _closedMarketLeverage = closedmarketleverage;
             _openMarketLeverage = openmarketleverage;   
+        }
+
+        /// <summary>
+        /// Gets the current leverage of the security
+        /// </summary>
+        /// <param name="security">The security to get leverage for</param>
+        /// <returns>The current leverage in the security</returns>
+        public override decimal GetLeverage(Security security)
+        {
+            return 1 / (MaintenanceMarginRequirement * GetMarginCorrection(security));
         }
 
         /// <summary>
@@ -67,12 +80,69 @@ namespace QuantConnect.Securities.Equity
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
         public override decimal GetInitialMarginRequiredForOrder(Security security, Order order)
         {
-            var closedopenratio = security.Exchange.ExchangeOpen ? 1 : _closedMarketLeverage/_openMarketLeverage;
-
             var orderFees = security.FeeModel.GetOrderFee(security, order);
 
-            var price = order.Status.IsFill() ? order.Price : security.Price;
-            return order.GetValue(price) * InitialMarginRequirement / closedopenratio + orderFees;        
+            return order.GetValue(security)*InitialMarginRequirement*GetMarginCorrection(security) + orderFees;
+        }
+
+        /// <summary>
+        /// Gets the margin currently alloted to the specified holding
+        /// </summary>
+        /// <param name="security">The security to compute maintenance margin for</param>
+        /// <returns>The maintenance margin required for the </returns>
+        public override decimal GetMaintenanceMargin(Security security)
+        {
+            return security.Holdings.AbsoluteHoldingsCost*(MaintenanceMarginRequirement* GetMarginCorrection(security));
+        }
+
+        /// <summary>
+        /// Generates a new order for the specified security taking into account the total margin
+        /// used by the account. Returns null when no margin call is to be issued.
+        /// </summary>
+        /// <param name="security">The security to generate a margin call order for</param>
+        /// <param name="netLiquidationValue">The net liquidation value for the entire account</param>
+        /// <param name="totalMargin">The total margin used by the account in units of base currency</param>
+        /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
+        public override SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin)
+        {
+            // leave a buffer in default implementation
+            const decimal marginBuffer = 0.10m;
+
+            if (totalMargin <= netLiquidationValue * (1 + marginBuffer))
+            {
+                return null;
+            }
+
+            if (!security.Holdings.Invested)
+            {
+                return null;
+            }
+
+            // compute the value we need to liquidate in order to get within margin requirements
+            var delta = totalMargin - netLiquidationValue;
+
+            // compute the number of shares required for the order, rounding up
+            var quantity = (int)(Math.Round(delta / security.Price, MidpointRounding.AwayFromZero) / (MaintenanceMarginRequirement*GetMarginCorrection(security)));
+
+            // don't try and liquidate more share than we currently hold, minimum value of 1, maximum value for absolute quantity
+            quantity = Math.Max(1, Math.Min((int)security.Holdings.AbsoluteQuantity, quantity));
+            if (security.Holdings.IsLong)
+            {
+                // adjust to a sell for long positions
+                quantity *= -1;
+            }
+
+            return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), "Margin Call");
+        }
+
+        /// <summary>
+        /// Get margin correction for closed market
+        /// </summary>
+        /// <param name="security"></param>
+        /// <returns></returns>
+        private decimal GetMarginCorrection(Security security)
+        {
+            return security.Exchange.ExchangeOpen ? 1 : _openMarketLeverage / _closedMarketLeverage;
         }
     }
 }
