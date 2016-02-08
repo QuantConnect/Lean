@@ -286,6 +286,19 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(DateTime.MinValue, indicator.Current.Time);
             Assert.AreEqual(0, indicator.Samples);
             Assert.IsFalse(indicator.IsReady);
+
+            var fields = indicator.GetType().GetProperties();
+            foreach (var field in fields)
+            {
+                if (field.PropertyType.IsSubclassOfGeneric(typeof (IndicatorBase<T>)))
+                {
+                    var subIndicator = field.GetValue(indicator) as IndicatorBase<T>;
+                    if (subIndicator != null && !(subIndicator is ConstantIndicator<T>))
+                    {
+                        AssertIndicatorIsInDefaultState(subIndicator);
+                    }
+                }
+            }
         }
 
         /// <summary>
