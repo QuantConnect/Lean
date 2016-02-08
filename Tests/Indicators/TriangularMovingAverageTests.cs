@@ -26,11 +26,27 @@ namespace QuantConnect.Tests.Indicators
         {
             var trimaOdd = new TriangularMovingAverage("TRIMA", 5);
 
-            TestHelper.TestIndicator(trimaOdd, "spy_trima.txt", "TRIMA_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            RunTestIndicator(trimaOdd, 5);
 
             var trimaEven = new TriangularMovingAverage("TRIMA", 6);
 
-            TestHelper.TestIndicator(trimaEven, "spy_trima.txt", "TRIMA_6", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            RunTestIndicator(trimaEven, 6);
+        }
+
+        [Test]
+        public void ComparesAgainstExternalDataAfterReset()
+        {
+            var trimaOdd = new TriangularMovingAverage("TRIMA", 5);
+
+            RunTestIndicator(trimaOdd, 5);
+            trimaOdd.Reset();
+            RunTestIndicator(trimaOdd, 5);
+
+            var trimaEven = new TriangularMovingAverage("TRIMA", 6);
+
+            RunTestIndicator(trimaEven, 6);
+            trimaEven.Reset();
+            RunTestIndicator(trimaEven, 6);
         }
 
         [Test]
@@ -39,6 +55,11 @@ namespace QuantConnect.Tests.Indicators
             var trima = new TriangularMovingAverage("TRIMA", 5);
 
             TestHelper.TestIndicatorReset(trima, "spy_trima.txt");
+        }
+
+        private static void RunTestIndicator(TriangularMovingAverage trima, int period)
+        {
+            TestHelper.TestIndicator(trima, "spy_trima.txt", "TRIMA_" + period, (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
         }
     }
 }

@@ -26,7 +26,17 @@ namespace QuantConnect.Tests.Indicators
         {
             var tema = new TripleExponentialMovingAverage("TEMA", 5);
 
-            TestHelper.TestIndicator(tema, "spy_tema.txt", "TEMA_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            RunTestIndicator(tema);
+        }
+
+        [Test]
+        public void ComparesAgainstExternalDataAfterReset()
+        {
+            var tema = new TripleExponentialMovingAverage("TEMA", 5);
+
+            RunTestIndicator(tema);
+            tema.Reset();
+            RunTestIndicator(tema);
         }
 
         [Test]
@@ -35,6 +45,11 @@ namespace QuantConnect.Tests.Indicators
             var tema = new TripleExponentialMovingAverage("TEMA", 5);
 
             TestHelper.TestIndicatorReset(tema, "spy_tema.txt");
+        }
+
+        private static void RunTestIndicator(TripleExponentialMovingAverage tema)
+        {
+            TestHelper.TestIndicator(tema, "spy_tema.txt", "TEMA_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
         }
     }
 }

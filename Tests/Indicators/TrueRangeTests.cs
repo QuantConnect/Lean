@@ -26,7 +26,17 @@ namespace QuantConnect.Tests.Indicators
         {
             var tr = new TrueRange("TR");
 
-            TestHelper.TestIndicator(tr, "spy_tr.txt", "TR", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            RunTestIndicator(tr);
+        }
+
+        [Test]
+        public void ComparesAgainstExternalDataAfterReset()
+        {
+            var tr = new TrueRange("TR");
+
+            RunTestIndicator(tr);
+            tr.Reset();
+            RunTestIndicator(tr);
         }
 
         [Test]
@@ -35,6 +45,11 @@ namespace QuantConnect.Tests.Indicators
             var tr = new TrueRange("TR");
 
             TestHelper.TestIndicatorReset(tr, "spy_tr.txt");
+        }
+
+        private static void RunTestIndicator(TrueRange tr)
+        {
+            TestHelper.TestIndicator(tr, "spy_tr.txt", "TR", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
         }
     }
 }

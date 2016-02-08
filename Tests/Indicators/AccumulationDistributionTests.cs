@@ -26,7 +26,17 @@ namespace QuantConnect.Tests.Indicators
         {
             var ad = new AccumulationDistribution("AD");
 
-            TestHelper.TestIndicator(ad, "spy_ad.txt", "AD", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            RunTestIndicator(ad);
+        }
+
+        [Test]
+        public void ComparesAgainstExternalDataAfterReset()
+        {
+            var ad = new AccumulationDistribution("AD");
+
+            RunTestIndicator(ad);
+            ad.Reset();
+            RunTestIndicator(ad);
         }
 
         [Test]
@@ -35,6 +45,11 @@ namespace QuantConnect.Tests.Indicators
             var ad = new AccumulationDistribution("AD");
 
             TestHelper.TestIndicatorReset(ad, "spy_ad.txt");
+        }
+
+        private static void RunTestIndicator(AccumulationDistribution ad)
+        {
+            TestHelper.TestIndicator(ad, "spy_ad.txt", "AD", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
         }
     }
 }

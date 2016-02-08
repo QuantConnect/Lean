@@ -26,7 +26,17 @@ namespace QuantConnect.Tests.Indicators
         {
             var bop = new BalanceOfPower("BOP");
 
-            TestHelper.TestIndicator(bop, "spy_bop.txt", "BOP", (ind, expected) => Assert.AreEqual(expected, (double)bop.Current.Value, 1e-3));
+            RunTestIndicator(bop);
+        }
+
+        [Test]
+        public void ComparesAgainstExternalDataAfterReset()
+        {
+            var bop = new BalanceOfPower("BOP");
+
+            RunTestIndicator(bop);
+            bop.Reset();
+            RunTestIndicator(bop);
         }
 
         [Test]
@@ -35,6 +45,11 @@ namespace QuantConnect.Tests.Indicators
             var bop = new BalanceOfPower("BOP");
 
             TestHelper.TestIndicatorReset(bop, "spy_bop.txt");
+        }
+
+        private static void RunTestIndicator(BalanceOfPower bop)
+        {
+            TestHelper.TestIndicator(bop, "spy_bop.txt", "BOP", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
         }
     }
 }

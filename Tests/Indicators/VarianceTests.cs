@@ -26,7 +26,17 @@ namespace QuantConnect.Tests.Indicators
         {
             var variance = new Variance("VAR", 10);
 
-            TestHelper.TestIndicator(variance, "spy_var.txt", "Var", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            RunTestIndicator(variance);
+        }
+
+        [Test]
+        public void ComparesAgainstExternalDataAfterReset()
+        {
+            var variance = new Variance("VAR", 10);
+
+            RunTestIndicator(variance);
+            variance.Reset();
+            RunTestIndicator(variance);
         }
 
         [Test]
@@ -35,6 +45,11 @@ namespace QuantConnect.Tests.Indicators
             var variance = new Variance("VAR", 10);
 
             TestHelper.TestIndicatorReset(variance, "spy_var.txt");
+        }
+
+        private static void RunTestIndicator(Variance var)
+        {
+            TestHelper.TestIndicator(var, "spy_var.txt", "Var", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
         }
     }
 }

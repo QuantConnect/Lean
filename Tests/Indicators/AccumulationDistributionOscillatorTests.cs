@@ -26,7 +26,17 @@ namespace QuantConnect.Tests.Indicators
         {
             var adOsc = new AccumulationDistributionOscillator("ADOSC", 3, 10);
 
-            TestHelper.TestIndicator(adOsc, "spy_ad_osc.txt", "AdOsc_3_10", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            RunTestIndicator(adOsc);
+        }
+
+        [Test]
+        public void ComparesAgainstExternalDataAfterReset()
+        {
+            var adOsc = new AccumulationDistributionOscillator("ADOSC", 3, 10);
+
+            RunTestIndicator(adOsc);
+            adOsc.Reset();
+            RunTestIndicator(adOsc);
         }
 
         [Test]
@@ -35,6 +45,11 @@ namespace QuantConnect.Tests.Indicators
             var adOsc = new AccumulationDistributionOscillator("ADOSC", 3, 10);
 
             TestHelper.TestIndicatorReset(adOsc, "spy_ad_osc.txt");
+        }
+
+        private static void RunTestIndicator(AccumulationDistributionOscillator adOsc)
+        {
+            TestHelper.TestIndicator(adOsc, "spy_ad_osc.txt", "AdOsc_3_10", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
         }
     }
 }
