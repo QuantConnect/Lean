@@ -33,16 +33,8 @@ namespace QuantConnect.Tests.Indicators
         public void ResetsProperly()
         {
             var ad = new AccumulationDistribution("AD");
-            foreach (var data in TestHelper.GetTradeBarStream("spy_ad.txt", false))
-            {
-                ad.Update(data);
-            }
 
-            Assert.IsTrue(ad.IsReady);
-
-            ad.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(ad);
+            TestHelper.TestIndicatorReset(ad, "spy_ad.txt");
         }
     }
 }

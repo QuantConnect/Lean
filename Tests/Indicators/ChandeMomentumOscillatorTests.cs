@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -33,18 +32,9 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ResetsProperly()
         {
-            var date = DateTime.Today;
             var cmo = new ChandeMomentumOscillator("CMO", 5);
-            foreach (var data in TestHelper.GetTradeBarStream("spy_cmo.txt"))
-            {
-                cmo.Update(date, data.Close);
-            }
 
-            Assert.IsTrue(cmo.IsReady);
-
-            cmo.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(cmo);
+            TestHelper.TestIndicatorReset(cmo, "spy_cmo.txt");
         }
     }
 }

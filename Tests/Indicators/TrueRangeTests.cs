@@ -33,16 +33,8 @@ namespace QuantConnect.Tests.Indicators
         public void ResetsProperly()
         {
             var tr = new TrueRange("TR");
-            foreach (var data in TestHelper.GetTradeBarStream("spy_tr.txt", false))
-            {
-                tr.Update(data);
-            }
 
-            Assert.IsTrue(tr.IsReady);
-
-            tr.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(tr);
+            TestHelper.TestIndicatorReset(tr, "spy_tr.txt");
         }
     }
 }

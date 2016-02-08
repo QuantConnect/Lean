@@ -28,7 +28,7 @@ namespace QuantConnect.Indicators
         private readonly ExponentialMovingAverage _ema2;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DoubleExponentialMovingAverage"/> class using the specified name.
+        /// Initializes a new instance of the <see cref="DoubleExponentialMovingAverage"/> class using the specified name and period.
         /// </summary> 
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the DEMA</param>
@@ -41,7 +41,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DoubleExponentialMovingAverage"/> class using the specified name.
+        /// Initializes a new instance of the <see cref="DoubleExponentialMovingAverage"/> class using the specified period.
         /// </summary> 
         /// <param name="period">The period of the DEMA</param>
         public DoubleExponentialMovingAverage(int period)

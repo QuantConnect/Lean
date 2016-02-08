@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -33,18 +32,9 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ResetsProperly()
         {
-            var date = DateTime.Today;
             var tema = new TripleExponentialMovingAverage("TEMA", 5);
-            foreach (var data in TestHelper.GetTradeBarStream("spy_tema.txt"))
-            {
-                tema.Update(date, data.Close);
-            }
 
-            Assert.IsTrue(tema.IsReady);
-
-            tema.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(tema);
+            TestHelper.TestIndicatorReset(tema, "spy_tema.txt");
         }
     }
 }

@@ -33,16 +33,8 @@ namespace QuantConnect.Tests.Indicators
         public void ResetsProperly()
         {
             var adOsc = new AccumulationDistributionOscillator("ADOSC", 3, 10);
-            foreach (var data in TestHelper.GetTradeBarStream("spy_ad_osc.txt", false))
-            {
-                adOsc.Update(data);
-            }
 
-            Assert.IsTrue(adOsc.IsReady);
-
-            adOsc.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(adOsc);
+            TestHelper.TestIndicatorReset(adOsc, "spy_ad_osc.txt");
         }
     }
 }

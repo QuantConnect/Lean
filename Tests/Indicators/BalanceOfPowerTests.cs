@@ -33,16 +33,8 @@ namespace QuantConnect.Tests.Indicators
         public void ResetsProperly()
         {
             var bop = new BalanceOfPower("BOP");
-            foreach (var data in TestHelper.GetTradeBarStream("spy_bop.txt", false))
-            {
-                bop.Update(data);
-            }
 
-            Assert.IsTrue(bop.IsReady);
-
-            bop.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(bop);
+            TestHelper.TestIndicatorReset(bop, "spy_bop.txt");
         }
     }
 }

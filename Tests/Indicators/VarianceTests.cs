@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -33,18 +32,9 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ResetsProperly()
         {
-            var date = DateTime.Today;
             var variance = new Variance("VAR", 10);
-            foreach (var data in TestHelper.GetTradeBarStream("spy_var.txt"))
-            {
-                variance.Update(date, data.Close);
-            }
 
-            Assert.IsTrue(variance.IsReady);
-
-            variance.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(variance);
+            TestHelper.TestIndicatorReset(variance, "spy_var.txt");
         }
     }
 }

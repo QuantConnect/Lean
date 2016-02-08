@@ -147,11 +147,11 @@ namespace QuantConnect.Tests.Indicators
         }
 
         /// <summary>
-        /// Compare the specified indicator against external data using the specificied comma delimited text file.
+        /// Compare the specified indicator against external data using the specified comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
         /// </summary>
         /// <param name="indicator">The indicator under test</param>
-        /// <param name="externalDataFilename"></param>
+        /// <param name="externalDataFilename">The external CSV file name</param>
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="customAssertion">Sets custom assertion logic, parameter is the indicator, expected value from the file</param>
         public static void TestIndicator(IndicatorBase<TradeBar> indicator, string externalDataFilename, string targetColumn, Action<IndicatorBase<TradeBar>, double> customAssertion)
@@ -197,6 +197,48 @@ namespace QuantConnect.Tests.Indicators
                 double expected = double.Parse(parts[targetIndex], CultureInfo.InvariantCulture);
                 customAssertion.Invoke(indicator, expected);
             }
+        }
+
+        /// <summary>
+        /// Tests a reset of the specified indicator after processing external data using the specified comma delimited text file.
+        /// The 'Close' column will be fed to the indicator as input
+        /// </summary>
+        /// <param name="indicator">The indicator under test</param>
+        /// <param name="externalDataFilename">The external CSV file name</param>
+        public static void TestIndicatorReset(IndicatorBase<TradeBar> indicator, string externalDataFilename)
+        {
+            foreach (var data in GetTradeBarStream(externalDataFilename, false))
+            {
+                indicator.Update(data);
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+
+            indicator.Reset();
+
+            AssertIndicatorIsInDefaultState(indicator);
+        }
+
+        /// <summary>
+        /// Tests a reset of the specified indicator after processing external data using the specified comma delimited text file.
+        /// The 'Close' column will be fed to the indicator as input
+        /// </summary>
+        /// <param name="indicator">The indicator under test</param>
+        /// <param name="externalDataFilename">The external CSV file name</param>
+        public static void TestIndicatorReset(IndicatorBase<IndicatorDataPoint> indicator, string externalDataFilename)
+        {
+            var date = DateTime.Today;
+
+            foreach (var data in GetTradeBarStream(externalDataFilename, false))
+            {
+                indicator.Update(date, data.Close);
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+
+            indicator.Reset();
+
+            AssertIndicatorIsInDefaultState(indicator);
         }
 
         public static IEnumerable<IReadOnlyDictionary<string, string>> GetCsvFileStream(string externalDataFilename)

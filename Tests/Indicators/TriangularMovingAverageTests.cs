@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -37,18 +36,9 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ResetsProperly()
         {
-            var date = DateTime.Today;
             var trima = new TriangularMovingAverage("TRIMA", 5);
-            foreach (var data in TestHelper.GetTradeBarStream("spy_trima.txt"))
-            {
-                trima.Update(date, data.Close);
-            }
 
-            Assert.IsTrue(trima.IsReady);
-
-            trima.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(trima);
+            TestHelper.TestIndicatorReset(trima, "spy_trima.txt");
         }
     }
 }
