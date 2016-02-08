@@ -36,37 +36,6 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork),
             TimeZones.NewYork);
 
-        private static Security CreateSecurity(DateTime newLocalTime)
-        {
-            var security = new Security(CreateUsEquitySecurityExchangeHours(), CreateTradeBarConfig());
-            security.Exchange.SetLocalDateTimeFrontier(newLocalTime);
-            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, newLocalTime, 100m));
-            return security;
-        }
-
-        private static SecurityExchangeHours CreateUsEquitySecurityExchangeHours()
-        {
-            var sunday = LocalMarketHours.ClosedAllDay(DayOfWeek.Sunday);
-            var monday = new LocalMarketHours(DayOfWeek.Monday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            var tuesday = new LocalMarketHours(DayOfWeek.Tuesday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            var wednesday = new LocalMarketHours(DayOfWeek.Wednesday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            var thursday = new LocalMarketHours(DayOfWeek.Thursday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            var friday = new LocalMarketHours(DayOfWeek.Friday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
-            var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
-
-            return new SecurityExchangeHours(TimeZones.NewYork, USHoliday.Dates.Select(x => x.Date), new[]
-            {
-                sunday, monday, tuesday, wednesday, thursday, friday, saturday
-            }.ToDictionary(x => x.DayOfWeek));
-        }
-
-        private static SubscriptionDataConfig CreateTradeBarConfig()
-        {
-            return new SubscriptionDataConfig(typeof (TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork,
-                TimeZones.NewYork, true, true, false);
-        }
-
         [Test]
         public void InitializationTests()
         {
@@ -80,6 +49,40 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             leverage = model.GetLeverage(CreateSecurity(Noon));
 
             Assert.AreEqual(5.0m, leverage);
+        }
+
+        [Test]
+        public void VerifyOpenMarketLeverage()
+        {
+            // Market is Open on Tuesday, Feb, 16th 2016 at Noon
+
+            var leverage = 4m;
+
+            var model = new PatternDayTradingMarginModel();
+            var security = CreateSecurity(Noon);
+            var order = new MarketOrder(security.Symbol, 100, security.LocalTime, type: security.Type);
+
+            var expected = 100 * 100m / leverage + 1;
+            var actual = model.GetInitialMarginRequiredForOrder(security, order);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void VerifyOpenMarketLeverageAltVersion()
+        {
+            // Market is Open on Tuesday, Feb, 16th 2016 at Noon
+
+            var leverage = 5m;
+
+            var model = new PatternDayTradingMarginModel(2m, leverage);
+            var security = CreateSecurity(Noon);
+            var order = new MarketOrder(security.Symbol, 100, security.LocalTime, type: security.Type);
+
+            var expected = 100 * 100m / leverage + 1;
+            var actual = model.GetInitialMarginRequiredForOrder(security, order);
+
+            Assert.AreEqual(expected, actual);
         }
 
         [Test]
@@ -151,40 +154,6 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         }
 
         [Test]
-        public void VerifyOpenMarketLeverage()
-        {
-            // Market is Open on Tuesday, Feb, 16th 2016 at Noon
-
-            var leverage = 4m;
-
-            var model = new PatternDayTradingMarginModel();
-            var security = CreateSecurity(Noon);
-            var order = new MarketOrder(security.Symbol, 100, security.LocalTime, type: security.Type);
-
-            var expected = 100*100m/leverage + 1;
-            var actual = model.GetInitialMarginRequiredForOrder(security, order);
-
-            Assert.AreEqual(expected, actual);
-        }
-
-        [Test]
-        public void VerifyOpenMarketLeverageAltVersion()
-        {
-            // Market is Open on Tuesday, Feb, 16th 2016 at Noon
-
-            var leverage = 5m;
-
-            var model = new PatternDayTradingMarginModel(2m, leverage);
-            var security = CreateSecurity(Noon);
-            var order = new MarketOrder(security.Symbol, 100, security.LocalTime, type: security.Type);
-
-            var expected = 100*100m/leverage + 1;
-            var actual = model.GetInitialMarginRequiredForOrder(security, order);
-
-            Assert.AreEqual(expected, actual);
-        }
-
-        [Test]
         public void VerifyWeekedMarketLeverageAltVersion()
         {
             // Market is Closed on Sunday, Feb, 14th 2016 at Noon
@@ -216,6 +185,37 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             var actual = model.GetInitialMarginRequiredForOrder(security, order);
 
             Assert.AreEqual(expected, actual);
+        }
+
+        private static Security CreateSecurity(DateTime newLocalTime)
+        {
+            var security = new Security(CreateUsEquitySecurityExchangeHours(), CreateTradeBarConfig());
+            security.Exchange.SetLocalDateTimeFrontier(newLocalTime);
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, newLocalTime, 100m));
+            return security;
+        }
+
+        private static SecurityExchangeHours CreateUsEquitySecurityExchangeHours()
+        {
+            var sunday = LocalMarketHours.ClosedAllDay(DayOfWeek.Sunday);
+            var monday = new LocalMarketHours(DayOfWeek.Monday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            var tuesday = new LocalMarketHours(DayOfWeek.Tuesday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            var wednesday = new LocalMarketHours(DayOfWeek.Wednesday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            var thursday = new LocalMarketHours(DayOfWeek.Thursday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            var friday = new LocalMarketHours(DayOfWeek.Friday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
+            var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
+
+            return new SecurityExchangeHours(TimeZones.NewYork, USHoliday.Dates.Select(x => x.Date), new[]
+            {
+                sunday, monday, tuesday, wednesday, thursday, friday, saturday
+            }.ToDictionary(x => x.DayOfWeek));
+        }
+
+        private static SubscriptionDataConfig CreateTradeBarConfig()
+        {
+            return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork,
+                TimeZones.NewYork, true, true, false);
         }
     }
 }

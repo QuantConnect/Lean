@@ -23,8 +23,8 @@ namespace QuantConnect.Securities.Equity
     /// </summary>
     public class PatternDayTradingMarginModel : SecurityMarginModel
     {
-        private decimal _openmarketleverage = 4.0m;
-        private decimal _closedmarketleverage = 2.0m;
+        private decimal _openMarketLeverage = 4.0m;
+        private decimal _closedMarketLeverage = 2.0m;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PatternDayTradingMarginModel" />
@@ -33,15 +33,15 @@ namespace QuantConnect.Securities.Equity
         /// Set the base leverage to 4x (regular trading hours)
         /// </remarks>
         public PatternDayTradingMarginModel()
-            : base(4.0m)
+            : this(2.0m, 4.0m)
         {
         }
 
         public PatternDayTradingMarginModel(decimal closedmarketleverage, decimal openmarketleverage):
             base(openmarketleverage)
         {
-            _closedmarketleverage = closedmarketleverage;
-            _openmarketleverage = openmarketleverage;           
+            _closedMarketLeverage = closedmarketleverage;
+            _openMarketLeverage = openmarketleverage;   
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace QuantConnect.Securities.Equity
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
         public override decimal GetInitialMarginRequiredForOrder(Security security, Order order)
         {
-            var closedopenratio = security.Exchange.ExchangeOpen ? 1 : _closedmarketleverage/_openmarketleverage;
+            var closedopenratio = security.Exchange.ExchangeOpen ? 1 : _closedMarketLeverage/_openMarketLeverage;
 
             var orderFees = security.FeeModel.GetOrderFee(security, order);
 
