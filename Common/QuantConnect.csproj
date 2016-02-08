@@ -373,6 +373,7 @@
     <Compile Include="Util\MarketHoursDatabaseJsonConverter.cs" />
     <Compile Include="Util\ParallelRunner.cs" />
     <Compile Include="Util\ParallelRunnerWorker.cs" />
+    <Compile Include="Util\ColorJsonConverter.cs" />
     <Compile Include="Util\SecurityIdentifierJsonConverter.cs" />
     <Compile Include="Util\TypeChangeJsonConverter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />
