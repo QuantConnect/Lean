@@ -64,6 +64,7 @@
     </Compile>
     <Compile Include="LinearWeightedMovingAverage.cs" />
     <Compile Include="ParabolicStopAndReverse.cs" />
+    <Compile Include="RateOfChangeRatio.cs" />
     <Compile Include="TrueRange.cs" />
     <Compile Include="TripleExponentialMovingAverage.cs" />
     <Compile Include="TriangularMovingAverage.cs" />
