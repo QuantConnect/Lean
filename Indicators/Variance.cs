@@ -73,5 +73,15 @@ namespace QuantConnect.Indicators
 
             return meanValue2 - meanValue1 * meanValue1;
         }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _rollingSum = 0;
+            _rollingSumOfSquares = 0;
+            base.Reset();
+        }
     }
 }

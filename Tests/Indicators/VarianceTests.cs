@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -27,24 +26,30 @@ namespace QuantConnect.Tests.Indicators
         {
             var variance = new Variance("VAR", 10);
 
-            TestHelper.TestIndicator(variance, "spy_var.txt", "Var", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            RunTestIndicator(variance);
+        }
+
+        [Test]
+        public void ComparesAgainstExternalDataAfterReset()
+        {
+            var variance = new Variance("VAR", 10);
+
+            RunTestIndicator(variance);
+            variance.Reset();
+            RunTestIndicator(variance);
         }
 
         [Test]
         public void ResetsProperly()
         {
-            var date = DateTime.Today;
             var variance = new Variance("VAR", 10);
-            foreach (var data in TestHelper.GetTradeBarStream("spy_var.txt"))
-            {
-                variance.Update(date, data.Close);
-            }
 
-            Assert.IsTrue(variance.IsReady);
+            TestHelper.TestIndicatorReset(variance, "spy_var.txt");
+        }
 
-            variance.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(variance);
+        private static void RunTestIndicator(Variance var)
+        {
+            TestHelper.TestIndicator(var, "spy_var.txt", "Var", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
         }
     }
 }

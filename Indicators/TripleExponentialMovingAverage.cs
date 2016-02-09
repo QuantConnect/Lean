@@ -78,5 +78,16 @@ namespace QuantConnect.Indicators
 
             return IsReady ? 3m * _ema1 - 3m * _ema2 + _ema3 : 0m;
         }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _ema1.Reset();
+            _ema2.Reset();
+            _ema3.Reset();
+            base.Reset();
+        }
     }
 }

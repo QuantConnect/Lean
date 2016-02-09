@@ -73,5 +73,15 @@ namespace QuantConnect.Indicators
 
             return _sma2;
         }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _sma1.Reset();
+            _sma2.Reset();
+            base.Reset();
+        }
     }
 }
