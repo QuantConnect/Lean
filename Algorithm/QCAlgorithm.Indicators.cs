@@ -758,7 +758,7 @@ namespace QuantConnect.Algorithm
         /// <returns>The MeanAbsoluteDeviation indicator for the requested symbol over the specified period</returns>
         public MeanAbsoluteDeviation MAD(Symbol symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, "TRIMA" + period, resolution);
+            var name = CreateIndicatorName(symbol, "MAD" + period, resolution);
             var mad = new MeanAbsoluteDeviation(name, period);
             RegisterIndicator(symbol, mad, resolution, selector);
             return mad;
