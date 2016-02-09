@@ -707,44 +707,5 @@ namespace QuantConnect
                 tarIn.Close();
             }
         }
-
-        /// <summary>
-        /// Creates the entry name for a QC zip data file
-        /// </summary>
-        public static string CreateZipEntryName(string symbol, SecurityType securityType, DateTime date, Resolution resolution, TickType dataType = TickType.Trade)
-        {
-            symbol = symbol.ToLower();
-
-            if (resolution == Resolution.Hour || resolution == Resolution.Daily)
-            {
-                return symbol + ".csv";
-            }
-
-            //All fx is quote data.
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
-            {
-                dataType = TickType.Quote;
-            }
-
-            return String.Format("{0}_{1}_{2}_{3}.csv", date.ToString(DateFormat.EightCharacter), symbol, resolution.ToString().ToLower(), dataType.ToString().ToLower());
-        }
-
-        /// <summary>
-        /// Creates the zip file name for a QC zip data file
-        /// </summary>
-        public static string CreateZipFileName(string symbol, SecurityType securityType, DateTime date, Resolution resolution)
-        {
-            if (resolution == Resolution.Hour || resolution == Resolution.Daily)
-            {
-                return symbol.ToLower() + ".zip";
-            }
-
-            var zipFileName = date.ToString(DateFormat.EightCharacter);
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
-            {
-                return zipFileName + "_quote.zip";
-            }
-            return zipFileName + "_trade.zip";
-        }
-    } // End OS Class
-} // End QC Namespace
+    }
+}
