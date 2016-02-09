@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Configuration;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
@@ -30,10 +29,9 @@ namespace QuantConnect.Tests.Common.Securities.Equity
     public class PatternDayTradingMarginModelTests
     {
         private static readonly DateTime Noon = new DateTime(2016, 02, 16, 12, 0, 0);
-        private static readonly DateTime MidNight = new DateTime(2016, 02, 16, 0, 0, 0);
+        private static readonly DateTime Midnight = new DateTime(2016, 02, 16, 0, 0, 0);
         private static readonly DateTime NoonWeekend = new DateTime(2016, 02, 14, 12, 0, 0);
         private static readonly DateTime NoonHoliday = new DateTime(2016, 02, 15, 12, 0, 0);
-
         private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
 
         [Test]
@@ -49,6 +47,28 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             leverage = model.GetLeverage(CreateSecurity(Noon));
 
             Assert.AreEqual(5.0m, leverage);
+        }
+
+        [Test]
+        public void SetLeverageTest()
+        {
+            var model = new PatternDayTradingMarginModel();
+
+            // Open market
+            var security = CreateSecurity(Noon);
+
+            security.MarginModel = new PatternDayTradingMarginModel();
+
+            model.SetLeverage(security, 10m);
+            Assert.AreNotEqual(10m, model.GetLeverage(security));
+            
+            // Closed market
+            security = CreateSecurity(Midnight);
+            
+            model.SetLeverage(security, 10m);
+            Assert.AreNotEqual(10m, model.GetLeverage(security));
+
+            security.Holdings.SetHoldings(100m, 100);
         }
 
         [Test]
@@ -86,14 +106,28 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         [Test]
         public void VerifyClosedMarketLeverage()
         {
-            // Market is Closed on Tuesday, Feb, 16th 2016 at Midnight
-
             var leverage = 2m;
             var expected = 100 * 100m / leverage + 1;
 
             var model = new PatternDayTradingMarginModel();
-            var security = CreateSecurity(MidNight);
+
+            // Market is Closed on Tuesday, Feb, 16th 2016 at Midnight
+            var security = CreateSecurity(Midnight);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
+
+            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
+
+            // Market is Closed on Monday, Feb, 15th 2016 at Noon (US President Day)
+            security = CreateSecurity(NoonHoliday);
+            order = new MarketOrder(security.Symbol, 100, security.LocalTime);
+
+            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
+
+            // Market is Closed on Sunday, Feb, 14th 2016 at Noon
+            security = CreateSecurity(NoonWeekend);
+            order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
             Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
@@ -102,81 +136,107 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         [Test]
         public void VerifyClosedMarketLeverageAltVersion()
         {
+            var leverage = 3m;
+            var expected = 100 * 100m / leverage + 1;
+
+            var model = new PatternDayTradingMarginModel(leverage, 4m);
+
             // Market is Closed on Tuesday, Feb, 16th 2016 at Midnight
-
-            var leverage = 3m;
-            var expected = 100 * 100m / leverage + 1;
-
-            var model = new PatternDayTradingMarginModel(leverage, 4m);
-            var security = CreateSecurity(MidNight);
+            var security = CreateSecurity(Midnight);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
+
+            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
+
+            // Market is Closed on Monday, Feb, 15th 2016 at Noon (US President Day)
+            security = CreateSecurity(NoonHoliday);
+            order = new MarketOrder(security.Symbol, 100, security.LocalTime);
+
+            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
+
+            // Market is Closed on Sunday, Feb, 14th 2016 at Noon
+            security = CreateSecurity(NoonWeekend);
+            order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
             Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
         }
 
         [Test]
-        public void VerifyHolidayMarketLeverage()
+        public void VerifyMaintenaceMargin()
         {
-            // Market is Closed on Monday, Feb, 15th 2016 at Noon (US President Day)
+            var model = new PatternDayTradingMarginModel();
 
-            var leverage = 2m;
-            var expected = 100 * 100m / leverage + 1;
+            // Open Market
+            var security = CreateSecurity(Noon);
+            security.Holdings.SetHoldings(100m, 100);
+
+            Assert.AreEqual((double)100 * 100 / 4, (double)model.GetMaintenanceMargin(security), 1e-3);
+
+            // Closed Market
+            security = CreateSecurity(Midnight);
+            security.Holdings.SetHoldings(100m, 100);
+
+            Assert.AreEqual((double)100 * 100 / 2, (double)model.GetMaintenanceMargin(security), 1e-3);
+        }
+
+        [Test]
+        public void VerifyMarginCallOrderLong()
+        {
+            var netLiquidationValue = 5000m;
+            var totalMargin = 10000m;
+            var securityPrice = 100m;
+            var quantity = 300;
 
             var model = new PatternDayTradingMarginModel();
-            var security = CreateSecurity(NoonHoliday);
-            var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
-            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
+            // Open Market
+            var security = CreateSecurity(Noon);
+            security.Holdings.SetHoldings(securityPrice, quantity);
+
+            var expected = -(int) (Math.Round((totalMargin - netLiquidationValue)/securityPrice, MidpointRounding.AwayFromZero)*4m);
+            var actual = model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
+
+            Assert.AreEqual(expected, actual);
+
+            // Closed Market
+            security = CreateSecurity(Midnight);
+            security.Holdings.SetHoldings(securityPrice, quantity);
+
+            expected = -(int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 2m);
+            actual = model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
+
+            Assert.AreEqual(expected, actual);
         }
 
         [Test]
-        public void VerifyHolidayMarketLeverageAltVersion()
+        public void VerifyMarginCallOrderShort()
         {
-            // Market is Closed on Monday, Feb, 15th 2016 at Noon (US President Day)
-
-            var leverage = 3m;
-            var expected = 100 * 100m / leverage + 1;
-
-            var model = new PatternDayTradingMarginModel(leverage, 4m);
-            var security = CreateSecurity(NoonHoliday);
-            var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
-
-            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
-        }
-
-        [Test]
-        public void VerifyWeekedMarketLeverageAltVersion()
-        {
-            // Market is Closed on Sunday, Feb, 14th 2016 at Noon
-
-            var leverage = 3m;
-            var expected = 100 * 100m / leverage + 1;
-
-            var model = new PatternDayTradingMarginModel(leverage, 4m);
-            var security = CreateSecurity(NoonWeekend);
-            var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
-
-            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
-        }
-
-        [Test]
-        public void VerifyWeekendMarketLeverage()
-        {
-            // Market is Closed on Sunday, Feb, 14th 2016 at Noon
-
-            var leverage = 2m;
-            var expected = 100 * 100m / leverage + 1;
+            var netLiquidationValue = 5000m;
+            var totalMargin = 10000m;
+            var securityPrice = 100m;
+            var quantity = -300;
 
             var model = new PatternDayTradingMarginModel();
-            var security = CreateSecurity(NoonWeekend);
-            var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
-            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
+            // Open Market
+            var security = CreateSecurity(Noon);
+            security.Holdings.SetHoldings(securityPrice, quantity);
+
+            var expected = (int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 4m);
+            var actual = model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
+
+            Assert.AreEqual(expected, actual);
+
+            // Closed Market
+            security = CreateSecurity(Midnight);
+            security.Holdings.SetHoldings(securityPrice, quantity);
+
+            expected = (int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 2m);
+            actual = model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
+
+            Assert.AreEqual(expected, actual);
         }
 
         private static Security CreateSecurity(DateTime newLocalTime)
