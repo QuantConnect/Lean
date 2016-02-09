@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Configuration;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
@@ -33,8 +34,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
         private static readonly DateTime NoonWeekend = new DateTime(2016, 02, 14, 12, 0, 0);
         private static readonly DateTime NoonHoliday = new DateTime(2016, 02, 15, 12, 0, 0);
 
-        private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork),
-            TimeZones.NewYork);
+        private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
 
         [Test]
         public void InitializationTests()
@@ -57,32 +57,30 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             // Market is Open on Tuesday, Feb, 16th 2016 at Noon
 
             var leverage = 4m;
+            var expected = 100 * 100m / leverage + 1;
 
             var model = new PatternDayTradingMarginModel();
             var security = CreateSecurity(Noon);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
-            var expected = 100 * 100m / leverage + 1;
-            var actual = model.GetInitialMarginRequiredForOrder(security, order);
-
-            Assert.AreEqual(expected, actual);
+            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
         }
-
+        
         [Test]
         public void VerifyOpenMarketLeverageAltVersion()
         {
             // Market is Open on Tuesday, Feb, 16th 2016 at Noon
 
             var leverage = 5m;
+            var expected = 100 * 100m / leverage + 1;
 
             var model = new PatternDayTradingMarginModel(2m, leverage);
             var security = CreateSecurity(Noon);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
-            var expected = 100 * 100m / leverage + 1;
-            var actual = model.GetInitialMarginRequiredForOrder(security, order);
-
-            Assert.AreEqual(expected, actual);
+            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
         }
 
         [Test]
@@ -91,15 +89,14 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             // Market is Closed on Tuesday, Feb, 16th 2016 at Midnight
 
             var leverage = 2m;
+            var expected = 100 * 100m / leverage + 1;
 
             var model = new PatternDayTradingMarginModel();
             var security = CreateSecurity(MidNight);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
-            var expected = 100*100m/leverage + 1;
-            var actual = model.GetInitialMarginRequiredForOrder(security, order);
-
-            Assert.AreEqual(expected, actual);
+            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
         }
 
         [Test]
@@ -108,15 +105,14 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             // Market is Closed on Tuesday, Feb, 16th 2016 at Midnight
 
             var leverage = 3m;
+            var expected = 100 * 100m / leverage + 1;
 
             var model = new PatternDayTradingMarginModel(leverage, 4m);
             var security = CreateSecurity(MidNight);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
-            var expected = 100*100m/leverage + 1;
-            var actual = model.GetInitialMarginRequiredForOrder(security, order);
-
-            Assert.AreEqual(expected, actual);
+            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
         }
 
         [Test]
@@ -125,15 +121,14 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             // Market is Closed on Monday, Feb, 15th 2016 at Noon (US President Day)
 
             var leverage = 2m;
+            var expected = 100 * 100m / leverage + 1;
 
             var model = new PatternDayTradingMarginModel();
             var security = CreateSecurity(NoonHoliday);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
-            var expected = 100*100m/leverage + 1;
-            var actual = model.GetInitialMarginRequiredForOrder(security, order);
-
-            Assert.AreEqual(expected, actual);
+            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
         }
 
         [Test]
@@ -142,15 +137,14 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             // Market is Closed on Monday, Feb, 15th 2016 at Noon (US President Day)
 
             var leverage = 3m;
+            var expected = 100 * 100m / leverage + 1;
 
             var model = new PatternDayTradingMarginModel(leverage, 4m);
             var security = CreateSecurity(NoonHoliday);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
-            var expected = 100*100m/leverage + 1;
-            var actual = model.GetInitialMarginRequiredForOrder(security, order);
-
-            Assert.AreEqual(expected, actual);
+            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
         }
 
         [Test]
@@ -159,15 +153,14 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             // Market is Closed on Sunday, Feb, 14th 2016 at Noon
 
             var leverage = 3m;
+            var expected = 100 * 100m / leverage + 1;
 
             var model = new PatternDayTradingMarginModel(leverage, 4m);
             var security = CreateSecurity(NoonWeekend);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
-            var expected = 100*100m/leverage + 1;
-            var actual = model.GetInitialMarginRequiredForOrder(security, order);
-
-            Assert.AreEqual(expected, actual);
+            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
         }
 
         [Test]
@@ -176,15 +169,14 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             // Market is Closed on Sunday, Feb, 14th 2016 at Noon
 
             var leverage = 2m;
+            var expected = 100 * 100m / leverage + 1;
 
             var model = new PatternDayTradingMarginModel();
             var security = CreateSecurity(NoonWeekend);
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
-            var expected = 100*100m/leverage + 1;
-            var actual = model.GetInitialMarginRequiredForOrder(security, order);
-
-            Assert.AreEqual(expected, actual);
+            Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
         }
 
         private static Security CreateSecurity(DateTime newLocalTime)
