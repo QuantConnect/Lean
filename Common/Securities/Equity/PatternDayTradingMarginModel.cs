@@ -92,7 +92,7 @@ namespace QuantConnect.Securities.Equity
         /// <returns>The maintenance margin required for the </returns>
         public override decimal GetMaintenanceMargin(Security security)
         {
-            return security.Holdings.AbsoluteHoldingsCost*(MaintenanceMarginRequirement* GetMarginCorrection(security));
+            return base.GetMaintenanceMargin(security)*GetMarginCorrection(security);
         }
 
         /// <summary>
