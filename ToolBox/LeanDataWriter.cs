@@ -23,6 +23,7 @@ using Ionic.Zip;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox
 {
@@ -121,7 +122,7 @@ namespace QuantConnect.ToolBox
                 lastTime = data.Time;
 
                 // Build the line and append it to the file
-                sb.Append(GenerateFileLine(data) + Environment.NewLine);
+                sb.Append(LeanData.GenerateLine(data, _securityType, _resolution) + Environment.NewLine);
             }
 
             // Write the last file
@@ -148,7 +149,7 @@ namespace QuantConnect.ToolBox
             var outputFile = GetZipOutputFileName(baseDirectory, lastTime);
 
             // Load new data rows into a SortedDictionary for easy merge/update
-            var newRows = new SortedDictionary<DateTime, string>(source.ToDictionary(x => x.Time, GenerateFileLine));
+            var newRows = new SortedDictionary<DateTime, string>(source.ToDictionary(x => x.Time, x => LeanData.GenerateLine(x, _securityType, _resolution)));
             SortedDictionary<DateTime, string> rows;
 
             if (File.Exists(outputFile))
@@ -226,95 +227,6 @@ namespace QuantConnect.ToolBox
             // Write out this data string to a zip file
             Compression.Zip(data, fileName, Compression.CreateZipEntryName(_symbol.Value, _securityType, time, _resolution, _dataType));
             Log.Trace("LeanDataWriter.Write(): Created: " + fileName);
-        }
-
-        /// <summary>
-        /// Generate a single line of the data for this security type
-        /// </summary>
-        /// <param name="data">Data we're generating</param>
-        /// <returns>String line for this basedata</returns>
-        private string GenerateFileLine(IBaseData data)
-        {
-            var line = string.Empty;
-            var format = "{0},{1},{2},{3},{4},{5}";
-            var milliseconds = data.Time.TimeOfDay.TotalMilliseconds.ToString(CultureInfo.InvariantCulture);
-            var longTime = data.Time.ToString(DateFormat.TwelveCharacter);
-
-            switch (_securityType)
-            {
-                case SecurityType.Equity:
-                    switch (_resolution)
-                    {
-                        case Resolution.Tick:
-                            var tick = data as Tick;
-                            if (tick != null)
-                            {
-                                line = string.Format(format, milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious);
-                            }
-                            break;
-
-                        case Resolution.Minute:
-                        case Resolution.Second:
-                            var bar = data as TradeBar;
-                            if (bar != null)
-                            {
-                                line = string.Format(format, milliseconds, Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close), bar.Volume);   
-                            }
-                            break;
-
-                        case Resolution.Hour:
-                        case Resolution.Daily:
-                            var bigBar = data as TradeBar;
-                            if (bigBar != null)
-                            {
-                                line = string.Format(format, longTime, Scale(bigBar.Open), Scale(bigBar.High), Scale(bigBar.Low), Scale(bigBar.Close), bigBar.Volume);
-                            }
-                            break;
-                    }
-                    break;
-
-                case SecurityType.Forex:
-                case SecurityType.Cfd:
-                    switch (_resolution)
-                    {
-                        case Resolution.Tick:
-                            var fxTick = data as Tick;
-                            if (fxTick != null)
-                            {
-                                line = string.Format("{0},{1},{2}", milliseconds, fxTick.BidPrice, fxTick.AskPrice);
-                            }
-                            break;
-
-                        case Resolution.Second:
-                        case Resolution.Minute:
-                            var fxBar = data as TradeBar;
-                            if (fxBar != null)
-                            {
-                                line = string.Format("{0},{1},{2},{3},{4}", milliseconds, fxBar.Open, fxBar.High, fxBar.Low, fxBar.Close);
-                            }
-                            break;
-
-                        case Resolution.Hour:
-                        case Resolution.Daily:
-                            var dailyBar = data as TradeBar;
-                            if (dailyBar != null)
-                            {
-                                line = string.Format("{0},{1},{2},{3},{4}", longTime, dailyBar.Open, dailyBar.High, dailyBar.Low, dailyBar.Close);
-                            }
-                            break;
-                    }
-                    break;
-            }
-
-            return line;
-        }
-
-        /// <summary>
-        /// Scale and convert the resulting number to deci-cents int.
-        /// </summary>
-        private static int Scale(decimal value)
-        {
-            return Convert.ToInt32(value*10000);
         }
 
         /// <summary>
