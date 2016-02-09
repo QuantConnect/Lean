@@ -185,8 +185,8 @@ namespace QuantConnect.Data.UniverseSelection
         public virtual IEnumerable<DateTime> GetTriggerTimes(DateTime startTimeUtc, DateTime endTimeUtc, MarketHoursDatabase marketHoursDatabase)
         {
             var exchangeHours = marketHoursDatabase.GetExchangeHours(Configuration);
-            var localStartTime = startTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone);
-            var localEndTime = endTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone);
+            var localStartTime = startTimeUtc.ConvertFromUtc(exchangeHours.TimeZone);
+            var localEndTime = endTimeUtc.ConvertFromUtc(exchangeHours.TimeZone);
 
             var first = true;
             foreach (var dateTime in LinqExtensions.Range(localStartTime, localEndTime, dt => dt + Interval))
