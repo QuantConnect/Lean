@@ -720,6 +720,38 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new TripleExponentialMovingAverage indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose TEMA we want</param>
+        /// <param name="period">The period over which to compute the TEMA</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The TripleExponentialMovingAverage indicator for the requested symbol over the specified period</returns>
+        public TripleExponentialMovingAverage TEMA(Symbol symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "TEMA" + period, resolution);
+            var tema = new TripleExponentialMovingAverage(name, period);
+            RegisterIndicator(symbol, tema, resolution, selector);
+            return tema;
+        }
+
+        /// <summary>
+        /// Creates a new TriangularMovingAverage indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose TRIMA we want</param>
+        /// <param name="period">The period over which to compute the TRIMA</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The TriangularMovingAverage indicator for the requested symbol over the specified period</returns>
+        public TriangularMovingAverage TRIMA(Symbol symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "TRIMA" + period, resolution);
+            var trima = new TriangularMovingAverage(name, period);
+            RegisterIndicator(symbol, trima, resolution, selector);
+            return trima;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
