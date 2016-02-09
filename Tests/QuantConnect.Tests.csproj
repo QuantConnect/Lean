@@ -122,6 +122,7 @@
     <Compile Include="Common\Securities\SecurityExchangeHoursTests.cs" />
     <Compile Include="Common\Securities\SecurityIdentifierTests.cs" />
     <Compile Include="Common\Securities\SecurityManagerTests.cs" />
+    <Compile Include="Common\Securities\SecurityTests.cs" />
     <Compile Include="Common\Securities\SecurityTransactionModelTests.cs" />
     <Compile Include="Common\Securities\UniverseManagerTests.cs" />
     <Compile Include="Common\SeriesTests.cs" />
