@@ -287,16 +287,31 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(0, indicator.Samples);
             Assert.IsFalse(indicator.IsReady);
 
-            var fields = indicator.GetType().GetProperties();
+            var fields = indicator.GetType().GetProperties()
+                .Where(x => x.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<T>)) ||
+                            x.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<TradeBar>)) ||
+                            x.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<IndicatorDataPoint>)));
             foreach (var field in fields)
             {
+                var subIndicator = field.GetValue(indicator);
+
+                if (subIndicator == null || 
+                    subIndicator is ConstantIndicator<T> || 
+                    subIndicator is ConstantIndicator<TradeBar> ||
+                    subIndicator is ConstantIndicator<IndicatorDataPoint>) 
+                    continue;
+
                 if (field.PropertyType.IsSubclassOfGeneric(typeof (IndicatorBase<T>)))
                 {
-                    var subIndicator = field.GetValue(indicator) as IndicatorBase<T>;
-                    if (subIndicator != null && !(subIndicator is ConstantIndicator<T>))
-                    {
-                        AssertIndicatorIsInDefaultState(subIndicator);
-                    }
+                    AssertIndicatorIsInDefaultState(subIndicator as IndicatorBase<T>);
+                }
+                else if (field.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<TradeBar>)))
+                {
+                    AssertIndicatorIsInDefaultState(subIndicator as IndicatorBase<TradeBar>);
+                }
+                else if (field.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<IndicatorDataPoint>)))
+                {
+                    AssertIndicatorIsInDefaultState(subIndicator as IndicatorBase<IndicatorDataPoint>);
                 }
             }
         }
