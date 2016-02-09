@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -43,18 +42,9 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ResetsProperly()
         {
-            var date = DateTime.Today;
             var rocr = new RateOfChangeRatio("ROCR", 5);
-            foreach (var data in TestHelper.GetTradeBarStream("spy_rocr.txt", false))
-            {
-                rocr.Update(date, data.Close);
-            }
-
-            Assert.IsTrue(rocr.IsReady);
-
-            rocr.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(rocr);
+        
+            TestHelper.TestIndicatorReset(rocr, "spy_rocr.txt");
         }
 
         private static void RunTestIndicator(RateOfChangeRatio rocr)
