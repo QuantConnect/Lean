@@ -14,14 +14,10 @@
 */
 
 using System;
-using System.Collections.Specialized;
-using System.Linq;
 using NUnit.Framework;
-using org.apache.avalon.framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using QuantConnect.Algorithm;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Slippage;
