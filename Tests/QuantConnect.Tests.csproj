@@ -178,6 +178,7 @@
     <Compile Include="Indicators\LeastSquaresMovingAverageTest.cs" />
     <Compile Include="Indicators\LogReturnTests.cs" />
     <Compile Include="Indicators\MomersionTests.cs" />
+    <Compile Include="Indicators\NormalizedAverageTrueRangeTests.cs" />
     <Compile Include="Indicators\OnBalanceVolumeTest.cs" />
     <Compile Include="Indicators\ParabolicStopAndReverseTests.cs" />
     <Compile Include="Indicators\T3MovingAverageTests.cs" />
@@ -367,6 +368,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_mfi.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_natr.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_ohlcv.txt">
