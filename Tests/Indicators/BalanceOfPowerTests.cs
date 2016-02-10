@@ -26,23 +26,30 @@ namespace QuantConnect.Tests.Indicators
         {
             var bop = new BalanceOfPower("BOP");
 
-            TestHelper.TestIndicator(bop, "spy_bop.txt", "BOP", (ind, expected) => Assert.AreEqual(expected, (double)bop.Current.Value, 1e-3));
+            RunTestIndicator(bop);
+        }
+
+        [Test]
+        public void ComparesAgainstExternalDataAfterReset()
+        {
+            var bop = new BalanceOfPower("BOP");
+
+            RunTestIndicator(bop);
+            bop.Reset();
+            RunTestIndicator(bop);
         }
 
         [Test]
         public void ResetsProperly()
         {
             var bop = new BalanceOfPower("BOP");
-            foreach (var data in TestHelper.GetTradeBarStream("spy_bop.txt", false))
-            {
-                bop.Update(data);
-            }
 
-            Assert.IsTrue(bop.IsReady);
+            TestHelper.TestIndicatorReset(bop, "spy_bop.txt");
+        }
 
-            bop.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(bop);
+        private static void RunTestIndicator(BalanceOfPower bop)
+        {
+            TestHelper.TestIndicator(bop, "spy_bop.txt", "BOP", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
         }
     }
 }

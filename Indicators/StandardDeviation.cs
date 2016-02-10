@@ -35,7 +35,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Initializes a new instance of the StandardDeviation class with the specified period.
+        /// Initializes a new instance of the StandardDeviation class with the specified name and period.
         /// 
         /// Evaluates the standard deviation of samples in the lookback period. 
         /// On a dataset of size N will use an N normalizer and would thus be biased if applied to a subset.

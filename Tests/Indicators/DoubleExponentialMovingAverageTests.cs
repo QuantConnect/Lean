@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -27,24 +26,30 @@ namespace QuantConnect.Tests.Indicators
         {
             var dema = new DoubleExponentialMovingAverage("DEMA", 5);
 
-            TestHelper.TestIndicator(dema, "spy_dema.txt", "DEMA_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-2));
+            RunTestIndicator(dema);
+        }
+
+        [Test]
+        public void ComparesAgainstExternalDataAfterReset()
+        {
+            var dema = new DoubleExponentialMovingAverage("DEMA", 5);
+
+            RunTestIndicator(dema);
+            dema.Reset();
+            RunTestIndicator(dema);
         }
 
         [Test]
         public void ResetsProperly()
         {
-            var date = DateTime.Today;
             var dema = new DoubleExponentialMovingAverage("DEMA", 5);
-            foreach (var data in TestHelper.GetTradeBarStream("spy_dema.txt"))
-            {
-                dema.Update(date, data.Close);
-            }
 
-            Assert.IsTrue(dema.IsReady);
+            TestHelper.TestIndicatorReset(dema, "spy_dema.txt");
+        }
 
-            dema.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(dema);
+        private static void RunTestIndicator(DoubleExponentialMovingAverage dema)
+        {
+            TestHelper.TestIndicator(dema, "spy_dema.txt", "DEMA_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-2));
         }
     }
 }

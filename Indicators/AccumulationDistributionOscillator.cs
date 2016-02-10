@@ -76,5 +76,16 @@ namespace QuantConnect.Indicators
 
             return IsReady ? _emaFast.Current.Value - _emaSlow.Current.Value : 0m;
         }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _ad.Reset();
+            _emaFast.Reset();
+            _emaSlow.Reset();
+            base.Reset();
+        }
     }
 }

@@ -27,7 +27,17 @@ namespace QuantConnect.Tests.Indicators
         {
             var std = new StandardDeviation("STD", 10);
 
-            TestHelper.TestIndicator(std, "spy_var.txt", "Var", (ind, expected) => Assert.AreEqual(Math.Sqrt(expected), (double)std.Current.Value, 1e-6));
+            RunTestIndicator(std);
+        }
+
+        [Test]
+        public void ComparesAgainstExternalDataAfterReset()
+        {
+            var std = new StandardDeviation("STD", 10);
+
+            RunTestIndicator(std);
+            std.Reset();
+            RunTestIndicator(std);
         }
 
         [Test]
@@ -65,6 +75,11 @@ namespace QuantConnect.Tests.Indicators
 
             std.Reset();
             TestHelper.AssertIndicatorIsInDefaultState(std);
+        }
+
+        private static void RunTestIndicator(StandardDeviation std)
+        {
+            TestHelper.TestIndicator(std, "spy_var.txt", "Var", (ind, expected) => Assert.AreEqual(Math.Sqrt(expected), (double)std.Current.Value, 1e-6));
         }
     }
 }
