@@ -21,12 +21,12 @@ namespace QuantConnect.Indicators
     /// EMA2 = EMA(EMA(t,period),period)
     /// DEMA = 2 * EMA(t,period) - EMA2
     /// The Generalized DEMA (GD) is calculated with the following formula:
-    /// GD = (vFactor+1) * EMA(t,period) - vFactor * EMA2
+    /// GD = (volumeFactor+1) * EMA(t,period) - volumeFactor * EMA2
     /// </summary>
     public class DoubleExponentialMovingAverage : IndicatorBase<IndicatorDataPoint>
     {
         private readonly int _period;
-        private readonly int _vFactor;
+        private readonly int _volumeFactor;
         private readonly ExponentialMovingAverage _ema1;
         private readonly ExponentialMovingAverage _ema2;
 
@@ -35,12 +35,12 @@ namespace QuantConnect.Indicators
         /// </summary> 
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the DEMA</param>
-        /// <param name="vFactor">The volume factor of the DEMA</param>
-        public DoubleExponentialMovingAverage(string name, int period, int vFactor = 1)
+        /// <param name="volumeFactor">The volume factor of the DEMA</param>
+        public DoubleExponentialMovingAverage(string name, int period, int volumeFactor = 1)
             : base(name)
         {
             _period = period;
-            _vFactor = vFactor;
+            _volumeFactor = volumeFactor;
             _ema1 = new ExponentialMovingAverage(name + "_1", period);
             _ema2 = new ExponentialMovingAverage(name + "_2", period);
         }
@@ -49,9 +49,9 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the <see cref="DoubleExponentialMovingAverage"/> class using the specified period.
         /// </summary> 
         /// <param name="period">The period of the DEMA</param>
-        /// <param name="vFactor">The volume factor of the DEMA</param>
-        public DoubleExponentialMovingAverage(int period, int vFactor = 1)
-            : this("DEMA" + period, period, vFactor)
+        /// <param name="volumeFactor">The volume factor of the DEMA</param>
+        public DoubleExponentialMovingAverage(int period, int volumeFactor = 1)
+            : this("DEMA" + period, period, volumeFactor)
         {
         }
 
@@ -71,9 +71,11 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
             _ema1.Update(input);
-            _ema2.Update(_ema1.Current);
 
-            return IsReady ? (_vFactor + 1) * _ema1 - _vFactor * _ema2 : 0m;
+            if (Samples > _period - 1)
+                _ema2.Update(_ema1.Current);
+
+            return IsReady ? (_volumeFactor + 1) * _ema1 - _volumeFactor * _ema2 : 0m;
         }
 
         /// <summary>
