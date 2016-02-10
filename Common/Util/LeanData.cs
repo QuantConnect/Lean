@@ -15,6 +15,7 @@
 
 using System;
 using System.Globalization;
+using System.IO;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -102,6 +103,28 @@ namespace QuantConnect.Util
             }
 
             return line;
+        }
+
+        /// <summary>
+        /// Generates the full zip file path rooted in the <paramref name="dataDirectory"/>
+        /// </summary>
+        public static string GenerateZipFilePath(string dataDirectory, Symbol symbol, DateTime date, Resolution resolution)
+        {
+            return GenerateZipFilePath(dataDirectory, symbol.Value, symbol.ID.SecurityType, symbol.ID.Market, date, resolution);
+        }
+
+        /// <summary>
+        /// Generates the full zip file path rooted in the <paramref name="dataDirectory"/>
+        /// </summary>
+        public static string GenerateZipFilePath(string dataDirectory, string symbol, SecurityType securityType, string market, DateTime date, Resolution resolution)
+        {
+            var directory = Path.Combine(dataDirectory, securityType.ToString().ToLower(), market.ToLower(), resolution.ToString().ToLower());
+            if (resolution != Resolution.Daily && resolution != Resolution.Hour)
+            {
+                directory = Path.Combine(directory, symbol.ToLower());
+            }
+
+            return Path.Combine(directory, GenerateZipFileName(symbol, securityType, date, resolution));
         }
 
         /// <summary>
