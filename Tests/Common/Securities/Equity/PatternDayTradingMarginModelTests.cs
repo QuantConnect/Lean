@@ -16,6 +16,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -60,15 +61,19 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             security.MarginModel = new PatternDayTradingMarginModel();
 
             model.SetLeverage(security, 10m);
-            Assert.AreNotEqual(10m, model.GetLeverage(security));
+            var actual = model.GetLeverage(security);
+
+            Assert.AreEqual(4m, actual);
+            Assert.AreNotEqual(10m, actual);
             
             // Closed market
             security = CreateSecurity(Midnight);
             
             model.SetLeverage(security, 10m);
-            Assert.AreNotEqual(10m, model.GetLeverage(security));
+            actual = model.GetLeverage(security);
 
-            security.Holdings.SetHoldings(100m, 100);
+            Assert.AreEqual(2m, actual);
+            Assert.AreNotEqual(10m, actual);
         }
 
         [Test]
@@ -179,64 +184,6 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             security.Holdings.SetHoldings(100m, 100);
 
             Assert.AreEqual((double)100 * 100 / 2, (double)model.GetMaintenanceMargin(security), 1e-3);
-        }
-
-        [Test]
-        public void VerifyMarginCallOrderLong()
-        {
-            var netLiquidationValue = 5000m;
-            var totalMargin = 10000m;
-            var securityPrice = 100m;
-            var quantity = 300;
-
-            var model = new PatternDayTradingMarginModel();
-
-            // Open Market
-            var security = CreateSecurity(Noon);
-            security.Holdings.SetHoldings(securityPrice, quantity);
-
-            var expected = -(int) (Math.Round((totalMargin - netLiquidationValue)/securityPrice, MidpointRounding.AwayFromZero)*4m);
-            var actual = model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
-
-            Assert.AreEqual(expected, actual);
-
-            // Closed Market
-            security = CreateSecurity(Midnight);
-            security.Holdings.SetHoldings(securityPrice, quantity);
-
-            expected = -(int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 2m);
-            actual = model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
-
-            Assert.AreEqual(expected, actual);
-        }
-
-        [Test]
-        public void VerifyMarginCallOrderShort()
-        {
-            var netLiquidationValue = 5000m;
-            var totalMargin = 10000m;
-            var securityPrice = 100m;
-            var quantity = -300;
-
-            var model = new PatternDayTradingMarginModel();
-
-            // Open Market
-            var security = CreateSecurity(Noon);
-            security.Holdings.SetHoldings(securityPrice, quantity);
-
-            var expected = (int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 4m);
-            var actual = model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
-
-            Assert.AreEqual(expected, actual);
-
-            // Closed Market
-            security = CreateSecurity(Midnight);
-            security.Holdings.SetHoldings(securityPrice, quantity);
-
-            expected = (int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 2m);
-            actual = model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
-
-            Assert.AreEqual(expected, actual);
         }
 
         private static Security CreateSecurity(DateTime newLocalTime)
