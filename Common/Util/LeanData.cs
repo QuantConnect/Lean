@@ -118,7 +118,23 @@ namespace QuantConnect.Util
         /// </summary>
         public static string GenerateZipFilePath(string dataDirectory, string symbol, SecurityType securityType, string market, DateTime date, Resolution resolution)
         {
-            var directory = Path.Combine(dataDirectory, securityType.ToString().ToLower(), market.ToLower(), resolution.ToString().ToLower());
+            return Path.Combine(dataDirectory, GeneateRelativeZipFilePath(symbol, securityType, market, date, resolution));
+        }
+
+        /// <summary>
+        /// Generates the relative zip file path rooted in the /Data directory
+        /// </summary>
+        public static string GeneateRelativeZipFilePath(Symbol symbol, DateTime date, Resolution resolution)
+        {
+            return GeneateRelativeZipFilePath(symbol.Value, symbol.ID.SecurityType, symbol.ID.Market, date, resolution);
+        }
+
+        /// <summary>
+        /// Generates the relative zip file path rooted in the /Data directory
+        /// </summary>
+        public static string GeneateRelativeZipFilePath(string symbol, SecurityType securityType, string market, DateTime date, Resolution resolution)
+        {
+            var directory = Path.Combine(securityType.ToString().ToLower(), market.ToLower(), resolution.ToString().ToLower());
             if (resolution != Resolution.Daily && resolution != Resolution.Hour)
             {
                 directory = Path.Combine(directory, symbol.ToLower());
