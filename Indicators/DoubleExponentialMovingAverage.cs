@@ -72,10 +72,12 @@ namespace QuantConnect.Indicators
         {
             _ema1.Update(input);
 
-            if (Samples > _period - 1)
-                _ema2.Update(_ema1.Current);
+            if (Samples <= _period - 1)
+                return _ema1;
 
-            return IsReady ? (_volumeFactor + 1) * _ema1 - _volumeFactor * _ema2 : 0m;
+            _ema2.Update(_ema1.Current);
+
+            return (_volumeFactor + 1) * _ema1 - _volumeFactor * _ema2;
         }
 
         /// <summary>

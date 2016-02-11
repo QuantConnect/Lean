@@ -72,13 +72,17 @@ namespace QuantConnect.Indicators
         {
             _gd1.Update(input);
 
-            if (Samples > 2 * (_period - 1))
-                _gd2.Update(_gd1.Current);
+            if (Samples <= 2 * (_period - 1))
+                return _gd1;
 
-            if (Samples > 4 * (_period - 1))
-                _gd3.Update(_gd2.Current);
+            _gd2.Update(_gd1.Current);
 
-            return IsReady ? _gd3 : 0m;
+            if (Samples <= 4 * (_period - 1))
+                return _gd2;
+
+            _gd3.Update(_gd2.Current);
+
+            return _gd3;
         }
 
         /// <summary>
