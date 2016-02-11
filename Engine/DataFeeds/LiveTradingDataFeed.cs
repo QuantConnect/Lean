@@ -399,9 +399,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var refresher = new RefreshEnumerator<BaseData>(() =>
                     {
                         var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
-                        var currentLocalDate = DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone).Date;
-                        var factory = new BaseDataSubscriptionFactory(config, currentLocalDate, true);
-                        var source = sourceProvider.GetSource(config, currentLocalDate, true);
+                        var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
+                        var factory = new BaseDataSubscriptionFactory(config, dateInDataTimeZone, true);
+                        var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
                         var factoryReadEnumerator = factory.Read(source).GetEnumerator();
                         var maximumDataAge = TimeSpan.FromTicks(Math.Max(config.Increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
                         var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, security.Exchange.TimeZone, maximumDataAge);
@@ -528,9 +528,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var refresher = new RefreshEnumerator<BaseDataCollection>(() =>
                 {
                     var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
-                    var currentLocalDate = DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone).Date;
-                    var factory = new BaseDataSubscriptionFactory(config, currentLocalDate, true);
-                    var source = sourceProvider.GetSource(config, currentLocalDate, true);
+                    var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
+                    var factory = new BaseDataSubscriptionFactory(config, dateInDataTimeZone, true);
+                    var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
                     var factorEnumerator = factory.Read(source).GetEnumerator();
                     var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, security.Exchange.TimeZone, config.Increment);
                     var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, tzOffsetProvider);

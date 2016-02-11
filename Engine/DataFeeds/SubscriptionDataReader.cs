@@ -117,7 +117,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="resultHandler">Result handler used to push error messages and perform sampling on skipped days</param>
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
         /// <param name="factorFileProvider">Used for getting factor files</param>
-        /// <param name="tradeableDates">Defines the dates for which we'll request data, in order</param>
+        /// <param name="tradeableDates">Defines the dates for which we'll request data, in order, in the security's exchange time zone</param>
         /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
         /// <param name="includeAuxilliaryData">True if we want to emit aux data, false to only emit price data</param>
         public SubscriptionDataReader(SubscriptionDataConfig config,
@@ -362,8 +362,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return null;
                 }
 
-                // fetch the new source
-                var newSource = _dataFactory.GetSource(_config, date, _isLiveMode);
+                // fetch the new source, using the data time zone for the date
+                var dateInDataTimeZone = date.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone);
+                var newSource = _dataFactory.GetSource(_config, dateInDataTimeZone, _isLiveMode);
 
                 // check if we should create a new subscription factory
                 var sourceChanged = _source != newSource && newSource.Source != "";
@@ -413,7 +414,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private ISubscriptionFactory HandleCsvFileFormat(SubscriptionDataSource source)
         {
-            var factory = new BaseDataSubscriptionFactory(_config, _tradeableDates.Current, _isLiveMode);
+            // convert the date to the data time zone 
+            var dateInDataTimeZone = _tradeableDates.Current.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date;
+            var factory = new BaseDataSubscriptionFactory(_config, dateInDataTimeZone, _isLiveMode);
 
             // handle missing files
             factory.InvalidSource += (sender, args) =>
