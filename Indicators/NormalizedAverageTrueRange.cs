@@ -71,7 +71,7 @@ namespace QuantConnect.Indicators
             if (!IsReady)
             {
                 _atr.Update(input);
-                return 0m;
+                return _atr / input.Close * 100;
             }
 
             if (Samples == _period + 1)
