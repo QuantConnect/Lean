@@ -234,32 +234,10 @@ namespace QuantConnect.ToolBox
         /// </summary>
         /// <param name="baseDirectory">Base output directory for the zip file</param>
         /// <param name="time">Date/time for the data we're writing</param>
-        /// <returns></returns>
+        /// <returns>The full path to the output zip file</returns>
         private string GetZipOutputFileName(string baseDirectory, DateTime time)
         {
-            string file;
-
-            // Further determine path based on the remaining data: security type
-            switch (_securityType)
-            {
-                case SecurityType.Equity:
-                case SecurityType.Forex:
-                case SecurityType.Cfd:
-                    if (_resolution == Resolution.Daily || _resolution == Resolution.Hour)
-                    {
-                        file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), LeanData.GenerateZipFileName(_symbol.Value, _securityType, time, _resolution));
-                    }
-                    else
-                    {
-                        file = Path.Combine(baseDirectory, _resolution.ToString().ToLower(), _symbol.Value.ToLower(), LeanData.GenerateZipFileName(_symbol.Value, _securityType, time, _resolution));
-                    }
-                    break;
-
-                default:
-                    throw new Exception("Sorry this security type is not yet supported by the LEAN data writer: " + _securityType);
-            }
-
-            return file;
+            return LeanData.GenerateZipFilePath(baseDirectory, _symbol.Value, _securityType, _market, time, _resolution);
         }
 
     }
