@@ -822,7 +822,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The T3MovingAverage indicator for the requested symbol over the specified period</returns>
-        public T3MovingAverage T3(Symbol symbol, int period, int volumeFactor, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        public T3MovingAverage T3(Symbol symbol, int period, int volumeFactor = 1, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
         {
             var name = CreateIndicatorName(symbol, string.Format("T3({0},{1})", period, volumeFactor), resolution);
             var t3 = new T3MovingAverage(name, period, volumeFactor);
