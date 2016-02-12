@@ -824,19 +824,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     _algorithm.Portfolio.ProcessFill(fill);
 
-                    var conversionRate = 1m;
-                    if (order.SecurityType == SecurityType.Forex)
-                    {
-                        string baseCurrency, quoteCurrency;
-                        Forex.DecomposeCurrencyPair(fill.Symbol.Value, out baseCurrency, out quoteCurrency);
-                        conversionRate = _algorithm.Portfolio.CashBook[quoteCurrency].ConversionRate;
-                    }
-                    else if (order.SecurityType == SecurityType.Cfd)
-                    {
-                        var cfd = (Cfd)_algorithm.Securities[fill.Symbol];
-                        var quoteCurrency = cfd.QuoteCurrency.Symbol;
-                        conversionRate = _algorithm.Portfolio.CashBook[quoteCurrency].ConversionRate;
-                    }
+                    var security = _algorithm.Securities[fill.Symbol];
+                    var conversionRate = security.QuoteCurrency.ConversionRate;
 
                     _algorithm.TradeBuilder.ProcessFill(fill, conversionRate);
                 }

@@ -93,23 +93,13 @@ namespace QuantConnect
             Symbol = holding.Symbol;
             Type = holding.Type;
             Quantity = holding.Quantity;
+            CurrencySymbol = Currencies.CurrencySymbols[security.QuoteCurrency.Symbol];
+            ConversionRate = security.QuoteCurrency.ConversionRate;
 
             var rounding = 2;
-            if (holding.Type == SecurityType.Forex)
+            if (holding.Type == SecurityType.Forex || holding.Type == SecurityType.Cfd)
             {
                 rounding = 5;
-                string basec, quotec;
-                Forex.DecomposeCurrencyPair(holding.Symbol.Value, out basec, out quotec);
-                CurrencySymbol = Currencies.CurrencySymbols[quotec];
-                ConversionRate = ((ForexHolding) holding).ConversionRate;
-            }
-            else if (holding.Type == SecurityType.Cfd)
-            {
-                rounding = 5;
-                var cfd = (Cfd)security;
-                var quotec =  cfd.QuoteCurrency.Symbol;
-                CurrencySymbol = Currencies.CurrencySymbols[quotec];
-                ConversionRate = ((CfdHolding)holding).ConversionRate;
             }
 
             AveragePrice = Math.Round(holding.AveragePrice, rounding);
