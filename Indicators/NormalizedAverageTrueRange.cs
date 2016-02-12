@@ -71,7 +71,7 @@ namespace QuantConnect.Indicators
             if (!IsReady)
             {
                 _atr.Update(input);
-                return _atr / input.Close * 100;
+                return input.Close != 0 ? _atr / input.Close * 100 : 0m;
             }
 
             if (Samples == _period + 1)
@@ -86,7 +86,7 @@ namespace QuantConnect.Indicators
                 _lastAtrValue = (_lastAtrValue * (_period - 1) + _tr) / _period;
             }
 
-            return _lastAtrValue / input.Close * 100;
+            return input.Close != 0 ? _lastAtrValue / input.Close * 100 : 0m;
         }
 
         /// <summary>
