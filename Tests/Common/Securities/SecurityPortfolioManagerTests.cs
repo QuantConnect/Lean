@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Common.Securities
             // we're going to process fills and very our equity after each fill
             var subscriptions = new SubscriptionManager(TimeKeeper);
             var securities = new SecurityManager(TimeKeeper);
-            var security = new Security(SecurityExchangeHours, subscriptions.Add(CASH, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork), new Cash(CashBook.AccountCurrency, 0, 1m));
+            var security = new Security(SecurityExchangeHours, subscriptions.Add(CASH, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             security.SetLeverage(10m);
             securities.Add(CASH, security);
             var transactions = new SecurityTransactionManager(securities);
@@ -153,11 +153,11 @@ namespace QuantConnect.Tests.Common.Securities
             var mchCash = portfolio.CashBook["MCH"];
             var usdCash = portfolio.CashBook["USD"];
 
-            var mchJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, jwbCash, subscriptions.Add(MCHJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork));
+            var mchJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, jwbCash, subscriptions.Add(MCHJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             mchJwbSecurity.SetLeverage(10m);
-            var mchUsdSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, subscriptions.Add(MCHUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork));
+            var mchUsdSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, subscriptions.Add(MCHUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             mchUsdSecurity.SetLeverage(10m);
-            var usdJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, mchCash, subscriptions.Add(USDJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork));
+            var usdJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, mchCash, subscriptions.Add(USDJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             usdJwbSecurity.SetLeverage(10m);
             
             // no fee model
@@ -236,7 +236,7 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.CashBook["USD"].SetAmount(quantity);
 
             var config = CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL);
-            securities.Add(new Security(SecurityExchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m)));
+            securities.Add(new Security(SecurityExchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             var security = securities[Symbols.AAPL];
             security.SetLeverage(leverage);
 
@@ -328,7 +328,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var time = DateTime.Now;
             var config1 = CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL);
-            securities.Add(new Security(SecurityExchangeHours, config1, new Cash(CashBook.AccountCurrency, 0, 1m)));
+            securities.Add(new Security(SecurityExchangeHours, config1, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             securities[Symbols.AAPL].SetLeverage(2m);
             securities[Symbols.AAPL].Holdings.SetHoldings(100, 100);
             securities[Symbols.AAPL].SetMarketPrice(new TradeBar{Time = time, Value = 100});
@@ -338,7 +338,7 @@ namespace QuantConnect.Tests.Common.Securities
             //Console.WriteLine();
 
             var config2 = CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURUSD);
-            securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, config2));
+            securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, config2, SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             securities[Symbols.EURUSD].SetLeverage(100m);
             securities[Symbols.EURUSD].Holdings.SetHoldings(1.1m, 1000);
             securities[Symbols.EURUSD].SetMarketPrice(new TradeBar { Time = time, Value = 1.1m });
@@ -348,7 +348,7 @@ namespace QuantConnect.Tests.Common.Securities
             //Console.WriteLine();
 
             var config3 = CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURGBP);
-            securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, gbpCash, config3));
+            securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, gbpCash, config3, SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             securities[Symbols.EURGBP].SetLeverage(100m);
             securities[Symbols.EURGBP].Holdings.SetHoldings(1m, 1000);
             securities[Symbols.EURGBP].SetMarketPrice(new TradeBar { Time = time, Value = 1m });
@@ -390,7 +390,7 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.SetCash(0);
 
-            securities.Add(Symbols.AAPL, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL), new Cash(CashBook.AccountCurrency, 0, 1m)));
+            securities.Add(Symbols.AAPL, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
 
             var fill = new OrderEvent(1, Symbols.AAPL, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell,  100, -100, 0);
             portfolio.ProcessFill(fill);
@@ -407,7 +407,7 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.SetCash(0);
 
-            securities.Add(Symbols.AAPL, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL), new Cash(CashBook.AccountCurrency, 0, 1m)));
+            securities.Add(Symbols.AAPL, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             securities[Symbols.AAPL].Holdings.SetHoldings(100, 100);
 
             var fill = new OrderEvent(1, Symbols.AAPL, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell,  100, -100, 0);
@@ -425,7 +425,7 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.SetCash(0);
 
-            securities.Add(Symbols.AAPL, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL), new Cash(CashBook.AccountCurrency, 0, 1m)));
+            securities.Add(Symbols.AAPL, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             securities[Symbols.AAPL].Holdings.SetHoldings(100, -100);
 
             var fill = new OrderEvent(1, Symbols.AAPL, DateTime.MinValue,  OrderStatus.Filled, OrderDirection.Sell,  100, -100, 0);
@@ -445,7 +445,7 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(1000);
             portfolio.CashBook.Add("EUR", 0, 1.1000m);
 
-            securities.Add(Symbols.EURUSD, new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, portfolio.CashBook["USD"], CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURUSD)));
+            securities.Add(Symbols.EURUSD, new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, portfolio.CashBook["USD"], CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURUSD), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             var security = securities[Symbols.EURUSD];
             Assert.AreEqual(0, security.Holdings.Quantity);
             Assert.AreEqual(1000, portfolio.Cash);
@@ -467,7 +467,7 @@ namespace QuantConnect.Tests.Common.Securities
             var transactions = new SecurityTransactionManager(securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.SetCash(1000);
-            securities.Add(Symbols.AAPL, new QuantConnect.Securities.Equity.Equity(securityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL), new Cash(CashBook.AccountCurrency, 0, 1m)));
+            securities.Add(Symbols.AAPL, new QuantConnect.Securities.Equity.Equity(securityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             var security = securities[Symbols.AAPL];
             security.SettlementModel = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
             Assert.AreEqual(0, security.Holdings.Quantity);

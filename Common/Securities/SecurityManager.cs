@@ -335,7 +335,7 @@ namespace QuantConnect.Securities
             switch (config.SecurityType)
             {
                 case SecurityType.Equity:
-                    security = new Equity.Equity(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency]);
+                    security = new Equity.Equity(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
                     break;
 
                 case SecurityType.Forex:
@@ -354,7 +354,7 @@ namespace QuantConnect.Securities
                             // since we have none it's safe to say the conversion is zero
                             securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
                         }
-                        security = new Forex.Forex(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config);
+                        security = new Forex.Forex(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, symbolProperties);
                     }
                     break;
 
@@ -373,7 +373,7 @@ namespace QuantConnect.Securities
 
                 default:
                 case SecurityType.Base:
-                    security = new Security(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency]);
+                    security = new Security(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
                     break;
             }
 
@@ -412,7 +412,6 @@ namespace QuantConnect.Securities
             var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
 
-            // only used in CFD security type, for now
             var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
 
             var tradeBarType = typeof(TradeBar);

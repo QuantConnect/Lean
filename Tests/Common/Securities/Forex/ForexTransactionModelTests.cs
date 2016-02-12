@@ -245,7 +245,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         private Security CreateSecurity()
         {
             var config = CreateTradeBarDataConfig(SecurityType.Forex);
-            var security = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), new Cash("abc", 0, 0), config);
+            var security = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), new Cash("abc", 0, 0), config, SymbolProperties.GetDefault(CashBook.AccountCurrency));
             return security;
         }
     }

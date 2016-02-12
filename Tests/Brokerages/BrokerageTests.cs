@@ -140,7 +140,7 @@ namespace QuantConnect.Tests.Brokerages
                 // by brokerages to track holdings
                 SecurityProvider[accountHolding.Symbol] = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                     new SubscriptionDataConfig(typeof (TradeBar), accountHolding.Symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
-                    new Cash(CashBook.AccountCurrency, 0, 1m));
+                    new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             }
             brokerage.OrderStatusChanged += (sender, args) =>
             {
@@ -170,7 +170,7 @@ namespace QuantConnect.Tests.Brokerages
                         {
                             _securityProvider[args.Symbol] = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                                 new SubscriptionDataConfig(typeof (TradeBar), args.Symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
-                                new Cash(CashBook.AccountCurrency, 0, 1m));
+                                new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
                             _securityProvider[args.Symbol].Holdings.SetHoldings(args.FillPrice, args.FillQuantity);
                         }
                     }

@@ -37,6 +37,7 @@ namespace QuantConnect.Securities.Cfd
         public Cfd(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config, SymbolProperties symbolProperties)
             : base(config,
                 quoteCurrency,
+                symbolProperties,
                 new CfdExchange(exchangeHours),
                 new CfdCache(),
                 new CfdPortfolioModel(),

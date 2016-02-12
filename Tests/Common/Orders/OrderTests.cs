@@ -48,11 +48,11 @@ namespace QuantConnect.Tests.Common.Orders
 
             var time = new DateTime(2016, 2, 4, 16, 0, 0).ConvertToUtc(tz);
 
-            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m));
+            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             equity.SetMarketPrice(new Tick {Value = price});
 
             var gbpCash = new Cash("GBP", 0, 1.46m);
-            var forex = new Forex(SecurityExchangeHours.AlwaysOpen(tz), gbpCash, new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false));
+            var forex = new Forex(SecurityExchangeHours.AlwaysOpen(tz), gbpCash, new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             forex.SetMarketPrice(new Tick {Value= price});
 
             var eurCash = new Cash("EUR", 0, 1.12m);

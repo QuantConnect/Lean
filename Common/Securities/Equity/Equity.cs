@@ -40,10 +40,11 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
-        public Equity(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency)
+        public Equity(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties)
             : base(
                 config,
                 quoteCurrency,
+                symbolProperties,
                 new EquityExchange(exchangeHours),
                 new EquityCache(),
                 new EquityPortfolioModel(),

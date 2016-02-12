@@ -268,9 +268,10 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency)
+        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties)
             : this(config,
                 quoteCurrency,
+                symbolProperties,
                 new SecurityExchange(exchangeHours),
                 new SecurityCache(),
                 new SecurityPortfolioModel(),
@@ -288,6 +289,7 @@ namespace QuantConnect.Securities
         /// </summary>
         protected Security(SubscriptionDataConfig config,
             Cash quoteCurrency,
+            SymbolProperties symbolProperties,
             SecurityExchange exchange,
             SecurityCache cache,
             ISecurityPortfolioModel portfolioModel,
