@@ -35,8 +35,8 @@ namespace QuantConnect.Indicators
         /// </summary> 
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the T3MovingAverage</param>
-        /// <param name="volumeFactor">The volume factor of the T3MovingAverage</param>
-        public T3MovingAverage(string name, int period, int volumeFactor) 
+        /// <param name="volumeFactor">The volume factor of the T3MovingAverage (value must be in the [0,1] range)</param>
+        public T3MovingAverage(string name, int period, decimal volumeFactor) 
             : base(name)
         {
             _period = period;
@@ -49,8 +49,8 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the <see cref="T3MovingAverage"/> class using the specified period.
         /// </summary> 
         /// <param name="period">The period of the T3MovingAverage</param>
-        /// <param name="volumeFactor">The volume factor of the T3MovingAverage</param>
-        public T3MovingAverage(int period, int volumeFactor)
+        /// <param name="volumeFactor">The volume factor of the T3MovingAverage (value must be in the [0,1] range)</param>
+        public T3MovingAverage(int period, decimal volumeFactor)
             : this(string.Format("T3({0},{1})", period, volumeFactor), period, volumeFactor)
         {
         }

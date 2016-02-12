@@ -55,7 +55,7 @@ namespace QuantConnect.Indicators
                     return new TriangularMovingAverage(period);
 
                 case MovingAverageType.T3:
-                    return new T3MovingAverage(period, 1);
+                    return new T3MovingAverage(period, 0.7m);
 
                 default:
                     throw new ArgumentOutOfRangeException("movingAverageType");
@@ -96,7 +96,7 @@ namespace QuantConnect.Indicators
                     return new TriangularMovingAverage(name, period);
 
                 case MovingAverageType.T3:
-                    return new T3MovingAverage(name, period, 1);
+                    return new T3MovingAverage(name, period, 0.7m);
 
                 default:
                     throw new ArgumentOutOfRangeException("movingAverageType");

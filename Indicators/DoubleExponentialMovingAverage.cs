@@ -26,7 +26,7 @@ namespace QuantConnect.Indicators
     public class DoubleExponentialMovingAverage : IndicatorBase<IndicatorDataPoint>
     {
         private readonly int _period;
-        private readonly int _volumeFactor;
+        private readonly decimal _volumeFactor;
         private readonly ExponentialMovingAverage _ema1;
         private readonly ExponentialMovingAverage _ema2;
 
@@ -35,8 +35,8 @@ namespace QuantConnect.Indicators
         /// </summary> 
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the DEMA</param>
-        /// <param name="volumeFactor">The volume factor of the DEMA</param>
-        public DoubleExponentialMovingAverage(string name, int period, int volumeFactor = 1)
+        /// <param name="volumeFactor">The volume factor of the DEMA (value must be in the [0,1] range, set to 1 for standard DEMA)</param>
+        public DoubleExponentialMovingAverage(string name, int period, decimal volumeFactor = 1m)
             : base(name)
         {
             _period = period;
@@ -49,8 +49,8 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the <see cref="DoubleExponentialMovingAverage"/> class using the specified period.
         /// </summary> 
         /// <param name="period">The period of the DEMA</param>
-        /// <param name="volumeFactor">The volume factor of the DEMA</param>
-        public DoubleExponentialMovingAverage(int period, int volumeFactor = 1)
+        /// <param name="volumeFactor">The volume factor of the DEMA (value must be in the [0,1] range, set to 1 for standard DEMA)</param>
+        public DoubleExponentialMovingAverage(int period, decimal volumeFactor = 1m)
             : this("DEMA" + period, period, volumeFactor)
         {
         }

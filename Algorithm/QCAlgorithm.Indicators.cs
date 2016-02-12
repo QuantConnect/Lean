@@ -818,11 +818,11 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose T3 we want</param>
         /// <param name="period">The period over which to compute the T3</param>
-        /// <param name="volumeFactor">The volume factor to be used for the T3</param>
+        /// <param name="volumeFactor">The volume factor to be used for the T3 (value must be in the [0,1] range, defaults to 0.7)</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The T3MovingAverage indicator for the requested symbol over the specified period</returns>
-        public T3MovingAverage T3(Symbol symbol, int period, int volumeFactor = 1, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        public T3MovingAverage T3(Symbol symbol, int period, decimal volumeFactor = 0.7m, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
         {
             var name = CreateIndicatorName(symbol, string.Format("T3({0},{1})", period, volumeFactor), resolution);
             var t3 = new T3MovingAverage(name, period, volumeFactor);
