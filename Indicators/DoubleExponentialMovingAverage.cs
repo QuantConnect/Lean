@@ -72,7 +72,7 @@ namespace QuantConnect.Indicators
         {
             _ema1.Update(input);
 
-            if (Samples <= _period - 1)
+            if (!_ema1.IsReady)
                 return _ema1;
 
             _ema2.Update(_ema1.Current);
