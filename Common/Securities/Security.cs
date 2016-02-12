@@ -57,6 +57,14 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the symbol properties for this security
+        /// </summary>
+        public SymbolProperties SymbolProperties
+        {
+            get; private set;
+        }
+
+        /// <summary>
         /// Type of the security.
         /// </summary>
         /// <remarks>
@@ -303,6 +311,7 @@ namespace QuantConnect.Securities
         {
             _config = config;
             QuoteCurrency = quoteCurrency;
+            SymbolProperties = symbolProperties;
             Cache = cache;
             Exchange = exchange;
             DataFilter = dataFilter;

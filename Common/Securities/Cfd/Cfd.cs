@@ -50,7 +50,6 @@ namespace QuantConnect.Securities.Cfd
                 )
         {
             Holdings = new CfdHolding(this);
-            SymbolProperties = symbolProperties;
 
             if (symbolProperties == null)
                 throw new ArgumentException("CFD requires a valid SymbolProperties argument");
@@ -58,12 +57,6 @@ namespace QuantConnect.Securities.Cfd
             if (symbolProperties.QuoteCurrency != quoteCurrency.Symbol)
                 throw new ArgumentException("CFD SymbolProperties.QuoteCurrency and QuoteCurrency.Symbol do not match.");
         }
-
-        /// <summary>
-        /// Gets the symbol properties for this security
-        /// </summary>
-        /// <remarks>Could possibly be moved to the base Security class</remarks>
-        public SymbolProperties SymbolProperties { get; private set; }
 
         /// <summary>
         /// Gets the quote currency for this CFD security
