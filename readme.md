@@ -67,30 +67,36 @@ If you are running MonoDevelop:
 
 Run the compiled `exe` file. For the time being you need to run the `exe` in the same path as your current working directory:
 ```
-cd Lean/Engine/bin/Debug
-mono ./QuantConnect.Lean.exe
+cd Lean/Launcher/bin/Debug
+mono ./QuantConnect.Launcher.Lean.exe
 ```
 ### Linux (Debian, Ubuntu)
 
-Setup Mono GPG signing key ([instructions here](http://www.mono-project.com/docs/getting-started/install/linux/#usage)).
+Setup Mono GPG signing key ([instructions here](http://www.mono-project.com/docs/getting-started/install/linux/)).
 
-Install dependencies:
+Install dependencies, MonoDevelop, Git and NuGet:
 ```
-sudo apt-get install mono-complete mono-vbnc monodevelop fsharp
+sudo apt-get install mono-complete mono-vbnc fsharp monodevelop monodevelop-nunit  git nuget 
 ```
-Clone the repo then compile:
+Clone the repo:
 ```
 git clone git@github.com:QuantConnect/Lean.git
 cd Lean
+```
+Like OSX, Linux does not fully support Visual Basic. You will need to remove this project from the solution for them to build properly. Alternatively modify the target framework:
+```
+sed -i 's/4.5/4.0' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj
+```
+Restore NuGet packages then compile:
+```
+nuget restore QuantConnect.Lean.sln
 mdtool build
 ```
-
 Run the compiled `exe` file. For the time being you need to run the `exe` in the same path as your current working directory:
 ```
-cd Lean/Engine/bin/Debug
-./QuantConnect.Lean.exe
+cd Lean/Launcher/bin/Debug
+./QuantConnect.Lean.Launcher.exe
 ```
-
 ### Windows
 
 - Install [Visual Studio](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
