@@ -48,7 +48,6 @@ namespace QuantConnect.Securities.Cfd
                 new CfdDataFilter()
                 )
         {
-            QuoteCurrency = quoteCurrency;
             Holdings = new CfdHolding(this);
             SymbolProperties = symbolProperties;
 
@@ -58,11 +57,6 @@ namespace QuantConnect.Securities.Cfd
             if (symbolProperties.QuoteCurrency != quoteCurrency.Symbol)
                 throw new ArgumentException("CFD SymbolProperties.QuoteCurrency and QuoteCurrency.Symbol do not match.");
         }
-
-        /// <summary>
-        /// Gets the Cash object used for converting the quote currency to the account currency
-        /// </summary>
-        public Cash QuoteCurrency { get; private set; }
 
         /// <summary>
         /// Gets the symbol properties for this security

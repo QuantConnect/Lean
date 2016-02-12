@@ -47,7 +47,6 @@ namespace QuantConnect.Securities.Forex
                 new ForexDataFilter()
                 )
         {
-            QuoteCurrency = quoteCurrency;
             Holdings = new ForexHolding(this);
 
             // decompose the symbol into each currency pair
@@ -56,11 +55,6 @@ namespace QuantConnect.Securities.Forex
             BaseCurrencySymbol = baseCurrencySymbol;
             QuoteCurrencySymbol = quoteCurrencySymbol;
         }
-
-        /// <summary>
-        /// Gets the Cash object used for converting the quote currency to the account currency
-        /// </summary>
-        public Cash QuoteCurrency { get; private set; }
 
         /// <summary>
         /// Gets the currency acquired by going long this currency pair

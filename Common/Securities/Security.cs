@@ -47,7 +47,15 @@ namespace QuantConnect.Securities
                 return _config.Symbol;
             }
         }
-        
+
+        /// <summary>
+        /// Gets the Cash object used for converting the quote currency to the account currency
+        /// </summary>
+        public Cash QuoteCurrency
+        {
+            get; private set;
+        }
+
         /// <summary>
         /// Type of the security.
         /// </summary>
@@ -292,6 +300,7 @@ namespace QuantConnect.Securities
             )
         {
             _config = config;
+            QuoteCurrency = quoteCurrency;
             Cache = cache;
             Exchange = exchange;
             DataFilter = dataFilter;
