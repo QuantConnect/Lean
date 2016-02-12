@@ -27,22 +27,6 @@ namespace QuantConnect.Securities
         private decimal _maintenanceMarginRequirement;
 
         /// <summary>
-        /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
-        /// </summary>
-        protected virtual decimal GetInitialMarginRequirement(Security security)
-        {
-            return _initialMarginRequirement;
-        }
-
-        /// <summary>
-        /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
-        /// </summary>
-        protected virtual decimal GetMaintenanceMarginRequirement(Security security)
-        {
-            return _maintenanceMarginRequirement;
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="SecurityMarginModel"/>
         /// </summary>
         /// <param name="initialMarginRequirement">The percentage of an order's absolute cost
@@ -216,6 +200,22 @@ namespace QuantConnect.Securities
             }
 
             return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), "Margin Call");
+        }
+
+        /// <summary>
+        /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
+        /// </summary>
+        protected virtual decimal GetInitialMarginRequirement(Security security)
+        {
+            return _initialMarginRequirement;
+        }
+
+        /// <summary>
+        /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
+        /// </summary>
+        protected virtual decimal GetMaintenanceMarginRequirement(Security security)
+        {
+            return _maintenanceMarginRequirement;
         }
     }
 }
