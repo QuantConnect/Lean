@@ -54,11 +54,7 @@ namespace QuantConnect.Securities
                 if (!_entries.TryGetValue(new SecurityDatabaseKey(market, null, securityType), out symbolProperties))
                 {
                     // no properties found, return object with default property values
-                    return new SymbolProperties(
-                        description: "", 
-                        quoteCurrency: "USD", 
-                        contractMultiplier: 1m,
-                        pipSize: 0.01m);
+                    return SymbolProperties.GetDefault(CashBook.AccountCurrency);
                 }
             }
 
