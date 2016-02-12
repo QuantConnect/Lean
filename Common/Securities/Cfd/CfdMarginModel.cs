@@ -47,7 +47,7 @@ namespace QuantConnect.Securities.Cfd
             var orderFees = security.FeeModel.GetOrderFee(security, order);
             
             var orderCostInAccountCurrency = order.GetValue(security);
-            return orderCostInAccountCurrency * InitialMarginRequirement + orderFees;
+            return orderCostInAccountCurrency * GetInitialMarginRequirement(security) + orderFees;
         }
 
         /// <summary>
