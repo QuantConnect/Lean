@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using System.IO;
 using System.Linq;
+using System.Text;
 using NUnit.Framework;
 
 namespace QuantConnect.Tests.Compression
@@ -30,6 +32,19 @@ namespace QuantConnect.Tests.Compression
             int actual = QuantConnect.Compression.ReadLines(file).Count();
 
             Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void ZipBytes()
+        {
+            const string fileContents = "this is the contents of a file!";
+            var fileBytes = Encoding.ASCII.GetBytes(fileContents); // using asci because UnzipData uses 1byte=1char
+            var zippedBytes = QuantConnect.Compression.ZipBytes(fileBytes, "entry");
+            File.WriteAllBytes("entry.zip", zippedBytes);
+            var unzipped = QuantConnect.Compression.Unzip("entry.zip").ToList();
+            Assert.AreEqual(1, unzipped.Count);
+            Assert.AreEqual("entry", unzipped[0].Key);
+            Assert.AreEqual(fileContents, unzipped[0].Value.Single());
         }
     }
 }

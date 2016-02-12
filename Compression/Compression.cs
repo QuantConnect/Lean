@@ -212,6 +212,25 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Performs an in memory zip of the specified bytes
+        /// </summary>
+        /// <param name="bytes">The file contents in bytes to be zipped</param>
+        /// <param name="zipEntryName">The zip entry name</param>
+        /// <returns>The zipped file as a byte array</returns>
+        public static byte[] ZipBytes(byte[] bytes, string zipEntryName)
+        {
+            using (var memoryStream = new MemoryStream())
+            using (var stream = new ZipOutputStream(memoryStream))
+            {
+                var entry = new ZipEntry(zipEntryName);
+                stream.PutNextEntry(entry);
+                var buffer = new byte[16*1024];
+                StreamUtils.Copy(new MemoryStream(bytes), stream, buffer);
+                return memoryStream.GetBuffer();
+            }
+        }
+
+        /// <summary>
         /// Compress a given file and delete the original file. Automatically rename the file to name.zip.
         /// </summary>
         /// <param name="textPath">Path of the original file</param>
@@ -436,6 +455,9 @@ namespace QuantConnect
         /// closed rendering all key value pair Value properties unaccessible. Ideally this
         /// would be enumerated depth first.
         /// </summary>
+        /// <remarks>
+        /// This method has the potential for a memory leak if each kvp.Value enumerable is not disposed
+        /// </remarks>
         /// <param name="filename">The zip file to stream</param>
         /// <returns>The stream zip contents</returns>
         public static IEnumerable<KeyValuePair<string, IEnumerable<string>>> Unzip(string filename)
