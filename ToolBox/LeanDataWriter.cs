@@ -38,23 +38,21 @@ namespace QuantConnect.ToolBox
         private readonly TickType _dataType;
         private readonly Resolution _resolution;
         private readonly SecurityType _securityType;
-        
+
         /// <summary>
         /// Create a new lean data writer to this base data directory.
         /// </summary>
         /// <param name="symbol">Symbol string</param>
         /// <param name="dataDirectory">Base data directory</param>
-        /// <param name="type">Security type</param>
         /// <param name="resolution">Resolution of the desired output data</param>
-        /// <param name="market">Market for this security</param>
         /// <param name="dataType">Write the data to trade files</param>
-        public LeanDataWriter(SecurityType type, Resolution resolution, Symbol symbol, string dataDirectory, string market, TickType dataType = TickType.Trade)
+        public LeanDataWriter(Resolution resolution, Symbol symbol, string dataDirectory, TickType dataType = TickType.Trade)
         {
-            _securityType = type;
+            _securityType = symbol.ID.SecurityType;
             _dataDirectory = dataDirectory;
             _resolution = resolution;
             _symbol = symbol;
-            _market = market.ToLower();
+            _market = symbol.ID.Market.ToLower();
             _dataType = dataType;
 
             // All fx data is quote data.
