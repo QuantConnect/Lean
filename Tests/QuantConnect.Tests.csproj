@@ -119,6 +119,7 @@
     <Compile Include="Common\Securities\ImmediateSettlementModelTests.cs" />
     <Compile Include="Common\Securities\LocalMarketHoursTests.cs" />
     <Compile Include="Common\Securities\MarketHoursDatabaseTests.cs" />
+    <Compile Include="Common\Securities\PatternDayTradingMarginModelTests.cs" />
     <Compile Include="Common\Securities\SecurityExchangeHoursTests.cs" />
     <Compile Include="Common\Securities\SecurityIdentifierTests.cs" />
     <Compile Include="Common\Securities\SecurityManagerTests.cs" />

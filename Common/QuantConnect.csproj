@@ -262,6 +262,7 @@
     <Compile Include="Securities\LocalMarketHours.cs" />
     <Compile Include="Securities\MarketHoursSegment.cs" />
     <Compile Include="Securities\MarketHoursState.cs" />
+    <Compile Include="Securities\PatternDayTradingMarginModel.cs" />
     <Compile Include="Securities\SecurityDatabaseKey.cs" />
     <Compile Include="Securities\SecurityExchangeHours.cs" />
     <Compile Include="Securities\MarketHoursDatabase.cs" />
