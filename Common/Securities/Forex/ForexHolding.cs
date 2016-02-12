@@ -44,15 +44,6 @@ namespace QuantConnect.Securities.Forex
         }
 
         /// <summary>
-        /// Acquisition cost of the security total holdings.
-        /// </summary>
-        public override decimal HoldingsCost
-        {
-            // we need to add a conversion since the data is in terms of the quote currency
-            get { return base.HoldingsCost*_forex.QuoteCurrency.ConversionRate; }
-        }
-
-        /// <summary>
         /// Market value of our holdings.
         /// </summary>
         public override decimal HoldingsValue

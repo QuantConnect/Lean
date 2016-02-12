@@ -110,7 +110,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return AveragePrice * Convert.ToDecimal(Quantity);
+                return AveragePrice * Convert.ToDecimal(Quantity) * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
             }
         }
 
