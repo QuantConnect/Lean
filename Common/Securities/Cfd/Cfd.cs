@@ -36,6 +36,7 @@ namespace QuantConnect.Securities.Cfd
         /// <param name="symbolProperties">The symbol properties for this security</param>
         public Cfd(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config, SymbolProperties symbolProperties)
             : base(config,
+                quoteCurrency,
                 new CfdExchange(exchangeHours),
                 new CfdCache(),
                 new CfdPortfolioModel(),

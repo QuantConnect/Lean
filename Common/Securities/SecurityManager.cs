@@ -335,7 +335,7 @@ namespace QuantConnect.Securities
             switch (config.SecurityType)
             {
                 case SecurityType.Equity:
-                    security = new Equity.Equity(exchangeHours, config);
+                    security = new Equity.Equity(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency]);
                     break;
 
                 case SecurityType.Forex:
@@ -373,7 +373,7 @@ namespace QuantConnect.Securities
 
                 default:
                 case SecurityType.Base:
-                    security = new Security(exchangeHours, config);
+                    security = new Security(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency]);
                     break;
             }
 

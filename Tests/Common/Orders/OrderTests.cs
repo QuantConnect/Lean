@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Common.Orders
 
             var time = new DateTime(2016, 2, 4, 16, 0, 0).ConvertToUtc(tz);
 
-            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false));
+            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m));
             equity.SetMarketPrice(new Tick {Value = price});
 
             var gbpCash = new Cash("GBP", 0, 1.46m);

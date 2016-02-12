@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
             var config = CreateTradeBarConfig();
-            var security = new Security(exchangeHours, config);
+            var security = new Security(exchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m));
 
             Assert.AreEqual(config, security.SubscriptionDataConfig);
             Assert.AreEqual(config.Symbol, security.Symbol);
@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void ConstructorTests()
         {
-            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig());
+            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig(), new Cash(CashBook.AccountCurrency, 0, 1m));
 
             Assert.IsNotNull(security.Exchange);
             Assert.IsInstanceOf<SecurityExchange>(security.Exchange);
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void HoldingsTests()
         {
-            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig());
+            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig(), new Cash(CashBook.AccountCurrency, 0, 1m));
             
             // Long 100 stocks test
             security.Holdings.SetHoldings(100m, 100);
@@ -107,7 +107,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void UpdatingSecurityPriceTests()
         {
-            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig());
+            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig(), new Cash(CashBook.AccountCurrency, 0, 1m));
 
             // Update securuty price with a TradeBar
             security.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.SPY, 101m, 103m, 100m, 102m, 100000));
@@ -132,7 +132,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void SetLeverageTest()
         {
-            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig());
+            var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig(), new Cash(CashBook.AccountCurrency, 0, 1m));
 
             security.SetLeverage(4m);
             Assert.AreEqual(4m,security.Leverage);

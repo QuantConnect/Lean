@@ -35,6 +35,7 @@ namespace QuantConnect.Securities.Forex
         /// <param name="config">The subscription configuration for this security</param>
         public Forex(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config)
             : base(config,
+                quoteCurrency,
                 new ForexExchange(exchangeHours),
                 new ForexCache(),
                 new ForexPortfolioModel(),

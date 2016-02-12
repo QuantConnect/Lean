@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             var model = new ImmediateSettlementModel();
             var config = CreateTradeBarConfig();
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m));
 
             portfolio.SetCash(1000);
             Assert.AreEqual(1000, portfolio.Cash);
