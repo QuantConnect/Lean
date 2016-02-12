@@ -66,5 +66,15 @@ namespace QuantConnect.Securities
             ContractMultiplier = contractMultiplier;
             PipSize = pipSize;
         }
+
+        /// <summary>
+        /// Gets a default instance of the <see cref="SymbolProperties"/> class for the specified <paramref name="quoteCurrency"/>
+        /// </summary>
+        /// <param name="quoteCurrency">The quote currency of the symbol</param>
+        /// <returns>A default instance of the<see cref="SymbolProperties"/> class</returns>
+        public static SymbolProperties GetDefault(string quoteCurrency)
+        {
+            return new SymbolProperties("", quoteCurrency, 1, 0.01m);
+        }
     }
 }
