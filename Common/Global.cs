@@ -107,7 +107,7 @@ namespace QuantConnect
             {
                 rounding = 5;
                 var cfd = (Cfd)security;
-                var quotec =  cfd.QuoteCurrencySymbol;
+                var quotec =  cfd.QuoteCurrency.Symbol;
                 CurrencySymbol = Currencies.CurrencySymbols[quotec];
                 ConversionRate = ((CfdHolding)holding).ConversionRate;
             }

@@ -54,7 +54,6 @@ namespace QuantConnect.Securities.Forex
             string baseCurrencySymbol, quoteCurrencySymbol;
             DecomposeCurrencyPair(config.Symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
             BaseCurrencySymbol = baseCurrencySymbol;
-            QuoteCurrencySymbol = quoteCurrencySymbol;
         }
 
         /// <summary>
@@ -65,15 +64,6 @@ namespace QuantConnect.Securities.Forex
         /// of going long the EUR/USD a trader is acquiring euros in exchange for US dollars
         /// </remarks>
         public string BaseCurrencySymbol { get; private set; }
-
-        /// <summary>
-        /// Gets the currency spent by going long this currency pair
-        /// </summary>
-        /// <remarks>
-        /// For example, the EUR/USD has a quote currency of US dollars, and as a result of
-        /// going long the EUR/USD a trader is spending US dollars in order to acquire euros.
-        /// </remarks>
-        public string QuoteCurrencySymbol { get; private set; }
 
         /// <summary>
         /// Decomposes the specified currency pair into a base and quote currency provided as out parameters

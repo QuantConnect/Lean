@@ -375,7 +375,7 @@ namespace QuantConnect.Algorithm
             {
                 // for CFD we need to verify that the conversion to USD has a value as well
                 var cfd = (Cfd) security;
-                var quoteCurrency = cfd.QuoteCurrencySymbol;
+                var quoteCurrency = cfd.QuoteCurrency.Symbol;
 
                 // verify it's in the portfolio
                 Cash quoteCash;

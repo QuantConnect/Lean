@@ -59,14 +59,6 @@ namespace QuantConnect.Securities.Cfd
         }
 
         /// <summary>
-        /// Gets the quote currency for this CFD security
-        /// </summary>
-        public string QuoteCurrencySymbol
-        {
-            get { return SymbolProperties.QuoteCurrency; }
-        }
-
-        /// <summary>
         /// Gets the contract multiplier for this CFD security
         /// </summary>
         /// <remarks>
