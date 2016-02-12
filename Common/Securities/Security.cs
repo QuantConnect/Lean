@@ -309,6 +309,17 @@ namespace QuantConnect.Securities
             ISecurityDataFilter dataFilter
             )
         {
+
+            if (symbolProperties == null)
+            {
+                throw new ArgumentNullException("symbolProperties", "Security requires a valid SymbolProperties instance.");
+            }
+
+            if (symbolProperties.QuoteCurrency != quoteCurrency.Symbol)
+            {
+                throw new ArgumentException("symbolProperties.QuoteCurrency must match the quoteCurrency.Symbol");
+            }
+
             _config = config;
             QuoteCurrency = quoteCurrency;
             SymbolProperties = symbolProperties;

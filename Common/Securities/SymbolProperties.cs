@@ -74,7 +74,7 @@ namespace QuantConnect.Securities
         /// <returns>A default instance of the<see cref="SymbolProperties"/> class</returns>
         public static SymbolProperties GetDefault(string quoteCurrency)
         {
-            return new SymbolProperties("", quoteCurrency, 1, 0.01m);
+            return new SymbolProperties("", quoteCurrency.ToUpper(), 1, 0.01m);
         }
     }
 }

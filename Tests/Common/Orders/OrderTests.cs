@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Common.Orders
             equity.SetMarketPrice(new Tick {Value = price});
 
             var gbpCash = new Cash("GBP", 0, 1.46m);
-            var forex = new Forex(SecurityExchangeHours.AlwaysOpen(tz), gbpCash, new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var forex = new Forex(SecurityExchangeHours.AlwaysOpen(tz), gbpCash, new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false), SymbolProperties.GetDefault(Symbols.EURGBP.Value));
             forex.SetMarketPrice(new Tick {Value= price});
 
             var eurCash = new Cash("EUR", 0, 1.12m);

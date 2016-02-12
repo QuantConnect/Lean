@@ -153,11 +153,11 @@ namespace QuantConnect.Tests.Common.Securities
             var mchCash = portfolio.CashBook["MCH"];
             var usdCash = portfolio.CashBook["USD"];
 
-            var mchJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, jwbCash, subscriptions.Add(MCHJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var mchJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, jwbCash, subscriptions.Add(MCHJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork), SymbolProperties.GetDefault(jwbCash.Symbol));
             mchJwbSecurity.SetLeverage(10m);
-            var mchUsdSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, subscriptions.Add(MCHUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var mchUsdSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, subscriptions.Add(MCHUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork), SymbolProperties.GetDefault(usdCash.Symbol));
             mchUsdSecurity.SetLeverage(10m);
-            var usdJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, mchCash, subscriptions.Add(USDJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var usdJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, mchCash, subscriptions.Add(USDJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork), SymbolProperties.GetDefault(mchCash.Symbol));
             usdJwbSecurity.SetLeverage(10m);
             
             // no fee model
@@ -348,7 +348,7 @@ namespace QuantConnect.Tests.Common.Securities
             //Console.WriteLine();
 
             var config3 = CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURGBP);
-            securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, gbpCash, config3, SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, gbpCash, config3, SymbolProperties.GetDefault(gbpCash.Symbol)));
             securities[Symbols.EURGBP].SetLeverage(100m);
             securities[Symbols.EURGBP].Holdings.SetHoldings(1m, 1000);
             securities[Symbols.EURGBP].SetMarketPrice(new TradeBar { Time = time, Value = 1m });

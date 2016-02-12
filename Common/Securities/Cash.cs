@@ -179,7 +179,7 @@ namespace QuantConnect.Securities
                 {
                     _invertRealTimePrice = symbol.Value == invert;
                     var securityType = symbol.ID.SecurityType;
-                    var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, securityType);
+                    var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, securityType, Symbol);
                     Cash quoteCash;
                     if (!cashBook.TryGetValue(symbolProperties.QuoteCurrency, out quoteCash))
                     {

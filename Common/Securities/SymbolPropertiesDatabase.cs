@@ -42,8 +42,9 @@ namespace QuantConnect.Securities
         /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
         /// <param name="symbol">The particular symbol being traded</param>
         /// <param name="securityType">The security type of the symbol</param>
+        /// <param name="defaultQuoteCurrency">Specifies the quote currency to be used when returning a default instance of an entry is not found in the database</param>
         /// <returns>The symbol properties matching the specified market/symbol/security-type or null if not found</returns>
-        public SymbolProperties GetSymbolProperties(string market, string symbol, SecurityType securityType)
+        public SymbolProperties GetSymbolProperties(string market, string symbol, SecurityType securityType, string defaultQuoteCurrency = CashBook.AccountCurrency)
         {
             SymbolProperties symbolProperties;
             var key = new SecurityDatabaseKey(market, symbol, securityType);
@@ -54,7 +55,7 @@ namespace QuantConnect.Securities
                 if (!_entries.TryGetValue(new SecurityDatabaseKey(market, null, securityType), out symbolProperties))
                 {
                     // no properties found, return object with default property values
-                    return SymbolProperties.GetDefault(CashBook.AccountCurrency);
+                    return SymbolProperties.GetDefault(defaultQuoteCurrency);
                 }
             }
 

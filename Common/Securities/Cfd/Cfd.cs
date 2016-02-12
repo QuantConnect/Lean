@@ -50,12 +50,6 @@ namespace QuantConnect.Securities.Cfd
                 )
         {
             Holdings = new CfdHolding(this);
-
-            if (symbolProperties == null)
-                throw new ArgumentException("CFD requires a valid SymbolProperties argument");
-
-            if (symbolProperties.QuoteCurrency != quoteCurrency.Symbol)
-                throw new ArgumentException("CFD SymbolProperties.QuoteCurrency and QuoteCurrency.Symbol do not match.");
         }
 
         /// <summary>
