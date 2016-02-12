@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using NodaTime;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 
@@ -286,6 +287,44 @@ namespace QuantConnect
                 }
             }
         }
+
+        /// <summary>
+        /// Define an enumerable date range of tradeable dates but expressed in a different time zone.
+        /// </summary>
+        /// <remarks>
+        /// This is mainly used to bridge the gap between exchange time zone and data time zone for file written to disk. The returned
+        /// enumerable of dates is gauranteed to be the same size or longer than those generated via <see cref="EachTradeableDay(ICollection{Security},DateTime,DateTime)"/>
+        /// </remarks>
+        /// <param name="exchange">The exchange hours</param>
+        /// <param name="from">The start time in the exchange time zone</param>
+        /// <param name="thru">The end time in the exchange time zone (inclusive of the final day)</param>
+        /// <param name="timeZone">The timezone to project the dates into (inclusive of the final day)</param>
+        /// <param name="includeExtendedMarketHours">True to include extended market hours trading in the search, false otherwise</param>
+        /// <returns></returns>
+        public static IEnumerable<DateTime> EachTradeableDayInTimeZone(SecurityExchangeHours exchange, DateTime from, DateTime thru, DateTimeZone timeZone, bool includeExtendedMarketHours = true)
+        {
+            var currentExchangeTime = from;
+            thru = thru.Date.AddDays(1); // we want to include the full thru date
+            while (currentExchangeTime < thru)
+            {
+                var currentInTimeZone = currentExchangeTime.ConvertTo(exchange.TimeZone, timeZone);
+                var currentInTimeZoneEod = currentInTimeZone.Date.AddDays(1);
+
+                // don't pass the end
+                if (currentInTimeZoneEod.ConvertTo(timeZone, exchange.TimeZone) > thru)
+                {
+                    currentInTimeZoneEod = thru.ConvertTo(exchange.TimeZone, timeZone);
+                }
+
+                var currentExchangeTimeEod = currentInTimeZoneEod.ConvertTo(timeZone, exchange.TimeZone);
+                if (exchange.IsOpen(currentExchangeTime, currentExchangeTimeEod, includeExtendedMarketHours))
+                {
+                    yield return currentInTimeZone.Date;
+                }
+
+                currentExchangeTime = currentInTimeZoneEod.ConvertTo(timeZone, exchange.TimeZone);
+            }
+        } 
 
         /// <summary>
         /// Make sure this date is not a holiday, or weekend for the securities in this algorithm.
