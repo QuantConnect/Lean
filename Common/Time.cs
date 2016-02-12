@@ -307,6 +307,7 @@ namespace QuantConnect
             thru = thru.Date.AddDays(1); // we want to include the full thru date
             while (currentExchangeTime < thru)
             {
+                // take steps of max size of one day in the data time zone
                 var currentInTimeZone = currentExchangeTime.ConvertTo(exchange.TimeZone, timeZone);
                 var currentInTimeZoneEod = currentInTimeZone.Date.AddDays(1);
 
@@ -316,6 +317,7 @@ namespace QuantConnect
                     currentInTimeZoneEod = thru.ConvertTo(exchange.TimeZone, timeZone);
                 }
 
+                // perform market open checks in the exchange time zone
                 var currentExchangeTimeEod = currentInTimeZoneEod.ConvertTo(timeZone, exchange.TimeZone);
                 if (exchange.IsOpen(currentExchangeTime, currentExchangeTimeEod, includeExtendedMarketHours))
                 {
