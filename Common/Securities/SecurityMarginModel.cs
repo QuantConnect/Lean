@@ -23,15 +23,26 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityMarginModel : ISecurityMarginModel
     {
+        private decimal _initialMarginRequirement;
+        private decimal _maintenanceMarginRequirement;
+
         /// <summary>
         /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
         /// </summary>
-        protected decimal InitialMarginRequirement;
+        protected virtual decimal InitialMarginRequirement
+        {
+            get { return _initialMarginRequirement; }
+            set { _initialMarginRequirement = value; }
+        }
 
         /// <summary>
         /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
         /// </summary>
-        protected decimal MaintenanceMarginRequirement;
+        protected virtual decimal MaintenanceMarginRequirement
+        {
+            get { return _maintenanceMarginRequirement; }
+            set { _maintenanceMarginRequirement = value; }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityMarginModel"/>
@@ -52,8 +63,8 @@ namespace QuantConnect.Securities
                 throw new ArgumentException("Maintenance margin requirement must be between 0 and 1");
             }
 
-            InitialMarginRequirement = initialMarginRequirement;
-            MaintenanceMarginRequirement = maintenanceMarginRequirement;
+            _initialMarginRequirement = initialMarginRequirement;
+            _maintenanceMarginRequirement = maintenanceMarginRequirement;
         }
 
         /// <summary>
@@ -67,8 +78,8 @@ namespace QuantConnect.Securities
                 throw new ArgumentException("Leverage must be greater than or equal to 1.");
             }
 
-            InitialMarginRequirement = 1/leverage;
-            MaintenanceMarginRequirement = 1/leverage;
+            _initialMarginRequirement = 1/leverage;
+            _maintenanceMarginRequirement = 1/leverage;
         }
 
         /// <summary>
