@@ -44,15 +44,6 @@ namespace QuantConnect.Securities.Cfd
         }
 
         /// <summary>
-        /// Market value of our holdings.
-        /// </summary>
-        public override decimal HoldingsValue
-        {
-            // we need to add a conversion since the data is in terms of the quote currency
-            get { return base.HoldingsValue * _cfd.ContractMultiplier * _cfd.QuoteCurrency.ConversionRate; }
-        }
-
-        /// <summary>
         /// Profit if we closed the holdings right now including the approximate fees.
         /// </summary>
         /// <remarks>Does not use the transaction model for market fills but should.</remarks>

@@ -161,7 +161,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal HoldingsValue
         {
-            get { return _price*Convert.ToDecimal(Quantity); }
+            get { return _price*Convert.ToDecimal(Quantity)*_security.QuoteCurrency.ConversionRate*_security.SymbolProperties.ContractMultiplier; }
         }
 
         /// <summary>
