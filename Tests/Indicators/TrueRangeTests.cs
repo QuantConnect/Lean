@@ -14,42 +14,27 @@
 */
 
 using NUnit.Framework;
+using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class TrueRangeTests
+    public class TrueRangeTests : CommonIndicatorTests<TradeBar>
     {
-        [Test]
-        public void ComparesAgainstExternalData()
+        protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            var tr = new TrueRange("TR");
-
-            RunTestIndicator(tr);
+            return new TrueRange("TR");
         }
 
-        [Test]
-        public void ComparesAgainstExternalDataAfterReset()
+        protected override string TestFileName
         {
-            var tr = new TrueRange("TR");
-
-            RunTestIndicator(tr);
-            tr.Reset();
-            RunTestIndicator(tr);
+            get { return "spy_tr.txt"; }
         }
 
-        [Test]
-        public void ResetsProperly()
+        protected override string TestColumnName
         {
-            var tr = new TrueRange("TR");
-
-            TestHelper.TestIndicatorReset(tr, "spy_tr.txt");
-        }
-
-        private static void RunTestIndicator(TrueRange tr)
-        {
-            TestHelper.TestIndicator(tr, "spy_tr.txt", "TR", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            get { return "TR"; }
         }
     }
 }

@@ -19,47 +19,47 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class TriangularMovingAverageTests
+    public class TriangularMovingAverageTests : CommonIndicatorTests<IndicatorDataPoint>
     {
         [Test]
-        public void ComparesAgainstExternalData()
+        public override void ComparesAgainstExternalData()
         {
-            var trimaOdd = new TriangularMovingAverage("TRIMA", 5);
-
-            RunTestIndicator(trimaOdd, 5);
-
-            var trimaEven = new TriangularMovingAverage("TRIMA", 6);
-
-            RunTestIndicator(trimaEven, 6);
+            foreach (var period in new[] {5, 6})
+            {
+                RunTestIndicator(new TriangularMovingAverage(period), period);
+            }
         }
 
         [Test]
-        public void ComparesAgainstExternalDataAfterReset()
+        public override void ComparesAgainstExternalDataAfterReset()
         {
-            var trimaOdd = new TriangularMovingAverage("TRIMA", 5);
-
-            RunTestIndicator(trimaOdd, 5);
-            trimaOdd.Reset();
-            RunTestIndicator(trimaOdd, 5);
-
-            var trimaEven = new TriangularMovingAverage("TRIMA", 6);
-
-            RunTestIndicator(trimaEven, 6);
-            trimaEven.Reset();
-            RunTestIndicator(trimaEven, 6);
+            foreach (var period in new[] { 5, 6 })
+            {
+                var indicator = new TriangularMovingAverage(period);
+                RunTestIndicator(indicator, period);
+                indicator.Reset();
+                RunTestIndicator(indicator, period);
+            }
         }
 
-        [Test]
-        public void ResetsProperly()
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            var trima = new TriangularMovingAverage("TRIMA", 5);
-
-            TestHelper.TestIndicatorReset(trima, "spy_trima.txt");
+            return new TriangularMovingAverage(5);
         }
 
-        private static void RunTestIndicator(TriangularMovingAverage trima, int period)
+        protected override string TestFileName
         {
-            TestHelper.TestIndicator(trima, "spy_trima.txt", "TRIMA_" + period, (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            get { return "spy_trima.txt"; }
+        }
+
+        protected override string TestColumnName
+        {
+            get { return "TRIMA"; }
+        }
+
+        private void RunTestIndicator(TriangularMovingAverage trima, int period)
+        {
+            TestHelper.TestIndicator(trima, TestFileName, TestColumnName + "_" + period, Assertion);
         }
     }
 }
