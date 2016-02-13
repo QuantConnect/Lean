@@ -24,7 +24,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ComparesAgainstExternalData()
         {
-            var indicator = new T3MovingAverage(5, 1);
+            var indicator = new T3MovingAverage(5);
 
             RunTestIndicator(indicator);
         }
@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ComparesAgainstExternalDataAfterReset()
         {
-            var indicator = new T3MovingAverage(5, 1);
+            var indicator = new T3MovingAverage(5);
 
             RunTestIndicator(indicator);
             indicator.Reset();
@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Indicators
 
         private static void RunTestIndicator(IndicatorBase<IndicatorDataPoint> indicator)
         {
-            TestHelper.TestIndicator(indicator, "spy_t3.txt", "T3_5_1", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 5e-2));
+            TestHelper.TestIndicator(indicator, "spy_t3.txt", "T3_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 2e-2));
         }
     }
 }
