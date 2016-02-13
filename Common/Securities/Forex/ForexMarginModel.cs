@@ -47,22 +47,6 @@ namespace QuantConnect.Securities.Forex
         }
 
         /// <summary>
-        /// Gets the total margin required to execute the specified order in units of the account currency including fees
-        /// </summary>
-        /// <param name="security">The security to compute initial margin for</param>
-        /// <param name="order">The order to be executed</param>
-        /// <returns>The total margin in terms of the currency quoted in the order</returns>
-        public override decimal GetInitialMarginRequiredForOrder(Security security, Order order)
-        {
-            //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
-            //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
-            var orderFees = security.FeeModel.GetOrderFee(security, order);
-            
-            var orderCostInAccountCurrency = order.GetValue(security);
-            return orderCostInAccountCurrency*GetInitialMarginRequirement(security) + orderFees;
-        }
-
-        /// <summary>
         /// Generates a new order for the specified security taking into account the total margin
         /// used by the account. Returns null when no margin call is to be issued.
         /// </summary>
