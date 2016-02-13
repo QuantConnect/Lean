@@ -170,6 +170,7 @@
     <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
     <Compile Include="Indicators\BalanceOfPowerTests.cs" />
     <Compile Include="Indicators\ChandeMomentumOscillatorTests.cs" />
+    <Compile Include="Indicators\CommonIndicatorTests.cs" />
     <Compile Include="Indicators\DonchianChannelTest.cs" />
     <Compile Include="Indicators\DoubleExponentialMovingAverageTests.cs" />
     <Compile Include="Indicators\IchimokuKinkoHyoTests.cs" />

@@ -20,26 +20,8 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class StandardDeviationTests
+    public class StandardDeviationTests : CommonIndicatorTests<IndicatorDataPoint>
     {
-        [Test]
-        public void ComparesAgainstExternalData()
-        {
-            var std = new StandardDeviation("STD", 10);
-
-            RunTestIndicator(std);
-        }
-
-        [Test]
-        public void ComparesAgainstExternalDataAfterReset()
-        {
-            var std = new StandardDeviation("STD", 10);
-
-            RunTestIndicator(std);
-            std.Reset();
-            RunTestIndicator(std);
-        }
-
         [Test]
         public void ComputesCorrectly()
         {
@@ -65,7 +47,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ResetsProperly()
+        public void ResetsProperly2()
         {
             var std = new StandardDeviation(3);
             std.Update(DateTime.Today, 1m);
@@ -77,9 +59,24 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.AssertIndicatorIsInDefaultState(std);
         }
 
-        private static void RunTestIndicator(StandardDeviation std)
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            TestHelper.TestIndicator(std, "spy_var.txt", "Var", (ind, expected) => Assert.AreEqual(Math.Sqrt(expected), (double)std.Current.Value, 1e-6));
+            return new StandardDeviation(10);
+        }
+
+        protected override string TestFileName
+        {
+            get { return "spy_var.txt"; }
+        }
+
+        protected override string TestColumnName
+        {
+            get { return "Var"; }
+        }
+
+        protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion
+        {
+            get { return (indicator, expected) => Assert.AreEqual(Math.Sqrt(expected), (double)indicator.Current.Value, 1e-6); }
         }
     }
 }

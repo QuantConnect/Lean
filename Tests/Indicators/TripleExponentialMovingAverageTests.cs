@@ -19,37 +19,21 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class TripleExponentialMovingAverageTests
+    public class TripleExponentialMovingAverageTests : CommonIndicatorTests<IndicatorDataPoint>
     {
-        [Test]
-        public void ComparesAgainstExternalData()
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            var tema = new TripleExponentialMovingAverage("TEMA", 5);
-
-            RunTestIndicator(tema);
+            return new TripleExponentialMovingAverage(5);
         }
 
-        [Test]
-        public void ComparesAgainstExternalDataAfterReset()
+        protected override string TestFileName
         {
-            var tema = new TripleExponentialMovingAverage("TEMA", 5);
-
-            RunTestIndicator(tema);
-            tema.Reset();
-            RunTestIndicator(tema);
+            get { return "spy_tema.txt"; }
         }
 
-        [Test]
-        public void ResetsProperly()
+        protected override string TestColumnName
         {
-            var tema = new TripleExponentialMovingAverage("TEMA", 5);
-
-            TestHelper.TestIndicatorReset(tema, "spy_tema.txt");
-        }
-
-        private static void RunTestIndicator(TripleExponentialMovingAverage tema)
-        {
-            TestHelper.TestIndicator(tema, "spy_tema.txt", "TEMA_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            get { return "TEMA_5"; }
         }
     }
 }
