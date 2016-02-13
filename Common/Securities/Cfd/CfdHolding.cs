@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
-
 namespace QuantConnect.Securities.Cfd
 {
     /// <summary>
@@ -23,8 +21,6 @@ namespace QuantConnect.Securities.Cfd
     /// <seealso cref="SecurityHolding"/>
     public class CfdHolding : SecurityHolding
     {
-        private readonly Cfd _cfd;
-
         /// <summary>
         /// CFD Holding Class constructor
         /// </summary>
@@ -32,15 +28,6 @@ namespace QuantConnect.Securities.Cfd
         public CfdHolding(Cfd security)
             : base(security)
         {
-            _cfd = security;
-        }
-
-        /// <summary>
-        /// Gets the conversion rate from the quote currency into the account currency
-        /// </summary>
-        public decimal ConversionRate
-        {
-            get { return _cfd.QuoteCurrency.ConversionRate; }
         }
     }
 }

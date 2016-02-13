@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
-
 namespace QuantConnect.Securities.Forex 
 {
     /// <summary>
@@ -23,8 +21,6 @@ namespace QuantConnect.Securities.Forex
     /// <seealso cref="SecurityHolding"/>
     public class ForexHolding : SecurityHolding 
     {
-        private readonly Forex _forex;
-
         /// <summary>
         /// Forex Holding Class
         /// </summary>
@@ -32,15 +28,6 @@ namespace QuantConnect.Securities.Forex
         public ForexHolding(Forex security)
             : base(security)
         {
-            _forex = security;
-        }
-
-        /// <summary>
-        /// Gets the conversion rate from the quote currency into the account currency
-        /// </summary>
-        public decimal ConversionRate
-        {
-            get { return _forex.QuoteCurrency.ConversionRate; }
         }
     }
 }
