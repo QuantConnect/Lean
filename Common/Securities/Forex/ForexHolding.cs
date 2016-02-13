@@ -42,29 +42,5 @@ namespace QuantConnect.Securities.Forex
         {
             get { return _forex.QuoteCurrency.ConversionRate; }
         }
-
-        /// <summary>
-        /// Profit if we closed the holdings right now including the approximate fees.
-        /// </summary>
-        /// <remarks>Does not use the transaction model for market fills but should.</remarks>
-        public override decimal TotalCloseProfit()
-        {
-            if (AbsoluteQuantity == 0)
-            {
-                return 0;
-            }
-
-            decimal orderFee = 0;
-
-            if (AbsoluteQuantity > 0)
-            {
-                // this is in the account currency
-                var marketOrder = new MarketOrder(_forex.Symbol, -Quantity, _forex.LocalTime.ConvertToUtc(_forex.Exchange.TimeZone));
-                orderFee = _forex.FeeModel.GetOrderFee(_forex, marketOrder);
-            }
-
-            // we need to add a conversion since the data is in terms of the quote currency
-            return (Price - AveragePrice)*Quantity*_forex.QuoteCurrency.ConversionRate - orderFee;
-        }
     }
 }

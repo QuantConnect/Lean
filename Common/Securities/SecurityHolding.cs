@@ -371,7 +371,7 @@ namespace QuantConnect.Securities
             var marketOrder = new MarketOrder(_security.Symbol, -Quantity, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone));
             var orderFee = _security.FeeModel.GetOrderFee(_security, marketOrder);
 
-            return (Price - AveragePrice) * Quantity - orderFee;
+            return (Price - AveragePrice)*Quantity*_security.QuoteCurrency.ConversionRate*_security.SymbolProperties.ContractMultiplier - orderFee;
         }
     }
-} //End Namespace
+}
