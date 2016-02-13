@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-using QuantConnect.Orders;
-
 namespace QuantConnect.Securities.Forex
 {
     /// <summary>
@@ -44,45 +41,6 @@ namespace QuantConnect.Securities.Forex
         public ForexMarginModel(decimal leverage)
             : base(leverage)
         {
-        }
-
-        /// <summary>
-        /// Generates a new order for the specified security taking into account the total margin
-        /// used by the account. Returns null when no margin call is to be issued.
-        /// </summary>
-        /// <param name="security">The security to generate a margin call order for</param>
-        /// <param name="netLiquidationValue">The net liquidation value for the entire account</param>
-        /// <param name="totalMargin">The totl margin used by the account in units of base currency</param>
-        /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
-        public override SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin)
-        {
-            if (totalMargin <= netLiquidationValue)
-            {
-                return null;
-            }
-            var forex = (Forex)security;
-
-            // we haven't begun receiving data for this yet
-            if (forex.Price == 0m || forex.QuoteCurrency.ConversionRate == 0m)
-            {
-                return null;
-            }
-
-            // compute the amount of quote currency we need to liquidate in order to get within margin requirements
-            decimal delta = (totalMargin - netLiquidationValue)/forex.QuoteCurrency.ConversionRate;
-
-            // compute the number of shares required for the order, rounding up
-            int quantity = (int) Math.Round(delta/security.Price, MidpointRounding.AwayFromZero);
-
-            // don't try and liquidate more share than we currently hold
-            quantity = Math.Min((int)security.Holdings.AbsoluteQuantity, quantity);
-            if (security.Holdings.IsLong)
-            {
-                // adjust to a sell for long positions
-                quantity *= -1;
-            }
-
-            return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), "Margin Call");
         }
     }
 }

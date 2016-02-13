@@ -185,11 +185,12 @@ namespace QuantConnect.Securities
                 return null;
             }
 
-            // compute the value we need to liquidate in order to get within margin requirements
-            decimal delta = totalMargin - netLiquidationValue;
-            
+            // compute the amount of quote currency we need to liquidate in order to get within margin requirements
+            var deltaInQuoteCurrency = (totalMargin - netLiquidationValue)/security.QuoteCurrency.ConversionRate;
+
             // compute the number of shares required for the order, rounding up
-            int quantity = (int) (Math.Round(delta/security.Price, MidpointRounding.AwayFromZero) / GetMaintenanceMarginRequirement(security));
+            var unitPriceInQuoteCurrency = security.Price * security.SymbolProperties.ContractMultiplier;
+            int quantity = (int) (Math.Round(deltaInQuoteCurrency/unitPriceInQuoteCurrency, MidpointRounding.AwayFromZero)/GetMaintenanceMarginRequirement(security));
 
             // don't try and liquidate more share than we currently hold, minimum value of 1, maximum value for absolute quantity
             quantity = Math.Max(1, Math.Min((int)security.Holdings.AbsoluteQuantity, quantity));
